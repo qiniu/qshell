@@ -23,6 +23,8 @@ var supportedCmds = map[string]cli.CliFunc{
 	"prefetch":    cli.Prefetch,
 	"batchdelete": cli.BatchDelete,
 	"checkqrsync": cli.CheckQrsync,
+	"fput":        cli.FormPut,
+	"rput":        cli.ResumablePut,
 }
 
 func main() {
