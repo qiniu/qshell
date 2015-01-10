@@ -211,3 +211,44 @@ func Chgm(cmd string, params ...string) {
 		Help(cmd)
 	}
 }
+
+func Fetch(cmd string, params ...string) {
+	if len(params) == 3 {
+		remoteResUrl := params[0]
+		bucket := params[1]
+		key := params[2]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
+		if err != nil {
+			log.Error("Fetch error,", err)
+		} else {
+			fmt.Println("Done!")
+		}
+	} else {
+		Help(cmd)
+	}
+}
+
+func Prefetch(cmd string, params ...string) {
+	if len(params) == 2 {
+		bucket := params[0]
+		key := params[1]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		err := qshell.Prefetch(&mac, bucket, key)
+		if err != nil {
+			log.Error("Prefetch error,", err)
+		} else {
+			fmt.Println("Done!")
+		}
+	} else {
+		Help(cmd)
+	}
+}

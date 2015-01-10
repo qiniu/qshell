@@ -18,6 +18,8 @@ var supportCmds = map[string]cli.CliFunc{
 	"move":       cli.Move,
 	"copy":       cli.Copy,
 	"chgm":       cli.Chgm,
+	"fetch":      cli.Fetch,
+	"prefetch":   cli.Prefetch,
 }
 
 func main() {
