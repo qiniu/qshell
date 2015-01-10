@@ -28,13 +28,26 @@ func (this *ListBucket) List(bucket string, prefix string, listResultFile string
 	marker := ""
 	limit := 1000
 	run := true
+	maxRetryTimes := 5
+	retryTimes := 1
 	for run {
 		entries, markerOut, err := client.ListPrefix(nil, bucket, prefix, marker, limit)
 		if err != nil {
 			if err == io.EOF {
 				run = false
+			} else {
+				log.Error(fmt.Sprintf("List error for marker `%s'", marker), err)
+				if retryTimes <= maxRetryTimes {
+					log.Info(fmt.Sprintf("Retry list for marker `%s' for `%d' time", marker, retryTimes))
+					retryTimes += 1
+					continue
+				} else {
+					log.Error(fmt.Sprintf("List failed too many times for `%s'", marker))
+					break
+				}
 			}
 		} else {
+			retryTimes = 1
 			if markerOut == "" {
 				run = false
 			} else {
