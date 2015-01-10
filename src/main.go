@@ -8,18 +8,19 @@ import (
 
 var debugMode = false
 
-var supportCmds = map[string]cli.CliFunc{
-	"account":    cli.Account,
-	"dircache":   cli.DirCache,
-	"listbucket": cli.ListBucket,
-	"prefop":     cli.Prefop,
-	"stat":       cli.Stat,
-	"delete":     cli.Delete,
-	"move":       cli.Move,
-	"copy":       cli.Copy,
-	"chgm":       cli.Chgm,
-	"fetch":      cli.Fetch,
-	"prefetch":   cli.Prefetch,
+var supportedCmds = map[string]cli.CliFunc{
+	"account":     cli.Account,
+	"dircache":    cli.DirCache,
+	"listbucket":  cli.ListBucket,
+	"prefop":      cli.Prefop,
+	"stat":        cli.Stat,
+	"delete":      cli.Delete,
+	"move":        cli.Move,
+	"copy":        cli.Copy,
+	"chgm":        cli.Chgm,
+	"fetch":       cli.Fetch,
+	"prefetch":    cli.Prefetch,
+	"batchdelete": cli.BatchDelete,
 }
 
 func main() {
@@ -45,7 +46,7 @@ func main() {
 			}
 		}
 		hit := false
-		for cmdName, cliFunc := range supportCmds {
+		for cmdName, cliFunc := range supportedCmds {
 			if cmdName == cmd {
 				cliFunc(cmd, params...)
 				hit = true

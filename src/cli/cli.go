@@ -1,12 +1,14 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/qiniu/api/auth/digest"
 	"github.com/qiniu/api/rs"
 	"github.com/qiniu/log"
 	"os"
 	"qshell"
+	"strings"
 )
 
 type CliFunc func(cmd string, params ...string)
@@ -247,6 +249,51 @@ func Prefetch(cmd string, params ...string) {
 			log.Error("Prefetch error,", err)
 		} else {
 			fmt.Println("Done!")
+		}
+	} else {
+		Help(cmd)
+	}
+}
+
+func BatchDelete(cmd string, params ...string) {
+	if len(params) == 2 {
+		bucket := params[0]
+		keyListFile := params[1]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		fp, err := os.Open(keyListFile)
+		if err != nil {
+			log.Error("Open bucket key map file error", err)
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+		entries := make([]rs.EntryPath, 0)
+		for scanner.Scan() {
+			key := strings.TrimSpace(scanner.Text())
+			if key != "" {
+				entry := rs.EntryPath{
+					bucket, key,
+				}
+				entries = append(entries, entry)
+			}
+		}
+		ret, err := client.BatchDelete(nil, entries)
+		if err != nil {
+			log.Error("Batch delete error", err)
+		} else {
+			for i, entry := range entries {
+				item := ret[i]
+				if item.Error != "" {
+					fmt.Println(fmt.Sprintf("Delete %s=>%s Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
+				} else {
+					fmt.Println(fmt.Sprintf("Delete %s=>%s Success, Code: %d", entry.Bucket, entry.Key, item.Code))
+				}
+			}
 		}
 	} else {
 		Help(cmd)
