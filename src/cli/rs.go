@@ -11,13 +11,6 @@ import (
 	"strings"
 )
 
-type CliFunc func(cmd string, params ...string)
-
-var accountS = qshell.Account{}
-var dircacheS = qshell.DirCache{}
-var listbucketS = qshell.ListBucket{}
-var rsfopS = qshell.RSFop{}
-
 func printStat(bucket string, key string, entry rs.Entry) {
 	statInfo := fmt.Sprintf("%-20s%-20s\r\n", "Bucket:", bucket)
 	statInfo += fmt.Sprintf("%-20s%-20s\r\n", "Key:", key)
@@ -26,30 +19,6 @@ func printStat(bucket string, key string, entry rs.Entry) {
 	statInfo += fmt.Sprintf("%-20s%-20d\r\n", "PutTime:", entry.PutTime)
 	statInfo += fmt.Sprintf("%-20s%-20s\r\n", "MimeType:", entry.MimeType)
 	fmt.Println(statInfo)
-}
-
-func Help(cmds ...string) {
-	defer os.Exit(1)
-	if len(cmds) == 0 {
-		fmt.Println(CmdHelpList())
-	} else {
-		for _, cmd := range cmds {
-			fmt.Println(CmdHelp(cmd))
-		}
-	}
-}
-
-func Account(cmd string, params ...string) {
-	if len(params) == 0 {
-		accountS.Get()
-		fmt.Println(accountS.String())
-	} else if len(params) == 2 {
-		accessKey := params[0]
-		secretKey := params[1]
-		accountS.Set(accessKey, secretKey)
-	} else {
-		Help(cmd)
-	}
 }
 
 func DirCache(cmd string, params ...string) {
@@ -79,22 +48,6 @@ func ListBucket(cmd string, params ...string) {
 			listbucketS.List(bucket, prefix, listResultFile)
 		} else {
 			log.Error("No AccessKey and SecretKey set error!")
-		}
-	} else {
-		Help(cmd)
-	}
-}
-
-func Prefop(cmd string, params ...string) {
-	if len(params) == 1 {
-		persistentId := params[0]
-		accountS.Get()
-		fopRet := qshell.FopRet{}
-		err := rsfopS.Prefop(persistentId, &fopRet)
-		if err != nil {
-			log.Error(fmt.Sprintf("Can not get fop status for `%s'", persistentId), err)
-		} else {
-			fmt.Println(fopRet.String())
 		}
 	} else {
 		Help(cmd)

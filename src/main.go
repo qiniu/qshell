@@ -2,6 +2,7 @@ package main
 
 import (
 	"cli"
+	"fmt"
 	"github.com/qiniu/log"
 	"os"
 )
@@ -21,6 +22,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"fetch":       cli.Fetch,
 	"prefetch":    cli.Prefetch,
 	"batchdelete": cli.BatchDelete,
+	"checkqrsync": cli.CheckQrsync,
 }
 
 func main() {
@@ -54,6 +56,7 @@ func main() {
 			}
 		}
 		if !hit {
+			fmt.Println(fmt.Sprintf("Unknow cmd `%s'", cmd))
 			cli.Help()
 		}
 	} else {
