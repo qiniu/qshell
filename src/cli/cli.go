@@ -29,10 +29,10 @@ func printStat(bucket string, key string, entry rs.Entry) {
 func Help(cmds ...string) {
 	defer os.Exit(1)
 	if len(cmds) == 0 {
-		fmt.Println(qshell.CmdHelpList())
+		fmt.Println(CmdHelpList())
 	} else {
 		for _, cmd := range cmds {
-			fmt.Println(qshell.CmdHelp(cmd))
+			fmt.Println(CmdHelp(cmd))
 		}
 	}
 }
@@ -61,11 +61,16 @@ func DirCache(cmd string, params ...string) {
 }
 
 func ListBucket(cmd string, params ...string) {
-	if len(params) == 3 {
+	if len(params) == 2 || len(params) == 3 {
 		bucket := params[0]
-		prefix := params[1]
-		listResultFile := params[2]
-		//get ak,sk
+		prefix := ""
+		listResultFile := ""
+		if len(params) == 2 {
+			listResultFile = params[1]
+		} else if len(params) == 3 {
+			prefix = params[1]
+			listResultFile = params[2]
+		}
 		accountS.Get()
 		if accountS.AccessKey != "" && accountS.SecretKey != "" {
 			listbucketS.Account = accountS

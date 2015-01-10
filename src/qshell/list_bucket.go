@@ -56,7 +56,7 @@ func (this *ListBucket) List(bucket string, prefix string, listResultFile string
 		}
 		//append entries
 		for _, entry := range entries {
-			lineData := fmt.Sprintf("%s\t%d\r\n", entry.Key, entry.Fsize)
+			lineData := fmt.Sprintf("%s\t%s\t%d\t%d\t%s\t%s\r\n", entry.Key, entry.Hash, entry.Fsize, entry.PutTime, entry.MimeType, entry.EndUser)
 			_, wErr := bw.WriteString(lineData)
 			if wErr != nil {
 				log.Error(fmt.Sprintf("Write line data `%s' to list result file failed.", lineData))

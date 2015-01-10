@@ -1,4 +1,4 @@
-package qshell
+package cli
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ var cmds = []string{
 var cmdDocs = map[string][]string{
 	"account":    []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
 	"dircache":   []string{"qshell [-d] dircache <CacheRootPath> <CacheResultFile>", "Cache the directory structure of a file path"},
-	"listbucket": []string{"qshell [-d] listbucket <Bucket> <Prefix> <ListResultFile>", "List all the file in the bucket by prefix"},
+	"listbucket": []string{"qshell [-d] listbucket <Bucket> [<Prefix>] <ListResultFile>", "List all the file in the bucket by prefix"},
 	"prefop":     []string{"qshell [-d] prefop <PersistentId>", "Query the fop status"},
 	"fput":       []string{"qshell [-d] fput <Bucket> <Key> <LocalSmallFile>", "Form upload a small file"},
 	"rput":       []string{"qshell [-d] rput <Bucket> <Key> <LocalBigFile>", "Resumable upload a big file"},
