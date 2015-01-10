@@ -32,14 +32,17 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) {
 	bWriter := bufio.NewWriter(cacheResultFileH)
 	walkStart := time.Now()
 	log.Info(fmt.Sprintf("Walk `%s' start from `%s'", cacheRootPath, walkStart.String()))
+	log.Info(fmt.Sprintf("Save dir cache result to `%s' and may take some time...", cacheResultFile))
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, err error) error {
 		var retErr error
 		log.Debug(fmt.Sprintf("Walking through `%s'", cacheRootPath))
 		if !fi.IsDir() {
 			relPath := strings.TrimPrefix(strings.TrimPrefix(path, cacheRootPath), "/")
 			fsize := fi.Size()
-			log.Debug(fmt.Sprintf("Hit file `%s' size: `%d'", relPath, fsize))
-			fmeta := fmt.Sprintln(fmt.Sprintf("%s\t%d", relPath, fsize))
+			//Unit is 100ns
+			flmd := fi.ModTime().UnixNano() / 100
+			log.Debug(fmt.Sprintf("Hit file `%s' size: `%d' mode time: `%d`", relPath, fsize, flmd))
+			fmeta := fmt.Sprintln(fmt.Sprintf("%s\t%d\t%d", relPath, fsize, flmd))
 			if _, err := bWriter.WriteString(fmeta); err != nil {
 				log.Error(fmt.Sprintf("Failed to write data `%s' to cache file", fmeta))
 				retErr = err
