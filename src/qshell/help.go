@@ -10,6 +10,17 @@ var optionDocs = map[string]string{
 	"-d": "Show debug message",
 }
 
+var cmds = []string{
+	"account",
+	"dircache",
+	"listbucket",
+	"prefop",
+	"fput",
+	"rput",
+	"sync",
+	"stat",
+	"delete",
+}
 var cmdDocs = map[string][]string{
 	"account":    []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
 	"dircache":   []string{"qshell [-d] dircache <CacheRootPath> <CacheResultFile>", "Cache the directory structure of a file path"},
@@ -30,10 +41,11 @@ func CmdHelpList() string {
 	}
 	helpAll += "\r\n"
 	helpAll += "Commands:\r\n"
-	for _, v := range cmdDocs {
-		cmd := v[0]
-		desc := v[1]
-		helpAll += fmt.Sprintf("\t%-60s%-100s\r\n", cmd, desc)
+	for _, cmd := range cmds {
+		help := cmdDocs[cmd]
+		fullCmd := help[0]
+		fullDesc := help[1]
+		helpAll += fmt.Sprintf("\t%-60s%-100s\r\n", fullCmd, fullDesc)
 	}
 	return helpAll
 }
@@ -41,7 +53,7 @@ func CmdHelpList() string {
 func CmdHelp(cmd string) (docStr string) {
 	docStr = fmt.Sprintf("Unknow cmd `%s'", cmd)
 	if cmdDoc, ok := cmdDocs[cmd]; ok {
-		docStr = fmt.Sprintf("%-40s%-40s\r\n", cmdDoc[0], cmdDoc[1])
+		docStr = fmt.Sprintf("%-60s%-100s\r\n", cmdDoc[0], cmdDoc[1])
 	}
 	return docStr
 }
