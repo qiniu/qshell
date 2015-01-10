@@ -16,6 +16,7 @@ var supportCmds = map[string]cli.CliFunc{
 	"stat":       cli.Stat,
 	"delete":     cli.Delete,
 	"move":       cli.Move,
+	"copy":       cli.Copy,
 }
 
 func main() {

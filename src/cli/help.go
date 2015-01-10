@@ -35,7 +35,7 @@ var cmdDocs = map[string][]string{
 	"stat":       []string{"qshell [-d] stat <Bucket> <Key>", "Get the basic info of a remote file"},
 	"delete":     []string{"qshell [-d] delete <Bucket> <Key>", "Delete a remote file in the bucket"},
 	"move":       []string{"qshell [-d] move <SrcBucket> <SrcKey> <DestBucket> <DestKey>", "Move/Rename a file and save in bucket"},
-	"copy":       []string{"qshell [-d] copy <SrcBucket> <SrcKey> <DestBucket> <DestKey>", "Make a copy of a file and save in bucket"},
+	"copy":       []string{"qshell [-d] copy <SrcBucket> <SrcKey> <DestBucket> [<DestKey>]", "Make a copy of a file and save in bucket"},
 	"chgm":       []string{"qshell [-d] chgm <Bucket> <Key> <NewMimeType>", "Change the mimeType of a file"},
 }
 

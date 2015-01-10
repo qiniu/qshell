@@ -146,16 +146,42 @@ func Move(cmd string, params ...string) {
 		srcBucket := params[0]
 		srcKey := params[1]
 		destBucket := params[2]
-		destkey := params[3]
+		destKey := params[3]
 		accountS.Get()
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
 		client := rs.New(&mac)
-		err := client.Move(nil, srcBucket, srcKey, destBucket, destkey)
+		err := client.Move(nil, srcBucket, srcKey, destBucket, destKey)
 		if err != nil {
 			log.Error("Move error,", err)
+		} else {
+			fmt.Println("Done!")
+		}
+	} else {
+		Help(cmd)
+	}
+}
+
+func Copy(cmd string, params ...string) {
+	if len(params) == 3 || len(params) == 4 {
+		srcBucket := params[0]
+		srcKey := params[1]
+		destBucket := params[2]
+		destKey := srcKey
+		if len(params) == 4 {
+			destKey = params[3]
+		}
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		err := client.Copy(nil, srcBucket, srcKey, destBucket, destKey)
+		if err != nil {
+			log.Error("Copy error,", err)
 		} else {
 			fmt.Println("Done!")
 		}
