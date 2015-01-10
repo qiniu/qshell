@@ -14,6 +14,7 @@ var supportCmds = map[string]cli.CliFunc{
 	"listbucket": cli.ListBucket,
 	"prefop":     cli.Prefop,
 	"stat":       cli.Stat,
+	"delete":     cli.Delete,
 }
 
 func main() {

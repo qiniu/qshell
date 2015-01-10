@@ -16,6 +16,16 @@ var dircacheS = qshell.DirCache{}
 var listbucketS = qshell.ListBucket{}
 var rsfopS = qshell.RSFop{}
 
+func printStat(bucket string, key string, entry rs.Entry) {
+	statInfo := fmt.Sprintf("%-20s%-20s\r\n", "Bucket:", bucket)
+	statInfo += fmt.Sprintf("%-20s%-20s\r\n", "Key:", key)
+	statInfo += fmt.Sprintf("%-20s%-20s\r\n", "Hash:", entry.Hash)
+	statInfo += fmt.Sprintf("%-20s%-20d\r\n", "Fsize:", entry.Fsize)
+	statInfo += fmt.Sprintf("%-20s%-20d\r\n", "PutTime:", entry.PutTime)
+	statInfo += fmt.Sprintf("%-20s%-20s\r\n", "MimeType:", entry.MimeType)
+	fmt.Println(statInfo)
+}
+
 func Help(cmds ...string) {
 	defer os.Exit(1)
 	if len(cmds) == 0 {
@@ -98,7 +108,28 @@ func Stat(cmd string, params ...string) {
 		if err != nil {
 			log.Error("Stat error,", err)
 		} else {
-			qshell.PrintStat(bucket, key, entry)
+			printStat(bucket, key, entry)
+		}
+	} else {
+		Help(cmd)
+	}
+}
+
+func Delete(cmd string, params ...string) {
+	if len(params) == 2 {
+		bucket := params[0]
+		key := params[1]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		err := client.Delete(nil, bucket, key)
+		if err != nil {
+			log.Error("Delete error,", err)
+		} else {
+			fmt.Println("Done!")
 		}
 	} else {
 		Help(cmd)
