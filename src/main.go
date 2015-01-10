@@ -15,6 +15,7 @@ var supportCmds = map[string]cli.CliFunc{
 	"prefop":     cli.Prefop,
 	"stat":       cli.Stat,
 	"delete":     cli.Delete,
+	"move":       cli.Move,
 }
 
 func main() {

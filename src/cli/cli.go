@@ -135,3 +135,26 @@ func Delete(cmd string, params ...string) {
 		Help(cmd)
 	}
 }
+
+func Move(cmd string, params ...string) {
+	if len(params) == 4 {
+		srcBucket := params[0]
+		srcKey := params[1]
+		destBucket := params[2]
+		destkey := params[3]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		err := client.Move(nil, srcBucket, srcKey, destBucket, destkey)
+		if err != nil {
+			log.Error("Move error,", err)
+		} else {
+			fmt.Println("Done!")
+		}
+	} else {
+		Help(cmd)
+	}
+}

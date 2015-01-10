@@ -20,6 +20,9 @@ var cmds = []string{
 	"sync",
 	"stat",
 	"delete",
+	"move",
+	"copy",
+	"chgm",
 }
 var cmdDocs = map[string][]string{
 	"account":    []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
@@ -31,6 +34,9 @@ var cmdDocs = map[string][]string{
 	"sync":       []string{"qshell [-d] sync <Bucket> <LocalSyncConfig>", "Batch upload files to the bucket"},
 	"stat":       []string{"qshell [-d] stat <Bucket> <Key>", "Get the basic info of a remote file"},
 	"delete":     []string{"qshell [-d] delete <Bucket> <Key>", "Delete a remote file in the bucket"},
+	"move":       []string{"qshell [-d] move <SrcBucket> <SrcKey> <DestBucket> <DestKey>", "Move/Rename a file and save in bucket"},
+	"copy":       []string{"qshell [-d] copy <SrcBucket> <SrcKey> <DestBucket> <DestKey>", "Make a copy of a file and save in bucket"},
+	"chgm":       []string{"qshell [-d] chgm <Bucket> <Key> <NewMimeType>", "Change the mimeType of a file"},
 }
 
 func CmdHelpList() string {
@@ -45,7 +51,7 @@ func CmdHelpList() string {
 		help := cmdDocs[cmd]
 		fullCmd := help[0]
 		fullDesc := help[1]
-		helpAll += fmt.Sprintf("\t%-60s%-100s\r\n", fullCmd, fullDesc)
+		helpAll += fmt.Sprintf("\t%-70s%-100s\r\n", fullCmd, fullDesc)
 	}
 	return helpAll
 }
@@ -53,7 +59,7 @@ func CmdHelpList() string {
 func CmdHelp(cmd string) (docStr string) {
 	docStr = fmt.Sprintf("Unknow cmd `%s'", cmd)
 	if cmdDoc, ok := cmdDocs[cmd]; ok {
-		docStr = fmt.Sprintf("%-60s%-100s\r\n", cmdDoc[0], cmdDoc[1])
+		docStr = fmt.Sprintf("%-70s%-100s\r\n", cmdDoc[0], cmdDoc[1])
 	}
 	return docStr
 }
