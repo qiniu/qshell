@@ -189,3 +189,25 @@ func Copy(cmd string, params ...string) {
 		Help(cmd)
 	}
 }
+
+func Chgm(cmd string, params ...string) {
+	if len(params) == 3 {
+		bucket := params[0]
+		key := params[1]
+		newMimeType := params[2]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		err := client.ChangeMime(nil, bucket, key, newMimeType)
+		if err != nil {
+			log.Error("Change mimeType error,", err)
+		} else {
+			fmt.Println("Done!")
+		}
+	} else {
+		Help(cmd)
+	}
+}
