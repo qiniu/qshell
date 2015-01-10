@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/qiniu/api/auth/digest"
+	"github.com/qiniu/api/rs"
 	"github.com/qiniu/log"
 	"os"
 	"qshell"
@@ -14,6 +16,7 @@ const (
 	CMD_DIRCACHE   = "dircache"
 	CMD_LISTBUCKET = "listbucket"
 	CMD_PREFOP     = "prefop"
+	CMD_STAT       = "stat"
 )
 
 var accountS = qshell.Account{}
@@ -64,6 +67,8 @@ func main() {
 			listbucket(params...)
 		case CMD_PREFOP:
 			prefop(params...)
+		case CMD_STAT:
+			stat(params...)
 		default:
 			help()
 		}
@@ -126,5 +131,26 @@ func prefop(params ...string) {
 		}
 	} else {
 		help(CMD_PREFOP)
+	}
+}
+
+func stat(params ...string) {
+	if len(params) == 2 {
+		bucket := params[0]
+		key := params[1]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		entry, err := client.Stat(nil, bucket, key)
+		if err != nil {
+			log.Error("Stat error,", err)
+		} else {
+			qshell.PrintStat(bucket, key, entry)
+		}
+	} else {
+		help(CMD_STAT)
 	}
 }
