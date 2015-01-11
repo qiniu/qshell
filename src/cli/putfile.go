@@ -8,7 +8,7 @@ import (
 	"github.com/qiniu/api/rs"
 	"github.com/qiniu/log"
 	"os"
-	"sync/atomic"
+	"sync"
 )
 
 func FormPut(cmd string, params ...string) {
@@ -65,8 +65,8 @@ func ResumablePut(cmd string, params ...string) {
 			putExtra.MimeType = mimeType
 		}
 		progressHandler := ProgressHandler{
-			fileSize,
-			0,
+			FileSize: fileSize,
+			Offset:   0,
 		}
 		putExtra.Notify = progressHandler.Notify
 		uptoken := policy.Token(&mac)
@@ -85,6 +85,7 @@ func ResumablePut(cmd string, params ...string) {
 type ProgressHandler struct {
 	FileSize int64
 	Offset   int64
+	RWMutex  sync.Mutex
 }
 
 func (this *ProgressHandler) Percent() float32 {
@@ -92,8 +93,9 @@ func (this *ProgressHandler) Percent() float32 {
 }
 
 func (this *ProgressHandler) Notify(blkIdx int, blkSize int, ret *rio.BlkputRet) {
-	offset := ret.Offset
-	atomic.AddInt64(&this.Offset, int64(offset))
+	this.RWMutex.Lock()
+	defer this.RWMutex.Unlock()
+	this.Offset = int64(ret.Offset)
 	percent := this.Percent()
 	output := fmt.Sprintf("Uploading %.2f%%", percent)
 	for i := 0; i < len(output); i++ {
