@@ -93,7 +93,7 @@ func (this *ProgressHandler) Notify(blkIdx int, blkSize int, ret *rio.BlkputRet)
 	output := fmt.Sprintf("\r")
 	for _, blockIndex := range this.BlockIndices {
 		blockProgress := this.BlockProgresses[blockIndex]
-		output += fmt.Sprintf("Block %d=>%.2f%%\t", blockIndex+1, blockProgress)
+		output += fmt.Sprintf("[Block %d=>%.2f%%], ", blockIndex+1, blockProgress)
 	}
 	fmt.Print(output)
 	os.Stdout.Sync()
