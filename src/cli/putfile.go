@@ -8,7 +8,7 @@ import (
 	"github.com/qiniu/api/rs"
 	"github.com/qiniu/log"
 	"os"
-	"sync"
+	"sort"
 )
 
 func FormPut(cmd string, params ...string) {
@@ -50,12 +50,6 @@ func ResumablePut(cmd string, params ...string) {
 		if len(params) == 4 {
 			mimeType = params[3]
 		}
-		fi, err := os.Stat(localFile)
-		if err != nil {
-			log.Error("Stat local file error,", err)
-			return
-		}
-		fileSize := fi.Size()
 		accountS.Get()
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 		policy := rs.PutPolicy{}
@@ -65,15 +59,16 @@ func ResumablePut(cmd string, params ...string) {
 			putExtra.MimeType = mimeType
 		}
 		progressHandler := ProgressHandler{
-			FileSize: fileSize,
-			Offset:   0,
+			BlockIndices:    make([]int, 0),
+			BlockProgresses: make(map[int]float32),
 		}
 		putExtra.Notify = progressHandler.Notify
+		putExtra.NotifyErr = progressHandler.NotifyErr
 		uptoken := policy.Token(&mac)
 		putRet := rio.PutRet{}
-		err = rio.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
+		err := rio.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
-			log.Error("\r\nPut file error", err)
+			log.Error("Put file error", err)
 		} else {
 			fmt.Println("\r\nPut file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
@@ -83,23 +78,26 @@ func ResumablePut(cmd string, params ...string) {
 }
 
 type ProgressHandler struct {
-	FileSize int64
-	Offset   int64
-	RWMutex  sync.Mutex
-}
-
-func (this *ProgressHandler) Percent() float32 {
-	return float32(this.Offset) / float32(this.FileSize) * 100
+	BlockIndices    []int
+	BlockProgresses map[int]float32
 }
 
 func (this *ProgressHandler) Notify(blkIdx int, blkSize int, ret *rio.BlkputRet) {
-	this.RWMutex.Lock()
-	defer this.RWMutex.Unlock()
-	this.Offset = int64(ret.Offset)
-	percent := this.Percent()
-	output := fmt.Sprintf("Uploading %.2f%%", percent)
-	for i := 0; i < len(output); i++ {
-		fmt.Print("\b")
+	offset := ret.Offset
+	perent := float32(offset) * 100 / float32(blkSize)
+	if _, ok := this.BlockProgresses[blkIdx]; !ok {
+		this.BlockIndices = append(this.BlockIndices, blkIdx)
+		sort.Ints(this.BlockIndices)
+	}
+	this.BlockProgresses[blkIdx] = perent
+	output := fmt.Sprintf("\r")
+	for _, blockIndex := range this.BlockIndices {
+		blockProgress := this.BlockProgresses[blockIndex]
+		output += fmt.Sprintf("Block %d=>%.2f%%\t", blockIndex+1, blockProgress)
 	}
 	fmt.Print(output)
+	os.Stdout.Sync()
+}
+func (this *ProgressHandler) NotifyErr(blkIdx int, blkSize int, err error) {
+
 }
