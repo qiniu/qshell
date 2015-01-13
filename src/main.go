@@ -10,21 +10,22 @@ import (
 var debugMode = false
 
 var supportedCmds = map[string]cli.CliFunc{
-	"account":     cli.Account,
-	"dircache":    cli.DirCache,
-	"listbucket":  cli.ListBucket,
-	"prefop":      cli.Prefop,
-	"stat":        cli.Stat,
-	"delete":      cli.Delete,
-	"move":        cli.Move,
-	"copy":        cli.Copy,
-	"chgm":        cli.Chgm,
-	"fetch":       cli.Fetch,
-	"prefetch":    cli.Prefetch,
-	"batchdelete": cli.BatchDelete,
-	"checkqrsync": cli.CheckQrsync,
-	"fput":        cli.FormPut,
-	"rput":        cli.ResumablePut,
+	"account":       cli.Account,
+	"dircache":      cli.DirCache,
+	"listbucket":    cli.ListBucket,
+	"alilistbucket": cli.AliListBucket,
+	"prefop":        cli.Prefop,
+	"stat":          cli.Stat,
+	"delete":        cli.Delete,
+	"move":          cli.Move,
+	"copy":          cli.Copy,
+	"chgm":          cli.Chgm,
+	"fetch":         cli.Fetch,
+	"prefetch":      cli.Prefetch,
+	"batchdelete":   cli.BatchDelete,
+	"checkqrsync":   cli.CheckQrsync,
+	"fput":          cli.FormPut,
+	"rput":          cli.ResumablePut,
 }
 
 func main() {
