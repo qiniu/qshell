@@ -53,6 +53,7 @@ func CheckQrsync(cmd string, params ...string) {
 				continue
 			}
 		}
+		allUploaded := true
 		//iter each local file and compare
 		dcrScanner := bufio.NewScanner(dirCacheFp)
 		dcrScanner.Split(bufio.ScanLines)
@@ -75,14 +76,19 @@ func CheckQrsync(cmd string, params ...string) {
 				}
 				if rFsize, ok := listResultDataMap[remoteFname]; ok {
 					if rFsize != fsize {
+						allUploaded = false
 						log.Error("Uploaded but size not ok for file ", localFname, "=>", remoteFname)
 					}
 				} else {
+					allUploaded = false
 					log.Error("Not uploaded for file ", localFname, "=>", remoteFname)
 				}
 			} else {
 				continue
 			}
+		}
+		if allUploaded {
+			fmt.Println("All Uploaded!")
 		}
 	} else {
 		Help(cmd)
