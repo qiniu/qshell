@@ -60,24 +60,25 @@ func CheckQrsync(cmd string, params ...string) {
 			line := strings.TrimSpace(dcrScanner.Text())
 			items := strings.Split(line, "\t")
 			if len(items) >= 2 {
-				fname := items[0]
+				localFname := items[0]
+				remoteFname := localFname
 				if ignoreLocalDir {
-					ldx := strings.LastIndex(fname, string(os.PathSeparator))
-					fname = fname[ldx+1:]
+					ldx := strings.LastIndex(remoteFname, string(os.PathSeparator))
+					remoteFname = remoteFname[ldx+1:]
 				}
 				if prefix != "" {
-					fname = prefix + fname
+					remoteFname = prefix + remoteFname
 				}
 				fsize, err := strconv.ParseInt(items[1], 10, 64)
 				if err != nil {
 					continue
 				}
-				if rFsize, ok := listResultDataMap[fname]; ok {
+				if rFsize, ok := listResultDataMap[remoteFname]; ok {
 					if rFsize != fsize {
-						log.Error("[SYNCERROR] Uploaded but size not ok for file ", fname)
+						log.Error("Uploaded but size not ok for file ", localFname, "=>", remoteFname)
 					}
 				} else {
-					log.Error("[SYNCERROR] Not uploaded for file ", fname)
+					log.Error("Not uploaded for file ", localFname, "=>", remoteFname)
 				}
 			} else {
 				continue

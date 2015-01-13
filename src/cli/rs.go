@@ -227,12 +227,16 @@ func BatchDelete(cmd string, params ...string) {
 		scanner.Split(bufio.ScanLines)
 		entries := make([]rs.EntryPath, 0)
 		for scanner.Scan() {
-			key := strings.TrimSpace(scanner.Text())
-			if key != "" {
-				entry := rs.EntryPath{
-					bucket, key,
+			line := strings.TrimSpace(scanner.Text())
+			items := strings.Split(line, "\t")
+			if len(items) > 0 {
+				key := items[0]
+				if key != "" {
+					entry := rs.EntryPath{
+						bucket, key,
+					}
+					entries = append(entries, entry)
 				}
-				entries = append(entries, entry)
 			}
 		}
 		ret, err := client.BatchDelete(nil, entries)
