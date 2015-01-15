@@ -91,6 +91,6 @@ func CheckQrsync(cmd string, params ...string) {
 			fmt.Println("All Uploaded!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }

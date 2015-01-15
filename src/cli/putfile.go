@@ -37,7 +37,7 @@ func FormPut(cmd string, params ...string) {
 			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -73,7 +73,7 @@ func ResumablePut(cmd string, params ...string) {
 			fmt.Println("\r\nPut file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 

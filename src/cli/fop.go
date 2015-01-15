@@ -18,6 +18,6 @@ func Prefop(cmd string, params ...string) {
 			fmt.Println(fopRet.String())
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }

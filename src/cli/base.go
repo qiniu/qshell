@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"qshell"
 )
 
@@ -13,17 +12,6 @@ var dircacheS = qshell.DirCache{}
 var listbucketS = qshell.ListBucket{}
 var rsfopS = qshell.RSFop{}
 
-func Help(cmds ...string) {
-	defer os.Exit(1)
-	if len(cmds) == 0 {
-		fmt.Println(CmdHelpList())
-	} else {
-		for _, cmd := range cmds {
-			fmt.Println(CmdHelp(cmd))
-		}
-	}
-}
-
 func Account(cmd string, params ...string) {
 	if len(params) == 0 {
 		accountS.Get()
@@ -33,6 +21,6 @@ func Account(cmd string, params ...string) {
 		secretKey := params[1]
 		accountS.Set(accessKey, secretKey)
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }

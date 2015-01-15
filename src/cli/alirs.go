@@ -31,6 +31,6 @@ func AliListBucket(cmd string, params ...string) {
 			log.Error("List bucket error,", err)
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }

@@ -27,7 +27,7 @@ func DirCache(cmd string, params ...string) {
 		cacheResultFile := params[1]
 		dircacheS.Cache(cacheRootPath, cacheResultFile)
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -50,7 +50,7 @@ func ListBucket(cmd string, params ...string) {
 			log.Error("No AccessKey and SecretKey set error!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -71,7 +71,7 @@ func Stat(cmd string, params ...string) {
 			printStat(bucket, key, entry)
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -92,7 +92,7 @@ func Delete(cmd string, params ...string) {
 			fmt.Println("Done!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -115,7 +115,7 @@ func Move(cmd string, params ...string) {
 			fmt.Println("Done!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -141,7 +141,7 @@ func Copy(cmd string, params ...string) {
 			fmt.Println("Done!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -163,7 +163,7 @@ func Chgm(cmd string, params ...string) {
 			fmt.Println("Done!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -184,7 +184,7 @@ func Fetch(cmd string, params ...string) {
 			fmt.Println("Done!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -204,7 +204,7 @@ func Prefetch(cmd string, params ...string) {
 			fmt.Println("Done!")
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
 
@@ -253,6 +253,6 @@ func BatchDelete(cmd string, params ...string) {
 			}
 		}
 	} else {
-		Help(cmd)
+		CmdHelp(cmd)
 	}
 }
