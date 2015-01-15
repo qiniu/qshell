@@ -26,6 +26,8 @@ var supportedCmds = map[string]cli.CliFunc{
 	"checkqrsync":   cli.CheckQrsync,
 	"fput":          cli.FormPut,
 	"rput":          cli.ResumablePut,
+	"b64encode":     cli.Base64Encode,
+	"b64decode":     cli.Base64Decode,
 	"help":          cli.Help,
 }
 
@@ -63,6 +65,6 @@ func main() {
 			fmt.Println(fmt.Sprintf("Unknow cmd `%s'", cmd))
 		}
 	} else {
-		fmt.Println("Use `help` or `help [cmd1 [cmd2 [cmd3 ...]]]` to see supported commands.")
+		fmt.Println("Use help or help [cmd1 [cmd2 [cmd3 ...]]] to see supported commands.")
 	}
 }

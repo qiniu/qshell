@@ -29,6 +29,8 @@ var cmds = []string{
 	"prefetch",
 	"batchdelete",
 	"checkqrsync",
+	"b64encode",
+	"b64decode",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
@@ -48,6 +50,8 @@ var cmdDocs = map[string][]string{
 	"prefetch":      []string{"qshell [-d] prefetch <Bucket> <Key>", "Fetch and update the file in bucket using mirror storage"},
 	"batchdelete":   []string{"qshell [-d] batchdelete <Bucket> <KeyListFile>", "Batch delete files in bucket"},
 	"checkqrsync":   []string{"qshell [-d] checkqrsync <DirCacheResultFile> <ListBucketResultFile> <IgnoreLocalDir> [Prefix]", "Check the qrsync result"},
+	"b64encode":     []string{"qshell [-d] b64encode <UrlSafe> <DataToEncode>", "Base64 Encode"},
+	"b64decode":     []string{"qshell [-d] b64decode <UrlSafe> <DataToDecode>", "Base64 Decode"},
 }
 
 func Help(cmd string, params ...string) {
