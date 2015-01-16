@@ -91,9 +91,14 @@ func (this *ProgressHandler) Notify(blkIdx int, blkSize int, ret *rio.BlkputRet)
 	}
 	this.BlockProgresses[blkIdx] = perent
 	output := fmt.Sprintf("\r")
-	for _, blockIndex := range this.BlockIndices {
+	for i, blockIndex := range this.BlockIndices {
 		blockProgress := this.BlockProgresses[blockIndex]
-		output += fmt.Sprintf("[Block %d=>%.2f%%], ", blockIndex+1, blockProgress)
+		if int(blockProgress) != 100 {
+			output += fmt.Sprintf("[Block %d=>%.2f%%]", blockIndex+1, blockProgress)
+			if i < len(this.BlockIndices)-1 {
+				output += ", "
+			}
+		}
 	}
 	fmt.Print(output)
 	os.Stdout.Sync()
