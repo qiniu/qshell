@@ -31,6 +31,11 @@ var cmds = []string{
 	"checkqrsync",
 	"b64encode",
 	"b64decode",
+	"urlencode",
+	"urldecode",
+	"ts2d",
+	"tns2d",
+	"d2ts",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
@@ -52,6 +57,11 @@ var cmdDocs = map[string][]string{
 	"checkqrsync":   []string{"qshell [-d] checkqrsync <DirCacheResultFile> <ListBucketResultFile> <IgnoreLocalDir> [Prefix]", "Check the qrsync result"},
 	"b64encode":     []string{"qshell [-d] b64encode <UrlSafe> <DataToEncode>", "Base64 Encode"},
 	"b64decode":     []string{"qshell [-d] b64decode <UrlSafe> <DataToDecode>", "Base64 Decode"},
+	"urlencode":     []string{"qshell [-d] urlencode <DataToEncode>", "Url encode"},
+	"urldecode":     []string{"qshell [-d] urldecode <DataToDecode>", "Url decode"},
+	"ts2d":          []string{"qshell [-d] ts2d <TimestampInSeconds>", "Convert timestamp in seconds to a date (TZ: Local)"},
+	"tns2d":         []string{"qshell [-d] tns2d <TimestampIn100NanoSeconds>", "Convert timestamp in 100 nano seconds to a date (TZ: Local)"},
+	"d2ts":          []string{"qshell [-d] d2ts <SecondsToNow>", "Create a timestamp in seconds using seconds to now"},
 }
 
 func Help(cmd string, params ...string) {
@@ -84,15 +94,15 @@ func CmdHelps(cmds ...string) {
 		fmt.Println(CmdList())
 	} else {
 		for _, cmd := range cmds {
-			fmt.Println(CmdHelp(cmd))
+			CmdHelp(cmd)
 		}
 	}
 }
 
-func CmdHelp(cmd string) (docStr string) {
-	docStr = fmt.Sprintf("Unknow cmd `%s'", cmd)
+func CmdHelp(cmd string) {
+	docStr := fmt.Sprintf("Unknow cmd `%s'", cmd)
 	if cmdDoc, ok := cmdDocs[cmd]; ok {
 		docStr = fmt.Sprintf("Usage: %s\r\n  %s\r\n", cmdDoc[0], cmdDoc[1])
 	}
-	return docStr
+	fmt.Println(docStr)
 }

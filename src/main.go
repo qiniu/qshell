@@ -28,6 +28,11 @@ var supportedCmds = map[string]cli.CliFunc{
 	"rput":          cli.ResumablePut,
 	"b64encode":     cli.Base64Encode,
 	"b64decode":     cli.Base64Decode,
+	"urlencode":     cli.Urlencode,
+	"urldecode":     cli.Urldecode,
+	"ts2d":          cli.Timestamp2Date,
+	"tns2d":         cli.TimestampNano2Date,
+	"d2ts":          cli.Date2Timestamp,
 	"help":          cli.Help,
 }
 

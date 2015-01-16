@@ -4,7 +4,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/qiniu/log"
+	"net/url"
 	"strconv"
+	"time"
 )
 
 func Base64Encode(cmd string, params ...string) {
@@ -49,6 +51,73 @@ func Base64Decode(cmd string, params ...string) {
 			}
 		}
 		fmt.Println(string(dataDecoded))
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func Timestamp2Date(cmd string, params ...string) {
+	if len(params) == 1 {
+		ts, err := strconv.ParseInt(params[0], 10, 64)
+		if err != nil {
+			log.Error("Invalid timestamp value,", params[0])
+			return
+		}
+		t := time.Unix(ts, 0)
+		fmt.Println(t.String())
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func TimestampNano2Date(cmd string, params ...string) {
+	if len(params) == 1 {
+		tns, err := strconv.ParseInt(params[0], 10, 64)
+		if err != nil {
+			log.Error("Invalid nano timestamp value,", params[0])
+			return
+		}
+		t := time.Unix(0, tns*100)
+		fmt.Println(t.String())
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func Date2Timestamp(cmd string, params ...string) {
+	if len(params) == 1 {
+		secs, err := strconv.ParseInt(params[0], 10, 64)
+		if err != nil {
+			log.Error("Invalid seconds to now,", params[0])
+			return
+		}
+		t := time.Now()
+		t = t.Add(time.Second * time.Duration(secs))
+		fmt.Println(t.Unix())
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func Urlencode(cmd string, params ...string) {
+	if len(params) == 1 {
+		dataToEncode := params[0]
+		dataEncoded := url.QueryEscape(dataToEncode)
+		fmt.Println(dataEncoded)
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func Urldecode(cmd string, params ...string) {
+	if len(params) == 1 {
+		dataToDecode := params[0]
+		dataDecoded, err := url.QueryUnescape(dataToDecode)
+		if err != nil {
+			log.Error("Failed to unescape data `", dataToDecode, "'")
+		} else {
+			fmt.Println(dataDecoded)
+		}
 	} else {
 		CmdHelp(cmd)
 	}
