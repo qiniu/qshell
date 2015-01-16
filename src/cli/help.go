@@ -34,6 +34,7 @@ var cmds = []string{
 	"urlencode",
 	"urldecode",
 	"ts2d",
+	"tms2d",
 	"tns2d",
 	"d2ts",
 }
@@ -60,7 +61,8 @@ var cmdDocs = map[string][]string{
 	"urlencode":     []string{"qshell [-d] urlencode <DataToEncode>", "Url encode"},
 	"urldecode":     []string{"qshell [-d] urldecode <DataToDecode>", "Url decode"},
 	"ts2d":          []string{"qshell [-d] ts2d <TimestampInSeconds>", "Convert timestamp in seconds to a date (TZ: Local)"},
-	"tns2d":         []string{"qshell [-d] tns2d <TimestampIn100NanoSeconds>", "Convert timestamp in 100 nano seconds to a date (TZ: Local)"},
+	"tms2d":         []string{"qshell [-d] tms2d <TimestampInMilliSeconds>", "Convert timestamp in milli-seconds to a date (TZ: Local)"},
+	"tns2d":         []string{"qshell [-d] tns2d <TimestampIn100NanoSeconds>", "Convert timestamp in 100 nano-seconds to a date (TZ: Local)"},
 	"d2ts":          []string{"qshell [-d] d2ts <SecondsToNow>", "Create a timestamp in seconds using seconds to now"},
 }
 

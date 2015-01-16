@@ -84,6 +84,18 @@ func TimestampNano2Date(cmd string, params ...string) {
 	}
 }
 
+func TimestampMilli2Date(cmd string, params ...string) {
+	if len(params) == 1 {
+		tms, err := strconv.ParseInt(params[0], 10, 64)
+		if err != nil {
+			log.Error("Invalid milli timestamp value,", params[0])
+			return
+		}
+		t := time.Unix(tms/1000, 0)
+		fmt.Println(t.String())
+	}
+}
+
 func Date2Timestamp(cmd string, params ...string) {
 	if len(params) == 1 {
 		secs, err := strconv.ParseInt(params[0], 10, 64)
