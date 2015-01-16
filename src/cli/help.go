@@ -37,6 +37,7 @@ var cmds = []string{
 	"tms2d",
 	"tns2d",
 	"d2ts",
+	"ip",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
@@ -64,6 +65,7 @@ var cmdDocs = map[string][]string{
 	"tms2d":         []string{"qshell [-d] tms2d <TimestampInMilliSeconds>", "Convert timestamp in milli-seconds to a date (TZ: Local)"},
 	"tns2d":         []string{"qshell [-d] tns2d <TimestampIn100NanoSeconds>", "Convert timestamp in 100 nano-seconds to a date (TZ: Local)"},
 	"d2ts":          []string{"qshell [-d] d2ts <SecondsToNow>", "Create a timestamp in seconds using seconds to now"},
+	"ip":            []string{"qshell [-d] ip <Ip1> [<Ip2> [<Ip3> ...]]]", "Query the ip information"},
 }
 
 func Help(cmd string, params ...string) {
