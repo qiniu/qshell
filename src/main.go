@@ -25,6 +25,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"batchdelete":   cli.BatchDelete,
 	"checkqrsync":   cli.CheckQrsync,
 	"fput":          cli.FormPut,
+	"qupload":       cli.QiniuUpload,
 	"rput":          cli.ResumablePut,
 	"b64encode":     cli.Base64Encode,
 	"b64decode":     cli.Base64Decode,

@@ -39,7 +39,7 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 			err = lbrErr
 			log.Error("Parse list result error, ", "marker=[", marker, "]", lbrErr)
 			if retryTimes <= maxRetryTimes {
-				log.Info("Retry marker=", marker, "] for ", retryTimes, "time...")
+				log.Debug("Retry marker=", marker, "] for ", retryTimes, "time...")
 				retryTimes += 1
 				continue
 			} else {

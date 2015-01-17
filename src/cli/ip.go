@@ -17,7 +17,7 @@ type IpInfo struct {
 }
 
 func (this IpInfo) String() string {
-	return fmt.Sprintf("Code: %d\tData: %s", this.Code, this.Data)
+	return fmt.Sprintf("Code: %d\t%s", this.Code, this.Data)
 }
 
 type IpData struct {
@@ -50,10 +50,10 @@ func IpQuery(cmd string, params ...string) {
 			err := client.Conn.Call(nil, &ipInfo, url)
 			if err != nil {
 				log.Error("Query ip info failed for", ip, "due to", err)
-				<-time.After(time.Second * 1)
 			} else {
 				fmt.Println(fmt.Sprintf("Ip: %-20s => %s", ip, ipInfo))
 			}
+			<-time.After(time.Second * 1)
 		}
 	} else {
 		CmdHelp(cmd)

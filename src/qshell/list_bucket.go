@@ -38,7 +38,7 @@ func (this *ListBucket) List(bucket string, prefix string, listResultFile string
 			} else {
 				log.Error(fmt.Sprintf("List error for marker `%s'", marker), err)
 				if retryTimes <= maxRetryTimes {
-					log.Info(fmt.Sprintf("Retry list for marker `%s' for `%d' time", marker, retryTimes))
+					log.Debug(fmt.Sprintf("Retry list for marker `%s' for `%d' time", marker, retryTimes))
 					retryTimes += 1
 					continue
 				} else {

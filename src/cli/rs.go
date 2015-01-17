@@ -246,11 +246,12 @@ func BatchDelete(cmd string, params ...string) {
 			for i, entry := range entries {
 				item := ret[i]
 				if item.Error != "" {
-					fmt.Println(fmt.Sprintf("Delete %s=>%s Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
+					log.Debug(fmt.Sprintf("Delete %s=>%s Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
 				} else {
-					fmt.Println(fmt.Sprintf("Delete %s=>%s Success, Code: %d", entry.Bucket, entry.Key, item.Code))
+					log.Debug(fmt.Sprintf("Delete %s=>%s Success, Code: %d", entry.Bucket, entry.Key, item.Code))
 				}
 			}
+			fmt.Println("All deleted!")
 		}
 	} else {
 		CmdHelp(cmd)

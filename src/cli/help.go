@@ -19,7 +19,7 @@ var cmds = []string{
 	"prefop",
 	"fput",
 	"rput",
-	"upload",
+	"qupload",
 	"stat",
 	"delete",
 	"move",
@@ -38,6 +38,10 @@ var cmds = []string{
 	"tns2d",
 	"d2ts",
 	"ip",
+	"fmd5",
+	"md5",
+	"fcrc32",
+	"crc32",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
@@ -47,7 +51,7 @@ var cmdDocs = map[string][]string{
 	"prefop":        []string{"qshell [-d] prefop <PersistentId>", "Query the fop status"},
 	"fput":          []string{"qshell [-d] fput <Bucket> <Key> <LocalFile> [MimeType]", "Form upload a local file"},
 	"rput":          []string{"qshell [-d] rput <Bucket> <Key> <LocalFile> [MimeType]", "Resumable upload a local file"},
-	"upload":        []string{"qshell [-d] upload <Bucket> <LocalUploadConfig>", "Batch upload files to the bucket"},
+	"qupload":       []string{"qshell [-d] qupload [<PutThresoldInBytes>] <LocalUploadConfig>", "Batch upload files to the qiniu bucket"},
 	"stat":          []string{"qshell [-d] stat <Bucket> <Key>", "Get the basic info of a remote file"},
 	"delete":        []string{"qshell [-d] delete <Bucket> <Key>", "Delete a remote file in the bucket"},
 	"move":          []string{"qshell [-d] move <SrcBucket> <SrcKey> <DestBucket> <DestKey>", "Move/Rename a file and save in bucket"},
@@ -85,9 +89,10 @@ func CmdList() string {
 	helpAll += "\r\n"
 	helpAll += "Commands:\r\n"
 	for _, cmd := range cmds {
-		help := cmdDocs[cmd]
-		cmdDesc := help[1]
-		helpAll += fmt.Sprintf("\t%-20s%-20s\r\n", cmd, cmdDesc)
+		if help, ok := cmdDocs[cmd]; ok {
+			cmdDesc := help[1]
+			helpAll += fmt.Sprintf("\t%-20s%-20s\r\n", cmd, cmdDesc)
+		}
 	}
 	return helpAll
 }
