@@ -38,10 +38,6 @@ var cmds = []string{
 	"tns2d",
 	"d2ts",
 	"ip",
-	"fmd5",
-	"md5",
-	"fcrc32",
-	"crc32",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},

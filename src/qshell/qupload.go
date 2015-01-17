@@ -72,7 +72,7 @@ func QiniuUpload(putThreshold int64, uploadConfigFile string) {
 		return
 	}
 	if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
-		log.Error("Upload config error for parameter `SrcDir`", err)
+		log.Error("Upload config error for parameter `SrcDir`,", err)
 		return
 	}
 	dirCache := DirCache{}
@@ -81,7 +81,8 @@ func QiniuUpload(putThreshold int64, uploadConfigFile string) {
 		log.Error("Failed to get current user", err)
 		return
 	}
-	md5Sum := md5.Sum(configData)
+	config, _ := json.Marshal(&uploadConfig)
+	md5Sum := md5.Sum(config)
 	storePath := fmt.Sprintf("%s/.qshell/qupload", currentUser.HomeDir)
 	err = os.MkdirAll(storePath, 0775)
 	if err != nil {
