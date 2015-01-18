@@ -25,40 +25,32 @@ qshell account
 接下来，我们就可以放心地使用七牛的API功能了。
 
 ###详解
-**dircache - 获取本地系统指定路径下的文件列表**
-```
-qshell [-d] dircache <DirCacheRootPath> <DirCacheResultFile>
-```
-比如，要获取`/Users/jemy/Temp4`目录下面的文件列表，则使用
-```
-qshell dircache /Users/jemy/Temp4 temp4.list.txt
-```
-其中`temp4.list.txt`是你保存列表结果的文件。列举的结果以如下格式组织：
-```
-文件相对于<DirCacheRootPath>的相对路径\t文件大小(单位字节)\t文件上次修改时间(单位100纳秒)
-```
-比如这样的：
-```
-rk_video_not_play.mp4	3985210	14206026340000000
-rtl1.flv	10342916	14205959890000000
-sync_demo/array_enumeration.png	5262899	13953255140000000
-sync_demo/demo2.gif	2685960	13966636230000000
-sync_demo/golang.png	149366	14010291080000000
-```
 
-**listbucket - 根据可选文件前缀来获取七牛空间中的文件列表**
-```
-qshell [-d] listbucket <Bucket> [<Prefix>] <ListBucketResultFile>
-```
-上面的`[Prefix]`表示这个`Prefix`参数是可选的，可以不设置，来获取空间中所有文件的列表。
-如果设置了，则表示获取拥有指定文件前缀的所有文件列表。该列举结果的格式如下：
-```
-Key\tSize\tHash\tPutTime\tMimeType\tEndUser
-```
-比如：
-```
-hello.jpg	1710619	FlUqUK7zqbqm3NPwzq2q7TMZ-Ijs	14209629320769140	image/jpeg
-hello.mp4	8495868	lns2dAHvO0qYseZFgDn3UqZlMOi-	14207312835630132	video/mp4
-hhh	1492031	FjiRl_U0AeSsVCHXscCGObKyMy8f	14200176147531840	image/jpeg
-jemygraw.jpg	1900176	FtmHAbztWfPEqPMv4t4vMNRYMETK	14208960018750329	application/octet-stream	QiniuAndroid
-```
+|命令|描述|详细|
+|------|----------|--------|
+|account|设置或显示当前用户的AccessKey和SecretKey|[文档](http://github.com/jemygraw/qshell/wiki/account)|
+|dircache|输出本地指定路径下所有的文件列表|[文档](http://github.com/jemygraw/qshell/wiki/dircache)|
+|listbucket|列举七牛空间里面的所有文件|[文档](http://github.com/jemygraw/qshell/wiki/listbucket)|
+|alilistbucket|列举阿里OSS空间里面的所有文件|[文档](http://github.com/jemygraw/qshell/wiki/alilistbucket)|
+|prefop|查询七牛数据处理的结果|[文档](http://github.com/jemygraw/qshell/wiki/prefop)|
+|fput|以文件表单的方式上传一个文件|[文档](http://github.com/jemygraw/qshell/wiki/fput)|
+|rput|以分片上传的方式上传一个文件|[文档](http://github.com/jemygraw/qshell/wiki/rput)|
+|qupload|同步数据到七牛空间， 带同步进度信息|[文档](http://github.com/jemygraw/qshell/wiki/qupload)|
+|stat|查询七牛空间中一个文件的基本信息|[文档](http://github.com/jemygraw/qshell/wiki/stat)|
+|delete|删除七牛空间中的一个文件|[文档](http://github.com/jemygraw/qshell/wiki/delete)|
+|move|移动或重命名七牛空间中的一个文件|[文档](http://github.com/jemygraw/qshell/wiki/move)|
+|copy|复制七牛空间中的一个文件|[文档](http://github.com/jemygraw/qshell/wiki/copy)|
+|chgm|修改七牛空间中的一个文件的MimeType|[文档](http://github.com/jemygraw/qshell/wiki/chgm)|
+|fetch|从Internet上抓取一个资源到七牛空间中|[文档](http://github.com/jemygraw/qshell/wiki/fetch)|
+|prefetch|更新七牛空间中从源站镜像过来的文件|[文档](http://github.com/jemygraw/qshell/wiki/prefetch)|
+|batchdelete|批量删除七牛空间中的文件，可以直接根据`listbucket`的结果来删除|[文档](http://github.com/jemygraw/qshell/wiki/batchdelete)|
+|checkqrsync|检查qrsync的同步结果，主要通过比对`dircache`和`listbucket`的结果|[文档](http://github.com/jemygraw/qshell/wiki/checkqrsync)|
+|b64encode|base64编码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](http://github.com/jemygraw/qshell/wiki/b64encode)|
+|b64decode|base64解码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](http://github.com/jemygraw/qshell/wiki/b64decode)|
+|urlencode|url编码工具|[文档](http://github.com/jemygraw/qshell/wiki/urlencode)|
+|urldecode|url解码工具|[文档](http://github.com/jemygraw/qshell/wiki/urldecode)|
+|ts2d|将timestamp(单位秒)转为UTC+8:00中国日期，主要用来检查上传策略的deadline参数|[文档](http://github.com/jemygraw/qshell/wiki/ts2d)|
+|tms2d|将timestamp(单位毫秒)转为UTC+8:00中国日期|[文档](http://github.com/jemygraw/qshell/wiki/tms2d)|
+|tns2d|将timestamp(单位100纳秒)转为UTC+8:00中国日期|[文档](http://github.com/jemygraw/qshell/wiki/tns2d)|
+|d2ts|将日期转为timestamp(单位秒)|[文档](http://github.com/jemygraw/qshell/wiki/d2ts)|
+|ip|根据淘宝的公开API查询ip地址的地理位置|[文档](http://github.com/jemygraw/qshell/wiki/ip)|
