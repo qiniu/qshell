@@ -10,13 +10,20 @@ import (
 )
 
 func Base64Encode(cmd string, params ...string) {
-	if len(params) == 2 {
-		urlSafe, err := strconv.ParseBool(params[0])
-		if err != nil {
-			log.Error("Invalid bool value or <UrlSafe>, must true or false")
-			return
+	if len(params) == 1 || len(params) == 2 {
+		urlSafe := true
+		var err error
+		var dataToEncode string
+		if len(params) == 2 {
+			urlSafe, err = strconv.ParseBool(params[0])
+			if err != nil {
+				log.Error("Invalid bool value or <UrlSafe>, must true or false")
+				return
+			}
+			dataToEncode = params[1]
+		} else {
+			dataToEncode = params[0]
 		}
-		dataToEncode := params[1]
 		dataEncoded := ""
 		if urlSafe {
 			dataEncoded = base64.URLEncoding.EncodeToString([]byte(dataToEncode))
@@ -29,13 +36,20 @@ func Base64Encode(cmd string, params ...string) {
 	}
 }
 func Base64Decode(cmd string, params ...string) {
-	if len(params) == 2 {
-		urlSafe, err := strconv.ParseBool(params[0])
-		if err != nil {
-			log.Error("Invalid bool value or <UrlSafe>, must true or false")
-			return
+	if len(params) == 1 || len(params) == 2 {
+		urlSafe := true
+		var err error
+		var dataToDecode string
+		if len(params) == 2 {
+			urlSafe, err = strconv.ParseBool(params[0])
+			if err != nil {
+				log.Error("Invalid bool value or <UrlSafe>, must true or false")
+				return
+			}
+			dataToDecode = params[1]
+		} else {
+			dataToDecode = params[0]
 		}
-		dataToDecode := params[1]
 		var dataDecoded []byte
 		if urlSafe {
 			dataDecoded, err = base64.URLEncoding.DecodeString(dataToDecode)
