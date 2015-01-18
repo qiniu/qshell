@@ -83,7 +83,7 @@ func QiniuUpload(putThreshold int64, uploadConfigFile string) {
 	}
 	config, _ := json.Marshal(&uploadConfig)
 	md5Sum := md5.Sum(config)
-	storePath := fmt.Sprintf("%s/.qshell/qupload", currentUser.HomeDir)
+	storePath := fmt.Sprintf("%s/.qshell/qupload/%x", currentUser.HomeDir, md5Sum)
 	err = os.MkdirAll(storePath, 0775)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to mkdir `%s' due to `%s'", storePath, err))
