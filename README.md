@@ -54,3 +54,8 @@ qshell account
 |tns2d|将timestamp(单位100纳秒)转为UTC+8:00中国日期|[文档](http://github.com/jemygraw/qshell/wiki/tns2d)|
 |d2ts|将日期转为timestamp(单位秒)|[文档](http://github.com/jemygraw/qshell/wiki/d2ts)|
 |ip|根据淘宝的公开API查询ip地址的地理位置|[文档](http://github.com/jemygraw/qshell/wiki/ip)|
+
+##编译
+1. 如果是编译本地平台的可执行程序，使用`src`目录下面的`build.sh`脚本即可。
+2. 如果是编译跨平台的可执行程序，使用`src`目录下面的`gox_build.sh`脚本即可。该脚本使用了[gox](https://github.com/mitchellh/gox)工具，请
+使用`go get github.com/mitchellh/gox`安装。
