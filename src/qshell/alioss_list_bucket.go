@@ -61,5 +61,11 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 		}
 		marker = lbr.NextMarker
 	}
-	return
+	fErr := bw.Flush()
+	if fErr != nil {
+		log.Error("Write data to buffer writer failed", fErr)
+		err = fErr
+		return
+	}
+	return err
 }
