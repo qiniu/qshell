@@ -142,23 +142,26 @@ func downloadFile(downConfig DownloadConfig, fileKey string) {
 		downUrl = fmt.Sprintf("%s?e=%d", downUrl, now.Unix())
 		mac := digest.Mac{downConfig.AccessKey, []byte(downConfig.SecretKey)}
 		token := digest.Sign(&mac, []byte(downUrl))
-		downUrl = fmt.Sprintf("%s&token=", downUrl, token)
+		downUrl = fmt.Sprintf("%s&token=%s", downUrl, token)
 	}
-
 	resp, respErr := rpc.DefaultClient.Get(nil, downUrl)
 	if respErr != nil {
 		log.Error("Download", fileKey, "failed by url", downUrl)
 		return
 	}
 	defer resp.Body.Close()
-	localFp, openErr := os.OpenFile(localFilePath, os.O_CREATE|os.O_WRONLY, 0666)
-	if openErr != nil {
-		log.Error("Open local file", localFilePath, "failed")
-		return
-	}
-	defer localFp.Close()
-	_, err := io.Copy(localFp, resp.Body)
-	if err != nil {
-		log.Error("Download", fileKey, "failed", err)
+	if resp.StatusCode == 200 {
+		localFp, openErr := os.OpenFile(localFilePath, os.O_CREATE|os.O_WRONLY, 0666)
+		if openErr != nil {
+			log.Error("Open local file", localFilePath, "failed")
+			return
+		}
+		defer localFp.Close()
+		_, err := io.Copy(localFp, resp.Body)
+		if err != nil {
+			log.Error("Download", fileKey, "failed", err)
+		}
+	} else {
+		log.Error("Download", fileKey, "failed by url", downUrl)
 	}
 }
