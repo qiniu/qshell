@@ -48,6 +48,7 @@ var cmdDocs = map[string][]string{
 	"fput":          []string{"qshell [-d] fput <Bucket> <Key> <LocalFile> [MimeType]", "Form upload a local file"},
 	"rput":          []string{"qshell [-d] rput <Bucket> <Key> <LocalFile> [MimeType]", "Resumable upload a local file"},
 	"qupload":       []string{"qshell [-d] qupload [<PutThresoldInBytes>] <LocalUploadConfig>", "Batch upload files to the qiniu bucket"},
+	"qdownload":     []string{"qshell [-d] qdownload [<ThreadCount>] <LocalDownloadConfig>"},
 	"stat":          []string{"qshell [-d] stat <Bucket> <Key>", "Get the basic info of a remote file"},
 	"delete":        []string{"qshell [-d] delete <Bucket> <Key>", "Delete a remote file in the bucket"},
 	"move":          []string{"qshell [-d] move <SrcBucket> <SrcKey> <DestBucket> <DestKey>", "Move/Rename a file and save in bucket"},

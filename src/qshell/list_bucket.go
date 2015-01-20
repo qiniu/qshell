@@ -14,9 +14,10 @@ type ListBucket struct {
 	Account
 }
 
-func (this *ListBucket) List(bucket string, prefix string, listResultFile string) {
+func (this *ListBucket) List(bucket string, prefix string, listResultFile string) (retErr error) {
 	fp, openErr := os.OpenFile(listResultFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if openErr != nil {
+		retErr = openErr
 		log.Error(fmt.Sprintf("Failed to open list result file `%s'", listResultFile))
 		return
 	}
@@ -61,10 +62,11 @@ func (this *ListBucket) List(bucket string, prefix string, listResultFile string
 			if wErr != nil {
 				log.Error(fmt.Sprintf("Write line data `%s' to list result file failed.", lineData))
 			}
-			fErr := bw.Flush()
-			if fErr != nil {
-				log.Error("Flush data to list result file error", err)
-			}
+		}
+		fErr := bw.Flush()
+		if fErr != nil {
+			log.Error("Flush data to list result file error", err)
 		}
 	}
+	return
 }
