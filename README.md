@@ -37,6 +37,7 @@ qshell account
 |fput|以文件表单的方式上传一个文件|[文档](http://github.com/jemygraw/qshell/wiki/fput)|
 |rput|以分片上传的方式上传一个文件|[文档](http://github.com/jemygraw/qshell/wiki/rput)|
 |qupload|同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查|[文档](http://github.com/jemygraw/qshell/wiki/qupload)|
+|qdownload|从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步|[文档](http://github.com/jemygraw/qshell/wiki/qdownload)|
 |stat|查询七牛空间中一个文件的基本信息|[文档](http://github.com/jemygraw/qshell/wiki/stat)|
 |delete|删除七牛空间中的一个文件|[文档](http://github.com/jemygraw/qshell/wiki/delete)|
 |move|移动或重命名七牛空间中的一个文件|[文档](http://github.com/jemygraw/qshell/wiki/move)|
