@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/log"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -57,6 +58,10 @@ func CheckQrsync(dirCacheResultFile string, listBucketResultFile string, ignoreL
 			}
 			if prefix != "" {
 				remoteFname = prefix + remoteFname
+			}
+			//convert \ to / under windows
+			if runtime.GOOS == "windows" {
+				remoteFname = strings.Replace(remoteFname, "\\", "/", -1)
 			}
 			fsize, err := strconv.ParseInt(items[1], 10, 64)
 			if err != nil {
