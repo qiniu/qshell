@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"runtime"
 	"strings"
 )
 
@@ -126,6 +127,10 @@ func QiniuUpload(putThreshold int64, uploadConfigFile string) {
 			}
 			if uploadConfig.KeyPrefix != "" {
 				uploadFname = strings.Join([]string{uploadConfig.KeyPrefix, uploadFname}, "")
+			}
+			//convert \ to / under windows
+			if runtime.GOOS == "windows" {
+				uploadFname = strings.Replace(uploadFname, "\\", "/", -1)
 			}
 			localFnameFull := strings.Join([]string{uploadConfig.SrcDir, localFname}, string(os.PathSeparator))
 			//check leveldb

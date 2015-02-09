@@ -11,17 +11,21 @@ type RSFop struct {
 }
 
 type FopRet struct {
-	Id       string `json:"id"`
-	Code     int    `json:"code"`
-	Desc     string `json:"desc"`
-	InputKey string `json:"inputKey,omitempty"`
-	Pipeline string `json:"pipeline,omitempty"`
-	Reqid    string `json:"reqid,omitempty"`
-	Items    []FopResult
+	Id          string `json:"id"`
+	Code        int    `json:"code"`
+	Desc        string `json:"desc"`
+	InputBucket string `json:"inputBucket,omitempty"`
+	InputKey    string `json:"inputKey,omitempty"`
+	Pipeline    string `json:"pipeline,omitempty"`
+	Reqid       string `json:"reqid,omitempty"`
+	Items       []FopResult
 }
 
 func (this *FopRet) String() string {
 	strData := fmt.Sprintf("Id: %s\r\nCode: %d\r\nDesc: %s\r\n", this.Id, this.Code, this.Desc)
+	if this.InputBucket != "" {
+		strData += fmt.Sprintln(fmt.Sprintf("InputBucket: %s", this.InputBucket))
+	}
 	if this.InputKey != "" {
 		strData += fmt.Sprintln(fmt.Sprintf("InputKey: %s", this.InputKey))
 	}
@@ -38,20 +42,34 @@ func (this *FopRet) String() string {
 		if item.Error != "" {
 			strData += fmt.Sprintf("\tError:\t%s\r\n", item.Error)
 		} else {
-			strData += fmt.Sprintf("\tHash:\t%s\r\n\tKey:\t%s\r\n", item.Hash, item.Key)
+			if item.Hash != "" {
+				strData += fmt.Sprintf("\tHash:\t%s\r\n", item.Hash)
+			}
+			if item.Key != "" {
+				strData += fmt.Sprintf("\tKey:\t%s\r\n", item.Key)
+			}
+			if item.Keys != nil {
+				if len(item.Keys) > 0 {
+					strData += "\tKeys: {\r\n"
+					for _, key := range item.Keys {
+						strData += fmt.Sprintf("\t\t%s\r\n", key)
+					}
+					strData += "\t}\r\n"
+				}
+			}
 		}
-		strData += "\r\n"
 	}
 	return strData
 }
 
 type FopResult struct {
-	Cmd   string `json:"cmd"`
-	Code  int    `json:"code"`
-	Desc  string `json:"desc"`
-	Error string `json:"error,omitempty"`
-	Hash  string `json:"hash,omitempty"`
-	Key   string `json:"key,omitempty"`
+	Cmd   string   `json:"cmd"`
+	Code  int      `json:"code"`
+	Desc  string   `json:"desc"`
+	Error string   `json:"error,omitempty"`
+	Hash  string   `json:"hash,omitempty"`
+	Key   string   `json:"key,omitempty"`
+	Keys  []string `json:"keys,omitempty"`
 }
 
 func (this *RSFop) Prefop(persistentId string, fopRet *FopRet) (err error) {
