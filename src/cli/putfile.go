@@ -44,9 +44,10 @@ func FormPut(cmd string, params ...string) {
 		} else {
 			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
-		lastTime := time.Now().Unix() - startTime.Unix()
-		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)/1000.0/float32(lastTime))
-		fmt.Println("Last time:", time.Since(startTime), "Average Speed:", avgSpeed, "KB/s")
+		lastNano := time.Now().UnixNano() - startTime.UnixNano()
+		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
+		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)*1e6/float32(lastNano))
+		fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
 	} else {
 		CmdHelp(cmd)
 	}
@@ -90,9 +91,10 @@ func ResumablePut(cmd string, params ...string) {
 		} else {
 			fmt.Println("\r\nPut file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
-		lastTime := time.Now().Unix() - startTime.Unix()
-		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)/1000.0/float32(lastTime))
-		fmt.Println("Last time:", time.Since(startTime), "Average Speed:", avgSpeed, "KB/s")
+		lastNano := time.Now().UnixNano() - startTime.UnixNano()
+		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
+		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)*1e6/float32(lastNano))
+		fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
 	} else {
 		CmdHelp(cmd)
 	}
