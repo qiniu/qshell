@@ -32,13 +32,21 @@ func FormPut(cmd string, params ...string) {
 		uptoken := policy.Token(&mac)
 		putRet := fio.PutRet{}
 		startTime := time.Now()
+		fStat, statErr := os.Stat(localFile)
+		if statErr != nil {
+			log.Error("Local file error", statErr)
+			return
+		}
+		fsize := fStat.Size()
 		err := fio.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			log.Error("Put file error", err)
 		} else {
 			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
-		fmt.Println("Last time:", time.Since(startTime))
+		lastTime := time.Now().Unix() - startTime.Unix()
+		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)/1000.0/float32(lastTime))
+		fmt.Println("Last time:", time.Since(startTime), "Average Speed:", avgSpeed, "KB/s")
 	} else {
 		CmdHelp(cmd)
 	}
@@ -70,13 +78,21 @@ func ResumablePut(cmd string, params ...string) {
 		uptoken := policy.Token(&mac)
 		putRet := rio.PutRet{}
 		startTime := time.Now()
+		fStat, statErr := os.Stat(localFile)
+		if statErr != nil {
+			log.Error("Local file error", statErr)
+			return
+		}
+		fsize := fStat.Size()
 		err := rio.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			log.Error("Put file error", err)
 		} else {
 			fmt.Println("\r\nPut file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
-		fmt.Println("Last time:", time.Since(startTime))
+		lastTime := time.Now().Unix() - startTime.Unix()
+		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)/1000.0/float32(lastTime))
+		fmt.Println("Last time:", time.Since(startTime), "Average Speed:", avgSpeed, "KB/s")
 	} else {
 		CmdHelp(cmd)
 	}
