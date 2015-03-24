@@ -238,22 +238,35 @@ func BatchDelete(cmd string, params ...string) {
 					entries = append(entries, entry)
 				}
 			}
-		}
-		ret, err := client.BatchDelete(nil, entries)
-		if err != nil {
-			log.Error("Batch delete error", err)
-		} else {
-			for i, entry := range entries {
-				item := ret[i]
-				if item.Error != "" {
-					log.Debug(fmt.Sprintf("Delete %s=>%s Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
-				} else {
-					log.Debug(fmt.Sprintf("Delete %s=>%s Success, Code: %d", entry.Bucket, entry.Key, item.Code))
-				}
+			//check 1000 limit
+			if len(entries) == 1000 {
+				batchDelete(client, entries)
+				//reset slice
+				entries = make([]rs.EntryPath, 0)
 			}
-			fmt.Println("All deleted!")
 		}
+		//delete the last batch
+		if len(entries) > 0 {
+			batchDelete(client, entries)
+		}
+		fmt.Println("All deleted!")
 	} else {
 		CmdHelp(cmd)
+	}
+}
+
+func batchDelete(client rs.Client, entries []rs.EntryPath) {
+	ret, err := client.BatchDelete(nil, entries)
+	if err != nil {
+		log.Error("Batch delete error", err)
+	} else {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Error != "" {
+				log.Debug(fmt.Sprintf("Delete %s=>%s Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
+			} else {
+				log.Debug(fmt.Sprintf("Delete %s=>%s Success, Code: %d", entry.Bucket, entry.Key, item.Code))
+			}
+		}
 	}
 }
