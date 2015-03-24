@@ -28,7 +28,8 @@ Config file like:
 	"secret_key"	:	"<Your SecretKey>",
 	"bucket"		:	"test-bucket",
 	"ignore_dir"	:	false,
-	"key_prefix"	:	"2014/12/01/"
+	"key_prefix"	:	"2014/12/01/",
+	"overwrite"		:	false
 }
 
 or without key_prefix and ignore_dir
@@ -52,6 +53,7 @@ type UploadConfig struct {
 	Bucket    string `json:"bucket"`
 	KeyPrefix string `json:"key_prefix,omitempty"`
 	IgnoreDir bool   `json:"ignore_dir,omitempty"`
+	Overwrite bool   `json:"overwrite,omitempty"`
 }
 
 func QiniuUpload(putThreshold int64, uploadConfigFile string) {
@@ -155,6 +157,10 @@ func QiniuUpload(putThreshold int64, uploadConfigFile string) {
 			mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
 			policy := rs.PutPolicy{}
 			policy.Scope = uploadConfig.Bucket
+			if uploadConfig.Overwrite {
+				policy.Scope = uploadConfig.Bucket + ":" + uploadFname
+				policy.InsertOnly = 0
+			}
 			policy.Expires = 24 * 3600
 			uptoken := policy.Token(&mac)
 			if fsize > putThreshold {
