@@ -107,6 +107,8 @@ func TimestampMilli2Date(cmd string, params ...string) {
 		}
 		t := time.Unix(tms/1000, 0)
 		fmt.Println(t.String())
+	} else {
+		CmdHelp(cmd)
 	}
 }
 
