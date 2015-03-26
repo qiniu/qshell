@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/log"
 	"net/url"
+	"qshell"
 	"strconv"
 	"time"
 )
@@ -146,6 +147,20 @@ func Urldecode(cmd string, params ...string) {
 		} else {
 			fmt.Println(dataDecoded)
 		}
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func Qetag(cmd string, params ...string) {
+	if len(params) == 1 {
+		localFilePath := params[0]
+		qetag, err := qshell.GetEtag(localFilePath)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(qetag)
 	} else {
 		CmdHelp(cmd)
 	}

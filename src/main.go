@@ -37,6 +37,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"tms2d":         cli.TimestampMilli2Date,
 	"d2ts":          cli.Date2Timestamp,
 	"ip":            cli.IpQuery,
+	"qetag":         cli.Qetag,
 	"help":          cli.Help,
 }
 
