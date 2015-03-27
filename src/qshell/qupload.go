@@ -44,7 +44,7 @@ or without key_prefix and ignore_dir
 */
 
 const (
-	PUT_THRESHOLD           int64 = 100 * 2 << 19
+	PUT_THRESHOLD           int64 = 100 * 1 << 20
 	MIN_UPLOAD_THREAD_COUNT int64 = 1
 	MAX_UPLOAD_THREAD_COUNT int64 = 100
 )
