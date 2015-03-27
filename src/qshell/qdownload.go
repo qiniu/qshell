@@ -29,6 +29,12 @@ import (
 	"prefix"		:	"demo/"
 }
 */
+
+const (
+	MIN_DOWNLOAD_THREAD_COUNT = 1
+	MAX_DOWNLOAD_THREAD_COUNT = 100
+)
+
 type DownloadConfig struct {
 	DestDir   string `json:"dest_dir"`
 	Bucket    string `json:"bucket"`
@@ -83,12 +89,11 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	listScanner.Split(bufio.ScanLines)
 	downWorkGroup := sync.WaitGroup{}
 	downCounter := 0
-	if threadCount < 0 || threadCount > 10 {
-		threadCount = 5
-	}
+
+	threadThresold := threadCount + 1
 	for listScanner.Scan() {
 		downCounter += 1
-		if downCounter%threadCount == 0 {
+		if downCounter%threadThresold == 0 {
 			downWorkGroup.Wait()
 		}
 		line := strings.TrimSpace(listScanner.Text())

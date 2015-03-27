@@ -21,6 +21,11 @@ func QiniuDownload(cmd string, params ...string) {
 			}
 			downConfig = params[1]
 		}
+		if threadCount < qshell.MIN_DOWNLOAD_THREAD_COUNT ||
+			threadCount > qshell.MAX_DOWNLOAD_THREAD_COUNT {
+			log.Warn("<ThreadCount> can only between 1 and 100")
+			threadCount = qshell.MIN_DOWNLOAD_THREAD_COUNT
+		}
 		qshell.QiniuDownload(int(threadCount), downConfig)
 	} else {
 		CmdHelp(cmd)

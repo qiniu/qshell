@@ -17,6 +17,7 @@ import (
 	"os/user"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 /*
@@ -43,7 +44,9 @@ or without key_prefix and ignore_dir
 */
 
 const (
-	PUT_THRESHOLD int64 = 2 << 30
+	PUT_THRESHOLD           int64 = 100 * 2 << 19
+	MIN_UPLOAD_THREAD_COUNT int64 = 1
+	MAX_UPLOAD_THREAD_COUNT int64 = 100
 )
 
 type UploadConfig struct {
@@ -56,7 +59,7 @@ type UploadConfig struct {
 	Overwrite bool   `json:"overwrite,omitempty"`
 }
 
-func QiniuUpload(putThreshold int64, uploadConfigFile string) {
+func QiniuUpload(threadCount int, uploadConfigFile string) {
 	fp, err := os.Open(uploadConfigFile)
 	if err != nil {
 		log.Error(fmt.Sprintf("Open upload config file `%s' error due to `%s'", uploadConfigFile, err))
@@ -116,6 +119,12 @@ func QiniuUpload(putThreshold int64, uploadConfigFile string) {
 		Sync: true,
 	}
 
+	upWorkGroup := sync.WaitGroup{}
+	upCounter := 0
+	threadThreshold := threadCount + 1
+
+	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
+	//check thread count
 	for bScanner.Scan() {
 		line := strings.TrimSpace(bScanner.Text())
 		items := strings.Split(line, "\t")
@@ -148,48 +157,59 @@ func QiniuUpload(putThreshold int64, uploadConfigFile string) {
 			fmt.Printf("Uploading %s (%d/%d, %.0f%%) ...", ldbKey, currentFileCount, totalFileCount,
 				float32(currentFileCount)*100/float32(totalFileCount))
 			os.Stdout.Sync()
-			fstat, err := os.Stat(localFnameFull)
-			if err != nil {
-				log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", localFnameFull, err))
-				continue
+			//worker
+			upCounter += 1
+			if upCounter%threadThreshold == 0 {
+				upWorkGroup.Wait()
 			}
-			fsize := fstat.Size()
-			mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
-			policy := rs.PutPolicy{}
-			policy.Scope = uploadConfig.Bucket
-			if uploadConfig.Overwrite {
-				policy.Scope = uploadConfig.Bucket + ":" + uploadFname
-				policy.InsertOnly = 0
-			}
-			policy.Expires = 24 * 3600
-			uptoken := policy.Token(&mac)
-			if fsize > putThreshold {
-				putRet := rio.PutRet{}
-				err := rio.PutFile(nil, &putRet, uptoken, uploadFname, localFnameFull, nil)
+			upWorkGroup.Add(1)
+			go func() {
+				defer upWorkGroup.Done()
+
+				fstat, err := os.Stat(localFnameFull)
 				if err != nil {
-					log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFnameFull, uploadFname, err))
+					log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", localFnameFull, err))
+					return
+				}
+				fsize := fstat.Size()
+
+				policy := rs.PutPolicy{}
+				policy.Scope = uploadConfig.Bucket
+				if uploadConfig.Overwrite {
+					policy.Scope = uploadConfig.Bucket + ":" + uploadFname
+					policy.InsertOnly = 0
+				}
+				policy.Expires = 24 * 3600
+				uptoken := policy.Token(&mac)
+				if fsize > PUT_THRESHOLD {
+					putRet := rio.PutRet{}
+					err := rio.PutFile(nil, &putRet, uptoken, uploadFname, localFnameFull, nil)
+					if err != nil {
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFnameFull, uploadFname, err))
+					} else {
+						perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
+						if perr != nil {
+							log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
+						}
+					}
 				} else {
-					perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
-					if perr != nil {
-						log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
+					putRet := fio.PutRet{}
+					err := fio.PutFile(nil, &putRet, uptoken, uploadFname, localFnameFull, nil)
+					if err != nil {
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFnameFull, uploadFname, err))
+					} else {
+						perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
+						if perr != nil {
+							log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
+						}
 					}
 				}
-			} else {
-				putRet := fio.PutRet{}
-				err := fio.PutFile(nil, &putRet, uptoken, uploadFname, localFnameFull, nil)
-				if err != nil {
-					log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFnameFull, uploadFname, err))
-				} else {
-					perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
-					if perr != nil {
-						log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
-					}
-				}
-			}
+			}()
 		} else {
 			log.Error(fmt.Sprintf("Error cache line `%s'", line))
 		}
 	}
+	upWorkGroup.Wait()
 	fmt.Println()
 	fmt.Println("Upload done!")
 	//list bucket

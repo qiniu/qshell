@@ -49,7 +49,7 @@ var cmdDocs = map[string][]string{
 	"prefop":        []string{"qshell [-d] prefop <PersistentId>", "Query the fop status"},
 	"fput":          []string{"qshell [-d] fput <Bucket> <Key> <LocalFile> [MimeType]", "Form upload a local file"},
 	"rput":          []string{"qshell [-d] rput <Bucket> <Key> <LocalFile> [MimeType]", "Resumable upload a local file"},
-	"qupload":       []string{"qshell [-d] qupload [<PutThresoldInBytes>] <LocalUploadConfig>", "Batch upload files to the qiniu bucket"},
+	"qupload":       []string{"qshell [-d] qupload [<ThreadCount>] <LocalUploadConfig>", "Batch upload files to the qiniu bucket"},
 	"qdownload":     []string{"qshell [-d] qdownload [<ThreadCount>] <LocalDownloadConfig>", "Batch download files from the qiniu bucket"},
 	"stat":          []string{"qshell [-d] stat <Bucket> <Key>", "Get the basic info of a remote file"},
 	"delete":        []string{"qshell [-d] delete <Bucket> <Key>", "Delete a remote file in the bucket"},
@@ -70,6 +70,7 @@ var cmdDocs = map[string][]string{
 	"d2ts":          []string{"qshell [-d] d2ts <SecondsToNow>", "Create a timestamp in seconds using seconds to now"},
 	"ip":            []string{"qshell [-d] ip <Ip1> [<Ip2> [<Ip3> ...]]]", "Query the ip information"},
 	"qetag":         []string{"qshell [-d] qetag <LocalFilePath>", "Calculate the hash of local file using the algorithm of qiniu qetag"},
+	"unzip":         []string{"qshell [-d] unzip <QiniuZipFilePath>", "Unzip the archive file created by the qiniu mkzip API"},
 }
 
 func Help(cmd string, params ...string) {
