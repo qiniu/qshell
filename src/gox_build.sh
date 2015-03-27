@@ -1,2 +1,3 @@
 export GOPATH=$GOPATH:/Users/jemy/QiniuCloud/Projects/qshell
-gox
+gox -os="windows"
+gox -os="darwin"
