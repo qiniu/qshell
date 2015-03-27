@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/log"
 	"net/url"
+	"os"
 	"qshell"
 	"strconv"
 	"time"
@@ -161,6 +162,30 @@ func Qetag(cmd string, params ...string) {
 			return
 		}
 		fmt.Println(qetag)
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func Unzip(cmd string, params ...string) {
+	if len(params) == 1 || len(params) == 2 {
+		zipFilePath := params[0]
+		unzipToDir, err := os.Getwd()
+		if err != nil {
+			log.Error("Get current work directory failed due to error", err)
+			return
+		}
+		if len(params) == 2 {
+			unzipToDir = params[1]
+			if _, statErr := os.Stat(unzipToDir); statErr != nil {
+				log.Error("Specified <UnzipToDir> is not a valid directory")
+				return
+			}
+		}
+		unzipErr := qshell.Unzip(zipFilePath, unzipToDir)
+		if unzipErr != nil {
+			log.Error("Unzip file failed due to error", unzipErr)
+		}
 	} else {
 		CmdHelp(cmd)
 	}
