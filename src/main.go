@@ -40,6 +40,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"qetag":         cli.Qetag,
 	"help":          cli.Help,
 	"unzip":         cli.Unzip,
+	"privateurl":    cli.PrivateUrl,
 }
 
 func main() {

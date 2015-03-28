@@ -18,7 +18,6 @@ func BlockCount(fsize int64) int {
 }
 
 func CalSha1(b []byte, r io.Reader) ([]byte, error) {
-
 	h := sha1.New()
 	_, err := io.Copy(h, r)
 	if err != nil {
@@ -28,7 +27,6 @@ func CalSha1(b []byte, r io.Reader) ([]byte, error) {
 }
 
 func GetEtag(filename string) (etag string, err error) {
-
 	f, err := os.Open(filename)
 	if err != nil {
 		return

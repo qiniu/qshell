@@ -8,6 +8,7 @@ import (
 	"github.com/qiniu/log"
 	"os"
 	"qshell"
+	"strconv"
 	"strings"
 )
 
@@ -268,5 +269,27 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 				log.Debug(fmt.Sprintf("Delete %s=>%s Success, Code: %d", entry.Bucket, entry.Key, item.Code))
 			}
 		}
+	}
+}
+
+func PrivateUrl(cmd string, params ...string) {
+	if len(params) == 2 {
+		publicUrl := params[0]
+		var deadline int
+		if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
+			log.Error("Invalid <Deadline>")
+			return
+		} else {
+			deadline = int(val)
+		}
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		url := qshell.PrivateUrl(&mac, publicUrl, deadline)
+		fmt.Println(url)
+	} else {
+		CmdHelp(cmd)
 	}
 }
