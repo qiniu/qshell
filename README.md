@@ -65,6 +65,9 @@ qshell account
 |tns2d|将timestamp(单位100纳秒)转为UTC+8:00中国日期|[文档](http://github.com/jemygraw/qshell/wiki/tns2d)|
 |d2ts|将日期转为timestamp(单位秒)|[文档](http://github.com/jemygraw/qshell/wiki/d2ts)|
 |ip|根据淘宝的公开API查询ip地址的地理位置|[文档](http://github.com/jemygraw/qshell/wiki/ip)|
+|qetag|根据七牛的qetag算法来计算文件的hash|[文档](http://github.com/jemygraw/qshell/wiki/qetag)|
+|unzip|解压zip文件，支持UTF-8编码和GBK编码|[文档](http://github.com/jemygraw/qshell/wiki/unzip)|
+|privateurl|生成私有空间资源的访问外链|[文档](http://github.com/jemygraw/qshell/wiki/privateurl)|
 
 ##编译
 1. 如果是编译本地平台的可执行程序，使用`src`目录下面的`build.sh`脚本即可。
