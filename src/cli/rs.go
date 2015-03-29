@@ -10,6 +10,7 @@ import (
 	"qshell"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func printStat(bucket string, key string, entry rs.Entry) {
@@ -273,14 +274,18 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 }
 
 func PrivateUrl(cmd string, params ...string) {
-	if len(params) == 2 {
+	if len(params) == 1 || len(params) == 2 {
 		publicUrl := params[0]
-		var deadline int
-		if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
-			log.Error("Invalid <Deadline>")
-			return
+		var deadline int64
+		if len(params) == 2 {
+			if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
+				log.Error("Invalid <Deadline>")
+				return
+			} else {
+				deadline = val
+			}
 		} else {
-			deadline = int(val)
+			deadline = time.Now().Add(time.Second * 3600).Unix()
 		}
 		accountS.Get()
 		mac := digest.Mac{

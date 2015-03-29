@@ -27,7 +27,7 @@ func Prefetch(mac *digest.Mac, bucket, key string) (err error) {
 	return
 }
 
-func PrivateUrl(mac *digest.Mac, publicUrl string, deadline int) string {
+func PrivateUrl(mac *digest.Mac, publicUrl string, deadline int64) string {
 	h := hmac.New(sha1.New, mac.SecretKey)
 
 	urlToSign := publicUrl

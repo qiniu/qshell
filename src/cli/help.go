@@ -73,7 +73,7 @@ var cmdDocs = map[string][]string{
 	"ip":            []string{"qshell [-d] ip <Ip1> [<Ip2> [<Ip3> ...]]]", "Query the ip information"},
 	"qetag":         []string{"qshell [-d] qetag <LocalFilePath>", "Calculate the hash of local file using the algorithm of qiniu qetag"},
 	"unzip":         []string{"qshell [-d] unzip <QiniuZipFilePath> [<UnzipToDir>]", "Unzip the archive file created by the qiniu mkzip API"},
-	"privateurl":    []string{"qshell [-d] privateurl <PublicUrl> <Deadline>", "Create private resource access url"},
+	"privateurl":    []string{"qshell [-d] privateurl <PublicUrl> [<Deadline>]", "Create private resource access url"},
 }
 
 func Help(cmd string, params ...string) {
