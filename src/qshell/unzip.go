@@ -26,6 +26,8 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 		return
 	}
 	defer cd.Close()
+
+	//list dir
 	for _, zipFile := range zipFiles {
 		fileInfo := zipFile.FileHeader.FileInfo()
 		fileName := zipFile.FileHeader.Name
@@ -43,7 +45,21 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 				err = errors.New(fmt.Sprintf("Mkdir error, %s", mErr))
 				continue
 			}
-		} else {
+		}
+	}
+
+	//list file
+	for _, zipFile := range zipFiles {
+		fileInfo := zipFile.FileHeader.FileInfo()
+		fileName := zipFile.FileHeader.Name
+
+		//check charset utf8 or gbk
+		if !utf8.Valid([]byte(fileName)) {
+			fileName = cd.ConvString(fileName)
+		}
+
+		fullPath := filepath.Join(unzipPath, fileName)
+		if !fileInfo.IsDir() {
 			localFp, openErr := os.OpenFile(fullPath, os.O_CREATE|os.O_WRONLY, 0666)
 			if openErr != nil {
 				err = errors.New(fmt.Sprintf("Open local file error, %s", openErr))
