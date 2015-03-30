@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/user"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -129,30 +130,41 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		line := strings.TrimSpace(bScanner.Text())
 		items := strings.Split(line, "\t")
 		if len(items) > 1 {
-			localFname := items[0]
-			uploadFname := localFname
+			cacheFname := items[0]
+			cacheFlmd, _ := strconv.Atoi(items[2])
+			uploadFileKey := cacheFname
 			if uploadConfig.IgnoreDir {
-				if i := strings.LastIndex(uploadFname, string(os.PathSeparator)); i != -1 {
-					uploadFname = uploadFname[i+1:]
+				if i := strings.LastIndex(uploadFileKey, string(os.PathSeparator)); i != -1 {
+					uploadFileKey = uploadFileKey[i+1:]
 				}
 			}
 			if uploadConfig.KeyPrefix != "" {
-				uploadFname = strings.Join([]string{uploadConfig.KeyPrefix, uploadFname}, "")
+				uploadFileKey = strings.Join([]string{uploadConfig.KeyPrefix, uploadFileKey}, "")
 			}
 			//convert \ to / under windows
 			if runtime.GOOS == "windows" {
-				uploadFname = strings.Replace(uploadFname, "\\", "/", -1)
+				uploadFileKey = strings.Replace(uploadFileKey, "\\", "/", -1)
 			}
-			localFnameFull := strings.Join([]string{uploadConfig.SrcDir, localFname}, string(os.PathSeparator))
+			cacheFilePath := strings.Join([]string{uploadConfig.SrcDir, cacheFname}, string(os.PathSeparator))
+			fstat, err := os.Stat(cacheFilePath)
+			if err != nil {
+				log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", cacheFilePath, err))
+				return
+			}
+			fsize := fstat.Size()
+
 			//check leveldb
 			currentFileCount += 1
-			ldbKey := fmt.Sprintf("%s => %s", localFnameFull, uploadFname)
+			ldbKey := fmt.Sprintf("%s => %s", cacheFilePath, uploadFileKey)
 			log.Debug(fmt.Sprintf("Checking %s ...", ldbKey))
-			_, err := ldb.Get([]byte(ldbKey), nil)
+			//check last modified
+			ldbFlmd, err := ldb.Get([]byte(ldbKey), nil)
+			flmd, _ := strconv.Atoi(string(ldbFlmd))
 			//not exist, return ErrNotFound
-			if err == nil {
+			if err == nil && cacheFlmd == flmd {
 				continue
 			}
+
 			fmt.Print("\033[2K\r")
 			fmt.Printf("Uploading %s (%d/%d, %.0f%%) ...", ldbKey, currentFileCount, totalFileCount,
 				float32(currentFileCount)*100/float32(totalFileCount))
@@ -166,26 +178,19 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			go func() {
 				defer upWorkGroup.Done()
 
-				fstat, err := os.Stat(localFnameFull)
-				if err != nil {
-					log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", localFnameFull, err))
-					return
-				}
-				fsize := fstat.Size()
-
 				policy := rs.PutPolicy{}
 				policy.Scope = uploadConfig.Bucket
 				if uploadConfig.Overwrite {
-					policy.Scope = uploadConfig.Bucket + ":" + uploadFname
+					policy.Scope = uploadConfig.Bucket + ":" + uploadFileKey
 					policy.InsertOnly = 0
 				}
 				policy.Expires = 24 * 3600
 				uptoken := policy.Token(&mac)
 				if fsize > PUT_THRESHOLD {
 					putRet := rio.PutRet{}
-					err := rio.PutFile(nil, &putRet, uptoken, uploadFname, localFnameFull, nil)
+					err := rio.PutFile(nil, &putRet, uptoken, uploadFileKey, cacheFilePath, nil)
 					if err != nil {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFnameFull, uploadFname, err))
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", cacheFilePath, uploadFileKey, err))
 					} else {
 						perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
 						if perr != nil {
@@ -194,11 +199,11 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 					}
 				} else {
 					putRet := fio.PutRet{}
-					err := fio.PutFile(nil, &putRet, uptoken, uploadFname, localFnameFull, nil)
+					err := fio.PutFile(nil, &putRet, uptoken, uploadFileKey, cacheFilePath, nil)
 					if err != nil {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFnameFull, uploadFname, err))
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", cacheFilePath, uploadFileKey, err))
 					} else {
-						perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
+						perr := ldb.Put([]byte(ldbKey), []byte(strconv.Itoa(cacheFlmd)), &ldbWOpt)
 						if perr != nil {
 							log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
 						}
