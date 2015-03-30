@@ -2,7 +2,7 @@ package qshell
 
 import (
 	"bufio"
-	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/qiniu/api/auth/digest"
@@ -88,16 +88,15 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		log.Error("Failed to get current user", err)
 		return
 	}
-	config, _ := json.Marshal(&uploadConfig)
-	md5Sum := md5.Sum(config)
-	storePath := fmt.Sprintf("%s/.qshell/qupload/%x", currentUser.HomeDir, md5Sum)
+	jobId := base64.URLEncoding.EncodeToString([]byte(uploadConfig.SrcDir + ":" + uploadConfig.Bucket))
+	storePath := fmt.Sprintf("%s/.qshell/qupload/%s", currentUser.HomeDir, jobId)
 	err = os.MkdirAll(storePath, 0775)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to mkdir `%s' due to `%s'", storePath, err))
 		return
 	}
-	cacheFileName := fmt.Sprintf("%s/%x.cache", storePath, md5Sum)
-	leveldbFileName := fmt.Sprintf("%s/%x.ldb", storePath, md5Sum)
+	cacheFileName := fmt.Sprintf("%s/%s.cache", storePath, jobId)
+	leveldbFileName := fmt.Sprintf("%s/%s.ldb", storePath, jobId)
 	totalFileCount := dirCache.Cache(uploadConfig.SrcDir, cacheFileName)
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
