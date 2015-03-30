@@ -98,7 +98,6 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	}
 	cacheFileName := fmt.Sprintf("%s/%x.cache", storePath, md5Sum)
 	leveldbFileName := fmt.Sprintf("%s/%x.ldb", storePath, md5Sum)
-	listFileName := fmt.Sprintf("%s/%x.list", storePath, md5Sum)
 	totalFileCount := dirCache.Cache(uploadConfig.SrcDir, cacheFileName)
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
@@ -217,17 +216,4 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	upWorkGroup.Wait()
 	fmt.Println()
 	fmt.Println("Upload done!")
-	//list bucket
-	acct := Account{
-		uploadConfig.AccessKey,
-		uploadConfig.SecretKey,
-	}
-	bucketLister := ListBucket{
-		Account: acct,
-	}
-	fmt.Println("Listing bucket...")
-	bucketLister.List(uploadConfig.Bucket, uploadConfig.KeyPrefix, listFileName)
-	//check data integrity
-	fmt.Println("Checking data integrity...")
-	CheckQrsync(cacheFileName, listFileName, uploadConfig.IgnoreDir, uploadConfig.KeyPrefix)
 }
