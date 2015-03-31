@@ -4,12 +4,31 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
-	"github.com/qiniu/iconv"
+	"github.com/qiniu/log"
+	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"os"
 	"path/filepath"
 	"unicode/utf8"
 )
+
+var gDecoder = simplifiedchinese.GBK.NewDecoder()
+
+func gbk2Utf8(text string) (string, error) {
+	utf8Dst := make([]byte, len(text)*3)
+	_, _, err := gDecoder.Transform(utf8Dst, []byte(text), true)
+	if err != nil {
+		return "", nil
+	}
+	gDecoder.Reset()
+	utf8Bytes := make([]byte, 0)
+	for _, b := range utf8Dst {
+		if b != 0 {
+			utf8Bytes = append(utf8Bytes, b)
+		}
+	}
+	return string(utf8Bytes), nil
+}
 
 func Unzip(zipFilePath string, unzipPath string) (err error) {
 	zipReader, zipErr := zip.OpenReader(zipFilePath)
@@ -20,12 +39,6 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 	defer zipReader.Close()
 
 	zipFiles := zipReader.File
-	cd, cErr := iconv.Open("utf-8", "gbk")
-	if cErr != nil {
-		err = errors.New(fmt.Sprintf("Create charset converter error, %s", cErr))
-		return
-	}
-	defer cd.Close()
 
 	//list dir
 	for _, zipFile := range zipFiles {
@@ -34,12 +47,16 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 
 		//check charset utf8 or gbk
 		if !utf8.Valid([]byte(fileName)) {
-			fileName = cd.ConvString(fileName)
+			fileName, err = gbk2Utf8(fileName)
+			if err != nil {
+				err = errors.New("Unsupported filename encoding")
+				continue
+			}
 		}
 
 		fullPath := filepath.Join(unzipPath, fileName)
-
 		if fileInfo.IsDir() {
+			log.Debug("Mkdir", fullPath)
 			mErr := os.MkdirAll(fullPath, 0775)
 			if mErr != nil {
 				err = errors.New(fmt.Sprintf("Mkdir error, %s", mErr))
@@ -55,12 +72,17 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 
 		//check charset utf8 or gbk
 		if !utf8.Valid([]byte(fileName)) {
-			fileName = cd.ConvString(fileName)
+			fileName, err = gbk2Utf8(fileName)
+			if err != nil {
+				err = errors.New("Unsupported filename encoding")
+				continue
+			}
 		}
 
 		fullPath := filepath.Join(unzipPath, fileName)
 		if !fileInfo.IsDir() {
-			localFp, openErr := os.OpenFile(fullPath, os.O_CREATE|os.O_WRONLY, 0666)
+			log.Debug("Creating file", fullPath)
+			localFp, openErr := os.OpenFile(fullPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 			if openErr != nil {
 				err = errors.New(fmt.Sprintf("Open local file error, %s", openErr))
 				continue
