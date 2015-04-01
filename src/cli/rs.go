@@ -170,20 +170,24 @@ func Chgm(cmd string, params ...string) {
 }
 
 func Fetch(cmd string, params ...string) {
-	if len(params) == 3 {
+	if len(params) == 2 || len(params) == 3 {
 		remoteResUrl := params[0]
 		bucket := params[1]
-		key := params[2]
+		key := ""
+		if len(params) == 3 {
+			key = params[2]
+		}
 		accountS.Get()
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
+		fetchResult, err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
 		if err != nil {
 			log.Error("Fetch error,", err)
 		} else {
-			fmt.Println("Done!")
+			fmt.Println("Key:", fetchResult.Key)
+			fmt.Println("Hash:", fetchResult.Hash)
 		}
 	} else {
 		CmdHelp(cmd)

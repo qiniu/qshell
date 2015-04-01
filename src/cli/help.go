@@ -58,7 +58,7 @@ var cmdDocs = map[string][]string{
 	"move":          []string{"qshell [-d] move <SrcBucket> <SrcKey> <DestBucket> <DestKey>", "Move/Rename a file and save in bucket"},
 	"copy":          []string{"qshell [-d] copy <SrcBucket> <SrcKey> <DestBucket> [<DestKey>]", "Make a copy of a file and save in bucket"},
 	"chgm":          []string{"qshell [-d] chgm <Bucket> <Key> <NewMimeType>", "Change the mimeType of a file"},
-	"fetch":         []string{"qshell [-d] fetch <RemoteResourceUrl> <Bucket> <Key>", "Fetch a remote resource by url and save in bucket"},
+	"fetch":         []string{"qshell [-d] fetch <RemoteResourceUrl> <Bucket> [<Key>]", "Fetch a remote resource by url and save in bucket"},
 	"prefetch":      []string{"qshell [-d] prefetch <Bucket> <Key>", "Fetch and update the file in bucket using mirror storage"},
 	"batchdelete":   []string{"qshell [-d] batchdelete <Bucket> <KeyListFile>", "Batch delete files in bucket"},
 	"checkqrsync":   []string{"qshell [-d] checkqrsync <DirCacheResultFile> <ListBucketResultFile> <IgnoreLocalDir> [Prefix]", "Check the qrsync result"},

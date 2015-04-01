@@ -11,12 +11,21 @@ import (
 	"strings"
 )
 
-func Fetch(mac *digest.Mac, remoteResUrl, bucket, key string) (err error) {
+type FetchResult struct {
+	Key  string `json:"key"`
+	Hash string `json:"hash"`
+}
+
+func Fetch(mac *digest.Mac, remoteResUrl, bucket, key string) (fetchResult FetchResult, err error) {
 	client := rs.New(mac)
+	entry := bucket
+	if key != "" {
+		entry += ":" + key
+	}
 	fetchUri := fmt.Sprintf("/fetch/%s/to/%s",
 		base64.URLEncoding.EncodeToString([]byte(remoteResUrl)),
-		base64.URLEncoding.EncodeToString([]byte(bucket+":"+key)))
-	err = client.Conn.Call(nil, nil, conf.IO_HOST+fetchUri)
+		base64.URLEncoding.EncodeToString([]byte(entry)))
+	err = client.Conn.Call(nil, &fetchResult, conf.IO_HOST+fetchUri)
 	return
 }
 
