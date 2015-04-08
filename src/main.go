@@ -23,6 +23,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"fetch":         cli.Fetch,
 	"prefetch":      cli.Prefetch,
 	"batchdelete":   cli.BatchDelete,
+	"batchchgm":     cli.BatchChgm,
 	"checkqrsync":   cli.CheckQrsync,
 	"fput":          cli.FormPut,
 	"qupload":       cli.QiniuUpload,

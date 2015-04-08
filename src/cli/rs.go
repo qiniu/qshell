@@ -226,7 +226,8 @@ func BatchDelete(cmd string, params ...string) {
 		client := rs.New(&mac)
 		fp, err := os.Open(keyListFile)
 		if err != nil {
-			log.Error("Open bucket key map file error", err)
+			log.Error("Open key list file error", err)
+			return
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -262,17 +263,76 @@ func BatchDelete(cmd string, params ...string) {
 }
 
 func batchDelete(client rs.Client, entries []rs.EntryPath) {
-	ret, err := client.BatchDelete(nil, entries)
+	ret, err := qshell.BatchDelete(client, entries)
 	if err != nil {
 		log.Error("Batch delete error", err)
-	} else {
-		for i, entry := range entries {
-			item := ret[i]
-			if item.Error != "" {
-				log.Debug(fmt.Sprintf("Delete %s=>%s Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
-			} else {
-				log.Debug(fmt.Sprintf("Delete %s=>%s Success, Code: %d", entry.Bucket, entry.Key, item.Code))
+	}
+
+	for i, entry := range entries {
+		item := ret[i]
+		if item.Data.Error != "" {
+			log.Error(fmt.Sprintf("Delete '%s' => '%s' Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
+		} else {
+			log.Debug(fmt.Sprintf("Delete '%s' => '%s' Success, Code: %d", entry.Bucket, entry.Key, item.Code))
+		}
+	}
+}
+
+func BatchChgm(cmd string, params ...string) {
+	if len(params) == 2 {
+		bucket := params[0]
+		keyMimeMapFile := params[1]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		fp, err := os.Open(keyMimeMapFile)
+		if err != nil {
+			log.Error("Open key mime map file error")
+			return
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+		entries := make([]qshell.ChgmEntryPath, 0)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			items := strings.Split(line, "\t")
+			if len(items) == 2 {
+				key := strings.TrimSpace(items[0])
+				mimeType := strings.TrimSpace(items[1])
+				if key != "" && mimeType != "" {
+					entry := qshell.ChgmEntryPath{bucket, key, mimeType}
+					entries = append(entries, entry)
+				}
 			}
+			if len(entries) == 1000 {
+				batchChgm(client, entries)
+				entries = make([]qshell.ChgmEntryPath, 0)
+			}
+		}
+		if len(entries) > 0 {
+			batchChgm(client, entries)
+		}
+		fmt.Println("All Chgmed!")
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
+	ret, err := qshell.BatchChgm(client, entries)
+	if err != nil {
+		log.Error("Batch chgm error", err)
+	}
+	for i, entry := range entries {
+		item := ret[i]
+		if item.Data.Error != "" {
+			log.Error(fmt.Sprintf("Chgm '%s' => '%s' Failed, Code :%d", entry.Key, entry.MimeType, item.Code))
+		} else {
+			log.Debug(fmt.Sprintf("Chgm '%s' => '%s' Success, Code :%d", entry.Key, entry.MimeType, item.Code))
 		}
 	}
 }

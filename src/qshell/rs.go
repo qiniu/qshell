@@ -17,6 +17,21 @@ type FetchResult struct {
 	Hash string `json:"hash"`
 }
 
+type ChgmEntryPath struct {
+	Bucket   string
+	Key      string
+	MimeType string
+}
+
+type BatchItemRet struct {
+	Code int              `json:"code"`
+	Data BatchItemRetData `json:"data"`
+}
+
+type BatchItemRetData struct {
+	Error string `json:"error,omitempty"`
+}
+
 func Fetch(mac *digest.Mac, remoteResUrl, bucket, key string) (fetchResult FetchResult, err error) {
 	client := rs.New(mac)
 	entry := bucket
@@ -68,4 +83,22 @@ func Saveas(mac *digest.Mac, publicUrl string, saveBucket string, saveKey string
 	sign := h.Sum(nil)
 	encodedSign := base64.URLEncoding.EncodeToString(sign)
 	return publicUrl + "|saveas/" + encodedSaveEntry + "/sign/" + mac.AccessKey + ":" + encodedSign, nil
+}
+
+func BatchChgm(client rs.Client, entries []ChgmEntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URIChangeMime(e.Bucket, e.Key, e.MimeType)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
+}
+
+func BatchDelete(client rs.Client, entries []rs.EntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URIDelete(e.Bucket, e.Key)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
 }
