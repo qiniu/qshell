@@ -41,6 +41,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"help":          cli.Help,
 	"unzip":         cli.Unzip,
 	"privateurl":    cli.PrivateUrl,
+	"saveas":        cli.Saveas,
 }
 
 func main() {

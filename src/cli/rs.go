@@ -302,3 +302,24 @@ func PrivateUrl(cmd string, params ...string) {
 		CmdHelp(cmd)
 	}
 }
+
+func Saveas(cmd string, params ...string) {
+	if len(params) == 3 {
+		publicUrl := params[0]
+		saveBucket := params[1]
+		saveKey := params[2]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		url, err := qshell.Saveas(&mac, publicUrl, saveBucket, saveKey)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(url)
+		}
+	} else {
+		CmdHelp(cmd)
+	}
+}

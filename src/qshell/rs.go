@@ -8,6 +8,7 @@ import (
 	"github.com/qiniu/api/auth/digest"
 	"github.com/qiniu/api/conf"
 	"github.com/qiniu/api/rs"
+	"net/url"
 	"strings"
 )
 
@@ -51,4 +52,20 @@ func PrivateUrl(mac *digest.Mac, publicUrl string, deadline int64) string {
 	token := mac.AccessKey + ":" + sign
 	url := fmt.Sprintf("%s&token=%s", urlToSign, token)
 	return url
+}
+
+func Saveas(mac *digest.Mac, publicUrl string, saveBucket string, saveKey string) (string, error) {
+	uri, parseErr := url.Parse(publicUrl)
+	if parseErr != nil {
+		return "", parseErr
+	}
+	baseUrl := uri.Host + uri.RequestURI()
+	saveEntry := saveBucket + ":" + saveKey
+	encodedSaveEntry := base64.URLEncoding.EncodeToString([]byte(saveEntry))
+	baseUrl += "|saveas/" + encodedSaveEntry
+	h := hmac.New(sha1.New, mac.SecretKey)
+	h.Write([]byte(baseUrl))
+	sign := h.Sum(nil)
+	encodedSign := base64.URLEncoding.EncodeToString(sign)
+	return publicUrl + "|saveas/" + encodedSaveEntry + "/sign/" + mac.AccessKey + ":" + encodedSign, nil
 }

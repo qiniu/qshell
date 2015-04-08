@@ -42,6 +42,7 @@ var cmds = []string{
 	"qetag",
 	"unzip",
 	"privateurl",
+	"saveas",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
@@ -61,6 +62,9 @@ var cmdDocs = map[string][]string{
 	"fetch":         []string{"qshell [-d] fetch <RemoteResourceUrl> <Bucket> [<Key>]", "Fetch a remote resource by url and save in bucket"},
 	"prefetch":      []string{"qshell [-d] prefetch <Bucket> <Key>", "Fetch and update the file in bucket using mirror storage"},
 	"batchdelete":   []string{"qshell [-d] batchdelete <Bucket> <KeyListFile>", "Batch delete files in bucket"},
+	"batchchgm":     []string{"qshell [-d] batchchgm <Bucket> <KeyMimeMapFile>", "Batch chgm files in bucket"},
+	"batchmove":     []string{"qshell [-d] batchmove <OldNewEntryMapFile>", "Batch move files from bucket to bucket"},
+	"batchrename":   []string{"qshell [-d] batchrename <Bucket> <OldNewKeyMapFile>", "Batch rename files in the bucket"},
 	"checkqrsync":   []string{"qshell [-d] checkqrsync <DirCacheResultFile> <ListBucketResultFile> <IgnoreLocalDir> [Prefix]", "Check the qrsync result"},
 	"b64encode":     []string{"qshell [-d] b64encode [<UrlSafe>] <DataToEncode>", "Base64 Encode"},
 	"b64decode":     []string{"qshell [-d] b64decode [<UrlSafe>] <DataToDecode>", "Base64 Decode"},
@@ -74,6 +78,7 @@ var cmdDocs = map[string][]string{
 	"qetag":         []string{"qshell [-d] qetag <LocalFilePath>", "Calculate the hash of local file using the algorithm of qiniu qetag"},
 	"unzip":         []string{"qshell [-d] unzip <QiniuZipFilePath> [<UnzipToDir>]", "Unzip the archive file created by the qiniu mkzip API"},
 	"privateurl":    []string{"qshell [-d] privateurl <PublicUrl> [<Deadline>]", "Create private resource access url"},
+	"saveas":        []string{"qshell [-d] saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>", "Create a resource access url with fop and saveas"},
 }
 
 func Help(cmd string, params ...string) {
