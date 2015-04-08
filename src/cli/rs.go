@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+const (
+	BATCH_ALLOW_MAX = 1000
+)
+
 func printStat(bucket string, key string, entry rs.Entry) {
 	statInfo := fmt.Sprintf("%-20s%-20s\r\n", "Bucket:", bucket)
 	statInfo += fmt.Sprintf("%-20s%-20s\r\n", "Key:", key)
@@ -237,7 +241,7 @@ func BatchDelete(cmd string, params ...string) {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
 			if len(items) > 0 {
-				key := items[0]
+				key := strings.TrimSpace(items[0])
 				if key != "" {
 					entry := rs.EntryPath{
 						bucket, key,
@@ -246,7 +250,7 @@ func BatchDelete(cmd string, params ...string) {
 				}
 			}
 			//check 1000 limit
-			if len(entries) == 1000 {
+			if len(entries) == BATCH_ALLOW_MAX {
 				batchDelete(client, entries)
 				//reset slice
 				entries = make([]rs.EntryPath, 0)
@@ -267,13 +271,14 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 	if err != nil {
 		log.Error("Batch delete error", err)
 	}
-
-	for i, entry := range entries {
-		item := ret[i]
-		if item.Data.Error != "" {
-			log.Error(fmt.Sprintf("Delete '%s' => '%s' Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
-		} else {
-			log.Debug(fmt.Sprintf("Delete '%s' => '%s' Success, Code: %d", entry.Bucket, entry.Key, item.Code))
+	if len(ret) > 0 {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Data.Error != "" {
+				log.Error(fmt.Sprintf("Delete '%s' => '%s' Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
+			} else {
+				log.Debug(fmt.Sprintf("Delete '%s' => '%s' Success, Code: %d", entry.Bucket, entry.Key, item.Code))
+			}
 		}
 	}
 }
@@ -308,7 +313,7 @@ func BatchChgm(cmd string, params ...string) {
 					entries = append(entries, entry)
 				}
 			}
-			if len(entries) == 1000 {
+			if len(entries) == BATCH_ALLOW_MAX {
 				batchChgm(client, entries)
 				entries = make([]qshell.ChgmEntryPath, 0)
 			}
@@ -327,12 +332,75 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 	if err != nil {
 		log.Error("Batch chgm error", err)
 	}
-	for i, entry := range entries {
-		item := ret[i]
-		if item.Data.Error != "" {
-			log.Error(fmt.Sprintf("Chgm '%s' => '%s' Failed, Code :%d", entry.Key, entry.MimeType, item.Code))
-		} else {
-			log.Debug(fmt.Sprintf("Chgm '%s' => '%s' Success, Code :%d", entry.Key, entry.MimeType, item.Code))
+	if len(ret) > 0 {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Data.Error != "" {
+				log.Error(fmt.Sprintf("Chgm '%s' => '%s' Failed, Code :%d", entry.Key, entry.MimeType, item.Code))
+			} else {
+				log.Debug(fmt.Sprintf("Chgm '%s' => '%s' Success, Code :%d", entry.Key, entry.MimeType, item.Code))
+			}
+		}
+	}
+}
+
+func BatchRename(cmd string, params ...string) {
+	if len(params) == 2 {
+		bucket := params[0]
+		oldNewKeyMapFile := params[1]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		fp, err := os.Open(oldNewKeyMapFile)
+		if err != nil {
+			log.Error("Open old new key map file error")
+			return
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+		entries := make([]qshell.RenameEntryPath, 0)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			items := strings.Split(line, "\t")
+			if len(items) == 2 {
+				oldKey := strings.TrimSpace(items[0])
+				newKey := strings.TrimSpace(items[1])
+				if oldKey != "" && newKey != "" {
+					entry := qshell.RenameEntryPath{oldKey, newKey}
+					entries = append(entries, entry)
+				}
+			}
+			if len(entries) == BATCH_ALLOW_MAX {
+				batchRename(client, bucket, entries)
+				entries = make([]qshell.RenameEntryPath, 0)
+			}
+		}
+		if len(entries) > 0 {
+			batchRename(client, bucket, entries)
+		}
+		fmt.Println("All Renamed!")
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func batchRename(client rs.Client, bucket string, entries []qshell.RenameEntryPath) {
+	ret, err := qshell.BatchRename(client, bucket, entries)
+	if err != nil {
+		log.Error("Batch rename error", err)
+	}
+	if len(ret) > 0 {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Data.Error != "" {
+				log.Error(fmt.Sprintf("Rename '%s' => '%s' Failed, Code :%d", entry.OldKey, entry.NewKey, item.Code))
+			} else {
+				log.Debug(fmt.Sprintf("Rename '%s' => '%s' Success, Code :%d", entry.OldKey, entry.NewKey, item.Code))
+			}
 		}
 	}
 }

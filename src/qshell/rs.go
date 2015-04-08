@@ -23,6 +23,11 @@ type ChgmEntryPath struct {
 	MimeType string
 }
 
+type RenameEntryPath struct {
+	OldKey string
+	NewKey string
+}
+
 type BatchItemRet struct {
 	Code int              `json:"code"`
 	Data BatchItemRetData `json:"data"`
@@ -98,6 +103,15 @@ func BatchDelete(client rs.Client, entries []rs.EntryPath) (ret []BatchItemRet, 
 	b := make([]string, len(entries))
 	for i, e := range entries {
 		b[i] = rs.URIDelete(e.Bucket, e.Key)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
+}
+
+func BatchRename(client rs.Client, bucket string, entries []RenameEntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URIMove(bucket, e.OldKey, bucket, e.NewKey)
 	}
 	err = client.Batch(nil, &ret, b)
 	return

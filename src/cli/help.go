@@ -63,7 +63,7 @@ var cmdDocs = map[string][]string{
 	"prefetch":      []string{"qshell [-d] prefetch <Bucket> <Key>", "Fetch and update the file in bucket using mirror storage"},
 	"batchdelete":   []string{"qshell [-d] batchdelete <Bucket> <KeyListFile>", "Batch delete files in bucket"},
 	"batchchgm":     []string{"qshell [-d] batchchgm <Bucket> <KeyMimeMapFile>", "Batch chgm files in bucket"},
-	"batchmove":     []string{"qshell [-d] batchmove <OldNewEntryMapFile>", "Batch move files from bucket to bucket"},
+	"batchmove":     []string{"qshell [-d] batchmove <SrcBucket> <DestBucket> <SrcDestKeyMapFile>", "Batch move files from bucket to bucket"},
 	"batchrename":   []string{"qshell [-d] batchrename <Bucket> <OldNewKeyMapFile>", "Batch rename files in the bucket"},
 	"checkqrsync":   []string{"qshell [-d] checkqrsync <DirCacheResultFile> <ListBucketResultFile> <IgnoreLocalDir> [Prefix]", "Check the qrsync result"},
 	"b64encode":     []string{"qshell [-d] b64encode [<UrlSafe>] <DataToEncode>", "Base64 Encode"},
