@@ -370,17 +370,17 @@ func BatchRename(cmd string, params ...string) {
 				oldKey := strings.TrimSpace(items[0])
 				newKey := strings.TrimSpace(items[1])
 				if oldKey != "" && newKey != "" {
-					entry := qshell.RenameEntryPath{oldKey, newKey}
+					entry := qshell.RenameEntryPath{bucket, oldKey, newKey}
 					entries = append(entries, entry)
 				}
 			}
 			if len(entries) == BATCH_ALLOW_MAX {
-				batchRename(client, bucket, entries)
+				batchRename(client, entries)
 				entries = make([]qshell.RenameEntryPath, 0)
 			}
 		}
 		if len(entries) > 0 {
-			batchRename(client, bucket, entries)
+			batchRename(client, entries)
 		}
 		fmt.Println("All Renamed!")
 	} else {
@@ -388,8 +388,8 @@ func BatchRename(cmd string, params ...string) {
 	}
 }
 
-func batchRename(client rs.Client, bucket string, entries []qshell.RenameEntryPath) {
-	ret, err := qshell.BatchRename(client, bucket, entries)
+func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
+	ret, err := qshell.BatchRename(client, entries)
 	if err != nil {
 		log.Error("Batch rename error", err)
 	}
@@ -400,6 +400,73 @@ func batchRename(client rs.Client, bucket string, entries []qshell.RenameEntryPa
 				log.Error(fmt.Sprintf("Rename '%s' => '%s' Failed, Code :%d", entry.OldKey, entry.NewKey, item.Code))
 			} else {
 				log.Debug(fmt.Sprintf("Rename '%s' => '%s' Success, Code :%d", entry.OldKey, entry.NewKey, item.Code))
+			}
+		}
+	}
+}
+
+func BatchMove(cmd string, params ...string) {
+	if len(params) == 3 {
+		srcBucket := params[0]
+		destBucket := params[1]
+		srcDestKeyMapFile := params[2]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		fp, err := os.Open(srcDestKeyMapFile)
+		if err != nil {
+			log.Error("Open src dest key map file error")
+			return
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+		entries := make([]qshell.MoveEntryPath, 0)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			items := strings.Split(line, "\t")
+			if len(items) == 1 || len(items) == 2 {
+				srcKey := strings.TrimSpace(items[0])
+				destKey := srcKey
+				if len(items) == 2 {
+					destKey = strings.TrimSpace(items[1])
+				}
+				if srcKey != "" && destKey != "" {
+					entry := qshell.MoveEntryPath{srcBucket, destBucket, srcKey, destKey}
+					entries = append(entries, entry)
+				}
+			}
+			if len(entries) == BATCH_ALLOW_MAX {
+				batchMove(client, entries)
+				entries = make([]qshell.MoveEntryPath, 0)
+			}
+		}
+		if len(entries) > 0 {
+			batchMove(client, entries)
+		}
+		fmt.Println("All Moved!")
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
+	ret, err := qshell.BatchMove(client, entries)
+	if err != nil {
+		log.Error("Batch move error", err)
+	}
+	if len(ret) > 0 {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Data.Error != "" {
+				log.Error(fmt.Sprintf("Move '%s:%s' => '%s:%s' Failed, Code :%d",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
+			} else {
+				log.Debug(fmt.Sprintf("Move '%s:%s' => '%s:%s' Success, Code :%d",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
 			}
 		}
 	}

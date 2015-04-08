@@ -24,8 +24,16 @@ type ChgmEntryPath struct {
 }
 
 type RenameEntryPath struct {
+	Bucket string
 	OldKey string
 	NewKey string
+}
+
+type MoveEntryPath struct {
+	SrcBucket  string
+	DestBucket string
+	SrcKey     string
+	DestKey    string
 }
 
 type BatchItemRet struct {
@@ -108,10 +116,19 @@ func BatchDelete(client rs.Client, entries []rs.EntryPath) (ret []BatchItemRet, 
 	return
 }
 
-func BatchRename(client rs.Client, bucket string, entries []RenameEntryPath) (ret []BatchItemRet, err error) {
+func BatchRename(client rs.Client, entries []RenameEntryPath) (ret []BatchItemRet, err error) {
 	b := make([]string, len(entries))
 	for i, e := range entries {
-		b[i] = rs.URIMove(bucket, e.OldKey, bucket, e.NewKey)
+		b[i] = rs.URIMove(e.Bucket, e.OldKey, e.Bucket, e.NewKey)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
+}
+
+func BatchMove(client rs.Client, entries []MoveEntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URIMove(e.SrcBucket, e.SrcKey, e.DestBucket, e.DestKey)
 	}
 	err = client.Batch(nil, &ret, b)
 	return
