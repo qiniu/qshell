@@ -43,6 +43,7 @@ var cmds = []string{
 	"unzip",
 	"privateurl",
 	"saveas",
+	"reqid",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
@@ -79,6 +80,7 @@ var cmdDocs = map[string][]string{
 	"unzip":         []string{"qshell [-d] unzip <QiniuZipFilePath> [<UnzipToDir>]", "Unzip the archive file created by the qiniu mkzip API"},
 	"privateurl":    []string{"qshell [-d] privateurl <PublicUrl> [<Deadline>]", "Create private resource access url"},
 	"saveas":        []string{"qshell [-d] saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>", "Create a resource access url with fop and saveas"},
+	"reqid":         []string{"qshell [-d] reqid <ReqIdToDecode>", "Decode a qiniu reqid"},
 }
 
 func Help(cmd string, params ...string) {

@@ -190,3 +190,31 @@ func Unzip(cmd string, params ...string) {
 		CmdHelp(cmd)
 	}
 }
+
+func ReqId(cmd string, params ...string) {
+	if len(params) == 1 {
+		reqId := params[0]
+		decodedBytes, err := base64.URLEncoding.DecodeString(reqId)
+		if err != nil || len(decodedBytes) < 4 {
+			log.Error("Invalid reqid", reqId, err)
+			return
+		}
+
+		newBytes := decodedBytes[4:]
+		newBytesLen := len(newBytes)
+		newStr := ""
+		for i := newBytesLen - 1; i >= 0; i-- {
+			newStr += fmt.Sprintf("%02X", newBytes[i])
+		}
+		unixNano, err := strconv.ParseInt(newStr, 16, 64)
+		if err != nil {
+			log.Error("Invalid reqid", reqId, err)
+			return
+		}
+		dstDate := time.Unix(0, unixNano)
+		fmt.Println(fmt.Sprintf("%04d-%02d-%02d/%02d-%02d", dstDate.Year(), dstDate.Month(), dstDate.Day(),
+			dstDate.Hour(), dstDate.Minute()))
+	} else {
+		CmdHelp(cmd)
+	}
+}
