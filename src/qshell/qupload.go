@@ -88,15 +88,16 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		log.Error("Failed to get current user", err)
 		return
 	}
+	pathSep:=string(os.PathSeparator)
 	jobId := base64.URLEncoding.EncodeToString([]byte(uploadConfig.SrcDir + ":" + uploadConfig.Bucket))
-	storePath := fmt.Sprintf("%s/.qshell/qupload/%s", currentUser.HomeDir, jobId)
+	storePath := fmt.Sprintf("%s%s.qshell%squpload%s%s", currentUser.HomeDir,pathSep,pathSep, pathSep,jobId)
 	err = os.MkdirAll(storePath, 0775)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to mkdir `%s' due to `%s'", storePath, err))
 		return
 	}
-	cacheFileName := fmt.Sprintf("%s/%s.cache", storePath, jobId)
-	leveldbFileName := fmt.Sprintf("%s/%s.ldb", storePath, jobId)
+	cacheFileName := fmt.Sprintf("%s%s%s.cache", storePath,pathSep, jobId)
+	leveldbFileName := fmt.Sprintf("%s%s%s.ldb", storePath,pathSep, jobId)
 	totalFileCount := dirCache.Cache(uploadConfig.SrcDir, cacheFileName)
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
@@ -132,7 +133,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			cacheFlmd, _ := strconv.Atoi(items[2])
 			uploadFileKey := cacheFname
 			if uploadConfig.IgnoreDir {
-				if i := strings.LastIndex(uploadFileKey, string(os.PathSeparator)); i != -1 {
+				if i := strings.LastIndex(uploadFileKey, pathSep); i != -1 {
 					uploadFileKey = uploadFileKey[i+1:]
 				}
 			}
@@ -143,7 +144,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			if runtime.GOOS == "windows" {
 				uploadFileKey = strings.Replace(uploadFileKey, "\\", "/", -1)
 			}
-			cacheFilePath := strings.Join([]string{uploadConfig.SrcDir, cacheFname}, string(os.PathSeparator))
+			cacheFilePath := strings.Join([]string{uploadConfig.SrcDir, cacheFname}, pathSep)
 			fstat, err := os.Stat(cacheFilePath)
 			if err != nil {
 				log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", cacheFilePath, err))
