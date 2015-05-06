@@ -9,16 +9,6 @@ qshell是利用[七牛文档上公开的API](http://d.qiniu.com)实现的一个�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell v1.0|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.0.zip)|
-|qshell v1.1|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.1.zip)|
-|qshell v1.2.1|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.2.1.zip)|
-|qshell v1.3|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.3.zip)|
-|qshell v1.3.1|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.3.1.zip)|
-|qshell v1.3.2|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.3.3.zip)|
-|qshell v1.3.3|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.3.3.zip)|
-|qshell v1.3.4|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.3.4.zip)|
-|qshell v1.3.6|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.3.6.zip)|
-|qshell v1.3.7|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.3.7.zip)|
 |qshell v1.3.8|Linux, Windows, Mac OSX|[下载](http://7rfgu2.com1.z0.glb.clouddn.com/qshell v1.3.8.zip)|
 
 ###使用
