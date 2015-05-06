@@ -63,6 +63,8 @@ qshell account
 |qetag|根据七牛的qetag算法来计算文件的hash|[文档](http://github.com/jemygraw/qshell/wiki/qetag)|
 |unzip|解压zip文件，支持UTF-8编码和GBK编码|[文档](http://github.com/jemygraw/qshell/wiki/unzip)|
 |privateurl|生成私有空间资源的访问外链|[文档](http://github.com/jemygraw/qshell/wiki/privateurl)|
+|saveas|实时处理的saveas链接快捷生成工具|[文档](http://github.com/jemygraw/qshell/wiki/saveas)|
+|reqid|七牛自定义头部X-Reqid解码工具|[文档](http://github.com/jemygraw/qshell/wiki/reqid)|
 
 ##编译
 1. 如果是编译本地平台的可执行程序，使用`src`目录下面的`build.sh`脚本即可。
