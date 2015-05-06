@@ -48,6 +48,7 @@ qshell account
 |prefetch|更新七牛空间中从源站镜像过来的文件|[文档](http://github.com/jemygraw/qshell/wiki/prefetch)|
 |batchdelete|批量删除七牛空间中的文件，可以直接根据`listbucket`的结果来删除|[文档](http://github.com/jemygraw/qshell/wiki/batchdelete)|
 |batchchgm|批量修改七牛空间中文件的MimeType|[文档](http://github.com/jemygraw/qshell/wiki/batchchgm)|
+|batchcopy|批量复制七牛空间中的文件到另一个空间|[文档](http://github.com/jemygraw/qshell/wiki/batchcopy)|
 |batchmove|批量移动七牛空间中的文件到另一个空间|[文档](http://github.com/jemygraw/qshell/wiki/batchmove)|
 |batchrename|批量重命名七牛空间中的文件|[文档](http://github.com/jemygraw/qshell/wiki/batchrename)|
 |checkqrsync|检查qrsync的同步结果，主要通过比对`dircache`和`listbucket`的结果|[文档](http://github.com/jemygraw/qshell/wiki/checkqrsync)|
