@@ -25,6 +25,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"batchdelete":   cli.BatchDelete,
 	"batchchgm":     cli.BatchChgm,
 	"batchrename":   cli.BatchRename,
+	"batchcopy":     cli.BatchCopy,
 	"batchmove":     cli.BatchMove,
 	"checkqrsync":   cli.CheckQrsync,
 	"fput":          cli.FormPut,

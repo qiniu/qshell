@@ -472,6 +472,73 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 	}
 }
 
+func BatchCopy(cmd string, params ...string) {
+	if len(params) == 3 {
+		srcBucket := params[0]
+		destBucket := params[1]
+		srcDestKeyMapFile := params[2]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		fp, err := os.Open(srcDestKeyMapFile)
+		if err != nil {
+			log.Error("Open src dest key map file error")
+			return
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+		entries := make([]qshell.CopyEntryPath, 0)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			items := strings.Split(line, "\t")
+			if len(items) == 1 || len(items) == 2 {
+				srcKey := strings.TrimSpace(items[0])
+				destKey := srcKey
+				if len(items) == 2 {
+					destKey = strings.TrimSpace(items[1])
+				}
+				if srcKey != "" && destKey != "" {
+					entry := qshell.CopyEntryPath{srcBucket, destBucket, srcKey, destKey}
+					entries = append(entries, entry)
+				}
+			}
+			if len(entries) == BATCH_ALLOW_MAX {
+				batchCopy(client, entries)
+				entries = make([]qshell.CopyEntryPath, 0)
+			}
+		}
+		if len(entries) > 0 {
+			batchCopy(client, entries)
+		}
+		fmt.Println("All Copyed!")
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
+	ret, err := qshell.BatchCopy(client, entries)
+	if err != nil {
+		log.Error("Batch move error", err)
+	}
+	if len(ret) > 0 {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Data.Error != "" {
+				log.Error(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Failed, Code :%d",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
+			} else {
+				log.Debug(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Success, Code :%d",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
+			}
+		}
+	}
+}
+
 func PrivateUrl(cmd string, params ...string) {
 	if len(params) == 1 || len(params) == 2 {
 		publicUrl := params[0]

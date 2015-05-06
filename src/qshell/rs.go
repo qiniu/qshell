@@ -36,6 +36,13 @@ type MoveEntryPath struct {
 	DestKey    string
 }
 
+type CopyEntryPath struct {
+	SrcBucket  string
+	DestBucket string
+	SrcKey     string
+	DestKey    string
+}
+
 type BatchItemRet struct {
 	Code int              `json:"code"`
 	Data BatchItemRetData `json:"data"`
@@ -129,6 +136,15 @@ func BatchMove(client rs.Client, entries []MoveEntryPath) (ret []BatchItemRet, e
 	b := make([]string, len(entries))
 	for i, e := range entries {
 		b[i] = rs.URIMove(e.SrcBucket, e.SrcKey, e.DestBucket, e.DestKey)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
+}
+
+func BatchCopy(client rs.Client, entries []CopyEntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URICopy(e.SrcBucket, e.SrcKey, e.DestBucket, e.DestKey)
 	}
 	err = client.Batch(nil, &ret, b)
 	return
