@@ -58,6 +58,7 @@ func (this *FopRet) String() string {
 				}
 			}
 		}
+		strData += "\r\n"
 	}
 	return strData
 }
