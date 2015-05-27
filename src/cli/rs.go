@@ -585,3 +585,46 @@ func Saveas(cmd string, params ...string) {
 		CmdHelp(cmd)
 	}
 }
+
+func M3u8Delete(cmd string, params ...string) {
+	if len(params) == 2 || len(params) == 3 {
+		bucket := params[0]
+		m3u8Key := params[1]
+		isPrivate := false
+		if len(params) == 3 {
+			isPrivate, _ = strconv.ParseBool(params[2])
+		}
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		m3u8FileList, err := qshell.M3u8FileList(&mac, bucket, m3u8Key, isPrivate)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		client := rs.New(&mac)
+		entryCnt := len(m3u8FileList)
+		if entryCnt == 0 {
+			log.Error("no m3u8 slices found")
+			return
+		}
+		if entryCnt <= BATCH_ALLOW_MAX {
+			batchDelete(client, m3u8FileList)
+		} else {
+			batchCnt := entryCnt / BATCH_ALLOW_MAX
+			for i := 0; i < batchCnt; i++ {
+				end := (i + 1) * BATCH_ALLOW_MAX
+				if end > entryCnt {
+					end = entryCnt
+				}
+				entriesToDelete := m3u8FileList[i*BATCH_ALLOW_MAX : end]
+				batchDelete(client, entriesToDelete)
+			}
+		}
+		fmt.Println("All deleted!")
+	} else {
+		CmdHelp(cmd)
+	}
+}

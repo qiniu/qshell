@@ -47,6 +47,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"privateurl":    cli.PrivateUrl,
 	"saveas":        cli.Saveas,
 	"reqid":         cli.ReqId,
+	"m3u8delete":    cli.M3u8Delete,
 }
 
 func main() {
