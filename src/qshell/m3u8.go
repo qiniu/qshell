@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type BucketDomain []string
@@ -54,7 +55,7 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string, isPrivate bool
 	//create downoad link
 	dnLink := fmt.Sprintf("http://%s/%s", domain, m3u8Key)
 	if isPrivate {
-		dnLink = PrivateUrl(mac, dnLink, 3600)
+		dnLink = PrivateUrl(mac, dnLink, time.Now().Add(time.Second*3600).Unix())
 	}
 	//get m3u8 file content
 	m3u8Resp, m3u8Err := http.Get(dnLink)
