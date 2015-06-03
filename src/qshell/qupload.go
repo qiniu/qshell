@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/qiniu/api/auth/digest"
+	"github.com/qiniu/api/conf"
 	fio "github.com/qiniu/api/io"
 	rio "github.com/qiniu/api/resumable/io"
 	"github.com/qiniu/api/rs"
@@ -25,6 +26,7 @@ import (
 Config file like:
 
 {
+	"up_host"		:	"http://upload.qiniu.com",
 	"src_dir" 		:	"/Users/jemy/Photos",
 	"access_key" 	:	"<Your AccessKey>",
 	"secret_key"	:	"<Your SecretKey>",
@@ -34,7 +36,7 @@ Config file like:
 	"overwrite"		:	false
 }
 
-or without key_prefix and ignore_dir
+or without up_host and key_prefix and ignore_dir
 
 {
 	"src_dir" 		:	"/Users/jemy/Photos",
@@ -55,6 +57,7 @@ type UploadConfig struct {
 	AccessKey string `json:"access_key"`
 	SecretKey string `json:"secret_key"`
 	Bucket    string `json:"bucket"`
+	UpHost    string `json:"up_host,omitempty"`
 	KeyPrefix string `json:"key_prefix,omitempty"`
 	IgnoreDir bool   `json:"ignore_dir,omitempty"`
 	Overwrite bool   `json:"overwrite,omitempty"`
@@ -88,16 +91,16 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		log.Error("Failed to get current user", err)
 		return
 	}
-	pathSep:=string(os.PathSeparator)
+	pathSep := string(os.PathSeparator)
 	jobId := base64.URLEncoding.EncodeToString([]byte(uploadConfig.SrcDir + ":" + uploadConfig.Bucket))
-	storePath := fmt.Sprintf("%s%s.qshell%squpload%s%s", currentUser.HomeDir,pathSep,pathSep, pathSep,jobId)
+	storePath := fmt.Sprintf("%s%s.qshell%squpload%s%s", currentUser.HomeDir, pathSep, pathSep, pathSep, jobId)
 	err = os.MkdirAll(storePath, 0775)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to mkdir `%s' due to `%s'", storePath, err))
 		return
 	}
-	cacheFileName := fmt.Sprintf("%s%s%s.cache", storePath,pathSep, jobId)
-	leveldbFileName := fmt.Sprintf("%s%s%s.ldb", storePath,pathSep, jobId)
+	cacheFileName := fmt.Sprintf("%s%s%s.cache", storePath, pathSep, jobId)
+	leveldbFileName := fmt.Sprintf("%s%s%s.ldb", storePath, pathSep, jobId)
 	totalFileCount := dirCache.Cache(uploadConfig.SrcDir, cacheFileName)
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
@@ -123,6 +126,10 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	upCounter := 0
 	threadThreshold := threadCount + 1
 
+	//use host if not empty
+	if uploadConfig.UpHost != "" {
+		conf.UP_HOST = uploadConfig.UpHost
+	}
 	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
 	//check thread count
 	for bScanner.Scan() {
