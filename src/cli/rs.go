@@ -241,7 +241,7 @@ func BatchDelete(cmd string, params ...string) {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
 			if len(items) > 0 {
-				key := strings.TrimSpace(items[0])
+				key := items[0]
 				if key != "" {
 					entry := rs.EntryPath{
 						bucket, key,
@@ -306,8 +306,8 @@ func BatchChgm(cmd string, params ...string) {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
 			if len(items) == 2 {
-				key := strings.TrimSpace(items[0])
-				mimeType := strings.TrimSpace(items[1])
+				key := items[0]
+				mimeType := items[1]
 				if key != "" && mimeType != "" {
 					entry := qshell.ChgmEntryPath{bucket, key, mimeType}
 					entries = append(entries, entry)
@@ -367,8 +367,8 @@ func BatchRename(cmd string, params ...string) {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
 			if len(items) == 2 {
-				oldKey := strings.TrimSpace(items[0])
-				newKey := strings.TrimSpace(items[1])
+				oldKey := items[0]
+				newKey := items[1]
 				if oldKey != "" && newKey != "" {
 					entry := qshell.RenameEntryPath{bucket, oldKey, newKey}
 					entries = append(entries, entry)
@@ -429,10 +429,10 @@ func BatchMove(cmd string, params ...string) {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
 			if len(items) == 1 || len(items) == 2 {
-				srcKey := strings.TrimSpace(items[0])
+				srcKey := items[0]
 				destKey := srcKey
 				if len(items) == 2 {
-					destKey = strings.TrimSpace(items[1])
+					destKey = items[1]
 				}
 				if srcKey != "" && destKey != "" {
 					entry := qshell.MoveEntryPath{srcBucket, destBucket, srcKey, destKey}
@@ -496,10 +496,10 @@ func BatchCopy(cmd string, params ...string) {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
 			if len(items) == 1 || len(items) == 2 {
-				srcKey := strings.TrimSpace(items[0])
+				srcKey := items[0]
 				destKey := srcKey
 				if len(items) == 2 {
-					destKey = strings.TrimSpace(items[1])
+					destKey = items[1]
 				}
 				if srcKey != "" && destKey != "" {
 					entry := qshell.CopyEntryPath{srcBucket, destBucket, srcKey, destKey}
