@@ -172,7 +172,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			}
 
 			fmt.Print("\033[2K\r")
-			fmt.Printf("Uploading %s (%d/%d, %.0f%%) ...", ldbKey, currentFileCount, totalFileCount,
+			fmt.Printf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
 				float32(currentFileCount)*100/float32(totalFileCount))
 			os.Stdout.Sync()
 			//worker
