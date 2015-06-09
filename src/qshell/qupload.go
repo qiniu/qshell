@@ -33,10 +33,11 @@ Config file like:
 	"bucket"		:	"test-bucket",
 	"ignore_dir"	:	false,
 	"key_prefix"	:	"2014/12/01/",
-	"overwrite"		:	false
+	"overwrite"		:	false,
+	"check_exists"	:	true
 }
 
-or without up_host and key_prefix and ignore_dir
+or without up_host and key_prefix and ignore_dir and check_exists
 
 {
 	"src_dir" 		:	"/Users/jemy/Photos",
@@ -53,14 +54,15 @@ const (
 )
 
 type UploadConfig struct {
-	SrcDir    string `json:"src_dir"`
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
-	Bucket    string `json:"bucket"`
-	UpHost    string `json:"up_host,omitempty"`
-	KeyPrefix string `json:"key_prefix,omitempty"`
-	IgnoreDir bool   `json:"ignore_dir,omitempty"`
-	Overwrite bool   `json:"overwrite,omitempty"`
+	SrcDir      string `json:"src_dir"`
+	AccessKey   string `json:"access_key"`
+	SecretKey   string `json:"secret_key"`
+	Bucket      string `json:"bucket"`
+	UpHost      string `json:"up_host,omitempty"`
+	KeyPrefix   string `json:"key_prefix,omitempty"`
+	IgnoreDir   bool   `json:"ignore_dir,omitempty"`
+	Overwrite   bool   `json:"overwrite,omitempty"`
+	CheckExists bool   `json:"check_exists,omitempty"`
 }
 
 func QiniuUpload(threadCount int, uploadConfigFile string) {
@@ -175,6 +177,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			fmt.Printf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
 				float32(currentFileCount)*100/float32(totalFileCount))
 			os.Stdout.Sync()
+			rsClient := rs.New(&mac)
 			//worker
 			upCounter += 1
 			if upCounter%threadThreshold == 0 {
@@ -183,7 +186,18 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			upWorkGroup.Add(1)
 			go func() {
 				defer upWorkGroup.Done()
-
+				//check exists
+				if uploadConfig.CheckExists {
+					rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
+					if checkErr != nil {
+						log.Error(fmt.Sprintf("Stat `%s' error due to `%s'", uploadFileKey, checkErr))
+						return
+					} else if rsEntry.Fsize == fsize {
+						log.Debug("File already exists in bucket, ignore this upload")
+						return
+					}
+				}
+				//upload
 				policy := rs.PutPolicy{}
 				policy.Scope = uploadConfig.Bucket
 				if uploadConfig.Overwrite {
