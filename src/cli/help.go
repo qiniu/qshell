@@ -9,6 +9,8 @@ var version = "v1.4.2"
 
 var optionDocs = map[string]string{
 	"-d": "Show debug message",
+	"-v": "Show version",
+	"-h": "Show help",
 }
 
 var cmds = []string{
@@ -88,6 +90,10 @@ var cmdDocs = map[string][]string{
 	"saveas":        []string{"qshell [-d] saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>", "Create a resource access url with fop and saveas"},
 	"reqid":         []string{"qshell [-d] reqid <ReqIdToDecode>", "Decode a qiniu reqid"},
 	"m3u8delete":    []string{"qshell [-d] m3u8delete <Bucket> <M3u8Key> [<IsPrivate>]", "Delete m3u8 playlist and the slices it references"},
+}
+
+func Version() {
+	fmt.Println("qshell", version)
 }
 
 func Help(cmd string, params ...string) {
