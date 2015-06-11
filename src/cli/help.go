@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-var version = "v1.4.2"
+var version = "v1.4.3"
 
 var optionDocs = map[string]string{
 	"-d": "Show debug message",
