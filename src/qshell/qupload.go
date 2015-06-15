@@ -65,6 +65,11 @@ type UploadConfig struct {
 	CheckExists bool   `json:"check_exists,omitempty"`
 }
 
+var upSettings = rio.Settings{
+	ChunkSize: 4 * 1024 * 1024,
+	TryTimes:  5,
+}
+
 func QiniuUpload(threadCount int, uploadConfigFile string) {
 	fp, err := os.Open(uploadConfigFile)
 	if err != nil {
@@ -132,6 +137,8 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	if uploadConfig.UpHost != "" {
 		conf.UP_HOST = uploadConfig.UpHost
 	}
+	//set settings
+	rio.SetSettings(&upSettings)
 	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
 	//check thread count
 	for bScanner.Scan() {
