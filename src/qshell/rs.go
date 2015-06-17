@@ -49,7 +49,11 @@ type BatchItemRet struct {
 }
 
 type BatchItemRetData struct {
-	Error string `json:"error,omitempty"`
+	Fsize    int    `json:"fsize,omitempty"`
+	Hash     string `json:"hash,omitempty"`
+	MimeType string `json:"mimeType,omitempty"`
+	PutTime  int64  `json:"putTime,omitempty"`
+	Error    string `json:"error,omitempty"`
 }
 
 func Fetch(mac *digest.Mac, remoteResUrl, bucket, key string) (fetchResult FetchResult, err error) {
@@ -103,6 +107,15 @@ func Saveas(mac *digest.Mac, publicUrl string, saveBucket string, saveKey string
 	sign := h.Sum(nil)
 	encodedSign := base64.URLEncoding.EncodeToString(sign)
 	return publicUrl + "|saveas/" + encodedSaveEntry + "/sign/" + mac.AccessKey + ":" + encodedSign, nil
+}
+
+func BatchStat(client rs.Client, entries []rs.EntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URIStat(e.Bucket, e.Key)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
 }
 
 func BatchChgm(client rs.Client, entries []ChgmEntryPath) (ret []BatchItemRet, err error) {

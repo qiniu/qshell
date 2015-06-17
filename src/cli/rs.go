@@ -218,6 +218,71 @@ func Prefetch(cmd string, params ...string) {
 	}
 }
 
+func BatchStat(cmd string, params ...string) {
+	if len(params) == 2 {
+		bucket := params[0]
+		keyListFile := params[1]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.New(&mac)
+		fp, err := os.Open(keyListFile)
+		if err != nil {
+			log.Error("Open key list file error", err)
+			return
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+		entries := make([]rs.EntryPath, 0)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			items := strings.Split(line, "\t")
+			if len(items) > 0 {
+				key := items[0]
+				if key != "" {
+					entry := rs.EntryPath{
+						bucket, key,
+					}
+					entries = append(entries, entry)
+				}
+			}
+			//check 1000 limit
+			if len(entries) == BATCH_ALLOW_MAX {
+				batchStat(client, entries)
+				//reset slice
+				entries = make([]rs.EntryPath, 0)
+			}
+		}
+		//delete the last batch
+		if len(entries) > 0 {
+			batchStat(client, entries)
+		}
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func batchStat(client rs.Client, entries []rs.EntryPath) {
+	ret, err := qshell.BatchStat(client, entries)
+	if err != nil {
+		log.Error("Batch stat error", err)
+	}
+	if len(ret) > 0 {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Data.Error != "" {
+				fmt.Println(entry.Key + "\t" + item.Data.Error)
+			} else {
+				fmt.Println(fmt.Sprintf("%s\t%d\t%s\t%s\t%d", entry.Key,
+					item.Data.Fsize, item.Data.Hash, item.Data.MimeType, item.Data.PutTime))
+			}
+		}
+	}
+}
+
 func BatchDelete(cmd string, params ...string) {
 	if len(params) == 2 {
 		bucket := params[0]
