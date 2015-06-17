@@ -17,7 +17,7 @@ type IpInfo struct {
 }
 
 func (this IpInfo) String() string {
-	return fmt.Sprintf("Code: %d\t%s", this.Code, this.Data)
+	return fmt.Sprintf("%s", this.Data)
 }
 
 type IpData struct {
@@ -37,7 +37,7 @@ type IpData struct {
 }
 
 func (this IpData) String() string {
-	return fmt.Sprintf("Country: %s\tArea: %s\tRegion: %s\tCity: %s\tCounty: %s\tIsp: %s",
+	return fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%s",
 		this.Country, this.Area, this.Region, this.City, this.County, this.Isp)
 }
 
