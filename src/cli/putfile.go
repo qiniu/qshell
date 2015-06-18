@@ -3,23 +3,35 @@ package cli
 import (
 	"fmt"
 	"github.com/qiniu/api/auth/digest"
+	"github.com/qiniu/api/conf"
 	fio "github.com/qiniu/api/io"
 	rio "github.com/qiniu/api/resumable/io"
 	"github.com/qiniu/api/rs"
 	"github.com/qiniu/log"
 	"os"
 	"sort"
+	"strings"
 	"time"
 )
 
 func FormPut(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 {
+	if len(params) == 3 || len(params) == 4 || len(params) == 5 {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
 		mimeType := ""
+		upHost := "http://upload.qiniu.com"
 		if len(params) == 4 {
+			param := params[3]
+			if strings.HasPrefix(param, "http") {
+				upHost = param
+			} else {
+				mimeType = param
+			}
+		}
+		if len(params) == 5 {
 			mimeType = params[3]
+			upHost = params[4]
 		}
 		accountS.Get()
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
@@ -29,6 +41,7 @@ func FormPut(cmd string, params ...string) {
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
 		}
+		conf.UP_HOST = upHost
 		uptoken := policy.Token(&mac)
 		putRet := fio.PutRet{}
 		startTime := time.Now()
@@ -54,13 +67,23 @@ func FormPut(cmd string, params ...string) {
 }
 
 func ResumablePut(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 {
+	if len(params) == 3 || len(params) == 4 || len(params) == 5 {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
 		mimeType := ""
+		upHost := "http://upload.qiniu.com"
 		if len(params) == 4 {
+			param := params[3]
+			if strings.HasPrefix(param, "http") {
+				upHost = param
+			} else {
+				mimeType = param
+			}
+		}
+		if len(params) == 5 {
 			mimeType = params[3]
+			upHost = params[4]
 		}
 		accountS.Get()
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
@@ -70,6 +93,7 @@ func ResumablePut(cmd string, params ...string) {
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
 		}
+		conf.UP_HOST = upHost
 		progressHandler := ProgressHandler{
 			BlockIndices:    make([]int, 0),
 			BlockProgresses: make(map[int]float32),

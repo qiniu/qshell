@@ -256,7 +256,7 @@ func BatchStat(cmd string, params ...string) {
 				entries = make([]rs.EntryPath, 0)
 			}
 		}
-		//delete the last batch
+		//stat the last batch
 		if len(entries) > 0 {
 			batchStat(client, entries)
 		}
