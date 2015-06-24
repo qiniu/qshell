@@ -9,7 +9,7 @@ qshell是利用[七牛文档上公开的API](http://d.qiniu.com)实现的一个�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell v1.4.3|Linux, Windows, Mac OSX|[下载](http://qdisk.qiniudn.com/qshell v1.4.3.zip)|
+|qshell v1.4.4|Linux, Windows, Mac OSX|[下载](http://qdisk.qiniudn.com/qshell v1.4.4.zip)|
 
 ###使用
 我们知道调用七牛的API需要一对`AccessKey`和`SecretKey`，这个可以从七牛的后台的账号设置->[密钥](https://portal.qiniu.com/setting/key)获取。
@@ -72,3 +72,6 @@ qshell account
 1. 如果是编译本地平台的可执行程序，使用`src`目录下面的`build.sh`脚本即可。
 2. 如果是编译跨平台的可执行程序，使用`src`目录下面的`gox_build.sh`脚本即可。该脚本使用了[gox](https://github.com/mitchellh/gox)工具，请
 使用`go get github.com/mitchellh/gox`安装。
+
+##帮助
+如果您遇到任何问题，而碰巧您脾气比较好的话，可以加QQ：2037014430，我将乐意帮助您。
