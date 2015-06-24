@@ -9,7 +9,7 @@ qshell是利用[七牛文档上公开的API](http://d.qiniu.com)实现的一个�
 
 |版本     |支持平台|链接|更新日志|
 |--------|---------|----|------|
-|qshell v1.4.4|Linux, Windows, Mac OSX|[下载](http://qdisk.qiniudn.com/qshell v1.4.4.zip)|[CHANGELOG.md](CHANGELOG.md)|
+|qshell v1.4.4|Linux, Windows, Mac OSX|[下载](http://qdisk.qiniudn.com/qshell v1.4.4.zip)|[查看](CHANGELOG.md)|
 
 ###使用
 我们知道调用七牛的API需要一对`AccessKey`和`SecretKey`，这个可以从七牛的后台的账号设置->[密钥](https://portal.qiniu.com/setting/key)获取。
