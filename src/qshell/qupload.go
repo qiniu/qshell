@@ -11,6 +11,7 @@ import (
 	rio "github.com/qiniu/api/resumable/io"
 	"github.com/qiniu/api/rs"
 	"github.com/qiniu/log"
+	"github.com/qiniu/rpc"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"io/ioutil"
@@ -196,12 +197,22 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				//check exists
 				if uploadConfig.CheckExists {
 					rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
-					if checkErr != nil {
-						log.Error(fmt.Sprintf("Stat `%s' error due to `%s'", uploadFileKey, checkErr))
-						return
-					} else if rsEntry.Fsize == fsize {
-						log.Debug("File already exists in bucket, ignore this upload")
-						return
+					if checkErr == nil {
+						//compare hash
+						localEtag, cErr := GetEtag(cacheFilePath)
+						if cErr != nil {
+							log.Error("Calc local file hash failed,", cErr)
+							return
+						}
+						if rsEntry.Hash == localEtag {
+							log.Info("File already exists in bucket, ignore this upload")
+							return
+						}
+					} else {
+						if _, ok := checkErr.(*rpc.ErrorInfo); !ok {
+							//not logic error, should be network error
+							return
+						}
 					}
 				}
 				//upload
