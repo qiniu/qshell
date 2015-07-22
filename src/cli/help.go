@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-var version = "v1.4.4"
+var version = "v1.4.5"
 
 var optionDocs = map[string]string{
 	"-d": "Show debug message",
@@ -52,6 +52,7 @@ var cmds = []string{
 	"saveas",
 	"reqid",
 	"m3u8delete",
+	"buckets",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
@@ -92,6 +93,7 @@ var cmdDocs = map[string][]string{
 	"saveas":        []string{"qshell [-d] saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>", "Create a resource access url with fop and saveas"},
 	"reqid":         []string{"qshell [-d] reqid <ReqIdToDecode>", "Decode a qiniu reqid"},
 	"m3u8delete":    []string{"qshell [-d] m3u8delete <Bucket> <M3u8Key> [<IsPrivate>]", "Delete m3u8 playlist and the slices it references"},
+	"buckets":       []string{"qshell [-d] buckets", "Get all buckets of the account"},
 }
 
 func Version() {
