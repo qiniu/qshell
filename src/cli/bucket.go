@@ -26,3 +26,24 @@ func GetBuckets(cmd string, params ...string) {
 		CmdHelp(cmd)
 	}
 }
+
+func GetDomainsOfBucket(cmd string, params ...string) {
+	if len(params) == 1 {
+		bucket := params[0]
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		domains, err := qshell.GetDomainsOfBucket(&mac, bucket)
+		if err != nil {
+			log.Error("Get domains error,", err)
+		} else {
+			for _, domain := range domains {
+				fmt.Println(domain)
+			}
+		}
+	} else {
+		CmdHelp(cmd)
+	}
+}

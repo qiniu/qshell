@@ -53,6 +53,7 @@ var cmds = []string{
 	"reqid",
 	"m3u8delete",
 	"buckets",
+	"domains",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
@@ -94,6 +95,7 @@ var cmdDocs = map[string][]string{
 	"reqid":         []string{"qshell [-d] reqid <ReqIdToDecode>", "Decode a qiniu reqid"},
 	"m3u8delete":    []string{"qshell [-d] m3u8delete <Bucket> <M3u8Key> [<IsPrivate>]", "Delete m3u8 playlist and the slices it references"},
 	"buckets":       []string{"qshell [-d] buckets", "Get all buckets of the account"},
+	"domains":       []string{"qshell [-d] domains <Bucket>", "Get all domains of the bucket"},
 }
 
 func Version() {

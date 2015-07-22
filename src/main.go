@@ -50,6 +50,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"reqid":         cli.ReqId,
 	"m3u8delete":    cli.M3u8Delete,
 	"buckets":       cli.GetBuckets,
+	"domains":       cli.GetDomainsOfBucket,
 }
 
 func main() {

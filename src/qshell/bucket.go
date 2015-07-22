@@ -14,3 +14,14 @@ func GetBuckets(mac *digest.Mac) (buckets []string, err error) {
 	err = client.Conn.Call(nil, &buckets, bucketsUri)
 	return
 }
+
+func GetDomainsOfBucket(mac *digest.Mac, bucket string) (domains []string, err error) {
+	domains = make([]string, 0)
+	client := rs.New(mac)
+	getDomainsUrl := "http://api.qiniu.com/v6/domain/list"
+	postData := map[string][]string{
+		"tbl": []string{bucket},
+	}
+	err = client.Conn.CallWithForm(nil, &domains, getDomainsUrl, postData)
+	return
+}
