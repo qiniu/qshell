@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"github.com/qiniu/api/rs"
+	"github.com/qiniu/api.v6/rs"
 	"github.com/qiniu/log"
 	"time"
 )

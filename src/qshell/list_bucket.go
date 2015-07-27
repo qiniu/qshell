@@ -3,8 +3,8 @@ package qshell
 import (
 	"bufio"
 	"fmt"
-	"github.com/qiniu/api/auth/digest"
-	"github.com/qiniu/api/rsf"
+	"github.com/qiniu/api.v6/auth/digest"
+	"github.com/qiniu/api.v6/rsf"
 	"github.com/qiniu/log"
 	"io"
 	"os"

@@ -2,11 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"github.com/qiniu/api/auth/digest"
-	"github.com/qiniu/api/conf"
-	fio "github.com/qiniu/api/io"
-	rio "github.com/qiniu/api/resumable/io"
-	"github.com/qiniu/api/rs"
+	"github.com/qiniu/api.v6/auth/digest"
+	"github.com/qiniu/api.v6/conf"
+	fio "github.com/qiniu/api.v6/io"
+	rio "github.com/qiniu/api.v6/resumable/io"
+	"github.com/qiniu/api.v6/rs"
 	"github.com/qiniu/log"
 	"os"
 	"sort"

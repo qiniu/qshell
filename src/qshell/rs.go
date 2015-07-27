@@ -5,9 +5,9 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"github.com/qiniu/api/auth/digest"
-	"github.com/qiniu/api/conf"
-	"github.com/qiniu/api/rs"
+	"github.com/qiniu/api.v6/auth/digest"
+	"github.com/qiniu/api.v6/conf"
+	"github.com/qiniu/api.v6/rs"
 	"net/url"
 	"strings"
 )

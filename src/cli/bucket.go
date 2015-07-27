@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"github.com/qiniu/api/auth/digest"
+	"github.com/qiniu/api.v6/auth/digest"
 	"github.com/qiniu/log"
 	"qshell"
 )
