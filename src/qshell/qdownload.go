@@ -26,7 +26,8 @@ import (
 	"access_key"	:	"<Your AccessKey>",
 	"secret_key"	:	"<Your SecretKey>",
 	"is_private"	:	false,
-	"prefix"		:	"demo/"
+	"prefix"		:	"demo/",
+	"suffix"		: ".mp4"
 }
 */
 
@@ -43,6 +44,7 @@ type DownloadConfig struct {
 	SecretKey string `json:"secret_key"`
 	IsPrivate bool   `json:"is_private"`
 	Prefix    string `json:"prefix,omitempty"`
+	Suffix    string `json:"suffix,omitempty"`
 }
 
 func QiniuDownload(threadCount int, downloadConfigFile string) {
@@ -100,6 +102,10 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 		items := strings.Split(line, "\t")
 		if len(items) > 2 {
 			fileKey := items[0]
+			//check suffix
+			if downConfig.Suffix != "" && !strings.HasSuffix(fileKey, downConfig.Suffix) {
+				continue
+			}
 			fileSize, _ := strconv.ParseInt(items[1], 10, 64)
 			//not backup yet
 			if !checkLocalDuplicate(downConfig.DestDir, fileKey, fileSize) {
