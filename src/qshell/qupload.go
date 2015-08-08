@@ -67,7 +67,7 @@ type UploadConfig struct {
 }
 
 var upSettings = rio.Settings{
-	ChunkSize: 2 * 1024 * 1024,
+	ChunkSize: 1 * 1024 * 1024,
 	TryTimes:  5,
 }
 
