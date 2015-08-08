@@ -49,7 +49,7 @@ or without up_host and key_prefix and ignore_dir and check_exists
 */
 
 const (
-	PUT_THRESHOLD           int64 = 100 * 1 << 20
+	PUT_THRESHOLD           int64 = 10 * 1 << 20
 	MIN_UPLOAD_THREAD_COUNT int64 = 1
 	MAX_UPLOAD_THREAD_COUNT int64 = 100
 )
