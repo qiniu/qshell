@@ -17,6 +17,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -99,14 +100,15 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		log.Error("Failed to get current user", err)
 		return
 	}
+
 	pathSep := string(os.PathSeparator)
 	//create job id
 	md5Hasher := md5.New()
-	md5Hasher.Write([]byte(uploadConfig.SrcDir + ":" + uploadConfig.Bucket))
+	md5Hasher.Write([]byte(strings.TrimSuffix(uploadConfig.SrcDir, pathSep) + ":" + uploadConfig.Bucket))
 	jobId := fmt.Sprintf("%x", md5Hasher.Sum(nil))
 
 	//local storage path
-	storePath := fmt.Sprintf("%s%s.qshell%squpload%s%s", currentUser.HomeDir, pathSep, pathSep, pathSep, jobId)
+	storePath := filepath.Join(currentUser.HomeDir, ".qshell", "qupload", jobId)
 	err = os.MkdirAll(storePath, 0775)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to mkdir `%s' due to `%s'", storePath, err))
@@ -114,9 +116,10 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	}
 
 	//cache file
-	cacheFileName := fmt.Sprintf("%s%s%s.cache", storePath, pathSep, jobId)
+
+	cacheFileName := filepath.Join(storePath, jobId+".cache")
 	//leveldb folder
-	leveldbFileName := fmt.Sprintf("%s%s%s.ldb", storePath, pathSep, jobId)
+	leveldbFileName := filepath.Join(storePath, jobId+".ldb")
 
 	totalFileCount := dirCache.Cache(uploadConfig.SrcDir, cacheFileName)
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
@@ -150,6 +153,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	//set settings
 	rio.SetSettings(&upSettings)
 	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
+
 	//check thread count
 	for bScanner.Scan() {
 		line := strings.TrimSpace(bScanner.Text())
@@ -170,7 +174,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			if runtime.GOOS == "windows" {
 				uploadFileKey = strings.Replace(uploadFileKey, "\\", "/", -1)
 			}
-			cacheFilePath := strings.Join([]string{uploadConfig.SrcDir, cacheFname}, pathSep)
+			cacheFilePath := filepath.Join(uploadConfig.SrcDir, cacheFname)
 			fstat, err := os.Stat(cacheFilePath)
 			if err != nil {
 				log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", cacheFilePath, err))
