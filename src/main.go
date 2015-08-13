@@ -94,7 +94,7 @@ func main() {
 			}
 		}
 		if !hit {
-			fmt.Println(fmt.Sprintf("Error: unknow cmd `%s'", cmd))
+			fmt.Println(fmt.Sprintf("Error: unknown cmd `%s'", cmd))
 		}
 	} else {
 		fmt.Println("Use help or help [cmd1 [cmd2 [cmd3 ...]]] to see supported commands.")

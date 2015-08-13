@@ -116,7 +116,6 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	}
 
 	//cache file
-
 	cacheFileName := filepath.Join(storePath, jobId+".cache")
 	//leveldb folder
 	leveldbFileName := filepath.Join(storePath, jobId+".ldb")
@@ -159,9 +158,9 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		line := strings.TrimSpace(bScanner.Text())
 		items := strings.Split(line, "\t")
 		if len(items) > 1 {
-			cacheFname := items[0]
-			cacheFlmd, _ := strconv.Atoi(items[2])
-			uploadFileKey := cacheFname
+			localFname := items[0]
+			localFlmd, _ := strconv.Atoi(items[2])
+			uploadFileKey := localFname
 			if uploadConfig.IgnoreDir {
 				if i := strings.LastIndex(uploadFileKey, pathSep); i != -1 {
 					uploadFileKey = uploadFileKey[i+1:]
@@ -174,61 +173,70 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			if runtime.GOOS == "windows" {
 				uploadFileKey = strings.Replace(uploadFileKey, "\\", "/", -1)
 			}
-			cacheFilePath := filepath.Join(uploadConfig.SrcDir, cacheFname)
-			fstat, err := os.Stat(cacheFilePath)
+
+			localFilePath := filepath.Join(uploadConfig.SrcDir, localFname)
+			fstat, err := os.Stat(localFilePath)
 			if err != nil {
-				log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", cacheFilePath, err))
+				log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", localFilePath, err))
 				return
 			}
+
 			fsize := fstat.Size()
 
-			//check leveldb
 			currentFileCount += 1
-			ldbKey := fmt.Sprintf("%s => %s", cacheFilePath, uploadFileKey)
-			log.Debug(fmt.Sprintf("Checking %s ...", ldbKey))
-			//check last modified
-			ldbFlmd, err := ldb.Get([]byte(ldbKey), nil)
-			flmd, _ := strconv.Atoi(string(ldbFlmd))
-			//not exist, return ErrNotFound
-			if err == nil && cacheFlmd == flmd {
-				continue
-			}
+			ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
 
 			fmt.Print("\033[2K\r")
 			fmt.Printf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
 				float32(currentFileCount)*100/float32(totalFileCount))
 			os.Stdout.Sync()
+
 			rsClient := rs.New(&mac)
+			log.Debug(fmt.Sprintf("Checking %s ...", ldbKey))
+
+			//check exists
+			if uploadConfig.CheckExists {
+				rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
+				if checkErr == nil {
+					//compare hash
+					localEtag, cErr := GetEtag(localFilePath)
+					if cErr != nil {
+						log.Error("Calc local file hash failed,", cErr)
+						continue
+					}
+					if rsEntry.Hash == localEtag {
+						log.Info("File already exists in bucket, ignore this upload")
+						continue
+					}
+				} else {
+					if _, ok := checkErr.(*rpc.ErrorInfo); !ok {
+						//not logic error, should be network error
+						continue
+					}
+				}
+			} else {
+				//check leveldb
+				ldbFlmd, err := ldb.Get([]byte(ldbKey), nil)
+				flmd, _ := strconv.Atoi(string(ldbFlmd))
+				//not exist, return ErrNotFound
+				//check last modified
+
+				if err == nil && localFlmd == flmd {
+					continue
+				}
+			}
+
 			//worker
 			upCounter += 1
 			if upCounter%threadThreshold == 0 {
 				upWorkGroup.Wait()
 			}
 			upWorkGroup.Add(1)
+
+			//start to upload
 			go func() {
 				defer upWorkGroup.Done()
-				//check exists
-				if uploadConfig.CheckExists {
-					rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
-					if checkErr == nil {
-						//compare hash
-						localEtag, cErr := GetEtag(cacheFilePath)
-						if cErr != nil {
-							log.Error("Calc local file hash failed,", cErr)
-							return
-						}
-						if rsEntry.Hash == localEtag {
-							log.Info("File already exists in bucket, ignore this upload")
-							return
-						}
-					} else {
-						if _, ok := checkErr.(*rpc.ErrorInfo); !ok {
-							//not logic error, should be network error
-							return
-						}
-					}
-				}
-				//upload
+
 				policy := rs.PutPolicy{}
 				policy.Scope = uploadConfig.Bucket
 				if uploadConfig.Overwrite {
@@ -239,9 +247,9 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				uptoken := policy.Token(&mac)
 				if fsize > PUT_THRESHOLD {
 					putRet := rio.PutRet{}
-					err := rio.PutFile(nil, &putRet, uptoken, uploadFileKey, cacheFilePath, nil)
+					err := rio.PutFile(nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
 					if err != nil {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", cacheFilePath, uploadFileKey, err))
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err))
 					} else {
 						perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
 						if perr != nil {
@@ -250,11 +258,11 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 					}
 				} else {
 					putRet := fio.PutRet{}
-					err := fio.PutFile(nil, &putRet, uptoken, uploadFileKey, cacheFilePath, nil)
+					err := fio.PutFile(nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
 					if err != nil {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", cacheFilePath, uploadFileKey, err))
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err))
 					} else {
-						perr := ldb.Put([]byte(ldbKey), []byte(strconv.Itoa(cacheFlmd)), &ldbWOpt)
+						perr := ldb.Put([]byte(ldbKey), []byte(strconv.Itoa(localFlmd)), &ldbWOpt)
 						if perr != nil {
 							log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
 						}
@@ -262,10 +270,11 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				}
 			}()
 		} else {
-			log.Error(fmt.Sprintf("Error cache line `%s'", line))
+			log.Error(fmt.Sprintf("Invalid cache line `%s'", line))
 		}
 	}
 	upWorkGroup.Wait()
+
 	fmt.Println()
 	fmt.Println("Upload done!")
 }
