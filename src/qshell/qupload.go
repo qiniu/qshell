@@ -241,7 +241,6 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			float32(currentFileCount)*100/float32(totalFileCount)))
 
 		rsClient := rs.New(&mac)
-		log.Debug(fmt.Sprintf("Checking %s ...", ldbKey))
 
 		//check exists
 		if uploadConfig.CheckExists {
