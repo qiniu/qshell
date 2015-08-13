@@ -57,15 +57,17 @@ const (
 )
 
 type UploadConfig struct {
-	SrcDir      string `json:"src_dir"`
-	AccessKey   string `json:"access_key"`
-	SecretKey   string `json:"secret_key"`
-	Bucket      string `json:"bucket"`
-	UpHost      string `json:"up_host,omitempty"`
-	KeyPrefix   string `json:"key_prefix,omitempty"`
-	IgnoreDir   bool   `json:"ignore_dir,omitempty"`
-	Overwrite   bool   `json:"overwrite,omitempty"`
-	CheckExists bool   `json:"check_exists,omitempty"`
+	SrcDir       string `json:"src_dir"`
+	AccessKey    string `json:"access_key"`
+	SecretKey    string `json:"secret_key"`
+	Bucket       string `json:"bucket"`
+	UpHost       string `json:"up_host,omitempty"`
+	KeyPrefix    string `json:"key_prefix,omitempty"`
+	IgnoreDir    bool   `json:"ignore_dir,omitempty"`
+	Overwrite    bool   `json:"overwrite,omitempty"`
+	CheckExists  bool   `json:"check_exists,omitempty"`
+	SkipPrefixes string `json:"skip_prefixes,omitempty"`
+	SkipSuffixes string `json:"skip_suffixes,omitempty"`
 }
 
 var upSettings = rio.Settings{
@@ -141,6 +143,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	var currentFileCount int64 = 0
 	var successFileCount int64 = 0
 	var failureFileCount int64 = 0
+	var skippedFileCount int64 = 0
 
 	ldbWOpt := opt.WriteOptions{
 		Sync: true,
@@ -167,6 +170,45 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		}
 
 		localFname := items[0]
+		currentFileCount += 1
+
+		skip := false
+		//check skip local file or folder
+		if uploadConfig.SkipPrefixes != "" {
+			//unpack skip prefix
+			skipPrefixes := strings.Split(uploadConfig.SkipPrefixes, ",")
+			for _, prefix := range skipPrefixes {
+				if strings.HasPrefix(localFname, prefix) {
+					log.Info(fmt.Sprintf("Skip by prefix '%s' for local file %s", prefix, localFname))
+					skip = true
+					skippedFileCount += 1
+					break
+				}
+			}
+
+			if skip {
+
+				continue
+			}
+		}
+
+		if uploadConfig.SkipSuffixes != "" {
+			skipSuffixes := strings.Split(uploadConfig.SkipSuffixes, ",")
+			for _, suffix := range skipSuffixes {
+				if strings.HasSuffix(localFname, suffix) {
+					log.Info(fmt.Sprintf("Skip by suffix '%s' for local file %s", suffix, localFname))
+					skip = true
+					skippedFileCount += 1
+					break
+				}
+			}
+
+			if skip {
+				continue
+			}
+		}
+
+		//pack the upload file key
 		localFlmd, _ := strconv.Atoi(items[2])
 		uploadFileKey := localFname
 
@@ -191,8 +233,6 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		}
 
 		fsize := fstat.Size()
-
-		currentFileCount += 1
 		ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
 
 		log.Info(fmt.Sprintf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
@@ -300,6 +340,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	log.Info("Total:\t", currentFileCount)
 	log.Info("Success:\t", successFileCount)
 	log.Info("Failure:\t", failureFileCount)
+	log.Info("Skipped:\t", skippedFileCount)
 	log.Info("-------------------------")
 
 }
