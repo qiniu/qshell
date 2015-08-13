@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 /*
@@ -136,7 +137,11 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	defer ufp.Close()
 	bScanner := bufio.NewScanner(ufp)
 	bScanner.Split(bufio.ScanLines)
-	currentFileCount := 0
+
+	var currentFileCount int64 = 0
+	var successFileCount int64 = 0
+	var failureFileCount int64 = 0
+
 	ldbWOpt := opt.WriteOptions{
 		Sync: true,
 	}
@@ -149,132 +154,152 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	if uploadConfig.UpHost != "" {
 		conf.UP_HOST = uploadConfig.UpHost
 	}
-	//set settings
+	//set resume upload settings
 	rio.SetSettings(&upSettings)
 	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
 
-	//check thread count
 	for bScanner.Scan() {
 		line := strings.TrimSpace(bScanner.Text())
 		items := strings.Split(line, "\t")
-		if len(items) > 1 {
-			localFname := items[0]
-			localFlmd, _ := strconv.Atoi(items[2])
-			uploadFileKey := localFname
-			if uploadConfig.IgnoreDir {
-				if i := strings.LastIndex(uploadFileKey, pathSep); i != -1 {
-					uploadFileKey = uploadFileKey[i+1:]
+		if len(items) != 3 {
+			log.Error(fmt.Sprintf("Invalid cache line `%s'", line))
+			continue
+		}
+
+		localFname := items[0]
+		localFlmd, _ := strconv.Atoi(items[2])
+		uploadFileKey := localFname
+
+		if uploadConfig.IgnoreDir {
+			if i := strings.LastIndex(uploadFileKey, pathSep); i != -1 {
+				uploadFileKey = uploadFileKey[i+1:]
+			}
+		}
+		if uploadConfig.KeyPrefix != "" {
+			uploadFileKey = strings.Join([]string{uploadConfig.KeyPrefix, uploadFileKey}, "")
+		}
+		//convert \ to / under windows
+		if runtime.GOOS == "windows" {
+			uploadFileKey = strings.Replace(uploadFileKey, "\\", "/", -1)
+		}
+
+		localFilePath := filepath.Join(uploadConfig.SrcDir, localFname)
+		fstat, err := os.Stat(localFilePath)
+		if err != nil {
+			log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", localFilePath, err))
+			return
+		}
+
+		fsize := fstat.Size()
+
+		currentFileCount += 1
+		ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
+
+		log.Info(fmt.Sprintf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
+			float32(currentFileCount)*100/float32(totalFileCount)))
+
+		rsClient := rs.New(&mac)
+		log.Debug(fmt.Sprintf("Checking %s ...", ldbKey))
+
+		//check exists
+		if uploadConfig.CheckExists {
+			rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
+			if checkErr == nil {
+				//compare hash
+				localEtag, cErr := GetEtag(localFilePath)
+				if cErr != nil {
+					atomic.AddInt64(&failureFileCount, 1)
+					log.Error("Calc local file hash failed,", cErr)
+					continue
 				}
-			}
-			if uploadConfig.KeyPrefix != "" {
-				uploadFileKey = strings.Join([]string{uploadConfig.KeyPrefix, uploadFileKey}, "")
-			}
-			//convert \ to / under windows
-			if runtime.GOOS == "windows" {
-				uploadFileKey = strings.Replace(uploadFileKey, "\\", "/", -1)
-			}
-
-			localFilePath := filepath.Join(uploadConfig.SrcDir, localFname)
-			fstat, err := os.Stat(localFilePath)
-			if err != nil {
-				log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", localFilePath, err))
-				return
-			}
-
-			fsize := fstat.Size()
-
-			currentFileCount += 1
-			ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
-
-			fmt.Print("\033[2K\r")
-			fmt.Printf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
-				float32(currentFileCount)*100/float32(totalFileCount))
-			os.Stdout.Sync()
-
-			rsClient := rs.New(&mac)
-			log.Debug(fmt.Sprintf("Checking %s ...", ldbKey))
-
-			//check exists
-			if uploadConfig.CheckExists {
-				rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
-				if checkErr == nil {
-					//compare hash
-					localEtag, cErr := GetEtag(localFilePath)
-					if cErr != nil {
-						log.Error("Calc local file hash failed,", cErr)
-						continue
-					}
-					if rsEntry.Hash == localEtag {
-						log.Info("File already exists in bucket, ignore this upload")
-						continue
-					}
-				} else {
-					if _, ok := checkErr.(*rpc.ErrorInfo); !ok {
-						//not logic error, should be network error
-						continue
-					}
+				if rsEntry.Hash == localEtag {
+					atomic.AddInt64(&successFileCount, 1)
+					log.Info(fmt.Sprintf("File %s already exists in bucket, ignore this upload", uploadFileKey))
+					continue
 				}
 			} else {
-				//check leveldb
-				ldbFlmd, err := ldb.Get([]byte(ldbKey), nil)
-				flmd, _ := strconv.Atoi(string(ldbFlmd))
-				//not exist, return ErrNotFound
-				//check last modified
-
-				if err == nil && localFlmd == flmd {
+				if _, ok := checkErr.(*rpc.ErrorInfo); !ok {
+					//not logic error, should be network error
+					atomic.AddInt64(&failureFileCount, 1)
 					continue
 				}
 			}
+		} else {
+			//check leveldb
+			ldbFlmd, err := ldb.Get([]byte(ldbKey), nil)
+			flmd, _ := strconv.Atoi(string(ldbFlmd))
+			//not exist, return ErrNotFound
+			//check last modified
 
-			//worker
-			upCounter += 1
-			if upCounter%threadThreshold == 0 {
-				upWorkGroup.Wait()
+			if err == nil && localFlmd == flmd {
+				atomic.AddInt64(&successFileCount, 1)
+				continue
 			}
-			upWorkGroup.Add(1)
+		}
 
-			//start to upload
-			go func() {
-				defer upWorkGroup.Done()
+		//worker
+		upCounter += 1
+		if upCounter%threadThreshold == 0 {
+			upWorkGroup.Wait()
+		}
+		upWorkGroup.Add(1)
 
-				policy := rs.PutPolicy{}
-				policy.Scope = uploadConfig.Bucket
-				if uploadConfig.Overwrite {
-					policy.Scope = uploadConfig.Bucket + ":" + uploadFileKey
-					policy.InsertOnly = 0
-				}
-				policy.Expires = 24 * 3600
-				uptoken := policy.Token(&mac)
-				if fsize > PUT_THRESHOLD {
-					putRet := rio.PutRet{}
-					err := rio.PutFile(nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
-					if err != nil {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err))
+		//start to upload
+		go func() {
+			defer upWorkGroup.Done()
+
+			policy := rs.PutPolicy{}
+			policy.Scope = uploadConfig.Bucket
+			if uploadConfig.Overwrite {
+				policy.Scope = uploadConfig.Bucket + ":" + uploadFileKey
+				policy.InsertOnly = 0
+			}
+			policy.Expires = 24 * 3600
+			uptoken := policy.Token(&mac)
+			if fsize > PUT_THRESHOLD {
+				putRet := rio.PutRet{}
+				err := rio.PutFile(nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
+				if err != nil {
+					atomic.AddInt64(&failureFileCount, 1)
+					if pErr, ok := err.(*rpc.ErrorInfo); ok {
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, pErr.Err))
 					} else {
-						perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
-						if perr != nil {
-							log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
-						}
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err))
 					}
 				} else {
-					putRet := fio.PutRet{}
-					err := fio.PutFile(nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
-					if err != nil {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err))
-					} else {
-						perr := ldb.Put([]byte(ldbKey), []byte(strconv.Itoa(localFlmd)), &ldbWOpt)
-						if perr != nil {
-							log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
-						}
+					atomic.AddInt64(&successFileCount, 1)
+					perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
+					if perr != nil {
+						log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
 					}
 				}
-			}()
-		} else {
-			log.Error(fmt.Sprintf("Invalid cache line `%s'", line))
-		}
+			} else {
+				putRet := fio.PutRet{}
+				err := fio.PutFile(nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
+				if err != nil {
+					atomic.AddInt64(&failureFileCount, 1)
+					if pErr, ok := err.(*rpc.ErrorInfo); ok {
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, pErr.Err))
+					} else {
+						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err))
+					}
+				} else {
+					atomic.AddInt64(&successFileCount, 1)
+					perr := ldb.Put([]byte(ldbKey), []byte(strconv.Itoa(localFlmd)), &ldbWOpt)
+					if perr != nil {
+						log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
+					}
+				}
+			}
+		}()
+
 	}
 	upWorkGroup.Wait()
 
-	fmt.Println()
-	fmt.Println("Upload done!")
+	log.Info("-------Upload Done-------")
+	log.Info("Total:\t", currentFileCount)
+	log.Info("Success:\t", successFileCount)
+	log.Info("Failure:\t", failureFileCount)
+	log.Info("-------------------------")
+
 }
