@@ -57,6 +57,7 @@ func main() {
 	args := os.Args
 	argc := len(args)
 	log.SetOutputLevel(log.Linfo)
+	log.SetOutput(os.Stdout)
 	if argc > 1 {
 		cmd := ""
 		params := []string{}
