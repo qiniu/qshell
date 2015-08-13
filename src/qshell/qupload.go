@@ -179,7 +179,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			skipPrefixes := strings.Split(uploadConfig.SkipPrefixes, ",")
 			for _, prefix := range skipPrefixes {
 				if strings.HasPrefix(localFname, strings.TrimSpace(prefix)) {
-					log.Info(fmt.Sprintf("Skip by prefix '%s' for local file %s",
+					log.Debug(fmt.Sprintf("Skip by prefix '%s' for local file %s",
 						strings.TrimSpace(prefix), localFname))
 					skip = true
 					skippedFileCount += 1
@@ -197,7 +197,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			skipSuffixes := strings.Split(uploadConfig.SkipSuffixes, ",")
 			for _, suffix := range skipSuffixes {
 				if strings.HasSuffix(localFname, strings.TrimSpace(suffix)) {
-					log.Info(fmt.Sprintf("Skip by suffix '%s' for local file %s",
+					log.Debug(fmt.Sprintf("Skip by suffix '%s' for local file %s",
 						strings.TrimSpace(suffix), localFname))
 					skip = true
 					skippedFileCount += 1
@@ -255,8 +255,8 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 					continue
 				}
 				if rsEntry.Hash == localEtag {
-					atomic.AddInt64(&successFileCount, 1)
-					log.Info(fmt.Sprintf("File %s already exists in bucket, ignore this upload", uploadFileKey))
+					atomic.AddInt64(&skippedFileCount, 1)
+					log.Debug(fmt.Sprintf("File %s already exists in bucket, ignore this upload", uploadFileKey))
 					continue
 				}
 			} else {
@@ -274,7 +274,8 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			//check last modified
 
 			if err == nil && localFlmd == flmd {
-				atomic.AddInt64(&successFileCount, 1)
+				log.Debug("Skip by local log for file", localFname)
+				atomic.AddInt64(&skippedFileCount, 1)
 				continue
 			}
 		}
