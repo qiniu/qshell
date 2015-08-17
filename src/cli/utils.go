@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"github.com/qiniu/log"
@@ -9,6 +10,10 @@ import (
 	"qshell"
 	"strconv"
 	"time"
+)
+
+const (
+	ALPHA_LIST = "abcdefghijklmnopqrstuvwxyz"
 )
 
 func Base64Encode(cmd string, params ...string) {
@@ -217,4 +222,25 @@ func ReqId(cmd string, params ...string) {
 	} else {
 		CmdHelp(cmd)
 	}
+}
+
+func CreateRandString(num int) (rcode string) {
+	if num <= 0 || num > len(ALPHA_LIST) {
+		rcode = ""
+		return
+	}
+
+	buffer := make([]byte, num)
+	_, err := rand.Read(buffer)
+	if err != nil {
+		rcode = ""
+		return
+	}
+
+	for _, b := range buffer {
+		index := int(b) / len(ALPHA_LIST)
+		rcode += string(ALPHA_LIST[index])
+	}
+
+	return
 }
