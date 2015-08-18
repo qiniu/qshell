@@ -1,3 +1,6 @@
+#1.4.9
+1. 为`batchdelete`,`batchcopy`,`batchrename`,`batchchgm`,`batchmove`添加操作确认功能
+
 #1.4.8
 1. 修复`qupload`的`src_dir`参数指定尾部`/`或者`\\`造成本地文件名多余问题
 2. 修复`qupload`的`check_exists`在远程文件删除，本地已同步过的情况下，再次同步不会上传的问题
