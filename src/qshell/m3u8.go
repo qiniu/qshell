@@ -43,11 +43,18 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string, isPrivate bool
 	var domain string
 	for _, d := range bucketDomains {
 		if strings.HasSuffix(d, "qiniudn.com") ||
-			strings.HasSuffix(d, "clouddn.com") {
+			strings.HasSuffix(d, "clouddn.com") ||
+			strings.HasSuffix(d, "qiniucdn.com") {
 			domain = d
 			break
 		}
 	}
+
+	//get first
+	if domain == "" {
+		domain = bucketDomains[0]
+	}
+
 	if domain == "" {
 		err = errors.New("no valid domain found for the bucket")
 		return
