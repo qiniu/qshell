@@ -1,6 +1,6 @@
 #1.5.0
 1. 优化m3u8获取域名的逻辑
-2. Batch操作的验证只在非Windows的操作系统下面提示
+2. Batch操作的验证在Windows的操作系统下面不显示颜色
 
 #1.4.9
 1. 为`batchdelete`,`batchcopy`,`batchrename`,`batchchgm`,`batchmove`添加操作确认功能
