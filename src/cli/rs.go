@@ -285,22 +285,24 @@ func batchStat(client rs.Client, entries []rs.EntryPath) {
 }
 
 func BatchDelete(cmd string, params ...string) {
-	if runtime.GOOS != "windows" {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			log.Error("Create confirm code failed")
-			return
-		}
+	//confirm
+	rcode := CreateRandString(6)
+	if rcode == "" {
+		log.Error("Create confirm code failed")
+		return
+	}
 
-		rcode2 := ""
+	rcode2 := ""
+	if runtime.GOOS == "windows" {
+		fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+	} else {
 		fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		fmt.Scanln(&rcode2)
+	}
+	fmt.Scanln(&rcode2)
 
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
+	if rcode != rcode2 {
+		fmt.Println("Task quit!")
+		return
 	}
 
 	if len(params) == 2 {
@@ -368,22 +370,24 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 }
 
 func BatchChgm(cmd string, params ...string) {
-	if runtime.GOOS != "windows" {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			log.Error("Create confirm code failed")
-			return
-		}
+	//confirm
+	rcode := CreateRandString(6)
+	if rcode == "" {
+		log.Error("Create confirm code failed")
+		return
+	}
 
-		rcode2 := ""
+	rcode2 := ""
+	if runtime.GOOS == "windows" {
+		fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+	} else {
 		fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		fmt.Scanln(&rcode2)
+	}
+	fmt.Scanln(&rcode2)
 
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
+	if rcode != rcode2 {
+		fmt.Println("Task quit!")
+		return
 	}
 
 	if len(params) == 2 {
@@ -447,22 +451,24 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 }
 
 func BatchRename(cmd string, params ...string) {
-	if runtime.GOOS != "windows" {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			log.Error("Create confirm code failed")
-			return
-		}
+	//confirm
+	rcode := CreateRandString(6)
+	if rcode == "" {
+		log.Error("Create confirm code failed")
+		return
+	}
 
-		rcode2 := ""
+	rcode2 := ""
+	if runtime.GOOS == "windows" {
+		fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+	} else {
 		fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		fmt.Scanln(&rcode2)
+	}
+	fmt.Scanln(&rcode2)
 
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
+	if rcode != rcode2 {
+		fmt.Println("Task quit!")
+		return
 	}
 
 	if len(params) == 2 {
@@ -526,22 +532,24 @@ func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 }
 
 func BatchMove(cmd string, params ...string) {
-	if runtime.GOOS != "windows" {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			log.Error("Create confirm code failed")
-			return
-		}
+	//confirm
+	rcode := CreateRandString(6)
+	if rcode == "" {
+		log.Error("Create confirm code failed")
+		return
+	}
 
-		rcode2 := ""
+	rcode2 := ""
+	if runtime.GOOS == "windows" {
+		fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+	} else {
 		fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		fmt.Scanln(&rcode2)
+	}
+	fmt.Scanln(&rcode2)
 
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
+	if rcode != rcode2 {
+		fmt.Println("Task quit!")
+		return
 	}
 
 	if len(params) == 3 {
@@ -611,22 +619,24 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 }
 
 func BatchCopy(cmd string, params ...string) {
-	if runtime.GOOS != "windows" {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			log.Error("Create confirm code failed")
-			return
-		}
+	//confirm
+	rcode := CreateRandString(6)
+	if rcode == "" {
+		log.Error("Create confirm code failed")
+		return
+	}
 
-		rcode2 := ""
+	rcode2 := ""
+	if runtime.GOOS == "windows" {
+		fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+	} else {
 		fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		fmt.Scanln(&rcode2)
+	}
+	fmt.Scanln(&rcode2)
 
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
+	if rcode != rcode2 {
+		fmt.Println("Task quit!")
+		return
 	}
 
 	if len(params) == 3 {

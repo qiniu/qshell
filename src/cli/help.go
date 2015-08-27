@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"runtime"
 )
 
 var version = "v1.5.0"
@@ -144,4 +145,8 @@ func CmdHelp(cmd string) {
 		docStr = fmt.Sprintf("Usage: %s\r\n  %s\r\n", cmdDoc[0], cmdDoc[1])
 	}
 	fmt.Println(docStr)
+}
+
+func UserAgent() string {
+	return fmt.Sprintf("QShell/%s (%s; %s; %s)", version, runtime.GOOS, runtime.GOARCH, runtime.Version())
 }

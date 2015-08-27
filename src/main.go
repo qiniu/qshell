@@ -4,6 +4,7 @@ import (
 	"cli"
 	"fmt"
 	"github.com/qiniu/log"
+	"github.com/qiniu/rpc"
 	"os"
 )
 
@@ -54,6 +55,10 @@ var supportedCmds = map[string]cli.CliFunc{
 }
 
 func main() {
+	//set qshell user agent
+	rpc.UserAgent = cli.UserAgent()
+
+	//parse command
 	args := os.Args
 	argc := len(args)
 	log.SetOutputLevel(log.Linfo)
