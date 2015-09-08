@@ -9,7 +9,7 @@ qshell是利用[七牛文档上公开的API](http://d.qiniu.com)实现的一个�
 
 |版本     |支持平台|链接|更新日志|
 |--------|---------|----|------|
-|qshell v1.5.0|Linux, Windows, Mac OSX|[下载](http://devtools.qiniu.com/qshell-v1.5.0.zip)|[查看](CHANGELOG.md)|
+|qshell v1.5.1|Linux, Windows, Mac OSX|[下载](http://devtools.qiniu.com/qshell-v1.5.1.zip)|[查看](CHANGELOG.md)|
 
 因为上面发布的zip包里面有支持不同平台的可执行文件，请根据系统平台选择合适的可执行文件，然后其他的都可以删除，再把可执行文件重命名为 `qshell` (Windows下面是 `qshell.exe`然后就可以使用了）
 
