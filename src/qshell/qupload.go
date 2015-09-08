@@ -231,7 +231,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		fstat, err := os.Stat(localFilePath)
 		if err != nil {
 			log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", localFilePath, err))
-			return
+			continue
 		}
 
 		fsize := fstat.Size()
