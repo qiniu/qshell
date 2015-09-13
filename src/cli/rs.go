@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	BATCH_ALLOW_MAX = 1000
+	BATCH_ALLOW_MAX             = 1000
+	BATCH_CDN_REFRESH_ALLOW_MAX = 10
 )
 
 func printStat(bucket string, key string, entry rs.Entry) {
@@ -702,6 +703,54 @@ func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
 			}
 		}
+	}
+}
+
+func BatchRefresh(cmd string, params ...string) {
+	if len(params) == 1 {
+		urlListFile := params[0]
+
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+
+		client := rs.New(&mac)
+		fp, err := os.Open(urlListFile)
+		if err != nil {
+			log.Error("Open url list file error", err)
+			return
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+
+		urlsToRefresh := make([]string, 0, 10)
+		for scanner.Scan() {
+			url := strings.TrimSpace(scanner.Text())
+			urlsToRefresh = append(urlsToRefresh, url)
+
+			if len(urlsToRefresh) == BATCH_CDN_REFRESH_ALLOW_MAX {
+				batchRefresh(&client, urlsToRefresh)
+				urlsToRefresh = make([]string, 0, 10)
+			}
+		}
+
+		if len(urlsToRefresh) > 0 {
+			batchRefresh(&client, urlsToRefresh)
+		}
+
+		fmt.Println("All refresh requests sent!")
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func batchRefresh(client *rs.Client, urls []string) {
+	err := qshell.BatchRefresh(client, urls)
+	if err != nil {
+		log.Error("batch refresh error", err)
 	}
 }
 

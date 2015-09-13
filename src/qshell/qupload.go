@@ -188,7 +188,6 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			}
 
 			if skip {
-
 				continue
 			}
 		}
