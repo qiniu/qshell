@@ -729,6 +729,9 @@ func BatchRefresh(cmd string, params ...string) {
 		urlsToRefresh := make([]string, 0, 10)
 		for scanner.Scan() {
 			url := strings.TrimSpace(scanner.Text())
+			if url == "" {
+				continue
+			}
 			urlsToRefresh = append(urlsToRefresh, url)
 
 			if len(urlsToRefresh) == BATCH_CDN_REFRESH_ALLOW_MAX {
@@ -775,6 +778,49 @@ func PrivateUrl(cmd string, params ...string) {
 		}
 		url := qshell.PrivateUrl(&mac, publicUrl, deadline)
 		fmt.Println(url)
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func BatchSign(cmd string, params ...string) {
+	if len(params) == 1 || len(params) == 2 {
+		urlListFile := params[0]
+		var deadline int64
+		if len(params) == 2 {
+			if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
+				log.Error("Invalid <Deadline>")
+				return
+			} else {
+				deadline = val
+			}
+		} else {
+			deadline = time.Now().Add(time.Second * 3600 * 24 * 365).Unix()
+		}
+
+		accountS.Get()
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+
+		fp, openErr := os.Open(urlListFile)
+		if openErr != nil {
+			log.Error("Open url list file error,", openErr)
+			return
+		}
+		defer fp.Close()
+
+		bReader := bufio.NewScanner(fp)
+		bReader.Split(bufio.ScanLines)
+		for bReader.Scan() {
+			urlToSign := strings.TrimSpace(bReader.Text())
+			if urlToSign == "" {
+				continue
+			}
+			signedUrl := qshell.PrivateUrl(&mac, urlToSign, deadline)
+			fmt.Println(signedUrl)
+		}
 	} else {
 		CmdHelp(cmd)
 	}

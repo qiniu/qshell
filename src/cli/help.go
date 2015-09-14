@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v1.5.2"
+var version = "v1.5.3"
 
 var optionDocs = map[string]string{
 	"-d": "Show debug message",
@@ -38,6 +38,7 @@ var cmds = []string{
 	"batchmove",
 	"batchrename",
 	"batchrefresh",
+	"batchsign",
 	"checkqrsync",
 	"b64encode",
 	"b64decode",
@@ -81,6 +82,7 @@ var cmdDocs = map[string][]string{
 	"batchmove":     []string{"qshell [-d] batchmove <SrcBucket> <DestBucket> <SrcDestKeyMapFile>", "Batch move files from bucket to bucket"},
 	"batchrename":   []string{"qshell [-d] batchrename <Bucket> <OldNewKeyMapFile>", "Batch rename files in the bucket"},
 	"batchrefresh":  []string{"qshell [-d] batchrefresh <UrlListFile>", "Batch refresh the cdn cache by the url list file"},
+	"batchsign":     []string{"qshell [-d] batchsign <UrlListFile> [<Deadline>]", "Batch create the private url from the public url list file"},
 	"checkqrsync":   []string{"qshell [-d] checkqrsync <DirCacheResultFile> <ListBucketResultFile> <IgnoreLocalDir> [Prefix]", "Check the qrsync result"},
 	"b64encode":     []string{"qshell [-d] b64encode [<UrlSafe>] <DataToEncode>", "Base64 Encode"},
 	"b64decode":     []string{"qshell [-d] b64decode [<UrlSafe>] <DataToDecode>", "Base64 Decode"},
