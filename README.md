@@ -9,7 +9,7 @@ qshell是利用[七牛文档上公开的API](http://d.qiniu.com)实现的一个�
 
 |版本     |支持平台|链接|更新日志|
 |--------|---------|----|------|
-|qshell v1.5.2|Linux, Windows, Mac OSX|[下载](http://devtools.qiniu.com/qshell-v1.5.2.zip)|[查看](CHANGELOG.md)|
+|qshell v1.5.3|Linux, Windows, Mac OSX|[下载](http://devtools.qiniu.com/qshell-v1.5.3.zip)|[查看](CHANGELOG.md)|
 
 因为上面发布的zip包里面有支持不同平台的可执行文件，请根据系统平台选择合适的可执行文件，然后其他的都可以删除，再把可执行文件重命名为 `qshell` (Windows下面是 `qshell.exe`然后就可以使用了）
 
@@ -56,6 +56,7 @@ qshell account
 |batchmove|批量移动七牛空间中的文件到另一个空间|[文档](http://github.com/jemygraw/qshell/wiki/batchmove)|
 |batchrename|批量重命名七牛空间中的文件|[文档](http://github.com/jemygraw/qshell/wiki/batchrename)|
 |batchrefresh|批量刷新七牛空间中的文件的访问外链|[文档](http://github.com/jemygraw/qshell/wiki/batchrefresh)|
+|batchsign|批量根据资源的公开外链生成资源的私有外链|[文档]((http://github.com/jemygraw/qshell/wiki/batchsign)|
 |checkqrsync|检查qrsync的同步结果，主要通过比对`dircache`和`listbucket`的结果|[文档](http://github.com/jemygraw/qshell/wiki/checkqrsync)|
 |b64encode|base64编码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](http://github.com/jemygraw/qshell/wiki/b64encode)|
 |b64decode|base64解码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](http://github.com/jemygraw/qshell/wiki/b64decode)|
