@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"path/filepath"
 )
 
 type Account struct {
@@ -35,20 +36,22 @@ func (this *Account) Set(accessKey string, secretKey string) {
 		log.Error("Get current user failed.", err)
 		return
 	}
-	qAccountFolder := fmt.Sprintf("%s/%s", currentUser.HomeDir, ".qshell")
+	qAccountFolder := filepath.Join(currentUser.HomeDir, ".qshell")
 	if _, err := os.Stat(qAccountFolder); err != nil {
 		if merr := os.MkdirAll(qAccountFolder, 0775); merr != nil {
 			log.Error(fmt.Sprintf("Mkdir `%s' failed.", qAccountFolder), merr)
 			return
 		}
 	}
-	qAccountFile := fmt.Sprintf("%s/%s", qAccountFolder, "account.json")
+	qAccountFile := filepath.Join(qAccountFolder, "account.json")
 	log.Debug(fmt.Sprintf("Account file is `%s'", qAccountFile))
-	fp, openErr := os.OpenFile(qAccountFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	fp, openErr := os.Create(qAccountFile)
 	if openErr != nil {
 		log.Error("Open account file failed.", openErr)
 		return
 	}
+	defer fp.Close()
+
 	this.AccessKey = accessKey
 	this.SecretKey = secretKey
 	account := Account{
@@ -60,7 +63,6 @@ func (this *Account) Set(accessKey string, secretKey string) {
 		log.Error("Write account info failed.", wErr)
 		return
 	}
-	fp.Close()
 }
 
 func (this *Account) Get() {
@@ -69,7 +71,7 @@ func (this *Account) Get() {
 		log.Error("Get current user failed.", err)
 		return
 	}
-	qAccountFile := fmt.Sprintf("%s/%s/%s", currentUser.HomeDir, ".qshell", "account.json")
+	qAccountFile := filepath.Join(currentUser.HomeDir, ".qshell", "account.json")
 	fp, openErr := os.Open(qAccountFile)
 	if openErr != nil {
 		log.Error("Open account file failed.", openErr)

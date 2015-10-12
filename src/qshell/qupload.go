@@ -23,6 +23,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 /*
@@ -76,6 +77,7 @@ var upSettings = rio.Settings{
 }
 
 func QiniuUpload(threadCount int, uploadConfigFile string) {
+	timeStart := time.Now()
 	fp, err := os.Open(uploadConfigFile)
 	if err != nil {
 		log.Error(fmt.Sprintf("Open upload config file `%s' error due to `%s'", uploadConfigFile, err))
@@ -337,11 +339,12 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	}
 	upWorkGroup.Wait()
 
-	log.Info("-------Upload Done-------")
+	log.Info("-------Upload Result-------")
 	log.Info("Total:\t", currentFileCount)
 	log.Info("Success:\t", successFileCount)
 	log.Info("Failure:\t", failureFileCount)
 	log.Info("Skipped:\t", skippedFileCount)
+	log.Info("Duration:\t", time.Since(timeStart))
 	log.Info("-------------------------")
 
 }

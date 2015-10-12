@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/md5"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/qiniu/api.v6/auth/digest"
 	"github.com/qiniu/log"
@@ -15,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -48,6 +50,7 @@ type DownloadConfig struct {
 }
 
 func QiniuDownload(threadCount int, downloadConfigFile string) {
+	timeStart := time.Now()
 	cnfFp, err := os.Open(downloadConfigFile)
 	if err != nil {
 		log.Error("Open download config file", downloadConfigFile, "failed,", err)
@@ -90,12 +93,17 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	listScanner := bufio.NewScanner(listFp)
 	listScanner.Split(bufio.ScanLines)
 	downWorkGroup := sync.WaitGroup{}
-	downCounter := 0
 
-	threadThresold := threadCount + 1
+	totalCount := 0
+	existsCount := 0
+
+	var successCount int32 = 0
+	var failCount int32 = 0
+
+	threadThreshold := threadCount + 1
 	for listScanner.Scan() {
-		downCounter += 1
-		if downCounter%threadThresold == 0 {
+		totalCount += 1
+		if totalCount%threadThreshold == 0 {
 			downWorkGroup.Wait()
 		}
 		line := strings.TrimSpace(listScanner.Text())
@@ -112,13 +120,27 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 				downWorkGroup.Add(1)
 				go func() {
 					defer downWorkGroup.Done()
-					downloadFile(downConfig, fileKey)
+					downErr := downloadFile(downConfig, fileKey)
+					if downErr != nil {
+						atomic.AddInt32(&failCount, 1)
+					} else {
+						atomic.AddInt32(&successCount, 1)
+					}
 				}()
+			} else {
+				existsCount += 1
 			}
 		}
 	}
 	downWorkGroup.Wait()
-	fmt.Println("All downloaded!")
+
+	log.Info("-------Download Result-------")
+	log.Info("Total:\t", totalCount)
+	log.Info("Local:\t", existsCount)
+	log.Info("Success:\t", successCount)
+	log.Info("Failure:\t", failCount)
+	log.Info("Duration:\t", time.Since(timeStart))
+	log.Info("-----------------------------")
 }
 
 func checkLocalDuplicate(destDir string, fileKey string, fileSize int64) bool {
@@ -135,18 +157,19 @@ func checkLocalDuplicate(destDir string, fileKey string, fileSize int64) bool {
 	return dup
 }
 
-func downloadFile(downConfig DownloadConfig, fileKey string) {
+func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 	localFilePath := filepath.Join(downConfig.DestDir, fileKey)
 	ldx := strings.LastIndex(localFilePath, string(os.PathSeparator))
 	if ldx != -1 {
 		localFileDir := localFilePath[:ldx]
-		err := os.MkdirAll(localFileDir, 0775)
-		if err != nil {
+		mkdirErr := os.MkdirAll(localFileDir, 0775)
+		if mkdirErr != nil {
+			err = mkdirErr
 			log.Error("MkdirAll failed for", localFileDir)
 			return
 		}
 	}
-	fmt.Println("Downloading", fileKey, "=>", localFilePath, "...")
+	log.Info("Downloading", fileKey, "=>", localFilePath, "...")
 	downUrl := strings.Join([]string{downConfig.Domain, fileKey}, "/")
 	if downConfig.IsPrivate {
 		now := time.Now().Add(time.Second * 3600 * 24)
@@ -157,22 +180,29 @@ func downloadFile(downConfig DownloadConfig, fileKey string) {
 	}
 	resp, respErr := rpc.DefaultClient.Get(nil, downUrl)
 	if respErr != nil {
+		err = respErr
 		log.Error("Download", fileKey, "failed by url", downUrl)
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		localFp, openErr := os.OpenFile(localFilePath, os.O_CREATE|os.O_WRONLY, 0666)
+		localFp, openErr := os.Create(localFilePath)
 		if openErr != nil {
+			err = openErr
 			log.Error("Open local file", localFilePath, "failed")
 			return
 		}
 		defer localFp.Close()
-		_, err := io.Copy(localFp, resp.Body)
-		if err != nil {
+		_, cpErr := io.Copy(localFp, resp.Body)
+		if cpErr != nil {
+			err = cpErr
 			log.Error("Download", fileKey, "failed", err)
+			return
 		}
 	} else {
-		log.Error("Download", fileKey, "failed by url", downUrl)
+		err = errors.New("download failed")
+		log.Error("Download", fileKey, "failed by url", downUrl, resp.Status)
+		return
 	}
+	return
 }
