@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -81,6 +82,16 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 
 		fullPath := filepath.Join(unzipPath, fileName)
 		if !fileInfo.IsDir() {
+			//to be compatible with pkzip(4.5)
+			lastIndex := strings.LastIndex(fullPath, string(os.PathSeparator))
+			if lastIndex != -1 {
+				fullPathDir := fullPath[:lastIndex]
+				mErr := os.MkdirAll(fullPathDir, 0775)
+				if mErr != nil {
+					err = errors.New(fmt.Sprintf("Mkdir error, %s", mErr))
+					continue
+				}
+			}
 			log.Debug("Creating file", fullPath)
 			localFp, openErr := os.OpenFile(fullPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 			if openErr != nil {
