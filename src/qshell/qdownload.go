@@ -51,21 +51,21 @@ type DownloadConfig struct {
 
 func QiniuDownload(threadCount int, downloadConfigFile string) {
 	timeStart := time.Now()
-	cnfFp, err := os.Open(downloadConfigFile)
-	if err != nil {
-		log.Error("Open download config file", downloadConfigFile, "failed,", err)
+	cnfFp, openErr := os.Open(downloadConfigFile)
+	if openErr != nil {
+		log.Error("Open download config file", downloadConfigFile, "failed,", openErr)
 		return
 	}
 	defer cnfFp.Close()
-	cnfData, err := ioutil.ReadAll(cnfFp)
-	if err != nil {
-		log.Error("Read download config file error", err)
+	cnfData, rErr := ioutil.ReadAll(cnfFp)
+	if rErr != nil {
+		log.Error("Read download config file error", rErr)
 		return
 	}
 	downConfig := DownloadConfig{}
 	cnfErr := json.Unmarshal(cnfData, &downConfig)
 	if cnfErr != nil {
-		log.Error("Parse download config error", err)
+		log.Error("Parse download config error", cnfErr)
 		return
 	}
 	cnfJson, _ := json.Marshal(&downConfig)
@@ -78,7 +78,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	bLister := ListBucket{
 		Account: acct,
 	}
-	log.Debug("List bucket...")
+	log.Info("List bucket...")
 	listErr := bLister.List(downConfig.Bucket, downConfig.Prefix, jobListName)
 	if listErr != nil {
 		log.Error("List bucket error", listErr)
@@ -196,7 +196,7 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 		_, cpErr := io.Copy(localFp, resp.Body)
 		if cpErr != nil {
 			err = cpErr
-			log.Error("Download", fileKey, "failed", err)
+			log.Error("Download", fileKey, "failed", cpErr.Error())
 			return
 		}
 	} else {
