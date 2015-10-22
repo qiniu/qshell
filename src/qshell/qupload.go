@@ -125,6 +125,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	//leveldb folder
 	leveldbFileName := filepath.Join(storePath, jobId+".ldb")
 
+	log.Info("listing local sync dir, this can take a long time, please wait paitently...")
 	totalFileCount := dirCache.Cache(uploadConfig.SrcDir, cacheFileName)
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {

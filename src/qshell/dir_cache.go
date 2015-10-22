@@ -33,7 +33,7 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 	defer cacheResultFileH.Close()
 	bWriter := bufio.NewWriter(cacheResultFileH)
 	walkStart := time.Now()
-	log.Debug(fmt.Sprintf("Walk `%s' start from `%s'", cacheRootPath, walkStart.String()))
+	log.Info(fmt.Sprintf("Walk `%s' start from `%s'", cacheRootPath, walkStart.String()))
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, err error) error {
 		var retErr error
 		//log.Debug(fmt.Sprintf("Walking through `%s'", cacheRootPath))
@@ -57,7 +57,7 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 	}
 
 	walkEnd := time.Now()
-	log.Debug(fmt.Sprintf("Walk `%s' end at `%s'", cacheRootPath, walkEnd.String()))
-	log.Debug(fmt.Sprintf("Walk `%s' last for `%s'", cacheRootPath, time.Since(walkStart)))
+	log.Info(fmt.Sprintf("Walk `%s' end at `%s'", cacheRootPath, walkEnd.String()))
+	log.Info(fmt.Sprintf("Walk `%s' last for `%s'", cacheRootPath, time.Since(walkStart)))
 	return
 }
