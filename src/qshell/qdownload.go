@@ -165,7 +165,7 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 		mkdirErr := os.MkdirAll(localFileDir, 0775)
 		if mkdirErr != nil {
 			err = mkdirErr
-			log.Error("MkdirAll failed for", localFileDir)
+			log.Error("MkdirAll failed for", localFileDir, mkdirErr.Error())
 			return
 		}
 	}
@@ -181,7 +181,7 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 	resp, respErr := rpc.DefaultClient.Get(nil, downUrl)
 	if respErr != nil {
 		err = respErr
-		log.Error("Download", fileKey, "failed by url", downUrl)
+		log.Error("Download", fileKey, "failed by url", downUrl, respErr.Error())
 		return
 	}
 	defer resp.Body.Close()
@@ -189,7 +189,7 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 		localFp, openErr := os.Create(localFilePath)
 		if openErr != nil {
 			err = openErr
-			log.Error("Open local file", localFilePath, "failed")
+			log.Error("Open local file", localFilePath, "failed", openErr.Error())
 			return
 		}
 		defer localFp.Close()
