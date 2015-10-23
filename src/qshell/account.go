@@ -3,6 +3,7 @@ package qshell
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/qiniu/api.v6/conf"
 	"github.com/qiniu/log"
 	"io/ioutil"
 	"os"
@@ -13,6 +14,7 @@ import (
 type Account struct {
 	AccessKey string `json:"access_key"`
 	SecretKey string `json:"secret_key"`
+	Zone      string `json:"zone,omitempty"`
 }
 
 func (this *Account) ToJson() (jsonStr string) {
@@ -27,10 +29,10 @@ func (this *Account) ToJson() (jsonStr string) {
 }
 
 func (this *Account) String() string {
-	return fmt.Sprintf("AccessKey: %s SecretKey: %s", this.AccessKey, this.SecretKey)
+	return fmt.Sprintf("AccessKey: %s SecretKey: %s Zone: %s", this.AccessKey, this.SecretKey, this.Zone)
 }
 
-func (this *Account) Set(accessKey string, secretKey string) {
+func (this *Account) Set(accessKey string, secretKey string, zone string) {
 	currentUser, err := user.Current()
 	if err != nil {
 		log.Error("Get current user failed.", err)
@@ -57,6 +59,7 @@ func (this *Account) Set(accessKey string, secretKey string) {
 	account := Account{
 		AccessKey: accessKey,
 		SecretKey: secretKey,
+		Zone:      zone,
 	}
 	_, wErr := fp.WriteString(account.ToJson())
 	if wErr != nil {
@@ -86,5 +89,31 @@ func (this *Account) Get() {
 	if umError := json.Unmarshal(accountBytes, this); umError != nil {
 		log.Error("Parse account file error.", umError)
 		return
+	}
+
+	if this.Zone == "" {
+		this.Zone = ZoneNB
+	}
+
+	//set default hosts
+	switch this.Zone {
+	case ZoneAWS:
+		conf.UP_HOST = ZoneAWSConfig.UpHost
+		conf.RS_HOST = ZoneAWSConfig.RsHost
+		conf.RSF_HOST = ZoneAWSConfig.RsfHost
+		conf.IO_HOST = ZoneAWSConfig.IovipHost
+		DEFAULT_API_HOST = ZoneAWSConfig.ApiHost
+	case ZoneBC:
+		conf.UP_HOST = ZoneBCConfig.UpHost
+		conf.RS_HOST = ZoneBCConfig.RsHost
+		conf.RSF_HOST = ZoneBCConfig.RsfHost
+		conf.IO_HOST = ZoneBCConfig.IovipHost
+		DEFAULT_API_HOST = ZoneBCConfig.ApiHost
+	default:
+		conf.UP_HOST = ZoneNBConfig.UpHost
+		conf.RS_HOST = ZoneNBConfig.RsHost
+		conf.RSF_HOST = ZoneNBConfig.RsfHost
+		conf.IO_HOST = ZoneNBConfig.IovipHost
+		DEFAULT_API_HOST = ZoneNBConfig.ApiHost
 	}
 }

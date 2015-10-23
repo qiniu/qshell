@@ -18,7 +18,7 @@ func GetBuckets(mac *digest.Mac) (buckets []string, err error) {
 func GetDomainsOfBucket(mac *digest.Mac, bucket string) (domains []string, err error) {
 	domains = make([]string, 0)
 	client := rs.New(mac)
-	getDomainsUrl := "http://api.qiniu.com/v6/domain/list"
+	getDomainsUrl := fmt.Sprintf("http://%s/v6/domain/list", DEFAULT_API_HOST)
 	postData := map[string][]string{
 		"tbl": []string{bucket},
 	}

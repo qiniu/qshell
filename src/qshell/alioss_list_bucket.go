@@ -19,8 +19,7 @@ type AliListBucket struct {
 
 func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 	//open result file
-	mode := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
-	fp, openErr := os.OpenFile(listResultFile, mode, 0666)
+	fp, openErr := os.Create(listResultFile)
 	if openErr != nil {
 		err = openErr
 		return
@@ -33,6 +32,8 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 	ossClient := oss.NewClient(this.DataCenter, this.AccessKeyId, this.AccessKeySecret, 0)
 	maxRetryTimes := 5
 	retryTimes := 1
+
+	log.Info("Listing the oss bucket...")
 	for {
 		lbr, lbrErr := ossClient.GetBucket(this.Bucket, this.Prefix, marker, "", "")
 		if lbrErr != nil {
