@@ -1,3 +1,10 @@
+#1.5.6
+1. 为工具添加`zone`功能，可以支持多机房的操作
+2. 将七牛的golang sdk v6下载到本地引入，以方便后面修改
+3. 为`qupload`添加本地网卡绑定功能`bind_nic_ip`
+4. 为`qupload`添加远程主机IP绑定功能`bind_up_ip`和`bind_rs_ip`，避免频繁DNS
+5. 为`qupload`添加选项参数`put_threshold`，用来指定分片上传的阈值
+
 #1.5.5
 1. 修复`dir_cache`中的`WalkFunc`没有处理文件遍历错误的bug
 2. 为`qupload`添加文件遍历提示信息，在大批量文件遍历的情况下，比较友好
