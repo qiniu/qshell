@@ -56,7 +56,7 @@ Valid values for zone are [aws,nb,bc]
 */
 
 const (
-	PUT_THRESHOLD           int64 = 10 * 1 << 20
+	DEFAULT_PUT_THRESHOLD   int64 = 100 * 1024 * 1024 //100MB
 	MIN_UPLOAD_THREAD_COUNT int64 = 1
 	MAX_UPLOAD_THREAD_COUNT int64 = 100
 )
@@ -69,6 +69,7 @@ type UploadConfig struct {
 	Bucket    string `json:"bucket"`
 
 	//optional config
+	PutThreshold int64  `json:"put_threshold,omitempty"`
 	KeyPrefix    string `json:"key_prefix,omitempty"`
 	IgnoreDir    bool   `json:"ignore_dir,omitempty"`
 	Overwrite    bool   `json:"overwrite,omitempty"`
@@ -172,17 +173,20 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	upCounter := 0
 	threadThreshold := threadCount + 1
 
-	//check zone
-	if uploadConfig.Zone != "" {
-		//set default hosts
-		switch uploadConfig.Zone {
-		case ZoneAWS:
-			SetZone(ZoneAWSConfig)
-		case ZoneBC:
-			SetZone(ZoneBCConfig)
-		default:
-			SetZone(ZoneNBConfig)
-		}
+	//chunk upload threshold
+	putThreshold := DEFAULT_PUT_THRESHOLD
+	if uploadConfig.PutThreshold != 0 {
+		putThreshold = uploadConfig.PutThreshold
+	}
+
+	//check zone, default nb
+	switch uploadConfig.Zone {
+	case ZoneAWS:
+		SetZone(ZoneAWSConfig)
+	case ZoneBC:
+		SetZone(ZoneBCConfig)
+	default:
+		SetZone(ZoneNBConfig)
 	}
 
 	//use host if not empty, overwrite the default config
@@ -352,7 +356,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			}
 			policy.Expires = 24 * 3600
 			uptoken := policy.Token(&mac)
-			if fsize > PUT_THRESHOLD {
+			if fsize > putThreshold {
 				putRet := rio.PutRet{}
 				err := rio.PutFile(nil, transport, uploadConfig.BindUpIp, &putRet, uptoken, uploadFileKey, localFilePath, nil)
 				if err != nil {

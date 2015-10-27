@@ -87,11 +87,14 @@ func (r Client) PostWithJson(
 func (r Client) Do(l Logger, req *http.Request) (resp *http.Response, err error) {
 	//check bind remote ip
 	if r.BindRemoteIp != "" {
-		host := req.URL.Host
-		newUrlStr := fmt.Sprintf("%s://%s%s", req.URL.Scheme, r.BindRemoteIp, req.RequestURI)
+		oldReqUrl := req.URL.String()
+		oldReqUri, _ := url.Parse(oldReqUrl)
+
+		newUrlStr := fmt.Sprintf("%s://%s%s", oldReqUri.Scheme, r.BindRemoteIp, oldReqUri.RequestURI())
 		newUrl, _ := url.Parse(newUrlStr)
+
 		req.URL = newUrl
-		req.Header.Set("Host", host)
+		req.Header.Set("Host", oldReqUri.Host)
 	}
 
 	if l != nil {
