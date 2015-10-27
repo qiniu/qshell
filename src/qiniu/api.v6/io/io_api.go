@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/textproto"
 	"os"
@@ -38,57 +37,6 @@ type PutRet struct {
 }
 
 var tmpFilePrefix = "qiniu-go-sdk-tmpfile"
-
-// ----------------------------------------------------------
-// !!! Deprecated !!!
-//
-// 1. 不推荐使用该组 API, 因为可能造成本地磁盘IO
-// 2. 如果只是纯粹上传一个 io.Reader, 请使用 Put2 或者 PutWithoutKey2
-// 3. 如果需要上传一个文件, 请使用 PutFile 或者 PutFileWithoutKey
-
-func Put(l rpc.Logger, ret interface{}, uptoken, key string, data io.Reader, extra *PutExtra) error {
-	return putReader(l, ret, uptoken, key, true, data, extra)
-}
-
-func PutWithoutKey(l rpc.Logger, ret interface{}, uptoken string, data io.Reader, extra *PutExtra) error {
-	return putReader(l, ret, uptoken, "", false, data, extra)
-}
-
-func putReader(l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, data io.Reader, extra *PutExtra) error {
-
-	rs, ok := data.(io.ReadSeeker)
-	if ok {
-		// 通过 Seeker 接口获取大小
-		size, err := rs.Seek(0, 2)
-		if err != nil {
-			return err
-		}
-		_, err = rs.Seek(0, 0)
-		if err != nil {
-			return err
-		}
-		return put(l, ret, uptoken, key, hasKey, data, size, extra)
-	} else {
-		// 写临时文件
-		tmpf, err := ioutil.TempFile(os.TempDir(), tmpFilePrefix)
-		if err != nil {
-			return err
-		}
-		fname := tmpf.Name()
-		defer os.Remove(fname)
-
-		_, err = io.Copy(tmpf, data)
-		if err != nil {
-			tmpf.Close()
-			return err
-		}
-		tmpf.Close()
-
-		return putFile(l, ret, uptoken, key, hasKey, fname, extra)
-	}
-
-	return nil
-}
 
 // ----------------------------------------------------------
 
