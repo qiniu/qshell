@@ -2,7 +2,7 @@ package qshell
 
 import (
 	"errors"
-	"github.com/qiniu/api.v6/rs"
+	"qiniu/api.v6/rs"
 )
 
 func BatchRefresh(client *rs.Client, urls []string) (err error) {

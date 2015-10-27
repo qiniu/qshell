@@ -3,12 +3,12 @@ package qshell
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/api.v6/conf"
-	"github.com/qiniu/log"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
+	"qiniu/api.v6/conf"
+	"qiniu/log"
 )
 
 type Account struct {

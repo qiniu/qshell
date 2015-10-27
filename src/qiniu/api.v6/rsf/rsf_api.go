@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/qiniu/api/auth/digest"
-	. "github.com/qiniu/api/conf"
-	"github.com/qiniu/rpc"
+	"qiniu/api.v6/auth/digest"
+	. "qiniu/api.v6/conf"
+	"qiniu/rpc"
 )
 
 // ----------------------------------------------------------

@@ -3,9 +3,9 @@ package main
 import (
 	"cli"
 	"fmt"
-	"github.com/qiniu/log"
-	"github.com/qiniu/rpc"
 	"os"
+	"qiniu/log"
+	"qiniu/rpc"
 )
 
 var debugMode = false

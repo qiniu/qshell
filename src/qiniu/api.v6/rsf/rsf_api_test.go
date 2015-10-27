@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"testing"
 
-	. "github.com/qiniu/api/conf"
-	qio "github.com/qiniu/api/io"
-	"github.com/qiniu/api/rs"
+	. "qiniu/api.v6/conf"
+	qio "qiniu/api.v6/io"
+	"qiniu/api.v6/rs"
 )
 
 var (

@@ -4,11 +4,11 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
-	"github.com/qiniu/log"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"os"
 	"path/filepath"
+	"qiniu/log"
 	"strings"
 	"unicode/utf8"
 )

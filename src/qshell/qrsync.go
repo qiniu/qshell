@@ -3,8 +3,8 @@ package qshell
 import (
 	"bufio"
 	"fmt"
-	"github.com/qiniu/log"
 	"os"
+	"qiniu/log"
 	"runtime"
 	"strconv"
 	"strings"

@@ -3,11 +3,11 @@ package qshell
 import (
 	"bufio"
 	"fmt"
-	"github.com/qiniu/api.v6/auth/digest"
-	"github.com/qiniu/api.v6/rsf"
-	"github.com/qiniu/log"
 	"io"
 	"os"
+	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/rsf"
+	"qiniu/log"
 )
 
 type ListBucket struct {

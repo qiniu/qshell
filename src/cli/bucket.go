@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"github.com/qiniu/api.v6/auth/digest"
-	"github.com/qiniu/log"
+	"qiniu/api.v6/auth/digest"
+	"qiniu/log"
 	"qshell"
 )
 

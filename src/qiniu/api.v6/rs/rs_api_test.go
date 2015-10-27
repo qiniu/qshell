@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/qiniu/api/conf"
-	"github.com/qiniu/api/io"
+	. "qiniu/api.v6/conf"
+	"qiniu/api.v6/io"
 )
 
 var (

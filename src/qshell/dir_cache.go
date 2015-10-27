@@ -3,9 +3,9 @@ package qshell
 import (
 	"bufio"
 	"fmt"
-	"github.com/qiniu/log"
 	"os"
 	"path/filepath"
+	"qiniu/log"
 	"strings"
 	"time"
 )

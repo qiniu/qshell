@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/qiniu/api/auth/digest"
-	"github.com/qiniu/api/url"
+	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/url"
 )
 
 // ----------------------------------------------------------

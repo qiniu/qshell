@@ -4,8 +4,8 @@ import (
 	gio "io"
 	"log"
 
-	"github.com/qiniu/api/io"
-	rio "github.com/qiniu/api/resumable/io"
+	"qiniu/api.v6/io"
+	rio "qiniu/api.v6/resumable/io"
 )
 
 func uploadFileDemo(localFile, key, uptoken string) {

@@ -3,9 +3,9 @@ package qshell
 import (
 	"bufio"
 	"fmt"
-	"github.com/qiniu/log"
 	"github.com/yanunon/oss-go-api/oss"
 	"os"
+	"qiniu/log"
 	"time"
 )
 

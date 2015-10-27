@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/qiniu/log"
+	"qiniu/log"
 	"qshell"
 )
 

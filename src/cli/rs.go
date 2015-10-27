@@ -3,10 +3,10 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"github.com/qiniu/api.v6/auth/digest"
-	"github.com/qiniu/api.v6/rs"
-	"github.com/qiniu/log"
 	"os"
+	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/rs"
+	"qiniu/log"
 	"qshell"
 	"runtime"
 	"strconv"

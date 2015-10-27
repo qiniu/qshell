@@ -3,7 +3,7 @@ package qshell
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/rpc"
+	"qiniu/rpc"
 )
 
 type RSFop struct {

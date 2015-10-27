@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/qiniu/rpc"
+	"qiniu/rpc"
 )
 
 var UP_HOST = "http://upload.qiniu.com"

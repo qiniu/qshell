@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"strconv"
 
-	. "github.com/qiniu/api/conf"
-	"github.com/qiniu/bytes"
-	"github.com/qiniu/log"
-	"github.com/qiniu/rpc"
+	. "qiniu/api.v6/conf"
+	"qiniu/bytes"
+	"qiniu/log"
+	"qiniu/rpc"
 )
 
 // ----------------------------------------------------------

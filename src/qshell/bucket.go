@@ -2,9 +2,9 @@ package qshell
 
 import (
 	"fmt"
-	"github.com/qiniu/api.v6/auth/digest"
-	"github.com/qiniu/api.v6/conf"
-	"github.com/qiniu/api.v6/rs"
+	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/conf"
+	"qiniu/api.v6/rs"
 )
 
 func GetBuckets(mac *digest.Mac) (buckets []string, err error) {

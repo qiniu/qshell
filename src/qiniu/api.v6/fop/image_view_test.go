@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/qiniu/api/conf"
-	"github.com/qiniu/api/io"
-	"github.com/qiniu/api/rs"
+	. "qiniu/api.v6/conf"
+	"qiniu/api.v6/io"
+	"qiniu/api.v6/rs"
 )
 
 var (

@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"github.com/qiniu/log"
+	"qiniu/log"
 	"qshell"
 	"strconv"
 )

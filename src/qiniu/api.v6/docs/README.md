@@ -68,7 +68,7 @@ GO-SDK 以开源方式提供。开发者可以随时从本文档提供的下载�
 ## 1. 安装
 在命令行下执行
 
-	go get -u github.com/qiniu/api
+	go get -u qiniu/api.v6
 
 <a name="setup"></a>
 ## 2. 初始化
@@ -83,7 +83,7 @@ GO-SDK 以开源方式提供。开发者可以随时从本文档提供的下载�
 在获取到 Access Key 和 Secret Key 之后，您可以在您的程序中调用如下两行代码进行初始化对接, 要确保`ACCESS_KEY` 和 `SECRET_KEY` 在服务端调用 api/auth/digest,api/rs，api/rsf之前均已赋值：
 
 ```{go}
-import . "github.com/qiniu/api/conf"
+import . "qiniu/api.v6/conf"
 
 ACCESS_KEY = "<YOUR_APP_ACCESS_KEY>"
 SECRET_KEY = "<YOUR_APP_SECRET_KEY>"
@@ -474,7 +474,7 @@ func downloadUrl(domain, key string) string {
 ## 5. 资源操作
 
 资源操作包括对存储在七牛云存储上的文件进行查看、复制、移动和删除处理。
-该节调用的函数第一个参数都为 `logger`, 用于记录log, 如果无需求, 可以设置为nil. 具体接口可以查阅 `github.com/qiniu/rpc`
+该节调用的函数第一个参数都为 `logger`, 用于记录log, 如果无需求, 可以设置为nil. 具体接口可以查阅 `qiniu/rpc`
 
 <a name="rs-stat"></a>
 ### 5.1 获取文件信息

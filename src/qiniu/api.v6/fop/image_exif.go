@@ -1,7 +1,7 @@
 package fop
 
 import (
-	"github.com/qiniu/rpc"
+	"qiniu/rpc"
 )
 
 type ExifValType struct {

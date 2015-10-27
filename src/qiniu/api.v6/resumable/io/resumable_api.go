@@ -6,8 +6,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/qiniu/log"
-	"github.com/qiniu/rpc"
+	"qiniu/log"
+	"qiniu/rpc"
 )
 
 // ----------------------------------------------------------
