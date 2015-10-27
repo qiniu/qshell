@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"qiniu/api.v6/conf"
 	"qiniu/log"
 )
 

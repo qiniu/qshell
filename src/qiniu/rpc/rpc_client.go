@@ -3,6 +3,7 @@ package rpc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -15,12 +16,13 @@ var UserAgent = "Golang qiniu/rpc package"
 
 type Client struct {
 	*http.Client
+	BindRemoteIp string
 }
 
-var DefaultClient = Client{http.DefaultClient}
+var DefaultClient = Client{http.DefaultClient, ""}
 
-func NewClient(t http.RoundTripper) Client {
-	return Client{&http.Client{Transport: t}}
+func NewClient(t http.RoundTripper, bindRemoteIp string) Client {
+	return Client{&http.Client{Transport: t}, bindRemoteIp}
 }
 
 // --------------------------------------------------------------------
@@ -83,6 +85,14 @@ func (r Client) PostWithJson(
 }
 
 func (r Client) Do(l Logger, req *http.Request) (resp *http.Response, err error) {
+	//check bind remote ip
+	if r.BindRemoteIp != "" {
+		host := req.URL.Host
+		newUrlStr := fmt.Sprintf("%s://%s%s", req.URL.Scheme, r.BindRemoteIp, req.RequestURI)
+		newUrl, _ := url.Parse(newUrlStr)
+		req.URL = newUrl
+		req.Header.Set("Host", host)
+	}
 
 	if l != nil {
 		req.Header.Set("X-Reqid", l.ReqId())

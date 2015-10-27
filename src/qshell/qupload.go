@@ -63,12 +63,12 @@ const (
 
 type UploadConfig struct {
 	//basic config
-	SrcDir       string `json:"src_dir"`
-	AccessKey    string `json:"access_key"`
-	SecretKey    string `json:"secret_key"`
-	Bucket       string `json:"bucket"`
-	UpHost       string `json:"up_host,omitempty"`
-	Zone         string `json:"zone,omitempty"`
+	SrcDir    string `json:"src_dir"`
+	AccessKey string `json:"access_key"`
+	SecretKey string `json:"secret_key"`
+	Bucket    string `json:"bucket"`
+
+	//optional config
 	KeyPrefix    string `json:"key_prefix,omitempty"`
 	IgnoreDir    bool   `json:"ignore_dir,omitempty"`
 	Overwrite    bool   `json:"overwrite,omitempty"`
@@ -77,8 +77,14 @@ type UploadConfig struct {
 	SkipSuffixes string `json:"skip_suffixes,omitempty"`
 
 	//advanced config
-	BindNicIp    string `json:"bind_nic_ip,omitempty"`
-	BindRemoteIp string `json:"bind_remote_ip,omitempty"`
+	Zone   string `json:"zone,omitempty"`
+	UpHost string `json:"up_host,omitempty"`
+
+	BindUpIp string `json:"bind_up_ip,omitempty"`
+	BindRsIp string `json:"bind_rs_ip,omitempty"`
+
+	//local network interface card config
+	BindNicIp string `json:"bind_nic_ip,omitempty"`
 }
 
 var upSettings = rio.Settings{
@@ -179,7 +185,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		}
 	}
 
-	//use host if not empty
+	//use host if not empty, overwrite the default config
 	if uploadConfig.UpHost != "" {
 		conf.UP_HOST = uploadConfig.UpHost
 	}
@@ -187,6 +193,31 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	rio.SetSettings(&upSettings)
 	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
 
+	//check bind net interface card
+	var transport *http.Transport
+	var rsClient rs.Client
+	if uploadConfig.BindNicIp != "" {
+		transport = &http.Transport{
+			Dial: (&net.Dialer{
+				LocalAddr: &net.TCPAddr{
+					IP: net.ParseIP(uploadConfig.BindNicIp),
+				},
+			}).Dial,
+		}
+	}
+
+	if transport != nil {
+		rsClient = rs.NewMacEx(&mac, transport, "")
+	} else {
+		rsClient = rs.New(&mac)
+	}
+
+	//check remote rs ip bind
+	if uploadConfig.BindRsIp != "" {
+		rsClient.Conn.BindRemoteIp = uploadConfig.BindRsIp
+	}
+
+	//scan lines and upload
 	for bScanner.Scan() {
 		line := strings.TrimSpace(bScanner.Text())
 		items := strings.Split(line, "\t")
@@ -265,25 +296,6 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		log.Info(fmt.Sprintf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
 			float32(currentFileCount)*100/float32(totalFileCount)))
 
-		//check bind net interface card
-		var transport *http.Transport
-		var rsClient rs.Client
-		if uploadConfig.BindNicIp != "" {
-			transport = &http.Transport{
-				Dial: (&net.Dialer{
-					LocalAddr: &net.TCPAddr{
-						IP: net.ParseIP(uploadConfig.BindNicIp),
-					},
-				}).Dial,
-			}
-		}
-
-		if transport != nil {
-			rsClient = rs.NewMacEx(&mac, transport)
-		} else {
-			rsClient = rs.New(&mac)
-		}
-
 		//check exists
 		if uploadConfig.CheckExists {
 			rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
@@ -342,7 +354,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			uptoken := policy.Token(&mac)
 			if fsize > PUT_THRESHOLD {
 				putRet := rio.PutRet{}
-				err := rio.PutFile(nil, transport, &putRet, uptoken, uploadFileKey, localFilePath, nil)
+				err := rio.PutFile(nil, transport, uploadConfig.BindUpIp, &putRet, uptoken, uploadFileKey, localFilePath, nil)
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
@@ -359,7 +371,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				}
 			} else {
 				putRet := fio.PutRet{}
-				err := fio.PutFile(nil, transport, &putRet, uptoken, uploadFileKey, localFilePath, nil)
+				err := fio.PutFile(nil, transport, uploadConfig.BindUpIp, &putRet, uptoken, uploadFileKey, localFilePath, nil)
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {

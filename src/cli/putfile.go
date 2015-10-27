@@ -20,7 +20,7 @@ func FormPut(cmd string, params ...string) {
 		key := params[1]
 		localFile := params[2]
 		mimeType := ""
-		upHost := "http://upload.qiniu.com"
+		upHost := ""
 		if len(params) == 4 {
 			param := params[3]
 			if strings.HasPrefix(param, "http") {
@@ -41,7 +41,9 @@ func FormPut(cmd string, params ...string) {
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
 		}
-		conf.UP_HOST = upHost
+		if upHost != "" {
+			conf.UP_HOST = upHost
+		}
 		uptoken := policy.Token(&mac)
 		putRet := fio.PutRet{}
 		startTime := time.Now()
@@ -51,7 +53,7 @@ func FormPut(cmd string, params ...string) {
 			return
 		}
 		fsize := fStat.Size()
-		err := fio.PutFile(nil, nil, &putRet, uptoken, key, localFile, &putExtra)
+		err := fio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			log.Error("Put file error", err)
 		} else {
@@ -72,7 +74,7 @@ func ResumablePut(cmd string, params ...string) {
 		key := params[1]
 		localFile := params[2]
 		mimeType := ""
-		upHost := "http://upload.qiniu.com"
+		upHost := ""
 		if len(params) == 4 {
 			param := params[3]
 			if strings.HasPrefix(param, "http") {
@@ -93,7 +95,10 @@ func ResumablePut(cmd string, params ...string) {
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
 		}
-		conf.UP_HOST = upHost
+
+		if upHost != "" {
+			conf.UP_HOST = upHost
+		}
 		progressHandler := ProgressHandler{
 			BlockIndices:    make([]int, 0),
 			BlockProgresses: make(map[int]float32),
@@ -109,7 +114,7 @@ func ResumablePut(cmd string, params ...string) {
 			return
 		}
 		fsize := fStat.Size()
-		err := rio.PutFile(nil, nil, &putRet, uptoken, key, localFile, &putExtra)
+		err := rio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			log.Error("Put file error", err)
 		} else {

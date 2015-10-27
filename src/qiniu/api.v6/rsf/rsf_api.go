@@ -37,12 +37,18 @@ type Client struct {
 func New(mac *digest.Mac) Client {
 	t := digest.NewTransport(mac, nil)
 	client := &http.Client{Transport: t}
-	return Client{rpc.Client{client}}
+	return Client{rpc.Client{client, ""}}
 }
 
 func NewEx(t http.RoundTripper) Client {
 	client := &http.Client{Transport: t}
-	return Client{rpc.Client{client}}
+	return Client{rpc.Client{client, ""}}
+}
+
+func NewMacEx(mac *digest.Mac, t http.RoundTripper, bindRemoteIp string) Client {
+	mt := digest.NewTransport(mac, t)
+	client := &http.Client{Transport: mt}
+	return Client{rpc.Client{client, bindRemoteIp}}
 }
 
 // ----------------------------------------------------------

@@ -50,9 +50,9 @@ func NewTransport(token string, transport http.RoundTripper) *Transport {
 	return &Transport{"UpToken " + token, transport}
 }
 
-func NewClient(token string, transport http.RoundTripper) rpc.Client {
+func NewClient(token string, transport http.RoundTripper, bindRemoteIp string) rpc.Client {
 	t := NewTransport(token, transport)
-	return rpc.Client{&http.Client{Transport: t}}
+	return rpc.Client{&http.Client{Transport: t}, bindRemoteIp}
 }
 
 // ----------------------------------------------------------

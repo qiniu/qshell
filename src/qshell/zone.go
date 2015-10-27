@@ -1,5 +1,9 @@
 package qshell
 
+import (
+	"qiniu/api.v6/conf"
+)
+
 type ZoneConfig struct {
 	UpHost    string
 	RsHost    string
@@ -17,6 +21,8 @@ const (
 	ZoneBC  = "bc"
 	ZoneAWS = "aws"
 )
+
+//zone all defaults to the service source site
 
 var ZoneNBConfig = ZoneConfig{
 	UpHost:    "http://up.qiniu.com",
