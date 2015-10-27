@@ -6,13 +6,13 @@ import (
 	"hash/crc32"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"net/textproto"
 	"os"
-	"strconv"
-	"strings"
-
 	. "qiniu/api.v6/conf"
 	"qiniu/rpc"
+	"strconv"
+	"strings"
 )
 
 // ----------------------------------------------------------
@@ -40,7 +40,7 @@ var tmpFilePrefix = "qiniu-go-sdk-tmpfile"
 
 // ----------------------------------------------------------
 
-func put(l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, data io.Reader, size int64, extra *PutExtra) error {
+func put(l rpc.Logger, t http.RoundTripper, ret interface{}, uptoken, key string, hasKey bool, data io.Reader, size int64, extra *PutExtra) error {
 
 	// CheckCrc == 1: 对于 Put 和 PutWithoutKey 等同于 CheckCrc == 2
 	if extra != nil {
@@ -50,28 +50,28 @@ func put(l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, data i
 			extra.CheckCrc = 2
 		}
 	}
-	return putWrite(l, ret, uptoken, key, hasKey, data, size, extra)
+	return putWrite(l, t, ret, uptoken, key, hasKey, data, size, extra)
 }
 
-func Put2(l rpc.Logger, ret interface{}, uptoken, key string, data io.Reader, size int64, extra *PutExtra) error {
-	return put(l, ret, uptoken, key, true, data, size, extra)
+func Put2(l rpc.Logger, t http.RoundTripper, ret interface{}, uptoken, key string, data io.Reader, size int64, extra *PutExtra) error {
+	return put(l, t, ret, uptoken, key, true, data, size, extra)
 }
 
-func PutWithoutKey2(l rpc.Logger, ret interface{}, uptoken string, data io.Reader, size int64, extra *PutExtra) error {
-	return put(l, ret, uptoken, "", false, data, size, extra)
+func PutWithoutKey2(l rpc.Logger, t http.RoundTripper, ret interface{}, uptoken string, data io.Reader, size int64, extra *PutExtra) error {
+	return put(l, t, ret, uptoken, "", false, data, size, extra)
 }
 
 // ----------------------------------------------------------
 
-func PutFile(l rpc.Logger, ret interface{}, uptoken, key, localFile string, extra *PutExtra) (err error) {
-	return putFile(l, ret, uptoken, key, true, localFile, extra)
+func PutFile(l rpc.Logger, t http.RoundTripper, ret interface{}, uptoken, key, localFile string, extra *PutExtra) (err error) {
+	return putFile(l, t, ret, uptoken, key, true, localFile, extra)
 }
 
-func PutFileWithoutKey(l rpc.Logger, ret interface{}, uptoken, localFile string, extra *PutExtra) (err error) {
-	return putFile(l, ret, uptoken, "", false, localFile, extra)
+func PutFileWithoutKey(l rpc.Logger, t http.RoundTripper, ret interface{}, uptoken, localFile string, extra *PutExtra) (err error) {
+	return putFile(l, t, ret, uptoken, "", false, localFile, extra)
 }
 
-func putFile(l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, localFile string, extra *PutExtra) (err error) {
+func putFile(l rpc.Logger, t http.RoundTripper, ret interface{}, uptoken, key string, hasKey bool, localFile string, extra *PutExtra) (err error) {
 
 	f, err := os.Open(localFile)
 	if err != nil {
@@ -92,12 +92,12 @@ func putFile(l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, lo
 		}
 	}
 
-	return putWrite(l, ret, uptoken, key, hasKey, f, fsize, extra)
+	return putWrite(l, t, ret, uptoken, key, hasKey, f, fsize, extra)
 }
 
 // ----------------------------------------------------------
 
-func putWrite(l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, data io.Reader, size int64, extra *PutExtra) error {
+func putWrite(l rpc.Logger, t http.RoundTripper, ret interface{}, uptoken, key string, hasKey bool, data io.Reader, size int64, extra *PutExtra) error {
 
 	var b bytes.Buffer
 	writer := multipart.NewWriter(&b)
@@ -114,7 +114,15 @@ func putWrite(l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, d
 	mr := io.MultiReader(&b, data, r)
 
 	contentType := writer.FormDataContentType()
-	return rpc.DefaultClient.CallWith64(l, ret, UP_HOST, contentType, mr, bodyLen)
+
+	var client rpc.Client
+	if t != nil {
+		client = rpc.NewClient(t)
+	} else {
+		client = rpc.DefaultClient
+	}
+
+	return client.CallWith64(l, ret, UP_HOST, contentType, mr, bodyLen)
 }
 
 /*

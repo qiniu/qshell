@@ -8,6 +8,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"io/ioutil"
+	"net"
+	"net/http"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -58,6 +60,7 @@ const (
 )
 
 type UploadConfig struct {
+	//basic config
 	SrcDir       string `json:"src_dir"`
 	AccessKey    string `json:"access_key"`
 	SecretKey    string `json:"secret_key"`
@@ -69,11 +72,15 @@ type UploadConfig struct {
 	CheckExists  bool   `json:"check_exists,omitempty"`
 	SkipPrefixes string `json:"skip_prefixes,omitempty"`
 	SkipSuffixes string `json:"skip_suffixes,omitempty"`
+
+	//advanced config
+	BindNicIp    string `json:"bind_nic_ip,omitempty"`
+	BindRemoteIp string `json:"bind_ip,omitempty"`
 }
 
 var upSettings = rio.Settings{
 	ChunkSize: 1 * 1024 * 1024,
-	TryTimes:  5,
+	TryTimes:  7,
 }
 
 func QiniuUpload(threadCount int, uploadConfigFile string) {
@@ -242,7 +249,24 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		log.Info(fmt.Sprintf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
 			float32(currentFileCount)*100/float32(totalFileCount)))
 
-		rsClient := rs.New(&mac)
+		//check bind net interface card
+		var transport *http.Transport
+		var rsClient rs.Client
+		if uploadConfig.BindNicIp != "" {
+			transport = &http.Transport{
+				Dial: (&net.Dialer{
+					LocalAddr: &net.TCPAddr{
+						IP: net.ParseIP(uploadConfig.BindNicIp),
+					},
+				}).Dial,
+			}
+		}
+
+		if transport != nil {
+			rsClient = rs.NewMacEx(&mac, transport)
+		} else {
+			rsClient = rs.New(&mac)
+		}
 
 		//check exists
 		if uploadConfig.CheckExists {
@@ -302,7 +326,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			uptoken := policy.Token(&mac)
 			if fsize > PUT_THRESHOLD {
 				putRet := rio.PutRet{}
-				err := rio.PutFile(nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
+				err := rio.PutFile(nil, transport, &putRet, uptoken, uploadFileKey, localFilePath, nil)
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
@@ -319,7 +343,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				}
 			} else {
 				putRet := fio.PutRet{}
-				err := fio.PutFile(nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
+				err := fio.PutFile(nil, transport, &putRet, uptoken, uploadFileKey, localFilePath, nil)
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {

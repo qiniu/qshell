@@ -51,7 +51,7 @@ func FormPut(cmd string, params ...string) {
 			return
 		}
 		fsize := fStat.Size()
-		err := fio.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
+		err := fio.PutFile(nil, nil, &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			log.Error("Put file error", err)
 		} else {
@@ -109,7 +109,7 @@ func ResumablePut(cmd string, params ...string) {
 			return
 		}
 		fsize := fStat.Size()
-		err := rio.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
+		err := rio.PutFile(nil, nil, &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			log.Error("Put file error", err)
 		} else {

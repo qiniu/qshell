@@ -19,6 +19,10 @@ type Client struct {
 
 var DefaultClient = Client{http.DefaultClient}
 
+func NewClient(t http.RoundTripper) Client {
+	return Client{&http.Client{Transport: t}}
+}
+
 // --------------------------------------------------------------------
 
 type Logger interface {

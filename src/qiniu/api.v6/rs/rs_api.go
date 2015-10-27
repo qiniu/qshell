@@ -26,6 +26,12 @@ func NewEx(t http.RoundTripper) Client {
 	return Client{rpc.Client{client}}
 }
 
+func NewMacEx(mac *digest.Mac, t http.RoundTripper) Client {
+	mt := digest.NewTransport(mac, t)
+	client := &http.Client{Transport: mt}
+	return Client{rpc.Client{client}}
+}
+
 // ----------------------------------------------------------
 
 // @gist entry
