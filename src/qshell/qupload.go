@@ -51,6 +51,8 @@ or without up_host and key_prefix and ignore_dir and check_exists
 	"secret_key"	:	"<Your SecretKey>",
 	"bucket"		:	"test-bucket",
 }
+
+Valid values for zone are [aws,nb,bc]
 */
 
 const (
@@ -66,6 +68,7 @@ type UploadConfig struct {
 	SecretKey    string `json:"secret_key"`
 	Bucket       string `json:"bucket"`
 	UpHost       string `json:"up_host,omitempty"`
+	Zone         string `json:"zone,omitempty"`
 	KeyPrefix    string `json:"key_prefix,omitempty"`
 	IgnoreDir    bool   `json:"ignore_dir,omitempty"`
 	Overwrite    bool   `json:"overwrite,omitempty"`
@@ -75,7 +78,7 @@ type UploadConfig struct {
 
 	//advanced config
 	BindNicIp    string `json:"bind_nic_ip,omitempty"`
-	BindRemoteIp string `json:"bind_ip,omitempty"`
+	BindRemoteIp string `json:"bind_remote_ip,omitempty"`
 }
 
 var upSettings = rio.Settings{
@@ -162,6 +165,19 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	upWorkGroup := sync.WaitGroup{}
 	upCounter := 0
 	threadThreshold := threadCount + 1
+
+	//check zone
+	if uploadConfig.Zone != "" {
+		//set default hosts
+		switch uploadConfig.Zone {
+		case ZoneAWS:
+			SetZone(ZoneAWSConfig)
+		case ZoneBC:
+			SetZone(ZoneBCConfig)
+		default:
+			SetZone(ZoneNBConfig)
+		}
+	}
 
 	//use host if not empty
 	if uploadConfig.UpHost != "" {

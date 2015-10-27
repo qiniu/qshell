@@ -41,3 +41,11 @@ var ZoneAWSConfig = ZoneConfig{
 	IovipHost: "http://iovip.gdipper.me",
 	ApiHost:   "http://api.gdipper.com",
 }
+
+func SetZone(zoneConfig ZoneConfig) {
+	conf.UP_HOST = zoneConfig.UpHost
+	conf.RS_HOST = zoneConfig.RsHost
+	conf.RSF_HOST = zoneConfig.RsfHost
+	conf.IO_HOST = zoneConfig.IovipHost
+	DEFAULT_API_HOST = zoneConfig.ApiHost
+}

@@ -98,22 +98,10 @@ func (this *Account) Get() {
 	//set default hosts
 	switch this.Zone {
 	case ZoneAWS:
-		conf.UP_HOST = ZoneAWSConfig.UpHost
-		conf.RS_HOST = ZoneAWSConfig.RsHost
-		conf.RSF_HOST = ZoneAWSConfig.RsfHost
-		conf.IO_HOST = ZoneAWSConfig.IovipHost
-		DEFAULT_API_HOST = ZoneAWSConfig.ApiHost
+		SetZone(ZoneAWSConfig)
 	case ZoneBC:
-		conf.UP_HOST = ZoneBCConfig.UpHost
-		conf.RS_HOST = ZoneBCConfig.RsHost
-		conf.RSF_HOST = ZoneBCConfig.RsfHost
-		conf.IO_HOST = ZoneBCConfig.IovipHost
-		DEFAULT_API_HOST = ZoneBCConfig.ApiHost
+		SetZone(ZoneBCConfig)
 	default:
-		conf.UP_HOST = ZoneNBConfig.UpHost
-		conf.RS_HOST = ZoneNBConfig.RsHost
-		conf.RSF_HOST = ZoneNBConfig.RsfHost
-		conf.IO_HOST = ZoneNBConfig.IovipHost
-		DEFAULT_API_HOST = ZoneNBConfig.ApiHost
+		SetZone(ZoneNBConfig)
 	}
 }
