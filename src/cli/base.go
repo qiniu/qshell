@@ -42,7 +42,7 @@ func Zone(cmd string, params ...string) {
 			fmt.Println(gErr)
 			return
 		}
-		fmt.Println("Current zone: ", accountS.Zone)
+		fmt.Println("Current zone:", accountS.Zone)
 	} else if len(params) == 1 {
 		gErr := accountS.Get()
 		if gErr != nil {

@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+var upSettings = rio.Settings{
+	ChunkSize: 4 * 1024 * 1024,
+	TryTimes:  7,
+}
+
 func FormPut(cmd string, params ...string) {
 	if len(params) == 3 || len(params) == 4 || len(params) == 5 {
 		bucket := params[0]
@@ -58,6 +63,7 @@ func FormPut(cmd string, params ...string) {
 			return
 		}
 		fsize := fStat.Size()
+		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...", localFile, bucket, key))
 		err := fio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			fmt.Println("Put file error", err)
@@ -125,6 +131,8 @@ func ResumablePut(cmd string, params ...string) {
 			return
 		}
 		fsize := fStat.Size()
+		rio.SetSettings(&upSettings)
+		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...", localFile, bucket, key))
 		err := rio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			fmt.Println("Put file error", err)
