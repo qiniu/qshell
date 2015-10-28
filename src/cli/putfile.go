@@ -63,7 +63,7 @@ func FormPut(cmd string, params ...string) {
 			return
 		}
 		fsize := fStat.Size()
-		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...", localFile, bucket, key))
+		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...\r\n", localFile, bucket, key))
 		err := fio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			fmt.Println("Put file error", err)
@@ -132,12 +132,13 @@ func ResumablePut(cmd string, params ...string) {
 		}
 		fsize := fStat.Size()
 		rio.SetSettings(&upSettings)
-		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...", localFile, bucket, key))
+		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...\r\n", localFile, bucket, key))
 		err := rio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			fmt.Println("Put file error", err)
 		} else {
-			fmt.Println("\r\nPut file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
+			fmt.Println()
+			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
 		lastNano := time.Now().UnixNano() - startTime.UnixNano()
 		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
