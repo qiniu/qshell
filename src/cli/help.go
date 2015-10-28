@@ -16,6 +16,7 @@ var optionDocs = map[string]string{
 
 var cmds = []string{
 	"account",
+	"zone",
 	"dircache",
 	"listbucket",
 	"alilistbucket",
@@ -60,6 +61,7 @@ var cmds = []string{
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>]", "Get/Set AccessKey and SecretKey"},
+	"zone":          []string{"qshell [-d] zone [Zone]", "Switch the zone, [nb,bc,aws]"},
 	"dircache":      []string{"qshell [-d] dircache <DirCacheRootPath> <DirCacheResultFile>", "Cache the directory structure of a file path"},
 	"listbucket":    []string{"qshell [-d] listbucket <Bucket> [<Prefix>] <ListBucketResultFile>", "List all the file in the bucket by prefix"},
 	"alilistbucket": []string{"qshell [-d] alilistbucket <DataCenter> <Bucket> <AccessKeyId> <AccesskeySecret> [Prefix] <ListBucketResultFile>", "List all the file in the bucket of aliyun oss by prefix"},

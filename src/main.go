@@ -12,6 +12,7 @@ var debugMode = false
 
 var supportedCmds = map[string]cli.CliFunc{
 	"account":       cli.Account,
+	"zone":          cli.Zone,
 	"dircache":      cli.DirCache,
 	"listbucket":    cli.ListBucket,
 	"alilistbucket": cli.AliListBucket,

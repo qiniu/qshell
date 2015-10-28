@@ -55,3 +55,13 @@ func SetZone(zoneConfig ZoneConfig) {
 	conf.IO_HOST = zoneConfig.IovipHost
 	DEFAULT_API_HOST = zoneConfig.ApiHost
 }
+
+func IsValidZone(zone string) (valid bool) {
+	switch zone {
+	case ZoneNB, ZoneBC, ZoneAWS:
+		valid = true
+	default:
+		valid = false
+	}
+	return
+}

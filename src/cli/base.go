@@ -19,18 +19,48 @@ func Account(cmd string, params ...string) {
 	} else if len(params) == 2 || len(params) == 3 {
 		accessKey := params[0]
 		secretKey := params[1]
-		zone := qshell.ZoneNB
+		var zone string
 		if len(params) == 3 {
-			val := params[2]
-			switch val {
-			case qshell.ZoneNB, qshell.ZoneBC, qshell.ZoneAWS:
-				zone = val
-			default:
-				fmt.Println(fmt.Sprintf("invalid zone '%s'", zone))
-				return
+			zone := params[2]
+			if !qshell.IsValidZone(zone) {
+				fmt.Println(fmt.Sprintf("Invalid zone '%s'", zone))
 			}
 		}
-		accountS.Set(accessKey, secretKey, zone)
+		sErr := accountS.Set(accessKey, secretKey, zone)
+		if sErr != nil {
+			fmt.Println(sErr)
+		}
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func Zone(cmd string, params ...string) {
+	if len(params) == 0 {
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+		fmt.Println("Current zone: ", accountS.Zone)
+	} else if len(params) == 1 {
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+		accessKey := accountS.AccessKey
+		secretKey := accountS.SecretKey
+		zone := params[0]
+		if !qshell.IsValidZone(zone) {
+			fmt.Println(fmt.Sprintf("Invalid zone '%s'", zone))
+			return
+		}
+
+		sErr := accountS.Set(accessKey, secretKey, zone)
+		if sErr != nil {
+			fmt.Println(sErr)
+		}
 	} else {
 		CmdHelp(cmd)
 	}
