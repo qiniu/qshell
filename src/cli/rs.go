@@ -6,7 +6,6 @@ import (
 	"os"
 	"qiniu/api.v6/auth/digest"
 	"qiniu/api.v6/rs"
-	"qiniu/log"
 	"qshell"
 	"runtime"
 	"strconv"
@@ -50,12 +49,18 @@ func ListBucket(cmd string, params ...string) {
 			prefix = params[1]
 			listResultFile = params[2]
 		}
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		if accountS.AccessKey != "" && accountS.SecretKey != "" {
 			listbucketS.Account = accountS
 			listbucketS.List(bucket, prefix, listResultFile)
 		} else {
-			log.Error("No AccessKey and SecretKey set error!")
+			fmt.Println("No AccessKey and SecretKey set error!")
 		}
 	} else {
 		CmdHelp(cmd)
@@ -66,7 +71,13 @@ func Stat(cmd string, params ...string) {
 	if len(params) == 2 {
 		bucket := params[0]
 		key := params[1]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -74,7 +85,7 @@ func Stat(cmd string, params ...string) {
 		client := rs.New(&mac)
 		entry, err := client.Stat(nil, bucket, key)
 		if err != nil {
-			log.Error("Stat error,", err)
+			fmt.Println("Stat error,", err.Error())
 		} else {
 			printStat(bucket, key, entry)
 		}
@@ -87,7 +98,13 @@ func Delete(cmd string, params ...string) {
 	if len(params) == 2 {
 		bucket := params[0]
 		key := params[1]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -95,7 +112,7 @@ func Delete(cmd string, params ...string) {
 		client := rs.New(&mac)
 		err := client.Delete(nil, bucket, key)
 		if err != nil {
-			log.Error("Delete error,", err)
+			fmt.Println("Delete error,", err.Error())
 		} else {
 			fmt.Println("Done!")
 		}
@@ -110,7 +127,13 @@ func Move(cmd string, params ...string) {
 		srcKey := params[1]
 		destBucket := params[2]
 		destKey := params[3]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -118,7 +141,7 @@ func Move(cmd string, params ...string) {
 		client := rs.New(&mac)
 		err := client.Move(nil, srcBucket, srcKey, destBucket, destKey)
 		if err != nil {
-			log.Error("Move error,", err)
+			fmt.Println("Move error,", err)
 		} else {
 			fmt.Println("Done!")
 		}
@@ -136,7 +159,13 @@ func Copy(cmd string, params ...string) {
 		if len(params) == 4 {
 			destKey = params[3]
 		}
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -144,7 +173,7 @@ func Copy(cmd string, params ...string) {
 		client := rs.New(&mac)
 		err := client.Copy(nil, srcBucket, srcKey, destBucket, destKey)
 		if err != nil {
-			log.Error("Copy error,", err)
+			fmt.Println("Copy error,", err)
 		} else {
 			fmt.Println("Done!")
 		}
@@ -158,7 +187,13 @@ func Chgm(cmd string, params ...string) {
 		bucket := params[0]
 		key := params[1]
 		newMimeType := params[2]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -166,7 +201,7 @@ func Chgm(cmd string, params ...string) {
 		client := rs.New(&mac)
 		err := client.ChangeMime(nil, bucket, key, newMimeType)
 		if err != nil {
-			log.Error("Change mimeType error,", err)
+			fmt.Println("Change mimeType error,", err)
 		} else {
 			fmt.Println("Done!")
 		}
@@ -183,14 +218,20 @@ func Fetch(cmd string, params ...string) {
 		if len(params) == 3 {
 			key = params[2]
 		}
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
 		fetchResult, err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
 		if err != nil {
-			log.Error("Fetch error,", err)
+			fmt.Println("Fetch error,", err)
 		} else {
 			fmt.Println("Key:", fetchResult.Key)
 			fmt.Println("Hash:", fetchResult.Hash)
@@ -204,14 +245,20 @@ func Prefetch(cmd string, params ...string) {
 	if len(params) == 2 {
 		bucket := params[0]
 		key := params[1]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
 		err := qshell.Prefetch(&mac, bucket, key)
 		if err != nil {
-			log.Error("Prefetch error,", err)
+			fmt.Println("Prefetch error,", err)
 		} else {
 			fmt.Println("Done!")
 		}
@@ -224,7 +271,13 @@ func BatchStat(cmd string, params ...string) {
 	if len(params) == 2 {
 		bucket := params[0]
 		keyListFile := params[1]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -232,7 +285,7 @@ func BatchStat(cmd string, params ...string) {
 		client := rs.New(&mac)
 		fp, err := os.Open(keyListFile)
 		if err != nil {
-			log.Error("Open key list file error", err)
+			fmt.Println("Open key list file error", err)
 			return
 		}
 		defer fp.Close()
@@ -270,7 +323,7 @@ func BatchStat(cmd string, params ...string) {
 func batchStat(client rs.Client, entries []rs.EntryPath) {
 	ret, err := qshell.BatchStat(client, entries)
 	if err != nil {
-		log.Error("Batch stat error", err)
+		fmt.Println("Batch stat error", err)
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
@@ -289,7 +342,7 @@ func BatchDelete(cmd string, params ...string) {
 	//confirm
 	rcode := CreateRandString(6)
 	if rcode == "" {
-		log.Error("Create confirm code failed")
+		fmt.Println("Create confirm code failed")
 		return
 	}
 
@@ -309,7 +362,13 @@ func BatchDelete(cmd string, params ...string) {
 	if len(params) == 2 {
 		bucket := params[0]
 		keyListFile := params[1]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -317,7 +376,7 @@ func BatchDelete(cmd string, params ...string) {
 		client := rs.New(&mac)
 		fp, err := os.Open(keyListFile)
 		if err != nil {
-			log.Error("Open key list file error", err)
+			fmt.Println("Open key list file error", err)
 			return
 		}
 		defer fp.Close()
@@ -356,13 +415,13 @@ func BatchDelete(cmd string, params ...string) {
 func batchDelete(client rs.Client, entries []rs.EntryPath) {
 	ret, err := qshell.BatchDelete(client, entries)
 	if err != nil {
-		log.Error("Batch delete error", err)
+		fmt.Println("Batch delete error", err)
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Data.Error != "" {
-				log.Error(fmt.Sprintf("Delete '%s' => '%s' Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
+				fmt.Println(fmt.Sprintf("Delete '%s' => '%s' Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
 			} else {
 				log.Debug(fmt.Sprintf("Delete '%s' => '%s' Success, Code: %d", entry.Bucket, entry.Key, item.Code))
 			}
@@ -374,7 +433,7 @@ func BatchChgm(cmd string, params ...string) {
 	//confirm
 	rcode := CreateRandString(6)
 	if rcode == "" {
-		log.Error("Create confirm code failed")
+		fmt.Println("Create confirm code failed")
 		return
 	}
 
@@ -394,7 +453,13 @@ func BatchChgm(cmd string, params ...string) {
 	if len(params) == 2 {
 		bucket := params[0]
 		keyMimeMapFile := params[1]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -402,7 +467,7 @@ func BatchChgm(cmd string, params ...string) {
 		client := rs.New(&mac)
 		fp, err := os.Open(keyMimeMapFile)
 		if err != nil {
-			log.Error("Open key mime map file error")
+			fmt.Println("Open key mime map file error")
 			return
 		}
 		defer fp.Close()
@@ -437,13 +502,13 @@ func BatchChgm(cmd string, params ...string) {
 func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 	ret, err := qshell.BatchChgm(client, entries)
 	if err != nil {
-		log.Error("Batch chgm error", err)
+		fmt.Println("Batch chgm error", err)
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Data.Error != "" {
-				log.Error(fmt.Sprintf("Chgm '%s' => '%s' Failed, Code :%d", entry.Key, entry.MimeType, item.Code))
+				fmt.Println(fmt.Sprintf("Chgm '%s' => '%s' Failed, Code :%d", entry.Key, entry.MimeType, item.Code))
 			} else {
 				log.Debug(fmt.Sprintf("Chgm '%s' => '%s' Success, Code :%d", entry.Key, entry.MimeType, item.Code))
 			}
@@ -455,7 +520,7 @@ func BatchRename(cmd string, params ...string) {
 	//confirm
 	rcode := CreateRandString(6)
 	if rcode == "" {
-		log.Error("Create confirm code failed")
+		fmt.Println("Create confirm code failed")
 		return
 	}
 
@@ -475,7 +540,13 @@ func BatchRename(cmd string, params ...string) {
 	if len(params) == 2 {
 		bucket := params[0]
 		oldNewKeyMapFile := params[1]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -483,7 +554,7 @@ func BatchRename(cmd string, params ...string) {
 		client := rs.New(&mac)
 		fp, err := os.Open(oldNewKeyMapFile)
 		if err != nil {
-			log.Error("Open old new key map file error")
+			fmt.Println("Open old new key map file error")
 			return
 		}
 		defer fp.Close()
@@ -518,13 +589,13 @@ func BatchRename(cmd string, params ...string) {
 func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 	ret, err := qshell.BatchRename(client, entries)
 	if err != nil {
-		log.Error("Batch rename error", err)
+		fmt.Println("Batch rename error", err)
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Data.Error != "" {
-				log.Error(fmt.Sprintf("Rename '%s' => '%s' Failed, Code :%d", entry.OldKey, entry.NewKey, item.Code))
+				fmt.Println(fmt.Sprintf("Rename '%s' => '%s' Failed, Code :%d", entry.OldKey, entry.NewKey, item.Code))
 			} else {
 				log.Debug(fmt.Sprintf("Rename '%s' => '%s' Success, Code :%d", entry.OldKey, entry.NewKey, item.Code))
 			}
@@ -536,7 +607,7 @@ func BatchMove(cmd string, params ...string) {
 	//confirm
 	rcode := CreateRandString(6)
 	if rcode == "" {
-		log.Error("Create confirm code failed")
+		fmt.Println("Create confirm code failed")
 		return
 	}
 
@@ -557,7 +628,13 @@ func BatchMove(cmd string, params ...string) {
 		srcBucket := params[0]
 		destBucket := params[1]
 		srcDestKeyMapFile := params[2]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -565,7 +642,7 @@ func BatchMove(cmd string, params ...string) {
 		client := rs.New(&mac)
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
-			log.Error("Open src dest key map file error")
+			fmt.Println("Open src dest key map file error")
 			return
 		}
 		defer fp.Close()
@@ -603,13 +680,13 @@ func BatchMove(cmd string, params ...string) {
 func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 	ret, err := qshell.BatchMove(client, entries)
 	if err != nil {
-		log.Error("Batch move error", err)
+		fmt.Println("Batch move error", err)
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Data.Error != "" {
-				log.Error(fmt.Sprintf("Move '%s:%s' => '%s:%s' Failed, Code :%d",
+				fmt.Println(fmt.Sprintf("Move '%s:%s' => '%s:%s' Failed, Code :%d",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
 			} else {
 				log.Debug(fmt.Sprintf("Move '%s:%s' => '%s:%s' Success, Code :%d",
@@ -623,7 +700,7 @@ func BatchCopy(cmd string, params ...string) {
 	//confirm
 	rcode := CreateRandString(6)
 	if rcode == "" {
-		log.Error("Create confirm code failed")
+		fmt.Println("Create confirm code failed")
 		return
 	}
 
@@ -644,7 +721,13 @@ func BatchCopy(cmd string, params ...string) {
 		srcBucket := params[0]
 		destBucket := params[1]
 		srcDestKeyMapFile := params[2]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -652,7 +735,7 @@ func BatchCopy(cmd string, params ...string) {
 		client := rs.New(&mac)
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
-			log.Error("Open src dest key map file error")
+			fmt.Println("Open src dest key map file error")
 			return
 		}
 		defer fp.Close()
@@ -690,13 +773,13 @@ func BatchCopy(cmd string, params ...string) {
 func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
 	ret, err := qshell.BatchCopy(client, entries)
 	if err != nil {
-		log.Error("Batch move error", err)
+		fmt.Println("Batch move error", err)
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Data.Error != "" {
-				log.Error(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Failed, Code :%d",
+				fmt.Println(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Failed, Code :%d",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
 			} else {
 				log.Debug(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Success, Code :%d",
@@ -710,7 +793,12 @@ func BatchRefresh(cmd string, params ...string) {
 	if len(params) == 1 {
 		urlListFile := params[0]
 
-		accountS.Get()
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -719,7 +807,7 @@ func BatchRefresh(cmd string, params ...string) {
 		client := rs.New(&mac)
 		fp, err := os.Open(urlListFile)
 		if err != nil {
-			log.Error("Open url list file error", err)
+			fmt.Println("Open url list file error", err)
 			return
 		}
 		defer fp.Close()
@@ -753,7 +841,7 @@ func BatchRefresh(cmd string, params ...string) {
 func batchRefresh(client *rs.Client, urls []string) {
 	err := qshell.BatchRefresh(client, urls)
 	if err != nil {
-		log.Error("batch refresh error", err)
+		fmt.Println("batch refresh error", err)
 	}
 }
 
@@ -763,7 +851,7 @@ func PrivateUrl(cmd string, params ...string) {
 		var deadline int64
 		if len(params) == 2 {
 			if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
-				log.Error("Invalid <Deadline>")
+				fmt.Println("Invalid <Deadline>")
 				return
 			} else {
 				deadline = val
@@ -771,7 +859,13 @@ func PrivateUrl(cmd string, params ...string) {
 		} else {
 			deadline = time.Now().Add(time.Second * 3600).Unix()
 		}
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -789,7 +883,7 @@ func BatchSign(cmd string, params ...string) {
 		var deadline int64
 		if len(params) == 2 {
 			if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
-				log.Error("Invalid <Deadline>")
+				fmt.Println("Invalid <Deadline>")
 				return
 			} else {
 				deadline = val
@@ -798,7 +892,12 @@ func BatchSign(cmd string, params ...string) {
 			deadline = time.Now().Add(time.Second * 3600 * 24 * 365).Unix()
 		}
 
-		accountS.Get()
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -806,7 +905,7 @@ func BatchSign(cmd string, params ...string) {
 
 		fp, openErr := os.Open(urlListFile)
 		if openErr != nil {
-			log.Error("Open url list file error,", openErr)
+			fmt.Println("Open url list file error,", openErr)
 			return
 		}
 		defer fp.Close()
@@ -831,7 +930,13 @@ func Saveas(cmd string, params ...string) {
 		publicUrl := params[0]
 		saveBucket := params[1]
 		saveKey := params[2]
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
@@ -855,20 +960,26 @@ func M3u8Delete(cmd string, params ...string) {
 		if len(params) == 3 {
 			isPrivate, _ = strconv.ParseBool(params[2])
 		}
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
 		m3u8FileList, err := qshell.M3u8FileList(&mac, bucket, m3u8Key, isPrivate)
 		if err != nil {
-			log.Error(err)
+			fmt.Println(err)
 			return
 		}
 		client := rs.New(&mac)
 		entryCnt := len(m3u8FileList)
 		if entryCnt == 0 {
-			log.Error("no m3u8 slices found")
+			fmt.Println("no m3u8 slices found")
 			return
 		}
 		if entryCnt <= BATCH_ALLOW_MAX {

@@ -4,6 +4,7 @@
 3. 为`qupload`添加本地网卡绑定功能`bind_nic_ip`
 4. 为`qupload`添加远程主机IP绑定功能`bind_up_ip`和`bind_rs_ip`，避免频繁DNS
 5. 为`qupload`添加选项参数`put_threshold`，用来指定分片上传的阈值
+6. 添加命令`zone`用来输出当前机房信息或者切换机房
 
 #1.5.5
 1. 修复`dir_cache`中的`WalkFunc`没有处理文件遍历错误的bug
