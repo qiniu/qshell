@@ -423,7 +423,7 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 			if item.Data.Error != "" {
 				fmt.Println(fmt.Sprintf("Delete '%s' => '%s' Failed, Code: %d", entry.Bucket, entry.Key, item.Code))
 			} else {
-				log.Debug(fmt.Sprintf("Delete '%s' => '%s' Success, Code: %d", entry.Bucket, entry.Key, item.Code))
+				fmt.Println(fmt.Sprintf("Delete '%s' => '%s' Success, Code: %d", entry.Bucket, entry.Key, item.Code))
 			}
 		}
 	}
@@ -510,7 +510,7 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 			if item.Data.Error != "" {
 				fmt.Println(fmt.Sprintf("Chgm '%s' => '%s' Failed, Code :%d", entry.Key, entry.MimeType, item.Code))
 			} else {
-				log.Debug(fmt.Sprintf("Chgm '%s' => '%s' Success, Code :%d", entry.Key, entry.MimeType, item.Code))
+				fmt.Println(fmt.Sprintf("Chgm '%s' => '%s' Success, Code :%d", entry.Key, entry.MimeType, item.Code))
 			}
 		}
 	}
@@ -597,7 +597,7 @@ func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 			if item.Data.Error != "" {
 				fmt.Println(fmt.Sprintf("Rename '%s' => '%s' Failed, Code :%d", entry.OldKey, entry.NewKey, item.Code))
 			} else {
-				log.Debug(fmt.Sprintf("Rename '%s' => '%s' Success, Code :%d", entry.OldKey, entry.NewKey, item.Code))
+				fmt.Println(fmt.Sprintf("Rename '%s' => '%s' Success, Code :%d", entry.OldKey, entry.NewKey, item.Code))
 			}
 		}
 	}
@@ -689,7 +689,7 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 				fmt.Println(fmt.Sprintf("Move '%s:%s' => '%s:%s' Failed, Code :%d",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
 			} else {
-				log.Debug(fmt.Sprintf("Move '%s:%s' => '%s:%s' Success, Code :%d",
+				fmt.Println(fmt.Sprintf("Move '%s:%s' => '%s:%s' Success, Code :%d",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
 			}
 		}
@@ -782,7 +782,7 @@ func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
 				fmt.Println(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Failed, Code :%d",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
 			} else {
-				log.Debug(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Success, Code :%d",
+				fmt.Println(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Success, Code :%d",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
 			}
 		}

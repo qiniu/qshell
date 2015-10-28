@@ -8,7 +8,6 @@ import (
 	fio "qiniu/api.v6/io"
 	rio "qiniu/api.v6/resumable/io"
 	"qiniu/api.v6/rs"
-	"qiniu/log"
 	"sort"
 	"strings"
 	"time"
@@ -33,7 +32,13 @@ func FormPut(cmd string, params ...string) {
 			mimeType = params[3]
 			upHost = params[4]
 		}
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 		policy := rs.PutPolicy{}
 		policy.Scope = bucket
@@ -49,13 +54,13 @@ func FormPut(cmd string, params ...string) {
 		startTime := time.Now()
 		fStat, statErr := os.Stat(localFile)
 		if statErr != nil {
-			log.Error("Local file error", statErr)
+			fmt.Println("Local file error", statErr)
 			return
 		}
 		fsize := fStat.Size()
 		err := fio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
-			log.Error("Put file error", err)
+			fmt.Println("Put file error", err)
 		} else {
 			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
@@ -87,7 +92,13 @@ func ResumablePut(cmd string, params ...string) {
 			mimeType = params[3]
 			upHost = params[4]
 		}
-		accountS.Get()
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 		policy := rs.PutPolicy{}
 		policy.Scope = bucket
@@ -110,13 +121,13 @@ func ResumablePut(cmd string, params ...string) {
 		startTime := time.Now()
 		fStat, statErr := os.Stat(localFile)
 		if statErr != nil {
-			log.Error("Local file error", statErr)
+			fmt.Println("Local file error", statErr)
 			return
 		}
 		fsize := fStat.Size()
 		err := rio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
-			log.Error("Put file error", err)
+			fmt.Println("Put file error", err)
 		} else {
 			fmt.Println("\r\nPut file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
@@ -155,6 +166,7 @@ func (this *ProgressHandler) Notify(blkIdx int, blkSize int, ret *rio.BlkputRet)
 	fmt.Print(output)
 	os.Stdout.Sync()
 }
+
 func (this *ProgressHandler) NotifyErr(blkIdx int, blkSize int, err error) {
 
 }

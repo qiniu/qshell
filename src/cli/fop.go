@@ -9,7 +9,6 @@ import (
 func Prefop(cmd string, params ...string) {
 	if len(params) == 1 {
 		persistentId := params[0]
-		accountS.Get()
 		fopRet := qshell.FopRet{}
 		err := rsfopS.Prefop(persistentId, &fopRet)
 		if err != nil {
