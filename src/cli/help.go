@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v1.5.7"
+var version = "v1.5.8"
 
 var optionDocs = map[string]string{
 	"-d": "Show debug message",
