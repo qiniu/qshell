@@ -10,6 +10,7 @@ import (
 	"qiniu/api.v6/rs"
 	"qiniu/rpc"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,23 +21,27 @@ var upSettings = rio.Settings{
 }
 
 func FormPut(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 || len(params) == 5 {
+	if len(params) == 3 || len(params) == 4 || len(params) == 5 || len(params) == 6 {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
 		mimeType := ""
 		upHost := ""
-		if len(params) == 4 {
-			param := params[3]
-			if strings.HasPrefix(param, "http") {
-				upHost = param
-			} else {
-				mimeType = param
+		overwrite := false
+
+		optionalParams := params[3:]
+		for _, param := range optionalParams {
+			if val, pErr := strconv.ParseBool(param); pErr == nil {
+				overwrite = val
+				continue
 			}
-		}
-		if len(params) == 5 {
-			mimeType = params[3]
-			upHost = params[4]
+
+			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
+				upHost = param
+				continue
+			}
+
+			mimeType = param
 		}
 
 		gErr := accountS.Get()
@@ -47,7 +52,12 @@ func FormPut(cmd string, params ...string) {
 
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 		policy := rs.PutPolicy{}
-		policy.Scope = bucket
+		if overwrite {
+			policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
+		} else {
+			policy.Scope = bucket
+		}
+
 		putExtra := fio.PutExtra{}
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
@@ -82,23 +92,27 @@ func FormPut(cmd string, params ...string) {
 }
 
 func ResumablePut(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 || len(params) == 5 {
+	if len(params) == 3 || len(params) == 4 || len(params) == 5 || len(params) == 6 {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
 		mimeType := ""
 		upHost := ""
-		if len(params) == 4 {
-			param := params[3]
-			if strings.HasPrefix(param, "http") {
-				upHost = param
-			} else {
-				mimeType = param
+		overwrite := false
+
+		optionalParams := params[3:]
+		for _, param := range optionalParams {
+			if val, pErr := strconv.ParseBool(param); pErr == nil {
+				overwrite = val
+				continue
 			}
-		}
-		if len(params) == 5 {
-			mimeType = params[3]
-			upHost = params[4]
+
+			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
+				upHost = param
+				continue
+			}
+
+			mimeType = param
 		}
 
 		gErr := accountS.Get()
@@ -109,7 +123,13 @@ func ResumablePut(cmd string, params ...string) {
 
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 		policy := rs.PutPolicy{}
-		policy.Scope = bucket
+
+		if overwrite {
+			policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
+		} else {
+			policy.Scope = bucket
+		}
+
 		putExtra := rio.PutExtra{}
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
