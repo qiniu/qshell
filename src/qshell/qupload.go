@@ -410,16 +410,12 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	}
 	upWorkGroup.Wait()
 
-	duration := time.Since(timeStart).Seconds()
-	durationStr := fmt.Sprintf("%.2f", duration)
-	duration, _ = strconv.ParseFloat(durationStr, 64)
-
 	log.Info("-------Upload Result-------")
 	log.Info("Total:\t", currentFileCount)
 	log.Info("Success:\t", successFileCount)
 	log.Info("Failure:\t", failureFileCount)
 	log.Info("Skipped:\t", skippedFileCount)
-	log.Info("Duration:\t", duration)
+	log.Info("Duration:\t", time.Since(timeStart))
 	log.Info("-------------------------")
 
 }
