@@ -3,7 +3,6 @@ package io
 import (
 	"errors"
 	"io"
-	"net/http"
 	"os"
 	"qiniu/log"
 	"qiniu/rpc"
@@ -117,26 +116,25 @@ var once sync.Once
 
 // ----------------------------------------------------------
 
-func Put(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken string, key string, f io.ReaderAt, fsize int64, extra *PutExtra) error {
-	return put(l, t, bindRemoteIp, ret, uptoken, key, true, f, fsize, extra)
+func Put(c rpc.Client, l rpc.Logger, ret interface{}, key string, f io.ReaderAt, fsize int64, extra *PutExtra) error {
+	return put(c, l, ret, key, true, f, fsize, extra)
 }
 
-func PutWithoutKey(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken string, f io.ReaderAt, fsize int64, extra *PutExtra) error {
-	return put(l, t, bindRemoteIp, ret, uptoken, "", false, f, fsize, extra)
+func PutWithoutKey(c rpc.Client, l rpc.Logger, ret interface{}, f io.ReaderAt, fsize int64, extra *PutExtra) error {
+	return put(c, l, ret, "", false, f, fsize, extra)
 }
 
-func PutFile(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken, key, localFile string, extra *PutExtra) (err error) {
-	return putFile(l, t, bindRemoteIp, ret, uptoken, key, true, localFile, extra)
+func PutFile(c rpc.Client, l rpc.Logger, ret interface{}, key, localFile string, extra *PutExtra) (err error) {
+	return putFile(c, l, ret, key, true, localFile, extra)
 }
 
-func PutFileWithoutKey(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken, localFile string, extra *PutExtra) (err error) {
-	return putFile(l, t, bindRemoteIp, ret, uptoken, "", false, localFile, extra)
+func PutFileWithoutKey(c rpc.Client, l rpc.Logger, ret interface{}, localFile string, extra *PutExtra) (err error) {
+	return putFile(c, l, ret, "", false, localFile, extra)
 }
 
 // ----------------------------------------------------------
 
-func put(
-	l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken string, key string, hasKey bool, f io.ReaderAt, fsize int64, extra *PutExtra) error {
+func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f io.ReaderAt, fsize int64, extra *PutExtra) error {
 
 	once.Do(initWorkers)
 
@@ -170,7 +168,6 @@ func put(
 	last := blockCnt - 1
 	blkSize := 1 << blockBits
 	nfails := 0
-	c := NewClient(uptoken, t, bindRemoteIp)
 
 	for i := 0; i < blockCnt; i++ {
 		blkIdx := i
@@ -206,7 +203,7 @@ func put(
 	return Mkfile(c, l, ret, key, hasKey, fsize, extra)
 }
 
-func putFile(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken, key string, hasKey bool, localFile string, extra *PutExtra) (err error) {
+func putFile(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, localFile string, extra *PutExtra) (err error) {
 
 	f, err := os.Open(localFile)
 	if err != nil {
@@ -219,7 +216,7 @@ func putFile(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interfa
 		return
 	}
 
-	return put(l, t, bindRemoteIp, ret, uptoken, key, hasKey, f, fi.Size(), extra)
+	return put(c, l, ret, key, hasKey, f, fi.Size(), extra)
 }
 
 // ----------------------------------------------------------

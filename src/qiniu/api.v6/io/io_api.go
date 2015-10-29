@@ -6,7 +6,6 @@ import (
 	"hash/crc32"
 	"io"
 	"mime/multipart"
-	"net/http"
 	"net/textproto"
 	"os"
 	. "qiniu/api.v6/conf"
@@ -36,11 +35,9 @@ type PutRet struct {
 	Key  string `json:"key"`
 }
 
-var tmpFilePrefix = "qiniu-go-sdk-tmpfile"
-
 // ----------------------------------------------------------
 
-func put(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken, key string, hasKey bool, data io.Reader, size int64, extra *PutExtra) error {
+func put(c rpc.Client, l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, data io.Reader, size int64, extra *PutExtra) error {
 
 	// CheckCrc == 1: 对于 Put 和 PutWithoutKey 等同于 CheckCrc == 2
 	if extra != nil {
@@ -50,28 +47,28 @@ func put(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}
 			extra.CheckCrc = 2
 		}
 	}
-	return putWrite(l, t, bindRemoteIp, ret, uptoken, key, hasKey, data, size, extra)
+	return putWrite(c, l, ret, uptoken, key, hasKey, data, size, extra)
 }
 
-func Put2(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken, key string, data io.Reader, size int64, extra *PutExtra) error {
-	return put(l, t, bindRemoteIp, ret, uptoken, key, true, data, size, extra)
+func Put2(c rpc.Client, l rpc.Logger, ret interface{}, uptoken, key string, data io.Reader, size int64, extra *PutExtra) error {
+	return put(c, l, ret, uptoken, key, true, data, size, extra)
 }
 
-func PutWithoutKey2(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken string, data io.Reader, size int64, extra *PutExtra) error {
-	return put(l, t, bindRemoteIp, ret, uptoken, "", false, data, size, extra)
+func PutWithoutKey2(c rpc.Client, l rpc.Logger, ret interface{}, uptoken string, data io.Reader, size int64, extra *PutExtra) error {
+	return put(c, l, ret, uptoken, "", false, data, size, extra)
 }
 
 // ----------------------------------------------------------
 
-func PutFile(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken, key, localFile string, extra *PutExtra) (err error) {
-	return putFile(l, t, bindRemoteIp, ret, uptoken, key, true, localFile, extra)
+func PutFile(c rpc.Client, l rpc.Logger, ret interface{}, uptoken, key, localFile string, extra *PutExtra) (err error) {
+	return putFile(c, l, ret, uptoken, key, true, localFile, extra)
 }
 
-func PutFileWithoutKey(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken, localFile string, extra *PutExtra) (err error) {
-	return putFile(l, t, bindRemoteIp, ret, uptoken, "", false, localFile, extra)
+func PutFileWithoutKey(c rpc.Client, l rpc.Logger, ret interface{}, uptoken, localFile string, extra *PutExtra) (err error) {
+	return putFile(c, l, ret, uptoken, "", false, localFile, extra)
 }
 
-func putFile(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken, key string, hasKey bool, localFile string, extra *PutExtra) (err error) {
+func putFile(c rpc.Client, l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, localFile string, extra *PutExtra) (err error) {
 
 	f, err := os.Open(localFile)
 	if err != nil {
@@ -92,12 +89,12 @@ func putFile(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interfa
 		}
 	}
 
-	return putWrite(l, t, bindRemoteIp, ret, uptoken, key, hasKey, f, fsize, extra)
+	return putWrite(c, l, ret, uptoken, key, hasKey, f, fsize, extra)
 }
 
 // ----------------------------------------------------------
 
-func putWrite(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interface{}, uptoken, key string, hasKey bool, data io.Reader, size int64, extra *PutExtra) error {
+func putWrite(c rpc.Client, l rpc.Logger, ret interface{}, uptoken, key string, hasKey bool, data io.Reader, size int64, extra *PutExtra) error {
 
 	var b bytes.Buffer
 	writer := multipart.NewWriter(&b)
@@ -115,20 +112,7 @@ func putWrite(l rpc.Logger, t http.RoundTripper, bindRemoteIp string, ret interf
 
 	contentType := writer.FormDataContentType()
 
-	//check transport
-	var client rpc.Client
-	if t != nil {
-		client = rpc.NewClient(t, bindRemoteIp)
-	} else {
-		client = rpc.DefaultClient
-	}
-
-	//check bind remote ip
-	if bindRemoteIp != "" {
-		client.BindRemoteIp = bindRemoteIp
-	}
-
-	return client.CallWith64(l, ret, UP_HOST, contentType, mr, bodyLen)
+	return c.CallWith64(l, ret, UP_HOST, contentType, mr, bodyLen)
 }
 
 /*

@@ -44,15 +44,17 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 }
 
 func NewTransport(token string, transport http.RoundTripper) *Transport {
-	if transport == nil {
-		transport = http.DefaultTransport
-	}
 	return &Transport{"UpToken " + token, transport}
 }
 
-func NewClient(token string, transport http.RoundTripper, bindRemoteIp string) rpc.Client {
+func NewClientEx(token string, transport http.RoundTripper, bindRemoteIp string) rpc.Client {
 	t := NewTransport(token, transport)
 	return rpc.Client{&http.Client{Transport: t}, bindRemoteIp}
+}
+
+func NewClient(token string, bindRemoteIp string) rpc.Client {
+	transport := http.DefaultTransport
+	return NewClientEx(token, transport, bindRemoteIp)
 }
 
 // ----------------------------------------------------------

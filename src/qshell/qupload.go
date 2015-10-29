@@ -175,7 +175,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 
 	//chunk upload threshold
 	putThreshold := DEFAULT_PUT_THRESHOLD
-	if uploadConfig.PutThreshold != 0 {
+	if uploadConfig.PutThreshold > 0 {
 		putThreshold = uploadConfig.PutThreshold
 	}
 
@@ -213,7 +213,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	if transport != nil {
 		rsClient = rs.NewMacEx(&mac, transport, "")
 	} else {
-		rsClient = rs.New(&mac)
+		rsClient = rs.NewMac(&mac)
 	}
 
 	//check remote rs ip bind
@@ -357,8 +357,15 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			policy.Expires = 24 * 3600
 			uptoken := policy.Token(&mac)
 			if fsize > putThreshold {
+				var putClient rpc.Client
+				if transport != nil {
+					putClient = rio.NewClientEx(uptoken, transport, uploadConfig.BindUpIp)
+				} else {
+					putClient = rio.NewClient(uptoken, uploadConfig.BindUpIp)
+				}
+
 				putRet := rio.PutRet{}
-				err := rio.PutFile(nil, transport, uploadConfig.BindUpIp, &putRet, uptoken, uploadFileKey, localFilePath, nil)
+				err := rio.PutFile(putClient, nil, &putRet, uploadFileKey, localFilePath, nil)
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
@@ -374,8 +381,15 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 					}
 				}
 			} else {
+				var putClient rpc.Client
+				if transport != nil {
+					putClient = rpc.NewClientEx(transport, uploadConfig.BindUpIp)
+				} else {
+					putClient = rpc.NewClient(uploadConfig.BindUpIp)
+				}
+
 				putRet := fio.PutRet{}
-				err := fio.PutFile(nil, transport, uploadConfig.BindUpIp, &putRet, uptoken, uploadFileKey, localFilePath, nil)
+				err := fio.PutFile(putClient, nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
@@ -396,12 +410,16 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	}
 	upWorkGroup.Wait()
 
+	duration := time.Since(timeStart).Seconds()
+	durationStr := fmt.Sprintf("%.2f", duration)
+	duration, _ = strconv.ParseFloat(durationStr, 64)
+
 	log.Info("-------Upload Result-------")
 	log.Info("Total:\t", currentFileCount)
 	log.Info("Success:\t", successFileCount)
 	log.Info("Failure:\t", failureFileCount)
 	log.Info("Skipped:\t", skippedFileCount)
-	log.Info("Duration:\t", time.Since(timeStart))
+	log.Info("Duration:\t", duration)
 	log.Info("-------------------------")
 
 }

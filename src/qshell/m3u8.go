@@ -18,7 +18,7 @@ import (
 type BucketDomain []string
 
 func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string, isPrivate bool) (slicesToDelete []rs.EntryPath, err error) {
-	client := rs.New(mac)
+	client := rs.NewMac(mac)
 	//check m3u8 file exists
 	_, sErr := client.Stat(nil, bucket, m3u8Key)
 	if sErr != nil {

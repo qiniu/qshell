@@ -8,6 +8,7 @@ import (
 	fio "qiniu/api.v6/io"
 	rio "qiniu/api.v6/resumable/io"
 	"qiniu/api.v6/rs"
+	"qiniu/rpc"
 	"sort"
 	"strings"
 	"time"
@@ -63,8 +64,9 @@ func FormPut(cmd string, params ...string) {
 			return
 		}
 		fsize := fStat.Size()
+		putClient := rpc.NewClient("")
 		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...\r\n", localFile, bucket, key))
-		err := fio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
+		err := fio.PutFile(putClient, nil, &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			fmt.Println("Put file error", err)
 		} else {
@@ -132,8 +134,9 @@ func ResumablePut(cmd string, params ...string) {
 		}
 		fsize := fStat.Size()
 		rio.SetSettings(&upSettings)
+		putClient := rio.NewClient(uptoken, "")
 		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...\r\n", localFile, bucket, key))
-		err := rio.PutFile(nil, nil, "", &putRet, uptoken, key, localFile, &putExtra)
+		err := rio.PutFile(putClient, nil, &putRet, key, localFile, &putExtra)
 		if err != nil {
 			fmt.Println("Put file error", err)
 		} else {

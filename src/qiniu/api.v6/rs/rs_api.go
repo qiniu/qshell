@@ -15,7 +15,7 @@ type Client struct {
 	Conn rpc.Client
 }
 
-func New(mac *digest.Mac) Client {
+func NewMac(mac *digest.Mac) Client {
 	t := digest.NewTransport(mac, nil)
 	client := &http.Client{Transport: t}
 	return Client{rpc.Client{client, ""}}

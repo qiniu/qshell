@@ -83,7 +83,7 @@ func Stat(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		entry, err := client.Stat(nil, bucket, key)
 		if err != nil {
 			fmt.Println("Stat error,", err.Error())
@@ -110,7 +110,7 @@ func Delete(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		err := client.Delete(nil, bucket, key)
 		if err != nil {
 			fmt.Println("Delete error,", err.Error())
@@ -139,7 +139,7 @@ func Move(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		err := client.Move(nil, srcBucket, srcKey, destBucket, destKey)
 		if err != nil {
 			fmt.Println("Move error,", err)
@@ -171,7 +171,7 @@ func Copy(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		err := client.Copy(nil, srcBucket, srcKey, destBucket, destKey)
 		if err != nil {
 			fmt.Println("Copy error,", err)
@@ -199,7 +199,7 @@ func Chgm(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		err := client.ChangeMime(nil, bucket, key, newMimeType)
 		if err != nil {
 			fmt.Println("Change mimeType error,", err)
@@ -283,7 +283,7 @@ func BatchStat(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		fp, err := os.Open(keyListFile)
 		if err != nil {
 			fmt.Println("Open key list file error", err)
@@ -374,7 +374,7 @@ func BatchDelete(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		fp, err := os.Open(keyListFile)
 		if err != nil {
 			fmt.Println("Open key list file error", err)
@@ -465,7 +465,7 @@ func BatchChgm(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		fp, err := os.Open(keyMimeMapFile)
 		if err != nil {
 			fmt.Println("Open key mime map file error")
@@ -552,7 +552,7 @@ func BatchRename(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		fp, err := os.Open(oldNewKeyMapFile)
 		if err != nil {
 			fmt.Println("Open old new key map file error")
@@ -640,7 +640,7 @@ func BatchMove(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Println("Open src dest key map file error")
@@ -733,7 +733,7 @@ func BatchCopy(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Println("Open src dest key map file error")
@@ -805,7 +805,7 @@ func BatchRefresh(cmd string, params ...string) {
 			[]byte(accountS.SecretKey),
 		}
 
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		fp, err := os.Open(urlListFile)
 		if err != nil {
 			fmt.Println("Open url list file error", err)
@@ -977,7 +977,7 @@ func M3u8Delete(cmd string, params ...string) {
 			fmt.Println(err)
 			return
 		}
-		client := rs.New(&mac)
+		client := rs.NewMac(&mac)
 		entryCnt := len(m3u8FileList)
 		if entryCnt == 0 {
 			fmt.Println("no m3u8 slices found")

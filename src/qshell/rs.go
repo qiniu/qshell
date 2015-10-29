@@ -57,7 +57,7 @@ type BatchItemRetData struct {
 }
 
 func Fetch(mac *digest.Mac, remoteResUrl, bucket, key string) (fetchResult FetchResult, err error) {
-	client := rs.New(mac)
+	client := rs.NewMac(mac)
 	entry := bucket
 	if key != "" {
 		entry += ":" + key
@@ -70,7 +70,7 @@ func Fetch(mac *digest.Mac, remoteResUrl, bucket, key string) (fetchResult Fetch
 }
 
 func Prefetch(mac *digest.Mac, bucket, key string) (err error) {
-	client := rs.New(mac)
+	client := rs.NewMac(mac)
 	prefetchUri := fmt.Sprintf("/prefetch/%s", base64.URLEncoding.EncodeToString([]byte(bucket+":"+key)))
 	err = client.Conn.Call(nil, nil, conf.IO_HOST+prefetchUri)
 	return

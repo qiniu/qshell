@@ -21,7 +21,11 @@ type Client struct {
 
 var DefaultClient = Client{http.DefaultClient, ""}
 
-func NewClient(t http.RoundTripper, bindRemoteIp string) Client {
+func NewClient(bindRemoteIp string) Client {
+	return Client{http.DefaultClient, bindRemoteIp}
+}
+
+func NewClientEx(t http.RoundTripper, bindRemoteIp string) Client {
 	return Client{&http.Client{Transport: t}, bindRemoteIp}
 }
 
