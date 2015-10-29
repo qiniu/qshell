@@ -60,14 +60,14 @@ var cmds = []string{
 	"domains",
 }
 var cmdDocs = map[string][]string{
-	"account":       []string{"qshell [-d] account [<AccessKey>] [<SecretKey>] [Zone]", "Get/Set AccessKey and SecretKey and Zone"},
-	"zone":          []string{"qshell [-d] zone [Zone]", "Switch the zone, [nb,bc,aws]"},
+	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>] [<Zone>]", "Get/Set AccessKey and SecretKey and Zone"},
+	"zone":          []string{"qshell [-d] zone [<Zone>]", "Switch the zone, [nb,bc,aws]"},
 	"dircache":      []string{"qshell [-d] dircache <DirCacheRootPath> <DirCacheResultFile>", "Cache the directory structure of a file path"},
 	"listbucket":    []string{"qshell [-d] listbucket <Bucket> [<Prefix>] <ListBucketResultFile>", "List all the file in the bucket by prefix"},
 	"alilistbucket": []string{"qshell [-d] alilistbucket <DataCenter> <Bucket> <AccessKeyId> <AccesskeySecret> [Prefix] <ListBucketResultFile>", "List all the file in the bucket of aliyun oss by prefix"},
 	"prefop":        []string{"qshell [-d] prefop <PersistentId>", "Query the fop status"},
-	"fput":          []string{"qshell [-d] fput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost]", "Form upload a local file"},
-	"rput":          []string{"qshell [-d] rput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost]", "Resumable upload a local file"},
+	"fput":          []string{"qshell [-d] fput <Bucket> <Key> <LocalFile> [<Overwrite>] [<MimeType>] [<UpHost>]", "Form upload a local file"},
+	"rput":          []string{"qshell [-d] rput <Bucket> <Key> <LocalFile> [<Overwrite>] [<MimeType>] [<UpHost>]", "Resumable upload a local file"},
 	"qupload":       []string{"qshell [-d] qupload [<ThreadCount>] <LocalUploadConfig>", "Batch upload files to the qiniu bucket"},
 	"qdownload":     []string{"qshell [-d] qdownload [<ThreadCount>] <LocalDownloadConfig>", "Batch download files from the qiniu bucket"},
 	"stat":          []string{"qshell [-d] stat <Bucket> <Key>", "Get the basic info of a remote file"},

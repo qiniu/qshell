@@ -35,6 +35,7 @@ qshell account
 |命令|描述|详细|
 |------|----------|--------|
 |account|设置或显示当前用户的AccessKey和SecretKey|[文档](http://github.com/jemygraw/qshell/wiki/account)|
+|zone|切换当前设置帐号所在的机房区域，仅账号拥有该指定区域机房时有效|[文档](http://github.com/jemygraw/qshell/wiki/zone)|
 |dircache|输出本地指定路径下所有的文件列表|[文档](http://github.com/jemygraw/qshell/wiki/dircache)|
 |listbucket|列举七牛空间里面的所有文件|[文档](http://github.com/jemygraw/qshell/wiki/listbucket)|
 |alilistbucket|列举阿里OSS空间里面的所有文件|[文档](http://github.com/jemygraw/qshell/wiki/alilistbucket)|
