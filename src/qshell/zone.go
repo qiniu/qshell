@@ -44,7 +44,7 @@ var ZoneAWSConfig = ZoneConfig{
 	UpHost:    "http://up.gdipper.com",
 	RsHost:    "http://rs.gdipper.com",
 	RsfHost:   "http://rsf.gdipper.com",
-	IovipHost: "http://iovip.gdipper.me",
+	IovipHost: "http://iovip.gdipper.com",
 	ApiHost:   "http://api.gdipper.com",
 }
 
