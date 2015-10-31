@@ -15,11 +15,17 @@ type ListBucket struct {
 }
 
 func (this *ListBucket) List(bucket string, prefix string, listResultFile string) (retErr error) {
-	fp, openErr := os.OpenFile(listResultFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
-	if openErr != nil {
-		retErr = openErr
-		log.Error(fmt.Sprintf("Failed to open list result file `%s'", listResultFile))
-		return
+	var fp *os.File
+	if listResultFile == "stdout" {
+		fp = os.Stdout
+	} else {
+		var openErr error
+		fp, openErr = os.Create(listResultFile)
+		if openErr != nil {
+			retErr = openErr
+			log.Error(fmt.Sprintf("Failed to open list result file `%s'", listResultFile))
+			return
+		}
 	}
 	defer fp.Close()
 	bw := bufio.NewWriter(fp)
