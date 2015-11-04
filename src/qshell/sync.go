@@ -124,6 +124,8 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 			lastBlock = true
 		}
 
+		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
+		log.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
 		blkCtx, pErr := rangeMkblkPipe(srcResUrl, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 		if pErr != nil {
 			log.Error(pErr.Error())
@@ -161,7 +163,6 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 	}
 
 	//make file
-	//func Mkfile(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, fsize int64, extra *PutExtra)
 	putRet := rio.PutRet{}
 	putExtra := rio.PutExtra{
 		Progresses: syncProgress.BlkCtxs,
@@ -180,7 +181,8 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 	return
 }
 
-func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int64, lastBlock bool, putClient rpc.Client) (putRet rio.BlkputRet, err error) {
+func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int64, lastBlock bool,
+	putClient rpc.Client) (putRet rio.BlkputRet, err error) {
 	//range get
 	dReq, dReqErr := http.NewRequest("GET", srcResUrl, nil)
 	if dReqErr != nil {

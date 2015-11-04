@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"qiniu/api.v6/auth/digest"
+	"qiniu/log"
 	"qshell"
 )
 
@@ -18,7 +19,7 @@ func Sync(cmd string, params ...string) {
 
 		gErr := accountS.Get()
 		if gErr != nil {
-			fmt.Println(gErr)
+			log.Error(gErr)
 			return
 		}
 
@@ -30,11 +31,11 @@ func Sync(cmd string, params ...string) {
 		//sync
 		hash, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, upHostIp)
 		if sErr != nil {
-			fmt.Println(sErr)
+			log.Error(sErr)
 			return
 		}
 
-		fmt.Println(fmt.Sprintf("Sync [%s]=>[%s:%s(%s)] Done!", srcResUrl, bucket, key, hash))
+		log.Info(fmt.Sprintf("Sync %s => %s:%s (%s) Done!", srcResUrl, bucket, key, hash))
 	} else {
 		CmdHelp(cmd)
 	}
