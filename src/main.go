@@ -22,6 +22,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"move":          cli.Move,
 	"copy":          cli.Copy,
 	"chgm":          cli.Chgm,
+	"sync":          cli.Sync,
 	"fetch":         cli.Fetch,
 	"prefetch":      cli.Prefetch,
 	"batchstat":     cli.BatchStat,

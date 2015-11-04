@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v1.5.8"
+var version = "v1.5.9"
 
 var optionDocs = map[string]string{
 	"-d": "Show debug message",
@@ -30,6 +30,7 @@ var cmds = []string{
 	"move",
 	"copy",
 	"chgm",
+	"sync",
 	"fetch",
 	"prefetch",
 	"batchstat",
@@ -75,6 +76,7 @@ var cmdDocs = map[string][]string{
 	"move":          []string{"qshell [-d] move <SrcBucket> <SrcKey> <DestBucket> <DestKey>", "Move/Rename a file and save in bucket"},
 	"copy":          []string{"qshell [-d] copy <SrcBucket> <SrcKey> <DestBucket> [<DestKey>]", "Make a copy of a file and save in bucket"},
 	"chgm":          []string{"qshell [-d] chgm <Bucket> <Key> <NewMimeType>", "Change the mimeType of a file"},
+	"sync":          []string{"qshell [-d] sync <SrcResUrl> <Bucket> <Key> [<UpHostIp>]", "Sync big file to qiniu bucket"},
 	"fetch":         []string{"qshell [-d] fetch <RemoteResourceUrl> <Bucket> [<Key>]", "Fetch a remote resource by url and save in bucket"},
 	"prefetch":      []string{"qshell [-d] prefetch <Bucket> <Key>", "Fetch and update the file in bucket using mirror storage"},
 	"batchstat":     []string{"qshell [-d] batchstat <Bucket> <KeyListFile>", "Batch stat files in bucket"},

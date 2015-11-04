@@ -8,11 +8,6 @@ import (
 	"os"
 )
 
-const (
-	BLOCK_BITS = 22 // Indicate that the blocksize is 4M
-	BLOCK_SIZE = 1 << BLOCK_BITS
-)
-
 func BlockCount(fsize int64) int {
 	return int((fsize + (BLOCK_SIZE - 1)) >> BLOCK_BITS)
 }
