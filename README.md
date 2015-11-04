@@ -49,7 +49,8 @@ qshell account
 |move|移动或重命名七牛空间中的一个文件|[文档](http://github.com/jemygraw/qshell/wiki/move)|
 |copy|复制七牛空间中的一个文件|[文档](http://github.com/jemygraw/qshell/wiki/copy)|
 |chgm|修改七牛空间中的一个文件的MimeType|[文档](http://github.com/jemygraw/qshell/wiki/chgm)|
-|fetch|从Internet上抓取一个资源到七牛空间中|[文档](http://github.com/jemygraw/qshell/wiki/fetch)|
+|fetch|从Internet上抓取一个资源并存储到七牛空间中|[文档](http://github.com/jemygraw/qshell/wiki/fetch)|
+|sync|从Internet上抓取一个资源并存储到七牛空间中，适合大文件的场合|[文档](http://github.com/jemygraw/qshell/wiki/sync)|
 |prefetch|更新七牛空间中从源站镜像过来的文件|[文档](http://github.com/jemygraw/qshell/wiki/prefetch)|
 |batchdelete|批量删除七牛空间中的文件，可以直接根据`listbucket`的结果来删除|[文档](http://github.com/jemygraw/qshell/wiki/batchdelete)|
 |batchchgm|批量修改七牛空间中文件的MimeType|[文档](http://github.com/jemygraw/qshell/wiki/batchchgm)|
