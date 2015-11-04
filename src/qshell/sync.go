@@ -132,7 +132,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 			time.Sleep(RETRY_INTERVAL)
 
 			for retryTimes := 1; retryTimes <= RETRY_MAX_TIMES; retryTimes++ {
-				log.Info(fmt.Sprintf("Retrying %d times range & mkblk block [%s]", retryTimes, blkIndex))
+				log.Info(fmt.Sprintf("Retrying %d time range & mkblk block [%d]", retryTimes, blkIndex))
 				blkCtx, pErr = rangeMkblkPipe(srcResUrl, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 				if pErr != nil {
 					log.Error(pErr)
@@ -146,7 +146,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 		}
 
 		if pErr != nil {
-			pErr = errors.New("Max retry reached and range & mkblk still failed, check your network")
+			err = errors.New("Max retry reached and range & mkblk still failed, check your network")
 			return
 		}
 

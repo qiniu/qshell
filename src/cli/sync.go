@@ -5,6 +5,7 @@ import (
 	"qiniu/api.v6/auth/digest"
 	"qiniu/log"
 	"qshell"
+	"time"
 )
 
 func Sync(cmd string, params ...string) {
@@ -29,13 +30,15 @@ func Sync(cmd string, params ...string) {
 		}
 
 		//sync
+		tStart := time.Now()
 		hash, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, upHostIp)
 		if sErr != nil {
 			log.Error(sErr)
 			return
 		}
 
-		log.Info(fmt.Sprintf("Sync %s => %s:%s (%s) Done!", srcResUrl, bucket, key, hash))
+		log.Info(fmt.Sprintf("Sync %s => %s:%s (%s) Success, Duration: %s!",
+			srcResUrl, bucket, key, hash, time.Since(tStart)))
 	} else {
 		CmdHelp(cmd)
 	}
