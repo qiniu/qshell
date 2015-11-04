@@ -115,6 +115,8 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 
 	//create upload token
 	policy := rs.PutPolicy{Scope: bucket}
+	//token is valid for one year
+	policy.Expires = 3600 * 24 * 365
 	uptoken := policy.Token(mac)
 	putClient := rio.NewClient(uptoken, upHostIp)
 
