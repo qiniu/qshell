@@ -291,16 +291,18 @@ func getRemoteFileLength(srcResUrl string) (totalSize int64, err error) {
 func checkExists(mac *digest.Mac, bucket, key string) (exists bool, err error) {
 	client := rs.NewMac(mac)
 	entry, sErr := client.Stat(nil, bucket, key)
-	if v, ok := sErr.(*rpc.ErrorInfo); !ok {
-		err = errors.New(fmt.Sprintf("Check file exists error, %s", sErr.Error()))
-		return
-	} else {
-		if v.Code != 612 {
-			err = errors.New(fmt.Sprintf("Check file exists error, %s", v.Err))
+	if sErr != nil {
+		if v, ok := sErr.(*rpc.ErrorInfo); !ok {
+			err = errors.New(fmt.Sprintf("Check file exists error, %s", sErr.Error()))
 			return
 		} else {
-			exists = false
-			return
+			if v.Code != 612 {
+				err = errors.New(fmt.Sprintf("Check file exists error, %s", v.Err))
+				return
+			} else {
+				exists = false
+				return
+			}
 		}
 	}
 
