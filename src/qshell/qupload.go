@@ -69,13 +69,14 @@ type UploadConfig struct {
 	Bucket    string `json:"bucket"`
 
 	//optional config
-	PutThreshold int64  `json:"put_threshold,omitempty"`
-	KeyPrefix    string `json:"key_prefix,omitempty"`
-	IgnoreDir    bool   `json:"ignore_dir,omitempty"`
-	Overwrite    bool   `json:"overwrite,omitempty"`
-	CheckExists  bool   `json:"check_exists,omitempty"`
-	SkipPrefixes string `json:"skip_prefixes,omitempty"`
-	SkipSuffixes string `json:"skip_suffixes,omitempty"`
+	PutThreshold     int64  `json:"put_threshold,omitempty"`
+	KeyPrefix        string `json:"key_prefix,omitempty"`
+	IgnoreDir        bool   `json:"ignore_dir,omitempty"`
+	Overwrite        bool   `json:"overwrite,omitempty"`
+	CheckExists      bool   `json:"check_exists,omitempty"`
+	SkipFilePrefixes string `json:"skip_file_prefixes,omitempty"`
+	SkipPathPrefixes string `json:"skip_path_prefixes,omitempty"`
+	SkipSuffixes     string `json:"skip_suffixes,omitempty"`
 
 	//advanced config
 	Zone   string `json:"zone,omitempty"`
@@ -230,18 +231,37 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			continue
 		}
 
-		localFname := items[0]
+		localFpath := items[0]
 		currentFileCount += 1
 
 		skip := false
 		//check skip local file or folder
-		if uploadConfig.SkipPrefixes != "" {
+		if uploadConfig.SkipPathPrefixes != "" {
 			//unpack skip prefix
-			skipPrefixes := strings.Split(uploadConfig.SkipPrefixes, ",")
-			for _, prefix := range skipPrefixes {
+			skipPathPrefixes := strings.Split(uploadConfig.SkipPathPrefixes, ",")
+			for _, prefix := range skipPathPrefixes {
+				if strings.HasPrefix(localFpath, strings.TrimSpace(prefix)) {
+					log.Debug(fmt.Sprintf("Skip by path prefix '%s' for local file %s",
+						strings.TrimSpace(prefix), localFpath))
+					skip = true
+					skippedFileCount += 1
+					break
+				}
+			}
+
+			if skip {
+				continue
+			}
+		}
+
+		if uploadConfig.SkipFilePrefixes != "" {
+			//unpack skip prefix
+			skipFilePrefixes := strings.Split(uploadConfig.SkipFilePrefixes, ",")
+			for _, prefix := range skipFilePrefixes {
+				localFname := filepath.Base(localFpath)
 				if strings.HasPrefix(localFname, strings.TrimSpace(prefix)) {
-					log.Debug(fmt.Sprintf("Skip by prefix '%s' for local file %s",
-						strings.TrimSpace(prefix), localFname))
+					log.Debug(fmt.Sprintf("Skip by file prefix '%s' for local file %s",
+						strings.TrimSpace(prefix), localFpath))
 					skip = true
 					skippedFileCount += 1
 					break
@@ -256,9 +276,9 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		if uploadConfig.SkipSuffixes != "" {
 			skipSuffixes := strings.Split(uploadConfig.SkipSuffixes, ",")
 			for _, suffix := range skipSuffixes {
-				if strings.HasSuffix(localFname, strings.TrimSpace(suffix)) {
+				if strings.HasSuffix(localFpath, strings.TrimSpace(suffix)) {
 					log.Debug(fmt.Sprintf("Skip by suffix '%s' for local file %s",
-						strings.TrimSpace(suffix), localFname))
+						strings.TrimSpace(suffix), localFpath))
 					skip = true
 					skippedFileCount += 1
 					break
@@ -272,7 +292,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 
 		//pack the upload file key
 		localFlmd, _ := strconv.Atoi(items[2])
-		uploadFileKey := localFname
+		uploadFileKey := localFpath
 
 		if uploadConfig.IgnoreDir {
 			if i := strings.LastIndex(uploadFileKey, pathSep); i != -1 {
@@ -287,7 +307,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			uploadFileKey = strings.Replace(uploadFileKey, "\\", "/", -1)
 		}
 
-		localFilePath := filepath.Join(uploadConfig.SrcDir, localFname)
+		localFilePath := filepath.Join(uploadConfig.SrcDir, localFpath)
 		fstat, err := os.Stat(localFilePath)
 		if err != nil {
 			log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", localFilePath, err))
@@ -331,7 +351,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			//check last modified
 
 			if err == nil && localFlmd == flmd {
-				log.Debug("Skip by local log for file", localFname)
+				log.Debug("Skip by local log for file", localFpath)
 				atomic.AddInt64(&skippedFileCount, 1)
 				continue
 			}
