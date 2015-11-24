@@ -21,7 +21,7 @@ func Account(cmd string, params ...string) {
 		secretKey := params[1]
 		var zone string
 		if len(params) == 3 {
-			zone := params[2]
+			zone = params[2]
 			if !qshell.IsValidZone(zone) {
 				fmt.Println(fmt.Sprintf("Invalid zone '%s'", zone))
 			}

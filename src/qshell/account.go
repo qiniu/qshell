@@ -60,13 +60,9 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 		zone = ZoneNB
 	}
 
-	account := Account{
-		AccessKey: accessKey,
-		SecretKey: secretKey,
-		Zone:      zone,
-	}
+	this.Zone = zone
 
-	jsonStr, mErr := account.ToJson()
+	jsonStr, mErr := this.ToJson()
 	if mErr != nil {
 		err = mErr
 		return
