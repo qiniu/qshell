@@ -31,18 +31,27 @@ import (
 Config file like:
 
 {
-	"up_host"		:	"http://upload.qiniu.com",
-	"src_dir" 		:	"/Users/jemy/Photos",
-	"access_key" 	:	"<Your AccessKey>",
-	"secret_key"	:	"<Your SecretKey>",
-	"bucket"		:	"test-bucket",
-	"ignore_dir"	:	false,
-	"key_prefix"	:	"2014/12/01/",
-	"overwrite"		:	false,
-	"check_exists"	:	true
+	"src_dir"				:	"/Users/jemy/Photos",
+	"access_key"			:	"<Your AccessKey>",
+	"secret_key"			:	"<Your SecretKey>",
+	"bucket"				:	"test-bucket",
+	"put_threshold"			:	10000000,
+	"key_prefix"			:	"2014/12/01/",
+	"ignore_dir"			:	false,
+	"overwrite"				:	false,
+	"check_exists"			:	true,
+	"skip_file_prefixes"	:	"IMG_",
+	"skip_path_prefixes"	:	"tmp/,bin/,obj/",
+	"skip_suffixes"			:	".exe,.obj,.class",
+	"up_host"				:	"http://upload.qiniu.com",
+	"zone"					:	"bc",
+	"bind_up_ip"			:	"",
+	"bind_rs_ip"			:	"",
+	"bind_nic_ip"			:	""
+
 }
 
-or without up_host and key_prefix and ignore_dir and check_exists
+or the simplest one
 
 {
 	"src_dir" 		:	"/Users/jemy/Photos",
@@ -55,7 +64,7 @@ Valid values for zone are [aws,nb,bc]
 */
 
 const (
-	DEFAULT_PUT_THRESHOLD   int64 = 10 * 1024 * 1024 //100MB
+	DEFAULT_PUT_THRESHOLD   int64 = 10 * 1024 * 1024 //10MB
 	MIN_UPLOAD_THREAD_COUNT int64 = 1
 	MAX_UPLOAD_THREAD_COUNT int64 = 100
 )
