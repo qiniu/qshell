@@ -164,7 +164,11 @@ func ResumablePut(cmd string, params ...string) {
 		err := rio.PutFile(putClient, nil, &putRet, key, localFile, &putExtra)
 		fmt.Println()
 		if err != nil {
-			fmt.Println("Put file error", err)
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println(fmt.Sprintf("Put file error, %d %s, Reqid: %s", v.Code, v.Err, v.Reqid))
+			} else {
+				fmt.Println("Put file error,", err)
+			}
 		} else {
 			fmt.Println()
 			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
