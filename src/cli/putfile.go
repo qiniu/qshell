@@ -76,9 +76,35 @@ func FormPut(cmd string, params ...string) {
 		fsize := fStat.Size()
 		putClient := rpc.NewClient("")
 		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...", localFile, bucket, key))
+		doneSignal := make(chan bool)
+		go func(ch chan bool) {
+			progressSigns := []string{"|", "/", "-", "\\", "|"}
+			for {
+				for _, p := range progressSigns {
+					fmt.Print("\rProgress: ", p)
+					os.Stdout.Sync()
+					<-time.After(time.Millisecond * 200)
+				}
+
+				select {
+				case <-ch:
+					break
+				}
+			}
+		}(doneSignal)
+
 		err := fio.PutFile(putClient, nil, &putRet, uptoken, key, localFile, &putExtra)
+		doneSignal <- true
+		fmt.Print("\rProgress: 100%")
+		os.Stdout.Sync()
+		fmt.Println()
+
 		if err != nil {
-			fmt.Println("Put file error", err)
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println(fmt.Sprintf("Put file error, %d %s, Reqid: %s", v.Code, v.Err, v.Reqid))
+			} else {
+				fmt.Println("Put file error,", err)
+			}
 		} else {
 			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
@@ -170,7 +196,6 @@ func ResumablePut(cmd string, params ...string) {
 				fmt.Println("Put file error,", err)
 			}
 		} else {
-			fmt.Println()
 			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
 		}
 		lastNano := time.Now().UnixNano() - startTime.UnixNano()
