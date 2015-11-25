@@ -9,9 +9,9 @@ import (
 	rio "qiniu/api.v6/resumable/io"
 	"qiniu/api.v6/rs"
 	"qiniu/rpc"
-	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -75,7 +75,7 @@ func FormPut(cmd string, params ...string) {
 		}
 		fsize := fStat.Size()
 		putClient := rpc.NewClient("")
-		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...\r\n", localFile, bucket, key))
+		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...", localFile, bucket, key))
 		err := fio.PutFile(putClient, nil, &putRet, uptoken, key, localFile, &putExtra)
 		if err != nil {
 			fmt.Println("Put file error", err)
@@ -121,6 +121,13 @@ func ResumablePut(cmd string, params ...string) {
 			return
 		}
 
+		fStat, statErr := os.Stat(localFile)
+		if statErr != nil {
+			fmt.Println("Local file error", statErr)
+			return
+		}
+		fsize := fStat.Size()
+
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 		policy := rs.PutPolicy{}
 
@@ -138,25 +145,24 @@ func ResumablePut(cmd string, params ...string) {
 		if upHost != "" {
 			conf.UP_HOST = upHost
 		}
+
 		progressHandler := ProgressHandler{
-			BlockIndices:    make([]int, 0),
-			BlockProgresses: make(map[int]float32),
+			rwLock:  &sync.RWMutex{},
+			fsize:   fsize,
+			offsets: make(map[int]int64, 0),
 		}
+
 		putExtra.Notify = progressHandler.Notify
 		putExtra.NotifyErr = progressHandler.NotifyErr
 		uptoken := policy.Token(&mac)
 		putRet := rio.PutRet{}
 		startTime := time.Now()
-		fStat, statErr := os.Stat(localFile)
-		if statErr != nil {
-			fmt.Println("Local file error", statErr)
-			return
-		}
-		fsize := fStat.Size()
+
 		rio.SetSettings(&upSettings)
 		putClient := rio.NewClient(uptoken, "")
-		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...\r\n", localFile, bucket, key))
+		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...", localFile, bucket, key))
 		err := rio.PutFile(putClient, nil, &putRet, key, localFile, &putExtra)
+		fmt.Println()
 		if err != nil {
 			fmt.Println("Put file error", err)
 		} else {
@@ -173,29 +179,23 @@ func ResumablePut(cmd string, params ...string) {
 }
 
 type ProgressHandler struct {
-	BlockIndices    []int
-	BlockProgresses map[int]float32
+	rwLock  *sync.RWMutex
+	offsets map[int]int64
+	fsize   int64
 }
 
 func (this *ProgressHandler) Notify(blkIdx int, blkSize int, ret *rio.BlkputRet) {
-	offset := ret.Offset
-	perent := float32(offset) * 100 / float32(blkSize)
-	if _, ok := this.BlockProgresses[blkIdx]; !ok {
-		this.BlockIndices = append(this.BlockIndices, blkIdx)
-		sort.Ints(this.BlockIndices)
+	this.rwLock.Lock()
+	defer this.rwLock.Unlock()
+
+	this.offsets[blkIdx] = int64(ret.Offset)
+	var uploaded int64
+	for _, offset := range this.offsets {
+		uploaded += offset
 	}
-	this.BlockProgresses[blkIdx] = perent
-	output := fmt.Sprintf("\r")
-	for i, blockIndex := range this.BlockIndices {
-		blockProgress := this.BlockProgresses[blockIndex]
-		if int(blockProgress) != 100 {
-			output += fmt.Sprintf("[Block %d=>%.2f%%]", blockIndex+1, blockProgress)
-			if i < len(this.BlockIndices)-1 {
-				output += ", "
-			}
-		}
-	}
-	fmt.Print(output)
+
+	percent := fmt.Sprintf("\rProgress: %.2f%%", float64(uploaded)/float64(this.fsize)*100)
+	fmt.Print(percent)
 	os.Stdout.Sync()
 }
 

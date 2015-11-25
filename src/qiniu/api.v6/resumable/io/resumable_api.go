@@ -1,12 +1,15 @@
 package io
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"qiniu/log"
 	"qiniu/rpc"
 	"sync"
+	"time"
 )
 
 // ----------------------------------------------------------
@@ -15,6 +18,10 @@ const (
 	defaultWorkers   = 4
 	defaultChunkSize = 256 * 1024 // 256k
 	defaultTryTimes  = 3
+)
+
+const (
+	BLOCK_CTX_VALID_DURATION = 5 * 24 * 3600 //5 DAYS
 )
 
 type Settings struct {
@@ -84,22 +91,28 @@ func BlockCount(fsize int64) int {
 // ----------------------------------------------------------
 
 type BlkputRet struct {
-	Ctx      string `json:"ctx"`
-	Checksum string `json:"checksum"`
-	Crc32    uint32 `json:"crc32"`
-	Offset   uint32 `json:"offset"`
-	Host     string `json:"host"`
+	Ctx       string `json:"ctx"`
+	Checksum  string `json:"checksum"`
+	Crc32     uint32 `json:"crc32"`
+	Offset    uint32 `json:"offset"`
+	Host      string `json:"host"`
+	ExpiredAt int64  `json:"expired_at"`
+}
+
+type ProgressRecord struct {
+	Progresses []BlkputRet `json:"progresses"`
 }
 
 // @gist PutExtra
 type PutExtra struct {
-	Params     map[string]string                             // 可选。用户自定义参数，以"x:"开头 否则忽略
-	MimeType   string                                        // 可选。
-	ChunkSize  int                                           // 可选。每次上传的Chunk大小
-	TryTimes   int                                           // 可选。尝试次数
-	Progresses []BlkputRet                                   // 可选。上传进度
-	Notify     func(blkIdx int, blkSize int, ret *BlkputRet) // 可选。进度提示（注意多个block是并行传输的）
-	NotifyErr  func(blkIdx int, blkSize int, err error)
+	Params       map[string]string                             // 可选。用户自定义参数，以"x:"开头 否则忽略
+	MimeType     string                                        // 可选。
+	ChunkSize    int                                           // 可选。每次上传的Chunk大小
+	TryTimes     int                                           // 可选。尝试次数
+	Progresses   []BlkputRet                                   // 可选。上传进度
+	ProgressFile string                                        //可选。块级断点续传进度保存文件
+	Notify       func(blkIdx int, blkSize int, ret *BlkputRet) // 可选。进度提示（注意多个block是并行传输的）
+	NotifyErr    func(blkIdx int, blkSize int, err error)
 }
 
 // @endgist
@@ -143,6 +156,52 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 	if extra == nil {
 		extra = new(PutExtra)
 	}
+
+	//load the progress file
+	var progressFp *os.File
+	var progressWLock = sync.RWMutex{}
+
+	if extra.ProgressFile != "" {
+		progressRecord := ProgressRecord{}
+		var cErr error
+		if _, pStatErr := os.Stat(extra.ProgressFile); pStatErr == nil {
+			var openErr error
+			progressFp, openErr = os.Open(extra.ProgressFile)
+			if openErr != nil {
+				func() {
+					defer progressFp.Close()
+					decoder := json.NewDecoder(progressFp)
+					decoder.Decode(&progressRecord)
+				}()
+			}
+		}
+
+		//reopen the progress file
+		progressFp, cErr = os.Create(extra.ProgressFile)
+		if cErr != nil {
+			log.Error(fmt.Sprintf("resumable.Put create progress file error, %s"), cErr)
+		}
+		defer progressFp.Close()
+
+		//load in progresses
+		if progressRecord.Progresses != nil && len(progressRecord.Progresses) > 0 {
+			//check the expire date of the first progress
+			now := time.Now().Unix()
+			first := progressRecord.Progresses[0]
+			if first.ExpiredAt+BLOCK_CTX_VALID_DURATION >= now {
+				//not expired, go ahead
+				extra.Progresses = make([]BlkputRet, 0, len(progressRecord.Progresses))
+				for _, progress := range progressRecord.Progresses {
+					if progress.Ctx != "" {
+						extra.Progresses = append(extra.Progresses, progress)
+					} else {
+						break
+					}
+				}
+			}
+		}
+	}
+
 	if extra.Progresses == nil {
 		extra.Progresses = make([]BlkputRet, blockCnt)
 	} else if len(extra.Progresses) != blockCnt {
@@ -169,7 +228,17 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 	blkSize := 1 << blockBits
 	nfails := 0
 
-	for i := 0; i < blockCnt; i++ {
+	//advance the blkIndx to the not uploaded blocks
+	i := 0
+	for _, progress := range extra.Progresses {
+		if progress.Ctx != "" {
+			i += 1
+		} else {
+			break
+		}
+	}
+
+	for ; i < blockCnt; i++ {
 		blkIdx := i
 		blkSize1 := blkSize
 		if i == last {
@@ -190,6 +259,21 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 				log.Warn("resumable.Put", blkIdx, "failed:", err)
 				extra.NotifyErr(blkIdx, blkSize1, err)
 				nfails++
+			} else {
+				//record block progress
+				progressWLock.Lock()
+				func() {
+					defer progressWLock.Unlock()
+					mData, mErr := json.Marshal(extra.Progresses)
+					if mErr == nil {
+						if progressFp != nil {
+							_, wErr := progressFp.Write(mData)
+							if wErr != nil {
+								log.Warn(fmt.Sprintf("resumable.Put record progress error, %s"), wErr.Error())
+							}
+						}
+					}
+				}()
 			}
 		}
 		tasks <- task
