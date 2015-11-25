@@ -177,9 +177,9 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 		//load in progresses
 		if progressRecord.Progresses != nil && len(progressRecord.Progresses) > 0 {
 			//check the expire date of the first progress
-			now := time.Now().Unix()
+			now := time.Now()
 			first := progressRecord.Progresses[0]
-			if now+int64(time.Hour*24) <= first.ExpiredAt {
+			if now.Add(time.Hour*24).Unix() <= first.ExpiredAt {
 				//not expired, go ahead
 				extra.Progresses = progressRecord.Progresses
 			}
