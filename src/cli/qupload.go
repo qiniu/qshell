@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"qiniu/log"
 	"qshell"
 	"strconv"
@@ -23,7 +24,7 @@ func QiniuUpload(cmd string, params ...string) {
 		}
 		if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT ||
 			threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
-			log.Info("You can set <ThreadCount> value between 1 and 100 to improve speed")
+			fmt.Println("You can set <ThreadCount> value between 1 and 100 to improve speed")
 			threadCount = qshell.MIN_UPLOAD_THREAD_COUNT
 		}
 		qshell.QiniuUpload(int(threadCount), uploadConfigFile)

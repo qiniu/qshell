@@ -144,7 +144,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	//leveldb folder
 	leveldbFileName := filepath.Join(storePath, jobId+".ldb")
 
-	log.Info("Listing local sync dir, this can take a long time, please wait paitently...")
+	fmt.Println("Listing local sync dir, this can take a long time, please wait patiently...")
 	totalFileCount := dirCache.Cache(uploadConfig.SrcDir, cacheFileName)
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
@@ -318,7 +318,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		fsize := fstat.Size()
 		ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
 
-		log.Info(fmt.Sprintf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
+		fmt.Println(fmt.Sprintf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
 			float32(currentFileCount)*100/float32(totalFileCount)))
 
 		//check exists
@@ -372,7 +372,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 			policy := rs.PutPolicy{}
 			policy.Scope = uploadConfig.Bucket
 			if uploadConfig.Overwrite {
-				policy.Scope = uploadConfig.Bucket + ":" + uploadFileKey
+				policy.Scope = fmt.Sprintf("%s:%s", uploadConfig.Bucket, uploadFileKey)
 				policy.InsertOnly = 0
 			}
 			policy.Expires = 30 * 24 * 3600
@@ -438,12 +438,13 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	}
 	upWorkGroup.Wait()
 
-	log.Info("-------Upload Result-------")
-	log.Info("Total:\t", currentFileCount)
-	log.Info("Success:\t", successFileCount)
-	log.Info("Failure:\t", failureFileCount)
-	log.Info("Skipped:\t", skippedFileCount)
-	log.Info("Duration:\t", time.Since(timeStart))
-	log.Info("-------------------------")
+	fmt.Println()
+	fmt.Println("-------Upload Result-------")
+	fmt.Println("Total:   \t", currentFileCount)
+	fmt.Println("Success: \t", successFileCount)
+	fmt.Println("Failure: \t", failureFileCount)
+	fmt.Println("Skipped: \t", skippedFileCount)
+	fmt.Println("Duration:\t", time.Since(timeStart))
+	fmt.Println("-------------------------")
 
 }
