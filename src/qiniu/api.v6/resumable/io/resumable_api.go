@@ -170,11 +170,11 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 					decoder := json.NewDecoder(progressFp)
 					decodeErr := decoder.Decode(&progressRecord)
 					if decodeErr != nil {
-						log.Debug("resumable.Put decode progess record error", decodeErr)
+						log.Debug(fmt.Sprintf("resumable.Put decode progess record error, %s", decodeErr.Error()))
 					}
 				}()
 			} else {
-				log.Debug("resumable.Put open progress record error", openErr)
+				log.Debug(fmt.Sprintf("resumable.Put open progress record error, %s", openErr.Error()))
 			}
 		}
 
@@ -250,22 +250,24 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 				nfails++
 			} else {
 				//record block progress
-				progressWLock.Lock()
-				func() {
-					defer progressWLock.Unlock()
-					progressRecord := ProgressRecord{
-						Progresses: extra.Progresses,
-					}
-					mData, mErr := json.Marshal(progressRecord)
-					if mErr == nil {
-						wErr := ioutil.WriteFile(extra.ProgressFile, mData, 0644)
-						if wErr != nil {
-							log.Warn(fmt.Sprintf("resumable.Put record progress error, %s"), wErr.Error())
+				if extra.ProgressFile != "" {
+					progressWLock.Lock()
+					func() {
+						defer progressWLock.Unlock()
+						progressRecord := ProgressRecord{
+							Progresses: extra.Progresses,
 						}
-					} else {
-						log.Info("resumable.Put marshal progress record error", mErr)
-					}
-				}()
+						mData, mErr := json.Marshal(progressRecord)
+						if mErr == nil {
+							wErr := ioutil.WriteFile(extra.ProgressFile, mData, 0644)
+							if wErr != nil {
+								log.Warn(fmt.Sprintf("resumable.Put record progress error, %s", wErr.Error()))
+							}
+						} else {
+							log.Info(fmt.Sprintf("resumable.Put marshal progress record error, %s", mErr.Error()))
+						}
+					}()
+				}
 			}
 		}
 		tasks <- task
