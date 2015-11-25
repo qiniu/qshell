@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"qiniu/log"
 	"qiniu/rpc"
@@ -67,7 +68,6 @@ func worker(tasks chan func()) {
 }
 
 func initWorkers() {
-
 	tasks = make(chan func(), settings.TaskQsize)
 	for i := 0; i < settings.Workers; i++ {
 		go worker(tasks)
@@ -158,30 +158,25 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 	}
 
 	//load the progress file
-	var progressFp *os.File
 	var progressWLock = sync.RWMutex{}
 
 	if extra.ProgressFile != "" {
 		progressRecord := ProgressRecord{}
-		var cErr error
 		if _, pStatErr := os.Stat(extra.ProgressFile); pStatErr == nil {
-			var openErr error
-			progressFp, openErr = os.Open(extra.ProgressFile)
-			if openErr != nil {
+			progressFp, openErr := os.Open(extra.ProgressFile)
+			if openErr == nil {
 				func() {
 					defer progressFp.Close()
 					decoder := json.NewDecoder(progressFp)
-					decoder.Decode(&progressRecord)
+					decodeErr := decoder.Decode(&progressRecord)
+					if decodeErr != nil {
+						log.Debug("resumable.Put decode progess record error", decodeErr)
+					}
 				}()
+			} else {
+				log.Debug("resumable.Put open progress record error", openErr)
 			}
 		}
-
-		//reopen the progress file
-		progressFp, cErr = os.Create(extra.ProgressFile)
-		if cErr != nil {
-			log.Error(fmt.Sprintf("resumable.Put create progress file error, %s"), cErr)
-		}
-		defer progressFp.Close()
 
 		//load in progresses
 		if progressRecord.Progresses != nil && len(progressRecord.Progresses) > 0 {
@@ -190,14 +185,7 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 			first := progressRecord.Progresses[0]
 			if first.ExpiredAt+BLOCK_CTX_VALID_DURATION >= now {
 				//not expired, go ahead
-				extra.Progresses = make([]BlkputRet, 0, len(progressRecord.Progresses))
-				for _, progress := range progressRecord.Progresses {
-					if progress.Ctx != "" {
-						extra.Progresses = append(extra.Progresses, progress)
-					} else {
-						break
-					}
-				}
+				extra.Progresses = progressRecord.Progresses
 			}
 		}
 	}
@@ -233,6 +221,7 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 	for _, progress := range extra.Progresses {
 		if progress.Ctx != "" {
 			i += 1
+			wg.Done()
 		} else {
 			break
 		}
@@ -264,14 +253,17 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 				progressWLock.Lock()
 				func() {
 					defer progressWLock.Unlock()
-					mData, mErr := json.Marshal(extra.Progresses)
+					progressRecord := ProgressRecord{
+						Progresses: extra.Progresses,
+					}
+					mData, mErr := json.Marshal(progressRecord)
 					if mErr == nil {
-						if progressFp != nil {
-							_, wErr := progressFp.Write(mData)
-							if wErr != nil {
-								log.Warn(fmt.Sprintf("resumable.Put record progress error, %s"), wErr.Error())
-							}
+						wErr := ioutil.WriteFile(extra.ProgressFile, mData, 0644)
+						if wErr != nil {
+							log.Warn(fmt.Sprintf("resumable.Put record progress error, %s"), wErr.Error())
 						}
+					} else {
+						log.Info("resumable.Put marshal progress record error", mErr)
 					}
 				}()
 			}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"qiniu/log"
 	"qiniu/rpc"
+	"runtime"
 )
 
 var debugMode = false
@@ -59,6 +60,8 @@ var supportedCmds = map[string]cli.CliFunc{
 }
 
 func main() {
+	//set cpu count
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	//set qshell user agent
 	rpc.UserAgent = cli.UserAgent()
 

@@ -15,7 +15,7 @@ type DirCache struct {
 
 func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileCount int64) {
 	if _, err := os.Stat(cacheResultFile); err != nil {
-		log.Info(fmt.Sprintf("No cache file `%s' found, will create one", cacheResultFile))
+		log.Debug(fmt.Sprintf("No cache file `%s' found, will create one", cacheResultFile))
 	} else {
 		os.Remove(cacheResultFile + ".old")
 		if rErr := os.Rename(cacheResultFile, cacheResultFile+".old"); rErr != nil {
@@ -33,7 +33,7 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 	defer cacheResultFileH.Close()
 	bWriter := bufio.NewWriter(cacheResultFileH)
 	walkStart := time.Now()
-	log.Info(fmt.Sprintf("Walk `%s' start from `%s'", cacheRootPath, walkStart.String()))
+	log.Debug(fmt.Sprintf("Walk `%s' start from `%s'", cacheRootPath, walkStart.String()))
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, err error) error {
 		var retErr error
 		//log.Debug(fmt.Sprintf("Walking through `%s'", cacheRootPath))
@@ -61,7 +61,7 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 	}
 
 	walkEnd := time.Now()
-	log.Info(fmt.Sprintf("Walk `%s' end at `%s'", cacheRootPath, walkEnd.String()))
-	log.Info(fmt.Sprintf("Walk `%s' last for `%s'", cacheRootPath, time.Since(walkStart)))
+	log.Debug(fmt.Sprintf("Walk `%s' end at `%s'", cacheRootPath, walkEnd.String()))
+	log.Debug(fmt.Sprintf("Walk `%s' last for `%s'", cacheRootPath, time.Since(walkStart)))
 	return
 }

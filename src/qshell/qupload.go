@@ -2,7 +2,6 @@ package qshell
 
 import (
 	"bufio"
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -56,7 +55,7 @@ Valid values for zone are [aws,nb,bc]
 */
 
 const (
-	DEFAULT_PUT_THRESHOLD   int64 = 100 * 1024 * 1024 //100MB
+	DEFAULT_PUT_THRESHOLD   int64 = 10 * 1024 * 1024 //100MB
 	MIN_UPLOAD_THREAD_COUNT int64 = 1
 	MAX_UPLOAD_THREAD_COUNT int64 = 100
 )
@@ -117,6 +116,10 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		log.Error("Upload config error for parameter `SrcDir`,", err)
 		return
 	}
+
+	//make SrcDir the full path
+	uploadConfig.SrcDir, _ = filepath.Abs(uploadConfig.SrcDir)
+
 	dirCache := DirCache{}
 	currentUser, err := user.Current()
 	if err != nil {
@@ -126,9 +129,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 
 	pathSep := string(os.PathSeparator)
 	//create job id
-	md5Hasher := md5.New()
-	md5Hasher.Write([]byte(strings.TrimSuffix(uploadConfig.SrcDir, pathSep) + ":" + uploadConfig.Bucket))
-	jobId := fmt.Sprintf("%x", md5Hasher.Sum(nil))
+	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
 
 	//local storage path
 	storePath := filepath.Join(currentUser.HomeDir, ".qshell", "qupload", jobId)
@@ -143,7 +144,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	//leveldb folder
 	leveldbFileName := filepath.Join(storePath, jobId+".ldb")
 
-	log.Info("listing local sync dir, this can take a long time, please wait paitently...")
+	log.Info("Listing local sync dir, this can take a long time, please wait paitently...")
 	totalFileCount := dirCache.Cache(uploadConfig.SrcDir, cacheFileName)
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
@@ -385,7 +386,13 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				}
 
 				putRet := rio.PutRet{}
-				err := rio.PutFile(putClient, nil, &putRet, uploadFileKey, localFilePath, nil)
+				putExtra := rio.PutExtra{}
+				progressFkey := Md5Hex(fmt.Sprintf("%s:%s|%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket, localFpath, uploadFileKey))
+				progressFname := fmt.Sprintf("%s.progress", progressFkey)
+				progressFpath := filepath.Join(storePath, progressFname)
+				putExtra.ProgressFile = progressFpath
+
+				err := rio.PutFile(putClient, nil, &putRet, uploadFileKey, localFilePath, &putExtra)
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
@@ -394,6 +401,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err))
 					}
 				} else {
+					os.Remove(progressFpath)
 					atomic.AddInt64(&successFileCount, 1)
 					perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
 					if perr != nil {
