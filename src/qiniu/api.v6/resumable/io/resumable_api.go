@@ -21,10 +21,6 @@ const (
 	defaultTryTimes  = 3
 )
 
-const (
-	BLOCK_CTX_VALID_DURATION = 5 * 24 * 3600 //5 DAYS
-)
-
 type Settings struct {
 	TaskQsize int // 可选。任务队列大小。为 0 表示取 Workers * 4。
 	Workers   int // 并行 Goroutine 数目。
@@ -183,7 +179,7 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 			//check the expire date of the first progress
 			now := time.Now().Unix()
 			first := progressRecord.Progresses[0]
-			if first.ExpiredAt+BLOCK_CTX_VALID_DURATION >= now {
+			if now+int64(time.Hour*24) <= first.ExpiredAt {
 				//not expired, go ahead
 				extra.Progresses = progressRecord.Progresses
 			}
