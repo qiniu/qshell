@@ -412,7 +412,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				} else {
 					os.Remove(progressFpath)
 					atomic.AddInt64(&successFileCount, 1)
-					perr := ldb.Put([]byte(ldbKey), []byte("Y"), &ldbWOpt)
+					perr := ldb.Put([]byte(ldbKey), []byte(strconv.Itoa(localFlmd)), &ldbWOpt)
 					if perr != nil {
 						log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
 					}
