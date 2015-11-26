@@ -83,12 +83,12 @@ func FormPut(cmd string, params ...string) {
 				for _, p := range progressSigns {
 					fmt.Print("\rProgress: ", p)
 					os.Stdout.Sync()
-					<-time.After(time.Millisecond * 200)
-				}
-
-				select {
-				case <-ch:
-					break
+					select {
+					case <-ch:
+						return
+					case <-time.After(time.Millisecond * 50):
+						continue
+					}
 				}
 			}
 		}(doneSignal)
