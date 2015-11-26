@@ -16,6 +16,29 @@ const (
 	ALPHA_LIST = "abcdefghijklmnopqrstuvwxyz"
 )
 
+const (
+	KB = 1024
+	MB = 1024 * KB
+	GB = 1024 * MB
+	TB = 1024 * GB
+)
+
+func FormatFsize(fsize int64) (result string) {
+	if fsize > TB {
+		result = fmt.Sprintf("%.2f TB", float64(fsize)/float64(TB))
+	} else if fsize > GB {
+		result = fmt.Sprintf("%.2f GB", float64(fsize)/float64(GB))
+	} else if fsize > MB {
+		result = fmt.Sprintf("%.2f MB", float64(fsize)/float64(MB))
+	} else if fsize > KB {
+		result = fmt.Sprintf("%.2f KB", float64(fsize)/float64(KB))
+	} else {
+		result = fmt.Sprintf("%d B", fsize)
+	}
+
+	return
+}
+
 func Base64Encode(cmd string, params ...string) {
 	if len(params) == 1 || len(params) == 2 {
 		urlSafe := true
