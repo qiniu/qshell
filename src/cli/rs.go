@@ -134,11 +134,14 @@ func Delete(cmd string, params ...string) {
 }
 
 func Move(cmd string, params ...string) {
-	if len(params) == 4 {
+	if len(params) == 3 || len(params) == 4 {
 		srcBucket := params[0]
 		srcKey := params[1]
 		destBucket := params[2]
-		destKey := params[3]
+		destKey := srcKey
+		if len(params) == 4 {
+			destKey = params[3]
+		}
 
 		gErr := accountS.Get()
 		if gErr != nil {
