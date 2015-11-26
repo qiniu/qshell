@@ -7,6 +7,7 @@ import (
 	"qiniu/api.v6/auth/digest"
 	"qiniu/api.v6/rs"
 	"qiniu/log"
+	"qiniu/rpc"
 	"qshell"
 	"runtime"
 	"strconv"
@@ -86,7 +87,11 @@ func Stat(cmd string, params ...string) {
 		client := rs.NewMac(&mac)
 		entry, err := client.Stat(nil, bucket, key)
 		if err != nil {
-			fmt.Println("Stat error,", err.Error())
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println("Stat error,", v.Code, v.Err)
+			} else {
+				fmt.Println("Stat error,", err.Error())
+			}
 		} else {
 			printStat(bucket, key, entry)
 		}
@@ -113,9 +118,13 @@ func Delete(cmd string, params ...string) {
 		client := rs.NewMac(&mac)
 		err := client.Delete(nil, bucket, key)
 		if err != nil {
-			fmt.Println("Delete error,", err.Error())
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println("Delete error,", v.Code, v.Err)
+			} else {
+				fmt.Println("Delete error,", err.Error())
+			}
 		} else {
-			fmt.Println("Done!")
+			fmt.Println("Delete done!")
 		}
 	} else {
 		CmdHelp(cmd)
@@ -142,9 +151,13 @@ func Move(cmd string, params ...string) {
 		client := rs.NewMac(&mac)
 		err := client.Move(nil, srcBucket, srcKey, destBucket, destKey)
 		if err != nil {
-			fmt.Println("Move error,", err)
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println("Move error,", v.Code, v.Err)
+			} else {
+				fmt.Println("Move error,", err.Error())
+			}
 		} else {
-			fmt.Println("Done!")
+			fmt.Println("Move done!")
 		}
 	} else {
 		CmdHelp(cmd)
@@ -174,9 +187,13 @@ func Copy(cmd string, params ...string) {
 		client := rs.NewMac(&mac)
 		err := client.Copy(nil, srcBucket, srcKey, destBucket, destKey)
 		if err != nil {
-			fmt.Println("Copy error,", err)
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println("Copy error,", v.Code, v.Err)
+			} else {
+				fmt.Println("Copy error,", err.Error())
+			}
 		} else {
-			fmt.Println("Done!")
+			fmt.Println("Copy done!")
 		}
 	} else {
 		CmdHelp(cmd)
@@ -202,9 +219,13 @@ func Chgm(cmd string, params ...string) {
 		client := rs.NewMac(&mac)
 		err := client.ChangeMime(nil, bucket, key, newMimeType)
 		if err != nil {
-			fmt.Println("Change mimeType error,", err)
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println("Change mimetype error,", v.Code, v.Err)
+			} else {
+				fmt.Println("Change mimetype error,", err.Error())
+			}
 		} else {
-			fmt.Println("Done!")
+			fmt.Println("Change mimetype done!")
 		}
 	} else {
 		CmdHelp(cmd)
@@ -232,7 +253,11 @@ func Fetch(cmd string, params ...string) {
 		}
 		fetchResult, err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
 		if err != nil {
-			fmt.Println("Fetch error,", err)
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println("Fetch error,", v.Code, v.Err)
+			} else {
+				fmt.Println("Fetch error,", err.Error())
+			}
 		} else {
 			fmt.Println("Key:", fetchResult.Key)
 			fmt.Println("Hash:", fetchResult.Hash)
@@ -259,9 +284,13 @@ func Prefetch(cmd string, params ...string) {
 		}
 		err := qshell.Prefetch(&mac, bucket, key)
 		if err != nil {
-			fmt.Println("Prefetch error,", err)
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println("Prefetch error,", v.Code, v.Err)
+			} else {
+				fmt.Println("Prefetch error,", err.Error())
+			}
 		} else {
-			fmt.Println("Done!")
+			fmt.Println("Prefetch done!")
 		}
 	} else {
 		CmdHelp(cmd)
