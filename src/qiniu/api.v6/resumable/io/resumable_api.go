@@ -212,18 +212,7 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 	blkSize := 1 << blockBits
 	nfails := 0
 
-	//advance the blkIndx to the not uploaded blocks
-	i := 0
-	for _, progress := range extra.Progresses {
-		if progress.Ctx != "" {
-			i += 1
-			wg.Done()
-		} else {
-			break
-		}
-	}
-
-	for ; i < blockCnt; i++ {
+	for i := 0; i < blockCnt; i++ {
 		blkIdx := i
 		blkSize1 := blkSize
 		if i == last {
