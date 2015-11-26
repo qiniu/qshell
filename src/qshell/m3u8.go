@@ -26,7 +26,7 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string, isPrivate bool
 		return
 	}
 	//get domain list of bucket
-	bucketDomainUrl := fmt.Sprintf("http://%s/v6/domain/list", DEFAULT_API_HOST)
+	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", DEFAULT_API_HOST)
 	bucketDomainData := map[string][]string{
 		"tbl": []string{bucket},
 	}
