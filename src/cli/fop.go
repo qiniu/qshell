@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"qiniu/log"
+	"qiniu/rpc"
 	"qshell"
 )
 
@@ -12,7 +12,11 @@ func Prefop(cmd string, params ...string) {
 		fopRet := qshell.FopRet{}
 		err := rsfopS.Prefop(persistentId, &fopRet)
 		if err != nil {
-			log.Error(fmt.Sprintf("Can not get fop status for `%s',", persistentId), err)
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println("Prefop error,", v.Code, v.Err)
+			} else {
+				fmt.Println("Prefop error,", err)
+			}
 		} else {
 			fmt.Println(fopRet.String())
 		}

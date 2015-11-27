@@ -92,7 +92,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 
 	if totalSize != syncProgress.TotalSize {
 		if syncProgress.TotalSize != 0 {
-			log.Info("Remote file length changed, progress file out of date")
+			log.Warn("Remote file length changed, progress file out of date")
 		}
 		syncProgress.Offset = 0
 		syncProgress.TotalSize = totalSize

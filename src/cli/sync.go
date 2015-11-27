@@ -37,7 +37,7 @@ func Sync(cmd string, params ...string) {
 			return
 		}
 
-		log.Info(fmt.Sprintf("Sync %s => %s:%s (%s) Success, Duration: %s!",
+		fmt.Println(fmt.Sprintf("Sync %s => %s:%s (%s) Success, Duration: %s!",
 			srcResUrl, bucket, key, hash, time.Since(tStart)))
 	} else {
 		CmdHelp(cmd)
