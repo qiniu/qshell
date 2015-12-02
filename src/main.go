@@ -98,15 +98,10 @@ func main() {
 			fmt.Println("Error: no subcommand specified")
 			return
 		}
-		hit := false
-		for cmdName, cliFunc := range supportedCmds {
-			if cmdName == cmd {
-				cliFunc(cmd, params...)
-				hit = true
-				break
-			}
-		}
-		if !hit {
+
+		if cliFunc, ok := supportedCmds[cmd]; ok {
+			cliFunc(cmd, params...)
+		} else {
 			fmt.Println(fmt.Sprintf("Error: unknown cmd `%s'", cmd))
 		}
 	} else {
