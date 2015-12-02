@@ -47,7 +47,7 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 
 	fp, openErr := os.Create(qAccountFile)
 	if openErr != nil {
-		err = errors.New(fmt.Sprintf("Open account file failed, %s, please use `account` to set AccessKey and SecretKey first", openErr.Error()))
+		err = errors.New(fmt.Sprintf("Open account file failed, %s", openErr.Error()))
 		return
 	}
 	defer fp.Close()
@@ -86,7 +86,7 @@ func (this *Account) Get() (err error) {
 	qAccountFile := filepath.Join(currentUser.HomeDir, ".qshell", "account.json")
 	fp, openErr := os.Open(qAccountFile)
 	if openErr != nil {
-		err = errors.New(fmt.Sprintf("Open account file failed, %s", openErr.Error()))
+		err = errors.New(fmt.Sprintf("Open account file failed, %s ,please use `account` to set AccessKey and SecretKey first", openErr.Error()))
 		return
 	}
 	defer fp.Close()
