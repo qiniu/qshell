@@ -14,7 +14,11 @@ var rsfopS = qshell.RSFop{}
 
 func Account(cmd string, params ...string) {
 	if len(params) == 0 {
-		accountS.Get()
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
 		fmt.Println(accountS.String())
 	} else if len(params) == 2 || len(params) == 3 {
 		accessKey := params[0]
