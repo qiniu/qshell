@@ -301,7 +301,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		}
 
 		//pack the upload file key
-		localFlmd, _ := strconv.Atoi(items[2])
+		localFlmd, _ := strconv.ParseInt(items[2], 10, 64)
 		uploadFileKey := localFpath
 
 		if uploadConfig.IgnoreDir {
@@ -356,7 +356,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		} else {
 			//check leveldb
 			ldbFlmd, err := ldb.Get([]byte(ldbKey), nil)
-			flmd, _ := strconv.Atoi(string(ldbFlmd))
+			flmd, _ := strconv.ParseInt(string(ldbFlmd), 10, 64)
 			//not exist, return ErrNotFound
 			//check last modified
 
@@ -412,7 +412,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				} else {
 					os.Remove(progressFpath)
 					atomic.AddInt64(&successFileCount, 1)
-					perr := ldb.Put([]byte(ldbKey), []byte(strconv.Itoa(localFlmd)), &ldbWOpt)
+					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
 						log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
 					}
@@ -436,7 +436,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 					}
 				} else {
 					atomic.AddInt64(&successFileCount, 1)
-					perr := ldb.Put([]byte(ldbKey), []byte(strconv.Itoa(localFlmd)), &ldbWOpt)
+					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
 						log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
 					}
