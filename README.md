@@ -9,7 +9,16 @@ qshell是利用[七牛文档上公开的API](http://d.qiniu.com)实现的一个�
 
 |版本     |支持平台|链接|更新日志|
 |--------|---------|----|------|
-|qshell v1.6.5|Linux, Windows, Mac OSX|[下载](http://devtools.qiniu.com/qshell-v1.6.5.zip)|[查看](CHANGELOG.md)|
+|qshell v1.6.5|Linux (32, 64位), Windows(32, 64位), Mac OSX(64位)|[下载](http://devtools.qiniu.com/qshell-v1.6.5.zip)|[查看](CHANGELOG.md)|
+
+|版本     |支持平台|链接|更新日志|
+|--------|---------|----|------|
+|qshell v1.7.0|Linux (32, 64位，arm平台), Windows(32, 64位), Mac OSX(32, 64位)|[下载](http://devtools.qiniu.com/qshell-v1.7.0.zip)|[查看](CHANGELOG.md)|
+
+
+**备注**
+
+`v1.7.0`以上的版本，移除了编译时和平台相关的代码，真正实现代码的跨平台编译，另外从该版本之后`account`命令设置的账号信息将保存在可执行文件所在的目录，而之前的低版本都是在用户目录下面。
 
 因为上面发布的zip包里面有支持不同平台的可执行文件，请根据系统平台选择合适的可执行文件，然后其他的都可以删除，再把可执行文件重命名为 `qshell` (Windows下面是 `qshell.exe`然后就可以使用了）
 
