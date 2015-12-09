@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path/filepath"
 )
 
@@ -31,12 +30,7 @@ func (this *Account) String() string {
 }
 
 func (this *Account) Set(accessKey string, secretKey string, zone string) (err error) {
-	currentUser, uErr := user.Current()
-	if uErr != nil {
-		err = errors.New(fmt.Sprintf("Get current user failed, %s", uErr.Error()))
-		return
-	}
-	qAccountFolder := filepath.Join(currentUser.HomeDir, ".qshell")
+	qAccountFolder := ".qshell"
 	if _, sErr := os.Stat(qAccountFolder); sErr != nil {
 		if mErr := os.MkdirAll(qAccountFolder, 0775); mErr != nil {
 			err = errors.New(fmt.Sprintf("Mkdir `%s' failed, %s", qAccountFolder, mErr.Error()))
@@ -78,12 +72,7 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 }
 
 func (this *Account) Get() (err error) {
-	currentUser, uErr := user.Current()
-	if uErr != nil {
-		err = errors.New(fmt.Sprintf("Get current user failed, %s", uErr.Error()))
-		return
-	}
-	qAccountFile := filepath.Join(currentUser.HomeDir, ".qshell", "account.json")
+	qAccountFile := filepath.Join(".qshell", "account.json")
 	fp, openErr := os.Open(qAccountFile)
 	if openErr != nil {
 		err = errors.New(fmt.Sprintf("Open account file failed, %s ,please use `account` to set AccessKey and SecretKey first", openErr.Error()))

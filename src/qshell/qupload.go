@@ -10,7 +10,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/user"
 	"path/filepath"
 	"qiniu/api.v6/auth/digest"
 	"qiniu/api.v6/conf"
@@ -130,18 +129,13 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	uploadConfig.SrcDir, _ = filepath.Abs(uploadConfig.SrcDir)
 
 	dirCache := DirCache{}
-	currentUser, err := user.Current()
-	if err != nil {
-		log.Error("Failed to get current user", err)
-		return
-	}
 
 	pathSep := string(os.PathSeparator)
 	//create job id
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
 
 	//local storage path
-	storePath := filepath.Join(currentUser.HomeDir, ".qshell", "qupload", jobId)
+	storePath := filepath.Join(".qshell", "qupload", jobId)
 	err = os.MkdirAll(storePath, 0775)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to mkdir `%s' due to `%s'", storePath, err))
