@@ -96,7 +96,7 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string, isPrivate bool
 				strings.HasPrefix(line, "https://") {
 				uri, pErr := url.Parse(line)
 				if pErr != nil {
-					log.Error(fmt.Sprintf("invalid url, %s", line))
+					log.Errorf("invalid url, %s", line)
 					continue
 				}
 				sliceKey = strings.TrimPrefix(uri.Path, "/")
