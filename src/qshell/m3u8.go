@@ -22,7 +22,7 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string, isPrivate bool
 	//check m3u8 file exists
 	_, sErr := client.Stat(nil, bucket, m3u8Key)
 	if sErr != nil {
-		err = errors.New(fmt.Sprintf("stat m3u8 file error, %s", sErr.Error()))
+		err = fmt.Errorf("stat m3u8 file error, %s", sErr.Error())
 		return
 	}
 	//get domain list of bucket
@@ -33,7 +33,7 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string, isPrivate bool
 	bucketDomains := BucketDomain{}
 	bErr := client.Conn.CallWithForm(nil, &bucketDomains, bucketDomainUrl, bucketDomainData)
 	if bErr != nil {
-		err = errors.New(fmt.Sprintf("get domain of bucket failed due to, %s", bErr.Error()))
+		err = fmt.Errorf("get domain of bucket failed due to, %s", bErr.Error())
 		return
 	}
 	if len(bucketDomains) == 0 {
@@ -67,17 +67,17 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string, isPrivate bool
 	//get m3u8 file content
 	m3u8Resp, m3u8Err := http.Get(dnLink)
 	if m3u8Err != nil {
-		err = errors.New(fmt.Sprintf("open url %s error due to, %s", dnLink, m3u8Err))
+		err = fmt.Errorf("open url %s error due to, %s", dnLink, m3u8Err)
 		return
 	}
 	defer m3u8Resp.Body.Close()
 	if m3u8Resp.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("download file error due to, %s", m3u8Resp.Status))
+		err = fmt.Errorf("download file error due to, %s", m3u8Resp.Status)
 		return
 	}
 	m3u8Bytes, readErr := ioutil.ReadAll(m3u8Resp.Body)
 	if readErr != nil {
-		err = errors.New(fmt.Sprintf("read m3u8 file content error due to, %s", readErr.Error()))
+		err = fmt.Errorf("read m3u8 file content error due to, %s", readErr.Error())
 		return
 	}
 	//check content

@@ -2,7 +2,6 @@ package qshell
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -18,7 +17,7 @@ type Account struct {
 func (this *Account) ToJson() (jsonStr string, err error) {
 	jsonData, mErr := json.Marshal(this)
 	if mErr != nil {
-		err = errors.New(fmt.Sprintf("Marshal account data failed, %s", mErr))
+		err = fmt.Errorf("Marshal account data failed, %s", mErr)
 		return
 	}
 	jsonStr = string(jsonData)
@@ -33,7 +32,7 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 	qAccountFolder := ".qshell"
 	if _, sErr := os.Stat(qAccountFolder); sErr != nil {
 		if mErr := os.MkdirAll(qAccountFolder, 0775); mErr != nil {
-			err = errors.New(fmt.Sprintf("Mkdir `%s' failed, %s", qAccountFolder, mErr.Error()))
+			err = fmt.Errorf("Mkdir `%s' failed, %s", qAccountFolder, mErr.Error())
 			return
 		}
 	}
@@ -41,7 +40,7 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 
 	fp, openErr := os.Create(qAccountFile)
 	if openErr != nil {
-		err = errors.New(fmt.Sprintf("Open account file failed, %s", openErr.Error()))
+		err = fmt.Errorf("Open account file failed, %s", openErr.Error())
 		return
 	}
 	defer fp.Close()
@@ -64,7 +63,7 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 
 	_, wErr := fp.WriteString(jsonStr)
 	if wErr != nil {
-		err = errors.New(fmt.Sprintf("Write account info failed, %s", wErr.Error()))
+		err = fmt.Errorf("Write account info failed, %s", wErr.Error())
 		return
 	}
 
@@ -75,17 +74,17 @@ func (this *Account) Get() (err error) {
 	qAccountFile := filepath.Join(".qshell", "account.json")
 	fp, openErr := os.Open(qAccountFile)
 	if openErr != nil {
-		err = errors.New(fmt.Sprintf("Open account file failed, %s ,please use `account` to set AccessKey and SecretKey first", openErr.Error()))
+		err = fmt.Errorf("Open account file failed, %s ,please use `account` to set AccessKey and SecretKey first", openErr.Error())
 		return
 	}
 	defer fp.Close()
 	accountBytes, readErr := ioutil.ReadAll(fp)
 	if readErr != nil {
-		err = errors.New(fmt.Sprintf("Read account file error, %s", readErr.Error()))
+		err = fmt.Errorf("Read account file error, %s", readErr.Error())
 		return
 	}
 	if umError := json.Unmarshal(accountBytes, this); umError != nil {
-		err = errors.New(fmt.Sprintf("Parse account file error, %s", umError.Error()))
+		err = fmt.Errorf("Parse account file error, %s", umError.Error())
 		return
 	}
 

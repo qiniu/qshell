@@ -171,7 +171,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 	}
 	mkErr := rio.Mkfile(putClient, nil, &putRet, key, true, totalSize, &putExtra)
 	if mkErr != nil {
-		err = errors.New(fmt.Sprintf("Mkfile error, %s", mkErr.Error()))
+		err = fmt.Errorf("Mkfile error, %s", mkErr.Error())
 		return
 	}
 
@@ -188,7 +188,7 @@ func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int
 	//range get
 	dReq, dReqErr := http.NewRequest("GET", srcResUrl, nil)
 	if dReqErr != nil {
-		err = errors.New(fmt.Sprintf("New request error, %s", dReqErr.Error()))
+		err = fmt.Errorf("New request error, %s", dReqErr.Error())
 		return
 	}
 
@@ -199,14 +199,14 @@ func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int
 	//get resp
 	dResp, dRespErr := http.DefaultClient.Do(dReq)
 	if dRespErr != nil {
-		err = errors.New(fmt.Sprintf("Get response error, %s", dRespErr.Error()))
+		err = fmt.Errorf("Get response error, %s", dRespErr.Error())
 		return
 	}
 	defer dResp.Body.Close()
 
 	//status error
 	if dResp.StatusCode/100 != 2 {
-		err = errors.New(fmt.Sprintf("Get resource error, %s", dResp.Status))
+		err = fmt.Errorf("Get resource error, %s", dResp.Status)
 		return
 	}
 
@@ -242,7 +242,7 @@ func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int
 
 	mkErr := rio.Mkblock(putClient, nil, &blkPutRet, blockSize, blockDataReader, blockDataSize)
 	if mkErr != nil {
-		err = errors.New(fmt.Sprintf("Mkblk error, %s", mkErr.Error()))
+		err = fmt.Errorf("Mkblk error, %s", mkErr.Error())
 		return
 	}
 
@@ -254,20 +254,20 @@ func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int
 func recordProgress(progressFile string, syncProgress SyncProgress) (err error) {
 	fh, openErr := os.Create(progressFile)
 	if openErr != nil {
-		err = errors.New(fmt.Sprintf("Open progress file %s error, %s", progressFile, openErr.Error()))
+		err = fmt.Errorf("Open progress file %s error, %s", progressFile, openErr.Error())
 		return
 	}
 	defer fh.Close()
 
 	jsonBytes, mErr := json.Marshal(&syncProgress)
 	if mErr != nil {
-		err = errors.New(fmt.Sprintf("Marshal sync progress error, %s", mErr.Error()))
+		err = fmt.Errorf("Marshal sync progress error, %s", mErr.Error())
 		return
 	}
 
 	_, wErr := fh.Write(jsonBytes)
 	if wErr != nil {
-		err = errors.New(fmt.Sprintf("Write sync progress error, %s", wErr.Error()))
+		err = fmt.Errorf("Write sync progress error, %s", wErr.Error())
 	}
 
 	return
@@ -276,7 +276,7 @@ func recordProgress(progressFile string, syncProgress SyncProgress) (err error) 
 func getRemoteFileLength(srcResUrl string) (totalSize int64, err error) {
 	resp, respErr := http.Head(srcResUrl)
 	if respErr != nil {
-		err = errors.New(fmt.Sprintf("New head request failed, %s", respErr.Error()))
+		err = fmt.Errorf("New head request failed, %s", respErr.Error())
 		return
 	}
 	defer resp.Body.Close()
@@ -297,11 +297,11 @@ func checkExists(mac *digest.Mac, bucket, key string) (exists bool, err error) {
 	entry, sErr := client.Stat(nil, bucket, key)
 	if sErr != nil {
 		if v, ok := sErr.(*rpc.ErrorInfo); !ok {
-			err = errors.New(fmt.Sprintf("Check file exists error, %s", sErr.Error()))
+			err = fmt.Errorf("Check file exists error, %s", sErr.Error())
 			return
 		} else {
 			if v.Code != 612 {
-				err = errors.New(fmt.Sprintf("Check file exists error, %s", v.Err))
+				err = fmt.Errorf("Check file exists error, %s", v.Err)
 				return
 			} else {
 				exists = false

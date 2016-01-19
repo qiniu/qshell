@@ -34,7 +34,7 @@ func gbk2Utf8(text string) (string, error) {
 func Unzip(zipFilePath string, unzipPath string) (err error) {
 	zipReader, zipErr := zip.OpenReader(zipFilePath)
 	if zipErr != nil {
-		err = errors.New(fmt.Sprintf("Open zip file error, %s", zipErr))
+		err = fmt.Errorf("Open zip file error, %s", zipErr)
 		return
 	}
 	defer zipReader.Close()
@@ -60,7 +60,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 			log.Debug("Mkdir", fullPath)
 			mErr := os.MkdirAll(fullPath, 0775)
 			if mErr != nil {
-				err = errors.New(fmt.Sprintf("Mkdir error, %s", mErr))
+				err = fmt.Errorf("Mkdir error, %s", mErr)
 				continue
 			}
 		}
@@ -88,28 +88,28 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 				fullPathDir := fullPath[:lastIndex]
 				mErr := os.MkdirAll(fullPathDir, 0775)
 				if mErr != nil {
-					err = errors.New(fmt.Sprintf("Mkdir error, %s", mErr))
+					err = fmt.Errorf("Mkdir error, %s", mErr)
 					continue
 				}
 			}
 			log.Debug("Creating file", fullPath)
-			localFp, openErr := os.OpenFile(fullPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
+			localFp, openErr := os.OpenFile(fullPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, zipFile.Mode())
 			if openErr != nil {
-				err = errors.New(fmt.Sprintf("Open local file error, %s", openErr))
+				err = fmt.Errorf("Open local file error, %s", openErr)
 				continue
 			}
 			defer localFp.Close()
 
 			zipFp, openErr := zipFile.Open()
 			if openErr != nil {
-				err = errors.New(fmt.Sprintf("Read zip content error, %s", openErr))
+				err = fmt.Errorf("Read zip content error, %s", openErr)
 				continue
 			}
 			defer zipFp.Close()
 
 			_, wErr := io.Copy(localFp, zipFp)
 			if wErr != nil {
-				err = errors.New(fmt.Sprintf("Save zip content error, %s", wErr))
+				err = fmt.Errorf("Save zip content error, %s", wErr)
 				continue
 			}
 		}
