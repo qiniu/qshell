@@ -14,20 +14,9 @@ type DirCache struct {
 }
 
 func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileCount int64) {
-	if _, err := os.Stat(cacheResultFile); err != nil {
-		log.Debug(fmt.Sprintf("No cache file `%s' found, will create one", cacheResultFile))
-	} else {
-		os.Remove(cacheResultFile + ".old")
-		if rErr := os.Rename(cacheResultFile, cacheResultFile+".old"); rErr != nil {
-			log.Error(fmt.Sprintf("Unable to rename cache file, plz manually delete `%s' and `%s.old'",
-				cacheResultFile, cacheResultFile))
-			log.Error(rErr)
-			return
-		}
-	}
-	cacheResultFileH, err := os.OpenFile(cacheResultFile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
+	cacheResultFileH, err := os.Create(cacheResultFile)
 	if err != nil {
-		log.Error(fmt.Sprintf("Failed to open cache file `%s'", cacheResultFile))
+		log.Errorf("Failed to open cache file `%s'", cacheResultFile)
 		return
 	}
 	defer cacheResultFileH.Close()
@@ -48,7 +37,7 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 				//log.Debug(fmt.Sprintf("Hit file `%s' size: `%d' mode time: `%d`", relPath, fsize, flmd))
 				fmeta := fmt.Sprintln(fmt.Sprintf("%s\t%d\t%d", relPath, fsize, flmd))
 				if _, err := bWriter.WriteString(fmeta); err != nil {
-					log.Error(fmt.Sprintf("Failed to write data `%s' to cache file", fmeta))
+					log.Errorf("Failed to write data `%s' to cache file", fmeta)
 					retErr = err
 				}
 				fileCount += 1
@@ -57,7 +46,7 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 		return retErr
 	})
 	if err := bWriter.Flush(); err != nil {
-		log.Error(fmt.Sprintf("Failed to flush to cache file `%s'", cacheResultFile))
+		log.Errorf("Failed to flush to cache file `%s'", cacheResultFile)
 	}
 
 	walkEnd := time.Now()

@@ -46,7 +46,8 @@ Config file like:
 	"zone"					:	"bc",
 	"bind_up_ip"			:	"",
 	"bind_rs_ip"			:	"",
-	"bind_nic_ip"			:	""
+	"bind_nic_ip"			:	"",
+	"rescan_local"			:	false
 
 }
 
@@ -68,6 +69,10 @@ const (
 	MAX_UPLOAD_THREAD_COUNT int64 = 100
 )
 
+type UploadInfo struct {
+	TotalFileCount int64 `json:"total_file_count"`
+}
+
 type UploadConfig struct {
 	//basic config
 	SrcDir    string `json:"src_dir"`
@@ -84,6 +89,7 @@ type UploadConfig struct {
 	SkipFilePrefixes string `json:"skip_file_prefixes,omitempty"`
 	SkipPathPrefixes string `json:"skip_path_prefixes,omitempty"`
 	SkipSuffixes     string `json:"skip_suffixes,omitempty"`
+	RescanLocal      bool   `json:"rescan_local,omitempty"`
 
 	//advanced config
 	Zone   string `json:"zone,omitempty"`
@@ -105,19 +111,19 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	timeStart := time.Now()
 	fp, err := os.Open(uploadConfigFile)
 	if err != nil {
-		log.Error(fmt.Sprintf("Open upload config file `%s' error due to `%s'", uploadConfigFile, err))
+		log.Errorf("Open upload config file `%s' error due to `%s'", uploadConfigFile, err)
 		return
 	}
 	defer fp.Close()
 	configData, err := ioutil.ReadAll(fp)
 	if err != nil {
-		log.Error(fmt.Sprintf("Read upload config file `%s' error due to `%s'", uploadConfigFile, err))
+		log.Errorf("Read upload config file `%s' error due to `%s'", uploadConfigFile, err)
 		return
 	}
 	var uploadConfig UploadConfig
 	err = json.Unmarshal(configData, &uploadConfig)
 	if err != nil {
-		log.Error(fmt.Sprintf("Parse upload config file `%s' errror due to `%s'", uploadConfigFile, err))
+		log.Errorf("Parse upload config file `%s' errror due to `%s'", uploadConfigFile, err)
 		return
 	}
 	if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
@@ -138,27 +144,82 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 	storePath := filepath.Join(".qshell", "qupload", jobId)
 	err = os.MkdirAll(storePath, 0775)
 	if err != nil {
-		log.Error(fmt.Sprintf("Failed to mkdir `%s' due to `%s'", storePath, err))
+		log.Errorf("Failed to mkdir `%s' due to `%s'", storePath, err)
 		return
 	}
 
 	//cache file
-	cacheFileName := filepath.Join(storePath, jobId+".cache")
+	rescanLocalDir := false
+	cacheResultName := filepath.Join(storePath, jobId+".cache")
+	cacheTempName := filepath.Join(storePath, jobId+".cache.temp")
+	cacheCountName := filepath.Join(storePath, jobId+".count")
+
+	if _, statErr := os.Stat(cacheResultName); statErr == nil {
+		//file already exists
+		rescanLocalDir = uploadConfig.RescanLocal
+	} else {
+		rescanLocalDir = true
+	}
+
+	var totalFileCount int64
+	if rescanLocalDir {
+		fmt.Println("Listing local sync dir, this can take a long time, please wait patiently...")
+		totalFileCount = dirCache.Cache(uploadConfig.SrcDir, cacheTempName)
+		if rErr := os.Remove(cacheResultName); rErr != nil {
+			log.Debug("Remove the old cached file error", rErr)
+		}
+		if rErr := os.Rename(cacheTempName, cacheResultName); rErr != nil {
+			fmt.Println("Rename the temp cached file error", rErr)
+			return
+		}
+		//write the total count to local file
+		if cFp, cErr := os.Create(cacheCountName); cErr == nil {
+			func() {
+				defer cFp.Close()
+				uploadInfo := UploadInfo{
+					TotalFileCount: totalFileCount,
+				}
+				uploadInfoBytes, mErr := json.Marshal(&uploadInfo)
+				if mErr == nil {
+					if _, wErr := cFp.Write(uploadInfoBytes); wErr != nil {
+						log.Errorf("Write local cached count file error %s", cErr)
+					} else {
+						cFp.Close()
+					}
+				}
+			}()
+		} else {
+			log.Errorf("Open local cached count file error %s", cErr)
+		}
+	} else {
+		fmt.Println("Use the last cached local sync dir file list ...")
+		//read from local cache
+		if rFp, rErr := os.Open(cacheCountName); rErr == nil {
+			func() {
+				defer rFp.Close()
+				uploadInfo := UploadInfo{}
+				decoder := json.NewDecoder(rFp)
+				if dErr := decoder.Decode(&uploadInfo); dErr == nil {
+					totalFileCount = uploadInfo.TotalFileCount
+				}
+			}()
+		} else {
+			log.Warnf("Open local cached count file error %s", rErr)
+		}
+	}
+
 	//leveldb folder
 	leveldbFileName := filepath.Join(storePath, jobId+".ldb")
-
-	fmt.Println("Listing local sync dir, this can take a long time, please wait patiently...")
-	totalFileCount := dirCache.Cache(uploadConfig.SrcDir, cacheFileName)
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
-		log.Error(fmt.Sprintf("Open leveldb `%s' failed due to `%s'", leveldbFileName, err))
+		log.Errorf("Open leveldb `%s' failed due to `%s'", leveldbFileName, err)
 		return
 	}
 	defer ldb.Close()
 	//sync
-	ufp, err := os.Open(cacheFileName)
+	ufp, err := os.Open(cacheResultName)
 	if err != nil {
-		log.Error(fmt.Sprintf("Open cache file `%s' failed due to `%s'", cacheFileName, err))
+		log.Errorf("Open cache file `%s' failed due to `%s'", cacheResultName, err)
 		return
 	}
 	defer ufp.Close()
@@ -231,7 +292,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		line := strings.TrimSpace(bScanner.Text())
 		items := strings.Split(line, "\t")
 		if len(items) != 3 {
-			log.Error(fmt.Sprintf("Invalid cache line `%s'", line))
+			log.Errorf("Invalid cache line `%s'", line)
 			continue
 		}
 
@@ -314,15 +375,19 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 		localFilePath := filepath.Join(uploadConfig.SrcDir, localFpath)
 		fstat, err := os.Stat(localFilePath)
 		if err != nil {
-			log.Error(fmt.Sprintf("Error stat local file `%s' due to `%s'", localFilePath, err))
+			log.Errorf("Error stat local file `%s' due to `%s'", localFilePath, err)
 			continue
 		}
 
 		fsize := fstat.Size()
 		ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
 
-		fmt.Println(fmt.Sprintf("Uploading %s (%d/%d, %.1f%%) ...", ldbKey, currentFileCount, totalFileCount,
-			float32(currentFileCount)*100/float32(totalFileCount)))
+		if totalFileCount != 0 {
+			fmt.Println(fmt.Sprintf("Uploading %s [%d/%d, %.1f%%] ...", ldbKey, currentFileCount, totalFileCount,
+				float32(currentFileCount)*100/float32(totalFileCount)))
+		} else {
+			fmt.Println(fmt.Sprintf("Uploading %s ...", ldbKey))
+		}
 
 		//check exists
 		if uploadConfig.CheckExists {
@@ -399,16 +464,16 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, pErr.Err))
+						log.Errorf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, pErr.Err)
 					} else {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err))
+						log.Errorf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err)
 					}
 				} else {
 					os.Remove(progressFpath)
 					atomic.AddInt64(&successFileCount, 1)
 					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
-						log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
+						log.Errorf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr)
 					}
 				}
 			} else {
@@ -424,15 +489,15 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, pErr.Err))
+						log.Errorf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, pErr.Err)
 					} else {
-						log.Error(fmt.Sprintf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err))
+						log.Errorf("Put file `%s' => `%s' failed due to `%s'", localFilePath, uploadFileKey, err)
 					}
 				} else {
 					atomic.AddInt64(&successFileCount, 1)
 					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
-						log.Error(fmt.Sprintf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr))
+						log.Errorf("Put key `%s' into leveldb error due to `%s'", ldbKey, perr)
 					}
 				}
 			}
