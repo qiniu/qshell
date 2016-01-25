@@ -37,6 +37,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"checkqrsync":   cli.CheckQrsync,
 	"fput":          cli.FormPut,
 	"qupload":       cli.QiniuUpload,
+	"qupload2":      cli.QiniuUpload2,
 	"qdownload":     cli.QiniuDownload,
 	"rput":          cli.ResumablePut,
 	"b64encode":     cli.Base64Encode,

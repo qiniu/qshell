@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -107,29 +106,8 @@ var upSettings = rio.Settings{
 	TryTimes:  7,
 }
 
-func QiniuUpload(threadCount int, uploadConfigFile string) {
+func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	timeStart := time.Now()
-	fp, err := os.Open(uploadConfigFile)
-	if err != nil {
-		log.Errorf("Open upload config file `%s' error due to `%s'", uploadConfigFile, err)
-		return
-	}
-	defer fp.Close()
-	configData, err := ioutil.ReadAll(fp)
-	if err != nil {
-		log.Errorf("Read upload config file `%s' error due to `%s'", uploadConfigFile, err)
-		return
-	}
-	var uploadConfig UploadConfig
-	err = json.Unmarshal(configData, &uploadConfig)
-	if err != nil {
-		log.Errorf("Parse upload config file `%s' errror due to `%s'", uploadConfigFile, err)
-		return
-	}
-	if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
-		log.Error("Upload config error for parameter `SrcDir`,", err)
-		return
-	}
 
 	//make SrcDir the full path
 	uploadConfig.SrcDir, _ = filepath.Abs(uploadConfig.SrcDir)
@@ -142,8 +120,7 @@ func QiniuUpload(threadCount int, uploadConfigFile string) {
 
 	//local storage path
 	storePath := filepath.Join(".qshell", "qupload", jobId)
-	err = os.MkdirAll(storePath, 0775)
-	if err != nil {
+	if err := os.MkdirAll(storePath, 0775); err != nil {
 		log.Errorf("Failed to mkdir `%s' due to `%s'", storePath, err)
 		return
 	}
