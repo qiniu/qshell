@@ -74,7 +74,7 @@ func (this *Account) Get() (err error) {
 	qAccountFile := filepath.Join(".qshell", "account.json")
 	fp, openErr := os.Open(qAccountFile)
 	if openErr != nil {
-		err = fmt.Errorf("Open account file failed, %s ,please use `account` to set AccessKey and SecretKey first", openErr.Error())
+		err = fmt.Errorf("Open account file failed, %s, please use `account` to set AccessKey and SecretKey first", openErr.Error())
 		return
 	}
 	defer fp.Close()
