@@ -17,7 +17,7 @@ import (
 
 const (
 	BATCH_ALLOW_MAX             = 1000
-	BATCH_CDN_REFRESH_ALLOW_MAX = 10
+	BATCH_CDN_REFRESH_ALLOW_MAX = 100
 )
 
 func printStat(bucket string, key string, entry rs.Entry) {
