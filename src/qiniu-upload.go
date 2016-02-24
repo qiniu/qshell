@@ -10,6 +10,7 @@ import (
 	"qiniu/api.v6/rs"
 	"qiniu/rpc"
 	"qshell"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -21,6 +22,9 @@ var upSettings = rio.Settings{
 }
 
 func main() {
+	//set cpu count
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	var bucket string
 	var key string
 	var localFile string

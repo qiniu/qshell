@@ -1,4 +1,4 @@
-export GOPATH=$GOPATH:/Users/jemy/QiniuCloud/Projects/qiniu_upload
+export GOPATH=$GOPATH:/Users/jemy/QiniuCloud/Projects/qshell
 GOOS=linux   GOARCH=386    go build -o ../bin/qiniu_upload_linux_386         qiniu-upload.go
 GOOS=linux   GOARCH=amd64  go build -o ../bin/qiniu_upload_linux_amd64       qiniu-upload.go
 GOOS=windows GOARCH=386    go build -o ../bin/qiniu_upload_windows_386.exe   qiniu-upload.go
