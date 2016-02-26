@@ -326,7 +326,7 @@ func BatchStat(cmd string, params ...string) {
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
 		scanner.Split(bufio.ScanLines)
-		entries := make([]rs.EntryPath, 0)
+		entries := make([]rs.EntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
@@ -357,9 +357,6 @@ func BatchStat(cmd string, params ...string) {
 
 func batchStat(client rs.Client, entries []rs.EntryPath) {
 	ret, err := qshell.BatchStat(client, entries)
-	if err != nil {
-		fmt.Println("Batch stat error", err)
-	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
@@ -369,6 +366,10 @@ func batchStat(client rs.Client, entries []rs.EntryPath) {
 				fmt.Println(fmt.Sprintf("%s\t%d\t%s\t%s\t%d", entry.Key,
 					item.Data.Fsize, item.Data.Hash, item.Data.MimeType, item.Data.PutTime))
 			}
+		}
+	} else {
+		if err != nil {
+			fmt.Println("Batch stat error", err)
 		}
 	}
 }
@@ -417,7 +418,7 @@ func BatchDelete(cmd string, params ...string) {
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
 		scanner.Split(bufio.ScanLines)
-		entries := make([]rs.EntryPath, 0)
+		entries := make([]rs.EntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
@@ -508,7 +509,7 @@ func BatchChgm(cmd string, params ...string) {
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
 		scanner.Split(bufio.ScanLines)
-		entries := make([]qshell.ChgmEntryPath, 0)
+		entries := make([]qshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
@@ -595,7 +596,7 @@ func BatchRename(cmd string, params ...string) {
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
 		scanner.Split(bufio.ScanLines)
-		entries := make([]qshell.RenameEntryPath, 0)
+		entries := make([]qshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
@@ -683,7 +684,7 @@ func BatchMove(cmd string, params ...string) {
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
 		scanner.Split(bufio.ScanLines)
-		entries := make([]qshell.MoveEntryPath, 0)
+		entries := make([]qshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
@@ -776,7 +777,7 @@ func BatchCopy(cmd string, params ...string) {
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
 		scanner.Split(bufio.ScanLines)
-		entries := make([]qshell.CopyEntryPath, 0)
+		entries := make([]qshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			items := strings.Split(line, "\t")
