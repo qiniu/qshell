@@ -89,8 +89,7 @@ qshell account
 
 ##编译
 1. 如果是编译本地平台的可执行程序，使用`src`目录下面的`build.sh`脚本即可。
-2. 如果是编译跨平台的可执行程序，使用`src`目录下面的`gox_build.sh`脚本即可。该脚本使用了[gox](https://github.com/mitchellh/gox)工具，请
-使用`go get github.com/mitchellh/gox`安装。
+2. 如果是编译跨平台的可执行程序，使用`src`目录下面的`cross_build.sh`脚本即可。
 
 ##帮助
 如果您遇到任何问题，可以加QQ：2037014430，我将乐意帮助您，非技术问题勿扰。
