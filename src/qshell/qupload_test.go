@@ -13,10 +13,35 @@ func TestGetFileTotalCount(t *testing.T) {
 
 func TestSimpleUpload(t *testing.T) {
 	uploadConfig := UploadConfig{
-		SrcDir:    "/Users/jemy/Temp/test",
+		SrcDir:    "/Users/jemy/Temp7",
 		AccessKey: os.Getenv("AccessKey"),
 		SecretKey: os.Getenv("SecretKey"),
 		Bucket:    "if-pbl",
+	}
+
+	QiniuUpload(1, &uploadConfig)
+}
+
+func TestSimpleUploadWithKeyPrefix(t *testing.T) {
+	uploadConfig := UploadConfig{
+		SrcDir:    "/Users/jemy/Temp7",
+		AccessKey: os.Getenv("AccessKey"),
+		SecretKey: os.Getenv("SecretKey"),
+		Bucket:    "if-pbl",
+		KeyPrefix: "2016/03/07/",
+	}
+
+	QiniuUpload(1, &uploadConfig)
+}
+
+func TestSimpleUploadIgnoreDir(t *testing.T) {
+	uploadConfig := UploadConfig{
+		SrcDir:    "/Users/jemy/Temp7",
+		AccessKey: os.Getenv("AccessKey"),
+		SecretKey: os.Getenv("SecretKey"),
+		Bucket:    "if-pbl",
+		KeyPrefix: "2016/03/08/",
+		IgnoreDir: true,
 	}
 
 	QiniuUpload(1, &uploadConfig)
