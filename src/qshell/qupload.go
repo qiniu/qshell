@@ -30,6 +30,7 @@ Config file like:
 
 {
 	"src_dir"				:	"/Users/jemy/Photos",
+	"file_list"             :   "",
 	"access_key"			:	"<Your AccessKey>",
 	"secret_key"			:	"<Your SecretKey>",
 	"bucket"				:	"test-bucket",
@@ -80,6 +81,7 @@ type UploadConfig struct {
 	Bucket    string `json:"bucket"`
 
 	//optional config
+	FileList         string `json:"file_list,omitempty"`
 	PutThreshold     int64  `json:"put_threshold,omitempty"`
 	KeyPrefix        string `json:"key_prefix,omitempty"`
 	IgnoreDir        bool   `json:"ignore_dir,omitempty"`
@@ -125,63 +127,72 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		return
 	}
 
-	//cache file
-	rescanLocalDir := false
-	cacheResultName := filepath.Join(storePath, jobId+".cache")
-	cacheTempName := filepath.Join(storePath, jobId+".cache.temp")
-	cacheCountName := filepath.Join(storePath, jobId+".count")
-
-	if _, statErr := os.Stat(cacheResultName); statErr == nil {
-		//file already exists
-		rescanLocalDir = uploadConfig.RescanLocal
-	} else {
-		rescanLocalDir = true
-	}
-
+	//find the local file list, by specified or by config
+	var cacheResultName string
 	var totalFileCount int64
-	if rescanLocalDir {
-		fmt.Println("Listing local sync dir, this can take a long time, please wait patiently...")
-		totalFileCount = dirCache.Cache(uploadConfig.SrcDir, cacheTempName)
-		if rErr := os.Remove(cacheResultName); rErr != nil {
-			log.Debug("Remove the old cached file error", rErr)
-		}
-		if rErr := os.Rename(cacheTempName, cacheResultName); rErr != nil {
-			fmt.Println("Rename the temp cached file error", rErr)
-			return
-		}
-		//write the total count to local file
-		if cFp, cErr := os.Create(cacheCountName); cErr == nil {
-			func() {
-				defer cFp.Close()
-				uploadInfo := UploadInfo{
-					TotalFileCount: totalFileCount,
-				}
-				uploadInfoBytes, mErr := json.Marshal(&uploadInfo)
-				if mErr == nil {
-					if _, wErr := cFp.Write(uploadInfoBytes); wErr != nil {
-						log.Errorf("Write local cached count file error %s", cErr)
-					} else {
-						cFp.Close()
-					}
-				}
-			}()
-		} else {
-			log.Errorf("Open local cached count file error %s", cErr)
-		}
+	_, fStatErr := os.Stat(uploadConfig.FileList)
+	if uploadConfig.FileList != "" && fStatErr == nil {
+		//use specified file list
+		cacheResultName = uploadConfig.FileList
+		totalFileCount = getFileLineCount(cacheResultName)
 	} else {
-		fmt.Println("Use the last cached local sync dir file list ...")
-		//read from local cache
-		if rFp, rErr := os.Open(cacheCountName); rErr == nil {
-			func() {
-				defer rFp.Close()
-				uploadInfo := UploadInfo{}
-				decoder := json.NewDecoder(rFp)
-				if dErr := decoder.Decode(&uploadInfo); dErr == nil {
-					totalFileCount = uploadInfo.TotalFileCount
-				}
-			}()
+		//cache file
+		cacheResultName = filepath.Join(storePath, jobId+".cache")
+		cacheTempName := filepath.Join(storePath, jobId+".cache.temp")
+		cacheCountName := filepath.Join(storePath, jobId+".count")
+
+		rescanLocalDir := false
+		if _, statErr := os.Stat(cacheResultName); statErr == nil {
+			//file already exists
+			rescanLocalDir = uploadConfig.RescanLocal
 		} else {
-			log.Warnf("Open local cached count file error %s", rErr)
+			rescanLocalDir = true
+		}
+
+		if rescanLocalDir {
+			fmt.Println("Listing local sync dir, this can take a long time, please wait patiently...")
+			totalFileCount = dirCache.Cache(uploadConfig.SrcDir, cacheTempName)
+			if rErr := os.Remove(cacheResultName); rErr != nil {
+				log.Debug("Remove the old cached file error", rErr)
+			}
+			if rErr := os.Rename(cacheTempName, cacheResultName); rErr != nil {
+				fmt.Println("Rename the temp cached file error", rErr)
+				return
+			}
+			//write the total count to local file
+			if cFp, cErr := os.Create(cacheCountName); cErr == nil {
+				func() {
+					defer cFp.Close()
+					uploadInfo := UploadInfo{
+						TotalFileCount: totalFileCount,
+					}
+					uploadInfoBytes, mErr := json.Marshal(&uploadInfo)
+					if mErr == nil {
+						if _, wErr := cFp.Write(uploadInfoBytes); wErr != nil {
+							log.Errorf("Write local cached count file error %s", cErr)
+						} else {
+							cFp.Close()
+						}
+					}
+				}()
+			} else {
+				log.Errorf("Open local cached count file error %s", cErr)
+			}
+		} else {
+			fmt.Println("Use the last cached local sync dir file list ...")
+			//read from local cache
+			if rFp, rErr := os.Open(cacheCountName); rErr == nil {
+				func() {
+					defer rFp.Close()
+					uploadInfo := UploadInfo{}
+					decoder := json.NewDecoder(rFp)
+					if dErr := decoder.Decode(&uploadInfo); dErr == nil {
+						totalFileCount = uploadInfo.TotalFileCount
+					}
+				}()
+			} else {
+				log.Warnf("Open local cached count file error %s", rErr)
+			}
 		}
 	}
 
@@ -196,7 +207,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	//sync
 	ufp, err := os.Open(cacheResultName)
 	if err != nil {
-		log.Errorf("Open cache file `%s' failed due to `%s'", cacheResultName, err)
+		log.Errorf("Open list file `%s' failed due to `%s'", cacheResultName, err)
 		return
 	}
 	defer ufp.Close()
@@ -492,4 +503,18 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	fmt.Println("Duration:\t", time.Since(timeStart))
 	fmt.Println("-------------------------")
 
+}
+
+func getFileLineCount(filePath string) (totalCount int64) {
+	fp, openErr := os.Open(filePath)
+	if openErr != nil {
+		return
+	}
+	defer fp.Close()
+
+	bScanner := bufio.NewScanner(fp)
+	for bScanner.Scan() {
+		totalCount += 1
+	}
+	return
 }
