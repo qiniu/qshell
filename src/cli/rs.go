@@ -442,7 +442,7 @@ func BatchDelete(cmd string, params ...string) {
 		if len(entries) > 0 {
 			batchDelete(client, entries)
 		}
-		fmt.Println("All deleted!")
+		fmt.Println("Batch delete done!")
 	} else {
 		CmdHelp(cmd)
 	}
@@ -451,15 +451,19 @@ func BatchDelete(cmd string, params ...string) {
 func batchDelete(client rs.Client, entries []rs.EntryPath) {
 	ret, err := qshell.BatchDelete(client, entries)
 	if err != nil {
-		fmt.Println("Batch delete error", err)
+		if _, ok := err.(*rpc.ErrorInfo); !ok {
+			fmt.Println("Batch delete error", err)
+			return
+		}
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
+
 			if item.Data.Error != "" {
-				log.Errorf("Delete '%s' => '%s' Failed, Code: %d", entry.Bucket, entry.Key, item.Code)
+				log.Errorf("Delete '%s' => '%s' failed, Err: %s", entry.Bucket, entry.Key, item.Data.Error)
 			} else {
-				log.Debug(fmt.Sprintf("Delete '%s' => '%s' Success, Code: %d", entry.Bucket, entry.Key, item.Code))
+				log.Debugf("Delete '%s' => '%s' success", entry.Bucket, entry.Key)
 			}
 		}
 	}
@@ -820,6 +824,87 @@ func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
 			} else {
 				log.Debug(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Success, Code :%d",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
+			}
+		}
+	}
+}
+
+func BatchPrefetch(cmd string, params ...string) {
+	//confirm
+	rcode := CreateRandString(6)
+	if rcode == "" {
+		fmt.Println("Create confirm code failed")
+		return
+	}
+
+	rcode2 := ""
+	if runtime.GOOS == "windows" {
+		fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+	} else {
+		fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+	}
+	fmt.Scanln(&rcode2)
+
+	if rcode != rcode2 {
+		fmt.Println("Task quit!")
+		return
+	}
+
+	if len(params) == 2 {
+		bucket := params[0]
+		keyListFile := params[1]
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		client := rs.NewMac(&mac)
+		fp, err := os.Open(keyListFile)
+		if err != nil {
+			fmt.Println("Open key list file error")
+			return
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+		entries := make([]qshell.PrefetchEntryPath, 0, BATCH_ALLOW_MAX)
+		for scanner.Scan() {
+			key := strings.TrimSpace(scanner.Text())
+			entry := qshell.PrefetchEntryPath{bucket, key}
+			entries = append(entries, entry)
+
+			if len(entries) == BATCH_ALLOW_MAX {
+				batchPrefetch(client, entries)
+				entries = make([]qshell.PrefetchEntryPath, 0)
+			}
+		}
+		if len(entries) > 0 {
+			batchPrefetch(client, entries)
+		}
+		fmt.Println("All Renamed!")
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func batchPrefetch(client rs.Client, entries []qshell.PrefetchEntryPath) {
+	ret, err := qshell.BatchPrefetch(client, entries)
+	if err != nil {
+		fmt.Println("Batch prefetch error", err)
+	}
+	if len(ret) > 0 {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Data.Error != "" {
+				log.Errorf("Prefetch '%s' -> '%s' Failed, Code :%d", entry.Bucket, entry.Key, item.Code)
+			} else {
+				log.Debug(fmt.Sprintf("Prefetch '%s' -> '%s' Success, Code :%d", entry.Bucket, entry.Key, item.Code))
 			}
 		}
 	}
