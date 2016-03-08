@@ -43,11 +43,6 @@ type CopyEntryPath struct {
 	DestKey    string
 }
 
-type PrefetchEntryPath struct {
-	Bucket string
-	Key    string
-}
-
 type BatchItemRet struct {
 	Code int              `json:"code"`
 	Data BatchItemRetData `json:"data"`
@@ -154,15 +149,6 @@ func BatchMove(client rs.Client, entries []MoveEntryPath) (ret []BatchItemRet, e
 	b := make([]string, len(entries))
 	for i, e := range entries {
 		b[i] = rs.URIMove(e.SrcBucket, e.SrcKey, e.DestBucket, e.DestKey)
-	}
-	err = client.Batch(nil, &ret, b)
-	return
-}
-
-func BatchPrefetch(client rs.Client, entries []PrefetchEntryPath) (ret []BatchItemRet, err error) {
-	b := make([]string, len(entries))
-	for i, e := range entries {
-		b[i] = rs.URIPrefetch(e.Bucket, e.Key)
 	}
 	err = client.Batch(nil, &ret, b)
 	return
