@@ -57,6 +57,7 @@ func FormPut(cmd string, params ...string) {
 		} else {
 			policy.Scope = bucket
 		}
+		policy.Expires = 7 * 24 * 3600
 
 		putExtra := fio.PutExtra{}
 		if mimeType != "" {
@@ -162,6 +163,7 @@ func ResumablePut(cmd string, params ...string) {
 		} else {
 			policy.Scope = bucket
 		}
+		policy.Expires = 7 * 24 * 3600
 
 		putExtra := rio.PutExtra{}
 		if mimeType != "" {

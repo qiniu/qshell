@@ -431,7 +431,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				policy.Scope = fmt.Sprintf("%s:%s", uploadConfig.Bucket, uploadFileKey)
 				policy.InsertOnly = 0
 			}
-			policy.Expires = 30 * 24 * 3600
+			policy.Expires = 7 * 24 * 3600
 			uptoken := policy.Token(&mac)
 			if fsize > putThreshold {
 				var putClient rpc.Client
