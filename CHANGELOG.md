@@ -1,3 +1,7 @@
+#1.7.3
+1. 使`prefop`支持不同的zone
+2. 更新`rput`和`qupload`的上传token有效期为7天
+
 #1.7.2
 1. 为`qupload`添加配置参数`file_list`，可以从文件中读取待同步列表
 
