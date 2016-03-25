@@ -1,3 +1,6 @@
+＃1.7.4
+1. 为`qdownload`添加`referer`参数，支持防盗链开启情况下的资源下载
+
 #1.7.3
 1. 使`prefop`支持不同的zone
 2. 更新`rput`和`qupload`的上传token有效期为7天
