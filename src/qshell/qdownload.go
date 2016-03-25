@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"qiniu/api.v6/auth/digest"
 	"qiniu/log"
-	"qiniu/rpc"
 	"strconv"
 	"strings"
 	"sync"
@@ -29,7 +29,8 @@ import (
 	"secret_key"	:	"<Your SecretKey>",
 	"is_private"	:	false,
 	"prefix"		:	"demo/",
-	"suffix"		: ".mp4"
+	"suffix"		: ".mp4",
+	"referer"		: ""
 }
 */
 
@@ -47,6 +48,7 @@ type DownloadConfig struct {
 	IsPrivate bool   `json:"is_private"`
 	Prefix    string `json:"prefix,omitempty"`
 	Suffix    string `json:"suffix,omitempty"`
+	Referer   string `json:"referer,omitemtpy"`
 }
 
 func QiniuDownload(threadCount int, downloadConfigFile string) {
@@ -178,7 +180,15 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 		token := digest.Sign(&mac, []byte(downUrl))
 		downUrl = fmt.Sprintf("%s&token=%s", downUrl, token)
 	}
-	resp, respErr := rpc.DefaultClient.Get(nil, downUrl)
+
+	req, reqErr := http.NewRequest("GET", downUrl, nil)
+	if reqErr != nil {
+		err = reqErr
+		log.Error("New request", fileKey, "failed by url", downUrl, reqErr.Error())
+		return
+	}
+	req.Header.Add("Referer", downConfig.Referer)
+	resp, respErr := http.DefaultClient.Do(req)
 	if respErr != nil {
 		err = respErr
 		log.Error("Download", fileKey, "failed by url", downUrl, respErr.Error())
