@@ -66,7 +66,7 @@ Valid values for zone are [aws,nb,bc]
 const (
 	DEFAULT_PUT_THRESHOLD   int64 = 10 * 1024 * 1024 //10MB
 	MIN_UPLOAD_THREAD_COUNT int64 = 1
-	MAX_UPLOAD_THREAD_COUNT int64 = 100
+	MAX_UPLOAD_THREAD_COUNT int64 = 2000
 )
 
 type UploadInfo struct {
@@ -87,6 +87,7 @@ type UploadConfig struct {
 	IgnoreDir        bool   `json:"ignore_dir,omitempty"`
 	Overwrite        bool   `json:"overwrite,omitempty"`
 	CheckExists      bool   `json:"check_exists,omitempty"`
+	CheckHash        bool   `json:"check_hash,omitempty"`
 	SkipFilePrefixes string `json:"skip_file_prefixes,omitempty"`
 	SkipPathPrefixes string `json:"skip_path_prefixes,omitempty"`
 	SkipSuffixes     string `json:"skip_suffixes,omitempty"`
@@ -381,16 +382,21 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		if uploadConfig.CheckExists {
 			rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
 			if checkErr == nil {
-				//compare hash
-				localEtag, cErr := GetEtag(localFilePath)
-				if cErr != nil {
-					atomic.AddInt64(&failureFileCount, 1)
-					log.Error("Calc local file hash failed,", cErr)
-					continue
-				}
-				if rsEntry.Hash == localEtag {
-					atomic.AddInt64(&skippedFileCount, 1)
-					log.Debug(fmt.Sprintf("File %s already exists in bucket, ignore this upload", uploadFileKey))
+				if uploadConfig.CheckHash {
+					//compare hash
+					localEtag, cErr := GetEtag(localFilePath)
+					if cErr != nil {
+						atomic.AddInt64(&failureFileCount, 1)
+						log.Error("Calc local file hash failed,", cErr)
+						continue
+					}
+					if rsEntry.Hash == localEtag {
+						atomic.AddInt64(&skippedFileCount, 1)
+						log.Debug(fmt.Sprintf("File %s already exists in bucket, ignore this upload", uploadFileKey))
+						continue
+					}
+				} else {
+					log.Debug(fmt.Sprintf("File %s already exists in bucket, ignore this upload, no hash check", uploadFileKey))
 					continue
 				}
 			} else {
