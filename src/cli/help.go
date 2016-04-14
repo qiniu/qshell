@@ -150,7 +150,7 @@ func CmdHelps(cmds ...string) {
 }
 
 func CmdHelp(cmd string) {
-	docStr := fmt.Sprintf("Unknow cmd `%s'", cmd)
+	docStr := fmt.Sprintf("Unknow cmd `%s`", cmd)
 	if cmdDoc, ok := cmdDocs[cmd]; ok {
 		docStr = fmt.Sprintf("Usage: %s\r\n  %s\r\n", cmdDoc[0], cmdDoc[1])
 	}

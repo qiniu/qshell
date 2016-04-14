@@ -29,19 +29,19 @@ func QiniuUpload(cmd string, params ...string) {
 		//read upload config
 		fp, err := os.Open(uploadConfigFile)
 		if err != nil {
-			log.Errorf("Open upload config file `%s' error due to `%s'", uploadConfigFile, err)
+			log.Errorf("Open upload config file `%s` error due to `%s`", uploadConfigFile, err)
 			return
 		}
 		defer fp.Close()
 		configData, err := ioutil.ReadAll(fp)
 		if err != nil {
-			log.Errorf("Read upload config file `%s' error due to `%s'", uploadConfigFile, err)
+			log.Errorf("Read upload config file `%s` error due to `%s`", uploadConfigFile, err)
 			return
 		}
 		var uploadConfig qshell.UploadConfig
 		err = json.Unmarshal(configData, &uploadConfig)
 		if err != nil {
-			log.Errorf("Parse upload config file `%s' errror due to `%s'", uploadConfigFile, err)
+			log.Errorf("Parse upload config file `%s` errror due to `%s`", uploadConfigFile, err)
 			return
 		}
 		if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
@@ -51,7 +51,8 @@ func QiniuUpload(cmd string, params ...string) {
 		//upload
 		if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT ||
 			threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
-			fmt.Println("You can set <ThreadCount> value between 1 and 100 to improve speed")
+			fmt.Printf("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
+				qshell.MIN_UPLOAD_THREAD_COUNT, qshell.MAX_UPLOAD_THREAD_COUNT)
 			threadCount = qshell.MIN_UPLOAD_THREAD_COUNT
 		}
 		qshell.QiniuUpload(int(threadCount), &uploadConfig)

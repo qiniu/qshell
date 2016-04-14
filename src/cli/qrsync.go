@@ -12,7 +12,7 @@ func CheckQrsync(cmd string, params ...string) {
 		listBucketResultFile := params[1]
 		ignoreLocalDir, err := strconv.ParseBool(params[2])
 		if err != nil {
-			log.Errorf("Invalid value `%s' for argument <IgnoreLocalDir>", params[2])
+			log.Errorf("Invalid value `%s` for argument <IgnoreLocalDir>", params[2])
 			return
 		}
 		prefix := ""

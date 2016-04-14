@@ -32,7 +32,7 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 	qAccountFolder := ".qshell"
 	if _, sErr := os.Stat(qAccountFolder); sErr != nil {
 		if mErr := os.MkdirAll(qAccountFolder, 0775); mErr != nil {
-			err = fmt.Errorf("Mkdir `%s' failed, %s", qAccountFolder, mErr.Error())
+			err = fmt.Errorf("Mkdir `%s` failed, %s", qAccountFolder, mErr.Error())
 			return
 		}
 	}

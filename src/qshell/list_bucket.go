@@ -23,7 +23,7 @@ func (this *ListBucket) List(bucket string, prefix string, listResultFile string
 		fp, openErr = os.Create(listResultFile)
 		if openErr != nil {
 			retErr = openErr
-			log.Errorf("Failed to open list result file `%s'", listResultFile)
+			log.Errorf("Failed to open list result file `%s`", listResultFile)
 			return
 		}
 	}
@@ -43,13 +43,13 @@ func (this *ListBucket) List(bucket string, prefix string, listResultFile string
 			if err == io.EOF {
 				run = false
 			} else {
-				log.Errorf("List error for marker `%s', %s", marker, err)
+				log.Errorf("List error for marker `%s`, %s", marker, err)
 				if retryTimes <= maxRetryTimes {
-					log.Debug(fmt.Sprintf("Retry list for marker `%s' for `%d' time", marker, retryTimes))
+					log.Debug(fmt.Sprintf("Retry list for marker `%s` for `%d' time", marker, retryTimes))
 					retryTimes += 1
 					continue
 				} else {
-					log.Errorf("List failed too many times for `%s'", marker)
+					log.Errorf("List failed too many times for `%s`", marker)
 					break
 				}
 			}
@@ -66,7 +66,7 @@ func (this *ListBucket) List(bucket string, prefix string, listResultFile string
 			lineData := fmt.Sprintf("%s\t%d\t%s\t%d\t%s\t%s\r\n", entry.Key, entry.Fsize, entry.Hash, entry.PutTime, entry.MimeType, entry.EndUser)
 			_, wErr := bw.WriteString(lineData)
 			if wErr != nil {
-				log.Errorf("Write line data `%s' to list result file failed.", lineData)
+				log.Errorf("Write line data `%s` to list result file failed.", lineData)
 			}
 		}
 		fErr := bw.Flush()
