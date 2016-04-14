@@ -1,3 +1,10 @@
+#1.7.5
+1. 为`qupload`添加`check_hash`参数，默认在`check_exists`情况下不进行hash匹配，节约同步时间
+2. 为`qupload`添加`check_size`参数，默认在`check_exists`情况下如果不进行hash匹配，可以启用文件大小匹配，做简单匹配，节约同步时间的同时，检测文件是否变化
+3. 为`qupload`添加`log_level`参数，可以设置日志级别，可以在同步出错的情况下，只输出错误信息方便查看原因
+4. 为`qupload`添加`log_file`参数，默认输出到终端，如果设置，则输出日志到指定的本地磁盘文件中
+5. 为`qupload`添加`skip_fixed_strings`参数，可以根据指定的字符串忽略相对路径中存在这些字符串的文件，不进行同步
+
 ＃1.7.4
 1. 为`qdownload`添加`referer`参数，支持防盗链开启情况下的资源下载
 
