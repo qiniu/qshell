@@ -60,6 +60,8 @@ var cmds = []string{
 	"m3u8delete",
 	"buckets",
 	"domains",
+	"cdnwho",
+	"regionip",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell [-d] account [<AccessKey> <SecretKey>] [<Zone>]", "Get/Set AccessKey and SecretKey and Zone"},
@@ -107,6 +109,8 @@ var cmdDocs = map[string][]string{
 	"m3u8delete":    []string{"qshell [-d] m3u8delete <Bucket> <M3u8Key> [<IsPrivate>]", "Delete m3u8 playlist and the slices it references"},
 	"buckets":       []string{"qshell [-d] buckets", "Get all buckets of the account"},
 	"domains":       []string{"qshell [-d] domains <Bucket>", "Get all domains of the bucket"},
+	"cdnwho":        []string{"qshell [-d] cdnwho <Ip>", "Get the cdn supplier of the ip"},
+	"regionip":      []string{"qshell [-d] regionip <Cname> <Isp> <Province>", "Get the regional ips of cname"},
 }
 
 func Version() {

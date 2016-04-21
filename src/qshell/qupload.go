@@ -42,6 +42,7 @@ Config file like:
 	"skip_file_prefixes"	:	"IMG_",
 	"skip_path_prefixes"	:	"tmp/,bin/,obj/",
 	"skip_suffixes"			:	".exe,.obj,.class",
+	"skip_fixed_strings"    :   ".svn,.git",
 	"up_host"				:	"http://upload.qiniu.com",
 	"zone"					:	"bc",
 	"bind_up_ip"			:	"",

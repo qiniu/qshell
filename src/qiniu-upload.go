@@ -73,6 +73,7 @@ func ResumablePut(bucket, key, localFile, mimeType, upHost string, overwrite boo
 
 	mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 	policy := rs.PutPolicy{}
+	policy.Expires = 3600 * 24 * 5
 
 	if overwrite {
 		policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
