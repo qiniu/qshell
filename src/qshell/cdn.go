@@ -26,9 +26,9 @@ func BatchRefresh(client *rs.Client, urls []string) (err error) {
 }
 
 type CdnIpInfo struct {
-	LineCname string `json:"LineCname"`
-	CdnInfo   string `json:"cdninfo"`
-	IpAddress string `json:"ipaddress"`
+	LineCname []string `json:"LineCname"`
+	CdnInfo   string   `json:"cdninfo"`
+	IpAddress string   `json:"ipaddress"`
 }
 
 func GetCdnSupplierOfIp(client *rs.Client, ip string) (cdnInfo CdnIpInfo, err error) {
