@@ -1,3 +1,7 @@
+#1.7.6
+1. 添加`cdnwho`指令，可以根据IP地址查询出对应的CDN厂商信息
+2. 添加`regionip`指令，可以根据地区和运营商查询CDN域名解析的IP列表
+
 #1.7.5
 1. 为`qupload`添加`check_hash`参数，默认在`check_exists`情况下不进行hash匹配，节约同步时间
 2. 为`qupload`添加`check_size`参数，默认在`check_exists`情况下如果不进行hash匹配，可以启用文件大小匹配，做简单匹配，节约同步时间的同时，检测文件是否变化
