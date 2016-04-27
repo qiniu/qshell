@@ -86,6 +86,7 @@ qshell account
 |m3u8delete|根据流媒体播放列表文件删除七牛空间中的流媒体切片|[文档](http://github.com/jemygraw/qshell/wiki/m3u8delete)|
 |buckets|获取当前账号下所有的空间名称|[文档](http://github.com/jemygraw/qshell/wiki/buckets)|
 |domains|获取指定空间的所有关联域名|[文档](http://github.com/jemygraw/qshell/wiki/domains)|
+|cdnwho|根据IP地址查询对应的CDN厂商信息，可以用来做域名解析分析|[文档](http://github.com/jemygraw/qshell/wiki/cdnwho)|
 
 ##编译
 1. 如果是编译本地平台的可执行程序，使用`src`目录下面的`build.sh`脚本即可。
