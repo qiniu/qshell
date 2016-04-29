@@ -5,6 +5,8 @@ import (
 	"qshell"
 )
 
+var ForceMode bool
+
 type CliFunc func(cmd string, params ...string)
 
 var accountS = qshell.Account{}

@@ -2,14 +2,13 @@ package main
 
 import (
 	"cli"
+	"flag"
 	"fmt"
 	"os"
 	"qiniu/log"
 	"qiniu/rpc"
 	"runtime"
 )
-
-var debugMode = false
 
 var supportedCmds = map[string]cli.CliFunc{
 	"account":       cli.Account,
@@ -69,45 +68,59 @@ func main() {
 	rpc.UserAgent = cli.UserAgent()
 
 	//parse command
-	args := os.Args
-	argc := len(args)
 	log.SetOutputLevel(log.Linfo)
 	log.SetOutput(os.Stdout)
-	if argc > 1 {
-		cmd := ""
-		params := []string{}
-		option := args[1]
-		if option == "-d" {
-			if argc > 2 {
-				cmd = args[2]
-				if argc > 3 {
-					params = args[3:]
-				}
-			}
-			log.SetOutputLevel(log.Ldebug)
-		} else if option == "-v" {
-			cli.Version()
-			return
-		} else if option == "-h" {
-			cli.Help("help")
-			return
-		} else {
-			cmd = args[1]
-			if argc > 2 {
-				params = args[2:]
-			}
-		}
-		if cmd == "" {
-			fmt.Println("Error: no subcommand specified")
-			return
-		}
 
-		if cliFunc, ok := supportedCmds[cmd]; ok {
-			cliFunc(cmd, params...)
-		} else {
-			fmt.Println(fmt.Sprintf("Error: unknown cmd `%s`", cmd))
-		}
-	} else {
+	if len(os.Args) <= 1 {
 		fmt.Println("Use help or help [cmd1 [cmd2 [cmd3 ...]]] to see supported commands.")
+		return
 	}
+
+	//flag
+	var debugMode bool
+	var forceMode bool
+	var helpMode bool
+	var versionMode bool
+
+	flag.BoolVar(&debugMode, "d", false, "debug mode")
+	flag.BoolVar(&forceMode, "f", false, "force mode")
+	flag.BoolVar(&helpMode, "h", false, "show help")
+	flag.BoolVar(&versionMode, "v", false, "show version")
+
+	flag.Parse()
+
+	if helpMode {
+		cli.Help("help")
+		return
+	}
+
+	if versionMode {
+		cli.Version()
+		return
+	}
+
+	if debugMode {
+		log.SetOutputLevel(log.Ldebug)
+	}
+
+	if forceMode {
+		cli.ForceMode = true
+	}
+
+	args := flag.Args()
+
+	cmd := args[0]
+	params := args[1:]
+
+	if cmd == "" {
+		fmt.Println("Error: no subcommand specified")
+		return
+	}
+
+	if cliFunc, ok := supportedCmds[cmd]; ok {
+		cliFunc(cmd, params...)
+	} else {
+		fmt.Println(fmt.Sprintf("Error: unknown cmd `%s`", cmd))
+	}
+
 }
