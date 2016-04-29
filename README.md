@@ -11,7 +11,7 @@ qshell是利用[七牛文档上公开的API](http://d.qiniu.com)实现的一个�
 
 |版本     |支持平台|链接|更新日志|
 |--------|---------|----|------|
-|qshell v1.7.6|Linux (32, 64位，arm平台), Windows(32, 64位), Mac OSX(32, 64位)|[下载](http://devtools.qiniu.com/qshell-v1.7.6.zip)|[查看](CHANGELOG.md)|
+|qshell v1.7.7|Linux (32, 64位，arm平台), Windows(32, 64位), Mac OSX(32, 64位)|[下载](http://devtools.qiniu.com/qshell-v1.7.7.zip)|[查看](CHANGELOG.md)|
 
 
 **备注**
@@ -38,6 +38,16 @@ qshell account
 ```
 上面的命令会输出当前你设置好的`AccessKey`和`SecretKey`。
 接下来，我们就可以放心地使用七牛的API功能了。
+
+###选项
+可用的选项参数如下：
+
+|参数|描述|
+|----|----|
+|-f|设置命令行的交互模式，如果指定这个选项，那么为不交互|
+|-d|设置是否输出DEBUG日志，如果指定这个选项，则输出DEBUG日志|
+|-h|打印命令列表帮助信息|
+|-v|打印工具版本|
 
 ###详解
 
