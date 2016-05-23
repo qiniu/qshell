@@ -25,11 +25,11 @@ func GetCdnSupplierOfIp(cmd string, params ...string) {
 		if err != nil {
 			log.Error("Get cdn supplier of ip error,", err)
 		} else {
-			for _, cname := range cdnInfo.LineCname {
-				fmt.Println(cname)
-			}
+			//for _, cname := range cdnInfo.LineCname {
+			//	fmt.Println(cname)
+			//}
 			fmt.Println(cdnInfo.CdnInfo)
-			fmt.Println(cdnInfo.IpAddress)
+			//fmt.Println(cdnInfo.IpAddress)
 		}
 	} else {
 		CmdHelp(cmd)

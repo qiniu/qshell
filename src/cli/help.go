@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v1.7.7"
+var version = "v1.7.8"
 
 var optionDocs = map[string]string{
 	"-d": "Show debug message",
@@ -106,7 +106,8 @@ var cmdDocs = map[string][]string{
 	"privateurl":    []string{"qshell privateurl <PublicUrl> [<Deadline>]", "Create private resource access url"},
 	"saveas":        []string{"qshell saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>", "Create a resource access url with fop and saveas"},
 	"reqid":         []string{"qshell reqid <ReqIdToDecode>", "Decode a qiniu reqid"},
-	"m3u8delete":    []string{"qshell m3u8delete <Bucket> <M3u8Key> [<IsPrivate>]", "Delete m3u8 playlist and the slices it references"},
+	"m3u8delete":    []string{"qshell m3u8delete <Bucket> <M3u8Key>", "Delete m3u8 playlist and the slices it references"},
+	"m3u8replace":   []string{"qshell m3u8replace <Bucket> <M3u8Key> [<NewDomain>]", "Replace m3u8 domain in the playlist"},
 	"buckets":       []string{"qshell buckets", "Get all buckets of the account"},
 	"domains":       []string{"qshell domains <Bucket>", "Get all domains of the bucket"},
 	"cdnwho":        []string{"qshell cdnwho <Ip>", "Get the cdn supplier of the ip"},

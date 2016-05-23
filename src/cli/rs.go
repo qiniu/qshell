@@ -1003,13 +1003,9 @@ func Saveas(cmd string, params ...string) {
 }
 
 func M3u8Delete(cmd string, params ...string) {
-	if len(params) == 2 || len(params) == 3 {
+	if len(params) == 2 {
 		bucket := params[0]
 		m3u8Key := params[1]
-		isPrivate := false
-		if len(params) == 3 {
-			isPrivate, _ = strconv.ParseBool(params[2])
-		}
 
 		gErr := accountS.Get()
 		if gErr != nil {
@@ -1021,7 +1017,7 @@ func M3u8Delete(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
-		m3u8FileList, err := qshell.M3u8FileList(&mac, bucket, m3u8Key, isPrivate)
+		m3u8FileList, err := qshell.M3u8FileList(&mac, bucket, m3u8Key)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -1046,6 +1042,41 @@ func M3u8Delete(cmd string, params ...string) {
 			}
 		}
 		fmt.Println("All deleted!")
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func M3u8Replace(cmd string, params ...string) {
+	if len(params) == 2 || len(params) == 3 {
+		bucket := params[0]
+		m3u8Key := params[1]
+		var newDomain string
+		if len(params) == 3 {
+			newDomain = strings.TrimRight(params[2], "/")
+		}
+
+		gErr := accountS.Get()
+		if gErr != nil {
+			fmt.Println(gErr)
+			return
+		}
+
+		mac := digest.Mac{
+			accountS.AccessKey,
+			[]byte(accountS.SecretKey),
+		}
+		err := qshell.M3u8ReplaceDomain(&mac, bucket, m3u8Key, newDomain)
+		if err != nil {
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Println("m3u8 replace domain error,", v.Err)
+			} else {
+				fmt.Println("m3u8 replace domain error,", err)
+			}
+			return
+		} else {
+			fmt.Println("Done!")
+		}
 	} else {
 		CmdHelp(cmd)
 	}
