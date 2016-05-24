@@ -857,7 +857,7 @@ func BatchRefresh(cmd string, params ...string) {
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(urlListFile)
 		if err != nil {
-			fmt.Println("Open url list file error", err)
+			fmt.Println("Open url list file error,", err)
 			return
 		}
 		defer fp.Close()
@@ -891,7 +891,7 @@ func BatchRefresh(cmd string, params ...string) {
 func batchRefresh(client *rs.Client, urls []string) {
 	err := qshell.BatchRefresh(client, urls)
 	if err != nil {
-		fmt.Println("batch refresh error", err)
+		fmt.Println("Batch refresh error,", err)
 	}
 }
 

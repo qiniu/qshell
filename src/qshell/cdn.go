@@ -9,6 +9,10 @@ import (
 	"qiniu/api.v6/rs"
 )
 
+type BatchRefreshRequest struct {
+	Urls []string `json:"urls"`
+}
+
 func BatchRefresh(client *rs.Client, urls []string) (err error) {
 	if len(urls) == 0 || len(urls) > 100 {
 		err = errors.New("url count invalid, should between [1, 100]")
@@ -17,11 +21,11 @@ func BatchRefresh(client *rs.Client, urls []string) (err error) {
 
 	postUrl := "http://fusion.qiniuapi.com/refresh"
 
-	postData := map[string][]string{
-		"urls": urls,
+	batchRefreshReq := BatchRefreshRequest{
+		Urls: urls,
 	}
 
-	err = client.Conn.CallWithForm(nil, nil, postUrl, postData)
+	err = client.Conn.CallWithJson(nil, nil, postUrl, batchRefreshReq)
 	return
 }
 

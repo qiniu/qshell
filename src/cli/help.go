@@ -58,6 +58,7 @@ var cmds = []string{
 	"saveas",
 	"reqid",
 	"m3u8delete",
+	"m3u8replace",
 	"buckets",
 	"domains",
 	"cdnwho",
