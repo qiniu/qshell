@@ -49,12 +49,18 @@ func QiniuUpload(cmd string, params ...string) {
 			return
 		}
 		//upload
-		if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT ||
-			threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
+
+		if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT || threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
 			fmt.Printf("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
 				qshell.MIN_UPLOAD_THREAD_COUNT, qshell.MAX_UPLOAD_THREAD_COUNT)
-			threadCount = qshell.MIN_UPLOAD_THREAD_COUNT
+
+			if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT {
+				threadCount = qshell.MIN_UPLOAD_THREAD_COUNT
+			} else if threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
+				threadCount = qshell.MAX_UPLOAD_THREAD_COUNT
+			}
 		}
+
 		qshell.QiniuUpload(int(threadCount), &uploadConfig)
 	} else {
 		CmdHelp(cmd)

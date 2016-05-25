@@ -49,6 +49,7 @@ type DownloadConfig struct {
 	Prefix    string `json:"prefix,omitempty"`
 	Suffix    string `json:"suffix,omitempty"`
 	Referer   string `json:"referer,omitemtpy"`
+	Zone      string `json:"zone,omitempty"`
 }
 
 func QiniuDownload(threadCount int, downloadConfigFile string) {
@@ -70,6 +71,18 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 		log.Error("Parse download config error", cnfErr)
 		return
 	}
+
+	//set default hosts
+	switch downConfig.Zone {
+	case ZoneAWS:
+		SetZone(ZoneAWSConfig)
+	case ZoneBC:
+		SetZone(ZoneBCConfig)
+	default:
+		SetZone(ZoneNBConfig)
+	}
+
+	//create local list file
 	cnfJson, _ := json.Marshal(&downConfig)
 	jobId := fmt.Sprintf("%x", md5.Sum(cnfJson))
 	jobListName := fmt.Sprintf("%s.list.txt", jobId)
