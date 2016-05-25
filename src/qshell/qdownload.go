@@ -29,8 +29,9 @@ import (
 	"secret_key"	:	"<Your SecretKey>",
 	"is_private"	:	false,
 	"prefix"		:	"demo/",
-	"suffix"		: ".mp4",
-	"referer"		: ""
+	"suffix"		: 	".mp4",
+	"referer"		: 	""
+	"zone"			:	""
 }
 */
 
