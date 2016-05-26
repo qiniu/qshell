@@ -71,7 +71,7 @@ const (
 )
 
 type UploadInfo struct {
-	TotalFileCount int64 `json:"total_file_count"`
+	TotalFileCount int `json:"total_file_count"`
 }
 
 type UploadConfig struct {
@@ -112,6 +112,16 @@ type UploadConfig struct {
 var upSettings = rio.Settings{
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  7,
+}
+
+var uploadTasks chan func()
+var initOnce sync.Once
+
+func doUpload(tasks chan func()) {
+	for {
+		task := <-tasks
+		task()
+	}
 }
 
 func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
@@ -169,7 +179,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 	//find the local file list, by specified or by config
 	var cacheResultName string
-	var totalFileCount int64
+	var totalFileCount int
 	_, fStatErr := os.Stat(uploadConfig.FileList)
 	if uploadConfig.FileList != "" && fStatErr == nil {
 		//use specified file list
@@ -232,6 +242,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				}()
 			} else {
 				log.Warnf("Open local cached count file error %s,", rErr)
+				totalFileCount = getFileLineCount(cacheResultName)
 			}
 		}
 	}
@@ -263,9 +274,16 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		Sync: true,
 	}
 
-	upWorkGroup := sync.WaitGroup{}
-	upCounter := 0
-	threadThreshold := threadCount + 1
+	//init wait group
+	upWaitGroup := sync.WaitGroup{}
+	upWaitGroup.Add(totalFileCount)
+
+	initOnce.Do(func() {
+		uploadTasks = make(chan func(), threadCount)
+		for i := 0; i < threadCount; i++ {
+			go doUpload(uploadTasks)
+		}
+	})
 
 	//chunk upload threshold
 	putThreshold := DEFAULT_PUT_THRESHOLD
@@ -484,16 +502,9 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			}
 		}
 
-		//worker
-		upCounter += 1
-		if upCounter%threadThreshold == 0 {
-			upWorkGroup.Wait()
-		}
-		upWorkGroup.Add(1)
-
 		//start to upload
-		go func() {
-			defer upWorkGroup.Done()
+		uploadTasks <- func() {
+			defer upWaitGroup.Done()
 
 			policy := rs.PutPolicy{}
 			policy.Scope = uploadConfig.Bucket
@@ -559,10 +570,10 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					}
 				}
 			}
-		}()
-
+		}
 	}
-	upWorkGroup.Wait()
+
+	//upWaitGroup.Wait()
 
 	fmt.Println()
 	fmt.Println("----------Upload Result----------")
@@ -575,7 +586,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 }
 
-func getFileLineCount(filePath string) (totalCount int64) {
+func getFileLineCount(filePath string) (totalCount int) {
 	fp, openErr := os.Open(filePath)
 	if openErr != nil {
 		return

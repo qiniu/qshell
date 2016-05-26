@@ -13,7 +13,7 @@ import (
 type DirCache struct {
 }
 
-func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileCount int64) {
+func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileCount int) {
 	cacheResultFileH, err := os.Create(cacheResultFile)
 	if err != nil {
 		log.Errorf("Failed to open cache file `%s`", cacheResultFile)
