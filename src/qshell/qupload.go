@@ -276,7 +276,6 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 	//init wait group
 	upWaitGroup := sync.WaitGroup{}
-	upWaitGroup.Add(totalFileCount)
 
 	initOnce.Do(func() {
 		uploadTasks = make(chan func(), threadCount)
@@ -503,6 +502,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		}
 
 		//start to upload
+		upWaitGroup.Add(1)
 		uploadTasks <- func() {
 			defer upWaitGroup.Done()
 
@@ -540,6 +540,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				} else {
 					os.Remove(progressFpath)
 					atomic.AddInt64(&successFileCount, 1)
+					log.Infof("Put file `%s` => `%s` success", localFilePath, uploadFileKey)
 					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
 						log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
@@ -564,6 +565,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					}
 				} else {
 					atomic.AddInt64(&successFileCount, 1)
+					log.Infof("Put file `%s` => `%s` success", localFilePath, uploadFileKey)
 					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
 						log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
@@ -573,7 +575,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		}
 	}
 
-	//upWaitGroup.Wait()
+	upWaitGroup.Wait()
 
 	fmt.Println()
 	fmt.Println("----------Upload Result----------")
