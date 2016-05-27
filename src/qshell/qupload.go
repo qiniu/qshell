@@ -115,7 +115,7 @@ var upSettings = rio.Settings{
 }
 
 var uploadTasks chan func()
-var initOnce sync.Once
+var initUpOnce sync.Once
 
 func doUpload(tasks chan func()) {
 	for {
@@ -277,7 +277,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	//init wait group
 	upWaitGroup := sync.WaitGroup{}
 
-	initOnce.Do(func() {
+	initUpOnce.Do(func() {
 		uploadTasks = make(chan func(), threadCount)
 		for i := 0; i < threadCount; i++ {
 			go doUpload(uploadTasks)

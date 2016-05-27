@@ -53,6 +53,16 @@ type DownloadConfig struct {
 	Zone      string `json:"zone,omitempty"`
 }
 
+var downloadTasks chan func()
+var initDownOnce sync.Once
+
+func doDownload(tasks chan func()) {
+	for {
+		task := <-tasks
+		task()
+	}
+}
+
 func QiniuDownload(threadCount int, downloadConfigFile string) {
 	timeStart := time.Now()
 	cnfFp, openErr := os.Open(downloadConfigFile)
@@ -94,7 +104,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	bLister := ListBucket{
 		Account: acct,
 	}
-	log.Info("List bucket...")
+	log.Info("List bucket ...")
 	listErr := bLister.List(downConfig.Bucket, downConfig.Prefix, jobListName)
 	if listErr != nil {
 		log.Error("List bucket error", listErr)
@@ -108,7 +118,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	defer listFp.Close()
 	listScanner := bufio.NewScanner(listFp)
 	listScanner.Split(bufio.ScanLines)
-	downWorkGroup := sync.WaitGroup{}
+	downWaitGroup := sync.WaitGroup{}
 
 	totalCount := 0
 	existsCount := 0
@@ -116,12 +126,15 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	var successCount int32 = 0
 	var failCount int32 = 0
 
-	threadThreshold := threadCount + 1
+	initDownOnce.Do(func() {
+		downloadTasks = make(chan func(), threadCount)
+		for i := 0; i < threadCount; i++ {
+			go doUpload(downloadTasks)
+		}
+	})
+
 	for listScanner.Scan() {
 		totalCount += 1
-		if totalCount%threadThreshold == 0 {
-			downWorkGroup.Wait()
-		}
 		line := strings.TrimSpace(listScanner.Text())
 		items := strings.Split(line, "\t")
 		if len(items) > 2 {
@@ -132,23 +145,24 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 			}
 			fileSize, _ := strconv.ParseInt(items[1], 10, 64)
 			//not backup yet
+
 			if !checkLocalDuplicate(downConfig.DestDir, fileKey, fileSize) {
-				downWorkGroup.Add(1)
-				go func() {
-					defer downWorkGroup.Done()
+				downWaitGroup.Add(1)
+				downloadTasks <- func() {
+					defer downWaitGroup.Done()
 					downErr := downloadFile(downConfig, fileKey)
 					if downErr != nil {
 						atomic.AddInt32(&failCount, 1)
 					} else {
 						atomic.AddInt32(&successCount, 1)
 					}
-				}()
+				}
 			} else {
 				existsCount += 1
 			}
 		}
 	}
-	downWorkGroup.Wait()
+	downWaitGroup.Wait()
 
 	log.Info("-------Download Result-------")
 	log.Info("Total:\t", totalCount)
