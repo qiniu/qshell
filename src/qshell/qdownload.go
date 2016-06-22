@@ -129,7 +129,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	initDownOnce.Do(func() {
 		downloadTasks = make(chan func(), threadCount)
 		for i := 0; i < threadCount; i++ {
-			go doUpload(downloadTasks)
+			go doDownload(downloadTasks)
 		}
 	})
 
