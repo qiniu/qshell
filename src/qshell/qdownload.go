@@ -224,6 +224,11 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
+		contentLengthStr := resp.Header.Get("Content-Length")
+		contentLength, pErr := strconv.ParseInt(contentLengthStr, 10, 64)
+		if pErr != nil {
+			contentLength = -1
+		}
 		localFp, openErr := os.Create(localFilePath)
 		if openErr != nil {
 			err = openErr
@@ -231,10 +236,14 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 			return
 		}
 		defer localFp.Close()
-		_, cpErr := io.Copy(localFp, resp.Body)
+		cpCnt, cpErr := io.Copy(localFp, resp.Body)
 		if cpErr != nil {
 			err = cpErr
 			log.Error("Download", fileKey, "failed", cpErr.Error())
+			return
+		} else if cpCnt != contentLength {
+			errMsg := fmt.Sprintf("download size not match %d != %d", cpCnt, contentLength)
+			err = errors.New(errMsg)
 			return
 		}
 	} else {

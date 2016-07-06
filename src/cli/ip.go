@@ -51,7 +51,8 @@ func IpQuery(cmd string, params ...string) {
 			if err != nil {
 				log.Error("Query ip info failed for", ip, "due to", err)
 			} else {
-				fmt.Println(fmt.Sprintf("Ip: %-20s => %s", ip, ipInfo))
+				//fmt.Println(fmt.Sprintf("Ip: %-20s => %s", ip, ipInfo))
+				fmt.Println(fmt.Sprintf("%s\t%s", ip, ipInfo.String()))
 			}
 			<-time.After(time.Second * 1)
 		}
