@@ -1,4 +1,5 @@
-export GOPATH=$GOPATH:/Users/jemy/QiniuCloud/Projects/qshell
+DIR=$(cd ../; pwd)
+export GOPATH=$GOPATH:$DIR
 GOOS=linux   GOARCH=386    go build -o ../bin/qshell_linux_386     main.go
 GOOS=linux   GOARCH=amd64  go build -o ../bin/qshell_linux_amd64   main.go
 GOOS=linux   GOARCH=arm    go build -o ../bin/qshell_linux_arm     main.go
