@@ -10,14 +10,15 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"qiniu/api.v6/auth/digest"
-	rio "qiniu/api.v6/resumable/io"
-	"qiniu/api.v6/rs"
 	"qiniu/log"
 	"qiniu/rpc"
 	"strconv"
 	"strings"
 	"time"
+
+	"qiniu/api.v6/auth/digest"
+	rio "qiniu/api.v6/resumable/io"
+	"qiniu/api.v6/rs"
 )
 
 //range get and chunk upload
@@ -25,6 +26,7 @@ import (
 const (
 	RETRY_MAX_TIMES = 5
 	RETRY_INTERVAL  = time.Second * 1
+	HTTP_TIMEOUT    = time.Second * 10
 )
 
 type SyncProgress struct {
@@ -197,7 +199,9 @@ func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int
 	dReq.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", rangeStartOffset, rangeEndOffset))
 
 	//get resp
-	dResp, dRespErr := http.DefaultClient.Do(dReq)
+	client := http.DefaultClient
+	client.Timeout = time.Duration(HTTP_TIMEOUT)
+	dResp, dRespErr := client.Do(dReq)
 	if dRespErr != nil {
 		err = fmt.Errorf("Get response error, %s", dRespErr.Error())
 		return
