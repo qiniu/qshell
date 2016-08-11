@@ -3,6 +3,7 @@
 *.a
 *.so
 src/test/
+src/.qshell
 # Folders
 _obj
 _test
