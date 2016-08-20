@@ -242,7 +242,7 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 			log.Error("Download", fileKey, "failed", cpErr.Error())
 			return
 		} else if cpCnt != contentLength {
-			errMsg := fmt.Sprintf("download size not match %d != %d", cpCnt, contentLength)
+			errMsg := fmt.Sprintf("Download size not match %d != %d", cpCnt, contentLength)
 			err = errors.New(errMsg)
 			return
 		}
