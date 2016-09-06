@@ -97,7 +97,6 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	}
 
 	ioProxyHost := conf.IO_HOST
-	reqHeaderHost := strings.TrimPrefix(downConfig.Domain, "http://")
 
 	//create local list file
 	cnfJson, _ := json.Marshal(&downConfig)
@@ -156,7 +155,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 				downWaitGroup.Add(1)
 				downloadTasks <- func() {
 					defer downWaitGroup.Done()
-					downErr := downloadFile(downConfig, fileKey, ioProxyHost, reqHeaderHost)
+					downErr := downloadFile(downConfig, fileKey, ioProxyHost)
 					if downErr != nil {
 						atomic.AddInt32(&failCount, 1)
 					} else {
@@ -193,7 +192,7 @@ func checkLocalDuplicate(destDir string, fileKey string, fileSize int64) bool {
 	return dup
 }
 
-func downloadFile(downConfig DownloadConfig, fileKey, ioProxyHost, reqHeaderHost string) (err error) {
+func downloadFile(downConfig DownloadConfig, fileKey, ioProxyHost string) (err error) {
 	localFilePath := filepath.Join(downConfig.DestDir, fileKey)
 	ldx := strings.LastIndex(localFilePath, string(os.PathSeparator))
 	if ldx != -1 {
@@ -206,7 +205,16 @@ func downloadFile(downConfig DownloadConfig, fileKey, ioProxyHost, reqHeaderHost
 		}
 	}
 	log.Info("Downloading", fileKey, "=>", localFilePath, "...")
-	downUrl := strings.Join([]string{ioProxyHost, fileKey}, "/")
+
+	var reqHost string
+	schemaIndex := strings.Index(downConfig.Domain, "://")
+	if schemaIndex != -1 {
+		reqHost = downConfig.Domain[schemaIndex+3:]
+	} else {
+		reqHost = downConfig.Domain
+	}
+
+	downUrl := fmt.Sprintf("http://%s/%s", reqHost, fileKey)
 	if downConfig.IsPrivate {
 		now := time.Now().Add(time.Second * 3600 * 24)
 		downUrl = fmt.Sprintf("%s?e=%d", downUrl, now.Unix())
@@ -215,6 +223,9 @@ func downloadFile(downConfig DownloadConfig, fileKey, ioProxyHost, reqHeaderHost
 		downUrl = fmt.Sprintf("%s&token=%s", downUrl, token)
 	}
 
+	//use proxy
+	downUrl = strings.Replace(downUrl, fmt.Sprintf("http://%s", reqHost), ioProxyHost, -1)
+	//new request
 	req, reqErr := http.NewRequest("GET", downUrl, nil)
 	if reqErr != nil {
 		err = reqErr
@@ -224,7 +235,8 @@ func downloadFile(downConfig DownloadConfig, fileKey, ioProxyHost, reqHeaderHost
 	if downConfig.Referer != "" {
 		req.Header.Add("Referer", downConfig.Referer)
 	}
-	req.Host = reqHeaderHost
+	//set request host
+	req.Host = reqHost
 	resp, respErr := http.DefaultClient.Do(req)
 	if respErr != nil {
 		err = respErr
@@ -233,11 +245,6 @@ func downloadFile(downConfig DownloadConfig, fileKey, ioProxyHost, reqHeaderHost
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		contentLengthStr := resp.Header.Get("Content-Length")
-		contentLength, pErr := strconv.ParseInt(contentLengthStr, 10, 64)
-		if pErr != nil {
-			contentLength = -1
-		}
 		localFp, openErr := os.Create(localFilePath)
 		if openErr != nil {
 			err = openErr
@@ -245,14 +252,10 @@ func downloadFile(downConfig DownloadConfig, fileKey, ioProxyHost, reqHeaderHost
 			return
 		}
 		defer localFp.Close()
-		cpCnt, cpErr := io.Copy(localFp, resp.Body)
+		_, cpErr := io.Copy(localFp, resp.Body)
 		if cpErr != nil {
 			err = cpErr
 			log.Error("Download", fileKey, "failed", cpErr.Error())
-			return
-		} else if cpCnt != contentLength {
-			errMsg := fmt.Sprintf("Download size not match %d != %d", cpCnt, contentLength)
-			err = errors.New(errMsg)
 			return
 		}
 	} else {
