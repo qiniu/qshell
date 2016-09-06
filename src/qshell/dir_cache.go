@@ -30,7 +30,13 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 			retErr = err
 		} else {
 			if !fi.IsDir() {
-				relPath := strings.TrimPrefix(strings.TrimPrefix(path, cacheRootPath), string(os.PathSeparator))
+				var relPath string
+				if cacheRootPath == "." {
+					relPath = path
+				} else {
+					relPath = strings.TrimPrefix(strings.TrimPrefix(path, cacheRootPath), string(os.PathSeparator))
+				}
+
 				fsize := fi.Size()
 				//Unit is 100ns
 				flmd := fi.ModTime().UnixNano() / 100
