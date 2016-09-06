@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/conf"
 	"qiniu/log"
 	"strconv"
 	"strings"
@@ -89,9 +90,14 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 		SetZone(ZoneAWSConfig)
 	case ZoneBC:
 		SetZone(ZoneBCConfig)
+	case ZoneNA0:
+		SetZone(ZoneNA0Config)
 	default:
 		SetZone(ZoneNBConfig)
 	}
+
+	ioProxyHost := conf.IO_HOST
+	reqHeaderHost := strings.TrimPrefix(downConfig.Domain, "http://")
 
 	//create local list file
 	cnfJson, _ := json.Marshal(&downConfig)
@@ -150,7 +156,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 				downWaitGroup.Add(1)
 				downloadTasks <- func() {
 					defer downWaitGroup.Done()
-					downErr := downloadFile(downConfig, fileKey)
+					downErr := downloadFile(downConfig, fileKey, ioProxyHost, reqHeaderHost)
 					if downErr != nil {
 						atomic.AddInt32(&failCount, 1)
 					} else {
@@ -187,7 +193,7 @@ func checkLocalDuplicate(destDir string, fileKey string, fileSize int64) bool {
 	return dup
 }
 
-func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
+func downloadFile(downConfig DownloadConfig, fileKey, ioProxyHost, reqHeaderHost string) (err error) {
 	localFilePath := filepath.Join(downConfig.DestDir, fileKey)
 	ldx := strings.LastIndex(localFilePath, string(os.PathSeparator))
 	if ldx != -1 {
@@ -200,7 +206,7 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 		}
 	}
 	log.Info("Downloading", fileKey, "=>", localFilePath, "...")
-	downUrl := strings.Join([]string{downConfig.Domain, fileKey}, "/")
+	downUrl := strings.Join([]string{ioProxyHost, fileKey}, "/")
 	if downConfig.IsPrivate {
 		now := time.Now().Add(time.Second * 3600 * 24)
 		downUrl = fmt.Sprintf("%s?e=%d", downUrl, now.Unix())
@@ -215,7 +221,10 @@ func downloadFile(downConfig DownloadConfig, fileKey string) (err error) {
 		log.Error("New request", fileKey, "failed by url", downUrl, reqErr.Error())
 		return
 	}
-	req.Header.Add("Referer", downConfig.Referer)
+	if downConfig.Referer != "" {
+		req.Header.Add("Referer", downConfig.Referer)
+	}
+	req.Host = reqHeaderHost
 	resp, respErr := http.DefaultClient.Do(req)
 	if respErr != nil {
 		err = respErr
