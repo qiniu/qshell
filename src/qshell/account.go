@@ -98,6 +98,8 @@ func (this *Account) Get() (err error) {
 		SetZone(ZoneAWSConfig)
 	case ZoneBC:
 		SetZone(ZoneBCConfig)
+	case ZoneNA0:
+		SetZone(ZoneNA0Config)
 	default:
 		SetZone(ZoneNBConfig)
 	}

@@ -20,6 +20,7 @@ const (
 	ZoneNB  = "nb"
 	ZoneBC  = "bc"
 	ZoneAWS = "aws"
+	ZoneNA0 = "na0"
 )
 
 //zone all defaults to the service source site
@@ -48,6 +49,14 @@ var ZoneAWSConfig = ZoneConfig{
 	ApiHost:   "http://api.gdipper.com",
 }
 
+var ZoneNA0Config = ZoneConfig{
+	UpHost:    "http://upload-na0.qiniu.com",
+	RsHost:    "http://rs-na0.qbox.me",
+	RsfHost:   "http://rsf-na0.qbox.me",
+	IovipHost: "http://iovip-na0.qbox.me",
+	ApiHost:   "http://api-na0.qiniu.com",
+}
+
 func SetZone(zoneConfig ZoneConfig) {
 	conf.UP_HOST = zoneConfig.UpHost
 	conf.RS_HOST = zoneConfig.RsHost
@@ -58,7 +67,7 @@ func SetZone(zoneConfig ZoneConfig) {
 
 func IsValidZone(zone string) (valid bool) {
 	switch zone {
-	case ZoneNB, ZoneBC, ZoneAWS:
+	case ZoneNB, ZoneBC, ZoneAWS, ZoneNA0:
 		valid = true
 	default:
 		valid = false

@@ -66,7 +66,7 @@ var cmds = []string{
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell account [<AccessKey> <SecretKey>] [<Zone>]", "Get/Set AccessKey and SecretKey and Zone"},
-	"zone":          []string{"qshell zone [<Zone>]", "Switch the zone, [nb,bc,aws]"},
+	"zone":          []string{"qshell zone [<Zone>]", "Switch the zone, [nb, bc, na0, aws]"},
 	"dircache":      []string{"qshell dircache <DirCacheRootPath> <DirCacheResultFile>", "Cache the directory structure of a file path"},
 	"listbucket":    []string{"qshell listbucket <Bucket> [<Prefix>] <ListBucketResultFile>", "List all the files in the bucket by prefix"},
 	"alilistbucket": []string{"qshell alilistbucket <DataCenter> <Bucket> <AccessKeyId> <AccesskeySecret> [Prefix] <ListBucketResultFile>", "List all the file in the bucket of aliyun oss by prefix"},
