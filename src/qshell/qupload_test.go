@@ -6,17 +6,19 @@ import (
 )
 
 func TestGetFileTotalCount(t *testing.T) {
-	fpath := "/Users/jemy/Temp/t.go"
+	fpath := "/Users/jemy/Worklab/qshelltest/qiniu.txt"
 	totalCount := getFileLineCount(fpath)
-	t.Log(totalCount)
+	if totalCount != 5 {
+		t.Fail()
+	}
 }
 
 func TestSimpleUpload(t *testing.T) {
 	uploadConfig := UploadConfig{
-		SrcDir:    "/Users/jemy/Temp7",
+		SrcDir:    os.Getenv("SrcDir"),
 		AccessKey: os.Getenv("AccessKey"),
 		SecretKey: os.Getenv("SecretKey"),
-		Bucket:    "if-pbl",
+		Bucket:    os.Getenv("Bucket"),
 	}
 
 	QiniuUpload(1, &uploadConfig)
@@ -24,11 +26,11 @@ func TestSimpleUpload(t *testing.T) {
 
 func TestSimpleUploadWithKeyPrefix(t *testing.T) {
 	uploadConfig := UploadConfig{
-		SrcDir:    "/Users/jemy/Temp7",
+		SrcDir:    os.Getenv("SrcDir"),
 		AccessKey: os.Getenv("AccessKey"),
 		SecretKey: os.Getenv("SecretKey"),
-		Bucket:    "if-pbl",
-		KeyPrefix: "2016/03/07/",
+		Bucket:    os.Getenv("Bucket"),
+		KeyPrefix: os.Getenv("Prefix"),
 	}
 
 	QiniuUpload(1, &uploadConfig)
@@ -36,11 +38,11 @@ func TestSimpleUploadWithKeyPrefix(t *testing.T) {
 
 func TestSimpleUploadIgnoreDir(t *testing.T) {
 	uploadConfig := UploadConfig{
-		SrcDir:    "/Users/jemy/Temp7",
+		SrcDir:    os.Getenv("SrcDir"),
 		AccessKey: os.Getenv("AccessKey"),
 		SecretKey: os.Getenv("SecretKey"),
-		Bucket:    "if-pbl",
-		KeyPrefix: "2016/03/08/",
+		Bucket:    os.Getenv("Bucket"),
+		KeyPrefix: os.Getenv("Prefix"),
 		IgnoreDir: true,
 	}
 
@@ -49,10 +51,10 @@ func TestSimpleUploadIgnoreDir(t *testing.T) {
 
 func TestOverwriteUpload(t *testing.T) {
 	uploadConfig := UploadConfig{
-		SrcDir:      "/Users/jemy/Temp/test",
+		SrcDir:      os.Getenv("SrcDir"),
 		AccessKey:   os.Getenv("AccessKey"),
 		SecretKey:   os.Getenv("SecretKey"),
-		Bucket:      "if-pbl",
+		Bucket:      os.Getenv("Bucket"),
 		Overwrite:   true,
 		RescanLocal: true,
 	}
@@ -63,10 +65,10 @@ func TestOverwriteUpload(t *testing.T) {
 //use when files are delete from the buckets
 func TestCheckExistsUpload(t *testing.T) {
 	uploadConfig := UploadConfig{
-		SrcDir:      "/Users/jemy/Temp/test",
+		SrcDir:      os.Getenv("SrcDir"),
 		AccessKey:   os.Getenv("AccessKey"),
 		SecretKey:   os.Getenv("SecretKey"),
-		Bucket:      "if-pbl",
+		Bucket:      os.Getenv("Bucket"),
 		Overwrite:   true,
 		RescanLocal: true,
 		CheckExists: true,
@@ -76,12 +78,12 @@ func TestCheckExistsUpload(t *testing.T) {
 }
 
 func TestUploadWithFileList(t *testing.T) {
-	flist := "/Users/jemy/Temp/test/flist.txt"
+	flist := os.Getenv("SrcFileList")
 	uploadConfig := UploadConfig{
-		SrcDir:    "/Users/jemy/Temp/test",
+		SrcDir:    os.Getenv("SrcDir"),
 		AccessKey: os.Getenv("AccessKey"),
 		SecretKey: os.Getenv("SecretKey"),
-		Bucket:    "if-pbl",
+		Bucket:    os.Getenv("Bucket"),
 		FileList:  flist,
 	}
 
