@@ -296,6 +296,8 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		SetZone(ZoneAWSConfig)
 	case ZoneBC:
 		SetZone(ZoneBCConfig)
+	case ZoneHN:
+		SetZone(ZoneHNConfig)
 	case ZoneNA0:
 		SetZone(ZoneNA0Config)
 	default:

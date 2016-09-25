@@ -19,6 +19,7 @@ var (
 const (
 	ZoneNB  = "nb"
 	ZoneBC  = "bc"
+	ZoneHN  = "hn"
 	ZoneAWS = "aws"
 	ZoneNA0 = "na0"
 )
@@ -35,10 +36,18 @@ var ZoneNBConfig = ZoneConfig{
 
 var ZoneBCConfig = ZoneConfig{
 	UpHost:    "http://up-z1.qiniu.com",
-	RsHost:    "http://rs.qiniu.com",
+	RsHost:    "http://rs-z1.qiniu.com",
 	RsfHost:   "http://rsf-z1.qbox.me",
 	IovipHost: "http://iovip-z1.qbox.me",
 	ApiHost:   "http://api-z1.qiniu.com",
+}
+
+var ZoneHNConfig = ZoneConfig{
+	UpHost:    "http://up-z2.qiniu.com",
+	RsHost:    "http://rs-z2.qiniu.com",
+	RsfHost:   "http://rsf-z2.qbox.me",
+	IovipHost: "http://iovip-z2.qbox.me",
+	ApiHost:   "http://api-z2.qiniu.com",
 }
 
 var ZoneAWSConfig = ZoneConfig{
@@ -67,7 +76,7 @@ func SetZone(zoneConfig ZoneConfig) {
 
 func IsValidZone(zone string) (valid bool) {
 	switch zone {
-	case ZoneNB, ZoneBC, ZoneAWS, ZoneNA0:
+	case ZoneNB, ZoneBC, ZoneHN, ZoneAWS, ZoneNA0:
 		valid = true
 	default:
 		valid = false
