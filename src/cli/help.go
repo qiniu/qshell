@@ -6,9 +6,10 @@ import (
 	"runtime"
 )
 
-var version = "v1.8.1"
+var version = "v1.8.2"
 
 var optionDocs = map[string]string{
+	"-f": "Force batch operations",
 	"-d": "Show debug message",
 	"-v": "Show version",
 	"-h": "Show help",
