@@ -540,6 +540,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 				err := rio.PutFile(putClient, nil, &putRet, uploadFileKey, localFilePath, &putExtra)
 				if err != nil {
+					os.Remove(progressFpath)
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
 						log.Errorf("Put file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, pErr.Err)
