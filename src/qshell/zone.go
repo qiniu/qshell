@@ -66,7 +66,20 @@ var ZoneNA0Config = ZoneConfig{
 	ApiHost:   "http://api-na0.qiniu.com",
 }
 
-func SetZone(zoneConfig ZoneConfig) {
+func SetZone(zone string) {
+	var zoneConfig ZoneConfig
+	switch zone {
+	case ZoneAWS:
+		zoneConfig = ZoneAWSConfig
+	case ZoneBC:
+		zoneConfig = ZoneBCConfig
+	case ZoneHN:
+		zoneConfig = ZoneHNConfig
+	case ZoneNA0:
+		zoneConfig = ZoneNA0Config
+	default:
+		zoneConfig = ZoneNBConfig
+	}
 	conf.UP_HOST = zoneConfig.UpHost
 	conf.RS_HOST = zoneConfig.RsHost
 	conf.RSF_HOST = zoneConfig.RsfHost

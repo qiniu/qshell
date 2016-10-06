@@ -290,24 +290,13 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		putThreshold = uploadConfig.PutThreshold
 	}
 
+	//check & set zone, default nb
 	if uploadConfig.Zone != "" && !IsValidZone(uploadConfig.Zone) {
 		log.Errorf("Invalid zone setting `%s` in config file, upload halt", uploadConfig.Zone)
 		return
 	}
 
-	//check zone, default nb
-	switch uploadConfig.Zone {
-	case ZoneAWS:
-		SetZone(ZoneAWSConfig)
-	case ZoneBC:
-		SetZone(ZoneBCConfig)
-	case ZoneHN:
-		SetZone(ZoneHNConfig)
-	case ZoneNA0:
-		SetZone(ZoneNA0Config)
-	default:
-		SetZone(ZoneNBConfig)
-	}
+	SetZone(uploadConfig.Zone)
 
 	//use host if not empty, overwrite the default config
 	if uploadConfig.UpHost != "" {

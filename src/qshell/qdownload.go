@@ -84,24 +84,14 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 		return
 	}
 
+	//check & set zone, default nb
 	if downConfig.Zone != "" && !IsValidZone(downConfig.Zone) {
 		log.Errorf("Invalid zone setting `%s` in config file, download halt", downConfig.Zone)
 		return
 	}
 
 	//set default hosts
-	switch downConfig.Zone {
-	case ZoneAWS:
-		SetZone(ZoneAWSConfig)
-	case ZoneBC:
-		SetZone(ZoneBCConfig)
-	case ZoneHN:
-		SetZone(ZoneHNConfig)
-	case ZoneNA0:
-		SetZone(ZoneNA0Config)
-	default:
-		SetZone(ZoneNBConfig)
-	}
+	SetZone(downConfig.Zone)
 
 	ioProxyHost := conf.IO_HOST
 

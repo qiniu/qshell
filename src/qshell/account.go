@@ -93,16 +93,7 @@ func (this *Account) Get() (err error) {
 	}
 
 	//set default hosts
-	switch this.Zone {
-	case ZoneAWS:
-		SetZone(ZoneAWSConfig)
-	case ZoneBC:
-		SetZone(ZoneBCConfig)
-	case ZoneNA0:
-		SetZone(ZoneNA0Config)
-	default:
-		SetZone(ZoneNBConfig)
-	}
+	SetZone(this.Zone)
 
 	return
 }
