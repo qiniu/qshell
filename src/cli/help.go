@@ -41,7 +41,6 @@ var cmds = []string{
 	"batchcopy",
 	"batchmove",
 	"batchrename",
-	"batchrefresh",
 	"batchsign",
 	"checkqrsync",
 	"b64encode",
@@ -63,6 +62,8 @@ var cmds = []string{
 	"buckets",
 	"domains",
 	"cdnwho",
+	"cdnrefresh",
+	"cdnprefetch",
 	"regionip",
 }
 var cmdDocs = map[string][]string{
@@ -91,7 +92,6 @@ var cmdDocs = map[string][]string{
 	"batchcopy":     []string{"qshell batchcopy <SrcBucket> <DestBucket> <SrcDestKeyMapFile>", "Batch copy files from bucket to bucket"},
 	"batchmove":     []string{"qshell batchmove <SrcBucket> <DestBucket> <SrcDestKeyMapFile>", "Batch move files from bucket to bucket"},
 	"batchrename":   []string{"qshell batchrename <Bucket> <OldNewKeyMapFile>", "Batch rename files in the bucket"},
-	"batchrefresh":  []string{"qshell batchrefresh <UrlListFile>", "Batch refresh the cdn cache by the url list file"},
 	"batchsign":     []string{"qshell batchsign <UrlListFile> [<Deadline>]", "Batch create the private url from the public url list file"},
 	"checkqrsync":   []string{"qshell checkqrsync <DirCacheResultFile> <ListBucketResultFile> <IgnoreLocalDir> [Prefix]", "Check the qrsync result"},
 	"b64encode":     []string{"qshell b64encode [<UrlSafe>] <DataToEncode>", "Base64 Encode"},
@@ -113,6 +113,8 @@ var cmdDocs = map[string][]string{
 	"buckets":       []string{"qshell buckets", "Get all buckets of the account"},
 	"domains":       []string{"qshell domains <Bucket>", "Get all domains of the bucket"},
 	"cdnwho":        []string{"qshell cdnwho <Ip>", "Get the cdn supplier of the ip"},
+	"cdnrefresh":    []string{"qshell cdnrefresh <UrlListFile>", "Batch refresh the cdn cache by the url list file"},
+	"cdnprefetch":   []string{"qshell cdnprefetch <UrlListFile>", "Batch prefetch the urls in the url list file"},
 	"regionip":      []string{"qshell regionip <Cname> <Isp> <Province>", "Get the regional ips of cname"},
 }
 

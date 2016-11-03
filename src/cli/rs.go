@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	BATCH_ALLOW_MAX             = 1000
-	BATCH_CDN_REFRESH_ALLOW_MAX = 100
+	BATCH_ALLOW_MAX = 1000
 )
 
 func printStat(bucket string, key string, entry rs.Entry) {
@@ -375,29 +374,29 @@ func batchStat(client rs.Client, entries []rs.EntryPath) {
 }
 
 func BatchDelete(cmd string, params ...string) {
-	if !ForceMode {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			fmt.Println("Create confirm code failed")
-			return
-		}
-
-		rcode2 := ""
-		if runtime.GOOS == "windows" {
-			fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
-		} else {
-			fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		}
-		fmt.Scanln(&rcode2)
-
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
-	}
-
 	if len(params) == 2 {
+		if !ForceMode {
+			//confirm
+			rcode := CreateRandString(6)
+			if rcode == "" {
+				fmt.Println("Create confirm code failed")
+				return
+			}
+
+			rcode2 := ""
+			if runtime.GOOS == "windows" {
+				fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+			} else {
+				fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+			}
+			fmt.Scanln(&rcode2)
+
+			if rcode != rcode2 {
+				fmt.Println("Task quit!")
+				return
+			}
+		}
+
 		bucket := params[0]
 		keyListFile := params[1]
 
@@ -472,29 +471,29 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 }
 
 func BatchChgm(cmd string, params ...string) {
-	if !ForceMode {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			fmt.Println("Create confirm code failed")
-			return
-		}
-
-		rcode2 := ""
-		if runtime.GOOS == "windows" {
-			fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
-		} else {
-			fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		}
-		fmt.Scanln(&rcode2)
-
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
-	}
-
 	if len(params) == 2 {
+		if !ForceMode {
+			//confirm
+			rcode := CreateRandString(6)
+			if rcode == "" {
+				fmt.Println("Create confirm code failed")
+				return
+			}
+
+			rcode2 := ""
+			if runtime.GOOS == "windows" {
+				fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+			} else {
+				fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+			}
+			fmt.Scanln(&rcode2)
+
+			if rcode != rcode2 {
+				fmt.Println("Task quit!")
+				return
+			}
+		}
+
 		bucket := params[0]
 		keyMimeMapFile := params[1]
 
@@ -561,29 +560,29 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 }
 
 func BatchRename(cmd string, params ...string) {
-	if !ForceMode {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			fmt.Println("Create confirm code failed")
-			return
-		}
-
-		rcode2 := ""
-		if runtime.GOOS == "windows" {
-			fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
-		} else {
-			fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		}
-		fmt.Scanln(&rcode2)
-
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
-	}
-
 	if len(params) == 2 {
+		if !ForceMode {
+			//confirm
+			rcode := CreateRandString(6)
+			if rcode == "" {
+				fmt.Println("Create confirm code failed")
+				return
+			}
+
+			rcode2 := ""
+			if runtime.GOOS == "windows" {
+				fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+			} else {
+				fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+			}
+			fmt.Scanln(&rcode2)
+
+			if rcode != rcode2 {
+				fmt.Println("Task quit!")
+				return
+			}
+		}
+
 		bucket := params[0]
 		oldNewKeyMapFile := params[1]
 
@@ -650,29 +649,29 @@ func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 }
 
 func BatchMove(cmd string, params ...string) {
-	if !ForceMode {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			fmt.Println("Create confirm code failed")
-			return
-		}
-
-		rcode2 := ""
-		if runtime.GOOS == "windows" {
-			fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
-		} else {
-			fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		}
-		fmt.Scanln(&rcode2)
-
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
-	}
-
 	if len(params) == 3 {
+		if !ForceMode {
+			//confirm
+			rcode := CreateRandString(6)
+			if rcode == "" {
+				fmt.Println("Create confirm code failed")
+				return
+			}
+
+			rcode2 := ""
+			if runtime.GOOS == "windows" {
+				fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+			} else {
+				fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+			}
+			fmt.Scanln(&rcode2)
+
+			if rcode != rcode2 {
+				fmt.Println("Task quit!")
+				return
+			}
+		}
+
 		srcBucket := params[0]
 		destBucket := params[1]
 		srcDestKeyMapFile := params[2]
@@ -745,29 +744,29 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 }
 
 func BatchCopy(cmd string, params ...string) {
-	if !ForceMode {
-		//confirm
-		rcode := CreateRandString(6)
-		if rcode == "" {
-			fmt.Println("Create confirm code failed")
-			return
-		}
-
-		rcode2 := ""
-		if runtime.GOOS == "windows" {
-			fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
-		} else {
-			fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
-		}
-		fmt.Scanln(&rcode2)
-
-		if rcode != rcode2 {
-			fmt.Println("Task quit!")
-			return
-		}
-	}
-
 	if len(params) == 3 {
+		if !ForceMode {
+			//confirm
+			rcode := CreateRandString(6)
+			if rcode == "" {
+				fmt.Println("Create confirm code failed")
+				return
+			}
+
+			rcode2 := ""
+			if runtime.GOOS == "windows" {
+				fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+			} else {
+				fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+			}
+			fmt.Scanln(&rcode2)
+
+			if rcode != rcode2 {
+				fmt.Println("Task quit!")
+				return
+			}
+		}
+
 		srcBucket := params[0]
 		destBucket := params[1]
 		srcDestKeyMapFile := params[2]
@@ -836,62 +835,6 @@ func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
 			}
 		}
-	}
-}
-
-func BatchRefresh(cmd string, params ...string) {
-	if len(params) == 1 {
-		urlListFile := params[0]
-
-		gErr := accountS.Get()
-		if gErr != nil {
-			fmt.Println(gErr)
-			return
-		}
-
-		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
-		}
-
-		client := rs.NewMac(&mac)
-		fp, err := os.Open(urlListFile)
-		if err != nil {
-			fmt.Println("Open url list file error,", err)
-			return
-		}
-		defer fp.Close()
-		scanner := bufio.NewScanner(fp)
-		scanner.Split(bufio.ScanLines)
-
-		urlsToRefresh := make([]string, 0, 10)
-		for scanner.Scan() {
-			url := strings.TrimSpace(scanner.Text())
-			if url == "" {
-				continue
-			}
-			urlsToRefresh = append(urlsToRefresh, url)
-
-			if len(urlsToRefresh) == BATCH_CDN_REFRESH_ALLOW_MAX {
-				batchRefresh(&client, urlsToRefresh)
-				urlsToRefresh = make([]string, 0, 10)
-			}
-		}
-
-		if len(urlsToRefresh) > 0 {
-			batchRefresh(&client, urlsToRefresh)
-		}
-
-		fmt.Println("All refresh requests sent!")
-	} else {
-		CmdHelp(cmd)
-	}
-}
-
-func batchRefresh(client *rs.Client, urls []string) {
-	err := qshell.BatchRefresh(client, urls)
-	if err != nil {
-		fmt.Println("Batch refresh error,", err)
 	}
 }
 

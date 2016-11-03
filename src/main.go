@@ -31,7 +31,6 @@ var supportedCmds = map[string]cli.CliFunc{
 	"batchrename":   cli.BatchRename,
 	"batchcopy":     cli.BatchCopy,
 	"batchmove":     cli.BatchMove,
-	"batchrefresh":  cli.BatchRefresh,
 	"batchsign":     cli.BatchSign,
 	"checkqrsync":   cli.CheckQrsync,
 	"fput":          cli.FormPut,
@@ -59,6 +58,8 @@ var supportedCmds = map[string]cli.CliFunc{
 	"buckets":       cli.GetBuckets,
 	"domains":       cli.GetDomainsOfBucket,
 	"cdnwho":        cli.GetCdnSupplierOfIp,
+	"cdnrefresh":    cli.CdnRefresh,
+	"cdnprefetch":   cli.CdnPrefetch,
 	"regionip":      cli.GetCdnRegionalIps,
 }
 
