@@ -450,13 +450,8 @@ func BatchDelete(cmd string, params ...string) {
 }
 
 func batchDelete(client rs.Client, entries []rs.EntryPath) {
-	ret, err := qshell.BatchDelete(client, entries)
-	if err != nil {
-		if _, ok := err.(*rpc.ErrorInfo); !ok {
-			fmt.Println("Batch delete error", err)
-			return
-		}
-	}
+	ret, _ := qshell.BatchDelete(client, entries)
+
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
@@ -545,7 +540,7 @@ func BatchChgm(cmd string, params ...string) {
 func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 	ret, err := qshell.BatchChgm(client, entries)
 	if err != nil {
-		fmt.Println("Batch chgm error", err)
+		fmt.Println("Batch chgm error")
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
@@ -634,7 +629,7 @@ func BatchRename(cmd string, params ...string) {
 func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 	ret, err := qshell.BatchRename(client, entries)
 	if err != nil {
-		fmt.Println("Batch rename error", err)
+		fmt.Println("Batch rename error")
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
@@ -727,7 +722,7 @@ func BatchMove(cmd string, params ...string) {
 func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 	ret, err := qshell.BatchMove(client, entries)
 	if err != nil {
-		fmt.Println("Batch move error", err)
+		fmt.Println("Batch move error")
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
@@ -822,7 +817,7 @@ func BatchCopy(cmd string, params ...string) {
 func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
 	ret, err := qshell.BatchCopy(client, entries)
 	if err != nil {
-		fmt.Println("Batch move error", err)
+		fmt.Println("Batch copy error")
 	}
 	if len(ret) > 0 {
 		for i, entry := range entries {
