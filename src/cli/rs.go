@@ -462,7 +462,7 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 			item := ret[i]
 
 			if item.Data.Error != "" {
-				log.Errorf("Delete '%s' => '%s' failed, Err: %s", entry.Bucket, entry.Key, item.Data.Error)
+				log.Errorf("Delete '%s' => '%s' failed, Code: %d, Error: %s", entry.Bucket, entry.Key, item.Code, item.Data.Error)
 			} else {
 				log.Debugf("Delete '%s' => '%s' success", entry.Bucket, entry.Key)
 			}
@@ -551,9 +551,9 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Data.Error != "" {
-				log.Errorf("Chgm '%s' => '%s' Failed, Code :%d", entry.Key, entry.MimeType, item.Code)
+				log.Errorf("Chgm '%s' => '%s' Failed, Code: %d, Error: %s", entry.Key, entry.MimeType, item.Code, item.Data.Error)
 			} else {
-				log.Debug(fmt.Sprintf("Chgm '%s' => '%s' Success, Code :%d", entry.Key, entry.MimeType, item.Code))
+				log.Debug(fmt.Sprintf("Chgm '%s' => '%s' success", entry.Key, entry.MimeType))
 			}
 		}
 	}
@@ -640,9 +640,9 @@ func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Data.Error != "" {
-				log.Errorf("Rename '%s' => '%s' Failed, Code :%d", entry.OldKey, entry.NewKey, item.Code)
+				log.Errorf("Rename '%s' => '%s' Failed, Code: %d, Error: %s", entry.OldKey, entry.NewKey, item.Code, item.Data.Error)
 			} else {
-				log.Debug(fmt.Sprintf("Rename '%s' => '%s' Success, Code :%d", entry.OldKey, entry.NewKey, item.Code))
+				log.Debug(fmt.Sprintf("Rename '%s' => '%s' success", entry.OldKey, entry.NewKey))
 			}
 		}
 	}
@@ -733,11 +733,11 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Data.Error != "" {
-				log.Errorf("Move '%s:%s' => '%s:%s' Failed, Code :%d",
-					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code)
+				log.Errorf("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code, item.Data.Error)
 			} else {
-				log.Debug(fmt.Sprintf("Move '%s:%s' => '%s:%s' Success, Code :%d",
-					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
+				log.Debug(fmt.Sprintf("Move '%s:%s' => '%s:%s' success",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey))
 			}
 		}
 	}
@@ -828,11 +828,11 @@ func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Data.Error != "" {
-				log.Errorf("Copy '%s:%s' => '%s:%s' Failed, Code :%d",
-					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code)
+				log.Errorf("Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code, item.Data.Error)
 			} else {
-				log.Debug(fmt.Sprintf("Copy '%s:%s' => '%s:%s' Success, Code :%d",
-					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code))
+				log.Debug(fmt.Sprintf("Copy '%s:%s' => '%s:%s' success",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey))
 			}
 		}
 	}
