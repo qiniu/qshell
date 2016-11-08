@@ -128,7 +128,8 @@ qshell支持通过设置`zone`参数来支持多机房，对应关系如下：
 |m3u8replace|修改流媒体播放列表文件中的切片引用域名|[文档](http://github.com/jemygraw/qshell/wiki/m3u8replace)|
 |buckets|获取当前账号下所有的空间名称|[文档](http://github.com/jemygraw/qshell/wiki/buckets)|
 |domains|获取指定空间的所有关联域名|[文档](http://github.com/jemygraw/qshell/wiki/domains)|
-|cdnwho|根据IP地址查询对应的CDN厂商信息，可以用来做域名解析分析|[文档](http://github.com/jemygraw/qshell/wiki/cdnwho)|
+|cdnrefresh|批量刷新cdn的访问外链|[文档](http://github.com/jemygraw/qshell/wiki/cdnrefresh)|
+|cdnprefetch|批量预取cdn的访问外链|[文档](http://github.com/jemygraw/qshell/wiki/cdnprefetch)|
 
 ##编译
 1. 如果是编译本地平台的可执行程序，使用`src`目录下面的`build.sh`脚本即可。
