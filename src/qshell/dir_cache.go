@@ -27,6 +27,7 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 		var retErr error
 		//log.Debug(fmt.Sprintf("Walking through `%s`", cacheRootPath))
 		if err != nil {
+			log.Errorf("Walk through `%s` error due to `%s`", path, err)
 			retErr = err
 		} else {
 			if !fi.IsDir() {
@@ -51,6 +52,7 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 		}
 		return retErr
 	})
+
 	if err := bWriter.Flush(); err != nil {
 		log.Errorf("Failed to flush to cache file `%s`", cacheResultFile)
 	}
