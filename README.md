@@ -107,7 +107,6 @@ qshell支持通过设置`zone`参数来支持多机房，对应关系如下：
 |batchcopy|批量复制七牛空间中的文件到另一个空间|[文档](http://github.com/jemygraw/qshell/wiki/batchcopy)|
 |batchmove|批量移动七牛空间中的文件到另一个空间|[文档](http://github.com/jemygraw/qshell/wiki/batchmove)|
 |batchrename|批量重命名七牛空间中的文件|[文档](http://github.com/jemygraw/qshell/wiki/batchrename)|
-|batchrefresh|批量刷新七牛空间中的文件的访问外链|[文档](http://github.com/jemygraw/qshell/wiki/batchrefresh)|
 |batchsign|批量根据资源的公开外链生成资源的私有外链|[文档](http://github.com/jemygraw/qshell/wiki/batchsign)|
 |checkqrsync|检查qrsync的同步结果，主要通过比对`dircache`和`listbucket`的结果|[文档](http://github.com/jemygraw/qshell/wiki/checkqrsync)|
 |b64encode|base64编码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](http://github.com/jemygraw/qshell/wiki/b64encode)|
