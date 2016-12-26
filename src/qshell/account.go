@@ -1,6 +1,7 @@
 package qshell
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -45,8 +46,15 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 	}
 	defer fp.Close()
 
+	aesKey := Md5Hex(accessKey)
+	encryptedSecretKeyBytes, encryptedErr := AesEncrypt([]byte(secretKey), []byte(aesKey[7:23]))
+	if encryptedErr != nil {
+		return encryptedErr
+	}
+	encryptedSecretKey := base64.URLEncoding.EncodeToString(encryptedSecretKeyBytes)
+
 	this.AccessKey = accessKey
-	this.SecretKey = secretKey
+	this.SecretKey = encryptedSecretKey
 
 	//default to nb
 	if !IsValidZone(zone) {
@@ -87,6 +95,17 @@ func (this *Account) Get() (err error) {
 		err = fmt.Errorf("Parse account file error, %s", umError.Error())
 		return
 	}
+	
+	aesKey := Md5Hex(this.AccessKey)
+	encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(this.SecretKey)
+	if decodeErr != nil {
+		return decodeErr
+	}
+	secretKeyBytes, decryptErr := AesDecrypt([]byte(encryptedSecretKeyBytes), []byte(aesKey[7:23]))
+	if decryptErr != nil {
+		return decryptErr
+	}
+	this.SecretKey = string(secretKeyBytes)
 
 	if this.Zone == "" {
 		this.Zone = ZoneNB
