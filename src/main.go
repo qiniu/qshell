@@ -57,10 +57,8 @@ var supportedCmds = map[string]cli.CliFunc{
 	"m3u8replace":   cli.M3u8Replace,
 	"buckets":       cli.GetBuckets,
 	"domains":       cli.GetDomainsOfBucket,
-	"cdnwho":        cli.GetCdnSupplierOfIp,
 	"cdnrefresh":    cli.CdnRefresh,
 	"cdnprefetch":   cli.CdnPrefetch,
-	"regionip":      cli.GetCdnRegionalIps,
 }
 
 func main() {

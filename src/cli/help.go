@@ -61,10 +61,8 @@ var cmds = []string{
 	"m3u8replace",
 	"buckets",
 	"domains",
-	"cdnwho",
 	"cdnrefresh",
 	"cdnprefetch",
-	"regionip",
 }
 var cmdDocs = map[string][]string{
 	"account":       []string{"qshell account [<AccessKey> <SecretKey>] [<Zone>]", "Get/Set AccessKey and SecretKey and Zone"},
@@ -112,10 +110,8 @@ var cmdDocs = map[string][]string{
 	"m3u8replace":   []string{"qshell m3u8replace <Bucket> <M3u8Key> [<NewDomain>]", "Replace m3u8 domain in the playlist"},
 	"buckets":       []string{"qshell buckets", "Get all buckets of the account"},
 	"domains":       []string{"qshell domains <Bucket>", "Get all domains of the bucket"},
-	"cdnwho":        []string{"qshell cdnwho <Ip>", "Get the cdn supplier of the ip"},
 	"cdnrefresh":    []string{"qshell cdnrefresh <UrlListFile>", "Batch refresh the cdn cache by the url list file"},
 	"cdnprefetch":   []string{"qshell cdnprefetch <UrlListFile>", "Batch prefetch the urls in the url list file"},
-	"regionip":      []string{"qshell regionip <Cname> <Isp> <Province>", "Get the regional ips of cname"},
 }
 
 func Version() {
