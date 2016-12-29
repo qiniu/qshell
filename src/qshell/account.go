@@ -80,7 +80,6 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 
 func (this *Account) Get() (err error) {
 	qAccountFile := filepath.Join(".qshell", "account.json")
-	fmt.Printf("Open account file at: %s\n\n",qAccountFile)
 	fp, openErr := os.Open(qAccountFile)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file failed, %s, please use `account` to set AccessKey and SecretKey first", openErr.Error())
@@ -96,6 +95,7 @@ func (this *Account) Get() (err error) {
 		err = fmt.Errorf("Parse account file error, %s", umError.Error())
 		return
 	}
+
 	// backwards compatible with old version of qshell, which encrypt ak/sk based on existing ak/sk
 	if len(this.SecretKey) == 40 {
 		this.Set(this.AccessKey, this.SecretKey, this.Zone)
@@ -120,6 +120,10 @@ func (this *Account) Get() (err error) {
 
 	//set default hosts
 	SetZone(this.Zone)
+
+	pwd, _ := os.Getwd()
+	accountPath := filepath.Join(pwd, qAccountFile)
+	fmt.Println("Load account from", accountPath, "\n")
 
 	return
 }
