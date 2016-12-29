@@ -2,12 +2,10 @@ package qshell
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"crypto/aes"
 	"crypto/cipher"
-	//"fmt"
-	//"os"
+	"crypto/md5"
+	"encoding/hex"
 )
 
 func Md5Hex(from string) string {
@@ -15,7 +13,6 @@ func Md5Hex(from string) string {
 	md5Hasher.Write([]byte(from))
 	return hex.EncodeToString(md5Hasher.Sum(nil))
 }
-
 
 func AesEncrypt(origData, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
@@ -38,7 +35,7 @@ func AesDecrypt(crypted, key []byte) ([]byte, error) {
 	blockSize := block.BlockSize()
 	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
 	origData := make([]byte, len(crypted))
-	
+
 	blockMode.CryptBlocks(origData, crypted)
 	origData = PKCS5UnPadding(origData)
 	return origData, nil
