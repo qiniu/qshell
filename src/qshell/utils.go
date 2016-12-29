@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"crypto/aes"
 	"crypto/cipher"
+	//"fmt"
+	//"os"
 )
 
 func Md5Hex(from string) string {
@@ -36,6 +38,7 @@ func AesDecrypt(crypted, key []byte) ([]byte, error) {
 	blockSize := block.BlockSize()
 	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
 	origData := make([]byte, len(crypted))
+	
 	blockMode.CryptBlocks(origData, crypted)
 	origData = PKCS5UnPadding(origData)
 	return origData, nil
