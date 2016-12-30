@@ -48,9 +48,9 @@ export PATH=$PATH:/home/jemy/tools
 ![windows-qshell-path-settings.png](http://devtools.qiniu.com/windows-qshell-path-settings.png)
 
 ## 使用
-该工具有两类命令，其中的一类命令需要指定配置文件，所有的参数信息都写在配置文件里面，比如`qdownload`和`qupload`。还有一类命令的运行需要依赖七牛账号下的`AccessKey`和`SecretKey`，以及空间所在的机房。所以这类命令运行之前，需要使用`account`命令来设置下`AccessKey`，`SecretKey`和默认机房编号`Zone`。
+该工具有两类命令，其中的一类命令需要指定配置文件，所有的参数信息都写在配置文件里面，比如 `qdownload` 和 `qupload` 。还有一类命令的运行需要依赖七牛账号下的 `AccessKey` 和 `SecretKey` ，以及空间所在的机房。所以这类命令运行之前，需要使用 `account` 命令来设置下 `AccessKey` ，`SecretKey` 和默认机房编号 `Zone` 。
 
-这里需要额外指出的是，为了支持多账号的情况（这种情况很常见，有很多公司有测试账号和线上账号，它们的`AccessKey`和`SecretKey`都不同），我们把`account`设置的参数以及其他命令过程中所产生的临时文件（比如`qupload`会保存已上传文件列表）都存放在`qshell`命令所运行的目录。举个例子，我们有两个目录，一个是测试账号的，一个是线上账号的，分别如下：
+这里需要额外指出的是，为了支持多账号的情况（这种情况很常见，有很多公司有测试账号和线上账号，它们的 `AccessKey` 和 `SecretKey` 都不同），我们把 `account` 设置的参数以及其他命令过程中所产生的临时文件（比如 `qupload` 会保存已上传文件列表）都存放在 `qshell` 命令所运行的目录。举个例子，我们有两个目录，一个是测试账号的，一个是线上账号的，分别如下：
 
 ```
 /home/jemy/tools/qshell_dev/
