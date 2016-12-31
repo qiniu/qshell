@@ -276,6 +276,8 @@ func Fetch(cmd string, params ...string) {
 		} else {
 			fmt.Println("Key:", fetchResult.Key)
 			fmt.Println("Hash:", fetchResult.Hash)
+			fmt.Printf("Fsize: %d (%s)\n", fetchResult.Fsize, FormatFsize(fetchResult.Fsize))
+			fmt.Println("Mime:", fetchResult.MimeType)
 		}
 	} else {
 		CmdHelp(cmd)

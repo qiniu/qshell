@@ -13,8 +13,10 @@ import (
 )
 
 type FetchResult struct {
-	Key  string `json:"key"`
-	Hash string `json:"hash"`
+	Key      string `json:"key"`
+	Hash     string `json:"hash"`
+	MimeType string `json:"mimeType"`
+	Fsize    int64  `json:"fsize"`
 }
 
 type ChgmEntryPath struct {
