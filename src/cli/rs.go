@@ -255,6 +255,17 @@ func Fetch(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
+
+		//get bucket zone info
+		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+		if gErr != nil {
+			fmt.Println("Get bucket region info error,", gErr)
+			return
+		}
+
+		//set up host
+		qshell.SetZone(bucketInfo.Region)
+
 		fetchResult, err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
