@@ -14,21 +14,29 @@ type DirCache struct {
 }
 
 func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileCount int) {
-	cacheResultFileH, err := os.Create(cacheResultFile)
+	cacheResultFh, err := os.Create(cacheResultFile)
 	if err != nil {
 		log.Errorf("Failed to open cache file `%s`", cacheResultFile)
 		return
 	}
-	defer cacheResultFileH.Close()
-	bWriter := bufio.NewWriter(cacheResultFileH)
+	defer cacheResultFh.Close()
+
+	bWriter := bufio.NewWriter(cacheResultFh)
+
+	//walk start
 	walkStart := time.Now()
-	log.Debug(fmt.Sprintf("Walk `%s` start from `%s`", cacheRootPath, walkStart.String()))
+	log.Infof("Walk `%s` start from %s", cacheRootPath, walkStart.String())
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, err error) error {
 		var retErr error
-		//log.Debug(fmt.Sprintf("Walking through `%s`", cacheRootPath))
+		if fi.IsDir() {
+			log.Infof("Walking through `%s`", path)
+		}
+
+		//check error
 		if err != nil {
-			log.Errorf("Walk through `%s` error due to `%s`", path, err)
-			retErr = err
+			log.Errorf("Walk through `%s` error, %s", path, err)
+			//skip this dir
+			retErr = filepath.SkipDir
 		} else {
 			if !fi.IsDir() {
 				var relPath string
@@ -41,13 +49,14 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 				fsize := fi.Size()
 				//Unit is 100ns
 				flmd := fi.ModTime().UnixNano() / 100
-				//log.Debug(fmt.Sprintf("Hit file `%s` size: `%d' mode time: `%d`", relPath, fsize, flmd))
-				fmeta := fmt.Sprintln(fmt.Sprintf("%s\t%d\t%d", relPath, fsize, flmd))
+
+				log.Debugf("Meet file `%s`, size: %d, modtime: %d", relPath, fsize, flmd)
+				fmeta := fmt.Sprintf("%s\t%d\t%d\n", relPath, fsize, flmd)
 				if _, err := bWriter.WriteString(fmeta); err != nil {
-					log.Errorf("Failed to write data `%s` to cache file", fmeta)
-					retErr = err
+					log.Errorf("Failed to write data `%s` to cache file `%s`", fmeta, cacheResultFile)
+				} else {
+					fileCount += 1
 				}
-				fileCount += 1
 			}
 		}
 		return retErr
@@ -58,7 +67,8 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 	}
 
 	walkEnd := time.Now()
-	log.Debug(fmt.Sprintf("Walk `%s` end at `%s`", cacheRootPath, walkEnd.String()))
-	log.Debug(fmt.Sprintf("Walk `%s` last for `%s`", cacheRootPath, time.Since(walkStart)))
+	log.Infof("Walk `%s` end at %s", cacheRootPath, walkEnd.String())
+	log.Infof("Walk `%s` last for %s", cacheRootPath, time.Since(walkStart))
+	log.Infof("Total file count %d", fileCount)
 	return
 }
