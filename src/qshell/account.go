@@ -25,7 +25,7 @@ func (this *Account) ToJson() (jsonStr string, err error) {
 }
 
 func (this *Account) String() string {
-	return fmt.Sprintf("AccessKey: %s SecretKey: %s", this.AccessKey, this.SecretKey)
+	return fmt.Sprintf("AccessKey: %s\nSecretKey: %s", this.AccessKey, this.SecretKey)
 }
 
 func (this *Account) Set(accessKey string, secretKey string) (err error) {

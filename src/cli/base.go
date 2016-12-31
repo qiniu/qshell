@@ -12,7 +12,6 @@ type CliFunc func(cmd string, params ...string)
 
 var accountS = qshell.Account{}
 var dircacheS = qshell.DirCache{}
-var listbucketS = qshell.ListBucket{}
 
 func Account(cmd string, params ...string) {
 	if len(params) == 0 {

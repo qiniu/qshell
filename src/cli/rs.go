@@ -59,9 +59,9 @@ func ListBucket(cmd string, params ...string) {
 			return
 		}
 
+		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 		if accountS.AccessKey != "" && accountS.SecretKey != "" {
-			listbucketS.Account = accountS
-			listbucketS.List(bucket, prefix, ListMarker, listResultFile)
+			qshell.ListBucket(&mac, bucket, prefix, ListMarker, listResultFile)
 		} else {
 			fmt.Println("No AccessKey and SecretKey set error!")
 		}

@@ -11,10 +11,6 @@ import (
 	"qiniu/rpc"
 )
 
-type ListBucket struct {
-	Account
-}
-
 /*
 *@param bucket
 *@param prefix
@@ -22,7 +18,7 @@ type ListBucket struct {
 *@param listResultFile
 *@return listError
  */
-func (this *ListBucket) List(bucket, prefix, marker, listResultFile string) (retErr error) {
+func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) (retErr error) {
 	var listResultFh *os.File
 	if listResultFile == "stdout" {
 		listResultFh = os.Stdout
@@ -48,10 +44,8 @@ func (this *ListBucket) List(bucket, prefix, marker, listResultFile string) (ret
 	defer listResultFh.Close()
 	bWriter := bufio.NewWriter(listResultFh)
 
-	mac := digest.Mac{this.AccessKey, []byte(this.SecretKey)}
-
 	//get zone info
-	bucketInfo, gErr := GetBucketInfo(&mac, bucket)
+	bucketInfo, gErr := GetBucketInfo(mac, bucket)
 	if gErr != nil {
 		retErr = gErr
 		log.Errorf("Failed to get region info of bucket `%s`", bucket)
@@ -62,7 +56,7 @@ func (this *ListBucket) List(bucket, prefix, marker, listResultFile string) (ret
 	SetZone(bucketInfo.Region)
 
 	//init
-	client := rsf.New(&mac)
+	client := rsf.New(mac)
 	limit := 1000
 	run := true
 	maxRetryTimes := 5
