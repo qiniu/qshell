@@ -979,6 +979,17 @@ func M3u8Delete(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
+
+		//get bucket zone info
+		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+		if gErr != nil {
+			fmt.Println("Get bucket region info error,", gErr)
+			return
+		}
+
+		//set up host
+		qshell.SetZone(bucketInfo.Region)
+
 		m3u8FileList, err := qshell.M3u8FileList(&mac, bucket, m3u8Key)
 		if err != nil {
 			fmt.Println(err)
@@ -1028,6 +1039,17 @@ func M3u8Replace(cmd string, params ...string) {
 			accountS.AccessKey,
 			[]byte(accountS.SecretKey),
 		}
+
+		//get bucket zone info
+		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+		if gErr != nil {
+			fmt.Println("Get bucket region info error,", gErr)
+			return
+		}
+
+		//set up host
+		qshell.SetZone(bucketInfo.Region)
+
 		err := qshell.M3u8ReplaceDomain(&mac, bucket, m3u8Key, newDomain)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
