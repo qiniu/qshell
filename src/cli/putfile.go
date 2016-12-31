@@ -116,7 +116,7 @@ func FormPut(cmd string, params ...string) {
 
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println("Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
+				fmt.Printf("Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
 				fmt.Println("Put file error,", err)
 			}
@@ -214,12 +214,12 @@ func ResumablePut(cmd string, params ...string) {
 
 		rio.SetSettings(&upSettings)
 		putClient := rio.NewClient(uptoken, "")
-		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...", localFile, bucket, key))
+		fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
 		err := rio.PutFile(putClient, nil, &putRet, key, localFile, &putExtra)
 		fmt.Println()
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println(fmt.Sprintf("Put file error, %d %s, Reqid: %s", v.Code, v.Err, v.Reqid))
+				fmt.Printf("Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
 				fmt.Println("Put file error,", err)
 			}

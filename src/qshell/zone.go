@@ -13,10 +13,9 @@ type ZoneConfig struct {
 }
 
 const (
-	ZoneNB  = "nb"
-	ZoneBC  = "bc"
-	ZoneHN  = "hn"
-	ZoneAWS = "aws"
+	ZoneNB  = "z0"
+	ZoneBC  = "z1"
+	ZoneHN  = "z2"
 	ZoneNA0 = "na0"
 )
 
