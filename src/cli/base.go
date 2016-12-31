@@ -11,7 +11,6 @@ var ListMarker string
 type CliFunc func(cmd string, params ...string)
 
 var accountS = qshell.Account{}
-var dircacheS = qshell.DirCache{}
 
 func Account(cmd string, params ...string) {
 	if len(params) == 0 {

@@ -44,7 +44,6 @@ Config file like:
 	"skip_suffixes"			:	".exe,.obj,.class",
 	"skip_fixed_strings"    :   ".svn,.git",
 	"up_host"				:	"http://upload.qiniu.com",
-	"zone"					:	"bc",
 	"bind_up_ip"			:	"",
 	"bind_rs_ip"			:	"",
 	"bind_nic_ip"			:	"",
@@ -163,23 +162,49 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	log.SetOutput(logFile)
 	fmt.Println()
 
+	//global up settings
+	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
+	//get bucket zone info
+	bucketInfo, gErr := GetBucketInfo(&mac, uploadConfig.Bucket)
+	if gErr != nil {
+		fmt.Println("Get bucket region info error,", gErr)
+		return
+	}
+
+	//set up host
+	SetZone(bucketInfo.Region)
+
+	//chunk upload threshold
+	putThreshold := DEFAULT_PUT_THRESHOLD
+	if uploadConfig.PutThreshold > 0 {
+		putThreshold = uploadConfig.PutThreshold
+	}
+
+	//use host if not empty, overwrite the default config
+	if uploadConfig.UpHost != "" {
+		conf.UP_HOST = uploadConfig.UpHost
+	}
+	//set resume upload settings
+	rio.SetSettings(&upSettings)
+
 	//make SrcDir the full path
 	uploadConfig.SrcDir, _ = filepath.Abs(uploadConfig.SrcDir)
-	dirCache := DirCache{}
+
 	pathSep := string(os.PathSeparator)
 	//create job id
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
 
 	//local storage path
 	storePath := filepath.Join(".qshell", "qupload", jobId)
-	if err := os.MkdirAll(storePath, 0775); err != nil {
-		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, err)
+	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
+		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		return
 	}
 
 	//find the local file list, by specified or by config
 	var cacheResultName string
 	var totalFileCount int
+	var cacheErr error
 	_, fStatErr := os.Stat(uploadConfig.FileList)
 	if uploadConfig.FileList != "" && fStatErr == nil {
 		//use specified file list
@@ -200,11 +225,12 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		}
 
 		if rescanLocalDir {
-			log.Info("Listing local sync dir, this can take a long time, please wait patiently ...")
-			totalFileCount = dirCache.Cache(uploadConfig.SrcDir, cacheTempName)
-			if rErr := os.Remove(cacheResultName); rErr != nil {
-				log.Debug("Remove the old cached file error", rErr)
+			log.Info("Listing local sync dir, this can take a long time for big directory, please wait patiently ...")
+			totalFileCount, cacheErr = DirCache(uploadConfig.SrcDir, cacheTempName)
+			if cacheErr != nil {
+				return
 			}
+
 			if rErr := os.Rename(cacheTempName, cacheResultName); rErr != nil {
 				log.Error("Rename the temp cached file error", rErr)
 				return
@@ -283,28 +309,6 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			go doUpload(uploadTasks)
 		}
 	})
-
-	//chunk upload threshold
-	putThreshold := DEFAULT_PUT_THRESHOLD
-	if uploadConfig.PutThreshold > 0 {
-		putThreshold = uploadConfig.PutThreshold
-	}
-
-	//check & set zone, default nb
-	if uploadConfig.Zone != "" && !IsValidZone(uploadConfig.Zone) {
-		log.Errorf("Invalid zone setting `%s` in config file, upload halt", uploadConfig.Zone)
-		return
-	}
-
-	SetZone(uploadConfig.Zone)
-
-	//use host if not empty, overwrite the default config
-	if uploadConfig.UpHost != "" {
-		conf.UP_HOST = uploadConfig.UpHost
-	}
-	//set resume upload settings
-	rio.SetSettings(&upSettings)
-	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
 
 	//check bind net interface card
 	var transport *http.Transport

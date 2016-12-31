@@ -2,6 +2,7 @@ package qshell
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,31 +11,45 @@ import (
 	"time"
 )
 
-type DirCache struct {
-}
+func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int, retErr error) {
+	//check dir
+	rootPathFileInfo, statErr := os.Stat(cacheRootPath)
+	if statErr != nil {
+		retErr = statErr
+		log.Errorf("Failed to stat path `%s`, %s", cacheRootPath, statErr)
+		return
+	}
 
-func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileCount int) {
-	cacheResultFh, err := os.Create(cacheResultFile)
-	if err != nil {
-		log.Errorf("Failed to open cache file `%s`", cacheResultFile)
+	if !rootPathFileInfo.IsDir() {
+		retErr = errors.New("dircache failed")
+		log.Errorf("Dircache failed, `%s` should be a directory rather than a file", cacheRootPath)
+		return
+	}
+
+	//create result file
+	cacheResultFh, createErr := os.Create(cacheResultFile)
+	if createErr != nil {
+		retErr = createErr
+		log.Errorf("Failed to open cache file `%s`, %s", cacheResultFile, createErr)
 		return
 	}
 	defer cacheResultFh.Close()
 
 	bWriter := bufio.NewWriter(cacheResultFh)
+	defer bWriter.Flush()
 
 	//walk start
 	walkStart := time.Now()
 	log.Infof("Walk `%s` start from %s", cacheRootPath, walkStart.String())
-	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, err error) error {
+	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, walkErr error) error {
 		var retErr error
 		if fi.IsDir() {
 			log.Infof("Walking through `%s`", path)
 		}
 
 		//check error
-		if err != nil {
-			log.Errorf("Walk through `%s` error, %s", path, err)
+		if walkErr != nil {
+			log.Errorf("Walk through `%s` error, %s", path, walkErr)
 			//skip this dir
 			retErr = filepath.SkipDir
 		} else {
@@ -62,8 +77,10 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 		return retErr
 	})
 
-	if err := bWriter.Flush(); err != nil {
+	if fErr := bWriter.Flush(); fErr != nil {
 		log.Errorf("Failed to flush to cache file `%s`", cacheResultFile)
+		retErr = fErr
+		return
 	}
 
 	walkEnd := time.Now()

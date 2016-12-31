@@ -35,7 +35,7 @@ func DirCache(cmd string, params ...string) {
 	if len(params) == 2 {
 		cacheRootPath := params[0]
 		cacheResultFile := params[1]
-		dircacheS.Cache(cacheRootPath, cacheResultFile)
+		qshell.DirCache(cacheRootPath, cacheResultFile)
 	} else {
 		CmdHelp(cmd)
 	}
