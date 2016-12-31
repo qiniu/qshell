@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/conf"
 	fio "qiniu/api.v6/io"
 	"qiniu/api.v6/rs"
 	"qiniu/log"
@@ -28,7 +29,7 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 		return
 	}
 	//get domain list of bucket
-	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", DEFAULT_API_HOST)
+	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", conf.API_HOST)
 	bucketDomainData := map[string][]string{
 		"tbl": []string{bucket},
 	}
@@ -121,7 +122,7 @@ func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain
 		return
 	}
 	//get domain list of bucket
-	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", DEFAULT_API_HOST)
+	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", conf.API_HOST)
 	bucketDomainData := map[string][]string{
 		"tbl": []string{bucket},
 	}

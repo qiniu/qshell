@@ -12,10 +12,6 @@ type ZoneConfig struct {
 	ApiHost   string
 }
 
-var (
-	DEFAULT_API_HOST = ZoneNBConfig.ApiHost
-)
-
 const (
 	ZoneNB  = "nb"
 	ZoneBC  = "bc"
@@ -39,38 +35,28 @@ var ZoneBCConfig = ZoneConfig{
 	RsHost:    "http://rs.qiniu.com",
 	RsfHost:   "http://rsf-z1.qbox.me",
 	IovipHost: "http://iovip-z1.qbox.me",
-	ApiHost:   "http://api-z1.qiniu.com",
+	ApiHost:   "http://api.qiniu.com",
 }
 
 var ZoneHNConfig = ZoneConfig{
 	UpHost:    "http://up-z2.qiniu.com",
-	RsHost:    "http://rs.qiniu.com",
+	RsHost:    "http://rs-z2.qiniu.com",
 	RsfHost:   "http://rsf-z2.qbox.me",
 	IovipHost: "http://iovip-z2.qbox.me",
-	ApiHost:   "http://api-z2.qiniu.com",
-}
-
-var ZoneAWSConfig = ZoneConfig{
-	UpHost:    "http://up.gdipper.com",
-	RsHost:    "http://rs.gdipper.com",
-	RsfHost:   "http://rsf.gdipper.com",
-	IovipHost: "http://io.gdipper.com",
-	ApiHost:   "http://api.gdipper.com",
+	ApiHost:   "http://api.qiniu.com",
 }
 
 var ZoneNA0Config = ZoneConfig{
-	UpHost:    "http://upload-na0.qiniu.com",
+	UpHost:    "http://up-na0.qiniu.com",
 	RsHost:    "http://rs-na0.qbox.me",
 	RsfHost:   "http://rsf-na0.qbox.me",
 	IovipHost: "http://iovip-na0.qbox.me",
-	ApiHost:   "http://api-na0.qiniu.com",
+	ApiHost:   "http://api.qiniu.com",
 }
 
 func SetZone(zone string) {
 	var zoneConfig ZoneConfig
 	switch zone {
-	case ZoneAWS:
-		zoneConfig = ZoneAWSConfig
 	case ZoneBC:
 		zoneConfig = ZoneBCConfig
 	case ZoneHN:
@@ -84,12 +70,12 @@ func SetZone(zone string) {
 	conf.RS_HOST = zoneConfig.RsHost
 	conf.RSF_HOST = zoneConfig.RsfHost
 	conf.IO_HOST = zoneConfig.IovipHost
-	DEFAULT_API_HOST = zoneConfig.ApiHost
+	conf.API_HOST = zoneConfig.ApiHost
 }
 
 func IsValidZone(zone string) (valid bool) {
 	switch zone {
-	case ZoneNB, ZoneBC, ZoneHN, ZoneAWS, ZoneNA0:
+	case ZoneNB, ZoneBC, ZoneHN, ZoneNA0:
 		valid = true
 	default:
 		valid = false

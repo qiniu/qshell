@@ -61,7 +61,7 @@ func ListBucket(cmd string, params ...string) {
 
 		if accountS.AccessKey != "" && accountS.SecretKey != "" {
 			listbucketS.Account = accountS
-			listbucketS.List(bucket, prefix, listResultFile)
+			listbucketS.List(bucket, prefix, ListMarker, listResultFile)
 		} else {
 			fmt.Println("No AccessKey and SecretKey set error!")
 		}

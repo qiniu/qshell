@@ -3,12 +3,9 @@ package qshell
 import (
 	"encoding/json"
 	"fmt"
+	"qiniu/api.v6/conf"
 	"qiniu/rpc"
 )
-
-type RSFop struct {
-	Account
-}
 
 type FopRet struct {
 	Id          string `json:"id"`
@@ -73,9 +70,9 @@ type FopResult struct {
 	Keys  []string `json:"keys,omitempty"`
 }
 
-func (this *RSFop) Prefop(persistentId string, fopRet *FopRet) (err error) {
+func Prefop(persistentId string, fopRet *FopRet) (err error) {
 	client := rpc.DefaultClient
-	resp, respErr := client.Get(nil, fmt.Sprintf("%s/status/get/prefop?id=%s", DEFAULT_API_HOST, persistentId))
+	resp, respErr := client.Get(nil, fmt.Sprintf("%s/status/get/prefop?id=%s", conf.API_HOST, persistentId))
 	if respErr != nil {
 		err = respErr
 		return

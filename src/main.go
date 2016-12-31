@@ -12,7 +12,6 @@ import (
 
 var supportedCmds = map[string]cli.CliFunc{
 	"account":       cli.Account,
-	"zone":          cli.Zone,
 	"dircache":      cli.DirCache,
 	"listbucket":    cli.ListBucket,
 	"alilistbucket": cli.AliListBucket,
@@ -75,16 +74,18 @@ func main() {
 		return
 	}
 
-	//flag
+	//global options
 	var debugMode bool
 	var forceMode bool
 	var helpMode bool
 	var versionMode bool
+	var listMarker string
 
 	flag.BoolVar(&debugMode, "d", false, "debug mode")
 	flag.BoolVar(&forceMode, "f", false, "force mode")
 	flag.BoolVar(&helpMode, "h", false, "show help")
 	flag.BoolVar(&versionMode, "v", false, "show version")
+	flag.StringVar(&listMarker, "marker", "", "list marker")
 
 	flag.Parse()
 
@@ -106,10 +107,13 @@ func main() {
 		cli.ForceMode = true
 	}
 
+	//set cmd and params
 	args := flag.Args()
-
 	cmd := args[0]
 	params := args[1:]
+
+	//set global options
+	cli.ListMarker = listMarker
 
 	if cmd == "" {
 		fmt.Println("Error: no subcommand specified")
@@ -119,7 +123,7 @@ func main() {
 	if cliFunc, ok := supportedCmds[cmd]; ok {
 		cliFunc(cmd, params...)
 	} else {
-		fmt.Println(fmt.Sprintf("Error: unknown cmd `%s`", cmd))
+		fmt.Printf("Error: unknown cmd `%s`\n", cmd)
 	}
 
 }

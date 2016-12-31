@@ -12,7 +12,6 @@ import (
 type Account struct {
 	AccessKey string `json:"access_key"`
 	SecretKey string `json:"secret_key"`
-	Zone      string `json:"zone,omitempty"`
 }
 
 func (this *Account) ToJson() (jsonStr string, err error) {
@@ -26,10 +25,10 @@ func (this *Account) ToJson() (jsonStr string, err error) {
 }
 
 func (this *Account) String() string {
-	return fmt.Sprintf("AccessKey: %s SecretKey: %s Zone: %s", this.AccessKey, this.SecretKey, this.Zone)
+	return fmt.Sprintf("AccessKey: %s SecretKey: %s", this.AccessKey, this.SecretKey)
 }
 
-func (this *Account) Set(accessKey string, secretKey string, zone string) (err error) {
+func (this *Account) Set(accessKey string, secretKey string) (err error) {
 	qAccountFolder := ".qshell"
 	if _, sErr := os.Stat(qAccountFolder); sErr != nil {
 		if mErr := os.MkdirAll(qAccountFolder, 0775); mErr != nil {
@@ -55,13 +54,6 @@ func (this *Account) Set(accessKey string, secretKey string, zone string) (err e
 
 	this.AccessKey = accessKey
 	this.SecretKey = encryptedSecretKey
-
-	//default to nb
-	if !IsValidZone(zone) {
-		zone = ZoneNB
-	}
-
-	this.Zone = zone
 
 	jsonStr, mErr := this.ToJson()
 	if mErr != nil {
@@ -98,7 +90,7 @@ func (this *Account) Get() (err error) {
 
 	// backwards compatible with old version of qshell, which encrypt ak/sk based on existing ak/sk
 	if len(this.SecretKey) == 40 {
-		this.Set(this.AccessKey, this.SecretKey, this.Zone)
+		this.Set(this.AccessKey, this.SecretKey)
 		this.Get()
 		return
 	}
@@ -114,16 +106,8 @@ func (this *Account) Get() (err error) {
 	}
 	this.SecretKey = string(secretKeyBytes)
 
-	if this.Zone == "" {
-		this.Zone = ZoneNB
-	}
-
-	//set default hosts
-	SetZone(this.Zone)
-
 	pwd, _ := os.Getwd()
 	accountPath := filepath.Join(pwd, qAccountFile)
 	fmt.Println("Load account from", accountPath, "\n")
-
 	return
 }

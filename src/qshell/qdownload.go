@@ -107,7 +107,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 		Account: acct,
 	}
 	log.Info("List bucket ...")
-	listErr := bLister.List(downConfig.Bucket, downConfig.Prefix, jobListName)
+	listErr := bLister.List(downConfig.Bucket, downConfig.Prefix, "", jobListName)
 	if listErr != nil {
 		log.Error("List bucket error", listErr)
 		return
