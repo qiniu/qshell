@@ -9,6 +9,7 @@ import (
 	rio "qiniu/api.v6/resumable/io"
 	"qiniu/api.v6/rs"
 	"qiniu/rpc"
+	"qshell"
 	"strconv"
 	"strings"
 	"sync"
@@ -51,6 +52,19 @@ func FormPut(cmd string, params ...string) {
 		}
 
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
+
+		if upHost == "" {
+			//get bucket zone info
+			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+			if gErr != nil {
+				fmt.Println("Get bucket region info error,", gErr)
+				return
+			}
+
+			//set up host
+			qshell.SetZone(bucketInfo.Region)
+		}
+
 		policy := rs.PutPolicy{}
 		if overwrite {
 			policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
@@ -76,7 +90,7 @@ func FormPut(cmd string, params ...string) {
 		}
 		fsize := fStat.Size()
 		putClient := rpc.NewClient("")
-		fmt.Println(fmt.Sprintf("Uploading %s => %s : %s ...", localFile, bucket, key))
+		fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
 		doneSignal := make(chan bool)
 		go func(ch chan bool) {
 			progressSigns := []string{"|", "/", "-", "\\", "|"}
@@ -102,7 +116,7 @@ func FormPut(cmd string, params ...string) {
 
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println(fmt.Sprintf("Put file error, %d %s, Reqid: %s", v.Code, v.Err, v.Reqid))
+				fmt.Println("Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
 				fmt.Println("Put file error,", err)
 			}
@@ -156,6 +170,18 @@ func ResumablePut(cmd string, params ...string) {
 		fsize := fStat.Size()
 
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
+		if upHost == "" {
+			//get bucket zone info
+			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+			if gErr != nil {
+				fmt.Println("Get bucket region info error,", gErr)
+				return
+			}
+
+			//set up host
+			qshell.SetZone(bucketInfo.Region)
+		}
+
 		policy := rs.PutPolicy{}
 
 		if overwrite {

@@ -23,7 +23,7 @@ const (
 //zone all defaults to the service source site
 
 var ZoneNBConfig = ZoneConfig{
-	UpHost:    "http://up.qiniu.com",
+	UpHost:    "http://upload.qiniu.com",
 	RsHost:    "http://rs.qiniu.com",
 	RsfHost:   "http://rsf.qbox.me",
 	IovipHost: "http://iovip.qbox.me",
@@ -31,7 +31,7 @@ var ZoneNBConfig = ZoneConfig{
 }
 
 var ZoneBCConfig = ZoneConfig{
-	UpHost:    "http://up-z1.qiniu.com",
+	UpHost:    "http://upload-z1.qiniu.com",
 	RsHost:    "http://rs.qiniu.com",
 	RsfHost:   "http://rsf-z1.qbox.me",
 	IovipHost: "http://iovip-z1.qbox.me",
@@ -39,7 +39,7 @@ var ZoneBCConfig = ZoneConfig{
 }
 
 var ZoneHNConfig = ZoneConfig{
-	UpHost:    "http://up-z2.qiniu.com",
+	UpHost:    "http://upload-z2.qiniu.com",
 	RsHost:    "http://rs-z2.qiniu.com",
 	RsfHost:   "http://rsf-z2.qbox.me",
 	IovipHost: "http://iovip-z2.qbox.me",
@@ -47,7 +47,7 @@ var ZoneHNConfig = ZoneConfig{
 }
 
 var ZoneNA0Config = ZoneConfig{
-	UpHost:    "http://up-na0.qiniu.com",
+	UpHost:    "http://upload-na0.qiniu.com",
 	RsHost:    "http://rs-na0.qbox.me",
 	RsfHost:   "http://rsf-na0.qbox.me",
 	IovipHost: "http://iovip-na0.qbox.me",
