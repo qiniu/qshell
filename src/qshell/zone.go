@@ -23,33 +23,33 @@ const (
 
 var ZoneNBConfig = ZoneConfig{
 	UpHost:    "http://upload.qiniu.com",
+	IovipHost: "http://iovip.qbox.me",
 	RsHost:    "http://rs.qiniu.com",
 	RsfHost:   "http://rsf.qbox.me",
-	IovipHost: "http://iovip.qbox.me",
 	ApiHost:   "http://api.qiniu.com",
 }
 
 var ZoneBCConfig = ZoneConfig{
 	UpHost:    "http://upload-z1.qiniu.com",
-	RsHost:    "http://rs.qiniu.com",
-	RsfHost:   "http://rsf-z1.qbox.me",
 	IovipHost: "http://iovip-z1.qbox.me",
+	RsHost:    "http://rs.qiniu.com",
+	RsfHost:   "http://rsf.qbox.me",
 	ApiHost:   "http://api.qiniu.com",
 }
 
 var ZoneHNConfig = ZoneConfig{
 	UpHost:    "http://upload-z2.qiniu.com",
-	RsHost:    "http://rs-z2.qiniu.com",
-	RsfHost:   "http://rsf-z2.qbox.me",
 	IovipHost: "http://iovip-z2.qbox.me",
+	RsHost:    "http://rs.qiniu.com",
+	RsfHost:   "http://rsf.qbox.me",
 	ApiHost:   "http://api.qiniu.com",
 }
 
 var ZoneNA0Config = ZoneConfig{
 	UpHost:    "http://upload-na0.qiniu.com",
-	RsHost:    "http://rs-na0.qbox.me",
-	RsfHost:   "http://rsf-na0.qbox.me",
 	IovipHost: "http://iovip-na0.qbox.me",
+	RsHost:    "http://rs.qbox.me",
+	RsfHost:   "http://rsf.qbox.me",
 	ApiHost:   "http://api.qiniu.com",
 }
 
