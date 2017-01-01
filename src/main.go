@@ -106,6 +106,7 @@ func main() {
 
 	//set qshell root path
 	if multiUserMode {
+		log.Debug("Entering multiple user mode")
 		pwd, gErr := os.Getwd()
 		if gErr != nil {
 			fmt.Println("Error: get current work dir error,", gErr)
@@ -113,6 +114,7 @@ func main() {
 		}
 		qshell.QShellRootPath = pwd
 	} else {
+		log.Debug("Entering single user mode")
 		curUser, gErr := user.Current()
 		if gErr != nil {
 			fmt.Println("Error: get current user error,", gErr)
