@@ -189,7 +189,6 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	//make SrcDir the full path
 	uploadConfig.SrcDir, _ = filepath.Abs(uploadConfig.SrcDir)
 
-	pathSep := string(os.PathSeparator)
 	//create job id
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
 
@@ -420,11 +419,12 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		localFlmd, _ := strconv.ParseInt(items[2], 10, 64)
 		uploadFileKey := localFpath
 
+		//check ignore dir
 		if uploadConfig.IgnoreDir {
-			if i := strings.LastIndex(uploadFileKey, pathSep); i != -1 {
-				uploadFileKey = uploadFileKey[i+1:]
-			}
+			uploadFileKey = filepath.Base(uploadFileKey)
 		}
+
+		//check prefix
 		if uploadConfig.KeyPrefix != "" {
 			uploadFileKey = strings.Join([]string{uploadConfig.KeyPrefix, uploadFileKey}, "")
 		}
