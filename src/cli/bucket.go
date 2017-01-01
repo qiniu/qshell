@@ -22,8 +22,12 @@ func GetBuckets(cmd string, params ...string) {
 		if err != nil {
 			log.Error("Get buckets error,", err)
 		} else {
-			for _, bucket := range buckets {
-				fmt.Println(bucket)
+			if len(buckets) == 0 {
+				fmt.Println("No buckets found")
+			} else {
+				for _, bucket := range buckets {
+					fmt.Println(bucket)
+				}
 			}
 		}
 	} else {
@@ -47,8 +51,12 @@ func GetDomainsOfBucket(cmd string, params ...string) {
 		if err != nil {
 			log.Error("Get domains error,", err)
 		} else {
-			for _, domain := range domains {
-				fmt.Println(domain)
+			if len(domains) == 0 {
+				fmt.Printf("No domains found for bucket `%s`\n", bucket)
+			} else {
+				for _, domain := range domains {
+					fmt.Println(domain)
+				}
 			}
 		}
 	} else {
