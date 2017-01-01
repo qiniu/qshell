@@ -18,7 +18,7 @@ import (
 
 var upSettings = rio.Settings{
 	ChunkSize: 4 * 1024 * 1024,
-	TryTimes:  7,
+	TryTimes:  3,
 }
 
 func FormPut(cmd string, params ...string) {
@@ -51,8 +51,8 @@ func FormPut(cmd string, params ...string) {
 			return
 		}
 
+		//upload settings
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
-
 		if upHost == "" {
 			//get bucket zone info
 			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
@@ -67,6 +67,7 @@ func FormPut(cmd string, params ...string) {
 			conf.UP_HOST = upHost
 		}
 
+		//create uptoken
 		policy := rs.PutPolicy{}
 		if overwrite {
 			policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
@@ -81,6 +82,8 @@ func FormPut(cmd string, params ...string) {
 		}
 
 		uptoken := policy.Token(&mac)
+
+		//start to upload
 		putRet := fio.PutRet{}
 		startTime := time.Now()
 		fStat, statErr := os.Stat(localFile)
@@ -169,6 +172,7 @@ func ResumablePut(cmd string, params ...string) {
 		}
 		fsize := fStat.Size()
 
+		//upload settings
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 		if upHost == "" {
 			//get bucket zone info
@@ -183,9 +187,10 @@ func ResumablePut(cmd string, params ...string) {
 		} else {
 			conf.UP_HOST = upHost
 		}
+		rio.SetSettings(&upSettings)
 
+		//create uptoken
 		policy := rs.PutPolicy{}
-
 		if overwrite {
 			policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
 		} else {
@@ -207,10 +212,11 @@ func ResumablePut(cmd string, params ...string) {
 		putExtra.Notify = progressHandler.Notify
 		putExtra.NotifyErr = progressHandler.NotifyErr
 		uptoken := policy.Token(&mac)
+
+		//start to upload
 		putRet := rio.PutRet{}
 		startTime := time.Now()
 
-		rio.SetSettings(&upSettings)
 		putClient := rio.NewClient(uptoken, "")
 		fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
 		err := rio.PutFile(putClient, nil, &putRet, key, localFile, &putExtra)
