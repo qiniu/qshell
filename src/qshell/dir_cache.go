@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+/*
+generate the file list for the specified directory
+
+@param cacheRootPath - dir to generate cache file
+@param cacheResultFile - cache result file path
+
+@return (fileCount, retErr) - total file count and any error meets
+*/
 func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int, retErr error) {
 	//check dir
 	rootPathFileInfo, statErr := os.Stat(cacheRootPath)
@@ -22,7 +30,7 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int, retE
 
 	if !rootPathFileInfo.IsDir() {
 		retErr = errors.New("dircache failed")
-		log.Errorf("Dircache failed, `%s` should be a directory rather than a file", cacheRootPath)
+		log.Errorf("Dir cache failed, `%s` should be a directory rather than a file", cacheRootPath)
 		return
 	}
 
@@ -40,6 +48,7 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int, retE
 
 	//walk start
 	walkStart := time.Now()
+
 	log.Infof("Walk `%s` start from %s", cacheRootPath, walkStart.String())
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, walkErr error) error {
 		var retErr error
@@ -50,6 +59,7 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int, retE
 		//check error
 		if walkErr != nil {
 			log.Errorf("Walk through `%s` error, %s", path, walkErr)
+
 			//skip this dir
 			retErr = filepath.SkipDir
 		} else {
@@ -86,6 +96,6 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int, retE
 	walkEnd := time.Now()
 	log.Infof("Walk `%s` end at %s", cacheRootPath, walkEnd.String())
 	log.Infof("Walk `%s` last for %s", cacheRootPath, time.Since(walkStart))
-	log.Infof("Total file count %d", fileCount)
+	log.Infof("Total file count cached %d", fileCount)
 	return
 }
