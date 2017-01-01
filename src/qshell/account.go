@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"qiniu/log"
 )
 
 type Account struct {
@@ -108,6 +109,6 @@ func (this *Account) Get() (err error) {
 
 	pwd, _ := os.Getwd()
 	accountPath := filepath.Join(pwd, qAccountFile)
-	fmt.Println("Load account from", accountPath, "\n")
+	log.Debugf("Load account from %s", accountPath)
 	return
 }
