@@ -60,14 +60,14 @@ func ListBucket(cmd string, params ...string) {
 			listResultFile = cmdParams[2]
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
-		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
-		if accountS.AccessKey != "" && accountS.SecretKey != "" {
+		mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
+		if account.AccessKey != "" && account.SecretKey != "" {
 			qshell.ListBucket(&mac, bucket, prefix, listMarker, listResultFile)
 		} else {
 			fmt.Println("No AccessKey and SecretKey set error!")
@@ -82,15 +82,15 @@ func Stat(cmd string, params ...string) {
 		bucket := params[0]
 		key := params[1]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		entry, err := client.Stat(nil, bucket, key)
@@ -113,15 +113,15 @@ func Delete(cmd string, params ...string) {
 		bucket := params[0]
 		key := params[1]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		err := client.Delete(nil, bucket, key)
@@ -153,15 +153,15 @@ func Move(cmd string, params ...string) {
 			destKey = cmdParams[3]
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		err := client.Move(nil, srcBucket, srcKey, destBucket, destKey, overwrite)
@@ -193,15 +193,15 @@ func Copy(cmd string, params ...string) {
 			destKey = cmdParams[3]
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		err := client.Copy(nil, srcBucket, srcKey, destBucket, destKey, overwrite)
@@ -223,15 +223,15 @@ func Chgm(cmd string, params ...string) {
 		key := params[1]
 		newMimeType := params[2]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		err := client.ChangeMime(nil, bucket, key, newMimeType)
@@ -258,15 +258,15 @@ func Fetch(cmd string, params ...string) {
 			key = params[2]
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 
 		//get bucket zone info
@@ -302,15 +302,15 @@ func Prefetch(cmd string, params ...string) {
 		bucket := params[0]
 		key := params[1]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 
 		//get bucket zone info
@@ -341,15 +341,15 @@ func BatchStat(cmd string, params ...string) {
 		bucket := params[0]
 		keyListFile := params[1]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(keyListFile)
@@ -445,15 +445,15 @@ func BatchDelete(cmd string, params ...string) {
 		bucket := cmdParams[0]
 		keyListFile := cmdParams[1]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(keyListFile)
@@ -550,15 +550,15 @@ func BatchChgm(cmd string, params ...string) {
 		bucket := cmdParams[0]
 		keyMimeMapFile := cmdParams[1]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(keyMimeMapFile)
@@ -651,15 +651,15 @@ func BatchRename(cmd string, params ...string) {
 		bucket := cmdParams[0]
 		oldNewKeyMapFile := cmdParams[1]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(oldNewKeyMapFile)
@@ -754,15 +754,15 @@ func BatchMove(cmd string, params ...string) {
 		destBucket := cmdParams[1]
 		srcDestKeyMapFile := cmdParams[2]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(srcDestKeyMapFile)
@@ -862,15 +862,15 @@ func BatchCopy(cmd string, params ...string) {
 		destBucket := cmdParams[1]
 		srcDestKeyMapFile := cmdParams[2]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(srcDestKeyMapFile)
@@ -949,15 +949,15 @@ func PrivateUrl(cmd string, params ...string) {
 			deadline = time.Now().Add(time.Second * 3600).Unix()
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		url := qshell.PrivateUrl(&mac, publicUrl, deadline)
 		fmt.Println(url)
@@ -981,15 +981,15 @@ func BatchSign(cmd string, params ...string) {
 			deadline = time.Now().Add(time.Second * 3600 * 24 * 365).Unix()
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 
 		fp, openErr := os.Open(urlListFile)
@@ -1020,15 +1020,15 @@ func Saveas(cmd string, params ...string) {
 		saveBucket := params[1]
 		saveKey := params[2]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		url, err := qshell.Saveas(&mac, publicUrl, saveBucket, saveKey)
 		if err != nil {
@@ -1046,15 +1046,15 @@ func M3u8Delete(cmd string, params ...string) {
 		bucket := params[0]
 		m3u8Key := params[1]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 
 		//get bucket zone info
@@ -1106,15 +1106,15 @@ func M3u8Replace(cmd string, params ...string) {
 			newDomain = strings.TrimRight(params[2], "/")
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 
 		//get bucket zone info

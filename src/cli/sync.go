@@ -18,15 +18,15 @@ func Sync(cmd string, params ...string) {
 			upHostIp = params[3]
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			log.Error(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		//get bucket zone info
 		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)

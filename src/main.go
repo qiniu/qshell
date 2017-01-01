@@ -5,8 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/user"
 	"qiniu/log"
 	"qiniu/rpc"
+	"qshell"
 	"runtime"
 )
 
@@ -78,8 +80,10 @@ func main() {
 	var debugMode bool
 	var helpMode bool
 	var versionMode bool
+	var multiUserMode bool
 
 	flag.BoolVar(&debugMode, "d", false, "debug mode")
+	flag.BoolVar(&multiUserMode, "m", false, "multi user mode")
 	flag.BoolVar(&helpMode, "h", false, "show help")
 	flag.BoolVar(&versionMode, "v", false, "show version")
 
@@ -95,8 +99,26 @@ func main() {
 		return
 	}
 
+	//set log level
 	if debugMode {
 		log.SetOutputLevel(log.Ldebug)
+	}
+
+	//set qshell root path
+	if multiUserMode {
+		pwd, gErr := os.Getwd()
+		if gErr != nil {
+			fmt.Println("Error: get current work dir error,", gErr)
+			return
+		}
+		qshell.QShellRootPath = pwd
+	} else {
+		curUser, gErr := user.Current()
+		if gErr != nil {
+			fmt.Println("Error: get current user error,", gErr)
+			return
+		}
+		qshell.QShellRootPath = curUser.HomeDir
 	}
 
 	//set cmd and params

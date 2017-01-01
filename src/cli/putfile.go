@@ -52,14 +52,14 @@ func FormPut(cmd string, params ...string) {
 			mimeType = param
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		//upload settings
-		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
+		mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 		if upHost == "" {
 			//get bucket zone info
 			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
@@ -169,7 +169,7 @@ func ResumablePut(cmd string, params ...string) {
 			mimeType = param
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
@@ -183,7 +183,7 @@ func ResumablePut(cmd string, params ...string) {
 		fsize := fStat.Size()
 
 		//upload settings
-		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
+		mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 		if upHost == "" {
 			//get bucket zone info
 			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)

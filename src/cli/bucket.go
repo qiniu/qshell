@@ -9,14 +9,14 @@ import (
 
 func GetBuckets(cmd string, params ...string) {
 	if len(params) == 0 {
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		buckets, err := qshell.GetBuckets(&mac)
 		if err != nil {
@@ -38,14 +38,14 @@ func GetBuckets(cmd string, params ...string) {
 func GetDomainsOfBucket(cmd string, params ...string) {
 	if len(params) == 1 {
 		bucket := params[0]
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		domains, err := qshell.GetDomainsOfBucket(&mac, bucket)
 		if err != nil {

@@ -194,7 +194,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
 
 	//local storage path
-	storePath := filepath.Join(".qshell", "qupload", jobId)
+	storePath := filepath.Join(QShellRootPath, ".qshell", "qupload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
 		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		return
