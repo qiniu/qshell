@@ -8,6 +8,10 @@
 qshell copy [-overwrite] <SrcBucket> <SrcKey> <DestBucket> [<DestKey>]
 ```
 
+# 鉴权
+
+需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+
 # 参数
 
 |参数名|描述|可选参数|
