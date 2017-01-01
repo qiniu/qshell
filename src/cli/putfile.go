@@ -16,6 +16,13 @@ import (
 	"time"
 )
 
+type PutRet struct {
+	Key      string `json:"key"`
+	Hash     string `json:"hash"`
+	MimeType string `json:"mimeType"`
+	Fsize    int64  `json:"fsize"`
+}
+
 var upSettings = rio.Settings{
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  3,
@@ -75,7 +82,7 @@ func FormPut(cmd string, params ...string) {
 			policy.Scope = bucket
 		}
 		policy.Expires = 7 * 24 * 3600
-
+		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 		putExtra := fio.PutExtra{}
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
@@ -84,7 +91,7 @@ func FormPut(cmd string, params ...string) {
 		uptoken := policy.Token(&mac)
 
 		//start to upload
-		putRet := fio.PutRet{}
+		putRet := PutRet{}
 		startTime := time.Now()
 		fStat, statErr := os.Stat(localFile)
 		if statErr != nil {
@@ -124,7 +131,10 @@ func FormPut(cmd string, params ...string) {
 				fmt.Println("Put file error,", err)
 			}
 		} else {
-			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
+			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "success!")
+			fmt.Println("Hash:", putRet.Hash)
+			fmt.Println("Fsize:", putRet.Fsize, "(", FormatFsize(fsize), ")")
+			fmt.Println("MimeType:", putRet.MimeType)
 		}
 		lastNano := time.Now().UnixNano() - startTime.UnixNano()
 		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
@@ -197,6 +207,7 @@ func ResumablePut(cmd string, params ...string) {
 			policy.Scope = bucket
 		}
 		policy.Expires = 7 * 24 * 3600
+		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 
 		putExtra := rio.PutExtra{}
 		if mimeType != "" {
@@ -214,7 +225,7 @@ func ResumablePut(cmd string, params ...string) {
 		uptoken := policy.Token(&mac)
 
 		//start to upload
-		putRet := rio.PutRet{}
+		putRet := PutRet{}
 		startTime := time.Now()
 
 		putClient := rio.NewClient(uptoken, "")
@@ -228,7 +239,10 @@ func ResumablePut(cmd string, params ...string) {
 				fmt.Println("Put file error,", err)
 			}
 		} else {
-			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "(", putRet.Hash, ")", "success!")
+			fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "success!")
+			fmt.Println("Hash:", putRet.Hash)
+			fmt.Println("Fsize:", putRet.Fsize, "(", FormatFsize(fsize), ")")
+			fmt.Println("MimeType:", putRet.MimeType)
 		}
 		lastNano := time.Now().UnixNano() - startTime.UnixNano()
 		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
