@@ -48,7 +48,6 @@ Config file like:
 	"bind_rs_ip"			:	"",
 	"bind_nic_ip"			:	"",
 	"rescan_local"			:	false
-
 }
 
 or the simplest one
@@ -96,21 +95,21 @@ type UploadConfig struct {
 	RescanLocal      bool   `json:"rescan_local,omitempty"`
 
 	//advanced config
-	Zone   string `json:"zone,omitempty"`
 	UpHost string `json:"up_host,omitempty"`
 
 	BindUpIp string `json:"bind_up_ip,omitempty"`
 	BindRsIp string `json:"bind_rs_ip,omitempty"`
-
 	//local network interface card config
 	BindNicIp string `json:"bind_nic_ip,omitempty"`
-	LogLevel  string `json:"log_level,omitempty"`
-	LogFile   string `json:"log_file,omitempty"`
+
+	//log settings
+	LogLevel string `json:"log_level,omitempty"`
+	LogFile  string `json:"log_file,omitempty"`
 }
 
 var upSettings = rio.Settings{
 	ChunkSize: 4 * 1024 * 1024,
-	TryTimes:  7,
+	TryTimes:  3,
 }
 
 var uploadTasks chan func()
@@ -212,9 +211,9 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		totalFileCount = getFileLineCount(cacheResultName)
 	} else {
 		//cache file
-		cacheResultName = filepath.Join(storePath, jobId+".cache")
-		cacheTempName := filepath.Join(storePath, jobId+".cache.temp")
-		cacheCountName := filepath.Join(storePath, jobId+".count")
+		cacheResultName = filepath.Join(storePath, fmt.Sprintf("%s.cache", jobId))
+		cacheTempName := filepath.Join(storePath, fmt.Sprintf("%s.cache.temp", jobId))
+		cacheCountName := filepath.Join(storePath, fmt.Sprintf("%s.count", jobId))
 
 		rescanLocalDir := false
 		if _, statErr := os.Stat(cacheResultName); statErr == nil {
@@ -282,13 +281,13 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	}
 	defer ldb.Close()
 	//sync
-	ufp, err := os.Open(cacheResultName)
+	cacheResultFileHandle, err := os.Open(cacheResultName)
 	if err != nil {
 		log.Errorf("Open list file `%s` failed due to %s", cacheResultName, err)
 		return
 	}
-	defer ufp.Close()
-	bScanner := bufio.NewScanner(ufp)
+	defer cacheResultFileHandle.Close()
+	bScanner := bufio.NewScanner(cacheResultFileHandle)
 	bScanner.Split(bufio.ScanLines)
 
 	var currentFileCount int64 = 0
