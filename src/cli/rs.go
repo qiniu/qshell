@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"qiniu/api.v6/auth/digest"
@@ -42,15 +43,21 @@ func DirCache(cmd string, params ...string) {
 }
 
 func ListBucket(cmd string, params ...string) {
-	if len(params) == 2 || len(params) == 3 {
-		bucket := params[0]
+	var listMarker string
+	flagSet := flag.NewFlagSet("listbucket", flag.ExitOnError)
+	flagSet.StringVar(&listMarker, "marker", "", "list marker")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 2 || len(cmdParams) == 3 {
+		bucket := cmdParams[0]
 		prefix := ""
 		listResultFile := ""
-		if len(params) == 2 {
-			listResultFile = params[1]
-		} else if len(params) == 3 {
-			prefix = params[1]
-			listResultFile = params[2]
+		if len(cmdParams) == 2 {
+			listResultFile = cmdParams[1]
+		} else if len(cmdParams) == 3 {
+			prefix = cmdParams[1]
+			listResultFile = cmdParams[2]
 		}
 
 		gErr := accountS.Get()
@@ -61,7 +68,7 @@ func ListBucket(cmd string, params ...string) {
 
 		mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
 		if accountS.AccessKey != "" && accountS.SecretKey != "" {
-			qshell.ListBucket(&mac, bucket, prefix, ListMarker, listResultFile)
+			qshell.ListBucket(&mac, bucket, prefix, listMarker, listResultFile)
 		} else {
 			fmt.Println("No AccessKey and SecretKey set error!")
 		}
@@ -398,8 +405,14 @@ func batchStat(client rs.Client, entries []rs.EntryPath) {
 }
 
 func BatchDelete(cmd string, params ...string) {
-	if len(params) == 2 {
-		if !ForceMode {
+	var force bool
+	flagSet := flag.NewFlagSet("batchdelete", flag.ExitOnError)
+	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 2 {
+		if !force {
 			//confirm
 			rcode := CreateRandString(6)
 			if rcode == "" {
@@ -490,8 +503,14 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 }
 
 func BatchChgm(cmd string, params ...string) {
-	if len(params) == 2 {
-		if !ForceMode {
+	var force bool
+	flagSet := flag.NewFlagSet("batchchgm", flag.ExitOnError)
+	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 2 {
+		if !force {
 			//confirm
 			rcode := CreateRandString(6)
 			if rcode == "" {
@@ -579,8 +598,14 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 }
 
 func BatchRename(cmd string, params ...string) {
-	if len(params) == 2 {
-		if !ForceMode {
+	var force bool
+	flagSet := flag.NewFlagSet("batchrename", flag.ExitOnError)
+	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 2 {
+		if !force {
 			//confirm
 			rcode := CreateRandString(6)
 			if rcode == "" {
@@ -668,8 +693,14 @@ func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 }
 
 func BatchMove(cmd string, params ...string) {
-	if len(params) == 3 {
-		if !ForceMode {
+	var force bool
+	flagSet := flag.NewFlagSet("batchdelete", flag.ExitOnError)
+	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 3 {
+		if !force {
 			//confirm
 			rcode := CreateRandString(6)
 			if rcode == "" {
@@ -763,8 +794,14 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 }
 
 func BatchCopy(cmd string, params ...string) {
-	if len(params) == 3 {
-		if !ForceMode {
+	var force bool
+	flagSet := flag.NewFlagSet("batchcopy", flag.ExitOnError)
+	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 3 {
+		if !force {
 			//confirm
 			rcode := CreateRandString(6)
 			if rcode == "" {

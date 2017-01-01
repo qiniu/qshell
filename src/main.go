@@ -76,16 +76,12 @@ func main() {
 
 	//global options
 	var debugMode bool
-	var forceMode bool
 	var helpMode bool
 	var versionMode bool
-	var listMarker string
 
 	flag.BoolVar(&debugMode, "d", false, "debug mode")
-	flag.BoolVar(&forceMode, "f", false, "force mode")
 	flag.BoolVar(&helpMode, "h", false, "show help")
 	flag.BoolVar(&versionMode, "v", false, "show version")
-	flag.StringVar(&listMarker, "marker", "", "list marker")
 
 	flag.Parse()
 
@@ -103,17 +99,10 @@ func main() {
 		log.SetOutputLevel(log.Ldebug)
 	}
 
-	if forceMode {
-		cli.ForceMode = true
-	}
-
 	//set cmd and params
 	args := flag.Args()
 	cmd := args[0]
 	params := args[1:]
-
-	//set global options
-	cli.ListMarker = listMarker
 
 	if cmd == "" {
 		fmt.Println("Error: no subcommand specified")

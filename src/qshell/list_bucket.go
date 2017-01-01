@@ -48,7 +48,7 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 	bucketInfo, gErr := GetBucketInfo(mac, bucket)
 	if gErr != nil {
 		retErr = gErr
-		log.Errorf("Failed to get region info of bucket `%s`", bucket)
+		log.Errorf("Failed to get region info of bucket `%s`, %s", bucket, gErr)
 		return
 	}
 

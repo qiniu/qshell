@@ -5,9 +5,6 @@ import (
 	"qshell"
 )
 
-var ForceMode bool
-var ListMarker string
-
 type CliFunc func(cmd string, params ...string)
 
 var accountS = qshell.Account{}
