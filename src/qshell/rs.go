@@ -138,28 +138,28 @@ func BatchDelete(client rs.Client, entries []rs.EntryPath) (ret []BatchItemRet, 
 	return
 }
 
-func BatchRename(client rs.Client, entries []RenameEntryPath) (ret []BatchItemRet, err error) {
+func BatchRename(client rs.Client, entries []RenameEntryPath, force bool) (ret []BatchItemRet, err error) {
 	b := make([]string, len(entries))
 	for i, e := range entries {
-		b[i] = rs.URIMove(e.Bucket, e.OldKey, e.Bucket, e.NewKey)
+		b[i] = rs.URIMove(e.Bucket, e.OldKey, e.Bucket, e.NewKey, force)
 	}
 	err = client.Batch(nil, &ret, b)
 	return
 }
 
-func BatchMove(client rs.Client, entries []MoveEntryPath) (ret []BatchItemRet, err error) {
+func BatchMove(client rs.Client, entries []MoveEntryPath, force bool) (ret []BatchItemRet, err error) {
 	b := make([]string, len(entries))
 	for i, e := range entries {
-		b[i] = rs.URIMove(e.SrcBucket, e.SrcKey, e.DestBucket, e.DestKey)
+		b[i] = rs.URIMove(e.SrcBucket, e.SrcKey, e.DestBucket, e.DestKey, force)
 	}
 	err = client.Batch(nil, &ret, b)
 	return
 }
 
-func BatchCopy(client rs.Client, entries []CopyEntryPath) (ret []BatchItemRet, err error) {
+func BatchCopy(client rs.Client, entries []CopyEntryPath, force bool) (ret []BatchItemRet, err error) {
 	b := make([]string, len(entries))
 	for i, e := range entries {
-		b[i] = rs.URICopy(e.SrcBucket, e.SrcKey, e.DestBucket, e.DestKey)
+		b[i] = rs.URICopy(e.SrcBucket, e.SrcKey, e.DestBucket, e.DestKey, force)
 	}
 	err = client.Batch(nil, &ret, b)
 	return

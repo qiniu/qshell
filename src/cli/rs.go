@@ -96,9 +96,9 @@ func Stat(cmd string, params ...string) {
 		entry, err := client.Stat(nil, bucket, key)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println("Stat error,", v.Code, v.Err)
+				fmt.Printf("Stat error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
-				fmt.Println("Stat error,", err.Error())
+				fmt.Println("Stat error,", err)
 			}
 		} else {
 			printStat(bucket, key, entry)
@@ -127,9 +127,9 @@ func Delete(cmd string, params ...string) {
 		err := client.Delete(nil, bucket, key)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println("Delete error,", v.Code, v.Err)
+				fmt.Printf("Delete error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
-				fmt.Println("Delete error,", err.Error())
+				fmt.Println("Delete error,", err)
 			}
 		} else {
 			fmt.Println("Delete done!")
@@ -140,13 +140,20 @@ func Delete(cmd string, params ...string) {
 }
 
 func Move(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 {
-		srcBucket := params[0]
-		srcKey := params[1]
-		destBucket := params[2]
+	var overwrite bool
+	flagSet := flag.NewFlagSet("move", flag.ExitOnError)
+	flagSet.BoolVar(&overwrite, "overwrite", false, "overwrite mode")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+
+	if len(cmdParams) == 3 || len(cmdParams) == 4 {
+		srcBucket := cmdParams[0]
+		srcKey := cmdParams[1]
+		destBucket := cmdParams[2]
 		destKey := srcKey
 		if len(params) == 4 {
-			destKey = params[3]
+			destKey = cmdParams[3]
 		}
 
 		gErr := accountS.Get()
@@ -160,12 +167,12 @@ func Move(cmd string, params ...string) {
 			[]byte(accountS.SecretKey),
 		}
 		client := rs.NewMac(&mac)
-		err := client.Move(nil, srcBucket, srcKey, destBucket, destKey)
+		err := client.Move(nil, srcBucket, srcKey, destBucket, destKey, overwrite)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println("Move error,", v.Code, v.Err)
+				fmt.Printf("Move error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
-				fmt.Println("Move error,", err.Error())
+				fmt.Println("Move error,", err)
 			}
 		} else {
 			fmt.Println("Move done!")
@@ -176,13 +183,19 @@ func Move(cmd string, params ...string) {
 }
 
 func Copy(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 {
-		srcBucket := params[0]
-		srcKey := params[1]
-		destBucket := params[2]
+	var overwrite bool
+	flagSet := flag.NewFlagSet("copy", flag.ExitOnError)
+	flagSet.BoolVar(&overwrite, "overwrite", false, "overwrite mode")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 3 || len(cmdParams) == 4 {
+		srcBucket := cmdParams[0]
+		srcKey := cmdParams[1]
+		destBucket := cmdParams[2]
 		destKey := srcKey
 		if len(params) == 4 {
-			destKey = params[3]
+			destKey = cmdParams[3]
 		}
 
 		gErr := accountS.Get()
@@ -196,12 +209,12 @@ func Copy(cmd string, params ...string) {
 			[]byte(accountS.SecretKey),
 		}
 		client := rs.NewMac(&mac)
-		err := client.Copy(nil, srcBucket, srcKey, destBucket, destKey)
+		err := client.Copy(nil, srcBucket, srcKey, destBucket, destKey, overwrite)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println("Copy error,", v.Code, v.Err)
+				fmt.Printf("Copy error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
-				fmt.Println("Copy error,", err.Error())
+				fmt.Println("Copy error,", err)
 			}
 		} else {
 			fmt.Println("Copy done!")
@@ -231,9 +244,9 @@ func Chgm(cmd string, params ...string) {
 		err := client.ChangeMime(nil, bucket, key, newMimeType)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println("Change mimetype error,", v.Code, v.Err)
+				fmt.Printf("Change mimetype error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
-				fmt.Println("Change mimetype error,", err.Error())
+				fmt.Println("Change mimetype error,", err)
 			}
 		} else {
 			fmt.Println("Change mimetype done!")
@@ -276,9 +289,9 @@ func Fetch(cmd string, params ...string) {
 		fetchResult, err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println("Fetch error,", v.Code, v.Err)
+				fmt.Printf("Fetch error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
-				fmt.Println("Fetch error,", err.Error())
+				fmt.Println("Fetch error,", err)
 			}
 		} else {
 			fmt.Println("Key:", fetchResult.Key)
@@ -320,9 +333,9 @@ func Prefetch(cmd string, params ...string) {
 		err := qshell.Prefetch(&mac, bucket, key)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Println("Prefetch error,", v.Code, v.Err)
+				fmt.Printf("Prefetch error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
-				fmt.Println("Prefetch error,", err.Error())
+				fmt.Println("Prefetch error,", err)
 			}
 		} else {
 			fmt.Println("Prefetch done!")
@@ -399,7 +412,11 @@ func batchStat(client rs.Client, entries []rs.EntryPath) {
 		}
 	} else {
 		if err != nil {
-			fmt.Println("Batch stat error", err)
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Printf("Batch stat error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
+			} else {
+				fmt.Println("Batch stat error,", err)
+			}
 		}
 	}
 }
@@ -520,9 +537,9 @@ func BatchChgm(cmd string, params ...string) {
 
 			rcode2 := ""
 			if runtime.GOOS == "windows" {
-				fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+				fmt.Printf("<DANGER> Input %s to confirm operation: ", rcode)
 			} else {
-				fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+				fmt.Printf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode)
 			}
 			fmt.Scanln(&rcode2)
 
@@ -591,7 +608,7 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 			if item.Data.Error != "" {
 				log.Errorf("Chgm '%s' => '%s' Failed, Code: %d, Error: %s", entry.Key, entry.MimeType, item.Code, item.Data.Error)
 			} else {
-				log.Debug(fmt.Sprintf("Chgm '%s' => '%s' success", entry.Key, entry.MimeType))
+				log.Debugf("Chgm '%s' => '%s' success", entry.Key, entry.MimeType)
 			}
 		}
 	}
@@ -599,8 +616,10 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 
 func BatchRename(cmd string, params ...string) {
 	var force bool
+	var overwrite bool
 	flagSet := flag.NewFlagSet("batchrename", flag.ExitOnError)
 	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.BoolVar(&overwrite, "overwrite", false, "overwrite mode")
 	flagSet.Parse(params)
 
 	cmdParams := flagSet.Args()
@@ -615,9 +634,9 @@ func BatchRename(cmd string, params ...string) {
 
 			rcode2 := ""
 			if runtime.GOOS == "windows" {
-				fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+				fmt.Printf("<DANGER> Input %s to confirm operation: ", rcode)
 			} else {
-				fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+				fmt.Printf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode)
 			}
 			fmt.Scanln(&rcode2)
 
@@ -662,12 +681,12 @@ func BatchRename(cmd string, params ...string) {
 				}
 			}
 			if len(entries) == BATCH_ALLOW_MAX {
-				batchRename(client, entries)
+				batchRename(client, entries, overwrite)
 				entries = make([]qshell.RenameEntryPath, 0)
 			}
 		}
 		if len(entries) > 0 {
-			batchRename(client, entries)
+			batchRename(client, entries, overwrite)
 		}
 		fmt.Println("All Renamed!")
 	} else {
@@ -675,8 +694,8 @@ func BatchRename(cmd string, params ...string) {
 	}
 }
 
-func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
-	ret, err := qshell.BatchRename(client, entries)
+func batchRename(client rs.Client, entries []qshell.RenameEntryPath, overwrite bool) {
+	ret, err := qshell.BatchRename(client, entries, overwrite)
 	if err != nil {
 		fmt.Println("Batch rename error")
 	}
@@ -686,7 +705,7 @@ func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 			if item.Data.Error != "" {
 				log.Errorf("Rename '%s' => '%s' Failed, Code: %d, Error: %s", entry.OldKey, entry.NewKey, item.Code, item.Data.Error)
 			} else {
-				log.Debug(fmt.Sprintf("Rename '%s' => '%s' success", entry.OldKey, entry.NewKey))
+				log.Debugf("Rename '%s' => '%s' success", entry.OldKey, entry.NewKey)
 			}
 		}
 	}
@@ -694,8 +713,10 @@ func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 
 func BatchMove(cmd string, params ...string) {
 	var force bool
+	var overwrite bool
 	flagSet := flag.NewFlagSet("batchmove", flag.ExitOnError)
 	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.BoolVar(&overwrite, "overwrite", false, "overwrite mode")
 	flagSet.Parse(params)
 
 	cmdParams := flagSet.Args()
@@ -710,9 +731,9 @@ func BatchMove(cmd string, params ...string) {
 
 			rcode2 := ""
 			if runtime.GOOS == "windows" {
-				fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+				fmt.Printf("<DANGER> Input %s to confirm operation: ", rcode)
 			} else {
-				fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+				fmt.Printf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode)
 			}
 			fmt.Scanln(&rcode2)
 
@@ -761,12 +782,12 @@ func BatchMove(cmd string, params ...string) {
 				}
 			}
 			if len(entries) == BATCH_ALLOW_MAX {
-				batchMove(client, entries)
+				batchMove(client, entries, overwrite)
 				entries = make([]qshell.MoveEntryPath, 0)
 			}
 		}
 		if len(entries) > 0 {
-			batchMove(client, entries)
+			batchMove(client, entries, overwrite)
 		}
 		fmt.Println("All Moved!")
 	} else {
@@ -774,8 +795,8 @@ func BatchMove(cmd string, params ...string) {
 	}
 }
 
-func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
-	ret, err := qshell.BatchMove(client, entries)
+func batchMove(client rs.Client, entries []qshell.MoveEntryPath, overwrite bool) {
+	ret, err := qshell.BatchMove(client, entries, overwrite)
 	if err != nil {
 		fmt.Println("Batch move error")
 	}
@@ -786,8 +807,8 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 				log.Errorf("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code, item.Data.Error)
 			} else {
-				log.Debug(fmt.Sprintf("Move '%s:%s' => '%s:%s' success",
-					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey))
+				log.Debugf("Move '%s:%s' => '%s:%s' success",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey)
 			}
 		}
 	}
@@ -795,8 +816,10 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath) {
 
 func BatchCopy(cmd string, params ...string) {
 	var force bool
+	var overwrite bool
 	flagSet := flag.NewFlagSet("batchcopy", flag.ExitOnError)
 	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.BoolVar(&overwrite, "overwrite", false, "overwrite mode")
 	flagSet.Parse(params)
 
 	cmdParams := flagSet.Args()
@@ -811,9 +834,9 @@ func BatchCopy(cmd string, params ...string) {
 
 			rcode2 := ""
 			if runtime.GOOS == "windows" {
-				fmt.Print(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", rcode))
+				fmt.Printf("<DANGER> Input %s to confirm operation: ", rcode)
 			} else {
-				fmt.Print(fmt.Sprintf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode))
+				fmt.Printf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode)
 			}
 			fmt.Scanln(&rcode2)
 
@@ -862,12 +885,12 @@ func BatchCopy(cmd string, params ...string) {
 				}
 			}
 			if len(entries) == BATCH_ALLOW_MAX {
-				batchCopy(client, entries)
+				batchCopy(client, entries, overwrite)
 				entries = make([]qshell.CopyEntryPath, 0)
 			}
 		}
 		if len(entries) > 0 {
-			batchCopy(client, entries)
+			batchCopy(client, entries, overwrite)
 		}
 		fmt.Println("All Copyed!")
 	} else {
@@ -875,8 +898,8 @@ func BatchCopy(cmd string, params ...string) {
 	}
 }
 
-func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
-	ret, err := qshell.BatchCopy(client, entries)
+func batchCopy(client rs.Client, entries []qshell.CopyEntryPath, overwrite bool) {
+	ret, err := qshell.BatchCopy(client, entries, overwrite)
 	if err != nil {
 		fmt.Println("Batch copy error")
 	}
@@ -887,8 +910,8 @@ func batchCopy(client rs.Client, entries []qshell.CopyEntryPath) {
 				log.Errorf("Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code, item.Data.Error)
 			} else {
-				log.Debug(fmt.Sprintf("Copy '%s:%s' => '%s:%s' success",
-					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey))
+				log.Debugf("Copy '%s:%s' => '%s:%s' success",
+					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey)
 			}
 		}
 	}
