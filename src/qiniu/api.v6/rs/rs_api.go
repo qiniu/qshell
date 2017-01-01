@@ -80,11 +80,11 @@ func URIStat(bucket, key string) string {
 }
 
 func URICopy(bucketSrc, keySrc, bucketDest, keyDest string, force bool) string {
-	return fmt.Sprintf("/copy/%s/%s/force/%s", encodeURI(bucketSrc+":"+keySrc), encodeURI(bucketDest+":"+keyDest), force)
+	return fmt.Sprintf("/copy/%s/%s/force/%v", encodeURI(bucketSrc+":"+keySrc), encodeURI(bucketDest+":"+keyDest), force)
 }
 
 func URIMove(bucketSrc, keySrc, bucketDest, keyDest string, force bool) string {
-	return fmt.Sprintf("/move/%s/%s/force/%s", encodeURI(bucketSrc+":"+keySrc), encodeURI(bucketDest+":"+keyDest), force)
+	return fmt.Sprintf("/move/%s/%s/force/%v", encodeURI(bucketSrc+":"+keySrc), encodeURI(bucketDest+":"+keyDest), force)
 }
 
 func URIChangeMime(bucket, key, mime string) string {

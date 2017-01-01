@@ -146,13 +146,12 @@ func Move(cmd string, params ...string) {
 	flagSet.Parse(params)
 
 	cmdParams := flagSet.Args()
-
 	if len(cmdParams) == 3 || len(cmdParams) == 4 {
 		srcBucket := cmdParams[0]
 		srcKey := cmdParams[1]
 		destBucket := cmdParams[2]
 		destKey := srcKey
-		if len(params) == 4 {
+		if len(cmdParams) == 4 {
 			destKey = cmdParams[3]
 		}
 
@@ -194,7 +193,7 @@ func Copy(cmd string, params ...string) {
 		srcKey := cmdParams[1]
 		destBucket := cmdParams[2]
 		destKey := srcKey
-		if len(params) == 4 {
+		if len(cmdParams) == 4 {
 			destKey = cmdParams[3]
 		}
 
@@ -451,8 +450,8 @@ func BatchDelete(cmd string, params ...string) {
 			}
 		}
 
-		bucket := params[0]
-		keyListFile := params[1]
+		bucket := cmdParams[0]
+		keyListFile := cmdParams[1]
 
 		gErr := accountS.Get()
 		if gErr != nil {
@@ -549,8 +548,8 @@ func BatchChgm(cmd string, params ...string) {
 			}
 		}
 
-		bucket := params[0]
-		keyMimeMapFile := params[1]
+		bucket := cmdParams[0]
+		keyMimeMapFile := cmdParams[1]
 
 		gErr := accountS.Get()
 		if gErr != nil {
@@ -646,8 +645,8 @@ func BatchRename(cmd string, params ...string) {
 			}
 		}
 
-		bucket := params[0]
-		oldNewKeyMapFile := params[1]
+		bucket := cmdParams[0]
+		oldNewKeyMapFile := cmdParams[1]
 
 		gErr := accountS.Get()
 		if gErr != nil {
@@ -743,9 +742,9 @@ func BatchMove(cmd string, params ...string) {
 			}
 		}
 
-		srcBucket := params[0]
-		destBucket := params[1]
-		srcDestKeyMapFile := params[2]
+		srcBucket := cmdParams[0]
+		destBucket := cmdParams[1]
+		srcDestKeyMapFile := cmdParams[2]
 
 		gErr := accountS.Get()
 		if gErr != nil {
@@ -846,9 +845,9 @@ func BatchCopy(cmd string, params ...string) {
 			}
 		}
 
-		srcBucket := params[0]
-		destBucket := params[1]
-		srcDestKeyMapFile := params[2]
+		srcBucket := cmdParams[0]
+		destBucket := cmdParams[1]
+		srcDestKeyMapFile := cmdParams[2]
 
 		gErr := accountS.Get()
 		if gErr != nil {
