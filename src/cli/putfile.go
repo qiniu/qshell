@@ -63,6 +63,8 @@ func FormPut(cmd string, params ...string) {
 
 			//set up host
 			qshell.SetZone(bucketInfo.Region)
+		} else {
+			conf.UP_HOST = upHost
 		}
 
 		policy := rs.PutPolicy{}
@@ -77,9 +79,7 @@ func FormPut(cmd string, params ...string) {
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
 		}
-		if upHost != "" {
-			conf.UP_HOST = upHost
-		}
+
 		uptoken := policy.Token(&mac)
 		putRet := fio.PutRet{}
 		startTime := time.Now()
@@ -180,6 +180,8 @@ func ResumablePut(cmd string, params ...string) {
 
 			//set up host
 			qshell.SetZone(bucketInfo.Region)
+		} else {
+			conf.UP_HOST = upHost
 		}
 
 		policy := rs.PutPolicy{}
@@ -194,10 +196,6 @@ func ResumablePut(cmd string, params ...string) {
 		putExtra := rio.PutExtra{}
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
-		}
-
-		if upHost != "" {
-			conf.UP_HOST = upHost
 		}
 
 		progressHandler := ProgressHandler{

@@ -694,7 +694,7 @@ func batchRename(client rs.Client, entries []qshell.RenameEntryPath) {
 
 func BatchMove(cmd string, params ...string) {
 	var force bool
-	flagSet := flag.NewFlagSet("batchdelete", flag.ExitOnError)
+	flagSet := flag.NewFlagSet("batchmove", flag.ExitOnError)
 	flagSet.BoolVar(&force, "force", false, "force mode")
 	flagSet.Parse(params)
 
