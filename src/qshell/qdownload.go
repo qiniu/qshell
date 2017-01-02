@@ -2,10 +2,11 @@ package qshell
 
 import (
 	"bufio"
-	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -62,19 +63,31 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	timeStart := time.Now()
 	cnfFp, openErr := os.Open(downloadConfigFile)
 	if openErr != nil {
-		log.Error("Open download config file", downloadConfigFile, "failed,", openErr)
+		log.Error("Open download config file error,", openErr)
 		return
 	}
 	defer cnfFp.Close()
 	cnfData, rErr := ioutil.ReadAll(cnfFp)
 	if rErr != nil {
-		log.Error("Read download config file error", rErr)
+		log.Error("Read download config file error,", rErr)
 		return
 	}
 	downConfig := DownloadConfig{}
 	cnfErr := json.Unmarshal(cnfData, &downConfig)
 	if cnfErr != nil {
-		log.Error("Parse download config error", cnfErr)
+		log.Error("Parse download config error,", cnfErr)
+		return
+	}
+
+	//check dest dir
+	destFileInfo, statErr := os.Stat(downConfig.DestDir)
+	if statErr != nil {
+		log.Error("Invalid dest dir,", statErr)
+		return
+	}
+
+	if !destFileInfo.IsDir() {
+		log.Error("Dest dir should be a directory")
 		return
 	}
 
@@ -101,33 +114,53 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 
 	//set up host
 	SetZone(bucketInfo.Region)
-	ioProxyHost := conf.IO_HOST
-	//create local list file
-	cnfJson, _ := json.Marshal(&downConfig)
-	jobId := fmt.Sprintf("%x", md5.Sum(cnfJson))
-	jobListName := fmt.Sprintf("%s.list.txt", jobId)
+	ioProxyAddress := conf.IO_HOST
 
-	log.Info("List bucket ...")
-	listErr := ListBucket(&mac, downConfig.Bucket, downConfig.Prefix, "", jobListName)
+	//create job id
+	jobId := Md5Hex(fmt.Sprintf("%s:%s", downConfig.DestDir, downConfig.Bucket))
+
+	//local storage path
+	storePath := filepath.Join(QShellRootPath, ".qshell", "qdownload", jobId)
+	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
+		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		return
+	}
+
+	jobListFileName := filepath.Join(storePath, fmt.Sprintf("%s.list", jobId))
+	resumeFile := filepath.Join(storePath, fmt.Sprintf("%s.ldb", jobId))
+	resumeLevelDb, openErr := leveldb.OpenFile(resumeFile, nil)
+	if openErr != nil {
+		log.Error("Open resume record leveldb error", openErr)
+		return
+	}
+	defer resumeLevelDb.Close()
+	//sync underlying writes from the OS buffer cache
+	//through to actual disk
+	ldbWOpt := opt.WriteOptions{
+		Sync: true,
+	}
+
+	//list bucket, prepare file list to download
+	log.Infof("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
+	listErr := ListBucket(&mac, downConfig.Bucket, downConfig.Prefix, "", jobListFileName)
 	if listErr != nil {
 		log.Error("List bucket error", listErr)
 		return
 	}
-	listFp, openErr := os.Open(jobListName)
+
+	//open prepared file list to download files
+	listFp, openErr := os.Open(jobListFileName)
 	if openErr != nil {
 		log.Error("Open list file error", openErr)
 		return
 	}
 	defer listFp.Close()
+
 	listScanner := bufio.NewScanner(listFp)
 	listScanner.Split(bufio.ScanLines)
+
+	//init wait group
 	downWaitGroup := sync.WaitGroup{}
-
-	totalCount := 0
-	existsCount := 0
-
-	var successCount int32 = 0
-	var failCount int32 = 0
 
 	initDownOnce.Do(func() {
 		downloadTasks = make(chan func(), threadCount)
@@ -136,118 +169,233 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 		}
 	})
 
+	//init counters
+	var totalCount int64
+	var existsCount int64
+	var updateCount int64
+	var successCount int64
+	var failCount int64
+
+	//key, fsize, etag, lmd, mime, enduser
 	for listScanner.Scan() {
 		totalCount += 1
 		line := strings.TrimSpace(listScanner.Text())
 		items := strings.Split(line, "\t")
-		if len(items) > 2 {
+		if len(items) >= 4 {
 			fileKey := items[0]
-			//check suffix
+
 			if downConfig.Suffix != "" && !strings.HasSuffix(fileKey, downConfig.Suffix) {
+				//skip files by suffix specified
 				continue
 			}
-			fileSize, _ := strconv.ParseInt(items[1], 10, 64)
-			//not backup yet
 
-			if !checkLocalDuplicate(downConfig.DestDir, fileKey, fileSize) {
-				downWaitGroup.Add(1)
-				downloadTasks <- func() {
-					defer downWaitGroup.Done()
-					downErr := downloadFile(&mac, downConfig, fileKey, ioProxyHost, domainOfBucket)
-					if downErr != nil {
-						atomic.AddInt32(&failCount, 1)
+			fileSize, pErr := strconv.ParseInt(items[1], 10, 64)
+			if pErr != nil {
+				log.Errorf("Invalid list line", line)
+				continue
+			}
+
+			fileMtime, pErr := strconv.ParseInt(items[3], 10, 64)
+			if pErr != nil {
+				log.Errorf("Invalid list line", line)
+				continue
+			}
+
+			fileUrl := makePrivateDownloadLink(&mac, domainOfBucket, ioProxyAddress, fileKey)
+
+			//check whether log file exists
+			localFilePath := filepath.Join(downConfig.DestDir, fileKey)
+			localAbsFilePath, _ := filepath.Abs(localFilePath)
+			localFilePathTmp := fmt.Sprintf("%s.tmp", localFilePath)
+			localFileInfo, statErr := os.Stat(localFilePath)
+
+			var downNewLog bool
+			var fromBytes int64
+
+			if statErr == nil {
+				//log file exists, check whether have updates
+				oldFileInfo, notFoundErr := resumeLevelDb.Get([]byte(localFilePath), nil)
+				if notFoundErr == nil {
+					//if exists
+					oldFileInfoItems := strings.Split(string(oldFileInfo), "|")
+					oldFileLmd, _ := strconv.ParseInt(oldFileInfoItems[0], 10, 64)
+					//oldFileSize, _ := strconv.ParseInt(oldFileInfoItems[1], 10, 64)
+					if oldFileLmd == fileMtime && localFileInfo.Size() == fileSize {
+						//nothing change, ignore
+						existsCount += 1
+						continue
 					} else {
-						atomic.AddInt32(&successCount, 1)
+						//somthing changed, must download a new file
+						downNewLog = true
+					}
+				} else {
+					if localFileInfo.Size() != fileSize {
+						downNewLog = true
+					} else {
+						//treat the local file not changed, write to leveldb, though may not accurate
+						//nothing to do
+						atomic.AddInt64(&existsCount, 1)
+						continue
 					}
 				}
 			} else {
-				existsCount += 1
+				//check whether tmp file exists
+				localTmpFileInfo, statErr := os.Stat(localFilePathTmp)
+				if statErr == nil {
+					//if tmp file exists, check whether last modify changed
+					oldFileInfo, notFoundErr := resumeLevelDb.Get([]byte(localFilePath), nil)
+					if notFoundErr == nil {
+						//if exists
+						oldFileInfoItems := strings.Split(string(oldFileInfo), "|")
+						oldFileLmd, _ := strconv.ParseInt(oldFileInfoItems[0], 10, 64)
+						//oldFileSize, _ := strconv.ParseInt(oldFileInfoItems[1], 10, 64)
+						if oldFileLmd == fileMtime {
+							//tmp file exists, file not changed, use range to download
+							if localTmpFileInfo.Size() < fileSize {
+								fromBytes = localTmpFileInfo.Size()
+							} else {
+								//rename it
+								renameErr := os.Rename(localFilePathTmp, localFilePath)
+								if renameErr != nil {
+									fmt.Println("Rename temp file to final log file error", renameErr)
+								}
+								continue
+							}
+						} else {
+							downNewLog = true
+						}
+					} else {
+						downNewLog = true
+					}
+				} else {
+					//no log file exists, donwload a new log file
+					downNewLog = true
+				}
+			}
+
+			//set file info in leveldb
+			rKey := localAbsFilePath
+			rVal := fmt.Sprintf("%d|%d", fileMtime, fileSize)
+			resumeLevelDb.Put([]byte(rKey), []byte(rVal), &ldbWOpt)
+
+			//download new
+			downWaitGroup.Add(1)
+			downloadTasks <- func() {
+				defer downWaitGroup.Done()
+
+				downErr := downloadFile(downConfig.DestDir, fileKey, fileUrl, domainOfBucket, fileSize, fromBytes)
+				if downErr != nil {
+					atomic.AddInt64(&failCount, 1)
+				} else {
+					atomic.AddInt64(&successCount, 1)
+					if !downNewLog {
+						atomic.AddInt64(&updateCount, 1)
+					}
+				}
 			}
 		}
 	}
+
+	//wait for all tasks done
 	downWaitGroup.Wait()
 
 	log.Info("-------Download Result-------")
-	log.Info("Total:\t", totalCount)
-	log.Info("Local:\t", existsCount)
-	log.Info("Success:\t", successCount)
-	log.Info("Failure:\t", failCount)
-	log.Info("Duration:\t", time.Since(timeStart))
+	log.Infof("%10s%10d\n", "Total:", totalCount)
+	log.Infof("%10s%10d\n", "Exists:", existsCount)
+	log.Infof("%10s%10d\n", "Success:", successCount)
+	log.Infof("%10s%10d\n", "Update:", updateCount)
+	log.Infof("%10s%10d\n", "Failure:", failCount)
+	log.Infof("%10s%15s\n", "Duration:", time.Since(timeStart))
 	log.Info("-----------------------------")
 }
 
-func checkLocalDuplicate(destDir string, fileKey string, fileSize int64) bool {
-	dup := false
-	filePath := filepath.Join(destDir, fileKey)
-	fStat, statErr := os.Stat(filePath)
-	if statErr == nil {
-		//exist, check file size
-		localFileSize := fStat.Size()
-		if localFileSize == fileSize {
-			dup = true
-		}
-	}
-	return dup
+/*
+@param ioProxyHost - like http://iovip.qbox.me
+*/
+func makePrivateDownloadLink(mac *digest.Mac, domainOfBucket, ioProxyAddress, fileKey string) (fileUrl string) {
+	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, fileKey)
+	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
+	privateUrl := PrivateUrl(mac, publicUrl, deadline)
+
+	//replace the io proxy host
+	fileUrl = strings.Replace(privateUrl, fmt.Sprintf("http://%s", domainOfBucket), ioProxyAddress, -1)
+	return
 }
 
-func downloadFile(mac *digest.Mac, downConfig DownloadConfig, fileKey, ioProxyHost, domainOfBucket string) (err error) {
-	localFilePath := filepath.Join(downConfig.DestDir, fileKey)
-	ldx := strings.LastIndex(localFilePath, string(os.PathSeparator))
-	if ldx != -1 {
-		localFileDir := localFilePath[:ldx]
-		mkdirErr := os.MkdirAll(localFileDir, 0775)
-		if mkdirErr != nil {
-			err = mkdirErr
-			log.Error("MkdirAll failed for", localFileDir, mkdirErr.Error())
-			return
-		}
-	}
-	log.Info("Downloading", fileKey, "=>", localFilePath, "...")
+//file key -> mtime
+func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize int64, fromBytes int64) (err error) {
+	startDown := time.Now().Unix()
+	localFilePath := filepath.Join(destDir, fileName)
+	localFileDir := filepath.Dir(localFilePath)
+	localFilePathTmp := fmt.Sprintf("%s.tmp", localFilePath)
 
-	//make public url
-	downUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, fileKey)
-
-	//set private download url
-	downUrl = PrivateUrl(mac, downUrl, time.Now().Add(time.Second*3600*24).Unix())
-
-	//use proxy
-	downUrl = strings.Replace(downUrl, fmt.Sprintf("http://%s", domainOfBucket), ioProxyHost, -1)
-	//new request
-	req, reqErr := http.NewRequest("GET", downUrl, nil)
-	if reqErr != nil {
-		err = reqErr
-		log.Error("New request", fileKey, "failed by url", downUrl, reqErr.Error())
+	mkdirErr := os.MkdirAll(localFileDir, 0775)
+	if mkdirErr != nil {
+		err = mkdirErr
+		fmt.Println("MkdirAll failed for", localFileDir, mkdirErr)
 		return
 	}
-	if downConfig.Referer != "" {
-		req.Header.Add("Referer", downConfig.Referer)
+
+	fmt.Println("Downloading", fileName, "=>", localFilePath, "...")
+	//new request
+	req, reqErr := http.NewRequest("GET", fileUrl, nil)
+	if reqErr != nil {
+		err = reqErr
+		fmt.Println("New request", fileName, "failed by url", fileUrl, reqErr)
+		return
 	}
-	//set request host
-	req.Host = domainOfBucket
+	//set host
+	req.Host = domainsOfBucket
+
+	if fromBytes != 0 {
+		req.Header.Add("Range", fmt.Sprintf("bytes=%d-", fromBytes))
+	}
+
 	resp, respErr := http.DefaultClient.Do(req)
 	if respErr != nil {
 		err = respErr
-		log.Error("Download", fileKey, "failed by url", downUrl, respErr.Error())
+		fmt.Println("Download", fileName, "failed by url", fileUrl, respErr)
 		return
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 200 {
-		localFp, openErr := os.Create(localFilePath)
+	if resp.StatusCode/100 == 2 {
+		var localFp *os.File
+		var openErr error
+		if fromBytes != 0 {
+			localFp, openErr = os.OpenFile(localFilePathTmp, os.O_APPEND|os.O_WRONLY, 0655)
+		} else {
+			localFp, openErr = os.Create(localFilePathTmp)
+		}
+
 		if openErr != nil {
 			err = openErr
-			log.Error("Open local file", localFilePath, "failed", openErr.Error())
+			fmt.Println("Open local file", localFilePathTmp, "failed", openErr)
 			return
 		}
-		defer localFp.Close()
-		_, cpErr := io.Copy(localFp, resp.Body)
+
+		cpCnt, cpErr := io.Copy(localFp, resp.Body)
 		if cpErr != nil {
 			err = cpErr
-			log.Error("Download", fileKey, "failed", cpErr.Error())
+			localFp.Close()
+			fmt.Println("Download", fileName, "failed", cpErr)
 			return
 		}
+		localFp.Close()
+
+		endDown := time.Now().Unix()
+		avgSpeed := fmt.Sprintf("%.2fKB/s", float64(cpCnt)/float64(endDown-startDown)/1024)
+		//move temp file to log file
+
+		renameErr := os.Rename(localFilePathTmp, localFilePath)
+		if renameErr != nil {
+			err = renameErr
+			fmt.Println("Rename temp file to final log file error", renameErr)
+			return
+		}
+		fmt.Println("Download", fileName, "=>", localFilePath, "success", avgSpeed)
 	} else {
 		err = errors.New("download failed")
-		log.Error("Download", fileKey, "failed by url", downUrl, resp.Status)
+		fmt.Println("Download", fileName, "failed by url", fileUrl, resp.Status)
 		return
 	}
 	return

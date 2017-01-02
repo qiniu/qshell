@@ -59,7 +59,6 @@ or the simplest one
 	"bucket"		:	"test-bucket",
 }
 
-Valid values for zone are [aws,nb,bc]
 */
 
 const (
