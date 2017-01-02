@@ -5,7 +5,9 @@
 参考文档：
 
 [创建块 (mkblk)](http://developer.qiniu.com/code/v6/api/kodo-api/up/mkblk.html)
+
 [上传片 (bput)](http://developer.qiniu.com/code/v6/api/kodo-api/up/bput.html)
+
 [创建文件 (mkfile)](http://developer.qiniu.com/code/v6/api/kodo-api/up/mkfile.html)
 
 # 格式
@@ -31,7 +33,7 @@ qshell rput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost]
 |MimeType|指定文件的MimeType|Y|
 |UpHost|上传入口地址，默认为空间所在机房的上传加速域名|Y|
 
-关于 `UpHost` ，这个是额外指定上传所使用的加速域名，在不指定的情况下，程序会自动根据空间来获取其所在的机房，并选择对应的上传加速域名作为上传域名。对于七牛的几大机房，默认的上传加速域名和其他源站域名分别如下表。
+关于 `UpHost` ，这个是用来指定上传所使用的入口域名。在不指定的情况下，程序会自动根据空间来获取其所在的机房，并选择对应的上传加速域名作为上传域名。对于七牛的几大机房，默认的上传加速域名和其他源站域名分别如下表。
 
 |机房|上传加速域名|源站上传域名|https上传加速域名|https上传源站域名|
 |----|----------------------|--------------------|----------------------|-----------------------|
@@ -40,7 +42,7 @@ qshell rput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost]
 |华南|http://upload-z2.qiniu.com|http://up-z2.qiniu.com|https://upload-z2.qbox.me|https://up-z2.qbox.me|
 |北美|http://upload-na0.qiniu.com|http://up-na0.qiniu.com|https://upload-na0.qbox.me|https://up-na0.qbox.me|
 
-当自行指定上传`UpHost`的时候，请根据空间所在机房，从上面的表中选择正常的域名。
+当自行指定上传`UpHost`的时候，请根据空间所在机房，从上面的表中选择正确的入口域名。
 
 # 示例
 
