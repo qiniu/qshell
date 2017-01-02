@@ -122,8 +122,19 @@ func doUpload(tasks chan func()) {
 }
 
 func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
-	//init log level
 	timeStart := time.Now()
+	//create job id
+	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
+
+	//local storage path
+	storePath := filepath.Join(QShellRootPath, ".qshell", "qupload", jobId)
+	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
+		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		return
+	}
+
+	defaultLogFile := filepath.Join(storePath, fmt.Sprintf("%s.log", jobId))
+	//init log level
 	switch uploadConfig.LogLevel {
 	case "debug":
 		log.SetOutputLevel(log.Ldebug)
@@ -138,12 +149,17 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	}
 
 	//init log writer
+	if uploadConfig.LogFile == "" {
+		//set default log file
+		uploadConfig.LogFile = defaultLogFile
+	}
+
+	//open log file
 	logFile := os.Stdout
 	switch uploadConfig.LogFile {
 	case "stderr":
 		logFile = os.Stderr
 		fmt.Println("Printing upload log to stderr")
-	case "":
 	case "stdout":
 		logFile = os.Stdout
 		fmt.Println("Printing upload log to stdout")
@@ -151,12 +167,13 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		var openErr error
 		logFile, openErr = os.Create(uploadConfig.LogFile)
 		if openErr != nil {
-			fmt.Println("Err: open log file error,", openErr)
+			fmt.Println("Open log file error,", openErr)
 			return
 		}
 		fmt.Println("Writing upload log to file", uploadConfig.LogFile)
 	}
 	defer logFile.Close()
+
 	log.SetOutput(logFile)
 	fmt.Println()
 
@@ -187,16 +204,6 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 	//make SrcDir the full path
 	uploadConfig.SrcDir, _ = filepath.Abs(uploadConfig.SrcDir)
-
-	//create job id
-	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
-
-	//local storage path
-	storePath := filepath.Join(QShellRootPath, ".qshell", "qupload", jobId)
-	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
-		return
-	}
 
 	//find the local file list, by specified or by config
 	var cacheResultName string

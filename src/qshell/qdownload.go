@@ -2,13 +2,11 @@ package qshell
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -36,7 +34,7 @@ import (
 
 const (
 	MIN_DOWNLOAD_THREAD_COUNT = 1
-	MAX_DOWNLOAD_THREAD_COUNT = 100
+	MAX_DOWNLOAD_THREAD_COUNT = 2000
 )
 
 type DownloadConfig struct {
@@ -46,7 +44,9 @@ type DownloadConfig struct {
 	SecretKey string `json:"secret_key"`
 	Prefix    string `json:"prefix,omitempty"`
 	Suffix    string `json:"suffix,omitempty"`
-	Referer   string `json:"referer,omitemtpy"`
+	//log settings
+	LogLevel string `json:"log_level,omitempty"`
+	LogFile  string `json:"log_file,omitempty"`
 }
 
 var downloadTasks chan func()
@@ -59,37 +59,62 @@ func doDownload(tasks chan func()) {
 	}
 }
 
-func QiniuDownload(threadCount int, downloadConfigFile string) {
+func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	timeStart := time.Now()
-	cnfFp, openErr := os.Open(downloadConfigFile)
-	if openErr != nil {
-		log.Error("Open download config file error,", openErr)
-		return
-	}
-	defer cnfFp.Close()
-	cnfData, rErr := ioutil.ReadAll(cnfFp)
-	if rErr != nil {
-		log.Error("Read download config file error,", rErr)
-		return
-	}
-	downConfig := DownloadConfig{}
-	cnfErr := json.Unmarshal(cnfData, &downConfig)
-	if cnfErr != nil {
-		log.Error("Parse download config error,", cnfErr)
+	//create job id
+	jobId := Md5Hex(fmt.Sprintf("%s:%s", downConfig.DestDir, downConfig.Bucket))
+
+	//local storage path
+	storePath := filepath.Join(QShellRootPath, ".qshell", "qdownload", jobId)
+	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
+		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		return
 	}
 
-	//check dest dir
-	destFileInfo, statErr := os.Stat(downConfig.DestDir)
-	if statErr != nil {
-		log.Error("Invalid dest dir,", statErr)
-		return
+	//init log settings
+	defaultLogFile := filepath.Join(storePath, fmt.Sprintf("%s.log", jobId))
+	//init log level
+	switch downConfig.LogLevel {
+	case "debug":
+		log.SetOutputLevel(log.Ldebug)
+	case "info":
+		log.SetOutputLevel(log.Linfo)
+	case "warn":
+		log.SetOutputLevel(log.Lwarn)
+	case "error":
+		log.SetOutputLevel(log.Lerror)
+	default:
+		log.SetOutputLevel(log.Linfo)
 	}
 
-	if !destFileInfo.IsDir() {
-		log.Error("Dest dir should be a directory")
-		return
+	//init log writer
+	if downConfig.LogFile == "" {
+		//set default log file
+		downConfig.LogFile = defaultLogFile
 	}
+
+	//open log file
+	logFile := os.Stdout
+	switch downConfig.LogFile {
+	case "stderr":
+		logFile = os.Stderr
+		fmt.Println("Printing download log to stderr")
+	case "stdout":
+		logFile = os.Stdout
+		fmt.Println("Printing download log to stdout")
+	default:
+		var openErr error
+		logFile, openErr = os.Create(downConfig.LogFile)
+		if openErr != nil {
+			fmt.Println("Open download log file error,", openErr)
+			return
+		}
+		fmt.Println("Writing download log to file", downConfig.LogFile)
+	}
+	defer logFile.Close()
+
+	log.SetOutput(logFile)
+	fmt.Println()
 
 	mac := digest.Mac{downConfig.AccessKey, []byte(downConfig.SecretKey)}
 	//get bucket zone info
@@ -115,16 +140,6 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	//set up host
 	SetZone(bucketInfo.Region)
 	ioProxyAddress := conf.IO_HOST
-
-	//create job id
-	jobId := Md5Hex(fmt.Sprintf("%s:%s", downConfig.DestDir, downConfig.Bucket))
-
-	//local storage path
-	storePath := filepath.Join(QShellRootPath, ".qshell", "qdownload", jobId)
-	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
-		return
-	}
 
 	jobListFileName := filepath.Join(storePath, fmt.Sprintf("%s.list", jobId))
 	resumeFile := filepath.Join(storePath, fmt.Sprintf("%s.ldb", jobId))
