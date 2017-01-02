@@ -8,10 +8,32 @@
 Key\tSize\tHash\tPutTime\tMimeType\tEndUser
 ```
 
+参考文档：[资源列举 (list)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/list.html)
+
 # 格式
 
 ```
-qshell listbucket <Bucket> [<Prefix>] <ListBucketResultFile>
+qshell listbucket [-marker <Marker>] <Bucket> [<Prefix>] <ListBucketResultFile>
+```
+
+上面的命令中，可选的场景有三种：
+
+（1）获取空间中所有的文件列表，这种情况下，可以直接指定 `Bucket` 参数和结果保存文件参数 `ListBucketResultFile` 即可。
+
+```
+qshell listbucket <Bucket> <ListBucketResultFile>
+```
+
+（2）获取空间中指定前缀的文件列表，这种情况下，除了指定（1）中的参数外，还需要指定 `Prefix` 参数。
+
+```
+qshell listbucket <Bucket> <Prefix> <ListBucketResultFile>
+```
+
+（3）该场景主要用在空间中文件列表较多导致大量列举操作超时或者是列举过程中网络异常导致列举操作失败的时候，这个时候列举失败的时候，程序会输出当时失败的`marker`，如果我们希望接着上一次的列举进度继续列举，那么可以在运行命令的时候，额外指定选项`marker`。
+
+```
+qshell listbucket -marker <Marker> <Bucket> <ListBucketResultFile>
 ```
 
 # 鉴权

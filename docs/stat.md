@@ -2,6 +2,8 @@
 
 `stat`指令根据七牛的公开API [stat](http://developer.qiniu.com/code/v6/api/kodo-api/rs/stat.html) 来获取空间中的一个文件的基本信息，包括文件的名称，保存的时间，hash值，文件的大小和MimeType。
 
+参考文档：[资源元信息查询 (stat)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/stat.html)
+
 # 格式
 
 ```

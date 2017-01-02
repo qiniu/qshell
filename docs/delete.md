@@ -1,6 +1,8 @@
 # 简介
 
-`delete`命令用来从七牛的空间里面删除一个文件。
+`delete` 命令用来从七牛的空间里面删除一个文件。
+
+参考文档：[资源删除 (delete)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/delete.html)
 
 # 格式
 

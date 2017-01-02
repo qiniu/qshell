@@ -1,6 +1,8 @@
 # 简介
 
-`chgm`指令根据七牛的公开API [chgm](http://developer.qiniu.com/code/v6/api/kodo-api/rs/chgm.html) 来为空间中的一个文件修改MimeType。
+`chgm` 指令用来为空间中的一个文件修改MimeType。
+
+参考文档：[资源元信息修改 (chgm)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/chgm.html)
 
 # 格式
 ```
