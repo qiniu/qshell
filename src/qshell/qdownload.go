@@ -258,6 +258,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 					} else {
 						//treat the local file not changed, write to leveldb, though may not accurate
 						//nothing to do
+						log.Warnf("Local file `%s` exists with same size as `%s`, check whether it changed by yourself", localAbsFilePath, fileKey)
 						atomic.AddInt64(&existsFileCount, 1)
 						continue
 					}
