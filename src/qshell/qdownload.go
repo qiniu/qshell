@@ -148,17 +148,6 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 		return
 	}
 
-	//open prepared file list to download files
-	listFp, openErr := os.Open(jobListFileName)
-	if openErr != nil {
-		log.Error("Open list file error", openErr)
-		return
-	}
-	defer listFp.Close()
-
-	listScanner := bufio.NewScanner(listFp)
-	listScanner.Split(bufio.ScanLines)
-
 	//init wait group
 	downWaitGroup := sync.WaitGroup{}
 
@@ -170,15 +159,28 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	})
 
 	//init counters
-	var totalCount int64
-	var existsCount int64
-	var updateCount int64
-	var successCount int64
-	var failCount int64
+	var totalFileCount int64
+	var currentFileCount int64
+	var existsFileCount int64
+	var updateFileCount int64
+	var successFileCount int64
+	var failureFileCount int64
 
+	totalFileCount = GetFileLineCount(jobListFileName)
+
+	//open prepared file list to download files
+	listFp, openErr := os.Open(jobListFileName)
+	if openErr != nil {
+		log.Error("Open list file error", openErr)
+		return
+	}
+	defer listFp.Close()
+
+	listScanner := bufio.NewScanner(listFp)
+	listScanner.Split(bufio.ScanLines)
 	//key, fsize, etag, lmd, mime, enduser
 	for listScanner.Scan() {
-		totalCount += 1
+		currentFileCount += 1
 		line := strings.TrimSpace(listScanner.Text())
 		items := strings.Split(line, "\t")
 		if len(items) >= 4 {
@@ -203,6 +205,13 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 
 			fileUrl := makePrivateDownloadLink(&mac, domainOfBucket, ioProxyAddress, fileKey)
 
+			//progress
+			if totalFileCount != 0 {
+				fmt.Printf("Downloading %s [%d/%d, %.1f%%] ...\n", fileKey, currentFileCount, totalFileCount,
+					float32(currentFileCount)*100/float32(totalFileCount))
+			} else {
+				fmt.Printf("Downloading %s ...\n", fileKey)
+			}
 			//check whether log file exists
 			localFilePath := filepath.Join(downConfig.DestDir, fileKey)
 			localAbsFilePath, _ := filepath.Abs(localFilePath)
@@ -222,7 +231,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 					//oldFileSize, _ := strconv.ParseInt(oldFileInfoItems[1], 10, 64)
 					if oldFileLmd == fileMtime && localFileInfo.Size() == fileSize {
 						//nothing change, ignore
-						existsCount += 1
+						existsFileCount += 1
 						continue
 					} else {
 						//somthing changed, must download a new file
@@ -234,7 +243,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 					} else {
 						//treat the local file not changed, write to leveldb, though may not accurate
 						//nothing to do
-						atomic.AddInt64(&existsCount, 1)
+						atomic.AddInt64(&existsFileCount, 1)
 						continue
 					}
 				}
@@ -257,7 +266,7 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 								//rename it
 								renameErr := os.Rename(localFilePathTmp, localFilePath)
 								if renameErr != nil {
-									fmt.Println("Rename temp file to final log file error", renameErr)
+									log.Error("Rename temp file to final log file error", renameErr)
 								}
 								continue
 							}
@@ -285,11 +294,11 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 
 				downErr := downloadFile(downConfig.DestDir, fileKey, fileUrl, domainOfBucket, fileSize, fromBytes)
 				if downErr != nil {
-					atomic.AddInt64(&failCount, 1)
+					atomic.AddInt64(&failureFileCount, 1)
 				} else {
-					atomic.AddInt64(&successCount, 1)
+					atomic.AddInt64(&successFileCount, 1)
 					if !downNewLog {
-						atomic.AddInt64(&updateCount, 1)
+						atomic.AddInt64(&updateFileCount, 1)
 					}
 				}
 			}
@@ -300,11 +309,11 @@ func QiniuDownload(threadCount int, downloadConfigFile string) {
 	downWaitGroup.Wait()
 
 	log.Info("-------Download Result-------")
-	log.Infof("%10s%10d\n", "Total:", totalCount)
-	log.Infof("%10s%10d\n", "Exists:", existsCount)
-	log.Infof("%10s%10d\n", "Success:", successCount)
-	log.Infof("%10s%10d\n", "Update:", updateCount)
-	log.Infof("%10s%10d\n", "Failure:", failCount)
+	log.Infof("%10s%10d\n", "Total:", totalFileCount)
+	log.Infof("%10s%10d\n", "Exists:", existsFileCount)
+	log.Infof("%10s%10d\n", "Success:", successFileCount)
+	log.Infof("%10s%10d\n", "Update:", updateFileCount)
+	log.Infof("%10s%10d\n", "Failure:", failureFileCount)
 	log.Infof("%10s%15s\n", "Duration:", time.Since(timeStart))
 	log.Info("-----------------------------")
 }
@@ -332,16 +341,16 @@ func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize i
 	mkdirErr := os.MkdirAll(localFileDir, 0775)
 	if mkdirErr != nil {
 		err = mkdirErr
-		fmt.Println("MkdirAll failed for", localFileDir, mkdirErr)
+		log.Error("MkdirAll failed for", localFileDir, mkdirErr)
 		return
 	}
 
-	fmt.Println("Downloading", fileName, "=>", localFilePath, "...")
+	log.Info("Downloading", fileName, "=>", localFilePath)
 	//new request
 	req, reqErr := http.NewRequest("GET", fileUrl, nil)
 	if reqErr != nil {
 		err = reqErr
-		fmt.Println("New request", fileName, "failed by url", fileUrl, reqErr)
+		log.Info("New request", fileName, "failed by url", fileUrl, reqErr)
 		return
 	}
 	//set host
@@ -354,7 +363,7 @@ func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize i
 	resp, respErr := http.DefaultClient.Do(req)
 	if respErr != nil {
 		err = respErr
-		fmt.Println("Download", fileName, "failed by url", fileUrl, respErr)
+		log.Info("Download", fileName, "failed by url", fileUrl, respErr)
 		return
 	}
 	defer resp.Body.Close()
@@ -369,7 +378,7 @@ func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize i
 
 		if openErr != nil {
 			err = openErr
-			fmt.Println("Open local file", localFilePathTmp, "failed", openErr)
+			log.Error("Open local file", localFilePathTmp, "failed", openErr)
 			return
 		}
 
@@ -377,25 +386,25 @@ func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize i
 		if cpErr != nil {
 			err = cpErr
 			localFp.Close()
-			fmt.Println("Download", fileName, "failed", cpErr)
+			log.Error("Download", fileName, "failed", cpErr)
 			return
 		}
 		localFp.Close()
 
 		endDown := time.Now().Unix()
 		avgSpeed := fmt.Sprintf("%.2fKB/s", float64(cpCnt)/float64(endDown-startDown)/1024)
-		//move temp file to log file
 
+		//move temp file to log file
 		renameErr := os.Rename(localFilePathTmp, localFilePath)
 		if renameErr != nil {
 			err = renameErr
-			fmt.Println("Rename temp file to final log file error", renameErr)
+			log.Error("Rename temp file to final log file error", renameErr)
 			return
 		}
-		fmt.Println("Download", fileName, "=>", localFilePath, "success", avgSpeed)
+		log.Info("Download", fileName, "=>", localFilePath, "success", avgSpeed)
 	} else {
 		err = errors.New("download failed")
-		fmt.Println("Download", fileName, "failed by url", fileUrl, resp.Status)
+		log.Info("Download", fileName, "failed by url", fileUrl, resp.Status)
 		return
 	}
 	return

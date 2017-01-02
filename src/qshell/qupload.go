@@ -68,7 +68,7 @@ const (
 )
 
 type UploadInfo struct {
-	TotalFileCount int `json:"total_file_count"`
+	TotalFileCount int64 `json:"total_file_count"`
 }
 
 type UploadConfig struct {
@@ -165,7 +165,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	//get bucket zone info
 	bucketInfo, gErr := GetBucketInfo(&mac, uploadConfig.Bucket)
 	if gErr != nil {
-		fmt.Println("Get bucket region info error,", gErr)
+		log.Error("Get bucket region info error,", gErr)
 		return
 	}
 
@@ -200,13 +200,13 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 	//find the local file list, by specified or by config
 	var cacheResultName string
-	var totalFileCount int
+	var totalFileCount int64
 	var cacheErr error
 	_, fStatErr := os.Stat(uploadConfig.FileList)
 	if uploadConfig.FileList != "" && fStatErr == nil {
 		//use specified file list
 		cacheResultName = uploadConfig.FileList
-		totalFileCount = getFileLineCount(cacheResultName)
+		totalFileCount = GetFileLineCount(cacheResultName)
 	} else {
 		//cache file
 		cacheResultName = filepath.Join(storePath, fmt.Sprintf("%s.cache", jobId))
@@ -222,7 +222,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		}
 
 		if rescanLocalDir {
-			log.Info("Listing local sync dir, this can take a long time for big directory, please wait patiently ...")
+			log.Info("Listing local sync dir, this can take a long time for big directory, please wait patiently")
 			totalFileCount, cacheErr = DirCache(uploadConfig.SrcDir, cacheTempName)
 			if cacheErr != nil {
 				return
@@ -252,7 +252,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				log.Errorf("Open local cached count file error %s,", cErr)
 			}
 		} else {
-			log.Infof("Use the last cached local sync dir file list ...")
+			log.Infof("Use the last cached local sync dir file list")
 			//read from local cache
 			if rFp, rErr := os.Open(cacheCountName); rErr == nil {
 				func() {
@@ -265,7 +265,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				}()
 			} else {
 				log.Warnf("Open local cached count file error %s,", rErr)
-				totalFileCount = getFileLineCount(cacheResultName)
+				totalFileCount = GetFileLineCount(cacheResultName)
 			}
 		}
 	}
@@ -288,10 +288,10 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	bScanner := bufio.NewScanner(cacheResultFileHandle)
 	bScanner.Split(bufio.ScanLines)
 
-	var currentFileCount int64 = 0
-	var successFileCount int64 = 0
-	var failureFileCount int64 = 0
-	var skippedFileCount int64 = 0
+	var currentFileCount int64
+	var successFileCount int64
+	var failureFileCount int64
+	var skippedFileCount int64
 
 	ldbWOpt := opt.WriteOptions{
 		Sync: true,
@@ -501,6 +501,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			}
 		}
 
+		log.Infof("Uploading file %s => %s : %s", localFpath, uploadConfig.Bucket, uploadFileKey)
 		//start to upload
 		upWaitGroup.Add(1)
 		uploadTasks <- func() {
@@ -578,27 +579,12 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 	upWaitGroup.Wait()
 
-	fmt.Println()
-	fmt.Println("----------Upload Result----------")
-	fmt.Println("Total:   \t", currentFileCount)
-	fmt.Println("Success: \t", successFileCount)
-	fmt.Println("Failure: \t", failureFileCount)
-	fmt.Println("Skipped: \t", skippedFileCount)
-	fmt.Println("Duration:\t", time.Since(timeStart))
-	fmt.Println("----------------------------------")
+	log.Info("-------Upload Result-------")
+	log.Infof("%10s%10d\n", "Total:", totalFileCount)
+	log.Infof("%10s%10d\n", "Success:", successFileCount)
+	log.Infof("%10s%10d\n", "Failure:", failureFileCount)
+	log.Infof("%10s%10d\n", "Skipped:", skippedFileCount)
+	log.Infof("%10s%15s\n", "Duration:", time.Since(timeStart))
+	log.Info("-----------------------------")
 
-}
-
-func getFileLineCount(filePath string) (totalCount int) {
-	fp, openErr := os.Open(filePath)
-	if openErr != nil {
-		return
-	}
-	defer fp.Close()
-
-	bScanner := bufio.NewScanner(fp)
-	for bScanner.Scan() {
-		totalCount += 1
-	}
-	return
 }

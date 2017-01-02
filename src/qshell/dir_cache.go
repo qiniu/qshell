@@ -19,7 +19,7 @@ generate the file list for the specified directory
 
 @return (fileCount, retErr) - total file count and any error meets
 */
-func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int, retErr error) {
+func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, retErr error) {
 	//check dir
 	rootPathFileInfo, statErr := os.Stat(cacheRootPath)
 	if statErr != nil {
