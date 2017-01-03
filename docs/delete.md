@@ -28,9 +28,3 @@ qshell delete <Bucket> <Key>
 ```
 qshell delete if-pbl qiniu.mp4
 ```
-
-输出：
-
-```
-Delete done!
-```
