@@ -64,7 +64,7 @@ func IpQuery(cmd string, params ...string) {
 
 				fmt.Println(fmt.Sprintf("%s\t%s", ip, ipInfo.String()))
 			}()
-			<-time.After(time.Second * 1)
+			<-time.After(time.Millisecond * 500)
 		}
 	} else {
 		CmdHelp(cmd)

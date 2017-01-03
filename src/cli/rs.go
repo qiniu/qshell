@@ -241,8 +241,6 @@ func Chgm(cmd string, params ...string) {
 			} else {
 				fmt.Println("Change mimetype error,", err)
 			}
-		} else {
-			fmt.Println("Change mimetype done!")
 		}
 	} else {
 		CmdHelp(cmd)
@@ -1091,7 +1089,6 @@ func M3u8Delete(cmd string, params ...string) {
 				batchDelete(client, entriesToDelete)
 			}
 		}
-		fmt.Println("All deleted!")
 	} else {
 		CmdHelp(cmd)
 	}
@@ -1135,8 +1132,6 @@ func M3u8Replace(cmd string, params ...string) {
 				fmt.Println("m3u8 replace domain error,", err)
 			}
 			return
-		} else {
-			fmt.Println("Done!")
 		}
 	} else {
 		CmdHelp(cmd)

@@ -174,6 +174,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	fmt.Println()
 
 	//global up settings
+	log.Infof("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
 	account, gErr := GetAccount()
 	if gErr != nil {
 		fmt.Println(gErr)
@@ -516,16 +517,18 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			//not exist, return ErrNotFound
 			//check last modified
 
-			if err == nil && localFlmd == flmd {
-				log.Infof("Skip by local leveldb log for file `%s`", localRelFpath)
-				atomic.AddInt64(&skippedFileCount, 1)
-				continue
-			} else {
-				if !uploadConfig.Overwrite {
-					//no overwrite set
-					log.Warnf("Skip upload of changed file `%s` but no overwrite set", localRelFpath)
-					atomic.AddInt64(&notOverwriteCount, 1)
+			if err == nil {
+				if localFlmd == flmd {
+					log.Infof("Skip by local leveldb log for file `%s`", localRelFpath)
+					atomic.AddInt64(&skippedFileCount, 1)
 					continue
+				} else {
+					if !uploadConfig.Overwrite {
+						//no overwrite set
+						log.Warnf("Skip upload of changed file `%s` because not set to overwrite", localRelFpath)
+						atomic.AddInt64(&notOverwriteCount, 1)
+						continue
+					}
 				}
 			}
 		}
@@ -608,14 +611,14 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 	upWaitGroup.Wait()
 
-	log.Info("-------Upload Result-------")
-	log.Infof("%10s%10d\n", "Total:", totalFileCount)
-	log.Infof("%10s%10d\n", "Success:", successFileCount)
-	log.Infof("%10s%10d\n", "Failure:", failureFileCount)
-	log.Infof("%10s%10d\n", "NotOverwrite:", notOverwriteCount)
-	log.Infof("%10s%10d\n", "Skipped:", skippedFileCount)
-	log.Infof("%10s%15s\n", "Duration:", time.Since(timeStart))
-	log.Info("-----------------------------")
+	log.Info("-------------Upload Result--------------")
+	log.Infof("%20s%10d\n", "Total:", totalFileCount)
+	log.Infof("%20s%10d\n", "Success:", successFileCount)
+	log.Infof("%20s%10d\n", "Failure:", failureFileCount)
+	log.Infof("%20s%10d\n", "NotOverwrite:", notOverwriteCount)
+	log.Infof("%20s%10d\n", "Skipped:", skippedFileCount)
+	log.Infof("%20s%15s\n", "Duration:", time.Since(timeStart))
+	log.Info("----------------------------------------")
 	fmt.Println("\nSee upload log at path", uploadConfig.LogFile)
 
 }

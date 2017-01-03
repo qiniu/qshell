@@ -26,7 +26,7 @@ func GetBucketInfo(mac *digest.Mac, bucket string) (bucketInfo BucketInfo, err e
 	callErr := client.Conn.Call(nil, &bucketInfo, bucketUri)
 	if callErr != nil {
 		if v, ok := callErr.(*rpc.ErrorInfo); ok {
-			err = fmt.Errorf("%s, xreqid: %s", v.Err, v.Reqid)
+			err = fmt.Errorf("code: %d, %s, xreqid: %s", v.Code, v.Err, v.Reqid)
 		} else {
 			err = callErr
 		}
@@ -41,7 +41,7 @@ func GetBuckets(mac *digest.Mac) (buckets []string, err error) {
 	callErr := client.Conn.Call(nil, &buckets, bucketsUri)
 	if callErr != nil {
 		if v, ok := callErr.(*rpc.ErrorInfo); ok {
-			err = fmt.Errorf("%s, xreqid: %s", v.Err, v.Reqid)
+			err = fmt.Errorf("code: %d, %s, xreqid: %s", v.Code, v.Err, v.Reqid)
 		} else {
 			err = callErr
 		}
@@ -59,7 +59,7 @@ func GetDomainsOfBucket(mac *digest.Mac, bucket string) (domains []string, err e
 	callErr := client.Conn.CallWithForm(nil, &domains, getDomainsUrl, postData)
 	if callErr != nil {
 		if v, ok := callErr.(*rpc.ErrorInfo); ok {
-			err = fmt.Errorf("%s, xreqid: %s", v.Err, v.Reqid)
+			err = fmt.Errorf("code: %d, %s, xreqid: %s", v.Code, v.Err, v.Reqid)
 		} else {
 			err = callErr
 		}
