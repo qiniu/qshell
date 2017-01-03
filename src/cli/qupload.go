@@ -2,7 +2,7 @@ package cli
 
 import (
 	"encoding/json"
-	"fmt"
+
 	"io/ioutil"
 	"os"
 	"qiniu/log"
@@ -44,14 +44,21 @@ func QiniuUpload(cmd string, params ...string) {
 			log.Errorf("Parse upload config file `%s` errror due to `%s`", uploadConfigFile, err)
 			return
 		}
-		if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
+		srcFileInfo, err := os.Stat(uploadConfig.SrcDir)
+
+		if err != nil {
 			log.Error("Upload config error for parameter `SrcDir`,", err)
 			return
 		}
-		//upload
 
+		if !srcFileInfo.IsDir() {
+			log.Error("Upload src dir should be a directory")
+			return
+		}
+
+		//upload
 		if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT || threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
-			fmt.Printf("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
+			log.Infof("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
 				qshell.MIN_UPLOAD_THREAD_COUNT, qshell.MAX_UPLOAD_THREAD_COUNT)
 
 			if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT {

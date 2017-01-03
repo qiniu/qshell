@@ -2,6 +2,7 @@ package qshell
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,25 +11,57 @@ import (
 	"time"
 )
 
-type DirCache struct {
-}
+/*
+generate the file list for the specified directory
 
-func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileCount int) {
-	cacheResultFileH, err := os.Create(cacheResultFile)
-	if err != nil {
-		log.Errorf("Failed to open cache file `%s`", cacheResultFile)
+@param cacheRootPath - dir to generate cache file
+@param cacheResultFile - cache result file path
+
+@return (fileCount, retErr) - total file count and any error meets
+*/
+func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, retErr error) {
+	//check dir
+	rootPathFileInfo, statErr := os.Stat(cacheRootPath)
+	if statErr != nil {
+		retErr = statErr
+		log.Errorf("Failed to stat path `%s`, %s", cacheRootPath, statErr)
 		return
 	}
-	defer cacheResultFileH.Close()
-	bWriter := bufio.NewWriter(cacheResultFileH)
+
+	if !rootPathFileInfo.IsDir() {
+		retErr = errors.New("dircache failed")
+		log.Errorf("Dir cache failed, `%s` should be a directory rather than a file", cacheRootPath)
+		return
+	}
+
+	//create result file
+	cacheResultFh, createErr := os.Create(cacheResultFile)
+	if createErr != nil {
+		retErr = createErr
+		log.Errorf("Failed to open cache file `%s`, %s", cacheResultFile, createErr)
+		return
+	}
+	defer cacheResultFh.Close()
+
+	bWriter := bufio.NewWriter(cacheResultFh)
+	defer bWriter.Flush()
+
+	//walk start
 	walkStart := time.Now()
-	log.Debug(fmt.Sprintf("Walk `%s` start from `%s`", cacheRootPath, walkStart.String()))
-	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, err error) error {
+
+	log.Infof("Walk `%s` start from %s", cacheRootPath, walkStart.String())
+	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, walkErr error) error {
 		var retErr error
-		//log.Debug(fmt.Sprintf("Walking through `%s`", cacheRootPath))
-		if err != nil {
-			log.Errorf("Walk through `%s` error due to `%s`", path, err)
-			retErr = err
+		if fi.IsDir() {
+			log.Infof("Walking through `%s`", path)
+		}
+
+		//check error
+		if walkErr != nil {
+			log.Errorf("Walk through `%s` error, %s", path, walkErr)
+
+			//skip this dir
+			retErr = filepath.SkipDir
 		} else {
 			if !fi.IsDir() {
 				var relPath string
@@ -41,24 +74,28 @@ func (this *DirCache) Cache(cacheRootPath string, cacheResultFile string) (fileC
 				fsize := fi.Size()
 				//Unit is 100ns
 				flmd := fi.ModTime().UnixNano() / 100
-				//log.Debug(fmt.Sprintf("Hit file `%s` size: `%d' mode time: `%d`", relPath, fsize, flmd))
-				fmeta := fmt.Sprintln(fmt.Sprintf("%s\t%d\t%d", relPath, fsize, flmd))
+
+				log.Debugf("Meet file `%s`, size: %d, modtime: %d", relPath, fsize, flmd)
+				fmeta := fmt.Sprintf("%s\t%d\t%d\n", relPath, fsize, flmd)
 				if _, err := bWriter.WriteString(fmeta); err != nil {
-					log.Errorf("Failed to write data `%s` to cache file", fmeta)
-					retErr = err
+					log.Errorf("Failed to write data `%s` to cache file `%s`", fmeta, cacheResultFile)
+				} else {
+					fileCount += 1
 				}
-				fileCount += 1
 			}
 		}
 		return retErr
 	})
 
-	if err := bWriter.Flush(); err != nil {
+	if fErr := bWriter.Flush(); fErr != nil {
 		log.Errorf("Failed to flush to cache file `%s`", cacheResultFile)
+		retErr = fErr
+		return
 	}
 
 	walkEnd := time.Now()
-	log.Debug(fmt.Sprintf("Walk `%s` end at `%s`", cacheRootPath, walkEnd.String()))
-	log.Debug(fmt.Sprintf("Walk `%s` last for `%s`", cacheRootPath, time.Since(walkStart)))
+	log.Infof("Walk `%s` end at %s", cacheRootPath, walkEnd.String())
+	log.Infof("Walk `%s` last for %s", cacheRootPath, time.Since(walkStart))
+	log.Infof("Total file count cached %d", fileCount)
 	return
 }

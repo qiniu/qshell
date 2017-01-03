@@ -38,12 +38,12 @@ const (
 )
 
 var levels = []string{
-	"[DEBUG]",
-	"[INFO]",
-	"[WARN]",
-	"[ERROR]",
-	"[PANIC]",
-	"[FATAL]",
+	"[D]",
+	"[I]",
+	"[W]",
+	"[E]",
+	"[P]",
+	"[F]",
 }
 
 // A Logger represents an active logging object that generates lines of

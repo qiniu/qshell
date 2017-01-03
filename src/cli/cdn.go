@@ -19,15 +19,15 @@ func CdnRefresh(cmd string, params ...string) {
 	if len(params) == 1 {
 		urlListFile := params[0]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 
 		client := rs.NewMac(&mac)
@@ -79,15 +79,15 @@ func CdnPrefetch(cmd string, params ...string) {
 	if len(params) == 1 {
 		urlListFile := params[0]
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 
 		client := rs.NewMac(&mac)

@@ -18,16 +18,25 @@ func Sync(cmd string, params ...string) {
 			upHostIp = params[3]
 		}
 
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			log.Error(gErr)
 			return
 		}
 
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
+		//get bucket zone info
+		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+		if gErr != nil {
+			fmt.Println("Get bucket region info error,", gErr)
+			return
+		}
+
+		//set up host
+		qshell.SetZone(bucketInfo.Region)
 
 		//sync
 		tStart := time.Now()
@@ -37,8 +46,8 @@ func Sync(cmd string, params ...string) {
 			return
 		}
 
-		fmt.Println(fmt.Sprintf("Sync %s => %s:%s (%s) Success, Duration: %s!",
-			srcResUrl, bucket, key, hash, time.Since(tStart)))
+		fmt.Printf("Sync %s => %s:%s (%s) Success, Duration: %s!\n",
+			srcResUrl, bucket, key, hash, time.Since(tStart))
 	} else {
 		CmdHelp(cmd)
 	}

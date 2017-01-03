@@ -9,21 +9,25 @@ import (
 
 func GetBuckets(cmd string, params ...string) {
 	if len(params) == 0 {
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		buckets, err := qshell.GetBuckets(&mac)
 		if err != nil {
 			log.Error("Get buckets error,", err)
 		} else {
-			for _, bucket := range buckets {
-				fmt.Println(bucket)
+			if len(buckets) == 0 {
+				fmt.Println("No buckets found")
+			} else {
+				for _, bucket := range buckets {
+					fmt.Println(bucket)
+				}
 			}
 		}
 	} else {
@@ -34,21 +38,25 @@ func GetBuckets(cmd string, params ...string) {
 func GetDomainsOfBucket(cmd string, params ...string) {
 	if len(params) == 1 {
 		bucket := params[0]
-		gErr := accountS.Get()
+		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			return
 		}
 		mac := digest.Mac{
-			accountS.AccessKey,
-			[]byte(accountS.SecretKey),
+			account.AccessKey,
+			[]byte(account.SecretKey),
 		}
 		domains, err := qshell.GetDomainsOfBucket(&mac, bucket)
 		if err != nil {
 			log.Error("Get domains error,", err)
 		} else {
-			for _, domain := range domains {
-				fmt.Println(domain)
+			if len(domains) == 0 {
+				fmt.Printf("No domains found for bucket `%s`\n", bucket)
+			} else {
+				for _, domain := range domains {
+					fmt.Println(domain)
+				}
 			}
 		}
 	} else {

@@ -9,12 +9,12 @@ import (
 	"qiniu/rpc"
 )
 
-var UP_HOST = "http://upload.qiniu.com"
-var RS_HOST = "http://rs.qbox.me"
+var UP_HOST = "http://up.qiniu.com"
 var RSF_HOST = "http://rsf.qbox.me"
-
-var PUB_HOST = "http://pub.qbox.me"
 var IO_HOST = "http://iovip.qbox.me"
+
+var RS_HOST = "http://rs.qiniu.com"
+var API_HOST = "http://api.qiniu.com"
 
 var ACCESS_KEY string
 var SECRET_KEY string

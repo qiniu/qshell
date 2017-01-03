@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/conf"
 	fio "qiniu/api.v6/io"
 	"qiniu/api.v6/rs"
 	"qiniu/log"
@@ -24,18 +25,22 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 	//check m3u8 file exists
 	_, sErr := client.Stat(nil, bucket, m3u8Key)
 	if sErr != nil {
-		err = fmt.Errorf("stat m3u8 file error, %s", sErr.Error())
+		if v, ok := sErr.(*rpc.ErrorInfo); ok {
+			err = fmt.Errorf("stat m3u8 file error, %s", v.Err)
+		} else {
+			err = fmt.Errorf("stat m3u8 file error, %s", sErr)
+		}
 		return
 	}
 	//get domain list of bucket
-	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", DEFAULT_API_HOST)
+	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", conf.API_HOST)
 	bucketDomainData := map[string][]string{
 		"tbl": []string{bucket},
 	}
 	bucketDomains := BucketDomain{}
 	bErr := client.Conn.CallWithForm(nil, &bucketDomains, bucketDomainUrl, bucketDomainData)
 	if bErr != nil {
-		err = fmt.Errorf("get domain of bucket failed due to, %s", bErr.Error())
+		err = fmt.Errorf("get domain of bucket failed, %s", bErr.Error())
 		return
 	}
 	if len(bucketDomains) == 0 {
@@ -65,19 +70,26 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 	dnLink := fmt.Sprintf("http://%s/%s", domain, m3u8Key)
 	dnLink = PrivateUrl(mac, dnLink, time.Now().Add(time.Second*3600).Unix())
 	//get m3u8 file content
-	m3u8Resp, m3u8Err := http.Get(dnLink)
+	dnLink = strings.Replace(dnLink, fmt.Sprintf("http://%s", domain), conf.IO_HOST, -1)
+	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)
+	if reqErr != nil {
+		err = fmt.Errorf("new request for url %s error, %s", dnLink, reqErr)
+		return
+	}
+	m3u8Req.Host = domain
+	m3u8Resp, m3u8Err := http.DefaultClient.Do(m3u8Req)
 	if m3u8Err != nil {
-		err = fmt.Errorf("open url %s error due to, %s", dnLink, m3u8Err)
+		err = fmt.Errorf("open url %s error, %s", dnLink, m3u8Err)
 		return
 	}
 	defer m3u8Resp.Body.Close()
 	if m3u8Resp.StatusCode != 200 {
-		err = fmt.Errorf("download file error due to, %s", m3u8Resp.Status)
+		err = fmt.Errorf("download m3u8 file error, %s", m3u8Resp.Status)
 		return
 	}
 	m3u8Bytes, readErr := ioutil.ReadAll(m3u8Resp.Body)
 	if readErr != nil {
-		err = fmt.Errorf("read m3u8 file content error due to, %s", readErr.Error())
+		err = fmt.Errorf("read m3u8 file content error, %s", readErr.Error())
 		return
 	}
 	//check content
@@ -117,18 +129,22 @@ func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain
 	//check m3u8 file exists
 	_, sErr := client.Stat(nil, bucket, m3u8Key)
 	if sErr != nil {
-		err = fmt.Errorf("stat m3u8 file error, %s", sErr.Error())
+		if v, ok := sErr.(*rpc.ErrorInfo); ok {
+			err = fmt.Errorf("stat m3u8 file error, %s", v.Err)
+		} else {
+			err = fmt.Errorf("stat m3u8 file error, %s", sErr)
+		}
 		return
 	}
 	//get domain list of bucket
-	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", DEFAULT_API_HOST)
+	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", conf.API_HOST)
 	bucketDomainData := map[string][]string{
 		"tbl": []string{bucket},
 	}
 	bucketDomains := BucketDomain{}
 	bErr := client.Conn.CallWithForm(nil, &bucketDomains, bucketDomainUrl, bucketDomainData)
 	if bErr != nil {
-		err = fmt.Errorf("get domain of bucket failed due to, %s", bErr.Error())
+		err = fmt.Errorf("get domain of bucket failed, %s", bErr.Error())
 		return
 	}
 	if len(bucketDomains) == 0 {
@@ -158,19 +174,26 @@ func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain
 	dnLink := fmt.Sprintf("http://%s/%s", domain, m3u8Key)
 	dnLink = PrivateUrl(mac, dnLink, time.Now().Add(time.Second*3600).Unix())
 	//get m3u8 file content
-	m3u8Resp, m3u8Err := http.Get(dnLink)
+	dnLink = strings.Replace(dnLink, fmt.Sprintf("http://%s", domain), conf.IO_HOST, -1)
+	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)
+	if reqErr != nil {
+		err = fmt.Errorf("new request for url %s error, %s", dnLink, reqErr)
+		return
+	}
+	m3u8Req.Host = domain
+	m3u8Resp, m3u8Err := http.DefaultClient.Do(m3u8Req)
 	if m3u8Err != nil {
-		err = fmt.Errorf("open url %s error due to, %s", dnLink, m3u8Err)
+		err = fmt.Errorf("open url %s error, %s", dnLink, m3u8Err)
 		return
 	}
 	defer m3u8Resp.Body.Close()
 	if m3u8Resp.StatusCode != 200 {
-		err = fmt.Errorf("download file error due to, %s", m3u8Resp.Status)
+		err = fmt.Errorf("download m3u8 file error, %s", m3u8Resp.Status)
 		return
 	}
 	m3u8Bytes, readErr := ioutil.ReadAll(m3u8Resp.Body)
 	if readErr != nil {
-		err = fmt.Errorf("read m3u8 file content error due to, %s", readErr.Error())
+		err = fmt.Errorf("read m3u8 file content error, %s", readErr.Error())
 		return
 	}
 	//check content

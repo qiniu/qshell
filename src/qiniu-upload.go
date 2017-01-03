@@ -57,8 +57,8 @@ func main() {
 }
 
 func ResumablePut(bucket, key, localFile, mimeType, upHost string, overwrite bool) {
-	accountS := qshell.Account{}
-	gErr := accountS.Get()
+	account := qshell.Account{}
+	account, gErr := qshell.GetAccount()
 	if gErr != nil {
 		fmt.Println(gErr)
 		return
@@ -71,7 +71,7 @@ func ResumablePut(bucket, key, localFile, mimeType, upHost string, overwrite boo
 	}
 	fsize := fStat.Size()
 
-	mac := digest.Mac{accountS.AccessKey, []byte(accountS.SecretKey)}
+	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 	policy := rs.PutPolicy{}
 	policy.Expires = 3600 * 24 * 5
 

@@ -70,21 +70,21 @@ type EntryPathPair struct {
 
 // @endgist
 
-func (rs Client) BatchMove(l rpc.Logger, entries []EntryPathPair) (ret []BatchItemRet, err error) {
+func (rs Client) BatchMove(l rpc.Logger, entries []EntryPathPair, force bool) (ret []BatchItemRet, err error) {
 
 	b := make([]string, len(entries))
 	for i, e := range entries {
-		b[i] = URIMove(e.Src.Bucket, e.Src.Key, e.Dest.Bucket, e.Dest.Key)
+		b[i] = URIMove(e.Src.Bucket, e.Src.Key, e.Dest.Bucket, e.Dest.Key, force)
 	}
 	err = rs.Batch(l, &ret, b)
 	return
 }
 
-func (rs Client) BatchCopy(l rpc.Logger, entries []EntryPathPair) (ret []BatchItemRet, err error) {
+func (rs Client) BatchCopy(l rpc.Logger, entries []EntryPathPair, force bool) (ret []BatchItemRet, err error) {
 
 	b := make([]string, len(entries))
 	for i, e := range entries {
-		b[i] = URICopy(e.Src.Bucket, e.Src.Key, e.Dest.Bucket, e.Dest.Key)
+		b[i] = URICopy(e.Src.Bucket, e.Src.Key, e.Dest.Bucket, e.Dest.Key, force)
 	}
 	err = rs.Batch(l, &ret, b)
 	return

@@ -12,65 +12,50 @@ type ZoneConfig struct {
 	ApiHost   string
 }
 
-var (
-	DEFAULT_API_HOST = ZoneNBConfig.ApiHost
-)
-
 const (
-	ZoneNB  = "nb"
-	ZoneBC  = "bc"
-	ZoneHN  = "hn"
-	ZoneAWS = "aws"
+	ZoneNB  = "z0"
+	ZoneBC  = "z1"
+	ZoneHN  = "z2"
 	ZoneNA0 = "na0"
 )
 
 //zone all defaults to the service source site
 
 var ZoneNBConfig = ZoneConfig{
-	UpHost:    "http://up.qiniu.com",
+	UpHost:    "http://upload.qiniu.com",
+	IovipHost: "http://iovip.qbox.me",
 	RsHost:    "http://rs.qiniu.com",
 	RsfHost:   "http://rsf.qbox.me",
-	IovipHost: "http://iovip.qbox.me",
 	ApiHost:   "http://api.qiniu.com",
 }
 
 var ZoneBCConfig = ZoneConfig{
-	UpHost:    "http://up-z1.qiniu.com",
-	RsHost:    "http://rs.qiniu.com",
-	RsfHost:   "http://rsf-z1.qbox.me",
+	UpHost:    "http://upload-z1.qiniu.com",
 	IovipHost: "http://iovip-z1.qbox.me",
-	ApiHost:   "http://api-z1.qiniu.com",
+	RsHost:    "http://rs.qiniu.com",
+	RsfHost:   "http://rsf.qbox.me",
+	ApiHost:   "http://api.qiniu.com",
 }
 
 var ZoneHNConfig = ZoneConfig{
-	UpHost:    "http://up-z2.qiniu.com",
-	RsHost:    "http://rs.qiniu.com",
-	RsfHost:   "http://rsf-z2.qbox.me",
+	UpHost:    "http://upload-z2.qiniu.com",
 	IovipHost: "http://iovip-z2.qbox.me",
-	ApiHost:   "http://api-z2.qiniu.com",
-}
-
-var ZoneAWSConfig = ZoneConfig{
-	UpHost:    "http://up.gdipper.com",
-	RsHost:    "http://rs.gdipper.com",
-	RsfHost:   "http://rsf.gdipper.com",
-	IovipHost: "http://io.gdipper.com",
-	ApiHost:   "http://api.gdipper.com",
+	RsHost:    "http://rs.qiniu.com",
+	RsfHost:   "http://rsf.qbox.me",
+	ApiHost:   "http://api.qiniu.com",
 }
 
 var ZoneNA0Config = ZoneConfig{
 	UpHost:    "http://upload-na0.qiniu.com",
-	RsHost:    "http://rs-na0.qbox.me",
-	RsfHost:   "http://rsf-na0.qbox.me",
 	IovipHost: "http://iovip-na0.qbox.me",
-	ApiHost:   "http://api-na0.qiniu.com",
+	RsHost:    "http://rs.qbox.me",
+	RsfHost:   "http://rsf.qbox.me",
+	ApiHost:   "http://api.qiniu.com",
 }
 
 func SetZone(zone string) {
 	var zoneConfig ZoneConfig
 	switch zone {
-	case ZoneAWS:
-		zoneConfig = ZoneAWSConfig
 	case ZoneBC:
 		zoneConfig = ZoneBCConfig
 	case ZoneHN:
@@ -84,12 +69,12 @@ func SetZone(zone string) {
 	conf.RS_HOST = zoneConfig.RsHost
 	conf.RSF_HOST = zoneConfig.RsfHost
 	conf.IO_HOST = zoneConfig.IovipHost
-	DEFAULT_API_HOST = zoneConfig.ApiHost
+	conf.API_HOST = zoneConfig.ApiHost
 }
 
 func IsValidZone(zone string) (valid bool) {
 	switch zone {
-	case ZoneNB, ZoneBC, ZoneHN, ZoneAWS, ZoneNA0:
+	case ZoneNB, ZoneBC, ZoneHN, ZoneNA0:
 		valid = true
 	default:
 		valid = false

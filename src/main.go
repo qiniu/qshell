@@ -5,14 +5,15 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/user"
 	"qiniu/log"
 	"qiniu/rpc"
+	"qshell"
 	"runtime"
 )
 
 var supportedCmds = map[string]cli.CliFunc{
 	"account":       cli.Account,
-	"zone":          cli.Zone,
 	"dircache":      cli.DirCache,
 	"listbucket":    cli.ListBucket,
 	"alilistbucket": cli.AliListBucket,
@@ -32,12 +33,11 @@ var supportedCmds = map[string]cli.CliFunc{
 	"batchcopy":     cli.BatchCopy,
 	"batchmove":     cli.BatchMove,
 	"batchsign":     cli.BatchSign,
-	"checkqrsync":   cli.CheckQrsync,
 	"fput":          cli.FormPut,
+	"rput":          cli.ResumablePut,
 	"qupload":       cli.QiniuUpload,
 	"qupload2":      cli.QiniuUpload2,
 	"qdownload":     cli.QiniuDownload,
-	"rput":          cli.ResumablePut,
 	"b64encode":     cli.Base64Encode,
 	"b64decode":     cli.Base64Decode,
 	"urlencode":     cli.Urlencode,
@@ -76,14 +76,14 @@ func main() {
 		return
 	}
 
-	//flag
+	//global options
 	var debugMode bool
-	var forceMode bool
 	var helpMode bool
 	var versionMode bool
+	var multiUserMode bool
 
 	flag.BoolVar(&debugMode, "d", false, "debug mode")
-	flag.BoolVar(&forceMode, "f", false, "force mode")
+	flag.BoolVar(&multiUserMode, "m", false, "multi user mode")
 	flag.BoolVar(&helpMode, "h", false, "show help")
 	flag.BoolVar(&versionMode, "v", false, "show version")
 
@@ -99,16 +99,32 @@ func main() {
 		return
 	}
 
+	//set log level
 	if debugMode {
 		log.SetOutputLevel(log.Ldebug)
 	}
 
-	if forceMode {
-		cli.ForceMode = true
+	//set qshell root path
+	if multiUserMode {
+		log.Debug("Entering multiple user mode")
+		pwd, gErr := os.Getwd()
+		if gErr != nil {
+			fmt.Println("Error: get current work dir error,", gErr)
+			return
+		}
+		qshell.QShellRootPath = pwd
+	} else {
+		log.Debug("Entering single user mode")
+		curUser, gErr := user.Current()
+		if gErr != nil {
+			fmt.Println("Error: get current user error,", gErr)
+			return
+		}
+		qshell.QShellRootPath = curUser.HomeDir
 	}
 
+	//set cmd and params
 	args := flag.Args()
-
 	cmd := args[0]
 	params := args[1:]
 
@@ -120,7 +136,7 @@ func main() {
 	if cliFunc, ok := supportedCmds[cmd]; ok {
 		cliFunc(cmd, params...)
 	} else {
-		fmt.Println(fmt.Sprintf("Error: unknown cmd `%s`", cmd))
+		fmt.Printf("Error: unknown cmd `%s`\n", cmd)
 	}
 
 }

@@ -13,10 +13,6 @@ RUN cd ~ && mkdir GoProjects
 RUN echo 'export GOPATH=~/GoProjects' >> ~/.bashrc
 
 #get remote source
-RUN ["/bin/bash", "-c", "export GOPATH=~/GoProjects && /usr/local/go/bin/go get github.com/qiniu/api.v6"]
-RUN ["/bin/bash", "-c", "export GOPATH=~/GoProjects && /usr/local/go/bin/go get github.com/qiniu/api.v6"]
-RUN ["/bin/bash", "-c", "export GOPATH=~/GoProjects && /usr/local/go/bin/go get github.com/qiniu/rpc"]
-RUN ["/bin/bash", "-c", "export GOPATH=~/GoProjects && /usr/local/go/bin/go get github.com/qiniu/log"]
 RUN ["/bin/bash", "-c", "export GOPATH=~/GoProjects && /usr/local/go/bin/go get github.com/syndtr/goleveldb/leveldb"]
 RUN ["/bin/bash", "-c", "export GOPATH=~/GoProjects && /usr/local/go/bin/go get github.com/yanunon/oss-go-api/oss"]
 RUN ["/bin/bash", "-c", "export GOPATH=~/GoProjects && /usr/local/go/bin/go get github.com/golang/text"]

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"net/http"
 
+	"fmt"
 	"qiniu/api.v6/auth/digest"
 	. "qiniu/api.v6/conf"
 	"qiniu/rpc"
@@ -54,12 +55,12 @@ func (rs Client) Delete(l rpc.Logger, bucket, key string) (err error) {
 	return rs.Conn.Call(l, nil, RS_HOST+URIDelete(bucket, key))
 }
 
-func (rs Client) Move(l rpc.Logger, bucketSrc, keySrc, bucketDest, keyDest string) (err error) {
-	return rs.Conn.Call(l, nil, RS_HOST+URIMove(bucketSrc, keySrc, bucketDest, keyDest))
+func (rs Client) Move(l rpc.Logger, bucketSrc, keySrc, bucketDest, keyDest string, force bool) (err error) {
+	return rs.Conn.Call(l, nil, RS_HOST+URIMove(bucketSrc, keySrc, bucketDest, keyDest, force))
 }
 
-func (rs Client) Copy(l rpc.Logger, bucketSrc, keySrc, bucketDest, keyDest string) (err error) {
-	return rs.Conn.Call(l, nil, RS_HOST+URICopy(bucketSrc, keySrc, bucketDest, keyDest))
+func (rs Client) Copy(l rpc.Logger, bucketSrc, keySrc, bucketDest, keyDest string, force bool) (err error) {
+	return rs.Conn.Call(l, nil, RS_HOST+URICopy(bucketSrc, keySrc, bucketDest, keyDest, force))
 }
 
 func (rs Client) ChangeMime(l rpc.Logger, bucket, key, mime string) (err error) {
@@ -71,25 +72,25 @@ func encodeURI(uri string) string {
 }
 
 func URIDelete(bucket, key string) string {
-	return "/delete/" + encodeURI(bucket+":"+key)
+	return fmt.Sprintf("/delete/%s", encodeURI(bucket+":"+key))
 }
 
 func URIStat(bucket, key string) string {
-	return "/stat/" + encodeURI(bucket+":"+key)
+	return fmt.Sprintf("/stat/%s", encodeURI(bucket+":"+key))
 }
 
-func URICopy(bucketSrc, keySrc, bucketDest, keyDest string) string {
-	return "/copy/" + encodeURI(bucketSrc+":"+keySrc) + "/" + encodeURI(bucketDest+":"+keyDest)
+func URICopy(bucketSrc, keySrc, bucketDest, keyDest string, force bool) string {
+	return fmt.Sprintf("/copy/%s/%s/force/%v", encodeURI(bucketSrc+":"+keySrc), encodeURI(bucketDest+":"+keyDest), force)
 }
 
-func URIMove(bucketSrc, keySrc, bucketDest, keyDest string) string {
-	return "/move/" + encodeURI(bucketSrc+":"+keySrc) + "/" + encodeURI(bucketDest+":"+keyDest)
+func URIMove(bucketSrc, keySrc, bucketDest, keyDest string, force bool) string {
+	return fmt.Sprintf("/move/%s/%s/force/%v", encodeURI(bucketSrc+":"+keySrc), encodeURI(bucketDest+":"+keyDest), force)
 }
 
 func URIChangeMime(bucket, key, mime string) string {
-	return "/chgm/" + encodeURI(bucket+":"+key) + "/mime/" + encodeURI(mime)
+	return fmt.Sprintf("/chgm/%s/mime/%s", encodeURI(bucket+":"+key), encodeURI(mime))
 }
 
 func URIPrefetch(bucket, key string) string {
-	return "/prefetch/" + encodeURI(bucket+":"+key)
+	return fmt.Sprintf("/prefetch/%s", encodeURI(bucket+":"+key))
 }
