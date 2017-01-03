@@ -297,6 +297,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 	var currentFileCount int64
 	var successFileCount int64
+	var notOverwriteCount int64
 	var failureFileCount int64
 	var skippedFileCount int64
 
@@ -408,7 +409,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			skipSuffixes := strings.Split(uploadConfig.SkipSuffixes, ",")
 			for _, suffix := range skipSuffixes {
 				if strings.HasSuffix(localRelFpath, strings.TrimSpace(suffix)) {
-					log.Debug(fmt.Sprintf("Skip by suffix `%s` for local file %s",
+					log.Debug(fmt.Sprintf("Skip by suffix `%s` for local file `%s`",
 						strings.TrimSpace(suffix), localRelFpath))
 					skip = true
 					skippedFileCount += 1
@@ -471,6 +472,10 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					}
 					if rsEntry.Hash == localEtag {
 						atomic.AddInt64(&skippedFileCount, 1)
+						perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
+						if perr != nil {
+							log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
+						}
 						log.Infof("File `%s` exists in bucket, hash match, ignore this upload", uploadFileKey)
 						continue
 					}
@@ -478,11 +483,19 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					if uploadConfig.CheckSize {
 						if rsEntry.Fsize == fsize {
 							atomic.AddInt64(&skippedFileCount, 1)
+							perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
+							if perr != nil {
+								log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
+							}
 							log.Infof("File `%s` exists in bucket, size match, ignore this upload", uploadFileKey)
 							continue
 						}
 					} else {
 						atomic.AddInt64(&skippedFileCount, 1)
+						perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
+						if perr != nil {
+							log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
+						}
 						log.Infof("File `%s` exists in bucket, no hash or size check, ignore this upload", uploadFileKey)
 						continue
 					}
@@ -503,9 +516,16 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			//check last modified
 
 			if err == nil && localFlmd == flmd {
-				log.Infof("Skip by local log for file %s", localRelFpath)
+				log.Infof("Skip by local leveldb log for file `%s`", localRelFpath)
 				atomic.AddInt64(&skippedFileCount, 1)
 				continue
+			} else {
+				if !uploadConfig.Overwrite {
+					//no overwrite set
+					log.Warnf("Skip upload of changed file `%s` but no overwrite set", localRelFpath)
+					atomic.AddInt64(&notOverwriteCount, 1)
+					continue
+				}
 			}
 		}
 
@@ -553,7 +573,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					log.Infof("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
 					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
-						log.Errorf("Upload key `%s` into leveldb error due to `%s`", ldbKey, perr)
+						log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
 					}
 				}
 			} else {
@@ -578,7 +598,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					log.Infof("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
 					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
-						log.Errorf("Upload key `%s` into leveldb error due to `%s`", ldbKey, perr)
+						log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
 					}
 				}
 			}
@@ -591,6 +611,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	log.Infof("%10s%10d\n", "Total:", totalFileCount)
 	log.Infof("%10s%10d\n", "Success:", successFileCount)
 	log.Infof("%10s%10d\n", "Failure:", failureFileCount)
+	log.Infof("%10s%10d\n", "NotOverwrite:", notOverwriteCount)
 	log.Infof("%10s%10d\n", "Skipped:", skippedFileCount)
 	log.Infof("%10s%15s\n", "Duration:", time.Since(timeStart))
 	log.Info("-----------------------------")
