@@ -359,8 +359,12 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			//unpack skip prefix
 			skipPathPrefixes := strings.Split(uploadConfig.SkipPathPrefixes, ",")
 			for _, prefix := range skipPathPrefixes {
-				if strings.HasPrefix(localRelFpath, strings.TrimSpace(prefix)) {
-					log.Infof("Skip by path prefix `%s` for local file path `%s`", strings.TrimSpace(prefix), localRelFpath)
+				if strings.TrimSpace(prefix) == "" {
+					continue
+				}
+
+				if strings.HasPrefix(localRelFpath, prefix) {
+					log.Infof("Skip by path prefix `%s` for local file path `%s`", prefix, localRelFpath)
 					skip = true
 					skippedFileCount += 1
 					break
@@ -376,9 +380,13 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			//unpack skip prefix
 			skipFilePrefixes := strings.Split(uploadConfig.SkipFilePrefixes, ",")
 			for _, prefix := range skipFilePrefixes {
+				if strings.TrimSpace(prefix) == "" {
+					continue
+				}
+
 				localFname := filepath.Base(localRelFpath)
-				if strings.HasPrefix(localFname, strings.TrimSpace(prefix)) {
-					log.Infof("Skip by file prefix `%s` for local file path `%s`", strings.TrimSpace(prefix), localRelFpath)
+				if strings.HasPrefix(localFname, prefix) {
+					log.Infof("Skip by file prefix `%s` for local file path `%s`", prefix, localRelFpath)
 					skip = true
 					skippedFileCount += 1
 					break
@@ -393,9 +401,13 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		if uploadConfig.SkipFixedStrings != "" {
 			//unpack fixed strings
 			skipFixedStrings := strings.Split(uploadConfig.SkipFixedStrings, ",")
-			for _, substr := range skipFixedStrings {
-				if strings.Contains(localRelFpath, strings.TrimSpace(substr)) {
-					log.Infof("Skip by fixed string `%s` for local file path `%s`", strings.TrimSpace(substr), localRelFpath)
+			for _, fixedStr := range skipFixedStrings {
+				if strings.TrimSpace(fixedStr) == "" {
+					continue
+				}
+
+				if strings.Contains(localRelFpath, fixedStr) {
+					log.Infof("Skip by fixed string `%s` for local file path `%s`", fixedStr, localRelFpath)
 					skip = true
 					skippedFileCount += 1
 					break
@@ -410,9 +422,12 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		if uploadConfig.SkipSuffixes != "" {
 			skipSuffixes := strings.Split(uploadConfig.SkipSuffixes, ",")
 			for _, suffix := range skipSuffixes {
-				if strings.HasSuffix(localRelFpath, strings.TrimSpace(suffix)) {
-					log.Debug(fmt.Sprintf("Skip by suffix `%s` for local file `%s`",
-						strings.TrimSpace(suffix), localRelFpath))
+				if strings.TrimSpace(suffix) == "" {
+					continue
+				}
+
+				if strings.HasSuffix(localRelFpath, suffix) {
+					log.Infof("Skip by suffix `%s` for local file `%s`", suffix, localRelFpath)
 					skip = true
 					skippedFileCount += 1
 					break
