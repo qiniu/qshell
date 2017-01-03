@@ -25,7 +25,7 @@ import (
 	"dest_dir"		:	"/Users/jemy/Backup",
 	"bucket"		:	"test-bucket",
 	"prefix"		:	"demo/",
-	"suffix"		: 	".mp4",
+	"suffixes"		: 	".png,.jpg",
 }
 */
 
@@ -35,10 +35,10 @@ const (
 )
 
 type DownloadConfig struct {
-	DestDir string `json:"dest_dir"`
-	Bucket  string `json:"bucket"`
-	Prefix  string `json:"prefix,omitempty"`
-	Suffix  string `json:"suffix,omitempty"`
+	DestDir  string `json:"dest_dir"`
+	Bucket   string `json:"bucket"`
+	Prefix   string `json:"prefix,omitempty"`
+	Suffixes string `json:"suffixes,omitempty"`
 	//log settings
 	LogLevel string `json:"log_level,omitempty"`
 	LogFile  string `json:"log_file,omitempty"`
@@ -111,6 +111,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	log.SetOutput(logFile)
 	fmt.Println()
 
+	log.Infof("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
 	account, gErr := GetAccount()
 	if gErr != nil {
 		fmt.Println("Get account error,", gErr)
@@ -180,6 +181,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	var updateFileCount int64
 	var successFileCount int64
 	var failureFileCount int64
+	var skipBySuffixes int64
 
 	totalFileCount = GetFileLineCount(jobListFileName)
 
@@ -194,6 +196,16 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	listScanner := bufio.NewScanner(listFp)
 	listScanner.Split(bufio.ScanLines)
 	//key, fsize, etag, lmd, mime, enduser
+
+	downSuffixes := strings.Split(downConfig.Suffixes, ",")
+	filterSuffixes := make([]string, 0, len(downSuffixes))
+
+	for _, suffix := range downSuffixes {
+		if strings.TrimSpace(suffix) != "" {
+			filterSuffixes = append(filterSuffixes, suffix)
+		}
+	}
+
 	for listScanner.Scan() {
 		currentFileCount += 1
 		line := strings.TrimSpace(listScanner.Text())
@@ -201,9 +213,21 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		if len(items) >= 4 {
 			fileKey := items[0]
 
-			if downConfig.Suffix != "" && !strings.HasSuffix(fileKey, downConfig.Suffix) {
-				//skip files by suffix specified
-				continue
+			if len(filterSuffixes) > 0 {
+				//filter files by suffixes
+				var goAhead bool
+				for _, suffix := range filterSuffixes {
+					if strings.HasSuffix(fileKey, suffix) {
+						goAhead = true
+						break
+					}
+				}
+
+				if !goAhead {
+					skipBySuffixes += 1
+					log.Infof("Skip download `%s`, suffix filter not match", fileKey)
+					continue
+				}
 			}
 
 			fileSize, pErr := strconv.ParseInt(items[1], 10, 64)
@@ -246,19 +270,22 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 					//oldFileSize, _ := strconv.ParseInt(oldFileInfoItems[1], 10, 64)
 					if oldFileLmd == fileMtime && localFileInfo.Size() == fileSize {
 						//nothing change, ignore
+						log.Infof("Local file `%s` exists, same as in bucket, download skip", localAbsFilePath)
 						existsFileCount += 1
 						continue
 					} else {
 						//somthing changed, must download a new file
+						log.Infof("Local file `%s` exists, but remote file changed, go to download", localAbsFilePath)
 						downNewLog = true
 					}
 				} else {
 					if localFileInfo.Size() != fileSize {
+						log.Infof("Local file `%s` exists, size not the same as in bucket, go to download", localAbsFilePath)
 						downNewLog = true
 					} else {
 						//treat the local file not changed, write to leveldb, though may not accurate
 						//nothing to do
-						log.Warnf("Local file `%s` exists with same size as `%s`, check whether it changed by yourself", localAbsFilePath, fileKey)
+						log.Warnf("Local file `%s` exists with same size as `%s`, treat it not changed", localAbsFilePath, fileKey)
 						atomic.AddInt64(&existsFileCount, 1)
 						continue
 					}
@@ -282,14 +309,17 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 								//rename it
 								renameErr := os.Rename(localFilePathTmp, localFilePath)
 								if renameErr != nil {
-									log.Error("Rename temp file to final log file error", renameErr)
+									log.Error("Rename temp file `%s` to final file `%s` error", localFilePathTmp, localFilePath, renameErr)
 								}
 								continue
 							}
 						} else {
+							log.Infof("Local tmp file `%s` exists, but remote file changed, go to download", localFilePathTmp)
 							downNewLog = true
 						}
 					} else {
+						//log tmp file exists, but no record in leveldb, download a new log file
+						log.Infof("Local tmp file `%s` exists, but no record in leveldb ,go to download", localFilePathTmp)
 						downNewLog = true
 					}
 				} else {
@@ -332,6 +362,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	log.Infof("%10s%10d\n", "Failure:", failureFileCount)
 	log.Infof("%10s%15s\n", "Duration:", time.Since(timeStart))
 	log.Info("-----------------------------")
+	fmt.Println("\nSee upload log at path", downConfig.LogFile)
 }
 
 /*
