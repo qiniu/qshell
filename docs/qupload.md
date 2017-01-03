@@ -17,7 +17,7 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 |参数名|描述|可选参数|
 |-----------|--------------------------|-----|
 |ThreadCount|并发上传的协程数量，默认为1，即文件一个个上传，对于大量小文件来说，可以通过提高该参数值来提升同步速度|Y|
-|LocalUploadConfig|数据同步的配置文件，该配置文件里面包含了一些诸如目标空间名称，AccessKey，SecretKey等信息，详情参考配置文件的讲解|N|
+|LocalUploadConfig|数据同步的配置文件，该配置文件里面包含了一些诸如本地同步目录，目标空间名称等信息，详情参考配置文件的讲解|N|
 
 关于 `ThreadCount` 的值，并不是越大越好，所以工具里面限制了范围 [1, 2000]，在实际情况下最好根据所拥有的上传带宽和文件的平均大小来计算下这个并发数，最简单的算法就是带宽除以平均文件大小即可得到并发数。
 
@@ -30,8 +30,6 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 ```
 {
    "src_dir"            :   "<LocalPath>",
-   "access_key"         :   "<Your AccessKey>",
-   "secret_key"         :   "<Your SecretKey>",
    "bucket"             :   "<Bucket>",
    "file_list"          :   "<FileList>",
    "key_prefix"         :   "<Key Prefix>",
@@ -54,8 +52,6 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 |参数名|描述|可选参数|
 |-----------|------------|------------|
 |src_dir|本地同步路径，为全路径格式，工具将同步该目录下面所有的文件；在Windows系统下面使用的时候，注意`dest_dir`的设置遵循`D:\\jemy\\backup`这种方式。也就是路径里面的`\`要有两个（`\\`）|N|
-|access_key|七牛账号对应的AccessKey|N|
-|secret_key|七牛账号对应的SecretKey|N|
 |bucket|同步数据的目标空间名称，可以为公开空间或私有空间|N|
 |file_list|待同步文件列表，该文件列表内容必须是相对于`src_dir`的文件相对路径列表，可以不指定，工具将自动获取`src_dir`下面的文件列表。请使用 `dircache` 命令生成这个文件列表，生成之后可以手动删除不需要的行|Y|
 |up_host|上传域名，可选设置，一般情况下不需要指定|Y|

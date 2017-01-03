@@ -32,8 +32,6 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 {
     "dest_dir"   :   "<LocalBackupDir>",
     "bucket"     :   "<Bucket>",
-    "access_key" :   "<Your AccessKey>",
-    "secret_key" :   "<Your SecretKey>",
     "prefix"     :   "image/",
     "suffix"     :   ".png"
 }
@@ -43,8 +41,6 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 |--------------|---------------|----------------|
 |dest_dir|本地数据备份路径，为全路径|N|
 |bucket|空间名称|N|
-|access_key|七牛账号对应的AccessKey|N|
-|secret_key|七牛账号对应的SecretKey|N|
 |prefix|只同步指定前缀的文件，默认为空|Y|
 |suffix|只同步指定后缀的文件，默认为空|Y|
 

@@ -480,6 +480,8 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 						}
 						log.Infof("File `%s` exists in bucket, hash match, ignore this upload", uploadFileKey)
 						continue
+					} else {
+						log.Infof("File `%s` exists in bucket, but hash not match, go to upload", uploadFileKey)
 					}
 				} else {
 					if uploadConfig.CheckSize {
@@ -491,6 +493,8 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 							}
 							log.Infof("File `%s` exists in bucket, size match, ignore this upload", uploadFileKey)
 							continue
+						} else {
+							log.Infof("File `%s` exists in bucket, but size not match, go to upload", uploadFileKey)
 						}
 					} else {
 						atomic.AddInt64(&skippedFileCount, 1)
