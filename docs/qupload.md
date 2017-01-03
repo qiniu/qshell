@@ -78,13 +78,11 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 ```
 {
   "src_dir" : "xxx",
-  "bucket" : "xxx",
-  "access_key" : "xxx",
-  "secret_key" : "xxx"
+  "bucket" : "xxx"
 }
 ```
 
-最基本的参数就是上面的这几个，分别为本地待上传的目录，上传的目标空间，账号对应的 `AccessKey` 和 `SecretKey`，有这些参数，基本上就可以将一个本地目录中的文件全部同步到空间中去。其余的一些参数，只是同步任务的其他场景下的可选参数。
+最基本的参数就是上面的这几个，分别为本地待上传的目录，上传的目标空间，指定这两个参数就可以将一个本地目录中的文件全部同步到空间中去。其余的一些参数，只是同步任务的其他场景下的可选参数。
 
 假设有目录 `/Users/jemy/Temp/uptest` ，下面的文件结构为：
 
@@ -176,8 +174,6 @@ Skip upload of changed file `xxx` but no overwrite set
 {
   "src_dir" : "xxx",
   "bucket" : "xxx",
-  "access_key" : "xxx",
-  "secret_key" : "xxx",
   "ignore_dir" : true
 }
 ```
