@@ -25,6 +25,30 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 
 `qupload` 功能需要配置文件的支持，配置文件支持的全部参数如下：
 
+```
+{
+   "src_dir"            :   "<LocalPath>",
+   "access_key"         :   "<Your AccessKey>",
+   "secret_key"         :   "<Your SecretKey>",
+   "bucket"             :   "<Bucket>",
+   "file_list"          :   "<FileList>",
+   "key_prefix"         :   "<Key Prefix>",
+   "up_host"            :   "<Upload Host>",
+   "ignore_dir"         :   false,
+   "overwrite"          :   false,
+   "check_exists"       :   false,
+   "check_hash"         :   false,
+   "check_size"         :   false,
+   "rescan_local"       :   true,
+   "skip_file_prefixes" :   "test,demo,",
+   "skip_path_prefixes" :   "hello/,temp/",
+   "skip_fixed_strings" :   ".svn,.git",
+   "skip_suffixes"      :   ".DS_Store,.exe",
+   "log_file"           :   "upload.log",
+   "log_level"          :   "info"
+}
+```
+
 |参数名|描述|可选参数|
 |-----------|------------|------------|
 |src_dir|本地同步路径，为全路径格式，工具将同步该目录下面所有的文件；在Windows系统下面使用的时候，注意`dest_dir`的设置遵循`D:\\jemy\\backup`这种方式。也就是路径里面的`\`要有两个（`\\`）|N|
@@ -49,7 +73,7 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 
 对于那么多的参数，我们可以分为几类来解释：
 
-# 解析
+# 讲解
 
 **最基本的上传功能和必须要指定的参数**
 
@@ -260,6 +284,8 @@ demo2.gif
 **增量上传的支持**
 
 增量上传主要解决两个问题，第一就是文件的新增，第二就是文件的内容已改动。这两种情况下，需要设置参数 `rescan_local` 为 `true` 去重新获取本地目录下的文件列表信息，然后再同步。默认情况下这个参数设置为 `false`，也就是说如果本地目录不存在文件的更新操作，那么如果上传中断的话，会使用上一次完整获取的文件列表。之所以这样做，是因为对于海量的数据同步，获取一次完整的文件列表也是十分耗费时间的。
+
+目前该工具支持增量上传的方式，仍然是重新运行上传命令，尚不支持后台常驻，自动检测更新进行同步的功能。
 
 **本地删除操作同步**
 
