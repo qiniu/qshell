@@ -5,8 +5,12 @@
 # 格式
 
 ```
-qshell batchchgm <Bucket> <KeyMimeMapFile>
+qshell batchchgm [-force] <Bucket> <KeyMimeMapFile>
 ```
+
+# 鉴权
+
+需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
 
 # 参数
 
@@ -14,6 +18,10 @@ qshell batchchgm <Bucket> <KeyMimeMapFile>
 |---------|-----------|
 |Bucket|空间名，可以为公开空间或私有空间|
 |KeyMimeMapFile|文件名称和新的MimeType对的列表，每一行是`Key\tNewMimeType`格式，注意格式中间的Tab。|
+
+**force选项**
+
+该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`-force`选项。
 
 # 示例
 

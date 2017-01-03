@@ -33,17 +33,17 @@ qshell copy [-overwrite] <SrcBucket> <SrcKey> <DestBucket> [<DestKey>]
 1.复制`if-pbl`空间中的`qiniu.jpg`，并保存在`if-pbl`中，新副本文件名为`2015/01/19/qiniu.jpg`
 
 ```
-qshell copy if-pbl qiniu.jpg if-pbl 2015/01/19/qiniu.jpg
+$ qshell copy if-pbl qiniu.jpg if-pbl 2015/01/19/qiniu.jpg
 ```
 
 2.复制`if-pbl`空间中的`qiniu.jpg`，并保存在`if-pri`中，新副本文件名和原文件名相同
 
 ```
-qshell copy if-pbl qiniu.jpg if-pri
+$ qshell copy if-pbl qiniu.jpg if-pri
 ```
 
 3. 复制`if-pbl`空间中的`qiniu.jpg`，并保存到`if-pri`中，由于`if-pri`已有文件`qiniu_pri.jpg`，所以加上选项`-overwrite`强制覆盖
 
 ```
-qshell copy -overwrite if-pbl qiniu.jpg if-pri qiniu_pri.jpg
+$ qshell copy -overwrite if-pbl qiniu.jpg if-pri qiniu_pri.jpg
 ```
