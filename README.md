@@ -174,3 +174,7 @@ $ ./build.sh
 
 如果您有任何问题，请写在[ISSUE列表](https://github.com/qiniu/qshell/issues)里面，我们会尽快回复您。
 
+## 技术讨论
+
+如果您希望和在工作中使用`qshell`的其他人进行交流，可以加入QQ群：343822521 。
+
