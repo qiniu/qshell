@@ -82,85 +82,68 @@ $ qshell fput bucket-test test1.png /home/jemy/images/test1.png
 │               └── MANIFEST-000000
 ```
 
+## 多用户模式
+
+
+
 ## 命令选项
 
 该工具还有一些有用的选项参数如下：
 
 |参数|描述|
 |----|----|
-|-f|设置命令行的交互模式，如果指定这个选项，那么为不交互，这个命令主要用在batch操作的命令里面，因为batch操作具有一定危险性，比如batchdelete批量删除，这个时候会要求输入一个验证码，如果遇到把qshell写到shell脚本里面，不想有验证码这一步的情况，可以指定这个选项|
 |-d|设置是否输出DEBUG日志，如果指定这个选项，则输出DEBUG级别的日志|
 |-h|打印命令列表帮助信息，遇到参数忘记的情况下，可以使用该命令|
 |-v|打印工具版本，反馈问题的时候，请提前告知工具对应版本号|
 
-## 多机房支持
-
-七牛目前上线了华北，华东，华南和北美机房，`qshell`可以同时支持这几个机房的操作，这个是通过`account`命令或者`zone`命令中指定的机房编码来支持的。另外对于`qupload`和`qdownload`，可以在配置文件里面添加选项`zone`来指定空间所在的机房，一旦指定机房之后，工具会自动判定所需要的域名入口信息。目前机房的编码如下：
-
-|机房|zone值|
-|----|----|
-|华东|nb|
-|华北|bc|
-|华南|hn|
-|北美|na0|
-
-比如通过：
-
-```
-$ qshell account ak sk nb 
-指定账号默认机房为华东机房
-
-$ qshell zone bc
-同一个账号下可能有多个机房的空间，每次都用account比较麻烦，可以用zone命令来切换机房
-```
 
 ## 命令列表
 
 |命令|类别|描述|详细|
 |------|------------|----------|--------|
-|account|账号|设置或显示当前用户的`AccessKey`和`SecretKey`和`Zone`|[文档](http://github.com/qiniu/qshell/wiki/account)|
-|dircache|存储|输出本地指定路径下所有的文件列表|[文档](http://github.com/qiniu/qshell/wiki/dircache)|
-|listbucket|存储|列举七牛空间里面的所有文件|[文档](http://github.com/qiniu/qshell/wiki/listbucket)|
-|prefop|存储|查询七牛数据处理的结果|[文档](http://github.com/qiniu/qshell/wiki/prefop)|
-|fput|存储|以文件表单的方式上传一个文件|[文档](http://github.com/qiniu/qshell/wiki/fput)|
-|rput|存储|以分片上传的方式上传一个文件|[文档](http://github.com/qiniu/qshell/wiki/rput)|
-|qupload|存储|同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查|[文档](http://github.com/qiniu/qshell/wiki/qupload)|
-|qdownload|存储|从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步|[文档](http://github.com/qiniu/qshell/wiki/qdownload)|
-|stat|存储|查询七牛空间中一个文件的基本信息|[文档](http://github.com/qiniu/qshell/wiki/stat)|
-|delete|存储|删除七牛空间中的一个文件|[文档](http://github.com/qiniu/qshell/wiki/delete)|
-|move|存储|移动或重命名七牛空间中的一个文件|[文档](http://github.com/qiniu/qshell/wiki/move)|
-|copy|存储|复制七牛空间中的一个文件|[文档](http://github.com/qiniu/qshell/wiki/copy)|
-|chgm|存储|修改七牛空间中的一个文件的MimeType|[文档](http://github.com/qiniu/qshell/wiki/chgm)|
-|fetch|存储|从Internet上抓取一个资源并存储到七牛空间中|[文档](http://github.com/qiniu/qshell/wiki/fetch)|
-|sync|存储|从Internet上抓取一个资源并存储到七牛空间中，适合大文件的场合|[文档](http://github.com/qiniu/qshell/wiki/sync)|
-|prefetch|存储|更新七牛空间中从源站镜像过来的文件|[文档](http://github.com/qiniu/qshell/wiki/prefetch)|
-|batchdelete|存储|批量删除七牛空间中的文件，可以直接根据`listbucket`的结果来删除|[文档](http://github.com/qiniu/qshell/wiki/batchdelete)|
-|batchchgm|存储|批量修改七牛空间中文件的MimeType|[文档](http://github.com/qiniu/qshell/wiki/batchchgm)|
-|batchcopy|存储|批量复制七牛空间中的文件到另一个空间|[文档](http://github.com/qiniu/qshell/wiki/batchcopy)|
-|batchmove|存储|批量移动七牛空间中的文件到另一个空间|[文档](http://github.com/qiniu/qshell/wiki/batchmove)|
-|batchrename|存储|批量重命名七牛空间中的文件|[文档](http://github.com/qiniu/qshell/wiki/batchrename)|
-|batchsign|存储|批量根据资源的公开外链生成资源的私有外链|[文档](http://github.com/qiniu/qshell/wiki/batchsign)|
-|privateurl|存储|生成私有空间资源的访问外链|[文档](http://github.com/qiniu/qshell/wiki/privateurl)|
-|saveas|存储|实时处理的saveas链接快捷生成工具|[文档](http://github.com/qiniu/qshell/wiki/saveas)|
-|reqid|存储|七牛自定义头部X-Reqid解码工具|[文档](http://github.com/qiniu/qshell/wiki/reqid)|
-|buckets|存储|获取当前账号下所有的空间名称|[文档](http://github.com/qiniu/qshell/wiki/buckets)|
-|domains|存储|获取指定空间的所有关联域名|[文档](http://github.com/qiniu/qshell/wiki/domains)|
-|qetag|存储|根据七牛的qetag算法来计算文件的hash|[文档](http://github.com/qiniu/qshell/wiki/qetag)|
-|m3u8delete|存储|根据流媒体播放列表文件删除七牛空间中的流媒体切片|[文档](http://github.com/qiniu/qshell/wiki/m3u8delete)|
-|m3u8replace|存储|修改流媒体播放列表文件中的切片引用域名|[文档](http://github.com/qiniu/qshell/wiki/m3u8replace)|
-|cdnrefresh|CDN|批量刷新cdn的访问外链|[文档](http://github.com/qiniu/qshell/wiki/cdnrefresh)|
-|cdnprefetch|CDN|批量预取cdn的访问外链|[文档](http://github.com/qiniu/qshell/wiki/cdnprefetch)|
-|b64encode|工具|base64编码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](http://github.com/qiniu/qshell/wiki/b64encode)|
-|b64decode|工具|base64解码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](http://github.com/qiniu/qshell/wiki/b64decode)|
-|urlencode|工具|url编码工具|[文档](http://github.com/qiniu/qshell/wiki/urlencode)|
-|urldecode|工具|url解码工具|[文档](http://github.com/qiniu/qshell/wiki/urldecode)|
-|ts2d|工具|将timestamp(单位秒)转为UTC+8:00中国日期，主要用来检查上传策略的deadline参数|[文档](http://github.com/qiniu/qshell/wiki/ts2d)|
-|tms2d|工具|将timestamp(单位毫秒)转为UTC+8:00中国日期|[文档](http://github.com/qiniu/qshell/wiki/tms2d)|
-|tns2d|工具|将timestamp(单位100纳秒)转为UTC+8:00中国日期|[文档](http://github.com/qiniu/qshell/wiki/tns2d)|
-|d2ts|工具|将日期转为timestamp(单位秒)|[文档](http://github.com/qiniu/qshell/wiki/d2ts)|
-|ip|工具|根据淘宝的公开API查询ip地址的地理位置|[文档](http://github.com/qiniu/qshell/wiki/ip)|
-|unzip|工具|解压zip文件，支持UTF-8编码和GBK编码|[文档](http://github.com/qiniu/qshell/wiki/unzip)|
-|alilistbucket|第三方|列举阿里OSS空间里面的所有文件|[文档](http://github.com/qiniu/qshell/wiki/alilistbucket)|
+|account|账号|设置或显示当前用户的`AccessKey`和`SecretKey`和`Zone`|[文档](docs/account)|
+|dircache|存储|输出本地指定路径下所有的文件列表|[文档](docs/dircache)|
+|listbucket|存储|列举七牛空间里面的所有文件|[文档](docs/listbucket)|
+|prefop|存储|查询七牛数据处理的结果|[文档](docs/prefop)|
+|fput|存储|以文件表单的方式上传一个文件|[文档](docs/fput)|
+|rput|存储|以分片上传的方式上传一个文件|[文档](docs/rput)|
+|qupload|存储|同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查|[文档](docs/qupload)|
+|qdownload|存储|从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步|[文档](docs/qdownload)|
+|stat|存储|查询七牛空间中一个文件的基本信息|[文档](docs/stat)|
+|delete|存储|删除七牛空间中的一个文件|[文档](docs/delete)|
+|move|存储|移动或重命名七牛空间中的一个文件|[文档](docs/move)|
+|copy|存储|复制七牛空间中的一个文件|[文档](docs/copy)|
+|chgm|存储|修改七牛空间中的一个文件的MimeType|[文档](docs/chgm)|
+|fetch|存储|从Internet上抓取一个资源并存储到七牛空间中|[文档](docs/fetch)|
+|sync|存储|从Internet上抓取一个资源并存储到七牛空间中，适合大文件的场合|[文档](docs/sync)|
+|prefetch|存储|更新七牛空间中从源站镜像过来的文件|[文档](docs/prefetch)|
+|batchdelete|存储|批量删除七牛空间中的文件，可以直接根据`listbucket`的结果来删除|[文档](docs/batchdelete)|
+|batchchgm|存储|批量修改七牛空间中文件的MimeType|[文档](docs/batchchgm)|
+|batchcopy|存储|批量复制七牛空间中的文件到另一个空间|[文档](docs/batchcopy)|
+|batchmove|存储|批量移动七牛空间中的文件到另一个空间|[文档](docs/batchmove)|
+|batchrename|存储|批量重命名七牛空间中的文件|[文档](docs/batchrename)|
+|batchsign|存储|批量根据资源的公开外链生成资源的私有外链|[文档](docs/batchsign)|
+|privateurl|存储|生成私有空间资源的访问外链|[文档](docs/privateurl)|
+|saveas|存储|实时处理的saveas链接快捷生成工具|[文档](docs/saveas)|
+|reqid|存储|七牛自定义头部X-Reqid解码工具|[文档](docs/reqid)|
+|buckets|存储|获取当前账号下所有的空间名称|[文档](docs/buckets)|
+|domains|存储|获取指定空间的所有关联域名|[文档](docs/domains)|
+|qetag|存储|根据七牛的qetag算法来计算文件的hash|[文档](docs/qetag)|
+|m3u8delete|存储|根据流媒体播放列表文件删除七牛空间中的流媒体切片|[文档](docs/m3u8delete)|
+|m3u8replace|存储|修改流媒体播放列表文件中的切片引用域名|[文档](docs/m3u8replace)|
+|cdnrefresh|CDN|批量刷新cdn的访问外链|[文档](docs/cdnrefresh)|
+|cdnprefetch|CDN|批量预取cdn的访问外链|[文档](docs/cdnprefetch)|
+|b64encode|工具|base64编码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](docs/b64encode)|
+|b64decode|工具|base64解码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](docs/b64decode)|
+|urlencode|工具|url编码工具|[文档](docs/urlencode)|
+|urldecode|工具|url解码工具|[文档](docs/urldecode)|
+|ts2d|工具|将timestamp(单位秒)转为UTC+8:00中国日期，主要用来检查上传策略的deadline参数|[文档](docs/ts2d)|
+|tms2d|工具|将timestamp(单位毫秒)转为UTC+8:00中国日期|[文档](docs/tms2d)|
+|tns2d|工具|将timestamp(单位100纳秒)转为UTC+8:00中国日期|[文档](docs/tns2d)|
+|d2ts|工具|将日期转为timestamp(单位秒)|[文档](docs/d2ts)|
+|ip|工具|根据淘宝的公开API查询ip地址的地理位置|[文档](docs/ip)|
+|unzip|工具|解压zip文件，支持UTF-8编码和GBK编码|[文档](docs/unzip)|
+|alilistbucket|第三方|列举阿里OSS空间里面的所有文件|[文档](docs/alilistbucket)|
 
 ## 项目编译
 

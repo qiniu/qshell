@@ -14,8 +14,6 @@ func QiniuUpload2(cmd string, params ...string) {
 	var threadCount int64
 	var srcDir string
 	var fileList string
-	var accessKey string
-	var secretKey string
 	var bucket string
 	var putThreshold int64
 	var keyPrefix string
@@ -39,8 +37,6 @@ func QiniuUpload2(cmd string, params ...string) {
 	flagSet.Int64Var(&threadCount, "thread-count", 0, "multiple thread count")
 	flagSet.StringVar(&srcDir, "src-dir", "", "src dir to upload")
 	flagSet.StringVar(&fileList, "file-list", "", "file list to upload")
-	flagSet.StringVar(&accessKey, "access-key", "", "access key")
-	flagSet.StringVar(&secretKey, "secret-key", "", "secret key")
 	flagSet.StringVar(&bucket, "bucket", "", "bucket")
 	flagSet.Int64Var(&putThreshold, "put-threshold", 0, "chunk upload threshold")
 	flagSet.StringVar(&keyPrefix, "key-prefix", "", "key prefix prepended to dest file key")
@@ -66,8 +62,6 @@ func QiniuUpload2(cmd string, params ...string) {
 	uploadConfig := qshell.UploadConfig{
 		SrcDir:           srcDir,
 		FileList:         fileList,
-		AccessKey:        accessKey,
-		SecretKey:        secretKey,
 		Bucket:           bucket,
 		PutThreshold:     putThreshold,
 		KeyPrefix:        keyPrefix,
@@ -92,16 +86,6 @@ func QiniuUpload2(cmd string, params ...string) {
 	//check params
 	if uploadConfig.SrcDir == "" {
 		fmt.Println("Upload config no `--src-dir` specified")
-		return
-	}
-
-	if uploadConfig.AccessKey == "" {
-		fmt.Println("Upload config no `--access-key` specified")
-		return
-	}
-
-	if uploadConfig.SecretKey == "" {
-		fmt.Println("Upload config no `--secret-key` specified")
 		return
 	}
 

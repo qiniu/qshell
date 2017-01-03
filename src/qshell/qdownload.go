@@ -24,8 +24,6 @@ import (
 {
 	"dest_dir"		:	"/Users/jemy/Backup",
 	"bucket"		:	"test-bucket",
-	"access_key"	:	"<Your AccessKey>",
-	"secret_key"	:	"<Your SecretKey>",
 	"prefix"		:	"demo/",
 	"suffix"		: 	".mp4",
 }
@@ -37,12 +35,10 @@ const (
 )
 
 type DownloadConfig struct {
-	DestDir   string `json:"dest_dir"`
-	Bucket    string `json:"bucket"`
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
-	Prefix    string `json:"prefix,omitempty"`
-	Suffix    string `json:"suffix,omitempty"`
+	DestDir string `json:"dest_dir"`
+	Bucket  string `json:"bucket"`
+	Prefix  string `json:"prefix,omitempty"`
+	Suffix  string `json:"suffix,omitempty"`
 	//log settings
 	LogLevel string `json:"log_level,omitempty"`
 	LogFile  string `json:"log_file,omitempty"`
@@ -115,7 +111,12 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	log.SetOutput(logFile)
 	fmt.Println()
 
-	mac := digest.Mac{downConfig.AccessKey, []byte(downConfig.SecretKey)}
+	account, gErr := GetAccount()
+	if gErr != nil {
+		fmt.Println("Get account error,", gErr)
+		return
+	}
+	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 	//get bucket zone info
 	bucketInfo, gErr := GetBucketInfo(&mac, downConfig.Bucket)
 	if gErr != nil {

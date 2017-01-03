@@ -31,8 +31,6 @@ Config file like:
 {
 	"src_dir"				:	"/Users/jemy/Photos",
 	"file_list"             :   "",
-	"access_key"			:	"<Your AccessKey>",
-	"secret_key"			:	"<Your SecretKey>",
 	"bucket"				:	"test-bucket",
 	"put_threshold"			:	10000000,
 	"key_prefix"			:	"2014/12/01/",
@@ -73,10 +71,8 @@ type UploadInfo struct {
 
 type UploadConfig struct {
 	//basic config
-	SrcDir    string `json:"src_dir"`
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
-	Bucket    string `json:"bucket"`
+	SrcDir string `json:"src_dir"`
+	Bucket string `json:"bucket"`
 
 	//optional config
 	FileList         string `json:"file_list,omitempty"`
@@ -178,7 +174,12 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	fmt.Println()
 
 	//global up settings
-	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
+	account, gErr := GetAccount()
+	if gErr != nil {
+		fmt.Println(gErr)
+		return
+	}
+	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 	//get bucket zone info
 	bucketInfo, gErr := GetBucketInfo(&mac, uploadConfig.Bucket)
 	if gErr != nil {
