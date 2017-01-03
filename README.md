@@ -49,7 +49,7 @@ export PATH=$PATH:/home/jemy/tools
 
 ![windows-qshell-path-settings.png](http://devtools.qiniu.com/windows-qshell-path-settings.png)
 
-## 使用
+## 密钥设置
 
 该工具有两类命令，一类需要鉴权，另一类不需要。
 

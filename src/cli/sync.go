@@ -40,14 +40,16 @@ func Sync(cmd string, params ...string) {
 
 		//sync
 		tStart := time.Now()
-		hash, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, upHostIp)
+		syncRet, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, upHostIp)
 		if sErr != nil {
 			log.Error(sErr)
 			return
 		}
 
-		fmt.Printf("Sync %s => %s:%s (%s) Success, Duration: %s!\n",
-			srcResUrl, bucket, key, hash, time.Since(tStart))
+		fmt.Printf("Sync %s => %s:%s Success, Duration: %s!\n", srcResUrl, bucket, key, time.Since(tStart))
+		fmt.Println("Hash:", syncRet.Hash)
+		fmt.Printf("Fsize: %d (%s)\n", syncRet.Fsize, FormatFsize(syncRet.Fsize))
+		fmt.Println("Mime:", syncRet.MimeType)
 	} else {
 		CmdHelp(cmd)
 	}
