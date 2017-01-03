@@ -28,7 +28,6 @@ import (
 	"secret_key"	:	"<Your SecretKey>",
 	"prefix"		:	"demo/",
 	"suffix"		: 	".mp4",
-	"referer"		: 	""
 }
 */
 

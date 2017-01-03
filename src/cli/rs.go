@@ -362,7 +362,7 @@ func BatchStat(cmd string, params ...string) {
 		scanner.Split(bufio.ScanLines)
 		entries := make([]rs.EntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
+			line := scanner.Text()
 			items := strings.Split(line, "\t")
 			if len(items) > 0 {
 				key := items[0]
@@ -466,7 +466,7 @@ func BatchDelete(cmd string, params ...string) {
 		scanner.Split(bufio.ScanLines)
 		entries := make([]rs.EntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
+			line := scanner.Text()
 			items := strings.Split(line, "\t")
 			if len(items) > 0 {
 				key := items[0]
@@ -571,7 +571,7 @@ func BatchChgm(cmd string, params ...string) {
 		scanner.Split(bufio.ScanLines)
 		entries := make([]qshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
+			line := scanner.Text()
 			items := strings.Split(line, "\t")
 			if len(items) == 2 {
 				key := items[0]
@@ -672,7 +672,7 @@ func BatchRename(cmd string, params ...string) {
 		scanner.Split(bufio.ScanLines)
 		entries := make([]qshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
+			line := scanner.Text()
 			items := strings.Split(line, "\t")
 			if len(items) == 2 {
 				oldKey := items[0]
@@ -775,7 +775,7 @@ func BatchMove(cmd string, params ...string) {
 		scanner.Split(bufio.ScanLines)
 		entries := make([]qshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
+			line := scanner.Text()
 			items := strings.Split(line, "\t")
 			if len(items) == 1 || len(items) == 2 {
 				srcKey := items[0]
@@ -883,7 +883,7 @@ func BatchCopy(cmd string, params ...string) {
 		scanner.Split(bufio.ScanLines)
 		entries := make([]qshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
 		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
+			line := scanner.Text()
 			items := strings.Split(line, "\t")
 			if len(items) == 1 || len(items) == 2 {
 				srcKey := items[0]
