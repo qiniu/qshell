@@ -4,11 +4,11 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"os"
 	"path/filepath"
-	"qiniu/log"
 	"unicode/utf8"
 )
 
@@ -56,7 +56,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 
 		fullPath := filepath.Join(unzipPath, fileName)
 		if fileInfo.IsDir() {
-			log.Debug("Mkdir", fullPath)
+			logs.Debug("Mkdir", fullPath)
 			mErr := os.MkdirAll(fullPath, 0775)
 			if mErr != nil {
 				err = fmt.Errorf("Mkdir error, %s", mErr)
@@ -89,7 +89,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 				continue
 			}
 
-			log.Debug("Creating file", fullPath)
+			logs.Debug("Creating file", fullPath)
 			localFp, openErr := os.OpenFile(fullPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, zipFile.Mode())
 			if openErr != nil {
 				err = fmt.Errorf("Open local file error, %s", openErr)

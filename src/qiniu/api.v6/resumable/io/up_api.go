@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/astaxie/beego/logs"
 	. "qiniu/api.v6/conf"
 	"qiniu/bytes"
-	"qiniu/log"
 	"qiniu/rpc"
 )
 
@@ -126,19 +126,19 @@ func ResumableBlockput(
 				extra.Notify(blkIdx, blkSize, ret)
 				continue
 			}
-			log.Warn("ResumableBlockput: invalid checksum, retry")
+			logs.Warning("ResumableBlockput: invalid checksum, retry")
 			err = ErrUnmatchedChecksum
 		} else {
 			if ei, ok := err.(*rpc.ErrorInfo); ok && ei.Code == InvalidCtx {
 				ret.Ctx = "" // reset
-				log.Warn("ResumableBlockput: invalid ctx, please retry")
+				logs.Warning("ResumableBlockput: invalid ctx, please retry")
 				return
 			}
-			log.Warn("ResumableBlockput: bput failed -", err)
+			logs.Warning("ResumableBlockput: bput failed -", err)
 		}
 		if tryTimes > 1 {
 			tryTimes--
-			log.Info("ResumableBlockput retrying ...")
+			logs.Warning("ResumableBlockput retrying ...")
 			goto lzRetry
 		}
 		break

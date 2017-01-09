@@ -15,5 +15,5 @@ func TestGetBucketInfo(t *testing.T) {
 	if gErr != nil {
 		t.Fatal(gErr)
 	}
-	t.Log(bucketInfo.Zone)
+	t.Log(bucketInfo.Region)
 }

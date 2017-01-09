@@ -12,7 +12,6 @@ import (
 	"qiniu/api.v6/conf"
 	fio "qiniu/api.v6/io"
 	"qiniu/api.v6/rs"
-	"qiniu/log"
 	"qiniu/rpc"
 	"strings"
 	"time"
@@ -108,7 +107,7 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 				strings.HasPrefix(line, "https://") {
 				uri, pErr := url.Parse(line)
 				if pErr != nil {
-					log.Errorf("invalid url, %s", line)
+					fmt.Println("invalid url,", line)
 					continue
 				}
 				sliceKey = strings.TrimPrefix(uri.Path, "/")
@@ -213,7 +212,7 @@ func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain
 				strings.HasPrefix(line, "https://") {
 				uri, pErr := url.Parse(line)
 				if pErr != nil {
-					log.Errorf("invalid url, %s", line)
+					fmt.Println("invalid url,", line)
 					continue
 				}
 

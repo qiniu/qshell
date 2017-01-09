@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"net"
@@ -15,7 +16,6 @@ import (
 	fio "qiniu/api.v6/io"
 	rio "qiniu/api.v6/resumable/io"
 	"qiniu/api.v6/rs"
-	"qiniu/log"
 	"qiniu/rpc"
 	"runtime"
 	"strconv"
@@ -29,32 +29,30 @@ import (
 Config file like:
 
 {
-	"src_dir"				:	"/Users/jemy/Photos",
+	"src_dir"		:	"/Users/jemy/Photos",
 	"file_list"             :   "",
-	"bucket"				:	"test-bucket",
-	"put_threshold"			:	10000000,
-	"key_prefix"			:	"2014/12/01/",
-	"ignore_dir"			:	false,
-	"overwrite"				:	false,
-	"check_exists"			:	true,
+	"bucket"		:	"test-bucket",
+	"put_threshold"		:	10000000,
+	"key_prefix"		:	"2014/12/01/",
+	"ignore_dir"		:	false,
+	"overwrite"		:	false,
+	"check_exists"		:	true,
 	"skip_file_prefixes"	:	"IMG_",
 	"skip_path_prefixes"	:	"tmp/,bin/,obj/",
-	"skip_suffixes"			:	".exe,.obj,.class",
+	"skip_suffixes"		:	".exe,.obj,.class",
 	"skip_fixed_strings"    :   ".svn,.git",
-	"up_host"				:	"http://upload.qiniu.com",
-	"bind_up_ip"			:	"",
-	"bind_rs_ip"			:	"",
-	"bind_nic_ip"			:	"",
-	"rescan_local"			:	false
+	"up_host"		:	"http://upload.qiniu.com",
+	"bind_up_ip"		:	"",
+	"bind_rs_ip"		:	"",
+	"bind_nic_ip"		:	"",
+	"rescan_local"		:	false
 }
 
 or the simplest one
 
 {
-	"src_dir" 		:	"/Users/jemy/Photos",
-	"access_key" 	:	"<Your AccessKey>",
-	"secret_key"	:	"<Your SecretKey>",
-	"bucket"		:	"test-bucket",
+	"src_dir" 	:	"/Users/jemy/Photos",
+	"bucket"	:	"test-bucket",
 }
 
 */
@@ -98,8 +96,10 @@ type UploadConfig struct {
 	BindNicIp string `json:"bind_nic_ip,omitempty"`
 
 	//log settings
-	LogLevel string `json:"log_level,omitempty"`
-	LogFile  string `json:"log_file,omitempty"`
+	LogLevel  string `json:"log_level,omitempty"`
+	LogFile   string `json:"log_file,omitempty"`
+	LogRotate int    `json:"log_rotate,omitempty"`
+	LogStdout bool   `json:"log_stdout,omitempty"`
 }
 
 var upSettings = rio.Settings{
@@ -125,23 +125,28 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	//local storage path
 	storePath := filepath.Join(QShellRootPath, ".qshell", "qupload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		return
 	}
 
 	defaultLogFile := filepath.Join(storePath, fmt.Sprintf("%s.log", jobId))
 	//init log level
+	logLevel := logs.LevelInformational
+	logRotate := 1
+	if uploadConfig.LogRotate > 0 {
+		logRotate = uploadConfig.LogRotate
+	}
 	switch uploadConfig.LogLevel {
 	case "debug":
-		log.SetOutputLevel(log.Ldebug)
+		logLevel = logs.LevelDebug
 	case "info":
-		log.SetOutputLevel(log.Linfo)
+		logLevel = logs.LevelInformational
 	case "warn":
-		log.SetOutputLevel(log.Lwarn)
+		logLevel = logs.LevelWarning
 	case "error":
-		log.SetOutputLevel(log.Lerror)
+		logLevel = logs.LevelError
 	default:
-		log.SetOutputLevel(log.Linfo)
+		logLevel = logs.LevelInformational
 	}
 
 	//init log writer
@@ -150,31 +155,19 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		uploadConfig.LogFile = defaultLogFile
 	}
 
-	//open log file
-	logFile := os.Stdout
-	switch uploadConfig.LogFile {
-	case "stderr":
-		logFile = os.Stderr
-		fmt.Println("Printing upload log to stderr")
-	case "stdout":
-		logFile = os.Stdout
-		fmt.Println("Printing upload log to stdout")
-	default:
-		var openErr error
-		logFile, openErr = os.Create(uploadConfig.LogFile)
-		if openErr != nil {
-			fmt.Println("Open log file error,", openErr)
-			return
-		}
-		fmt.Println("Writing upload log to file", uploadConfig.LogFile)
+	if !uploadConfig.LogStdout {
+		logs.GetBeeLogger().DelLogger(logs.AdapterConsole)
 	}
-	defer logFile.Close()
+	//open log file
+	fmt.Println("Writing upload log to file", uploadConfig.LogFile)
 
-	log.SetOutput(logFile)
+	//daily rotate
+	logs.SetLogger(logs.AdapterFile, fmt.Sprintf(`{"filename":"%s", "level":%d, "daily":true, "maxdays":%d}`,
+		uploadConfig.LogFile, logLevel, logRotate))
 	fmt.Println()
 
 	//global up settings
-	log.Infof("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
+	logs.Info("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
 	account, gErr := GetAccount()
 	if gErr != nil {
 		fmt.Println(gErr)
@@ -184,7 +177,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	//get bucket zone info
 	bucketInfo, gErr := GetBucketInfo(&mac, uploadConfig.Bucket)
 	if gErr != nil {
-		log.Error("Get bucket region info error,", gErr)
+		logs.Error("Get bucket region info error,", gErr)
 		return
 	}
 
@@ -231,14 +224,14 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		}
 
 		if rescanLocalDir {
-			log.Info("Listing local sync dir, this can take a long time for big directory, please wait patiently")
+			logs.Informational("Listing local sync dir, this can take a long time for big directory, please wait patiently")
 			totalFileCount, cacheErr = DirCache(uploadConfig.SrcDir, cacheTempName)
 			if cacheErr != nil {
 				return
 			}
 
 			if rErr := os.Rename(cacheTempName, cacheResultName); rErr != nil {
-				log.Error("Rename the temp cached file error", rErr)
+				logs.Error("Rename the temp cached file error", rErr)
 				return
 			}
 			//write the total count to local file
@@ -251,17 +244,17 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					uploadInfoBytes, mErr := json.Marshal(&uploadInfo)
 					if mErr == nil {
 						if _, wErr := cFp.Write(uploadInfoBytes); wErr != nil {
-							log.Warnf("Write local cached count file error %s", cErr)
+							logs.Warning("Write local cached count file error %s", cErr)
 						} else {
 							cFp.Close()
 						}
 					}
 				}()
 			} else {
-				log.Errorf("Open local cached count file error %s,", cErr)
+				logs.Error("Open local cached count file error %s,", cErr)
 			}
 		} else {
-			log.Infof("Use the last cached local sync dir file list")
+			logs.Informational("Use the last cached local sync dir file list")
 			//read from local cache
 			if rFp, rErr := os.Open(cacheCountName); rErr == nil {
 				func() {
@@ -273,7 +266,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					}
 				}()
 			} else {
-				log.Warnf("Open local cached count file error %s,", rErr)
+				logs.Warning("Open local cached count file error %s,", rErr)
 				totalFileCount = GetFileLineCount(cacheResultName)
 			}
 		}
@@ -283,14 +276,14 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	leveldbFileName := filepath.Join(storePath, jobId+".ldb")
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
-		log.Errorf("Open leveldb `%s` failed due to %s", leveldbFileName, err)
+		logs.Error("Open leveldb `%s` failed due to %s", leveldbFileName, err)
 		return
 	}
 	defer ldb.Close()
 	//sync
 	cacheResultFileHandle, err := os.Open(cacheResultName)
 	if err != nil {
-		log.Errorf("Open list file `%s` failed due to %s", cacheResultName, err)
+		logs.Error("Open list file `%s` failed due to %s", cacheResultName, err)
 		return
 	}
 	defer cacheResultFileHandle.Close()
@@ -346,7 +339,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		line := bScanner.Text()
 		items := strings.Split(line, "\t")
 		if len(items) != 3 {
-			log.Errorf("Invalid cache line `%s`", line)
+			logs.Error("Invalid cache line `%s`", line)
 			continue
 		}
 
@@ -364,7 +357,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				}
 
 				if strings.HasPrefix(localRelFpath, prefix) {
-					log.Infof("Skip by path prefix `%s` for local file path `%s`", prefix, localRelFpath)
+					logs.Informational("Skip by path prefix `%s` for local file path `%s`", prefix, localRelFpath)
 					skip = true
 					skippedFileCount += 1
 					break
@@ -386,7 +379,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 				localFname := filepath.Base(localRelFpath)
 				if strings.HasPrefix(localFname, prefix) {
-					log.Infof("Skip by file prefix `%s` for local file path `%s`", prefix, localRelFpath)
+					logs.Informational("Skip by file prefix `%s` for local file path `%s`", prefix, localRelFpath)
 					skip = true
 					skippedFileCount += 1
 					break
@@ -407,7 +400,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				}
 
 				if strings.Contains(localRelFpath, fixedStr) {
-					log.Infof("Skip by fixed string `%s` for local file path `%s`", fixedStr, localRelFpath)
+					logs.Informational("Skip by fixed string `%s` for local file path `%s`", fixedStr, localRelFpath)
 					skip = true
 					skippedFileCount += 1
 					break
@@ -427,7 +420,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				}
 
 				if strings.HasSuffix(localRelFpath, suffix) {
-					log.Infof("Skip by suffix `%s` for local file `%s`", suffix, localRelFpath)
+					logs.Informational("Skip by suffix `%s` for local file `%s`", suffix, localRelFpath)
 					skip = true
 					skippedFileCount += 1
 					break
@@ -461,7 +454,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		fstat, err := os.Stat(localFilePath)
 		if err != nil {
 			failureFileCount += 1
-			log.Errorf("Error stat local file `%s` due to `%s`", localFilePath, err)
+			logs.Error("Error stat local file `%s` due to `%s`", localFilePath, err)
 			continue
 		}
 
@@ -484,19 +477,19 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					localEtag, cErr := GetEtag(localFilePath)
 					if cErr != nil {
 						atomic.AddInt64(&failureFileCount, 1)
-						log.Errorf("File `%s` calc local hash failed, %s", uploadFileKey, cErr)
+						logs.Error("File `%s` calc local hash failed, %s", uploadFileKey, cErr)
 						continue
 					}
 					if rsEntry.Hash == localEtag {
 						atomic.AddInt64(&skippedFileCount, 1)
 						perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 						if perr != nil {
-							log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
+							logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
 						}
-						log.Infof("File `%s` exists in bucket, hash match, ignore this upload", uploadFileKey)
+						logs.Informational("File `%s` exists in bucket, hash match, ignore this upload", uploadFileKey)
 						continue
 					} else {
-						log.Infof("File `%s` exists in bucket, but hash not match, go to upload", uploadFileKey)
+						logs.Informational("File `%s` exists in bucket, but hash not match, go to upload", uploadFileKey)
 					}
 				} else {
 					if uploadConfig.CheckSize {
@@ -504,27 +497,27 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 							atomic.AddInt64(&skippedFileCount, 1)
 							perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 							if perr != nil {
-								log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
+								logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
 							}
-							log.Infof("File `%s` exists in bucket, size match, ignore this upload", uploadFileKey)
+							logs.Info("File `%s` exists in bucket, size match, ignore this upload", uploadFileKey)
 							continue
 						} else {
-							log.Infof("File `%s` exists in bucket, but size not match, go to upload", uploadFileKey)
+							logs.Info("File `%s` exists in bucket, but size not match, go to upload", uploadFileKey)
 						}
 					} else {
 						atomic.AddInt64(&skippedFileCount, 1)
 						perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 						if perr != nil {
-							log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
+							logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
 						}
-						log.Infof("File `%s` exists in bucket, no hash or size check, ignore this upload", uploadFileKey)
+						logs.Info("File `%s` exists in bucket, no hash or size check, ignore this upload", uploadFileKey)
 						continue
 					}
 				}
 			} else {
 				if _, ok := checkErr.(*rpc.ErrorInfo); !ok {
 					//not logic error, should be network error
-					log.Errorf("Get file `%s` stat error, %s", uploadFileKey, checkErr)
+					logs.Error("Get file `%s` stat error, %s", uploadFileKey, checkErr)
 					atomic.AddInt64(&failureFileCount, 1)
 					continue
 				}
@@ -538,13 +531,13 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 			if err == nil {
 				if localFlmd == flmd {
-					log.Infof("Skip by local leveldb log for file `%s`", localRelFpath)
+					logs.Informational("Skip by local leveldb log for file `%s`", localRelFpath)
 					atomic.AddInt64(&skippedFileCount, 1)
 					continue
 				} else {
 					if !uploadConfig.Overwrite {
 						//no overwrite set
-						log.Warnf("Skip upload of changed file `%s` because not set to overwrite", localRelFpath)
+						logs.Warning("Skip upload of changed file `%s` because not set to overwrite", localRelFpath)
 						atomic.AddInt64(&notOverwriteCount, 1)
 						continue
 					}
@@ -552,7 +545,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			}
 		}
 
-		log.Infof("Uploading file %s => %s : %s", localFilePath, uploadConfig.Bucket, uploadFileKey)
+		logs.Informational("Uploading file %s => %s : %s", localFilePath, uploadConfig.Bucket, uploadFileKey)
 		//start to upload
 		upWaitGroup.Add(1)
 		uploadTasks <- func() {
@@ -586,17 +579,17 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 					os.Remove(progressFpath)
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
-						log.Errorf("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, pErr.Err)
+						logs.Error("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, pErr.Err)
 					} else {
-						log.Errorf("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, err)
+						logs.Error("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, err)
 					}
 				} else {
 					os.Remove(progressFpath)
 					atomic.AddInt64(&successFileCount, 1)
-					log.Infof("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
+					logs.Informational("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
 					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
-						log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
+						logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
 					}
 				}
 			} else {
@@ -612,16 +605,16 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				if err != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 					if pErr, ok := err.(*rpc.ErrorInfo); ok {
-						log.Errorf("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, pErr.Err)
+						logs.Error("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, pErr.Err)
 					} else {
-						log.Errorf("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, err)
+						logs.Error("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, err)
 					}
 				} else {
 					atomic.AddInt64(&successFileCount, 1)
-					log.Infof("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
+					logs.Informational("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
 					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
 					if perr != nil {
-						log.Errorf("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
+						logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, perr)
 					}
 				}
 			}
@@ -630,14 +623,14 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 	upWaitGroup.Wait()
 
-	log.Info("-------------Upload Result--------------")
-	log.Infof("%20s%10d\n", "Total:", totalFileCount)
-	log.Infof("%20s%10d\n", "Success:", successFileCount)
-	log.Infof("%20s%10d\n", "Failure:", failureFileCount)
-	log.Infof("%20s%10d\n", "NotOverwrite:", notOverwriteCount)
-	log.Infof("%20s%10d\n", "Skipped:", skippedFileCount)
-	log.Infof("%20s%15s\n", "Duration:", time.Since(timeStart))
-	log.Info("----------------------------------------")
+	logs.Informational("-------------Upload Result--------------")
+	logs.Informational("%20s%10d", "Total:", totalFileCount)
+	logs.Informational("%20s%10d", "Success:", successFileCount)
+	logs.Informational("%20s%10d", "Failure:", failureFileCount)
+	logs.Informational("%20s%10d", "NotOverwrite:", notOverwriteCount)
+	logs.Informational("%20s%10d", "Skipped:", skippedFileCount)
+	logs.Informational("%20s%15s", "Duration:", time.Since(timeStart))
+	logs.Info("----------------------------------------")
 	fmt.Println("\nSee upload log at path", uploadConfig.LogFile)
 
 }

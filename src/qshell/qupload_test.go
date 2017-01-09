@@ -7,7 +7,7 @@ import (
 
 func TestGetFileTotalCount(t *testing.T) {
 	fpath := "/Users/jemy/Worklab/qshelltest/qiniu.txt"
-	totalCount := getFileLineCount(fpath)
+	totalCount := GetFileLineCount(fpath)
 	if totalCount != 5 {
 		t.Fail()
 	}
@@ -15,10 +15,8 @@ func TestGetFileTotalCount(t *testing.T) {
 
 func TestSimpleUpload(t *testing.T) {
 	uploadConfig := UploadConfig{
-		SrcDir:    os.Getenv("SrcDir"),
-		AccessKey: os.Getenv("AccessKey"),
-		SecretKey: os.Getenv("SecretKey"),
-		Bucket:    os.Getenv("Bucket"),
+		SrcDir: os.Getenv("SrcDir"),
+		Bucket: os.Getenv("Bucket"),
 	}
 
 	QiniuUpload(1, &uploadConfig)
@@ -27,8 +25,6 @@ func TestSimpleUpload(t *testing.T) {
 func TestSimpleUploadWithKeyPrefix(t *testing.T) {
 	uploadConfig := UploadConfig{
 		SrcDir:    os.Getenv("SrcDir"),
-		AccessKey: os.Getenv("AccessKey"),
-		SecretKey: os.Getenv("SecretKey"),
 		Bucket:    os.Getenv("Bucket"),
 		KeyPrefix: os.Getenv("Prefix"),
 	}
@@ -39,8 +35,6 @@ func TestSimpleUploadWithKeyPrefix(t *testing.T) {
 func TestSimpleUploadIgnoreDir(t *testing.T) {
 	uploadConfig := UploadConfig{
 		SrcDir:    os.Getenv("SrcDir"),
-		AccessKey: os.Getenv("AccessKey"),
-		SecretKey: os.Getenv("SecretKey"),
 		Bucket:    os.Getenv("Bucket"),
 		KeyPrefix: os.Getenv("Prefix"),
 		IgnoreDir: true,
@@ -52,8 +46,6 @@ func TestSimpleUploadIgnoreDir(t *testing.T) {
 func TestOverwriteUpload(t *testing.T) {
 	uploadConfig := UploadConfig{
 		SrcDir:      os.Getenv("SrcDir"),
-		AccessKey:   os.Getenv("AccessKey"),
-		SecretKey:   os.Getenv("SecretKey"),
 		Bucket:      os.Getenv("Bucket"),
 		Overwrite:   true,
 		RescanLocal: true,
@@ -66,8 +58,6 @@ func TestOverwriteUpload(t *testing.T) {
 func TestCheckExistsUpload(t *testing.T) {
 	uploadConfig := UploadConfig{
 		SrcDir:      os.Getenv("SrcDir"),
-		AccessKey:   os.Getenv("AccessKey"),
-		SecretKey:   os.Getenv("SecretKey"),
 		Bucket:      os.Getenv("Bucket"),
 		Overwrite:   true,
 		RescanLocal: true,
@@ -80,11 +70,9 @@ func TestCheckExistsUpload(t *testing.T) {
 func TestUploadWithFileList(t *testing.T) {
 	flist := os.Getenv("SrcFileList")
 	uploadConfig := UploadConfig{
-		SrcDir:    os.Getenv("SrcDir"),
-		AccessKey: os.Getenv("AccessKey"),
-		SecretKey: os.Getenv("SecretKey"),
-		Bucket:    os.Getenv("Bucket"),
-		FileList:  flist,
+		SrcDir:   os.Getenv("SrcDir"),
+		Bucket:   os.Getenv("Bucket"),
+		FileList: flist,
 	}
 
 	QiniuUpload(1, &uploadConfig)

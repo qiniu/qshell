@@ -3,11 +3,10 @@ package io
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/astaxie/beego/logs"
 	"io"
 	"io/ioutil"
 	"os"
-	"qiniu/log"
 	"qiniu/rpc"
 	"sync"
 	"time"
@@ -166,11 +165,11 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 					decoder := json.NewDecoder(progressFp)
 					decodeErr := decoder.Decode(&progressRecord)
 					if decodeErr != nil {
-						log.Debug(fmt.Sprintf("resumable.Put decode progess record error, %s", decodeErr.Error()))
+						logs.Warning("resumable.Put decode progess record error, %s", decodeErr)
 					}
 				}()
 			} else {
-				log.Debug(fmt.Sprintf("resumable.Put open progress record error, %s", openErr.Error()))
+				logs.Warning("resumable.Put open progress record error, %s", openErr)
 			}
 		}
 
@@ -227,10 +226,10 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 			if err != nil {
 				if tryTimes > 1 {
 					tryTimes--
-					log.Info("resumable.Put retrying ...")
+					logs.Warning("resumable.Put retrying ...")
 					goto lzRetry
 				}
-				log.Warn("resumable.Put", blkIdx, "failed:", err)
+				logs.Warning("resumable.Put", blkIdx, "failed:", err)
 				extra.NotifyErr(blkIdx, blkSize1, err)
 				nfails++
 			} else {
@@ -246,10 +245,10 @@ func put(c rpc.Client, l rpc.Logger, ret interface{}, key string, hasKey bool, f
 						if mErr == nil {
 							wErr := ioutil.WriteFile(extra.ProgressFile, mData, 0644)
 							if wErr != nil {
-								log.Warn(fmt.Sprintf("resumable.Put record progress error, %s", wErr.Error()))
+								logs.Warning("resumable.Put record progress error, %s", wErr.Error)
 							}
 						} else {
-							log.Info(fmt.Sprintf("resumable.Put marshal progress record error, %s", mErr.Error()))
+							logs.Warning("resumable.Put marshal progress record error, %s", mErr.Error)
 						}
 					}()
 				}

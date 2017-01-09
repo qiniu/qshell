@@ -4,9 +4,9 @@ import (
 	"cli"
 	"flag"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"os"
 	"os/user"
-	"qiniu/log"
 	"qiniu/rpc"
 	"qshell"
 	"runtime"
@@ -68,8 +68,8 @@ func main() {
 	rpc.UserAgent = cli.UserAgent()
 
 	//parse command
-	log.SetOutputLevel(log.Linfo)
-	log.SetOutput(os.Stdout)
+	logs.SetLevel(logs.LevelInformational)
+	logs.SetLogger(logs.AdapterConsole)
 
 	if len(os.Args) <= 1 {
 		fmt.Println("Use help or help [cmd1 [cmd2 [cmd3 ...]]] to see supported commands.")
@@ -101,12 +101,12 @@ func main() {
 
 	//set log level
 	if debugMode {
-		log.SetOutputLevel(log.Ldebug)
+		logs.SetLevel(logs.LevelDebug)
 	}
 
 	//set qshell root path
 	if multiUserMode {
-		log.Debug("Entering multiple user mode")
+		logs.Debug("Entering multiple user mode")
 		pwd, gErr := os.Getwd()
 		if gErr != nil {
 			fmt.Println("Error: get current work dir error,", gErr)
@@ -114,7 +114,7 @@ func main() {
 		}
 		qshell.QShellRootPath = pwd
 	} else {
-		log.Debug("Entering single user mode")
+		logs.Debug("Entering single user mode")
 		curUser, gErr := user.Current()
 		if gErr != nil {
 			fmt.Println("Error: get current user error,", gErr)

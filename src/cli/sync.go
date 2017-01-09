@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"qiniu/api.v6/auth/digest"
-	"qiniu/log"
 	"qshell"
 	"time"
 )
@@ -20,7 +20,7 @@ func Sync(cmd string, params ...string) {
 
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
-			log.Error(gErr)
+			logs.Error(gErr)
 			return
 		}
 
@@ -42,7 +42,7 @@ func Sync(cmd string, params ...string) {
 		tStart := time.Now()
 		syncRet, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, upHostIp)
 		if sErr != nil {
-			log.Error(sErr)
+			logs.Error(sErr)
 			return
 		}
 
