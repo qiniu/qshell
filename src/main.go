@@ -128,11 +128,6 @@ func main() {
 	cmd := args[0]
 	params := args[1:]
 
-	if cmd == "" {
-		fmt.Println("Error: no subcommand specified")
-		return
-	}
-
 	if cliFunc, ok := supportedCmds[cmd]; ok {
 		cliFunc(cmd, params...)
 	} else {

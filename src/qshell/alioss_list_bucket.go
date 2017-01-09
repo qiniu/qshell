@@ -38,9 +38,9 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 		lbr, lbrErr := ossClient.GetBucket(this.Bucket, this.Prefix, marker, "", "")
 		if lbrErr != nil {
 			err = lbrErr
-			logs.Error("Parse list result error, ", "marker=[", marker, "]", lbrErr)
+			logs.Error("Parse list result error,", "marker=[", marker, "]", lbrErr)
 			if retryTimes <= maxRetryTimes {
-				logs.Warning("Retry marker=", marker, "] for ", retryTimes, "time...")
+				logs.Warning("Retry marker=", marker, "] for", retryTimes, "time...")
 				retryTimes += 1
 				continue
 			} else {
