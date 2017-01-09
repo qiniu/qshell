@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 
+	"flag"
 	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"os"
@@ -11,19 +12,24 @@ import (
 )
 
 func QiniuUpload(cmd string, params ...string) {
-	if len(params) == 1 || len(params) == 2 {
+	var watchDir bool
+	flagSet := flag.NewFlagSet("qupload", flag.ExitOnError)
+	flagSet.BoolVar(&watchDir, "watch", false, "watch dir changes after upload completes")
+	flagSet.Parse(params)
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 1 || len(cmdParams) == 2 {
 		var uploadConfigFile string
 		var threadCount int64
 		var err error
-		if len(params) == 2 {
-			threadCount, err = strconv.ParseInt(params[0], 10, 64)
+		if len(cmdParams) == 2 {
+			threadCount, err = strconv.ParseInt(cmdParams[0], 10, 64)
 			if err != nil {
-				logs.Error("Invalid <ThreadCount> value,", params[0])
+				logs.Error("Invalid <ThreadCount> value,", cmdParams[0])
 				return
 			}
-			uploadConfigFile = params[1]
+			uploadConfigFile = cmdParams[1]
 		} else {
-			uploadConfigFile = params[0]
+			uploadConfigFile = cmdParams[0]
 		}
 
 		//read upload config
@@ -68,7 +74,7 @@ func QiniuUpload(cmd string, params ...string) {
 			}
 		}
 
-		qshell.QiniuUpload(int(threadCount), &uploadConfig)
+		qshell.QiniuUpload(int(threadCount), &uploadConfig, watchDir)
 	} else {
 		CmdHelp(cmd)
 	}

@@ -33,6 +33,8 @@ func QiniuUpload2(cmd string, params ...string) {
 	var rescanLocal bool
 	var logLevel string
 	var logFile string
+	var logRotate int
+	var watchDir bool
 
 	flagSet.Int64Var(&threadCount, "thread-count", 0, "multiple thread count")
 	flagSet.StringVar(&srcDir, "src-dir", "", "src dir to upload")
@@ -56,6 +58,8 @@ func QiniuUpload2(cmd string, params ...string) {
 	flagSet.BoolVar(&rescanLocal, "rescan-local", false, "rescan local dir to upload newly add files")
 	flagSet.StringVar(&logFile, "log-file", "", "log file")
 	flagSet.StringVar(&logLevel, "log-level", "info", "log level")
+	flagSet.IntVar(&logRotate, "log-rotate", 1, "log rotate days")
+	flagSet.BoolVar(&watchDir, "watch", false, "watch dir changes after upload completes")
 
 	flagSet.Parse(params)
 
@@ -81,6 +85,7 @@ func QiniuUpload2(cmd string, params ...string) {
 		RescanLocal:      rescanLocal,
 		LogFile:          logFile,
 		LogLevel:         logLevel,
+		LogRotate:        logRotate,
 	}
 
 	//check params
@@ -110,5 +115,5 @@ func QiniuUpload2(cmd string, params ...string) {
 		}
 	}
 
-	qshell.QiniuUpload(int(threadCount), &uploadConfig)
+	qshell.QiniuUpload(int(threadCount), &uploadConfig, watchDir)
 }
