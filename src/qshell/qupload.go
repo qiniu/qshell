@@ -59,7 +59,7 @@ or the simplest one
 */
 
 const (
-	DEFAULT_PUT_THRESHOLD   int64 = 10 * 1024 * 1024 //10MB
+	DEFAULT_PUT_THRESHOLD int64 = 10 * 1024 * 1024 //10MB
 	MIN_UPLOAD_THREAD_COUNT int64 = 1
 	MAX_UPLOAD_THREAD_COUNT int64 = 2000
 )
@@ -70,44 +70,51 @@ type UploadInfo struct {
 
 type UploadConfig struct {
 	//basic config
-	SrcDir string `json:"src_dir"`
-	Bucket string `json:"bucket"`
+	SrcDir            string `json:"src_dir"`
+	Bucket            string `json:"bucket"`
 
 	//optional config
-	FileList         string `json:"file_list,omitempty"`
-	PutThreshold     int64  `json:"put_threshold,omitempty"`
-	KeyPrefix        string `json:"key_prefix,omitempty"`
-	IgnoreDir        bool   `json:"ignore_dir,omitempty"`
-	Overwrite        bool   `json:"overwrite,omitempty"`
-	CheckExists      bool   `json:"check_exists,omitempty"`
-	CheckHash        bool   `json:"check_hash,omitempty"`
-	CheckSize        bool   `json:"check_size,omitempty"`
-	SkipFilePrefixes string `json:"skip_file_prefixes,omitempty"`
-	SkipPathPrefixes string `json:"skip_path_prefixes,omitempty"`
-	SkipFixedStrings string `json:"skip_fixed_strings,omitempty"`
-	SkipSuffixes     string `json:"skip_suffixes,omitempty"`
-	RescanLocal      bool   `json:"rescan_local,omitempty"`
+	FileList          string `json:"file_list,omitempty"`
+	PutThreshold      int64  `json:"put_threshold,omitempty"`
+	KeyPrefix         string `json:"key_prefix,omitempty"`
+	IgnoreDir         bool   `json:"ignore_dir,omitempty"`
+	Overwrite         bool   `json:"overwrite,omitempty"`
+	CheckExists       bool   `json:"check_exists,omitempty"`
+	CheckHash         bool   `json:"check_hash,omitempty"`
+	CheckSize         bool   `json:"check_size,omitempty"`
+	SkipFilePrefixes  string `json:"skip_file_prefixes,omitempty"`
+	SkipPathPrefixes  string `json:"skip_path_prefixes,omitempty"`
+	SkipFixedStrings  string `json:"skip_fixed_strings,omitempty"`
+	SkipSuffixes      string `json:"skip_suffixes,omitempty"`
+	RescanLocal       bool   `json:"rescan_local,omitempty"`
 
 	//advanced config
-	UpHost string `json:"up_host,omitempty"`
+	UpHost            string `json:"up_host,omitempty"`
 
-	BindUpIp string `json:"bind_up_ip,omitempty"`
-	BindRsIp string `json:"bind_rs_ip,omitempty"`
+	BindUpIp          string `json:"bind_up_ip,omitempty"`
+	BindRsIp          string `json:"bind_rs_ip,omitempty"`
 	//local network interface card config
-	BindNicIp string `json:"bind_nic_ip,omitempty"`
+	BindNicIp         string `json:"bind_nic_ip,omitempty"`
 
 	//log settings
-	LogLevel  string `json:"log_level,omitempty"`
-	LogFile   string `json:"log_file,omitempty"`
-	LogRotate int    `json:"log_rotate,omitempty"`
-	LogStdout bool   `json:"log_stdout,omitempty"`
+	LogLevel          string `json:"log_level,omitempty"`
+	LogFile           string `json:"log_file,omitempty"`
+	LogRotate         int    `json:"log_rotate,omitempty"`
+	LogStdout         bool   `json:"log_stdout,omitempty"`
 
 	//watch filters
 	WatchFilePrefixes string `json:"watch_file_prefixes,omitempty"`
 	WatchPathPrefixes string `json:"watch_path_prefixes,omitempty"`
 	WatchFixedStrings string `json:"watch_fixed_strings,omitempty"`
 	WatchSuffixes     string `json:"watch_suffixes,omitempty"`
+
+	//danger operations
+	SyncRename bool `json:"sync_rename,omitempty"`
+	SyncDelete bool `json:"sync_delete,omitempty"`
+
 }
+
+var defaultIgnoreWatchSuffixes = []string{"~", ".swp"}
 
 var upSettings = rio.Settings{
 	ChunkSize: 4 * 1024 * 1024,
@@ -234,7 +241,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 	}
 
 	//leveldb folder
-	leveldbFileName := filepath.Join(storePath, jobId+".ldb")
+	leveldbFileName := filepath.Join(storePath, jobId + ".ldb")
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
 		logs.Error("Open leveldb `%s` failed due to %s", leveldbFileName, err)
@@ -303,22 +310,26 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 		currentFileCount += 1
 
 		//check skip local file or folder
-		if skipByPathPrefixes(uploadConfig.SkipPathPrefixes, localFileRelativePath) {
+		if skip, prefix := hitByPathPrefixes(uploadConfig.SkipPathPrefixes, localFileRelativePath); skip {
+			logs.Informational("Skip by path prefix `%s` for local file path `%s`", prefix, localFileRelativePath)
 			skippedFileCount += 1
 			continue
 		}
 
-		if skipByFilePrefixes(uploadConfig.SkipFilePrefixes, localFileRelativePath) {
+		if skip, prefix := hitByFilePrefixes(uploadConfig.SkipFilePrefixes, localFileRelativePath); skip {
+			logs.Informational("Skip by file prefix `%s` for local file path `%s`", prefix, localFileRelativePath)
 			skippedFileCount += 1
 			continue
 		}
 
-		if skipByFixesString(uploadConfig.SkipFixedStrings, localFileRelativePath) {
+		if skip, fixedStr := hitByFixesString(uploadConfig.SkipFixedStrings, localFileRelativePath); skip {
+			logs.Informational("Skip by fixed string `%s` for local file path `%s`", fixedStr, localFileRelativePath)
 			skippedFileCount += 1
 			continue
 		}
 
-		if skipBySuffixes(uploadConfig.SkipSuffixes, localFileRelativePath) {
+		if skip, suffix := hitBySuffixes(uploadConfig.SkipSuffixes, localFileRelativePath); skip {
+			logs.Informational("Skip by suffix `%s` for local file `%s`", suffix, localFileRelativePath)
 			skippedFileCount += 1
 			continue
 		}
@@ -354,7 +365,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 
 		if totalFileCount != 0 {
 			fmt.Printf("Uploading %s [%d/%d, %.1f%%] ...\n", ldbKey, currentFileCount, totalFileCount,
-				float32(currentFileCount)*100/float32(totalFileCount))
+				float32(currentFileCount) * 100 / float32(totalFileCount))
 		} else {
 			fmt.Printf("Uploading %s ...\n", ldbKey)
 		}
@@ -404,7 +415,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 	fmt.Println("\nSee upload log at path", uploadConfig.LogFile)
 
 	if watchDir {
-		startWatcher(uploadConfig.SrcDir)
+		startWatcher(uploadConfig)
 	} else {
 		if failureFileCount > 0 {
 			os.Exit(STATUS_ERROR)
@@ -478,18 +489,18 @@ func prepareCacheFileList(cacheResultName, cacheCountName, srcDir string, rescan
 	return
 }
 
-func skipByPathPrefixes(skipPathPrefixesStr, localFileRelativePath string) (skip bool) {
-	if skipPathPrefixesStr != "" {
+func hitByPathPrefixes(pathPrefixesStr, localFileRelativePath string) (hit bool, pathPrefix string) {
+	if pathPrefixesStr != "" {
 		//unpack skip prefix
-		skipPathPrefixes := strings.Split(skipPathPrefixesStr, ",")
-		for _, prefix := range skipPathPrefixes {
+		pathPrefixes := strings.Split(pathPrefixesStr, ",")
+		for _, prefix := range pathPrefixes {
 			if strings.TrimSpace(prefix) == "" {
 				continue
 			}
 
 			if strings.HasPrefix(localFileRelativePath, prefix) {
-				logs.Informational("Skip by path prefix `%s` for local file path `%s`", prefix, localFileRelativePath)
-				skip = true
+				pathPrefix = prefix
+				hit = true
 				break
 			}
 		}
@@ -497,19 +508,19 @@ func skipByPathPrefixes(skipPathPrefixesStr, localFileRelativePath string) (skip
 	return
 }
 
-func skipByFilePrefixes(skipFilePrefixesStr, localFileRelativePath string) (skip bool) {
-	if skipFilePrefixesStr != "" {
+func hitByFilePrefixes(filePrefixesStr, localFileRelativePath string) (hit bool, filePrefix string) {
+	if filePrefixesStr != "" {
 		//unpack skip prefix
-		skipFilePrefixes := strings.Split(skipFilePrefixesStr, ",")
-		for _, prefix := range skipFilePrefixes {
+		filePrefixes := strings.Split(filePrefixesStr, ",")
+		for _, prefix := range filePrefixes {
 			if strings.TrimSpace(prefix) == "" {
 				continue
 			}
 
 			localFileName := filepath.Base(localFileRelativePath)
 			if strings.HasPrefix(localFileName, prefix) {
-				logs.Informational("Skip by file prefix `%s` for local file path `%s`", prefix, localFileRelativePath)
-				skip = true
+				filePrefix = prefix
+				hit = true
 				break
 			}
 		}
@@ -517,18 +528,18 @@ func skipByFilePrefixes(skipFilePrefixesStr, localFileRelativePath string) (skip
 	return
 }
 
-func skipByFixesString(skipFixedStringsStr, localFileRelativePath string) (skip bool) {
-	if skipFixedStringsStr != "" {
+func hitByFixesString(fixedStringsStr, localFileRelativePath string) (hit bool, hitFixedStr string) {
+	if fixedStringsStr != "" {
 		//unpack fixed strings
-		skipFixedStrings := strings.Split(skipFixedStringsStr, ",")
-		for _, fixedStr := range skipFixedStrings {
+		fixedStrings := strings.Split(fixedStringsStr, ",")
+		for _, fixedStr := range fixedStrings {
 			if strings.TrimSpace(fixedStr) == "" {
 				continue
 			}
 
 			if strings.Contains(localFileRelativePath, fixedStr) {
-				logs.Informational("Skip by fixed string `%s` for local file path `%s`", fixedStr, localFileRelativePath)
-				skip = true
+				hitFixedStr = fixedStr
+				hit = true
 				break
 			}
 		}
@@ -537,17 +548,17 @@ func skipByFixesString(skipFixedStringsStr, localFileRelativePath string) (skip 
 
 }
 
-func skipBySuffixes(skipSuffixesStr, localFileRelativePath string) (skip bool) {
-	if skipSuffixesStr != "" {
-		skipSuffixes := strings.Split(skipSuffixesStr, ",")
-		for _, suffix := range skipSuffixes {
+func hitBySuffixes(suffixesStr, localFileRelativePath string) (hit bool, hitSuffix string) {
+	if suffixesStr != "" {
+		suffixes := strings.Split(suffixesStr, ",")
+		for _, suffix := range suffixes {
 			if strings.TrimSpace(suffix) == "" {
 				continue
 			}
 
 			if strings.HasSuffix(localFileRelativePath, suffix) {
-				logs.Informational("Skip by suffix `%s` for local file `%s`", suffix, localFileRelativePath)
-				skip = true
+				hitSuffix = suffix
+				hit = true
 				break
 			}
 		}
@@ -556,7 +567,7 @@ func skipBySuffixes(skipSuffixesStr, localFileRelativePath string) (skip bool) {
 }
 
 func checkFileNeedToUpload(uploadConfig *UploadConfig, rsClient *rs.Client, ldb *leveldb.DB, ldbWOpt *opt.WriteOptions,
-	ldbKey, localFilePath, uploadFileKey string, localFileLastModified, localFileSize int64) (needToUpload bool) {
+ldbKey, localFilePath, uploadFileKey string, localFileLastModified, localFileSize int64) (needToUpload bool) {
 	//default to upload
 	needToUpload = true
 
@@ -654,8 +665,8 @@ func checkFileNeedToUpload(uploadConfig *UploadConfig, rsClient *rs.Client, ldb 
 }
 
 func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
-	ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string,
-	localFilePath, uploadFileKey string, localFileLastModified int64) {
+ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string,
+localFilePath, uploadFileKey string, localFileLastModified int64) {
 	var putClient rpc.Client
 	if transport != nil {
 		putClient = rpc.NewClientEx(transport, uploadConfig.BindUpIp)
@@ -683,8 +694,8 @@ func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 }
 
 func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
-	ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string, storePath,
-	localFilePath, uploadFileKey string, localFileLastModified int64) {
+ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string, storePath,
+localFilePath, uploadFileKey string, localFileLastModified int64) {
 	var putClient rpc.Client
 	if transport != nil {
 		putClient = rio.NewClientEx(upToken, transport, uploadConfig.BindUpIp)
@@ -726,8 +737,8 @@ func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 /*
 care about create, write, rename, remove
 */
-func startWatcher(srcDir string) {
-	logs.Informational("init fs watcher for", srcDir)
+func startWatcher(uploadConfig *UploadConfig) {
+	logs.Informational("init fs watcher for", uploadConfig.SrcDir)
 	dirWatcher, initErr := fsnotify.NewWatcher()
 	if initErr != nil {
 		logs.Error("init fs watcher error", initErr)
@@ -738,20 +749,31 @@ func startWatcher(srcDir string) {
 	waitForDone := make(chan bool)
 	//check for fs events
 	go func() {
-		logs.Informational("check fs events for", srcDir)
+		logs.Informational("check fs events for", uploadConfig.SrcDir)
 		for {
 			select {
 			case event := <-dirWatcher.Events:
 				localFilePath := event.Name
+				localFileRelativePath,_:=filepath.Rel(uploadConfig.SrcDir,localFilePath)
 
-				if event.Op&fsnotify.Create == fsnotify.Create {
-					logs.Informational("fire event CREATE for %s", localFilePath)
-				} else if event.Op&fsnotify.Write == fsnotify.Write {
-					logs.Informational("fire event WRITE for %s", localFilePath)
-				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
-					logs.Informational("fire event RENAME for %s", localFilePath)
-				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					logs.Informational("fire event REMOVE for %s", localFilePath)
+				//convert \ to / under windows
+				if runtime.GOOS == "windows" {
+					localFileRelativePath = strings.Replace(localFileRelativePath, "\\", "/", -1)
+				}
+
+				if !checkWatchFilters(uploadConfig,localFileRelativePath){
+					//no filter matched
+					continue
+				}
+
+				if event.Op & fsnotify.Create == fsnotify.Create {
+					logs.Informational("fire event CREATE for %s", localFileRelativePath)
+				} else if event.Op & fsnotify.Write == fsnotify.Write {
+					logs.Informational("fire event WRITE for %s", localFileRelativePath)
+				} else if event.Op & fsnotify.Rename == fsnotify.Rename {
+					logs.Informational("fire event RENAME for %s", localFileRelativePath)
+				} else if event.Op & fsnotify.Remove == fsnotify.Remove {
+					logs.Informational("fire event REMOVE for %s", localFileRelativePath)
 				}
 
 			case watchErr := <-dirWatcher.Errors:
@@ -762,12 +784,46 @@ func startWatcher(srcDir string) {
 	}()
 
 	//add dir to watch
-	logs.Informational("add dir fs events watch for", srcDir)
-	addWatchErr := dirWatcher.Add(srcDir)
+	logs.Informational("add dir fs events watch for", uploadConfig.SrcDir)
+	addWatchErr := dirWatcher.Add(uploadConfig.SrcDir)
 	if addWatchErr != nil {
 		logs.Error("add fs watch dir error", addWatchErr)
 		os.Exit(STATUS_HALT)
 	}
 
 	<-waitForDone
+}
+
+func checkWatchFilters(uploadConfig *UploadConfig, localFileRelativePath string )(match bool){
+	if hit,prefix:=hitByPathPrefixes(uploadConfig.WatchPathPrefixes,localFileRelativePath);hit{
+		logs.Informational("Watch hit by path prefix `%s` for local file path `%s`", prefix, localFileRelativePath)
+		match=true
+		return
+	}
+
+	if hit,prefix:=hitByFilePrefixes(uploadConfig.WatchFilePrefixes,localFileRelativePath);hit{
+		logs.Informational("Watch hit by file prefix `%s` for local file path `%s`", prefix, localFileRelativePath)
+		match=true
+		return
+	}
+
+	if hit,fixedStr:=hitByFixesString(uploadConfig.WatchFixedStrings,localFileRelativePath);hit{
+		logs.Informational("Watch hit by fixed string `%s` for local file path `%s`", fixedStr, localFileRelativePath)
+		match=true
+		return
+	}
+
+	if hit,suffix:=hitBySuffixes(uploadConfig.WatchSuffixes,localFileRelativePath);hit{
+		logs.Informational("Watch hit by suffix `%s` for local file `%s`", suffix, localFileRelativePath)
+		match=true
+		return
+	}
+
+	for _,suffix:=range defaultIgnoreWatchSuffixes{
+		if !strings.HasSuffix(localFileRelativePath,suffix){
+			match=true
+			return
+		}
+	}
+	return
 }
