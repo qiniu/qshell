@@ -52,10 +52,6 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 	logs.Informational("Walk `%s` start from %s", cacheRootPath, walkStart.String())
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, walkErr error) error {
 		var retErr error
-		if fi.IsDir() {
-			logs.Informational("Walking through `%s`", path)
-		}
-
 		//check error
 		if walkErr != nil {
 			logs.Error("Walk through `%s` error, %s", path, walkErr)
@@ -63,6 +59,10 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 			//skip this dir
 			retErr = filepath.SkipDir
 		} else {
+			if fi.IsDir() {
+				logs.Informational("Walking through `%s`", path)
+			}
+
 			if !fi.IsDir() {
 				var relPath string
 				if cacheRootPath == "." {
