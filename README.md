@@ -180,6 +180,10 @@ git clone https://github.com/golang/sys.git  $GOPATH/src/golang.org/x/sys
 git clone https://github.com/golang/text.git $GOPATH/src/golang.org/x/text
 ```
  
+对于跨平台的编译脚本 `cross-build-main.sh` 编译出来的二进制文件存在的已知问题如下：
+
+[crontab下面引用qshell出错](https://github.com/qiniu/qshell/issues/68)
+
 ## 问题反馈
 
 如果您有任何问题，请写在[ISSUE列表](https://github.com/qiniu/qshell/issues)里面，我们会尽快回复您。
