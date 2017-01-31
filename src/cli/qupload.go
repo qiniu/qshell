@@ -25,7 +25,7 @@ func QiniuUpload(cmd string, params ...string) {
 			threadCount, err = strconv.ParseInt(cmdParams[0], 10, 64)
 			if err != nil {
 				logs.Error("Invalid <ThreadCount> value,", cmdParams[0])
-				return
+				os.Exit(2)
 			}
 			uploadConfigFile = cmdParams[1]
 		} else {
@@ -36,30 +36,30 @@ func QiniuUpload(cmd string, params ...string) {
 		fp, err := os.Open(uploadConfigFile)
 		if err != nil {
 			logs.Error("Open upload config file `%s` error due to `%s`", uploadConfigFile, err)
-			return
+			os.Exit(2)
 		}
 		defer fp.Close()
 		configData, err := ioutil.ReadAll(fp)
 		if err != nil {
 			logs.Error("Read upload config file `%s` error due to `%s`", uploadConfigFile, err)
-			return
+			os.Exit(2)
 		}
 		var uploadConfig qshell.UploadConfig
 		err = json.Unmarshal(configData, &uploadConfig)
 		if err != nil {
 			logs.Error("Parse upload config file `%s` errror due to `%s`", uploadConfigFile, err)
-			return
+			os.Exit(2)
 		}
 		srcFileInfo, err := os.Stat(uploadConfig.SrcDir)
 
 		if err != nil {
 			logs.Error("Upload config error for parameter `SrcDir`,", err)
-			return
+			os.Exit(2)
 		}
 
 		if !srcFileInfo.IsDir() {
 			logs.Error("Upload src dir should be a directory")
-			return
+			os.Exit(2)
 		}
 
 		//upload

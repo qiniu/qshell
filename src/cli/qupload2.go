@@ -3,7 +3,7 @@ package cli
 import (
 	"flag"
 	"fmt"
-	"github.com/qiniu/log"
+	"github.com/astaxie/beego/logs"
 	"os"
 	"qshell"
 )
@@ -100,7 +100,7 @@ func QiniuUpload2(cmd string, params ...string) {
 	}
 
 	if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
-		log.Error("Upload config `SrcDir` not exist error,", err)
+		logs.Error("Upload config `SrcDir` not exist error,", err)
 		return
 	}
 
