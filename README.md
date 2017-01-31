@@ -164,12 +164,22 @@ $ qshell -m stat bucket key
 如果对项目编译感兴趣，请按照如下方式进行：
 
 ```
+$ go get github.com/astaxie/beego/logs
+$ go get github.com/fsnotify/fsnotify
 $ go get github.com/syndtr/goleveldb/leveldb
 $ go get github.com/yanunon/oss-go-api/oss
-$ go get github.com/golang/text
+$ go get golang.org/x/text/encoding/simplifiedchinese
+$ go get golang.org/x/sys/unix
 $ ./build.sh
 ```
 
+如果上面的 `golang.org/x`  下面的包因为被墙而无法下载，那么可以使用 `git clone` 分别将依赖的库下载到本地的`GOPATH`中：
+
+```
+git clone https://github.com/golang/sys.git  $GOPATH/src/golang.org/x/sys
+git clone https://github.com/golang/text.git $GOPATH/src/golang.org/x/text
+```
+ 
 ## 问题反馈
 
 如果您有任何问题，请写在[ISSUE列表](https://github.com/qiniu/qshell/issues)里面，我们会尽快回复您。
