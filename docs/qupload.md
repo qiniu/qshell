@@ -45,7 +45,9 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
    "skip_fixed_strings" :   ".svn,.git",
    "skip_suffixes"      :   ".DS_Store,.exe",
    "log_file"           :   "upload.log",
-   "log_level"          :   "info"
+   "log_level"          :   "info",
+   "log_rotate"         :   1,
+   "log_stdout"         :   false
 }
 ```
 
@@ -67,7 +69,9 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 |skip_suffixes|跳过所有以该后缀列表里面字符串为后缀的文件或者目录|Y|
 |rescan_local|默认情况下，本地新增的文件不会被同步，需要手动设置为true才会去检测新增文件。|Y|
 |log_level|上传日志输出级别，可选值为`debug`,`info`,`warn`,`error`,默认`info`|Y|
-|log_file|上传日志的输出文件，可选值为`stdout`,`stderr`,`本地日志文件名`，默认`stdout`|Y|
+|log_file|上传日志的输出文件，如果不指定会输出到qshell工作目录下默认的文件中，文件名可以在终端输出看到|Y|
+|log_rotate|上传日志文件的切换周期，单位为天，默认为1天即切换到新的上传日志文件|Y|
+|log_stdout|上传日志是否同时输出一份到标准终端，默认为false，主要在调试上传功能时可以指定为true|Y|
 
 对于那么多的参数，我们可以分为几类来解释：
 
