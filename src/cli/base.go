@@ -26,6 +26,5 @@ func Account(cmd string, params ...string) {
 		}
 	} else {
 		CmdHelp(cmd)
-		os.Exit(qshell.STATUS_HALT)
 	}
 }

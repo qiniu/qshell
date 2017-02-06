@@ -36,7 +36,10 @@ func DirCache(cmd string, params ...string) {
 	if len(params) == 2 {
 		cacheRootPath := params[0]
 		cacheResultFile := params[1]
-		qshell.DirCache(cacheRootPath, cacheResultFile)
+		_, retErr := qshell.DirCache(cacheRootPath, cacheResultFile)
+		if retErr != nil {
+			os.Exit(qshell.STATUS_ERROR)
+		}
 	} else {
 		CmdHelp(cmd)
 	}
@@ -63,14 +66,14 @@ func ListBucket(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
-		if account.AccessKey != "" && account.SecretKey != "" {
-			qshell.ListBucket(&mac, bucket, prefix, listMarker, listResultFile)
-		} else {
-			fmt.Println("No AccessKey and SecretKey set error!")
+
+		retErr := qshell.ListBucket(&mac, bucket, prefix, listMarker, listResultFile)
+		if retErr != nil {
+			os.Exit(qshell.STATUS_ERROR)
 		}
 	} else {
 		CmdHelp(cmd)
@@ -85,7 +88,7 @@ func Stat(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -100,6 +103,7 @@ func Stat(cmd string, params ...string) {
 			} else {
 				fmt.Println("Stat error,", err)
 			}
+			os.Exit(qshell.STATUS_ERROR)
 		} else {
 			printStat(bucket, key, entry)
 		}
@@ -116,7 +120,7 @@ func Delete(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -131,6 +135,7 @@ func Delete(cmd string, params ...string) {
 			} else {
 				fmt.Println("Delete error,", err)
 			}
+			os.Exit(qshell.STATUS_ERROR)
 		}
 	} else {
 		CmdHelp(cmd)
@@ -156,7 +161,7 @@ func Move(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -171,6 +176,7 @@ func Move(cmd string, params ...string) {
 			} else {
 				fmt.Println("Move error,", err)
 			}
+			os.Exit(qshell.STATUS_ERROR)
 		}
 	} else {
 		CmdHelp(cmd)
@@ -196,7 +202,7 @@ func Copy(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -211,6 +217,7 @@ func Copy(cmd string, params ...string) {
 			} else {
 				fmt.Println("Copy error,", err)
 			}
+			os.Exit(qshell.STATUS_ERROR)
 		}
 	} else {
 		CmdHelp(cmd)
@@ -226,7 +233,7 @@ func Chgm(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -241,6 +248,7 @@ func Chgm(cmd string, params ...string) {
 			} else {
 				fmt.Println("Change mimetype error,", err)
 			}
+			os.Exit(qshell.STATUS_ERROR)
 		}
 	} else {
 		CmdHelp(cmd)
@@ -259,7 +267,7 @@ func Fetch(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -271,7 +279,7 @@ func Fetch(cmd string, params ...string) {
 		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
 		if gErr != nil {
 			fmt.Println("Get bucket region info error,", gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		//set up host
@@ -284,6 +292,7 @@ func Fetch(cmd string, params ...string) {
 			} else {
 				fmt.Println("Fetch error,", err)
 			}
+			os.Exit(qshell.STATUS_ERROR)
 		} else {
 			fmt.Println("Key:", fetchResult.Key)
 			fmt.Println("Hash:", fetchResult.Hash)
@@ -315,7 +324,7 @@ func Prefetch(cmd string, params ...string) {
 		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
 		if gErr != nil {
 			fmt.Println("Get bucket region info error,", gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		//set up host
@@ -328,6 +337,7 @@ func Prefetch(cmd string, params ...string) {
 			} else {
 				fmt.Println("Prefetch error,", err)
 			}
+			os.Exit(qshell.STATUS_ERROR)
 		}
 	} else {
 		CmdHelp(cmd)
@@ -342,7 +352,7 @@ func BatchStat(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -353,7 +363,7 @@ func BatchStat(cmd string, params ...string) {
 		fp, err := os.Open(keyListFile)
 		if err != nil {
 			fmt.Println("Open key list file error", err)
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -421,10 +431,6 @@ func BatchDelete(cmd string, params ...string) {
 		if !force {
 			//confirm
 			rcode := CreateRandString(6)
-			if rcode == "" {
-				fmt.Println("Create confirm code failed")
-				return
-			}
 
 			rcode2 := ""
 			if runtime.GOOS == "windows" {
@@ -436,7 +442,7 @@ func BatchDelete(cmd string, params ...string) {
 
 			if rcode != rcode2 {
 				fmt.Println("Task quit!")
-				return
+				os.Exit(qshell.STATUS_HALT)
 			}
 		}
 
@@ -446,7 +452,7 @@ func BatchDelete(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -457,7 +463,7 @@ func BatchDelete(cmd string, params ...string) {
 		fp, err := os.Open(keyListFile)
 		if err != nil {
 			fmt.Println("Open key list file error", err)
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -526,10 +532,6 @@ func BatchChgm(cmd string, params ...string) {
 		if !force {
 			//confirm
 			rcode := CreateRandString(6)
-			if rcode == "" {
-				fmt.Println("Create confirm code failed")
-				return
-			}
 
 			rcode2 := ""
 			if runtime.GOOS == "windows" {
@@ -541,7 +543,7 @@ func BatchChgm(cmd string, params ...string) {
 
 			if rcode != rcode2 {
 				fmt.Println("Task quit!")
-				return
+				os.Exit(qshell.STATUS_HALT)
 			}
 		}
 
@@ -551,7 +553,7 @@ func BatchChgm(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -562,7 +564,7 @@ func BatchChgm(cmd string, params ...string) {
 		fp, err := os.Open(keyMimeMapFile)
 		if err != nil {
 			fmt.Println("Open key mime map file error")
-			return
+			os.Exit(STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -627,10 +629,6 @@ func BatchRename(cmd string, params ...string) {
 		if !force {
 			//confirm
 			rcode := CreateRandString(6)
-			if rcode == "" {
-				fmt.Println("Create confirm code failed")
-				return
-			}
 
 			rcode2 := ""
 			if runtime.GOOS == "windows" {
@@ -642,7 +640,7 @@ func BatchRename(cmd string, params ...string) {
 
 			if rcode != rcode2 {
 				fmt.Println("Task quit!")
-				return
+				os.Exit(qshell.STATUS_HALT)
 			}
 		}
 
@@ -652,7 +650,7 @@ func BatchRename(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -663,7 +661,7 @@ func BatchRename(cmd string, params ...string) {
 		fp, err := os.Open(oldNewKeyMapFile)
 		if err != nil {
 			fmt.Println("Open old new key map file error")
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -729,10 +727,6 @@ func BatchMove(cmd string, params ...string) {
 		if !force {
 			//confirm
 			rcode := CreateRandString(6)
-			if rcode == "" {
-				fmt.Println("Create confirm code failed")
-				return
-			}
 
 			rcode2 := ""
 			if runtime.GOOS == "windows" {
@@ -744,7 +738,7 @@ func BatchMove(cmd string, params ...string) {
 
 			if rcode != rcode2 {
 				fmt.Println("Task quit!")
-				return
+				os.Exit(qshell.STATUS_HALT)
 			}
 		}
 
@@ -755,7 +749,7 @@ func BatchMove(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -766,7 +760,7 @@ func BatchMove(cmd string, params ...string) {
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Println("Open src dest key map file error")
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -837,10 +831,6 @@ func BatchCopy(cmd string, params ...string) {
 		if !force {
 			//confirm
 			rcode := CreateRandString(6)
-			if rcode == "" {
-				fmt.Println("Create confirm code failed")
-				return
-			}
 
 			rcode2 := ""
 			if runtime.GOOS == "windows" {
@@ -852,7 +842,7 @@ func BatchCopy(cmd string, params ...string) {
 
 			if rcode != rcode2 {
 				fmt.Println("Task quit!")
-				return
+				os.Exit(qshell.STATUS_HALT)
 			}
 		}
 
@@ -863,7 +853,7 @@ func BatchCopy(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -874,7 +864,7 @@ func BatchCopy(cmd string, params ...string) {
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Println("Open src dest key map file error")
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -939,7 +929,7 @@ func PrivateUrl(cmd string, params ...string) {
 		if len(params) == 2 {
 			if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
 				fmt.Println("Invalid <Deadline>")
-				return
+				os.Exit(qshell.STATUS_HALT)
 			} else {
 				deadline = val
 			}
@@ -950,7 +940,7 @@ func PrivateUrl(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -971,7 +961,7 @@ func BatchSign(cmd string, params ...string) {
 		if len(params) == 2 {
 			if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
 				fmt.Println("Invalid <Deadline>")
-				return
+				os.Exit(qshell.STATUS_HALT)
 			} else {
 				deadline = val
 			}
@@ -982,7 +972,7 @@ func BatchSign(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -993,7 +983,7 @@ func BatchSign(cmd string, params ...string) {
 		fp, openErr := os.Open(urlListFile)
 		if openErr != nil {
 			fmt.Println("Open url list file error,", openErr)
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 
@@ -1021,7 +1011,7 @@ func Saveas(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -1031,6 +1021,7 @@ func Saveas(cmd string, params ...string) {
 		url, err := qshell.Saveas(&mac, publicUrl, saveBucket, saveKey)
 		if err != nil {
 			fmt.Println(err)
+			os.Exit(qshell.STATUS_ERROR)
 		} else {
 			fmt.Println(url)
 		}
@@ -1047,7 +1038,7 @@ func M3u8Delete(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -1059,7 +1050,7 @@ func M3u8Delete(cmd string, params ...string) {
 		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
 		if gErr != nil {
 			fmt.Println("Get bucket region info error,", gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		//set up host
@@ -1068,13 +1059,13 @@ func M3u8Delete(cmd string, params ...string) {
 		m3u8FileList, err := qshell.M3u8FileList(&mac, bucket, m3u8Key)
 		if err != nil {
 			fmt.Println(err)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 		client := rs.NewMac(&mac)
 		entryCnt := len(m3u8FileList)
 		if entryCnt == 0 {
 			fmt.Println("no m3u8 slices found")
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 		if entryCnt <= BATCH_ALLOW_MAX {
 			batchDelete(client, m3u8FileList)
@@ -1106,7 +1097,7 @@ func M3u8Replace(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -1118,7 +1109,7 @@ func M3u8Replace(cmd string, params ...string) {
 		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
 		if gErr != nil {
 			fmt.Println("Get bucket region info error,", gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		//set up host
@@ -1131,6 +1122,7 @@ func M3u8Replace(cmd string, params ...string) {
 			} else {
 				fmt.Println("m3u8 replace domain error,", err)
 			}
+			os.Exit(qshell.STATUS_ERROR)
 			return
 		}
 	} else {
