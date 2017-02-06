@@ -65,7 +65,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	storePath := filepath.Join(QShellRootPath, ".qshell", "qdownload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
 		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
-		return
+		os.Exit(STATUS_ERROR)
 	}
 
 	//init log settings
@@ -107,25 +107,25 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	account, gErr := GetAccount()
 	if gErr != nil {
 		fmt.Println("Get account error,", gErr)
-		return
+		os.Exit(STATUS_ERROR)
 	}
 	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 	//get bucket zone info
 	bucketInfo, gErr := GetBucketInfo(&mac, downConfig.Bucket)
 	if gErr != nil {
 		logs.Error("Get bucket region info error,", gErr)
-		return
+		os.Exit(STATUS_ERROR)
 	}
 	//get domains of bucket
 	domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
 	if gErr != nil {
 		logs.Error("Get domains of bucket error,", gErr)
-		return
+		os.Exit(STATUS_ERROR)
 	}
 
 	if len(domainsOfBucket) == 0 {
 		logs.Error("No domains found for bucket", downConfig.Bucket)
-		return
+		os.Exit(STATUS_ERROR)
 	}
 
 	domainOfBucket := domainsOfBucket[0]
@@ -139,7 +139,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	resumeLevelDb, openErr := leveldb.OpenFile(resumeFile, nil)
 	if openErr != nil {
 		logs.Error("Open resume record leveldb error", openErr)
-		return
+		os.Exit(STATUS_ERROR)
 	}
 	defer resumeLevelDb.Close()
 	//sync underlying writes from the OS buffer cache
@@ -153,7 +153,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	listErr := ListBucket(&mac, downConfig.Bucket, downConfig.Prefix, "", jobListFileName)
 	if listErr != nil {
 		logs.Error("List bucket error", listErr)
-		return
+		os.Exit(STATUS_ERROR)
 	}
 
 	//init wait group
@@ -181,7 +181,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	listFp, openErr := os.Open(jobListFileName)
 	if openErr != nil {
 		logs.Error("Open list file error", openErr)
-		return
+		os.Exit(STATUS_ERROR)
 	}
 	defer listFp.Close()
 

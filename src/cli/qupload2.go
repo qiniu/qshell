@@ -91,17 +91,17 @@ func QiniuUpload2(cmd string, params ...string) {
 	//check params
 	if uploadConfig.SrcDir == "" {
 		fmt.Println("Upload config no `--src-dir` specified")
-		return
+		os.Exit(qshell.STATUS_HALT)
 	}
 
 	if uploadConfig.Bucket == "" {
 		fmt.Println("Upload config no `--bucket` specified")
-		return
+		os.Exit(qshell.STATUS_HALT)
 	}
 
 	if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
 		logs.Error("Upload config `SrcDir` not exist error,", err)
-		return
+		os.Exit(qshell.STATUS_HALT)
 	}
 
 	if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT || threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {

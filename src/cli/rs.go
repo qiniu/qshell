@@ -312,7 +312,7 @@ func Prefetch(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -564,7 +564,7 @@ func BatchChgm(cmd string, params ...string) {
 		fp, err := os.Open(keyMimeMapFile)
 		if err != nil {
 			fmt.Println("Open key mime map file error")
-			os.Exit(STATUS_HALT)
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -1123,7 +1123,6 @@ func M3u8Replace(cmd string, params ...string) {
 				fmt.Println("m3u8 replace domain error,", err)
 			}
 			os.Exit(qshell.STATUS_ERROR)
-			return
 		}
 	} else {
 		CmdHelp(cmd)

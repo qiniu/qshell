@@ -22,7 +22,7 @@ func CdnRefresh(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -34,7 +34,7 @@ func CdnRefresh(cmd string, params ...string) {
 		fp, err := os.Open(urlListFile)
 		if err != nil {
 			fmt.Println("Open url list file error,", err)
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -57,8 +57,6 @@ func CdnRefresh(cmd string, params ...string) {
 		if len(urlsToRefresh) > 0 {
 			cdnRefresh(&client, urlsToRefresh)
 		}
-
-		fmt.Println("All refresh requests sent!")
 	} else {
 		CmdHelp(cmd)
 	}
@@ -82,7 +80,7 @@ func CdnPrefetch(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -94,7 +92,7 @@ func CdnPrefetch(cmd string, params ...string) {
 		fp, err := os.Open(urlListFile)
 		if err != nil {
 			fmt.Println("Open url list file error,", err)
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
@@ -117,8 +115,6 @@ func CdnPrefetch(cmd string, params ...string) {
 		if len(urlsToPrefetch) > 0 {
 			cdnPrefetch(&client, urlsToPrefetch)
 		}
-
-		fmt.Println("All prefetch requests sent!")
 	} else {
 		CmdHelp(cmd)
 	}

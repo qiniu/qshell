@@ -36,30 +36,30 @@ func QiniuUpload(cmd string, params ...string) {
 		fp, err := os.Open(uploadConfigFile)
 		if err != nil {
 			logs.Error("Open upload config file `%s` error due to `%s`", uploadConfigFile, err)
-			os.Exit(2)
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		configData, err := ioutil.ReadAll(fp)
 		if err != nil {
 			logs.Error("Read upload config file `%s` error due to `%s`", uploadConfigFile, err)
-			os.Exit(2)
+			os.Exit(qshell.STATUS_HALT)
 		}
 		var uploadConfig qshell.UploadConfig
 		err = json.Unmarshal(configData, &uploadConfig)
 		if err != nil {
 			logs.Error("Parse upload config file `%s` errror due to `%s`", uploadConfigFile, err)
-			os.Exit(2)
+			os.Exit(qshell.STATUS_HALT)
 		}
 		srcFileInfo, err := os.Stat(uploadConfig.SrcDir)
 
 		if err != nil {
 			logs.Error("Upload config error for parameter `SrcDir`,", err)
-			os.Exit(2)
+			os.Exit(qshell.STATUS_HALT)
 		}
 
 		if !srcFileInfo.IsDir() {
 			logs.Error("Upload src dir should be a directory")
-			os.Exit(2)
+			os.Exit(qshell.STATUS_HALT)
 		}
 
 		//upload

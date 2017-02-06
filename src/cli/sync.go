@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"os"
 	"qiniu/api.v6/auth/digest"
 	"qshell"
 	"time"
@@ -21,7 +22,7 @@ func Sync(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			logs.Error(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -32,7 +33,7 @@ func Sync(cmd string, params ...string) {
 		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
 		if gErr != nil {
 			fmt.Println("Get bucket region info error,", gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		//set up host
@@ -43,7 +44,7 @@ func Sync(cmd string, params ...string) {
 		syncRet, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, upHostIp)
 		if sErr != nil {
 			logs.Error(sErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		fmt.Printf("Sync %s => %s:%s Success, Duration: %s!\n", srcResUrl, bucket, key, time.Since(tStart))
