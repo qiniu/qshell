@@ -73,7 +73,7 @@ func main() {
 
 	if len(os.Args) <= 1 {
 		fmt.Println("Use help or help [cmd1 [cmd2 [cmd3 ...]]] to see supported commands.")
-		return
+		os.Exit(qshell.STATUS_HALT)
 	}
 
 	//global options
@@ -110,7 +110,7 @@ func main() {
 		pwd, gErr := os.Getwd()
 		if gErr != nil {
 			fmt.Println("Error: get current work dir error,", gErr)
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		qshell.QShellRootPath = pwd
 	} else {
@@ -118,7 +118,7 @@ func main() {
 		curUser, gErr := user.Current()
 		if gErr != nil {
 			fmt.Println("Error: get current user error,", gErr)
-			return
+			os.Exit(qshell.STATUS_HALT)
 		}
 		qshell.QShellRootPath = curUser.HomeDir
 	}
@@ -132,6 +132,6 @@ func main() {
 		cliFunc(cmd, params...)
 	} else {
 		fmt.Printf("Error: unknown cmd `%s`\n", cmd)
+		os.Exit(qshell.STATUS_HALT)
 	}
-
 }

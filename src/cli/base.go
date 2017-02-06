@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"qshell"
 )
 
@@ -12,7 +13,7 @@ func Account(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 		fmt.Println(account.String())
 	} else if len(params) == 2 || len(params) == 3 {
@@ -21,8 +22,10 @@ func Account(cmd string, params ...string) {
 		sErr := qshell.SetAccount(accessKey, secretKey)
 		if sErr != nil {
 			fmt.Println(sErr)
+			os.Exit(qshell.STATUS_ERROR)
 		}
 	} else {
 		CmdHelp(cmd)
+		os.Exit(qshell.STATUS_HALT)
 	}
 }

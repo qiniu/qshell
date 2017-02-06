@@ -10,7 +10,7 @@ const (
 
 const (
 	STATUS_OK = iota
-	//upload error
+	//process error
 	STATUS_ERROR
 	//local error
 	STATUS_HALT
