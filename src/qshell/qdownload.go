@@ -355,6 +355,10 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	logs.Informational("%10s%15s", "Duration:", time.Since(timeStart))
 	logs.Informational("-----------------------------")
 	fmt.Println("\nSee upload log at path", downConfig.LogFile)
+
+	if failureFileCount > 0 {
+		os.Exit(STATUS_ERROR)
+	}
 }
 
 /*
