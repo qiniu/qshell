@@ -2,7 +2,6 @@ package cli
 
 import (
 	"encoding/json"
-
 	"flag"
 	"github.com/astaxie/beego/logs"
 	"io/ioutil"

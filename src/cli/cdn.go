@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"qiniu/api.v6/auth/digest"
@@ -16,8 +17,15 @@ const (
 )
 
 func CdnRefresh(cmd string, params ...string) {
-	if len(params) == 1 {
-		urlListFile := params[0]
+	var isDirs bool
+	flagSet := flag.NewFlagSet("cdnRefresh", flag.ExitOnError)
+	flagSet.BoolVar(&isDirs, "dirs", false, "refresh dirs")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+
+	if len(cmdParams) == 1 {
+		urlListFile := cmdParams[0]
 
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
@@ -33,37 +41,45 @@ func CdnRefresh(cmd string, params ...string) {
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(urlListFile)
 		if err != nil {
-			fmt.Println("Open url list file error,", err)
+			fmt.Println("Open refresh item list file error,", err)
 			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		scanner := bufio.NewScanner(fp)
 		scanner.Split(bufio.ScanLines)
 
-		urlsToRefresh := make([]string, 0, 10)
+		itemsToRefresh := make([]string, 0, 10)
 		for scanner.Scan() {
 			url := strings.TrimSpace(scanner.Text())
 			if url == "" {
 				continue
 			}
-			urlsToRefresh = append(urlsToRefresh, url)
+			itemsToRefresh = append(itemsToRefresh, url)
 
-			if len(urlsToRefresh) == BATCH_CDN_REFRESH_ALLOW_MAX {
-				cdnRefresh(&client, urlsToRefresh)
-				urlsToRefresh = make([]string, 0, 10)
+			if len(itemsToRefresh) == BATCH_CDN_REFRESH_ALLOW_MAX {
+				if isDirs {
+					cdnRefresh(&client, nil, itemsToRefresh)
+				} else {
+					cdnRefresh(&client, itemsToRefresh, nil)
+				}
+				itemsToRefresh = make([]string, 0, 10)
 			}
 		}
 
-		if len(urlsToRefresh) > 0 {
-			cdnRefresh(&client, urlsToRefresh)
+		if len(itemsToRefresh) > 0 {
+			if isDirs {
+				cdnRefresh(&client, nil, itemsToRefresh)
+			} else {
+				cdnRefresh(&client, itemsToRefresh, nil)
+			}
 		}
 	} else {
 		CmdHelp(cmd)
 	}
 }
 
-func cdnRefresh(client *rs.Client, urls []string) {
-	resp, err := qshell.BatchRefresh(client, urls)
+func cdnRefresh(client *rs.Client, urls []string, dirs []string) {
+	resp, err := qshell.BatchRefresh(client, urls, dirs)
 	if err != nil {
 		fmt.Println("CDN refresh error,", err)
 	} else {
