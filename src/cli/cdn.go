@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	BATCH_CDN_REFRESH_ALLOW_MAX  = 100
-	BATCH_CDN_PREFETCH_ALLOW_MAX = 100
+	BATCH_CDN_REFRESH_URLS_ALLOW_MAX = 100
+	BATCH_CDN_REFRESH_DIRS_ALLOW_MAX = 10
+	BATCH_CDN_PREFETCH_ALLOW_MAX     = 100
 )
 
 func CdnRefresh(cmd string, params ...string) {
@@ -48,24 +49,37 @@ func CdnRefresh(cmd string, params ...string) {
 		scanner := bufio.NewScanner(fp)
 		scanner.Split(bufio.ScanLines)
 
-		itemsToRefresh := make([]string, 0, 10)
-		for scanner.Scan() {
-			url := strings.TrimSpace(scanner.Text())
-			if url == "" {
-				continue
-			}
-			itemsToRefresh = append(itemsToRefresh, url)
+		itemsToRefresh := make([]string, 0, 100)
 
-			if len(itemsToRefresh) == BATCH_CDN_REFRESH_ALLOW_MAX {
-				if isDirs {
-					cdnRefresh(&client, nil, itemsToRefresh)
-				} else {
-					cdnRefresh(&client, itemsToRefresh, nil)
+		if isDirs {
+			for scanner.Scan() {
+				item := strings.TrimSpace(scanner.Text())
+				if item == "" {
+					continue
 				}
-				itemsToRefresh = make([]string, 0, 10)
+				itemsToRefresh = append(itemsToRefresh, item)
+
+				if len(itemsToRefresh) == BATCH_CDN_REFRESH_DIRS_ALLOW_MAX {
+					cdnRefresh(&client, nil, itemsToRefresh)
+					itemsToRefresh = make([]string, 0, 10)
+				}
+			}
+		} else {
+			for scanner.Scan() {
+				item := strings.TrimSpace(scanner.Text())
+				if item == "" {
+					continue
+				}
+				itemsToRefresh = append(itemsToRefresh, item)
+
+				if len(itemsToRefresh) == BATCH_CDN_REFRESH_URLS_ALLOW_MAX {
+					cdnRefresh(&client, itemsToRefresh, nil)
+					itemsToRefresh = make([]string, 0, 100)
+				}
 			}
 		}
 
+		//check final items
 		if len(itemsToRefresh) > 0 {
 			if isDirs {
 				cdnRefresh(&client, nil, itemsToRefresh)
