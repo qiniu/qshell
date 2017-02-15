@@ -98,6 +98,9 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	if !downConfig.LogStdout {
 		logs.GetBeeLogger().DelLogger(logs.AdapterConsole)
 	}
+	//open log file
+	fmt.Println("Writing download log to file", downConfig.LogFile)
+
 	//daily rotate
 	logs.SetLogger(logs.AdapterFile, fmt.Sprintf(`{"filename":"%s", "level":%d, "daily":true, "maxdays":%d}`,
 		downConfig.LogFile, logLevel, logRotate))
@@ -354,7 +357,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	logs.Informational("%10s%10d", "Failure:", failureFileCount)
 	logs.Informational("%10s%15s", "Duration:", time.Since(timeStart))
 	logs.Informational("-----------------------------")
-	fmt.Println("\nSee upload log at path", downConfig.LogFile)
+	fmt.Println("\nSee download log at path", downConfig.LogFile)
 
 	if failureFileCount > 0 {
 		os.Exit(STATUS_ERROR)
