@@ -57,8 +57,6 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 {
 	"dest_dir"	:	"/Users/jemy/Temp7/backup",
 	"bucket"	:	"qdisk",
-	"access_key"	:	"ELUs327kxVPJrGCXqWae9yioc0xYZyrIpbM6Wh6x",
-	"secret_key"	:	"LVzZY2SqOQ_I_kM1n00ygACVBArDvOWtiLkDtKip",
 	"prefix"	:	"movies/",
 	"suffixes"	:	".mp4"
 }
