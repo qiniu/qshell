@@ -102,8 +102,13 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	fmt.Println("Writing download log to file", downConfig.LogFile)
 
 	//daily rotate
-	logs.SetLogger(logs.AdapterFile, fmt.Sprintf(`{"filename":"%s", "level":%d, "daily":true, "maxdays":%d}`,
-		downConfig.LogFile, logLevel, logRotate))
+	logCfg := BeeLogConfig{
+		Filename: downConfig.LogFile,
+		Level:    logLevel,
+		Daily:    true,
+		MaxDays:  logRotate,
+	}
+	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
 
 	logs.Informational("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))

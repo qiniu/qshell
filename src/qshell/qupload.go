@@ -170,8 +170,13 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 	fmt.Println("Writing upload log to file", uploadConfig.LogFile)
 
 	//daily rotate
-	logs.SetLogger(logs.AdapterFile, fmt.Sprintf(`{"filename":"%s", "level":%d, "daily":true, "maxdays":%d}`,
-		uploadConfig.LogFile, logLevel, logRotate))
+	logCfg := BeeLogConfig{
+		Filename: uploadConfig.LogFile,
+		Level:    logLevel,
+		Daily:    true,
+		MaxDays:  logRotate,
+	}
+	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
 
 	//global up settings
