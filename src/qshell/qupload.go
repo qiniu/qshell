@@ -386,10 +386,10 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 			upToken := policy.Token(&mac)
 
 			if localFileSize > putThreshold {
-				formUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken,
+				resumableUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken, storePath,
 					localFilePath, uploadFileKey, localFileLastModified)
 			} else {
-				resumableUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken, storePath,
+				formUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken,
 					localFilePath, uploadFileKey, localFileLastModified)
 			}
 		}
@@ -668,9 +668,9 @@ func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
 		if pErr, ok := err.(*rpc.ErrorInfo); ok {
-			logs.Error("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, pErr.Err)
+			logs.Error("Form upload file `%s` => `%s` failed due to rerror `%s`", localFilePath, uploadFileKey, pErr.Err)
 		} else {
-			logs.Error("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, err)
+			logs.Error("Form upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, err)
 		}
 	} else {
 		atomic.AddInt64(&successFileCount, 1)
@@ -708,9 +708,9 @@ func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 		os.Remove(progressFilePath)
 		atomic.AddInt64(&failureFileCount, 1)
 		if pErr, ok := err.(*rpc.ErrorInfo); ok {
-			logs.Error("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, pErr.Err)
+			logs.Error("Resumable upload file `%s` => `%s` failed due to rerror `%s`", localFilePath, uploadFileKey, pErr.Err)
 		} else {
-			logs.Error("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, err)
+			logs.Error("Resumable upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, err)
 		}
 	} else {
 		os.Remove(progressFilePath)
