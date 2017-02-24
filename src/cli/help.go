@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v2.0.3"
+var version = "v2.0.5"
 
 var optionDocs = map[string]string{
 	"-f": "Force batch operations",
