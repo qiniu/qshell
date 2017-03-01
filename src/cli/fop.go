@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"qiniu/rpc"
 	"qshell"
 )
@@ -17,6 +18,7 @@ func Prefop(cmd string, params ...string) {
 			} else {
 				fmt.Println("Prefop error,", err)
 			}
+			os.Exit(qshell.STATUS_ERROR)
 		} else {
 			fmt.Println(fopRet.String())
 		}

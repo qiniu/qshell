@@ -2,63 +2,68 @@ package cli
 
 import (
 	"encoding/json"
-
+	"flag"
+	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"os"
-	"qiniu/log"
 	"qshell"
 	"strconv"
 )
 
 func QiniuUpload(cmd string, params ...string) {
-	if len(params) == 1 || len(params) == 2 {
+	var watchDir bool
+	flagSet := flag.NewFlagSet("qupload", flag.ExitOnError)
+	flagSet.BoolVar(&watchDir, "watch", false, "watch dir changes after upload completes")
+	flagSet.Parse(params)
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 1 || len(cmdParams) == 2 {
 		var uploadConfigFile string
 		var threadCount int64
 		var err error
-		if len(params) == 2 {
-			threadCount, err = strconv.ParseInt(params[0], 10, 64)
+		if len(cmdParams) == 2 {
+			threadCount, err = strconv.ParseInt(cmdParams[0], 10, 64)
 			if err != nil {
-				log.Error("Invalid <ThreadCount> value,", params[0])
-				return
+				logs.Error("Invalid <ThreadCount> value,", cmdParams[0])
+				os.Exit(2)
 			}
-			uploadConfigFile = params[1]
+			uploadConfigFile = cmdParams[1]
 		} else {
-			uploadConfigFile = params[0]
+			uploadConfigFile = cmdParams[0]
 		}
 
 		//read upload config
 		fp, err := os.Open(uploadConfigFile)
 		if err != nil {
-			log.Errorf("Open upload config file `%s` error due to `%s`", uploadConfigFile, err)
-			return
+			logs.Error("Open upload config file `%s` error due to `%s`", uploadConfigFile, err)
+			os.Exit(qshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		configData, err := ioutil.ReadAll(fp)
 		if err != nil {
-			log.Errorf("Read upload config file `%s` error due to `%s`", uploadConfigFile, err)
-			return
+			logs.Error("Read upload config file `%s` error due to `%s`", uploadConfigFile, err)
+			os.Exit(qshell.STATUS_HALT)
 		}
 		var uploadConfig qshell.UploadConfig
 		err = json.Unmarshal(configData, &uploadConfig)
 		if err != nil {
-			log.Errorf("Parse upload config file `%s` errror due to `%s`", uploadConfigFile, err)
-			return
+			logs.Error("Parse upload config file `%s` errror due to `%s`", uploadConfigFile, err)
+			os.Exit(qshell.STATUS_HALT)
 		}
 		srcFileInfo, err := os.Stat(uploadConfig.SrcDir)
 
 		if err != nil {
-			log.Error("Upload config error for parameter `SrcDir`,", err)
-			return
+			logs.Error("Upload config error for parameter `SrcDir`,", err)
+			os.Exit(qshell.STATUS_HALT)
 		}
 
 		if !srcFileInfo.IsDir() {
-			log.Error("Upload src dir should be a directory")
-			return
+			logs.Error("Upload src dir should be a directory")
+			os.Exit(qshell.STATUS_HALT)
 		}
 
 		//upload
 		if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT || threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
-			log.Infof("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
+			logs.Info("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
 				qshell.MIN_UPLOAD_THREAD_COUNT, qshell.MAX_UPLOAD_THREAD_COUNT)
 
 			if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT {
@@ -68,7 +73,7 @@ func QiniuUpload(cmd string, params ...string) {
 			}
 		}
 
-		qshell.QiniuUpload(int(threadCount), &uploadConfig)
+		qshell.QiniuUpload(int(threadCount), &uploadConfig, watchDir)
 	} else {
 		CmdHelp(cmd)
 	}

@@ -55,7 +55,7 @@ func FormPut(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		//upload settings
@@ -65,7 +65,7 @@ func FormPut(cmd string, params ...string) {
 			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
 			if gErr != nil {
 				fmt.Println("Get bucket region info error,", gErr)
-				return
+				os.Exit(qshell.STATUS_ERROR)
 			}
 
 			//set up host
@@ -96,7 +96,7 @@ func FormPut(cmd string, params ...string) {
 		fStat, statErr := os.Stat(localFile)
 		if statErr != nil {
 			fmt.Println("Local file error", statErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 		fsize := fStat.Size()
 		putClient := rpc.NewClient("")
@@ -140,6 +140,10 @@ func FormPut(cmd string, params ...string) {
 		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
 		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)*1e6/float32(lastNano))
 		fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
+
+		if err != nil {
+			os.Exit(qshell.STATUS_ERROR)
+		}
 	} else {
 		CmdHelp(cmd)
 	}
@@ -172,13 +176,13 @@ func ResumablePut(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		fStat, statErr := os.Stat(localFile)
 		if statErr != nil {
 			fmt.Println("Local file error", statErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 		fsize := fStat.Size()
 
@@ -189,7 +193,7 @@ func ResumablePut(cmd string, params ...string) {
 			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
 			if gErr != nil {
 				fmt.Println("Get bucket region info error,", gErr)
-				return
+				os.Exit(qshell.STATUS_ERROR)
 			}
 
 			//set up host
@@ -248,6 +252,10 @@ func ResumablePut(cmd string, params ...string) {
 		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
 		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)*1e6/float32(lastNano))
 		fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
+
+		if err != nil {
+			os.Exit(qshell.STATUS_ERROR)
+		}
 	} else {
 		CmdHelp(cmd)
 	}

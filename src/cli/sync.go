@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
+	"os"
 	"qiniu/api.v6/auth/digest"
-	"qiniu/log"
 	"qshell"
 	"time"
 )
@@ -20,8 +21,8 @@ func Sync(cmd string, params ...string) {
 
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
-			log.Error(gErr)
-			return
+			logs.Error(gErr)
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		mac := digest.Mac{
@@ -32,7 +33,7 @@ func Sync(cmd string, params ...string) {
 		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
 		if gErr != nil {
 			fmt.Println("Get bucket region info error,", gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		//set up host
@@ -40,14 +41,16 @@ func Sync(cmd string, params ...string) {
 
 		//sync
 		tStart := time.Now()
-		hash, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, upHostIp)
+		syncRet, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, upHostIp)
 		if sErr != nil {
-			log.Error(sErr)
-			return
+			logs.Error(sErr)
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
-		fmt.Printf("Sync %s => %s:%s (%s) Success, Duration: %s!\n",
-			srcResUrl, bucket, key, hash, time.Since(tStart))
+		fmt.Printf("Sync %s => %s:%s Success, Duration: %s!\n", srcResUrl, bucket, key, time.Since(tStart))
+		fmt.Println("Hash:", syncRet.Hash)
+		fmt.Printf("Fsize: %d (%s)\n", syncRet.Fsize, FormatFsize(syncRet.Fsize))
+		fmt.Println("Mime:", syncRet.MimeType)
 	} else {
 		CmdHelp(cmd)
 	}

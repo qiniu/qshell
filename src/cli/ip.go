@@ -3,8 +3,8 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"net/http"
-	"qiniu/log"
 	"time"
 )
 
@@ -50,7 +50,7 @@ func IpQuery(cmd string, params ...string) {
 			func() {
 				gResp, gErr := http.Get(url)
 				if gErr != nil {
-					log.Error("Query ip info failed for %s, %s", ip, gErr)
+					logs.Error("Query ip info failed for %s, %s", ip, gErr)
 					return
 				}
 				defer gResp.Body.Close()
@@ -58,13 +58,13 @@ func IpQuery(cmd string, params ...string) {
 				decoder := json.NewDecoder(gResp.Body)
 				decodeErr := decoder.Decode(&ipInfo)
 				if decodeErr != nil {
-					log.Errorf("Parse ip info body failed for %s, %s", ip, decodeErr)
+					logs.Error("Parse ip info body failed for %s, %s", ip, decodeErr)
 					return
 				}
 
 				fmt.Println(fmt.Sprintf("%s\t%s", ip, ipInfo.String()))
 			}()
-			<-time.After(time.Second * 1)
+			<-time.After(time.Millisecond * 500)
 		}
 	} else {
 		CmdHelp(cmd)

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"net"
@@ -15,7 +16,6 @@ import (
 	fio "qiniu/api.v6/io"
 	rio "qiniu/api.v6/resumable/io"
 	"qiniu/api.v6/rs"
-	"qiniu/log"
 	"qiniu/rpc"
 	"runtime"
 	"strconv"
@@ -29,34 +29,30 @@ import (
 Config file like:
 
 {
-	"src_dir"				:	"/Users/jemy/Photos",
-	"file_list"             :   "",
-	"access_key"			:	"<Your AccessKey>",
-	"secret_key"			:	"<Your SecretKey>",
-	"bucket"				:	"test-bucket",
-	"put_threshold"			:	10000000,
-	"key_prefix"			:	"2014/12/01/",
-	"ignore_dir"			:	false,
-	"overwrite"				:	false,
-	"check_exists"			:	true,
+	"src_dir"		:	"/Users/jemy/Photos",
+	"file_list"             :       "",
+	"bucket"		:	"test-bucket",
+	"put_threshold"		:	10000000,
+	"key_prefix"		:	"2014/12/01/",
+	"ignore_dir"		:	false,
+	"overwrite"		:	false,
+	"check_exists"		:	true,
 	"skip_file_prefixes"	:	"IMG_",
 	"skip_path_prefixes"	:	"tmp/,bin/,obj/",
-	"skip_suffixes"			:	".exe,.obj,.class",
-	"skip_fixed_strings"    :   ".svn,.git",
-	"up_host"				:	"http://upload.qiniu.com",
-	"bind_up_ip"			:	"",
-	"bind_rs_ip"			:	"",
-	"bind_nic_ip"			:	"",
-	"rescan_local"			:	false
+	"skip_suffixes"		:	".exe,.obj,.class",
+	"skip_fixed_strings"    :       ".svn,.git",
+	"up_host"		:	"http://upload.qiniu.com",
+	"bind_up_ip"		:	"",
+	"bind_rs_ip"		:	"",
+	"bind_nic_ip"		:	"",
+	"rescan_local"		:	false
 }
 
 or the simplest one
 
 {
-	"src_dir" 		:	"/Users/jemy/Photos",
-	"access_key" 	:	"<Your AccessKey>",
-	"secret_key"	:	"<Your SecretKey>",
-	"bucket"		:	"test-bucket",
+	"src_dir" 	:	"/Users/jemy/Photos",
+	"bucket"	:	"test-bucket",
 }
 
 */
@@ -73,10 +69,8 @@ type UploadInfo struct {
 
 type UploadConfig struct {
 	//basic config
-	SrcDir    string `json:"src_dir"`
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
-	Bucket    string `json:"bucket"`
+	SrcDir string `json:"src_dir"`
+	Bucket string `json:"bucket"`
 
 	//optional config
 	FileList         string `json:"file_list,omitempty"`
@@ -102,9 +96,13 @@ type UploadConfig struct {
 	BindNicIp string `json:"bind_nic_ip,omitempty"`
 
 	//log settings
-	LogLevel string `json:"log_level,omitempty"`
-	LogFile  string `json:"log_file,omitempty"`
+	LogLevel  string `json:"log_level,omitempty"`
+	LogFile   string `json:"log_file,omitempty"`
+	LogRotate int    `json:"log_rotate,omitempty"`
+	LogStdout bool   `json:"log_stdout,omitempty"`
 }
+
+var defaultIgnoreWatchSuffixes = []string{"~", ".swp"}
 
 var upSettings = rio.Settings{
 	ChunkSize: 4 * 1024 * 1024,
@@ -121,7 +119,13 @@ func doUpload(tasks chan func()) {
 	}
 }
 
-func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
+var currentFileCount int64
+var successFileCount int64
+var notOverwriteCount int64
+var failureFileCount int64
+var skippedFileCount int64
+
+func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 	timeStart := time.Now()
 	//create job id
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
@@ -129,23 +133,28 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	//local storage path
 	storePath := filepath.Join(QShellRootPath, ".qshell", "qupload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
-		return
+		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		os.Exit(STATUS_HALT)
 	}
 
 	defaultLogFile := filepath.Join(storePath, fmt.Sprintf("%s.log", jobId))
 	//init log level
+	logLevel := logs.LevelInformational
+	logRotate := 1
+	if uploadConfig.LogRotate > 0 {
+		logRotate = uploadConfig.LogRotate
+	}
 	switch uploadConfig.LogLevel {
 	case "debug":
-		log.SetOutputLevel(log.Ldebug)
+		logLevel = logs.LevelDebug
 	case "info":
-		log.SetOutputLevel(log.Linfo)
+		logLevel = logs.LevelInformational
 	case "warn":
-		log.SetOutputLevel(log.Lwarn)
+		logLevel = logs.LevelWarning
 	case "error":
-		log.SetOutputLevel(log.Lerror)
+		logLevel = logs.LevelError
 	default:
-		log.SetOutputLevel(log.Linfo)
+		logLevel = logs.LevelInformational
 	}
 
 	//init log writer
@@ -154,36 +163,35 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		uploadConfig.LogFile = defaultLogFile
 	}
 
-	//open log file
-	logFile := os.Stdout
-	switch uploadConfig.LogFile {
-	case "stderr":
-		logFile = os.Stderr
-		fmt.Println("Printing upload log to stderr")
-	case "stdout":
-		logFile = os.Stdout
-		fmt.Println("Printing upload log to stdout")
-	default:
-		var openErr error
-		logFile, openErr = os.Create(uploadConfig.LogFile)
-		if openErr != nil {
-			fmt.Println("Open log file error,", openErr)
-			return
-		}
-		fmt.Println("Writing upload log to file", uploadConfig.LogFile)
+	if !uploadConfig.LogStdout {
+		logs.GetBeeLogger().DelLogger(logs.AdapterConsole)
 	}
-	defer logFile.Close()
+	//open log file
+	fmt.Println("Writing upload log to file", uploadConfig.LogFile)
 
-	log.SetOutput(logFile)
+	//daily rotate
+	logCfg := BeeLogConfig{
+		Filename: uploadConfig.LogFile,
+		Level:    logLevel,
+		Daily:    true,
+		MaxDays:  logRotate,
+	}
+	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
 
 	//global up settings
-	mac := digest.Mac{uploadConfig.AccessKey, []byte(uploadConfig.SecretKey)}
+	logs.Info("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
+	account, gErr := GetAccount()
+	if gErr != nil {
+		fmt.Println(gErr)
+		os.Exit(STATUS_HALT)
+	}
+	mac := digest.Mac{AccessKey: account.AccessKey, SecretKey: []byte(account.SecretKey)}
 	//get bucket zone info
 	bucketInfo, gErr := GetBucketInfo(&mac, uploadConfig.Bucket)
 	if gErr != nil {
-		log.Error("Get bucket region info error,", gErr)
-		return
+		logs.Error("Get bucket region info error,", gErr)
+		os.Exit(STATUS_HALT)
 	}
 
 	//set up host
@@ -207,73 +215,21 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 
 	//find the local file list, by specified or by config
 	var cacheResultName string
+	var cacheCountName string
 	var totalFileCount int64
 	var cacheErr error
-	_, fStatErr := os.Stat(uploadConfig.FileList)
-	if uploadConfig.FileList != "" && fStatErr == nil {
+	_, localFileStatErr := os.Stat(uploadConfig.FileList)
+	if uploadConfig.FileList != "" && localFileStatErr == nil {
 		//use specified file list
 		cacheResultName = uploadConfig.FileList
 		totalFileCount = GetFileLineCount(cacheResultName)
 	} else {
-		//cache file
 		cacheResultName = filepath.Join(storePath, fmt.Sprintf("%s.cache", jobId))
-		cacheTempName := filepath.Join(storePath, fmt.Sprintf("%s.cache.temp", jobId))
-		cacheCountName := filepath.Join(storePath, fmt.Sprintf("%s.count", jobId))
-
-		rescanLocalDir := false
-		if _, statErr := os.Stat(cacheResultName); statErr == nil {
-			//file exists
-			rescanLocalDir = uploadConfig.RescanLocal
-		} else {
-			rescanLocalDir = true
-		}
-
-		if rescanLocalDir {
-			log.Info("Listing local sync dir, this can take a long time for big directory, please wait patiently")
-			totalFileCount, cacheErr = DirCache(uploadConfig.SrcDir, cacheTempName)
-			if cacheErr != nil {
-				return
-			}
-
-			if rErr := os.Rename(cacheTempName, cacheResultName); rErr != nil {
-				log.Error("Rename the temp cached file error", rErr)
-				return
-			}
-			//write the total count to local file
-			if cFp, cErr := os.Create(cacheCountName); cErr == nil {
-				func() {
-					defer cFp.Close()
-					uploadInfo := UploadInfo{
-						TotalFileCount: totalFileCount,
-					}
-					uploadInfoBytes, mErr := json.Marshal(&uploadInfo)
-					if mErr == nil {
-						if _, wErr := cFp.Write(uploadInfoBytes); wErr != nil {
-							log.Warnf("Write local cached count file error %s", cErr)
-						} else {
-							cFp.Close()
-						}
-					}
-				}()
-			} else {
-				log.Errorf("Open local cached count file error %s,", cErr)
-			}
-		} else {
-			log.Infof("Use the last cached local sync dir file list")
-			//read from local cache
-			if rFp, rErr := os.Open(cacheCountName); rErr == nil {
-				func() {
-					defer rFp.Close()
-					uploadInfo := UploadInfo{}
-					decoder := json.NewDecoder(rFp)
-					if dErr := decoder.Decode(&uploadInfo); dErr == nil {
-						totalFileCount = uploadInfo.TotalFileCount
-					}
-				}()
-			} else {
-				log.Warnf("Open local cached count file error %s,", rErr)
-				totalFileCount = GetFileLineCount(cacheResultName)
-			}
+		cacheCountName = filepath.Join(storePath, fmt.Sprintf("%s.count", jobId))
+		totalFileCount, cacheErr = prepareCacheFileList(cacheResultName, cacheCountName,
+			uploadConfig.SrcDir, uploadConfig.RescanLocal)
+		if cacheErr != nil {
+			os.Exit(STATUS_HALT)
 		}
 	}
 
@@ -281,24 +237,20 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 	leveldbFileName := filepath.Join(storePath, jobId+".ldb")
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
-		log.Errorf("Open leveldb `%s` failed due to %s", leveldbFileName, err)
-		return
+		logs.Error("Open leveldb `%s` failed due to %s", leveldbFileName, err)
+		os.Exit(STATUS_HALT)
 	}
 	defer ldb.Close()
-	//sync
+
+	//open cache list file
 	cacheResultFileHandle, err := os.Open(cacheResultName)
 	if err != nil {
-		log.Errorf("Open list file `%s` failed due to %s", cacheResultName, err)
-		return
+		logs.Error("Open list file `%s` failed due to %s", cacheResultName, err)
+		os.Exit(STATUS_HALT)
 	}
 	defer cacheResultFileHandle.Close()
 	bScanner := bufio.NewScanner(cacheResultFileHandle)
 	bScanner.Split(bufio.ScanLines)
-
-	var currentFileCount int64
-	var successFileCount int64
-	var failureFileCount int64
-	var skippedFileCount int64
 
 	ldbWOpt := opt.WriteOptions{
 		Sync: true,
@@ -343,87 +295,41 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		line := bScanner.Text()
 		items := strings.Split(line, "\t")
 		if len(items) != 3 {
-			log.Errorf("Invalid cache line `%s`", line)
+			logs.Error("Invalid cache line `%s`", line)
 			continue
 		}
 
-		localRelFpath := items[0]
+		localFileRelativePath := items[0]
 		currentFileCount += 1
 
-		skip := false
 		//check skip local file or folder
-		if uploadConfig.SkipPathPrefixes != "" {
-			//unpack skip prefix
-			skipPathPrefixes := strings.Split(uploadConfig.SkipPathPrefixes, ",")
-			for _, prefix := range skipPathPrefixes {
-				if strings.HasPrefix(localRelFpath, strings.TrimSpace(prefix)) {
-					log.Infof("Skip by path prefix `%s` for local file path `%s`", strings.TrimSpace(prefix), localRelFpath)
-					skip = true
-					skippedFileCount += 1
-					break
-				}
-			}
-
-			if skip {
-				continue
-			}
+		if skip, prefix := hitByPathPrefixes(uploadConfig.SkipPathPrefixes, localFileRelativePath); skip {
+			logs.Informational("Skip by path prefix `%s` for local file path `%s`", prefix, localFileRelativePath)
+			skippedFileCount += 1
+			continue
 		}
 
-		if uploadConfig.SkipFilePrefixes != "" {
-			//unpack skip prefix
-			skipFilePrefixes := strings.Split(uploadConfig.SkipFilePrefixes, ",")
-			for _, prefix := range skipFilePrefixes {
-				localFname := filepath.Base(localRelFpath)
-				if strings.HasPrefix(localFname, strings.TrimSpace(prefix)) {
-					log.Infof("Skip by file prefix `%s` for local file path `%s`", strings.TrimSpace(prefix), localRelFpath)
-					skip = true
-					skippedFileCount += 1
-					break
-				}
-			}
-
-			if skip {
-				continue
-			}
+		if skip, prefix := hitByFilePrefixes(uploadConfig.SkipFilePrefixes, localFileRelativePath); skip {
+			logs.Informational("Skip by file prefix `%s` for local file path `%s`", prefix, localFileRelativePath)
+			skippedFileCount += 1
+			continue
 		}
 
-		if uploadConfig.SkipFixedStrings != "" {
-			//unpack fixed strings
-			skipFixedStrings := strings.Split(uploadConfig.SkipFixedStrings, ",")
-			for _, substr := range skipFixedStrings {
-				if strings.Contains(localRelFpath, strings.TrimSpace(substr)) {
-					log.Infof("Skip by fixed string `%s` for local file path `%s`", strings.TrimSpace(substr), localRelFpath)
-					skip = true
-					skippedFileCount += 1
-					break
-				}
-			}
-
-			if skip {
-				continue
-			}
+		if skip, fixedStr := hitByFixesString(uploadConfig.SkipFixedStrings, localFileRelativePath); skip {
+			logs.Informational("Skip by fixed string `%s` for local file path `%s`", fixedStr, localFileRelativePath)
+			skippedFileCount += 1
+			continue
 		}
 
-		if uploadConfig.SkipSuffixes != "" {
-			skipSuffixes := strings.Split(uploadConfig.SkipSuffixes, ",")
-			for _, suffix := range skipSuffixes {
-				if strings.HasSuffix(localRelFpath, strings.TrimSpace(suffix)) {
-					log.Debug(fmt.Sprintf("Skip by suffix `%s` for local file %s",
-						strings.TrimSpace(suffix), localRelFpath))
-					skip = true
-					skippedFileCount += 1
-					break
-				}
-			}
-
-			if skip {
-				continue
-			}
+		if skip, suffix := hitBySuffixes(uploadConfig.SkipSuffixes, localFileRelativePath); skip {
+			logs.Informational("Skip by suffix `%s` for local file `%s`", suffix, localFileRelativePath)
+			skippedFileCount += 1
+			continue
 		}
 
 		//pack the upload file key
-		localFlmd, _ := strconv.ParseInt(items[2], 10, 64)
-		uploadFileKey := localRelFpath
+		localFileLastModified, _ := strconv.ParseInt(items[2], 10, 64)
+		uploadFileKey := localFileRelativePath
 
 		//check ignore dir
 		if uploadConfig.IgnoreDir {
@@ -439,15 +345,15 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 			uploadFileKey = strings.Replace(uploadFileKey, "\\", "/", -1)
 		}
 
-		localFilePath := filepath.Join(uploadConfig.SrcDir, localRelFpath)
-		fstat, err := os.Stat(localFilePath)
-		if err != nil {
+		localFilePath := filepath.Join(uploadConfig.SrcDir, localFileRelativePath)
+		localFileStat, statErr := os.Stat(localFilePath)
+		if statErr != nil {
 			failureFileCount += 1
-			log.Errorf("Error stat local file `%s` due to `%s`", localFilePath, err)
+			logs.Error("Error stat local file `%s` due to `%s`", localFilePath, statErr)
 			continue
 		}
 
-		fsize := fstat.Size()
+		localFileSize := localFileStat.Size()
 		ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
 
 		if totalFileCount != 0 {
@@ -458,58 +364,13 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 		}
 
 		//check exists
-		if uploadConfig.CheckExists {
-			rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
-			if checkErr == nil {
-				if uploadConfig.CheckHash {
-					//compare hash
-					localEtag, cErr := GetEtag(localFilePath)
-					if cErr != nil {
-						atomic.AddInt64(&failureFileCount, 1)
-						log.Errorf("File `%s` calc local hash failed, %s", uploadFileKey, cErr)
-						continue
-					}
-					if rsEntry.Hash == localEtag {
-						atomic.AddInt64(&skippedFileCount, 1)
-						log.Infof("File `%s` exists in bucket, hash match, ignore this upload", uploadFileKey)
-						continue
-					}
-				} else {
-					if uploadConfig.CheckSize {
-						if rsEntry.Fsize == fsize {
-							atomic.AddInt64(&skippedFileCount, 1)
-							log.Infof("File `%s` exists in bucket, size match, ignore this upload", uploadFileKey)
-							continue
-						}
-					} else {
-						atomic.AddInt64(&skippedFileCount, 1)
-						log.Infof("File `%s` exists in bucket, no hash or size check, ignore this upload", uploadFileKey)
-						continue
-					}
-				}
-			} else {
-				if _, ok := checkErr.(*rpc.ErrorInfo); !ok {
-					//not logic error, should be network error
-					log.Errorf("Get file `%s` stat error, %s", uploadFileKey, checkErr)
-					atomic.AddInt64(&failureFileCount, 1)
-					continue
-				}
-			}
-		} else {
-			//check leveldb
-			ldbFlmd, err := ldb.Get([]byte(ldbKey), nil)
-			flmd, _ := strconv.ParseInt(string(ldbFlmd), 10, 64)
-			//not exist, return ErrNotFound
-			//check last modified
-
-			if err == nil && localFlmd == flmd {
-				log.Infof("Skip by local log for file %s", localRelFpath)
-				atomic.AddInt64(&skippedFileCount, 1)
-				continue
-			}
+		if !checkFileNeedToUpload(uploadConfig, &rsClient, ldb, &ldbWOpt, ldbKey, localFilePath,
+			uploadFileKey, localFileLastModified, localFileSize) {
+			continue
 		}
 
-		log.Infof("Uploading file %s => %s : %s", localFilePath, uploadConfig.Bucket, uploadFileKey)
+		logs.Informational("Uploading file %s => %s : %s", localFilePath, uploadConfig.Bucket, uploadFileKey)
+
 		//start to upload
 		upWaitGroup.Add(1)
 		uploadTasks <- func() {
@@ -522,78 +383,342 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig) {
 				policy.InsertOnly = 0
 			}
 			policy.Expires = 7 * 24 * 3600
-			uptoken := policy.Token(&mac)
-			if fsize > putThreshold {
-				var putClient rpc.Client
-				if transport != nil {
-					putClient = rio.NewClientEx(uptoken, transport, uploadConfig.BindUpIp)
-				} else {
-					putClient = rio.NewClient(uptoken, uploadConfig.BindUpIp)
-				}
+			upToken := policy.Token(&mac)
 
-				putRet := rio.PutRet{}
-				putExtra := rio.PutExtra{}
-				progressFkey := Md5Hex(fmt.Sprintf("%s:%s|%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket, localRelFpath, uploadFileKey))
-				progressFname := fmt.Sprintf("%s.progress", progressFkey)
-				progressFpath := filepath.Join(storePath, progressFname)
-				putExtra.ProgressFile = progressFpath
-
-				err := rio.PutFile(putClient, nil, &putRet, uploadFileKey, localFilePath, &putExtra)
-				if err != nil {
-					os.Remove(progressFpath)
-					atomic.AddInt64(&failureFileCount, 1)
-					if pErr, ok := err.(*rpc.ErrorInfo); ok {
-						log.Errorf("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, pErr.Err)
-					} else {
-						log.Errorf("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, err)
-					}
-				} else {
-					os.Remove(progressFpath)
-					atomic.AddInt64(&successFileCount, 1)
-					log.Infof("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
-					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
-					if perr != nil {
-						log.Errorf("Upload key `%s` into leveldb error due to `%s`", ldbKey, perr)
-					}
-				}
+			if localFileSize > putThreshold {
+				resumableUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken, storePath,
+					localFilePath, uploadFileKey, localFileLastModified)
 			} else {
-				var putClient rpc.Client
-				if transport != nil {
-					putClient = rpc.NewClientEx(transport, uploadConfig.BindUpIp)
-				} else {
-					putClient = rpc.NewClient(uploadConfig.BindUpIp)
-				}
-
-				putRet := fio.PutRet{}
-				err := fio.PutFile(putClient, nil, &putRet, uptoken, uploadFileKey, localFilePath, nil)
-				if err != nil {
-					atomic.AddInt64(&failureFileCount, 1)
-					if pErr, ok := err.(*rpc.ErrorInfo); ok {
-						log.Errorf("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, pErr.Err)
-					} else {
-						log.Errorf("Upload file `%s` => `%s` failed due to `%s`", localFilePath, uploadFileKey, err)
-					}
-				} else {
-					atomic.AddInt64(&successFileCount, 1)
-					log.Infof("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
-					perr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFlmd)), &ldbWOpt)
-					if perr != nil {
-						log.Errorf("Upload key `%s` into leveldb error due to `%s`", ldbKey, perr)
-					}
-				}
+				formUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken,
+					localFilePath, uploadFileKey, localFileLastModified)
 			}
 		}
 	}
 
 	upWaitGroup.Wait()
 
-	log.Info("-------Upload Result-------")
-	log.Infof("%10s%10d\n", "Total:", totalFileCount)
-	log.Infof("%10s%10d\n", "Success:", successFileCount)
-	log.Infof("%10s%10d\n", "Failure:", failureFileCount)
-	log.Infof("%10s%10d\n", "Skipped:", skippedFileCount)
-	log.Infof("%10s%15s\n", "Duration:", time.Since(timeStart))
-	log.Info("-----------------------------")
+	logs.Informational("-------------Upload Result--------------")
+	logs.Informational("%20s%10d", "Total:", totalFileCount)
+	logs.Informational("%20s%10d", "Success:", successFileCount)
+	logs.Informational("%20s%10d", "Failure:", failureFileCount)
+	logs.Informational("%20s%10d", "NotOverwrite:", notOverwriteCount)
+	logs.Informational("%20s%10d", "Skipped:", skippedFileCount)
+	logs.Informational("%20s%15s", "Duration:", time.Since(timeStart))
+	logs.Info("----------------------------------------")
 	fmt.Println("\nSee upload log at path", uploadConfig.LogFile)
 
+	if failureFileCount > 0 {
+		os.Exit(STATUS_ERROR)
+	} else {
+		os.Exit(STATUS_OK)
+	}
+}
+
+func prepareCacheFileList(cacheResultName, cacheCountName, srcDir string, rescanLocal bool) (totalFileCount int64, cacheErr error) {
+	//cache file
+	cacheTempName := fmt.Sprintf("%s.temp", cacheResultName)
+
+	rescanLocalDir := false
+	if _, statErr := os.Stat(cacheResultName); statErr == nil {
+		//file exists
+		rescanLocalDir = rescanLocal
+	} else {
+		rescanLocalDir = true
+	}
+
+	if rescanLocalDir {
+		logs.Informational("Listing local sync dir, this can take a long time for big directory, please wait patiently")
+		totalFileCount, cacheErr = DirCache(srcDir, cacheTempName)
+		if cacheErr != nil {
+			return
+		}
+
+		if rErr := os.Rename(cacheTempName, cacheResultName); rErr != nil {
+			logs.Error("Rename the temp cached file error", rErr)
+			cacheErr = rErr
+			return
+		}
+		//write the total count to local file
+		if cFp, cErr := os.Create(cacheCountName); cErr == nil {
+			func() {
+				defer cFp.Close()
+				uploadInfo := UploadInfo{
+					TotalFileCount: totalFileCount,
+				}
+				uploadInfoBytes, mErr := json.Marshal(&uploadInfo)
+				if mErr == nil {
+					if _, wErr := cFp.Write(uploadInfoBytes); wErr != nil {
+						logs.Warning("Write local cached count file error %s", cErr)
+					} else {
+						cFp.Close()
+					}
+				}
+			}()
+		} else {
+			logs.Error("Open local cached count file error %s,", cErr)
+		}
+	} else {
+		logs.Informational("Use the last cached local sync dir file list")
+		//read from local cache
+		if rFp, rErr := os.Open(cacheCountName); rErr == nil {
+			func() {
+				defer rFp.Close()
+				uploadInfo := UploadInfo{}
+				decoder := json.NewDecoder(rFp)
+				if dErr := decoder.Decode(&uploadInfo); dErr == nil {
+					totalFileCount = uploadInfo.TotalFileCount
+				}
+			}()
+		} else {
+			logs.Warning("Open local cached count file error %s,", rErr)
+			totalFileCount = GetFileLineCount(cacheResultName)
+		}
+	}
+
+	return
+}
+
+func hitByPathPrefixes(pathPrefixesStr, localFileRelativePath string) (hit bool, pathPrefix string) {
+	if pathPrefixesStr != "" {
+		//unpack skip prefix
+		pathPrefixes := strings.Split(pathPrefixesStr, ",")
+		for _, prefix := range pathPrefixes {
+			if strings.TrimSpace(prefix) == "" {
+				continue
+			}
+
+			if strings.HasPrefix(localFileRelativePath, prefix) {
+				pathPrefix = prefix
+				hit = true
+				break
+			}
+		}
+	}
+	return
+}
+
+func hitByFilePrefixes(filePrefixesStr, localFileRelativePath string) (hit bool, filePrefix string) {
+	if filePrefixesStr != "" {
+		//unpack skip prefix
+		filePrefixes := strings.Split(filePrefixesStr, ",")
+		for _, prefix := range filePrefixes {
+			if strings.TrimSpace(prefix) == "" {
+				continue
+			}
+
+			localFileName := filepath.Base(localFileRelativePath)
+			if strings.HasPrefix(localFileName, prefix) {
+				filePrefix = prefix
+				hit = true
+				break
+			}
+		}
+	}
+	return
+}
+
+func hitByFixesString(fixedStringsStr, localFileRelativePath string) (hit bool, hitFixedStr string) {
+	if fixedStringsStr != "" {
+		//unpack fixed strings
+		fixedStrings := strings.Split(fixedStringsStr, ",")
+		for _, fixedStr := range fixedStrings {
+			if strings.TrimSpace(fixedStr) == "" {
+				continue
+			}
+
+			if strings.Contains(localFileRelativePath, fixedStr) {
+				hitFixedStr = fixedStr
+				hit = true
+				break
+			}
+		}
+	}
+	return
+
+}
+
+func hitBySuffixes(suffixesStr, localFileRelativePath string) (hit bool, hitSuffix string) {
+	if suffixesStr != "" {
+		suffixes := strings.Split(suffixesStr, ",")
+		for _, suffix := range suffixes {
+			if strings.TrimSpace(suffix) == "" {
+				continue
+			}
+
+			if strings.HasSuffix(localFileRelativePath, suffix) {
+				hitSuffix = suffix
+				hit = true
+				break
+			}
+		}
+	}
+	return
+}
+
+func checkFileNeedToUpload(uploadConfig *UploadConfig, rsClient *rs.Client, ldb *leveldb.DB, ldbWOpt *opt.WriteOptions,
+	ldbKey, localFilePath, uploadFileKey string, localFileLastModified, localFileSize int64) (needToUpload bool) {
+	//default to upload
+	needToUpload = true
+
+	//check before to upload
+	if uploadConfig.CheckExists {
+		rsEntry, checkErr := rsClient.Stat(nil, uploadConfig.Bucket, uploadFileKey)
+		if checkErr == nil {
+			ldbValue := fmt.Sprintf("%d", localFileLastModified)
+			if uploadConfig.CheckHash {
+				//compare hash
+				localEtag, cErr := GetEtag(localFilePath)
+				if cErr != nil {
+					logs.Error("File `%s` calc local hash failed, %s", uploadFileKey, cErr)
+					atomic.AddInt64(&failureFileCount, 1)
+					needToUpload = false
+				}
+				if rsEntry.Hash == localEtag {
+					logs.Informational("File `%s` exists in bucket, hash match, ignore this upload", uploadFileKey)
+					atomic.AddInt64(&skippedFileCount, 1)
+					putErr := ldb.Put([]byte(ldbKey), []byte(ldbValue), ldbWOpt)
+					if putErr != nil {
+						logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)
+					}
+					needToUpload = false
+				} else {
+					if !uploadConfig.Overwrite {
+						logs.Warning("Skip upload of unmatch hash file `%s` because `overwrite` is false", localFilePath)
+						atomic.AddInt64(&notOverwriteCount, 1)
+						needToUpload = false
+					} else {
+						logs.Informational("File `%s` exists in bucket, but hash not match, go to upload", uploadFileKey)
+					}
+				}
+			} else {
+				if uploadConfig.CheckSize {
+					if rsEntry.Fsize == localFileSize {
+						logs.Info("File `%s` exists in bucket, size match, ignore this upload", uploadFileKey)
+						atomic.AddInt64(&skippedFileCount, 1)
+						putErr := ldb.Put([]byte(ldbKey), []byte(ldbValue), ldbWOpt)
+						if putErr != nil {
+							logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)
+						}
+						needToUpload = false
+					} else {
+						if !uploadConfig.Overwrite {
+							logs.Warning("Skip upload of unmatch size file `%s` because `overwrite` is false", localFilePath)
+							atomic.AddInt64(&notOverwriteCount, 1)
+							needToUpload = false
+						} else {
+							logs.Info("File `%s` exists in bucket, but size not match, go to upload", uploadFileKey)
+						}
+					}
+				} else {
+					logs.Info("File `%s` exists in bucket, no hash or size check, ignore this upload", uploadFileKey)
+					atomic.AddInt64(&skippedFileCount, 1)
+					putErr := ldb.Put([]byte(ldbKey), []byte(ldbValue), ldbWOpt)
+					if putErr != nil {
+						logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)
+					}
+					needToUpload = false
+				}
+			}
+		} else {
+			if _, ok := checkErr.(*rpc.ErrorInfo); !ok {
+				//not logic error, should be network error
+				logs.Error("Get file `%s` stat error, %s", uploadFileKey, checkErr)
+				atomic.AddInt64(&failureFileCount, 1)
+				needToUpload = false
+			}
+		}
+	} else {
+		//check leveldb
+		ldbFlmd, err := ldb.Get([]byte(ldbKey), nil)
+		flmd, _ := strconv.ParseInt(string(ldbFlmd), 10, 64)
+		//not exist, return ErrNotFound
+		//check last modified
+
+		if err == nil {
+			if localFileLastModified == flmd {
+				logs.Informational("Skip by local leveldb log for file `%s`", localFilePath)
+				atomic.AddInt64(&skippedFileCount, 1)
+				needToUpload = false
+			} else {
+				if !uploadConfig.Overwrite {
+					//no overwrite set
+					logs.Warning("Skip upload of changed file `%s` because `overwrite` is false",
+						localFilePath)
+					atomic.AddInt64(&notOverwriteCount, 1)
+					needToUpload = false
+				}
+			}
+		}
+	}
+	return
+}
+
+func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
+	ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string,
+	localFilePath, uploadFileKey string, localFileLastModified int64) {
+	var putClient rpc.Client
+	if transport != nil {
+		putClient = rpc.NewClientEx(transport, uploadConfig.BindUpIp)
+	} else {
+		putClient = rpc.NewClient(uploadConfig.BindUpIp)
+	}
+
+	putRet := fio.PutRet{}
+	err := fio.PutFile(putClient, nil, &putRet, upToken, uploadFileKey, localFilePath, nil)
+	if err != nil {
+		atomic.AddInt64(&failureFileCount, 1)
+		if pErr, ok := err.(*rpc.ErrorInfo); ok {
+			logs.Error("Form upload file `%s` => `%s` failed due to rerror `%s`", localFilePath, uploadFileKey, pErr.Err)
+		} else {
+			logs.Error("Form upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, err)
+		}
+	} else {
+		atomic.AddInt64(&successFileCount, 1)
+		logs.Informational("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
+		putErr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFileLastModified)), ldbWOpt)
+		if putErr != nil {
+			logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)
+		}
+	}
+}
+
+func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
+	ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string, storePath,
+	localFilePath, uploadFileKey string, localFileLastModified int64) {
+	var putClient rpc.Client
+	if transport != nil {
+		putClient = rio.NewClientEx(upToken, transport, uploadConfig.BindUpIp)
+	} else {
+		putClient = rio.NewClient(upToken, uploadConfig.BindUpIp)
+	}
+
+	//params
+	putRet := rio.PutRet{}
+	putExtra := rio.PutExtra{}
+
+	//progress file
+	progressFileKey := Md5Hex(fmt.Sprintf("%s:%s|%s:%s", uploadConfig.SrcDir,
+		uploadConfig.Bucket, localFilePath, uploadFileKey))
+	progressFilePath := filepath.Join(storePath, fmt.Sprintf("%s.progress", progressFileKey))
+	putExtra.ProgressFile = progressFilePath
+
+	//resumable upload
+	err := rio.PutFile(putClient, nil, &putRet, uploadFileKey, localFilePath, &putExtra)
+	if err != nil {
+		os.Remove(progressFilePath)
+		atomic.AddInt64(&failureFileCount, 1)
+		if pErr, ok := err.(*rpc.ErrorInfo); ok {
+			logs.Error("Resumable upload file `%s` => `%s` failed due to rerror `%s`", localFilePath, uploadFileKey, pErr.Err)
+		} else {
+			logs.Error("Resumable upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, err)
+		}
+	} else {
+		os.Remove(progressFilePath)
+		atomic.AddInt64(&successFileCount, 1)
+		logs.Informational("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
+		putErr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFileLastModified)), ldbWOpt)
+		if putErr != nil {
+			logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)
+		}
+	}
 }

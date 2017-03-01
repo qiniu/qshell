@@ -4,9 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"net/url"
 	"os"
-	"qiniu/log"
 	"qshell"
 	"strconv"
 	"time"
@@ -47,7 +47,7 @@ func Base64Encode(cmd string, params ...string) {
 		if len(params) == 2 {
 			urlSafe, err = strconv.ParseBool(params[0])
 			if err != nil {
-				log.Error("Invalid bool value or <UrlSafe>, must true or false")
+				logs.Error("Invalid bool value or <UrlSafe>, must true or false")
 				return
 			}
 			dataToEncode = params[1]
@@ -73,7 +73,7 @@ func Base64Decode(cmd string, params ...string) {
 		if len(params) == 2 {
 			urlSafe, err = strconv.ParseBool(params[0])
 			if err != nil {
-				log.Error("Invalid bool value or <UrlSafe>, must true or false")
+				logs.Error("Invalid bool value or <UrlSafe>, must true or false")
 				return
 			}
 			dataToDecode = params[1]
@@ -84,13 +84,13 @@ func Base64Decode(cmd string, params ...string) {
 		if urlSafe {
 			dataDecoded, err = base64.URLEncoding.DecodeString(dataToDecode)
 			if err != nil {
-				log.Error("Failed to decode `", dataToDecode, "' in url safe mode.")
+				logs.Error("Failed to decode `", dataToDecode, "' in url safe mode.")
 				return
 			}
 		} else {
 			dataDecoded, err = base64.StdEncoding.DecodeString(dataToDecode)
 			if err != nil {
-				log.Error("Failed to decode `", dataToDecode, "' in standard mode.")
+				logs.Error("Failed to decode `", dataToDecode, "' in standard mode.")
 				return
 			}
 		}
@@ -104,7 +104,7 @@ func Timestamp2Date(cmd string, params ...string) {
 	if len(params) == 1 {
 		ts, err := strconv.ParseInt(params[0], 10, 64)
 		if err != nil {
-			log.Error("Invalid timestamp value,", params[0])
+			logs.Error("Invalid timestamp value,", params[0])
 			return
 		}
 		t := time.Unix(ts, 0)
@@ -118,7 +118,7 @@ func TimestampNano2Date(cmd string, params ...string) {
 	if len(params) == 1 {
 		tns, err := strconv.ParseInt(params[0], 10, 64)
 		if err != nil {
-			log.Error("Invalid nano timestamp value,", params[0])
+			logs.Error("Invalid nano timestamp value,", params[0])
 			return
 		}
 		t := time.Unix(0, tns*100)
@@ -132,7 +132,7 @@ func TimestampMilli2Date(cmd string, params ...string) {
 	if len(params) == 1 {
 		tms, err := strconv.ParseInt(params[0], 10, 64)
 		if err != nil {
-			log.Error("Invalid milli timestamp value,", params[0])
+			logs.Error("Invalid milli timestamp value,", params[0])
 			return
 		}
 		t := time.Unix(tms/1000, 0)
@@ -146,7 +146,7 @@ func Date2Timestamp(cmd string, params ...string) {
 	if len(params) == 1 {
 		secs, err := strconv.ParseInt(params[0], 10, 64)
 		if err != nil {
-			log.Error("Invalid seconds to now,", params[0])
+			logs.Error("Invalid seconds to now,", params[0])
 			return
 		}
 		t := time.Now()
@@ -172,7 +172,7 @@ func Urldecode(cmd string, params ...string) {
 		dataToDecode := params[0]
 		dataDecoded, err := url.QueryUnescape(dataToDecode)
 		if err != nil {
-			log.Error("Failed to unescape data `", dataToDecode, "'")
+			logs.Error("Failed to unescape data `", dataToDecode, "'")
 		} else {
 			fmt.Println(dataDecoded)
 		}
@@ -200,19 +200,19 @@ func Unzip(cmd string, params ...string) {
 		zipFilePath := params[0]
 		unzipToDir, err := os.Getwd()
 		if err != nil {
-			log.Error("Get current work directory failed due to error", err)
+			logs.Error("Get current work directory failed due to error", err)
 			return
 		}
 		if len(params) == 2 {
 			unzipToDir = params[1]
 			if _, statErr := os.Stat(unzipToDir); statErr != nil {
-				log.Error("Specified <UnzipToDir> is not a valid directory")
+				logs.Error("Specified <UnzipToDir> is not a valid directory")
 				return
 			}
 		}
 		unzipErr := qshell.Unzip(zipFilePath, unzipToDir)
 		if unzipErr != nil {
-			log.Error("Unzip file failed due to error", unzipErr)
+			logs.Error("Unzip file failed due to error", unzipErr)
 		}
 	} else {
 		CmdHelp(cmd)
@@ -224,7 +224,7 @@ func ReqId(cmd string, params ...string) {
 		reqId := params[0]
 		decodedBytes, err := base64.URLEncoding.DecodeString(reqId)
 		if err != nil || len(decodedBytes) < 4 {
-			log.Error("Invalid reqid", reqId, err)
+			logs.Error("Invalid reqid", reqId, err)
 			return
 		}
 
@@ -236,7 +236,7 @@ func ReqId(cmd string, params ...string) {
 		}
 		unixNano, err := strconv.ParseInt(newStr, 16, 64)
 		if err != nil {
-			log.Error("Invalid reqid", reqId, err)
+			logs.Error("Invalid reqid", reqId, err)
 			return
 		}
 		dstDate := time.Unix(0, unixNano)

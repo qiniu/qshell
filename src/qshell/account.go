@@ -4,10 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"qiniu/log"
 )
 
 type Account struct {
@@ -117,6 +117,6 @@ func GetAccount() (account Account, err error) {
 		account.SecretKey = string(secretKeyBytes)
 	}
 
-	log.Debugf("Load account from %s", accountFname)
+	logs.Debug("Load account from %s", accountFname)
 	return
 }

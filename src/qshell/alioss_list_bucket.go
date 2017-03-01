@@ -3,9 +3,9 @@ package qshell
 import (
 	"bufio"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"github.com/yanunon/oss-go-api/oss"
 	"os"
-	"qiniu/log"
 	"time"
 )
 
@@ -33,14 +33,14 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 	maxRetryTimes := 5
 	retryTimes := 1
 
-	log.Info("Listing the oss bucket...")
+	logs.Info("Listing the oss bucket...")
 	for {
 		lbr, lbrErr := ossClient.GetBucket(this.Bucket, this.Prefix, marker, "", "")
 		if lbrErr != nil {
 			err = lbrErr
-			log.Error("Parse list result error, ", "marker=[", marker, "]", lbrErr)
+			logs.Error("Parse list result error,", "marker=[", marker, "]", lbrErr)
 			if retryTimes <= maxRetryTimes {
-				log.Debug("Retry marker=", marker, "] for ", retryTimes, "time...")
+				logs.Warning("Retry marker=", marker, "] for", retryTimes, "time...")
 				retryTimes += 1
 				continue
 			} else {
@@ -52,7 +52,7 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 		for _, object := range lbr.Contents {
 			lmdTime, lmdPErr := time.Parse("2006-01-02T15:04:05.999Z", object.LastModified)
 			if lmdPErr != nil {
-				log.Error("Parse object last modified error, ", lmdPErr)
+				logs.Error("Parse object last modified error, ", lmdPErr)
 				lmdTime = time.Now()
 			}
 			bw.WriteString(fmt.Sprintln(fmt.Sprintf("%s\t%d\t%d", object.Key[prefixLen:], object.Size, lmdTime.UnixNano()/100)))
@@ -64,7 +64,7 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 	}
 	fErr := bw.Flush()
 	if fErr != nil {
-		log.Error("Write data to buffer writer failed", fErr)
+		logs.Error("Write data to buffer writer failed", fErr)
 		err = fErr
 		return
 	}

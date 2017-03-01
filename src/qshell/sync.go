@@ -2,23 +2,21 @@ package qshell
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"io"
 	"net/http"
 	"os"
-	"qiniu/log"
+	"path/filepath"
+	"qiniu/api.v6/auth/digest"
+	rio "qiniu/api.v6/resumable/io"
+	"qiniu/api.v6/rs"
 	"qiniu/rpc"
 	"strconv"
 	"strings"
 	"time"
-
-	"qiniu/api.v6/auth/digest"
-	rio "qiniu/api.v6/resumable/io"
-	"qiniu/api.v6/rs"
 )
 
 //range get and chunk upload
@@ -29,13 +27,20 @@ const (
 	HTTP_TIMEOUT    = time.Second * 10
 )
 
+type PutRet struct {
+	Key      string `json:"key"`
+	Hash     string `json:"hash"`
+	MimeType string `json:"mimeType"`
+	Fsize    int64  `json:"fsize"`
+}
+
 type SyncProgress struct {
 	BlkCtxs   []rio.BlkputRet `json:"blk_ctxs"`
 	Offset    int64           `json:"offset"`
 	TotalSize int64           `json:"total_size"`
 }
 
-func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string, err error) {
+func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutRet, err error) {
 	if exists, cErr := checkExists(mac, bucket, key); cErr != nil {
 		err = cErr
 		return
@@ -45,8 +50,17 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 	}
 
 	syncProgress := SyncProgress{}
-	//read from the local progress file if exists, file name by md5(bucket+":"+key)
-	progressFile := createProgressFileName(bucket, key)
+	//create sync id
+	syncId := Md5Hex(fmt.Sprintf("%s:%s:%s", srcResUrl, bucket, key))
+
+	//local storage path
+	storePath := filepath.Join(QShellRootPath, ".qshell", "sync")
+	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
+		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		return
+	}
+
+	progressFile := filepath.Join(storePath, fmt.Sprintf("%s.progress", syncId))
 	if statInfo, statErr := os.Stat(progressFile); statErr == nil {
 		//check file last modified time, if older than one week, ignore
 		if statInfo.ModTime().Add(time.Hour * 24 * 5).After(time.Now()) {
@@ -62,7 +76,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 
 	//check offset valid or not
 	if syncProgress.Offset%BLOCK_SIZE != 0 {
-		log.Info("Invalid offset from progress file,", syncProgress.Offset)
+		logs.Informational("Invalid offset from progress file,", syncProgress.Offset)
 		syncProgress.Offset = 0
 		syncProgress.TotalSize = 0
 		syncProgress.BlkCtxs = make([]rio.BlkputRet, 0)
@@ -71,7 +85,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 	//check offset and blk ctxs
 	if syncProgress.Offset != 0 && syncProgress.BlkCtxs != nil {
 		if int(syncProgress.Offset/BLOCK_SIZE) != len(syncProgress.BlkCtxs) {
-			log.Info("Invalid offset and block contexts")
+			logs.Informational("Invalid offset and block contexts")
 			syncProgress.Offset = 0
 			syncProgress.TotalSize = 0
 			syncProgress.BlkCtxs = make([]rio.BlkputRet, 0)
@@ -94,7 +108,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 
 	if totalSize != syncProgress.TotalSize {
 		if syncProgress.TotalSize != 0 {
-			log.Warn("Remote file length changed, progress file out of date")
+			logs.Warning("Remote file length changed, progress file out of date")
 		}
 		syncProgress.Offset = 0
 		syncProgress.TotalSize = totalSize
@@ -119,6 +133,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 	policy := rs.PutPolicy{Scope: bucket}
 	//token is valid for one year
 	policy.Expires = 3600 * 24 * 365
+	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 	uptoken := policy.Token(mac)
 	putClient := rio.NewClient(uptoken, upHostIp)
 
@@ -129,17 +144,17 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 		}
 
 		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
-		log.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
+		logs.Informational("Syncing block %d [%s%%] ...", blkIndex, syncPercent)
 		blkCtx, pErr := rangeMkblkPipe(srcResUrl, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 		if pErr != nil {
-			log.Error(pErr.Error())
+			logs.Error(pErr.Error())
 			time.Sleep(RETRY_INTERVAL)
 
 			for retryTimes := 1; retryTimes <= RETRY_MAX_TIMES; retryTimes++ {
-				log.Info(fmt.Sprintf("Retrying %d time range & mkblk block [%d]", retryTimes, blkIndex))
+				logs.Informational(fmt.Sprintf("Retrying %d time range & mkblk block [%d]", retryTimes, blkIndex))
 				blkCtx, pErr = rangeMkblkPipe(srcResUrl, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 				if pErr != nil {
-					log.Error(pErr)
+					logs.Error(pErr)
 					//wait a interval and retry
 					time.Sleep(RETRY_INTERVAL)
 					continue
@@ -162,12 +177,11 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 
 		rErr := recordProgress(progressFile, syncProgress)
 		if rErr != nil {
-			log.Info(rErr.Error())
+			logs.Informational(rErr.Error())
 		}
 	}
 
 	//make file
-	putRet := rio.PutRet{}
 	putExtra := rio.PutExtra{
 		Progresses: syncProgress.BlkCtxs,
 	}
@@ -176,8 +190,6 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (hash string
 		err = fmt.Errorf("Mkfile error, %s", mkErr.Error())
 		return
 	}
-
-	hash = putRet.Hash
 
 	//delete progress file
 	os.Remove(progressFile)
@@ -335,10 +347,4 @@ func parseContentRange(contentRange string) (rangeSize, totalSize int64) {
 	rangeSize = toOffset - fromOffset + 1
 
 	return
-}
-
-func createProgressFileName(bucket, key string) string {
-	h := md5.New()
-	h.Write([]byte(fmt.Sprintf("%s:%s", bucket, key)))
-	return fmt.Sprintf(".%s.progress", hex.EncodeToString(h.Sum(nil)))
 }

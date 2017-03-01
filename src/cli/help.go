@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v2.0.0"
+var version = "v2.0.5"
 
 var optionDocs = map[string]string{
 	"-f": "Force batch operations",
@@ -113,7 +113,7 @@ var cmdDocs = map[string][]string{
 }
 
 func Version() {
-	fmt.Println("qshell", version)
+	fmt.Printf("QShell/%s (%s; %s; %s)\n", version, runtime.GOOS, runtime.GOARCH, runtime.Version())
 }
 
 func Help(cmd string, params ...string) {

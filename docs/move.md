@@ -44,7 +44,7 @@ qshell move if-pbl qiniu.jpg if-pbl 2015/01/19/qiniu.jpg
 qshell move if-pbl qiniu.jpg if-pri 2015/01/19/qiniu.jpg
 ```
 
-4. 强制覆盖`if-pbl`中的已有文件`2015/01/19/qiniu.jpg`
+4.强制覆盖`if-pbl`中的已有文件`2015/01/19/qiniu.jpg`
 
 ```
 qshell move -overwrite if-pbl qiniu.jpg if-pbl 2015/01/19/qiniu.jpg

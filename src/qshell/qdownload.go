@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"io"
@@ -12,7 +13,6 @@ import (
 	"path/filepath"
 	"qiniu/api.v6/auth/digest"
 	"qiniu/api.v6/conf"
-	"qiniu/log"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,11 +24,8 @@ import (
 {
 	"dest_dir"		:	"/Users/jemy/Backup",
 	"bucket"		:	"test-bucket",
-	"access_key"	:	"<Your AccessKey>",
-	"secret_key"	:	"<Your SecretKey>",
 	"prefix"		:	"demo/",
-	"suffix"		: 	".mp4",
-	"referer"		: 	""
+	"suffixes"		: 	".png,.jpg",
 }
 */
 
@@ -38,15 +35,15 @@ const (
 )
 
 type DownloadConfig struct {
-	DestDir   string `json:"dest_dir"`
-	Bucket    string `json:"bucket"`
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
-	Prefix    string `json:"prefix,omitempty"`
-	Suffix    string `json:"suffix,omitempty"`
+	DestDir  string `json:"dest_dir"`
+	Bucket   string `json:"bucket"`
+	Prefix   string `json:"prefix,omitempty"`
+	Suffixes string `json:"suffixes,omitempty"`
 	//log settings
-	LogLevel string `json:"log_level,omitempty"`
-	LogFile  string `json:"log_file,omitempty"`
+	LogLevel  string `json:"log_level,omitempty"`
+	LogFile   string `json:"log_file,omitempty"`
+	LogRotate int    `json:"log_rotate,omitempty"`
+	LogStdout bool   `json:"log_stdout,omitempty"`
 }
 
 var downloadTasks chan func()
@@ -67,24 +64,29 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	//local storage path
 	storePath := filepath.Join(QShellRootPath, ".qshell", "qdownload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		log.Errorf("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
-		return
+		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		os.Exit(STATUS_ERROR)
 	}
 
 	//init log settings
 	defaultLogFile := filepath.Join(storePath, fmt.Sprintf("%s.log", jobId))
 	//init log level
+	logLevel := logs.LevelInformational
+	logRotate := 1
+	if downConfig.LogRotate > 0 {
+		logRotate = downConfig.LogRotate
+	}
 	switch downConfig.LogLevel {
 	case "debug":
-		log.SetOutputLevel(log.Ldebug)
+		logLevel = logs.LevelDebug
 	case "info":
-		log.SetOutputLevel(log.Linfo)
+		logLevel = logs.LevelInformational
 	case "warn":
-		log.SetOutputLevel(log.Lwarn)
+		logLevel = logs.LevelWarning
 	case "error":
-		log.SetOutputLevel(log.Lerror)
+		logLevel = logs.LevelError
 	default:
-		log.SetOutputLevel(log.Linfo)
+		logLevel = logs.LevelInformational
 	}
 
 	//init log writer
@@ -93,46 +95,45 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		downConfig.LogFile = defaultLogFile
 	}
 
-	//open log file
-	logFile := os.Stdout
-	switch downConfig.LogFile {
-	case "stderr":
-		logFile = os.Stderr
-		fmt.Println("Printing download log to stderr")
-	case "stdout":
-		logFile = os.Stdout
-		fmt.Println("Printing download log to stdout")
-	default:
-		var openErr error
-		logFile, openErr = os.Create(downConfig.LogFile)
-		if openErr != nil {
-			fmt.Println("Open download log file error,", openErr)
-			return
-		}
-		fmt.Println("Writing download log to file", downConfig.LogFile)
+	if !downConfig.LogStdout {
+		logs.GetBeeLogger().DelLogger(logs.AdapterConsole)
 	}
-	defer logFile.Close()
+	//open log file
+	fmt.Println("Writing download log to file", downConfig.LogFile)
 
-	log.SetOutput(logFile)
+	//daily rotate
+	logCfg := BeeLogConfig{
+		Filename: downConfig.LogFile,
+		Level:    logLevel,
+		Daily:    true,
+		MaxDays:  logRotate,
+	}
+	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
 
-	mac := digest.Mac{downConfig.AccessKey, []byte(downConfig.SecretKey)}
+	logs.Informational("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
+	account, gErr := GetAccount()
+	if gErr != nil {
+		fmt.Println("Get account error,", gErr)
+		os.Exit(STATUS_ERROR)
+	}
+	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 	//get bucket zone info
 	bucketInfo, gErr := GetBucketInfo(&mac, downConfig.Bucket)
 	if gErr != nil {
-		log.Error("Get bucket region info error,", gErr)
-		return
+		logs.Error("Get bucket region info error,", gErr)
+		os.Exit(STATUS_ERROR)
 	}
 	//get domains of bucket
 	domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
 	if gErr != nil {
-		log.Error("Get domains of bucket error,", gErr)
-		return
+		logs.Error("Get domains of bucket error,", gErr)
+		os.Exit(STATUS_ERROR)
 	}
 
 	if len(domainsOfBucket) == 0 {
-		log.Error("No domains found for bucket", downConfig.Bucket)
-		return
+		logs.Error("No domains found for bucket", downConfig.Bucket)
+		os.Exit(STATUS_ERROR)
 	}
 
 	domainOfBucket := domainsOfBucket[0]
@@ -145,8 +146,8 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	resumeFile := filepath.Join(storePath, fmt.Sprintf("%s.ldb", jobId))
 	resumeLevelDb, openErr := leveldb.OpenFile(resumeFile, nil)
 	if openErr != nil {
-		log.Error("Open resume record leveldb error", openErr)
-		return
+		logs.Error("Open resume record leveldb error", openErr)
+		os.Exit(STATUS_ERROR)
 	}
 	defer resumeLevelDb.Close()
 	//sync underlying writes from the OS buffer cache
@@ -156,11 +157,11 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	}
 
 	//list bucket, prepare file list to download
-	log.Infof("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
+	logs.Informational("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
 	listErr := ListBucket(&mac, downConfig.Bucket, downConfig.Prefix, "", jobListFileName)
 	if listErr != nil {
-		log.Error("List bucket error", listErr)
-		return
+		logs.Error("List bucket error", listErr)
+		os.Exit(STATUS_ERROR)
 	}
 
 	//init wait group
@@ -180,20 +181,31 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	var updateFileCount int64
 	var successFileCount int64
 	var failureFileCount int64
+	var skipBySuffixes int64
 
 	totalFileCount = GetFileLineCount(jobListFileName)
 
 	//open prepared file list to download files
 	listFp, openErr := os.Open(jobListFileName)
 	if openErr != nil {
-		log.Error("Open list file error", openErr)
-		return
+		logs.Error("Open list file error", openErr)
+		os.Exit(STATUS_ERROR)
 	}
 	defer listFp.Close()
 
 	listScanner := bufio.NewScanner(listFp)
 	listScanner.Split(bufio.ScanLines)
 	//key, fsize, etag, lmd, mime, enduser
+
+	downSuffixes := strings.Split(downConfig.Suffixes, ",")
+	filterSuffixes := make([]string, 0, len(downSuffixes))
+
+	for _, suffix := range downSuffixes {
+		if strings.TrimSpace(suffix) != "" {
+			filterSuffixes = append(filterSuffixes, suffix)
+		}
+	}
+
 	for listScanner.Scan() {
 		currentFileCount += 1
 		line := strings.TrimSpace(listScanner.Text())
@@ -201,20 +213,32 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		if len(items) >= 4 {
 			fileKey := items[0]
 
-			if downConfig.Suffix != "" && !strings.HasSuffix(fileKey, downConfig.Suffix) {
-				//skip files by suffix specified
-				continue
+			if len(filterSuffixes) > 0 {
+				//filter files by suffixes
+				var goAhead bool
+				for _, suffix := range filterSuffixes {
+					if strings.HasSuffix(fileKey, suffix) {
+						goAhead = true
+						break
+					}
+				}
+
+				if !goAhead {
+					skipBySuffixes += 1
+					logs.Informational("Skip download `%s`, suffix filter not match", fileKey)
+					continue
+				}
 			}
 
 			fileSize, pErr := strconv.ParseInt(items[1], 10, 64)
 			if pErr != nil {
-				log.Errorf("Invalid list line", line)
+				logs.Error("Invalid list line", line)
 				continue
 			}
 
 			fileMtime, pErr := strconv.ParseInt(items[3], 10, 64)
 			if pErr != nil {
-				log.Errorf("Invalid list line", line)
+				logs.Error("Invalid list line", line)
 				continue
 			}
 
@@ -246,19 +270,22 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 					//oldFileSize, _ := strconv.ParseInt(oldFileInfoItems[1], 10, 64)
 					if oldFileLmd == fileMtime && localFileInfo.Size() == fileSize {
 						//nothing change, ignore
+						logs.Informational("Local file `%s` exists, same as in bucket, download skip", localAbsFilePath)
 						existsFileCount += 1
 						continue
 					} else {
 						//somthing changed, must download a new file
+						logs.Informational("Local file `%s` exists, but remote file changed, go to download", localAbsFilePath)
 						downNewLog = true
 					}
 				} else {
 					if localFileInfo.Size() != fileSize {
+						logs.Informational("Local file `%s` exists, size not the same as in bucket, go to download", localAbsFilePath)
 						downNewLog = true
 					} else {
 						//treat the local file not changed, write to leveldb, though may not accurate
 						//nothing to do
-						log.Warnf("Local file `%s` exists with same size as `%s`, check whether it changed by yourself", localAbsFilePath, fileKey)
+						logs.Warning("Local file `%s` exists with same size as `%s`, treat it not changed", localAbsFilePath, fileKey)
 						atomic.AddInt64(&existsFileCount, 1)
 						continue
 					}
@@ -282,14 +309,17 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 								//rename it
 								renameErr := os.Rename(localFilePathTmp, localFilePath)
 								if renameErr != nil {
-									log.Error("Rename temp file to final log file error", renameErr)
+									logs.Error("Rename temp file `%s` to final file `%s` error", localFilePathTmp, localFilePath, renameErr)
 								}
 								continue
 							}
 						} else {
+							logs.Informational("Local tmp file `%s` exists, but remote file changed, go to download", localFilePathTmp)
 							downNewLog = true
 						}
 					} else {
+						//log tmp file exists, but no record in leveldb, download a new log file
+						logs.Informational("Local tmp file `%s` exists, but no record in leveldb ,go to download", localFilePathTmp)
 						downNewLog = true
 					}
 				} else {
@@ -324,14 +354,19 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	//wait for all tasks done
 	downWaitGroup.Wait()
 
-	log.Info("-------Download Result-------")
-	log.Infof("%10s%10d\n", "Total:", totalFileCount)
-	log.Infof("%10s%10d\n", "Exists:", existsFileCount)
-	log.Infof("%10s%10d\n", "Success:", successFileCount)
-	log.Infof("%10s%10d\n", "Update:", updateFileCount)
-	log.Infof("%10s%10d\n", "Failure:", failureFileCount)
-	log.Infof("%10s%15s\n", "Duration:", time.Since(timeStart))
-	log.Info("-----------------------------")
+	logs.Informational("-------Download Result-------")
+	logs.Informational("%10s%10d", "Total:", totalFileCount)
+	logs.Informational("%10s%10d", "Exists:", existsFileCount)
+	logs.Informational("%10s%10d", "Success:", successFileCount)
+	logs.Informational("%10s%10d", "Update:", updateFileCount)
+	logs.Informational("%10s%10d", "Failure:", failureFileCount)
+	logs.Informational("%10s%15s", "Duration:", time.Since(timeStart))
+	logs.Informational("-----------------------------")
+	fmt.Println("\nSee download log at path", downConfig.LogFile)
+
+	if failureFileCount > 0 {
+		os.Exit(STATUS_ERROR)
+	}
 }
 
 /*
@@ -357,16 +392,16 @@ func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize i
 	mkdirErr := os.MkdirAll(localFileDir, 0775)
 	if mkdirErr != nil {
 		err = mkdirErr
-		log.Error("MkdirAll failed for", localFileDir, mkdirErr)
+		logs.Error("MkdirAll failed for", localFileDir, mkdirErr)
 		return
 	}
 
-	log.Info("Downloading", fileName, "=>", localFilePath)
+	logs.Informational("Downloading", fileName, "=>", localFilePath)
 	//new request
 	req, reqErr := http.NewRequest("GET", fileUrl, nil)
 	if reqErr != nil {
 		err = reqErr
-		log.Info("New request", fileName, "failed by url", fileUrl, reqErr)
+		logs.Informational("New request", fileName, "failed by url", fileUrl, reqErr)
 		return
 	}
 	//set host
@@ -379,7 +414,7 @@ func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize i
 	resp, respErr := http.DefaultClient.Do(req)
 	if respErr != nil {
 		err = respErr
-		log.Info("Download", fileName, "failed by url", fileUrl, respErr)
+		logs.Informational("Download", fileName, "failed by url", fileUrl, respErr)
 		return
 	}
 	defer resp.Body.Close()
@@ -394,7 +429,7 @@ func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize i
 
 		if openErr != nil {
 			err = openErr
-			log.Error("Open local file", localFilePathTmp, "failed", openErr)
+			logs.Error("Open local file", localFilePathTmp, "failed", openErr)
 			return
 		}
 
@@ -402,7 +437,7 @@ func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize i
 		if cpErr != nil {
 			err = cpErr
 			localFp.Close()
-			log.Error("Download", fileName, "failed", cpErr)
+			logs.Error("Download", fileName, "failed", cpErr)
 			return
 		}
 		localFp.Close()
@@ -414,13 +449,13 @@ func downloadFile(destDir, fileName, fileUrl, domainsOfBucket string, fileSize i
 		renameErr := os.Rename(localFilePathTmp, localFilePath)
 		if renameErr != nil {
 			err = renameErr
-			log.Error("Rename temp file to final log file error", renameErr)
+			logs.Error("Rename temp file to final log file error", renameErr)
 			return
 		}
-		log.Info("Download", fileName, "=>", localFilePath, "success", avgSpeed)
+		logs.Informational("Download", fileName, "=>", localFilePath, "success", avgSpeed)
 	} else {
 		err = errors.New("download failed")
-		log.Info("Download", fileName, "failed by url", fileUrl, resp.Status)
+		logs.Informational("Download", fileName, "failed by url", fileUrl, resp.Status)
 		return
 	}
 	return

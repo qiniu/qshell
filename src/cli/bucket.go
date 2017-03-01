@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
+	"os"
 	"qiniu/api.v6/auth/digest"
-	"qiniu/log"
 	"qshell"
 )
 
@@ -12,7 +13,7 @@ func GetBuckets(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 		mac := digest.Mac{
 			account.AccessKey,
@@ -20,7 +21,8 @@ func GetBuckets(cmd string, params ...string) {
 		}
 		buckets, err := qshell.GetBuckets(&mac)
 		if err != nil {
-			log.Error("Get buckets error,", err)
+			logs.Error("Get buckets error,", err)
+			os.Exit(qshell.STATUS_ERROR)
 		} else {
 			if len(buckets) == 0 {
 				fmt.Println("No buckets found")
@@ -41,7 +43,7 @@ func GetDomainsOfBucket(cmd string, params ...string) {
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			return
+			os.Exit(qshell.STATUS_ERROR)
 		}
 		mac := digest.Mac{
 			account.AccessKey,
@@ -49,7 +51,8 @@ func GetDomainsOfBucket(cmd string, params ...string) {
 		}
 		domains, err := qshell.GetDomainsOfBucket(&mac, bucket)
 		if err != nil {
-			log.Error("Get domains error,", err)
+			logs.Error("Get domains error,", err)
+			os.Exit(qshell.STATUS_ERROR)
 		} else {
 			if len(domains) == 0 {
 				fmt.Printf("No domains found for bucket `%s`\n", bucket)

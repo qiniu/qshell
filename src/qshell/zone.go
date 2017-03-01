@@ -25,32 +25,32 @@ var ZoneNBConfig = ZoneConfig{
 	UpHost:    "http://upload.qiniu.com",
 	IovipHost: "http://iovip.qbox.me",
 	RsHost:    "http://rs.qiniu.com",
-	RsfHost:   "http://rsf.qbox.me",
+	RsfHost:   "http://rsf.qiniu.com",
 	ApiHost:   "http://api.qiniu.com",
 }
 
 var ZoneBCConfig = ZoneConfig{
 	UpHost:    "http://upload-z1.qiniu.com",
 	IovipHost: "http://iovip-z1.qbox.me",
-	RsHost:    "http://rs.qiniu.com",
-	RsfHost:   "http://rsf.qbox.me",
-	ApiHost:   "http://api.qiniu.com",
+	RsHost:    "http://rs-z1.qiniu.com",
+	RsfHost:   "http://rsf-z1.qiniu.com",
+	ApiHost:   "http://api-z1.qiniu.com",
 }
 
 var ZoneHNConfig = ZoneConfig{
 	UpHost:    "http://upload-z2.qiniu.com",
 	IovipHost: "http://iovip-z2.qbox.me",
-	RsHost:    "http://rs.qiniu.com",
-	RsfHost:   "http://rsf.qbox.me",
-	ApiHost:   "http://api.qiniu.com",
+	RsHost:    "http://rs-z2.qiniu.com",
+	RsfHost:   "http://rsf-z2.qiniu.com",
+	ApiHost:   "http://api-z2.qiniu.com",
 }
 
 var ZoneNA0Config = ZoneConfig{
 	UpHost:    "http://upload-na0.qiniu.com",
 	IovipHost: "http://iovip-na0.qbox.me",
-	RsHost:    "http://rs.qbox.me",
-	RsfHost:   "http://rsf.qbox.me",
-	ApiHost:   "http://api.qiniu.com",
+	RsHost:    "http://rs-na0.qiniu.com",
+	RsfHost:   "http://rsf-na0.qiniu.com",
+	ApiHost:   "http://api-na0.qiniu.com",
 }
 
 func SetZone(zone string) {

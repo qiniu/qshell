@@ -3,11 +3,11 @@ package qshell
 import (
 	"bufio"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"io"
 	"os"
 	"qiniu/api.v6/auth/digest"
 	"qiniu/api.v6/rsf"
-	"qiniu/log"
 	"qiniu/rpc"
 )
 
@@ -29,14 +29,14 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 			listResultFh, openErr = os.OpenFile(listResultFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if openErr != nil {
 				retErr = openErr
-				log.Errorf("Failed to open list result file `%s`", listResultFile)
+				logs.Error("Failed to open list result file `%s`", listResultFile)
 				return
 			}
 		} else {
 			listResultFh, openErr = os.Create(listResultFile)
 			if openErr != nil {
 				retErr = openErr
-				log.Errorf("Failed to open list result file `%s`", listResultFile)
+				logs.Error("Failed to open list result file `%s`", listResultFile)
 				return
 			}
 		}
@@ -48,7 +48,7 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 	bucketInfo, gErr := GetBucketInfo(mac, bucket)
 	if gErr != nil {
 		retErr = gErr
-		log.Errorf("Failed to get region info of bucket `%s`, %s", bucket, gErr)
+		logs.Error("Failed to get region info of bucket `%s`, %s", bucket, gErr)
 		return
 	}
 
@@ -70,16 +70,16 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 				run = false
 			} else {
 				if v, ok := listErr.(*rpc.ErrorInfo); ok {
-					log.Errorf("List error for marker `%s`, %s", marker, v.Err)
+					logs.Error("List error for marker `%s`, %s", marker, v.Err)
 				} else {
-					log.Errorf("List error for marker `%s`, %s", marker, listErr)
+					logs.Error("List error for marker `%s`, %s", marker, listErr)
 				}
 				if retryTimes <= maxRetryTimes {
-					log.Debugf("Retry list for marker `%s` for %d times", marker, retryTimes)
+					logs.Warning("Retry list for marker `%s` for %d times", marker, retryTimes)
 					retryTimes += 1
 					continue
 				} else {
-					log.Errorf("List failed too many times for marker `%s`", marker)
+					logs.Error("List failed too many times for marker `%s`", marker)
 					break
 				}
 			}
@@ -97,14 +97,14 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 			lineData := fmt.Sprintf("%s\t%d\t%s\t%d\t%s\t%s\r\n", entry.Key, entry.Fsize, entry.Hash, entry.PutTime, entry.MimeType, entry.EndUser)
 			_, wErr := bWriter.WriteString(lineData)
 			if wErr != nil {
-				log.Errorf("Write line data `%s` to list result file failed.", lineData)
+				logs.Error("Write line data `%s` to list result file failed.", lineData)
 			}
 		}
 
 		//flush
 		fErr := bWriter.Flush()
 		if fErr != nil {
-			log.Error("Flush data to list result file error", listErr)
+			logs.Error("Flush data to list result file error", listErr)
 		}
 	}
 

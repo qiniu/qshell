@@ -6,7 +6,8 @@ import (
 )
 
 type BatchRefreshRequest struct {
-	Urls []string `json:"urls"`
+	Urls []string `json:"urls,omitempty"`
+	Dirs []string `json:"dirs,omitempty"`
 }
 
 type BatchRefreshResponse struct {
@@ -21,16 +22,26 @@ type BatchRefreshResponse struct {
 	DirSurplusDay int      `json:"dirSurplusDay"`
 }
 
-func BatchRefresh(client *rs.Client, urls []string) (batchRefreshResp BatchRefreshResponse, err error) {
-	if len(urls) == 0 || len(urls) > 100 {
+func BatchRefresh(client *rs.Client, urls []string, dirs []string) (batchRefreshResp BatchRefreshResponse, err error) {
+	if len(urls) > 100 {
 		err = errors.New("url count invalid, should between [1, 100]")
 		return
 	}
 
-	postUrl := "http://fusion.qiniuapi.com/v2/tune/refresh"
+	if len(dirs) > 10 {
+		err = errors.New("dir count invalid, should between [1, 10]")
+		return
+	}
 
+	if len(urls) == 0 && len(dirs) == 0 {
+		err = errors.New("no url or dir to refresh error")
+		return
+	}
+
+	postUrl := "http://fusion.qiniuapi.com/v2/tune/refresh"
 	batchRefreshReq := BatchRefreshRequest{
 		Urls: urls,
+		Dirs: dirs,
 	}
 
 	batchRefreshResp = BatchRefreshResponse{}

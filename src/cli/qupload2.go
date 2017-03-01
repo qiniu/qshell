@@ -3,7 +3,7 @@ package cli
 import (
 	"flag"
 	"fmt"
-	"github.com/qiniu/log"
+	"github.com/astaxie/beego/logs"
 	"os"
 	"qshell"
 )
@@ -14,8 +14,6 @@ func QiniuUpload2(cmd string, params ...string) {
 	var threadCount int64
 	var srcDir string
 	var fileList string
-	var accessKey string
-	var secretKey string
 	var bucket string
 	var putThreshold int64
 	var keyPrefix string
@@ -35,12 +33,12 @@ func QiniuUpload2(cmd string, params ...string) {
 	var rescanLocal bool
 	var logLevel string
 	var logFile string
+	var logRotate int
+	var watchDir bool
 
 	flagSet.Int64Var(&threadCount, "thread-count", 0, "multiple thread count")
 	flagSet.StringVar(&srcDir, "src-dir", "", "src dir to upload")
 	flagSet.StringVar(&fileList, "file-list", "", "file list to upload")
-	flagSet.StringVar(&accessKey, "access-key", "", "access key")
-	flagSet.StringVar(&secretKey, "secret-key", "", "secret key")
 	flagSet.StringVar(&bucket, "bucket", "", "bucket")
 	flagSet.Int64Var(&putThreshold, "put-threshold", 0, "chunk upload threshold")
 	flagSet.StringVar(&keyPrefix, "key-prefix", "", "key prefix prepended to dest file key")
@@ -60,14 +58,14 @@ func QiniuUpload2(cmd string, params ...string) {
 	flagSet.BoolVar(&rescanLocal, "rescan-local", false, "rescan local dir to upload newly add files")
 	flagSet.StringVar(&logFile, "log-file", "", "log file")
 	flagSet.StringVar(&logLevel, "log-level", "info", "log level")
+	flagSet.IntVar(&logRotate, "log-rotate", 1, "log rotate days")
+	flagSet.BoolVar(&watchDir, "watch", false, "watch dir changes after upload completes")
 
 	flagSet.Parse(params)
 
 	uploadConfig := qshell.UploadConfig{
 		SrcDir:           srcDir,
 		FileList:         fileList,
-		AccessKey:        accessKey,
-		SecretKey:        secretKey,
 		Bucket:           bucket,
 		PutThreshold:     putThreshold,
 		KeyPrefix:        keyPrefix,
@@ -87,32 +85,23 @@ func QiniuUpload2(cmd string, params ...string) {
 		RescanLocal:      rescanLocal,
 		LogFile:          logFile,
 		LogLevel:         logLevel,
+		LogRotate:        logRotate,
 	}
 
 	//check params
 	if uploadConfig.SrcDir == "" {
 		fmt.Println("Upload config no `--src-dir` specified")
-		return
-	}
-
-	if uploadConfig.AccessKey == "" {
-		fmt.Println("Upload config no `--access-key` specified")
-		return
-	}
-
-	if uploadConfig.SecretKey == "" {
-		fmt.Println("Upload config no `--secret-key` specified")
-		return
+		os.Exit(qshell.STATUS_HALT)
 	}
 
 	if uploadConfig.Bucket == "" {
 		fmt.Println("Upload config no `--bucket` specified")
-		return
+		os.Exit(qshell.STATUS_HALT)
 	}
 
 	if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
-		log.Error("Upload config `SrcDir` not exist error,", err)
-		return
+		logs.Error("Upload config `SrcDir` not exist error,", err)
+		os.Exit(qshell.STATUS_HALT)
 	}
 
 	if threadCount < qshell.MIN_UPLOAD_THREAD_COUNT || threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
@@ -126,5 +115,5 @@ func QiniuUpload2(cmd string, params ...string) {
 		}
 	}
 
-	qshell.QiniuUpload(int(threadCount), &uploadConfig)
+	qshell.QiniuUpload(int(threadCount), &uploadConfig, watchDir)
 }
