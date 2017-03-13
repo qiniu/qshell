@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"qiniu/api.v6/auth/digest"
-	"qiniu/api.v6/url"
+	"qshell/qiniu/api.v6/auth/digest"
+	"qshell/qiniu/api.v6/url"
 )
 
 // ----------------------------------------------------------

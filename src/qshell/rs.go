@@ -6,9 +6,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/url"
-	"qiniu/api.v6/auth/digest"
-	"qiniu/api.v6/conf"
-	"qiniu/api.v6/rs"
+	"qshell/qiniu/api.v6/auth/digest"
+	"qshell/qiniu/api.v6/conf"
+	"qshell/qiniu/api.v6/rs"
 	"strings"
 )
 

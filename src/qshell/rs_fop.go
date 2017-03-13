@@ -3,8 +3,8 @@ package qshell
 import (
 	"encoding/json"
 	"fmt"
-	"qiniu/api.v6/conf"
-	"qiniu/rpc"
+	"qshell/qiniu/api.v6/conf"
+	"qshell/qiniu/rpc"
 )
 
 type FopRet struct {

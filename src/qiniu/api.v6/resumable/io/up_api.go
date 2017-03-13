@@ -10,9 +10,9 @@ import (
 	"strconv"
 
 	"github.com/astaxie/beego/logs"
-	. "qiniu/api.v6/conf"
-	"qiniu/bytes"
-	"qiniu/rpc"
+	. "qshell/qiniu/api.v6/conf"
+	"qshell/qiniu/bytes"
+	"qshell/qiniu/rpc"
 )
 
 // ----------------------------------------------------------

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
-	"qiniu/api.v6/auth/digest"
-	"qshell"
+	"qshell/qiniu/api.v6/auth/digest"
 	"time"
+	"qshell/qshell"
 )
 
 func Sync(cmd string, params ...string) {

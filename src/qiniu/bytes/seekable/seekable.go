@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"qiniu/bytes"
+	"qshell/qiniu/bytes"
 )
 
 // ---------------------------------------------------

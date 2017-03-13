@@ -80,6 +80,10 @@ func GetAccount() (account Account, err error) {
 	accountFname := filepath.Join(storageDir, "account.json")
 	accountFh, openErr := os.Open(accountFname)
 	if openErr != nil {
+		if os.IsNotExist(openErr) {
+			err = fmt.Errorf("The account file \"%s\" does not exist, please use `account` to set AccessKey and SecretKey first", accountFname)
+			return
+		}
 		err = fmt.Errorf("Open account file error, %s, please use `account` to set AccessKey and SecretKey first", openErr)
 		return
 	}

@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
-	"qiniu/api.v6/auth/digest"
-	"qiniu/api.v6/rs"
-	"qiniu/rpc"
-	"qshell"
+	"qshell/qiniu/api.v6/auth/digest"
+	"qshell/qiniu/api.v6/rs"
+	"qshell/qiniu/rpc"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+	"qshell/qshell"
 )
 
 const (

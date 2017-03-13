@@ -2,7 +2,7 @@ package cli
 
 import (
 	"github.com/astaxie/beego/logs"
-	"qshell"
+	"qshell/qshell"
 )
 
 func AliListBucket(cmd string, params ...string) {

@@ -6,9 +6,9 @@ import (
 	"github.com/astaxie/beego/logs"
 	"io"
 	"os"
-	"qiniu/api.v6/auth/digest"
-	"qiniu/api.v6/rsf"
-	"qiniu/rpc"
+	"qshell/qiniu/api.v6/auth/digest"
+	"qshell/qiniu/api.v6/rsf"
+	"qshell/qiniu/rpc"
 )
 
 /*

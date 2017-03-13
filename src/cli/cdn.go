@@ -5,10 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"qiniu/api.v6/auth/digest"
-	"qiniu/api.v6/rs"
-	"qshell"
+	"qshell/qiniu/api.v6/auth/digest"
+	"qshell/qiniu/api.v6/rs"
 	"strings"
+	"qshell/qshell"
 )
 
 const (

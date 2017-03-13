@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
-	"qshell"
+	"qshell/qshell"
 )
 
 type CliFunc func(cmd string, params ...string)
