@@ -39,6 +39,7 @@ type DownloadConfig struct {
 	Bucket   string `json:"bucket"`
 	Prefix   string `json:"prefix,omitempty"`
 	Suffixes string `json:"suffixes,omitempty"`
+	CdnDomain string `json:"cdn_domain,omitempty"`
 	//log settings
 	LogLevel  string `json:"log_level,omitempty"`
 	LogFile   string `json:"log_file,omitempty"`
@@ -124,19 +125,23 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		logs.Error("Get bucket region info error,", gErr)
 		os.Exit(STATUS_ERROR)
 	}
-	//get domains of bucket
-	domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
-	if gErr != nil {
-		logs.Error("Get domains of bucket error,", gErr)
-		os.Exit(STATUS_ERROR)
-	}
 
-	if len(domainsOfBucket) == 0 {
-		logs.Error("No domains found for bucket", downConfig.Bucket)
-		os.Exit(STATUS_ERROR)
-	}
+	domainOfBucket := downConfig.CdnDomain
+	if domainOfBucket == "" {
+		// 如果没有手动指定，则使用默认domain
+		//get domains of bucket
+		domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
+		if gErr != nil {
+			logs.Error("Get domains of bucket error,", gErr)
+			os.Exit(STATUS_ERROR)
+		}
 
-	domainOfBucket := domainsOfBucket[0]
+		if len(domainsOfBucket) == 0 {
+			logs.Error("No domains found for bucket", downConfig.Bucket)
+			os.Exit(STATUS_ERROR)
+		}
+		domainOfBucket = domainsOfBucket[0]
+	}
 
 	//set up host
 	SetZone(bucketInfo.Region)

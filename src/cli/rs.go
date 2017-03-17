@@ -9,11 +9,11 @@ import (
 	"qshell/qiniu/api.v6/auth/digest"
 	"qshell/qiniu/api.v6/rs"
 	"qshell/qiniu/rpc"
+	"qshell/qshell"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
-	"qshell/qshell"
 )
 
 const (

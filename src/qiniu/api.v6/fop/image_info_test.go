@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	. "qiniu/api.v6/conf"
+	. "qshell/qiniu/api.v6/conf"
 )
 
 func init() {

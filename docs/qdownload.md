@@ -43,6 +43,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 |bucket|空间名称|N|
 |prefix|只同步指定前缀的文件，默认为空|Y|
 |suffixes|只同步指定后缀的文件，默认为空|Y|
+|cdn_domain|指定下载的域名，如果不设置则默认使用源站下载|Y|
 
 
 注意，在Windows系统下面使用的时候，注意`dest_dir`的设置遵循`D:\\jemy\\backup`这种方式。也就是路径里面的`\`要有两个（`\\`）。

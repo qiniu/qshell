@@ -4,15 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"qshell/qiniu/api.v6/auth/digest"
-	"qshell/qiniu/api.v6/conf"
-	rio "qshell/qiniu/api.v6/resumable/io"
-	"qshell/qiniu/api.v6/rs"
-	"qshell/qiniu/rpc"
+	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/conf"
+	rio "qiniu/api.v6/resumable/io"
+	"qiniu/api.v6/rs"
+	"qiniu/rpc"
+	"qshell"
 	"runtime"
 	"sync"
 	"time"
-	"qshell/qshell"
 )
 
 var upSettings = rio.Settings{

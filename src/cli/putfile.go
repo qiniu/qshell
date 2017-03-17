@@ -9,11 +9,11 @@ import (
 	rio "qshell/qiniu/api.v6/resumable/io"
 	"qshell/qiniu/api.v6/rs"
 	"qshell/qiniu/rpc"
+	"qshell/qshell"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"qshell/qshell"
 )
 
 type PutRet struct {

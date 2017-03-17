@@ -84,8 +84,6 @@ func GetAccount() (account Account, err error) {
 			err = fmt.Errorf("The account file \"%s\" does not exist, please use `account` to set AccessKey and SecretKey first", accountFname)
 			return
 		}
-		err = fmt.Errorf("Open account file error, %s, please use `account` to set AccessKey and SecretKey first", openErr)
-		return
 	}
 	defer accountFh.Close()
 

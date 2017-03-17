@@ -3,7 +3,7 @@ package gist
 import (
 	"log"
 
-	"qiniu/api.v6/fop"
+	"qshell/qiniu/api.v6/fop"
 )
 
 // @gist makeImageInfoUrl

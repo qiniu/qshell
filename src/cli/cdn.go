@@ -7,8 +7,8 @@ import (
 	"os"
 	"qshell/qiniu/api.v6/auth/digest"
 	"qshell/qiniu/api.v6/rs"
-	"strings"
 	"qshell/qshell"
+	"strings"
 )
 
 const (
