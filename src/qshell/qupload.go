@@ -180,7 +180,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 	fmt.Println()
 
 	//global up settings
-	logs.Info("Load account from %s", filepath.Join(QShellRootPath, ".account.json"))
+	logs.Info("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
 	account, gErr := GetAccount()
 	if gErr != nil {
 		fmt.Println(gErr)
