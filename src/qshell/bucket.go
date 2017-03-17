@@ -2,9 +2,9 @@ package qshell
 
 import (
 	"fmt"
-	"qshell/qiniu/api.v6/auth/digest"
-	"qshell/qiniu/api.v6/rs"
-	"qshell/qiniu/rpc"
+	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/rs"
+	"qiniu/rpc"
 )
 
 type BucketInfo struct {

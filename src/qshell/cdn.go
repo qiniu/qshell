@@ -2,7 +2,7 @@ package qshell
 
 import (
 	"errors"
-	"qshell/qiniu/api.v6/rs"
+	"qiniu/api.v6/rs"
 )
 
 type BatchRefreshRequest struct {

@@ -5,9 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"qshell/qiniu/api.v6/auth/digest"
-	"qshell/qiniu/api.v6/rs"
-	"qshell/qshell"
+	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/rs"
+	"qshell"
 	"strings"
 )
 

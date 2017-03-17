@@ -3,9 +3,9 @@ package gist
 import (
 	"log"
 
-	"qshell/qiniu/api.v6/rs"
+	"qiniu/api.v6/rs"
 
-	. "qshell/qiniu/api.v6/conf"
+	. "qiniu/api.v6/conf"
 )
 
 func init() {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
-	"qshell/qshell"
+	"qshell"
 )
 
 func QiniuUpload2(cmd string, params ...string) {

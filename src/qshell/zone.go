@@ -1,7 +1,7 @@
 package qshell
 
 import (
-	"qshell/qiniu/api.v6/conf"
+	"qiniu/api.v6/conf"
 )
 
 type ZoneConfig struct {

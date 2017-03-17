@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"qshell/qiniu/rpc"
+	"qiniu/rpc"
 	"sync"
 	"time"
 )

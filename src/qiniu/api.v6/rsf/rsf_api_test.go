@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"testing"
 
-	. "qshell/qiniu/api.v6/conf"
-	qio "qshell/qiniu/api.v6/io"
-	"qshell/qiniu/api.v6/rs"
+	. "qiniu/api.v6/conf"
+	qio "qiniu/api.v6/io"
+	"qiniu/api.v6/rs"
 )
 
 var (

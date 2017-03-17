@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"fmt"
-	"qshell/qiniu/api.v6/auth/digest"
-	. "qshell/qiniu/api.v6/conf"
-	"qshell/qiniu/rpc"
+	"qiniu/api.v6/auth/digest"
+	. "qiniu/api.v6/conf"
+	"qiniu/rpc"
 )
 
 // ----------------------------------------------------------

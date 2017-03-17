@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"runtime"
 
-	"qshell/qiniu/rpc"
+	"qiniu/rpc"
 )
 
 var UP_HOST = "http://up.qiniu.com"

@@ -2,7 +2,7 @@ package qshell
 
 import (
 	"os"
-	"qshell/qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/auth/digest"
 	"testing"
 )
 

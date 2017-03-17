@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	. "qshell/qiniu/api.v6/conf"
-	"qshell/qiniu/api.v6/rs"
+	. "qiniu/api.v6/conf"
+	"qiniu/api.v6/rs"
 )
 
 var (
@@ -27,7 +27,7 @@ func init() {
 	if bucket == "" {
 		panic("require QINIU_TEST_BUCKET")
 	}
-	rs.New(nil).Delete(nil, bucket, testKey)
+	rs.NewMac(nil).Delete(nil, bucket, testKey)
 }
 
 func TestAll(t *testing.T) {

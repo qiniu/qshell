@@ -8,8 +8,8 @@ import (
 	"mime/multipart"
 	"net/textproto"
 	"os"
-	. "qshell/qiniu/api.v6/conf"
-	"qshell/qiniu/rpc"
+	. "qiniu/api.v6/conf"
+	"qiniu/rpc"
 	"strconv"
 	"strings"
 )

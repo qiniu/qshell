@@ -7,7 +7,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"net/url"
 	"os"
-	"qshell/qshell"
+	"qshell"
 	"strconv"
 	"time"
 )

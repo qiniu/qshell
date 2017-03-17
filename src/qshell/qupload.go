@@ -11,12 +11,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"qshell/qiniu/api.v6/auth/digest"
-	"qshell/qiniu/api.v6/conf"
-	fio "qshell/qiniu/api.v6/io"
-	rio "qshell/qiniu/api.v6/resumable/io"
-	"qshell/qiniu/api.v6/rs"
-	"qshell/qiniu/rpc"
+	"qiniu/api.v6/auth/digest"
+	"qiniu/api.v6/conf"
+	fio "qiniu/api.v6/io"
+	rio "qiniu/api.v6/resumable/io"
+	"qiniu/api.v6/rs"
+	"qiniu/rpc"
 	"runtime"
 	"strconv"
 	"strings"
@@ -180,7 +180,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 	fmt.Println()
 
 	//global up settings
-	logs.Info("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
+	logs.Info("Load account from %s", filepath.Join(QShellRootPath, ".account.json"))
 	account, gErr := GetAccount()
 	if gErr != nil {
 		fmt.Println(gErr)

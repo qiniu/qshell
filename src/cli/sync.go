@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
-	"qshell/qiniu/api.v6/auth/digest"
-	"qshell/qshell"
+	"qiniu/api.v6/auth/digest"
+	"qshell"
 	"time"
 )
 

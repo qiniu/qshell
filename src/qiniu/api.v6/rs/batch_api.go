@@ -1,8 +1,8 @@
 package rs
 
 import (
-	. "qshell/qiniu/api.v6/conf"
-	"qshell/qiniu/rpc"
+	. "qiniu/api.v6/conf"
+	"qiniu/rpc"
 )
 
 // ----------------------------------------------------------

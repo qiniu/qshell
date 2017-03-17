@@ -6,7 +6,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"os"
-	"qshell/qshell"
+	"qshell"
 	"strconv"
 )
 

@@ -1,7 +1,7 @@
 package fop
 
 import (
-	"qshell/qiniu/rpc"
+	"qiniu/rpc"
 )
 
 type ExifValType struct {

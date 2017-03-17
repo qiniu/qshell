@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	. "qshell/qiniu/api.v6/conf"
-	"qshell/qiniu/api.v6/rs"
+	. "qiniu/api.v6/conf"
+	"qiniu/api.v6/rs"
 )
 
 var (

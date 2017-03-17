@@ -1,15 +1,15 @@
 package main
 
 import (
-	"qshell/cli"
+	"cli"
 	"flag"
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
 	"os/user"
-	"qshell/qiniu/rpc"
+	"qiniu/rpc"
 	"runtime"
-	"qshell/qshell"
+	"qshell"
 )
 
 var supportedCmds = map[string]cli.CliFunc{

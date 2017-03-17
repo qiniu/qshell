@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 	"os"
-	"qshell/qiniu/rpc"
-	"qshell/qshell"
+	"qiniu/rpc"
+	"qshell"
 )
 
 func Prefop(cmd string, params ...string) {

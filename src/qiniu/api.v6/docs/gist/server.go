@@ -1,9 +1,9 @@
 package gist
 
-import "qshell/qiniu/api.v6/rs"
+import "qiniu/api.v6/rs"
 
 // @gist init-import
-import . "qshell/qiniu/api.v6/conf"
+import . "qiniu/api.v6/conf"
 
 // @endgist
 
