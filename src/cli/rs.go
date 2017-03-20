@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -616,12 +617,24 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 	}
 }
 
+var batchRenameTasks chan func()
+var initBatchRenameOnce sync.Once
+
+func doBatchRename(tasks chan func()) {
+	for {
+		task := <-batchRenameTasks
+		task()
+	}
+}
+
 func BatchRename(cmd string, params ...string) {
 	var force bool
 	var overwrite bool
+	var worker int
 	flagSet := flag.NewFlagSet("batchrename", flag.ExitOnError)
 	flagSet.BoolVar(&force, "force", false, "force mode")
 	flagSet.BoolVar(&overwrite, "overwrite", false, "overwrite mode")
+	flagSet.IntVar(&worker, "worker", 1, "worker count")
 	flagSet.Parse(params)
 
 	cmdParams := flagSet.Args()
@@ -657,6 +670,15 @@ func BatchRename(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
+
+		renameWaitGroup := sync.WaitGroup{}
+		initBatchRenameOnce.Do(func() {
+			batchRenameTasks = make(chan func(), worker)
+			for i := 0; i < worker; i++ {
+				go doBatchRename(batchRenameTasks)
+			}
+		})
+
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(oldNewKeyMapFile)
 		if err != nil {
@@ -679,13 +701,28 @@ func BatchRename(cmd string, params ...string) {
 				}
 			}
 			if len(entries) == BATCH_ALLOW_MAX {
-				batchRename(client, entries, overwrite)
-				entries = make([]qshell.RenameEntryPath, 0)
+				toRenameEntries := make([]qshell.RenameEntryPath, len(entries))
+				copy(toRenameEntries, entries)
+
+				renameWaitGroup.Add(1)
+				batchRenameTasks <- func() {
+					defer renameWaitGroup.Done()
+					batchRename(client, toRenameEntries, overwrite)
+				}
+				entries = make([]qshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
 			}
 		}
 		if len(entries) > 0 {
-			batchRename(client, entries, overwrite)
+			toRenameEntries := make([]qshell.RenameEntryPath, len(entries))
+			copy(toRenameEntries, entries)
+
+			renameWaitGroup.Add(1)
+			batchRenameTasks <- func() {
+				defer renameWaitGroup.Done()
+				batchRename(client, toRenameEntries, overwrite)
+			}
 		}
+		renameWaitGroup.Wait()
 	} else {
 		CmdHelp(cmd)
 	}
