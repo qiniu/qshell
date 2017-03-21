@@ -513,7 +513,7 @@ func BatchDelete(cmd string, params ...string) {
 					entries = append(entries, entry)
 				}
 			}
-			//check 1000 limit
+			//check limit
 			if len(entries) == BATCH_ALLOW_MAX {
 				toDeleteEntries := make([]rs.EntryPath, len(entries))
 				copy(toDeleteEntries, entries)
@@ -524,7 +524,6 @@ func BatchDelete(cmd string, params ...string) {
 					batchDelete(client, toDeleteEntries)
 				}
 				entries = make([]rs.EntryPath, 0, BATCH_ALLOW_MAX)
-
 			}
 		}
 		//delete the last batch
@@ -552,7 +551,7 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 		for i, entry := range entries {
 			item := ret[i]
 
-			if item.Data.Error != "" {
+			if item.Code != 200 || item.Data.Error != "" {
 				logs.Error("Delete '%s' => '%s' failed, Code: %d, Error: %s", entry.Bucket, entry.Key, item.Code, item.Data.Error)
 			} else {
 				logs.Debug("Delete '%s' => '%s' success", entry.Bucket, entry.Key)
@@ -571,8 +570,10 @@ func batchDelete(client rs.Client, entries []rs.EntryPath) {
 
 func BatchChgm(cmd string, params ...string) {
 	var force bool
+	var worker int
 	flagSet := flag.NewFlagSet("batchchgm", flag.ExitOnError)
 	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.IntVar(&worker, "worker", 1, "worker count")
 	flagSet.Parse(params)
 
 	cmdParams := flagSet.Args()
@@ -608,6 +609,28 @@ func BatchChgm(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
+
+		//get bucket zone info
+		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+		if gErr != nil {
+			fmt.Println("Get bucket region info error,", gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		//set zone info
+		qshell.SetZone(bucketInfo.Region)
+
+		var batchTasks chan func()
+		var initBatchOnce sync.Once
+
+		batchWaitGroup := sync.WaitGroup{}
+		initBatchOnce.Do(func() {
+			batchTasks = make(chan func(), worker)
+			for i := 0; i < worker; i++ {
+				go doBatchOperation(batchTasks)
+			}
+		})
+
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(keyMimeMapFile)
 		if err != nil {
@@ -630,13 +653,29 @@ func BatchChgm(cmd string, params ...string) {
 				}
 			}
 			if len(entries) == BATCH_ALLOW_MAX {
-				batchChgm(client, entries)
-				entries = make([]qshell.ChgmEntryPath, 0)
+				toChgmEntries := make([]qshell.ChgmEntryPath, len(entries))
+				copy(toChgmEntries, entries)
+
+				batchWaitGroup.Add(1)
+				batchTasks <- func() {
+					defer batchWaitGroup.Done()
+					batchChgm(client, toChgmEntries)
+				}
+				entries = make([]qshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
 			}
 		}
 		if len(entries) > 0 {
-			batchChgm(client, entries)
+			toChgmEntries := make([]qshell.ChgmEntryPath, len(entries))
+			copy(toChgmEntries, entries)
+
+			batchWaitGroup.Add(1)
+			batchTasks <- func() {
+				defer batchWaitGroup.Done()
+				batchChgm(client, toChgmEntries)
+			}
 		}
+
+		batchWaitGroup.Wait()
 	} else {
 		CmdHelp(cmd)
 	}
