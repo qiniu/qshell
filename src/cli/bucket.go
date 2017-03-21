@@ -66,3 +66,7 @@ func GetDomainsOfBucket(cmd string, params ...string) {
 		CmdHelp(cmd)
 	}
 }
+
+func GetFileFromBucket(cmd string, params ...string) {
+
+}

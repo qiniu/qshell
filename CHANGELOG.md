@@ -1,3 +1,6 @@
+# 2.0.6
+1. 为`batchcopy`，`batchdelete`，`batchmove`，`batchchgm`，`batchrename`添加并发操作参数 
+
 # 2.0.5
 1. 修复2.0.1引入的bug，该bug不影响文件上传结果，但是影响文件上传效率。主要是
 决定采用表单上传还是分片上传的时候逻辑写反了。
