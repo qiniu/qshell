@@ -410,7 +410,7 @@ func batchStat(client rs.Client, entries []rs.EntryPath) {
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
-			if item.Data.Error != "" {
+			if item.Code != 200 || item.Data.Error != "" {
 				fmt.Println(entry.Key + "\t" + item.Data.Error)
 			} else {
 				fmt.Println(fmt.Sprintf("%s\t%d\t%s\t%s\t%d", entry.Key,
@@ -686,7 +686,7 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
-			if item.Data.Error != "" {
+			if item.Code != 200 || item.Data.Error != "" {
 				logs.Error("Chgm '%s' => '%s' Failed, Code: %d, Error: %s", entry.Key, entry.MimeType, item.Code, item.Data.Error)
 			} else {
 				logs.Debug("Chgm '%s' => '%s' success", entry.Key, entry.MimeType)
@@ -843,9 +843,11 @@ func batchRename(client rs.Client, entries []qshell.RenameEntryPath, overwrite b
 func BatchMove(cmd string, params ...string) {
 	var force bool
 	var overwrite bool
+	var worker int
 	flagSet := flag.NewFlagSet("batchmove", flag.ExitOnError)
 	flagSet.BoolVar(&force, "force", false, "force mode")
 	flagSet.BoolVar(&overwrite, "overwrite", false, "overwrite mode")
+	flagSet.IntVar(&worker, "worker", 1, "worker count")
 	flagSet.Parse(params)
 
 	cmdParams := flagSet.Args()
@@ -882,6 +884,28 @@ func BatchMove(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
+
+		//get bucket zone info
+		bucketInfo, gErr := qshell.GetBucketInfo(&mac, srcBucket)
+		if gErr != nil {
+			fmt.Println("Get bucket region info error,", gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		//set zone info
+		qshell.SetZone(bucketInfo.Region)
+
+		var batchTasks chan func()
+		var initBatchOnce sync.Once
+
+		batchWaitGroup := sync.WaitGroup{}
+		initBatchOnce.Do(func() {
+			batchTasks = make(chan func(), worker)
+			for i := 0; i < worker; i++ {
+				go doBatchOperation(batchTasks)
+			}
+		})
+
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
@@ -907,13 +931,29 @@ func BatchMove(cmd string, params ...string) {
 				}
 			}
 			if len(entries) == BATCH_ALLOW_MAX {
-				batchMove(client, entries, overwrite)
-				entries = make([]qshell.MoveEntryPath, 0)
+				toMoveEntries := make([]qshell.MoveEntryPath, len(entries))
+				copy(toMoveEntries, entries)
+
+				batchWaitGroup.Add(1)
+				batchTasks <- func() {
+					defer batchWaitGroup.Done()
+					batchMove(client, toMoveEntries, overwrite)
+				}
+				entries = make([]qshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
 			}
 		}
 		if len(entries) > 0 {
-			batchMove(client, entries, overwrite)
+			toMoveEntries := make([]qshell.MoveEntryPath, len(entries))
+			copy(toMoveEntries, entries)
+
+			batchWaitGroup.Add(1)
+			batchTasks <- func() {
+				defer batchWaitGroup.Done()
+				batchMove(client, toMoveEntries, overwrite)
+			}
 		}
+
+		batchWaitGroup.Wait()
 	} else {
 		CmdHelp(cmd)
 	}
@@ -925,7 +965,7 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath, overwrite bool)
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
-			if item.Data.Error != "" {
+			if item.Code != 200 || item.Data.Error != "" {
 				logs.Error("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code, item.Data.Error)
 			} else {
@@ -947,9 +987,12 @@ func batchMove(client rs.Client, entries []qshell.MoveEntryPath, overwrite bool)
 func BatchCopy(cmd string, params ...string) {
 	var force bool
 	var overwrite bool
+	var worker int
+
 	flagSet := flag.NewFlagSet("batchcopy", flag.ExitOnError)
 	flagSet.BoolVar(&force, "force", false, "force mode")
 	flagSet.BoolVar(&overwrite, "overwrite", false, "overwrite mode")
+	flagSet.IntVar(&worker, "worker", 1, "worker count")
 	flagSet.Parse(params)
 
 	cmdParams := flagSet.Args()
@@ -986,6 +1029,28 @@ func BatchCopy(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
+
+		//get bucket zone info
+		bucketInfo, gErr := qshell.GetBucketInfo(&mac, srcBucket)
+		if gErr != nil {
+			fmt.Println("Get bucket region info error,", gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		//set zone info
+		qshell.SetZone(bucketInfo.Region)
+
+		var batchTasks chan func()
+		var initBatchOnce sync.Once
+
+		batchWaitGroup := sync.WaitGroup{}
+		initBatchOnce.Do(func() {
+			batchTasks = make(chan func(), worker)
+			for i := 0; i < worker; i++ {
+				go doBatchOperation(batchTasks)
+			}
+		})
+
 		client := rs.NewMac(&mac)
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
@@ -1011,13 +1076,29 @@ func BatchCopy(cmd string, params ...string) {
 				}
 			}
 			if len(entries) == BATCH_ALLOW_MAX {
-				batchCopy(client, entries, overwrite)
-				entries = make([]qshell.CopyEntryPath, 0)
+				toCopyEntries := make([]qshell.CopyEntryPath, len(entries))
+				copy(toCopyEntries, entries)
+
+				batchWaitGroup.Add(1)
+				batchTasks <- func() {
+					defer batchWaitGroup.Done()
+					batchCopy(client, toCopyEntries, overwrite)
+				}
+				entries = make([]qshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
 			}
 		}
 		if len(entries) > 0 {
-			batchCopy(client, entries, overwrite)
+			toCopyEntries := make([]qshell.CopyEntryPath, len(entries))
+			copy(toCopyEntries, entries)
+
+			batchWaitGroup.Add(1)
+			batchTasks <- func() {
+				defer batchWaitGroup.Done()
+				batchCopy(client, toCopyEntries, overwrite)
+			}
 		}
+
+		batchWaitGroup.Wait()
 	} else {
 		CmdHelp(cmd)
 	}
@@ -1029,7 +1110,7 @@ func batchCopy(client rs.Client, entries []qshell.CopyEntryPath, overwrite bool)
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
-			if item.Data.Error != "" {
+			if item.Code != 200 || item.Data.Error != "" {
 				logs.Error("Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 					entry.SrcBucket, entry.SrcKey, entry.DestBucket, entry.DestKey, item.Code, item.Data.Error)
 			} else {
