@@ -26,6 +26,7 @@ import (
 	"bucket"		:	"test-bucket",
 	"prefix"		:	"demo/",
 	"suffixes"		: 	".png,.jpg",
+	"cdn_domain"		:	"",
 }
 */
 
@@ -39,6 +40,7 @@ type DownloadConfig struct {
 	Bucket   string `json:"bucket"`
 	Prefix   string `json:"prefix,omitempty"`
 	Suffixes string `json:"suffixes,omitempty"`
+	CdnDomain string `json:"cdn_domain,omitempty"`
 	//log settings
 	LogLevel  string `json:"log_level,omitempty"`
 	LogFile   string `json:"log_file,omitempty"`
@@ -242,7 +244,12 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 				continue
 			}
 
-			fileUrl := makePrivateDownloadLink(&mac, domainOfBucket, ioProxyAddress, fileKey)
+			var fileUrl string
+			if downConfig.CdnDomain == "" { // if cdn_domain is not provided, use default domain
+				fileUrl = makePrivateDownloadLink(&mac, domainOfBucket, ioProxyAddress, fileKey)
+			} else { // if cdn_domain is provided, use it
+				fileUrl = makePrivateDownloadLink(&mac, domainOfBucket, downConfig.CdnDomain, fileKey)
+			}
 
 			//progress
 			if totalFileCount != 0 {
@@ -338,7 +345,13 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			downloadTasks <- func() {
 				defer downWaitGroup.Done()
 
-				downErr := downloadFile(downConfig.DestDir, fileKey, fileUrl, domainOfBucket, fileSize, fromBytes)
+				var downErr error
+				if downConfig.CdnDomain == "" { // if cdn_domain is not provided, use default domain
+					downErr = downloadFile(downConfig.DestDir, fileKey, fileUrl, domainOfBucket, fileSize, fromBytes)
+				} else { // if cdn_domain is provided, use it
+					downErr = downloadFile(downConfig.DestDir, fileKey, fileUrl, downConfig.CdnDomain, fileSize, fromBytes)
+				}
+
 				if downErr != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 				} else {
