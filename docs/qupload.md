@@ -205,12 +205,12 @@ demo2.gif
 
 很多情况下，该工具的使用者的网络和七牛的网络都不是在一个内网，或者是机房或者是普通的办公网络和家庭网络。这种情况下，为了保证上传的速度和效率，必须走加速上传通道。目前本工具中使用的空间所在机房和对应的上传加速域名如下表：
 
-|机房| 上传加速域名 |
-|----|----------------------|
-|华东| http://upload.qiniu.com |
-|华北| http://upload-z1.qiniu.com |
-|华南| http://upload-z2.qiniu.com |
-|北美| http://upload-na0.qiniu.com |
+| 机房 | 上传加速域名 |
+| ---- | ---------------------- |
+| 华东 | http://upload.qiniu.com |
+| 华北 | http://upload-z1.qiniu.com |
+| 华南 | http://upload-z2.qiniu.com |
+| 北美 | http://upload-na0.qiniu.com |
 
 本工具会根据配置文件中指定的空间参数，自动获取所应该使用的默认加速域名，所以不需要担心是否需要额外设置上传域名。
 
@@ -218,12 +218,12 @@ demo2.gif
 
 有些情况下，你可能想自己指定上传的入口域名，工具也为这种需求提供了参数 `up_host`，你可以自行指定上传的域名来从这个入口上传文件。当然你需要根据空间所在的机房选择正确的上传入口域名，可选的域名列表如下：
 
-|机房|上传加速域名|源站上传域名|https上传加速域名|https上传源站域名|
-|----|----------------------|--------------------|----------------------|-----------------------|
-|华东|http://upload.qiniu.com|http://up.qiniu.com|https://upload.qbox.me|https://up.qbox.me|
-|华北|http://upload-z1.qiniu.com|http://up-z1.qiniu.com|https://upload-z1.qbox.me|https://up-z1.qbox.me|
-|华南|http://upload-z2.qiniu.com|http://up-z2.qiniu.com|https://upload-z2.qbox.me|https://up-z2.qbox.me|
-|北美|http://upload-na0.qiniu.com|http://up-na0.qiniu.com|https://upload-na0.qbox.me|https://up-na0.qbox.me|
+| 机房 | 上传加速域名 | 源站上传域名 | https上传加速域名 | https上传源站域名 |
+| ---- | ---------------------- | -------------------- | ---------------------- | ----------------------- |
+| 华东 | http://upload.qiniu.com | http://up.qiniu.com | https://upload.qbox.me | https://up.qbox.me |
+| 华北 | http://upload-z1.qiniu.com | http://up-z1.qiniu.com | https://upload-z1.qbox.me | https://up-z1.qbox.me |
+| 华南 | http://upload-z2.qiniu.com | http://up-z2.qiniu.com | https://upload-z2.qbox.me | https://up-z2.qbox.me |
+| 北美 | http://upload-na0.qiniu.com | http://up-na0.qiniu.com | https://upload-na0.qbox.me | https://up-na0.qbox.me |
 
 一般来说，如果你的网络是机房网络，而且带宽比较大，那么可以选择七牛的源站上传域名来上传，否则都选择上传加速域名即可。
 
