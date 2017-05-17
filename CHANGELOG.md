@@ -1,3 +1,6 @@
+# 2.0.7
+1. 修复`qdownload`使用`cdn_domain`下载时，可能出现的400和404错误。
+
 # 2.0.6
 1. 为`batchcopy`，`batchdelete`，`batchmove`，`batchchgm`，`batchrename`添加并发操作参数 
 2. 为`qdownload`添加`cdn_domain`和`referer`配置参数，允许用户从CDN域名下载资源
