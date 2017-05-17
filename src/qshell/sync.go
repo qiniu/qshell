@@ -56,7 +56,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 	//local storage path
 	storePath := filepath.Join(QShellRootPath, ".qshell", "sync")
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		logs.Error("Failed to mkdir ", storePath, " due to ", mkdirErr)
 		return
 	}
 
@@ -144,7 +144,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 		}
 
 		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
-		logs.Informational("Syncing block %d [%s%%] ...", blkIndex, syncPercent)
+		logs.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
 		blkCtx, pErr := rangeMkblkPipe(srcResUrl, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 		if pErr != nil {
 			logs.Error(pErr.Error())
