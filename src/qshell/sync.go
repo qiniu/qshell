@@ -206,19 +206,37 @@ func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int
 		return
 	}
 
+	//proxyURL, _ := url.Parse("http://localhost:8888")
+
 	//set range header
 	rangeEndOffset := rangeStartOffset + rangeBlockSize - 1
-	dReq.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", rangeStartOffset, rangeEndOffset))
+	dReq.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", rangeStartOffset, rangeEndOffset))
 
-	//get resp
+	//set client properties
 	client := http.DefaultClient
 	client.Timeout = time.Duration(HTTP_TIMEOUT)
+	//client.Transport = &http.Transport{
+	//	Proxy: http.ProxyURL(proxyURL),
+	//}
+
+	client.CheckRedirect = func(rReq *http.Request, rVias []*http.Request) (err error) {
+		rReq.Header.Add("Range", dReq.Header.Get("Range"))
+		return nil
+	}
+
+	//get response
 	dResp, dRespErr := client.Do(dReq)
 	if dRespErr != nil {
 		err = fmt.Errorf("Get response error, %s", dRespErr.Error())
 		return
 	}
 	defer dResp.Body.Close()
+
+	//fmt.Println("-------------------")
+	//fmt.Println(dResp.StatusCode)
+	//for k, v := range dResp.Header {
+	//	fmt.Println(k, ":", strings.Join(v, ","))
+	//}
 
 	//status error
 	if dResp.StatusCode/100 != 2 {
