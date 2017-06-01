@@ -37,6 +37,7 @@ func printStat(bucket string, key string, entry rs.Entry) {
 	putTime := time.Unix(0, entry.PutTime*100)
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "PutTime:", entry.PutTime, putTime.String())
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "MimeType:", entry.MimeType)
+	statInfo += fmt.Sprintf("%-20s%d\r\n", "FileType:", entry.FileType)
 	fmt.Println(statInfo)
 }
 
