@@ -1,12 +1,22 @@
 # 简介
 
-`cdnrefresh`命令用来根据指定的文件访问列表来批量更新CDN的缓存。
+`cdnrefresh`命令用来根据指定的文件访问列表或者目录列表来批量更新CDN的缓存。
 
 # 格式
+
+刷新链接的命令格式：
 
 ```
 qshell cdnrefresh <UrlListFile>
 ```
+
+刷新目录的命令格式：
+
+```
+qshell cdnrefresh -dirs <DirListFile>
+```
+
+注意需要刷新的目录，必须以`/`结尾。
 
 # 鉴权
 
@@ -14,9 +24,17 @@ qshell cdnrefresh <UrlListFile>
 
 # 参数
 
+刷新链接
+
 |参数名|描述|
 |---------|-----------|
 |UrlListFile|需要进行刷新的文件访问外链列表，每行一个访问外链|
+
+刷新目录
+
+|参数名|描述|
+|---------|-----------|
+|DirListFile|需要进行刷新的目录列表，每行一个目录，目录必须以`/`结尾|
 
 # 示例
 

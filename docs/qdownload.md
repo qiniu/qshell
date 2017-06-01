@@ -33,7 +33,13 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
     "dest_dir"   :   "<LocalBackupDir>",
     "bucket"     :   "<Bucket>",
     "prefix"     :   "image/",
-    "suffixes"   :   ".png,.jpg"
+    "suffixes"   :   ".png,.jpg",
+    "cdn_domain" :   "down.example.com",
+    "referer"    :   "http://www.example.com"
+    "log_file"   :   "upload.log",
+    "log_level"  :   "info",
+    "log_rotate" :   1,
+    "log_stdout" :   false
 }
 ```
 
@@ -43,9 +49,18 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 |bucket|空间名称|N|
 |prefix|只同步指定前缀的文件，默认为空|Y|
 |suffixes|只同步指定后缀的文件，默认为空|Y|
+|cdn_domain|设置下载的CDN域名，默认为空表示从存储源站下载|N|
+|referer|如果CDN域名配置了域名白名单防盗链，需要指定一个允许访问的referer地址|N|
+|log_level|上传日志输出级别，可选值为`debug`,`info`,`warn`,`error`,默认`info`|Y|
+|log_file|上传日志的输出文件，如果不指定会输出到qshell工作目录下默认的文件中，文件名可以在终端输出看到|Y|
+|log_rotate|上传日志文件的切换周期，单位为天，默认为1天即切换到新的上传日志文件|Y|
+|log_stdout|上传日志是否同时输出一份到标准终端，默认为false，主要在调试上传功能时可以指定为true|Y|
 
 
-注意，在Windows系统下面使用的时候，注意`dest_dir`的设置遵循`D:\\jemy\\backup`这种方式。也就是路径里面的`\`要有两个（`\\`）。
+**备注：**
+
+1. 在Windows系统下面使用的时候，注意`dest_dir`的设置遵循`D:\\jemy\\backup`这种方式。也就是路径里面的`\`要有两个（`\\`）。
+2. 在默认不指定`cdn_domain`的情况下，会从存储源站下载资源，这部分下载产生的流量会生成存储源站下载流量的计费，请注意，这部分计费不在七牛CDN免费10G流量覆盖范围。
 
 # 示例
 

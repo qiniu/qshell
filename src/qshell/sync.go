@@ -45,7 +45,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 		err = cErr
 		return
 	} else if exists {
-		err = errors.New("File with same key already exists in bucket")
+		err = errors.New("File with same key` already exists in bucket")
 		return
 	}
 
@@ -76,7 +76,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 
 	//check offset valid or not
 	if syncProgress.Offset%BLOCK_SIZE != 0 {
-		logs.Informational("Invalid offset from progress file,", syncProgress.Offset)
+		logs.Info("Invalid offset from progress file,", syncProgress.Offset)
 		syncProgress.Offset = 0
 		syncProgress.TotalSize = 0
 		syncProgress.BlkCtxs = make([]rio.BlkputRet, 0)
@@ -85,7 +85,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 	//check offset and blk ctxs
 	if syncProgress.Offset != 0 && syncProgress.BlkCtxs != nil {
 		if int(syncProgress.Offset/BLOCK_SIZE) != len(syncProgress.BlkCtxs) {
-			logs.Informational("Invalid offset and block contexts")
+			logs.Info("Invalid offset and block contexts")
 			syncProgress.Offset = 0
 			syncProgress.TotalSize = 0
 			syncProgress.BlkCtxs = make([]rio.BlkputRet, 0)
@@ -144,14 +144,14 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 		}
 
 		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
-		logs.Informational("Syncing block %d [%s%%] ...", blkIndex, syncPercent)
+		logs.Info("Syncing block %d [%s] ...", blkIndex, syncPercent)
 		blkCtx, pErr := rangeMkblkPipe(srcResUrl, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 		if pErr != nil {
 			logs.Error(pErr.Error())
 			time.Sleep(RETRY_INTERVAL)
 
 			for retryTimes := 1; retryTimes <= RETRY_MAX_TIMES; retryTimes++ {
-				logs.Informational(fmt.Sprintf("Retrying %d time range & mkblk block [%d]", retryTimes, blkIndex))
+				logs.Info("Retrying %d time range & mkblk block [%d]", retryTimes, blkIndex)
 				blkCtx, pErr = rangeMkblkPipe(srcResUrl, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 				if pErr != nil {
 					logs.Error(pErr)
@@ -177,7 +177,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 
 		rErr := recordProgress(progressFile, syncProgress)
 		if rErr != nil {
-			logs.Informational(rErr.Error())
+			logs.Info(rErr.Error())
 		}
 	}
 
@@ -206,19 +206,37 @@ func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int
 		return
 	}
 
+	//proxyURL, _ := url.Parse("http://localhost:8888")
+
 	//set range header
 	rangeEndOffset := rangeStartOffset + rangeBlockSize - 1
-	dReq.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", rangeStartOffset, rangeEndOffset))
+	dReq.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", rangeStartOffset, rangeEndOffset))
 
-	//get resp
+	//set client properties
 	client := http.DefaultClient
 	client.Timeout = time.Duration(HTTP_TIMEOUT)
+	//client.Transport = &http.Transport{
+	//	Proxy: http.ProxyURL(proxyURL),
+	//}
+
+	client.CheckRedirect = func(rReq *http.Request, rVias []*http.Request) (err error) {
+		rReq.Header.Add("Range", dReq.Header.Get("Range"))
+		return nil
+	}
+
+	//get response
 	dResp, dRespErr := client.Do(dReq)
 	if dRespErr != nil {
 		err = fmt.Errorf("Get response error, %s", dRespErr.Error())
 		return
 	}
 	defer dResp.Body.Close()
+
+	//fmt.Println("-------------------")
+	//fmt.Println(dResp.StatusCode)
+	//for k, v := range dResp.Header {
+	//	fmt.Println(k, ":", strings.Join(v, ","))
+	//}
 
 	//status error
 	if dResp.StatusCode/100 != 2 {

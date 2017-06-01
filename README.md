@@ -11,7 +11,7 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|更新日志|
 |--------|---------|----|------|
-|qshell v2.0.5|Linux (32, 64位，arm平台), Windows(32, 64位), Mac OSX(32, 64位)|[下载](http://devtools.qiniu.com/qshell-v2.0.5.zip)|[查看](CHANGELOG.md)|
+|qshell v2.0.7|Linux (32, 64位，arm平台), Windows(32, 64位), Mac OSX(32, 64位)|[下载](http://devtools.qiniu.com/qshell-v2.0.7.zip)|[查看](CHANGELOG.md)|
 
 ## 安装
 
@@ -146,7 +146,7 @@ $ qshell -m stat bucket key
 |qetag|存储|根据七牛的qetag算法来计算文件的hash|[文档](docs/qetag.md)|
 |m3u8delete|存储|根据流媒体播放列表文件删除七牛空间中的流媒体切片|[文档](docs/m3u8delete.md)|
 |m3u8replace|存储|修改流媒体播放列表文件中的切片引用域名|[文档](docs/m3u8replace.md)|
-|cdnrefresh|CDN|批量刷新cdn的访问外链|[文档](docs/cdnrefresh.md)|
+|cdnrefresh|CDN|批量刷新cdn的访问外链或目录|[文档](docs/cdnrefresh.md)|
 |cdnprefetch|CDN|批量预取cdn的访问外链|[文档](docs/cdnprefetch.md)|
 |b64encode|工具|base64编码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](docs/b64encode.md)|
 |b64decode|工具|base64解码工具，可选是否使用UrlSafe方式，默认UrlSafe|[文档](docs/b64decode.md)|
