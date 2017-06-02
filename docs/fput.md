@@ -26,6 +26,7 @@ qshell fput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost]
 |Overwrite|是否覆盖空间已有文件，默认为`false`|Y|
 |MimeType|指定文件的MimeType|Y|
 |UpHost|上传入口地址，默认为空间所在机房的上传加速域名|Y|
+|coolstorage|是否使用低频存储，默认为`false`|Y|
 
 关于 `UpHost` ，这个是用来指定上传所使用的入口域名。在不指定的情况下，程序会自动根据空间来获取其所在的机房，并选择对应的上传加速域名作为上传域名。对于七牛的几大机房，默认的上传加速域名和其他源站域名分别如下表。
 
@@ -61,7 +62,7 @@ Last time: 0.33 s, Average Speed: 118.6 KB/s
 2.上传本地文件`/Users/jemy/Documents/qiniu.jpg`到空间`if-pbl`里面，带前缀`2015/01/18/`，并且指定`MimeType`参数为`image/jpg`
 
 ```
-$ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg image/jpg
+$ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg -mimetype=image/jpg
 ```
 
 输出：
@@ -79,7 +80,7 @@ Last time: 0.39 s, Average Speed: 101.4 KB/s
 3.上传本地文件`/Users/jemy/Documents/qiniu.jpg`到空间`if-pbl`里面，并且指定指定的上传入口
 
 ```
-$ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg https://upload.qbox.me
+$ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg -uphost=https://upload.qbox.me
 ```
 
 输出：
@@ -97,7 +98,7 @@ Last time: 1.47 s, Average Speed: 26.7 KB/s
 4.覆盖上传 `qiniu.mp4' 到空间`if-pbl`
 
 ```
-$ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg true
+$ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg -overwrite
 ```
 
 输出：
@@ -111,3 +112,22 @@ Fsize: 39335 ( 38.41 KB )
 MimeType: image/jpeg
 Last time: 0.40 s, Average Speed: 98.2 KB/s
 ```
+5. 使用低频存储
+```
+$ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg -coolstorage -overwrite -mimetype="image/jpg" -uphost="https://upload.qbox.me"
+```
+
+输出：
+
+```
+Uploading main.go => tianzone : heh ...
+Progress: 100%
+Put file main.go => tianzone : heh success!
+Hash: FhvwbwqVEqzyHLuGc7roIikMTL0Q
+Fsize: 3317 ( 3.24 KB )
+MimeType: image/jpg
+Last time: 0.26 s, Average Speed: 12.5 KB/s
+
+```
+
+

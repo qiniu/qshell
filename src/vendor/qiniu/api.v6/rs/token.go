@@ -57,6 +57,7 @@ type PutPolicy struct {
 	PersistentPipeline  string `json:"persistentPipeline,omitempty"`
 	AsyncOps            string `json:"asyncOps,omitempty"`
 	EndUser             string `json:"endUser,omitempty"`
+	FileType            int    `json:"fileType"`
 }
 
 func (r *PutPolicy) Token(mac *digest.Mac) string {
