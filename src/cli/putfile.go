@@ -11,8 +11,6 @@ import (
 	"qiniu/api.v6/rs"
 	"qiniu/rpc"
 	"qshell"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -75,10 +73,9 @@ func FormPut(cmd string, params ...string) {
 		} else {
 			policy.Scope = bucket
 		}
-		if coolStorage{
+		if coolStorage {
 			policy.FileType = 1
 		}
-		
 		policy.Expires = 7 * 24 * 3600
 		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 		putExtra := fio.PutExtra{}
@@ -133,6 +130,7 @@ func FormPut(cmd string, params ...string) {
 			fmt.Println("Hash:", putRet.Hash)
 			fmt.Println("Fsize:", putRet.Fsize, "(", FormatFsize(fsize), ")")
 			fmt.Println("MimeType:", putRet.MimeType)
+			fmt.Println("FileType:", putRet.FileType)
 		}
 		lastNano := time.Now().UnixNano() - startTime.UnixNano()
 		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
@@ -148,29 +146,21 @@ func FormPut(cmd string, params ...string) {
 }
 
 func ResumablePut(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 || len(params) == 5 || len(params) == 6 {
+	if len(params) >= 3 && len(params) <= 7 {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
 		mimeType := ""
 		upHost := ""
 		overwrite := false
+		coolStorage := false
 
-		optionalParams := params[3:]
-		for _, param := range optionalParams {
-			if val, pErr := strconv.ParseBool(param); pErr == nil {
-				overwrite = val
-				continue
-			}
-
-			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
-				upHost = param
-				continue
-			}
-
-			mimeType = param
-		}
-
+		f := flag.NewFlagSet("fput", flag.ExitOnError)
+		f.BoolVar(&overwrite, "overwrite", false, "Whether overwrite existing file")
+		f.BoolVar(&coolStorage, "coolstorage", false, "Whether use cold storage")
+		f.StringVar(&mimeType, "mimetype", "", "specify a mimetype for file")
+		f.StringVar(&upHost, "uphost", "", "Specify a uphost")
+		f.Parse(params[3:])
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
@@ -207,6 +197,9 @@ func ResumablePut(cmd string, params ...string) {
 			policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
 		} else {
 			policy.Scope = bucket
+		}
+		if coolStorage {
+			policy.FileType = 1
 		}
 		policy.Expires = 7 * 24 * 3600
 		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
