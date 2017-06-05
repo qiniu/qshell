@@ -130,7 +130,6 @@ func FormPut(cmd string, params ...string) {
 			fmt.Println("Hash:", putRet.Hash)
 			fmt.Println("Fsize:", putRet.Fsize, "(", FormatFsize(fsize), ")")
 			fmt.Println("MimeType:", putRet.MimeType)
-			fmt.Println("FileType:", putRet.FileType)
 		}
 		lastNano := time.Now().UnixNano() - startTime.UnixNano()
 		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
