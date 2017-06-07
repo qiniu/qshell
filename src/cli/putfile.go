@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"qiniu/api.v6/auth/digest"
@@ -10,8 +11,6 @@ import (
 	"qiniu/api.v6/rs"
 	"qiniu/rpc"
 	"qshell"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -29,27 +28,27 @@ var upSettings = rio.Settings{
 }
 
 func FormPut(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 || len(params) == 5 || len(params) == 6 {
+	if len(params) >= 3 && len(params) <= 7 {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
-		mimeType := ""
-		upHost := ""
-		overwrite := false
 
-		optionalParams := params[3:]
-		for _, param := range optionalParams {
-			if val, pErr := strconv.ParseBool(param); pErr == nil {
-				overwrite = val
-				continue
-			}
+		var (
+			mimeType  string
+			upHost    string
+			overwrite bool
+			filetype  int
+		)
 
-			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
-				upHost = param
-				continue
-			}
-
-			mimeType = param
+		f := flag.NewFlagSet("fput", flag.ExitOnError)
+		f.BoolVar(&overwrite, "overwrite", false, "Whether overwrite existing file")
+		f.IntVar(&filetype, "filetype", 0, "Whether use cold storage")
+		f.StringVar(&mimeType, "mimetype", "", "specify a mimetype for file")
+		f.StringVar(&upHost, "uphost", "", "Specify a uphost")
+		f.Parse(params[3:])
+		if filetype != 1 && filetype != 0 {
+			fmt.Println("Wrong filetype, It should be set to 0 or 1")
+			os.Exit(qshell.STATUS_ERROR)
 		}
 
 		account, gErr := qshell.GetAccount()
@@ -80,6 +79,9 @@ func FormPut(cmd string, params ...string) {
 			policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
 		} else {
 			policy.Scope = bucket
+		}
+		if filetype == 1 {
+			policy.FileType = 1
 		}
 		policy.Expires = 7 * 24 * 3600
 		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
@@ -150,29 +152,27 @@ func FormPut(cmd string, params ...string) {
 }
 
 func ResumablePut(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 || len(params) == 5 || len(params) == 6 {
+	if len(params) >= 3 && len(params) <= 7 {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
-		mimeType := ""
-		upHost := ""
-		overwrite := false
+		var (
+			mimeType  string
+			upHost    string
+			overwrite bool
+			filetype  int
+		)
 
-		optionalParams := params[3:]
-		for _, param := range optionalParams {
-			if val, pErr := strconv.ParseBool(param); pErr == nil {
-				overwrite = val
-				continue
-			}
-
-			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
-				upHost = param
-				continue
-			}
-
-			mimeType = param
+		f := flag.NewFlagSet("fput", flag.ExitOnError)
+		f.BoolVar(&overwrite, "overwrite", false, "Whether overwrite existing file")
+		f.IntVar(&filetype, "filetype", 0, "Whether use cold storage")
+		f.StringVar(&mimeType, "mimetype", "", "specify a mimetype for file")
+		f.StringVar(&upHost, "uphost", "", "Specify a uphost")
+		f.Parse(params[3:])
+		if filetype != 1 && filetype != 0 {
+			fmt.Println("Wrong filetype, It should be set to 0 or 1")
+			os.Exit(qshell.STATUS_ERROR)
 		}
-
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
@@ -209,6 +209,9 @@ func ResumablePut(cmd string, params ...string) {
 			policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
 		} else {
 			policy.Scope = bucket
+		}
+		if filetype == 1 {
+			policy.FileType = 1
 		}
 		policy.Expires = 7 * 24 * 3600
 		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`

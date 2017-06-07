@@ -37,6 +37,11 @@ func printStat(bucket string, key string, entry rs.Entry) {
 	putTime := time.Unix(0, entry.PutTime*100)
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "PutTime:", entry.PutTime, putTime.String())
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "MimeType:", entry.MimeType)
+	if entry.FileType==0{
+		statInfo += fmt.Sprintf("%-20s%d -> 标准存储\r\n", "FileType:", entry.FileType)
+	}else{
+		statInfo += fmt.Sprintf("%-20s%d -> 低频存储\r\n", "FileType:", entry.FileType)
+	}
 	fmt.Println(statInfo)
 }
 
@@ -413,8 +418,8 @@ func batchStat(client rs.Client, entries []rs.EntryPath) {
 			if item.Code != 200 || item.Data.Error != "" {
 				fmt.Println(entry.Key + "\t" + item.Data.Error)
 			} else {
-				fmt.Println(fmt.Sprintf("%s\t%d\t%s\t%s\t%d", entry.Key,
-					item.Data.Fsize, item.Data.Hash, item.Data.MimeType, item.Data.PutTime))
+				fmt.Println(fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d", entry.Key,
+					item.Data.Fsize, item.Data.Hash, item.Data.MimeType, item.Data.PutTime,item.Data.FileType))
 			}
 		}
 	} else {

@@ -11,31 +11,33 @@ import (
 func QiniuUpload2(cmd string, params ...string) {
 	flagSet := flag.NewFlagSet("qupload2", flag.ExitOnError)
 
-	var threadCount int64
-	var srcDir string
-	var fileList string
-	var bucket string
-	var putThreshold int64
-	var keyPrefix string
-	var ignoreDir bool
-	var overwrite bool
-	var checkExists bool
-	var checkHash bool
-	var checkSize bool
-	var skipFilePrefixes string
-	var skipPathPrefixes string
-	var skipFixedStrings string
-	var skipSuffixes string
-	var upHost string
-	var bindUpIp string
-	var bindRsIp string
-	var bindNicIp string
-	var rescanLocal bool
-	var logLevel string
-	var logFile string
-	var logRotate int
-	var watchDir bool
-
+	var (
+		threadCount      int64
+		srcDir           string
+		fileList         string
+		bucket           string
+		putThreshold     int64
+		keyPrefix        string
+		ignoreDir        bool
+		overwrite        bool
+		checkExists      bool
+		checkHash        bool
+		checkSize        bool
+		skipFilePrefixes string
+		skipPathPrefixes string
+		skipFixedStrings string
+		skipSuffixes     string
+		upHost           string
+		bindUpIp         string
+		bindRsIp         string
+		bindNicIp        string
+		rescanLocal      bool
+		logLevel         string
+		logFile          string
+		logRotate        int
+		watchDir         bool
+		filetype         int
+	)
 	flagSet.Int64Var(&threadCount, "thread-count", 0, "multiple thread count")
 	flagSet.StringVar(&srcDir, "src-dir", "", "src dir to upload")
 	flagSet.StringVar(&fileList, "file-list", "", "file list to upload")
@@ -60,6 +62,7 @@ func QiniuUpload2(cmd string, params ...string) {
 	flagSet.StringVar(&logLevel, "log-level", "info", "log level")
 	flagSet.IntVar(&logRotate, "log-rotate", 1, "log rotate days")
 	flagSet.BoolVar(&watchDir, "watch", false, "watch dir changes after upload completes")
+	flagSet.IntVar(&filetype, "filetype", 0, "whether use infrequency storage")
 
 	flagSet.Parse(params)
 
@@ -89,6 +92,11 @@ func QiniuUpload2(cmd string, params ...string) {
 	}
 
 	//check params
+	if uploadConfig.FileType != 0 && uploadConfig.FileType != 1 {
+		fmt.Println("Wrong filetype has been set, It should be 1 or 0")
+		os.Exit(qshell.STATUS_HALT)
+	}
+
 	if uploadConfig.SrcDir == "" {
 		fmt.Println("Upload config no `--src-dir` specified")
 		os.Exit(qshell.STATUS_HALT)

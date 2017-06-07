@@ -86,7 +86,7 @@ type UploadConfig struct {
 	SkipFixedStrings string `json:"skip_fixed_strings,omitempty"`
 	SkipSuffixes     string `json:"skip_suffixes,omitempty"`
 	RescanLocal      bool   `json:"rescan_local,omitempty"`
-
+	FileType         int    `json:"file_type,omitempty"`
 	//advanced config
 	UpHost string `json:"up_host,omitempty"`
 
@@ -381,6 +381,9 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 			if uploadConfig.Overwrite {
 				policy.Scope = fmt.Sprintf("%s:%s", uploadConfig.Bucket, uploadFileKey)
 				policy.InsertOnly = 0
+			}
+			if uploadConfig.FileType==1{
+				policy.FileType = 1
 			}
 			policy.Expires = 7 * 24 * 3600
 			upToken := policy.Token(&mac)
