@@ -32,17 +32,24 @@ func FormPut(cmd string, params ...string) {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
-		mimeType := ""
-		upHost := ""
-		overwrite := false
-		coolStorage := false
+
+		var (
+			mimeType  string
+			upHost    string
+			overwrite bool
+			filetype  int
+		)
 
 		f := flag.NewFlagSet("fput", flag.ExitOnError)
 		f.BoolVar(&overwrite, "overwrite", false, "Whether overwrite existing file")
-		f.BoolVar(&coolStorage, "coolstorage", false, "Whether use cold storage")
+		f.IntVar(&filetype, "filetype", 0, "Whether use cold storage")
 		f.StringVar(&mimeType, "mimetype", "", "specify a mimetype for file")
 		f.StringVar(&upHost, "uphost", "", "Specify a uphost")
 		f.Parse(params[3:])
+		if filetype != 1 && filetype != 0 {
+			fmt.Println("Wrong filetype, It should be set to 0 or 1")
+			os.Exit(qshell.STATUS_ERROR)
+		}
 
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
@@ -73,7 +80,7 @@ func FormPut(cmd string, params ...string) {
 		} else {
 			policy.Scope = bucket
 		}
-		if coolStorage {
+		if filetype == 1 {
 			policy.FileType = 1
 		}
 		policy.Expires = 7 * 24 * 3600
@@ -149,17 +156,23 @@ func ResumablePut(cmd string, params ...string) {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
-		mimeType := ""
-		upHost := ""
-		overwrite := false
-		coolStorage := false
+		var (
+			mimeType  string
+			upHost    string
+			overwrite bool
+			filetype  int
+		)
 
 		f := flag.NewFlagSet("fput", flag.ExitOnError)
 		f.BoolVar(&overwrite, "overwrite", false, "Whether overwrite existing file")
-		f.BoolVar(&coolStorage, "coolstorage", false, "Whether use cold storage")
+		f.IntVar(&filetype, "filetype", 0, "Whether use cold storage")
 		f.StringVar(&mimeType, "mimetype", "", "specify a mimetype for file")
 		f.StringVar(&upHost, "uphost", "", "Specify a uphost")
 		f.Parse(params[3:])
+		if filetype != 1 && filetype != 0 {
+			fmt.Println("Wrong filetype, It should be set to 0 or 1")
+			os.Exit(qshell.STATUS_ERROR)
+		}
 		account, gErr := qshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
@@ -197,7 +210,7 @@ func ResumablePut(cmd string, params ...string) {
 		} else {
 			policy.Scope = bucket
 		}
-		if coolStorage {
+		if filetype == 1 {
 			policy.FileType = 1
 		}
 		policy.Expires = 7 * 24 * 3600
