@@ -42,6 +42,7 @@ type Entry struct {
 	PutTime  int64  `json:"putTime"`
 	MimeType string `json:"mimeType"`
 	Customer string `json:"customer"`
+	FileType int    `json:"type"`
 }
 
 // @endgist
