@@ -1,5 +1,6 @@
 # 2.0.8
 1. `fput`, `rput`, `stat`, `qupload`, `qupload2`，`batchstat`，`listbucket`命令支持低频存储
+2. 修复`sync`命令不支持链接302的bug
 
 # 2.0.7
 1. 修复`qdownload`使用`cdn_domain`下载时，可能出现的400和404错误。
