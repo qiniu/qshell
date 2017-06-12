@@ -2,7 +2,7 @@
 
 `listbucket`用来获取七牛空间里面的文件列表，可以指定文件前缀获取指定的文件列表，如果不指定，则获取所有文件的列表。
 
-获取的文件列表组织格式如下：
+获取的文件列表组织格式如下（每个字段用Tab分隔）：
 
 ```
 Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
