@@ -35,6 +35,7 @@ func QiniuUpload2(cmd string, params ...string) {
 	var logFile string
 	var logRotate int
 	var watchDir bool
+	var fileType int
 
 	flagSet.Int64Var(&threadCount, "thread-count", 0, "multiple thread count")
 	flagSet.StringVar(&srcDir, "src-dir", "", "src dir to upload")
@@ -60,6 +61,7 @@ func QiniuUpload2(cmd string, params ...string) {
 	flagSet.StringVar(&logLevel, "log-level", "info", "log level")
 	flagSet.IntVar(&logRotate, "log-rotate", 1, "log rotate days")
 	flagSet.BoolVar(&watchDir, "watch", false, "watch dir changes after upload completes")
+	flagSet.IntVar(&fileType, "filetype", 0, "use infrequency storage")
 
 	flagSet.Parse(params)
 
@@ -86,6 +88,7 @@ func QiniuUpload2(cmd string, params ...string) {
 		LogFile:          logFile,
 		LogLevel:         logLevel,
 		LogRotate:        logRotate,
+		FileType:         fileType,
 	}
 
 	//check params

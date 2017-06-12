@@ -45,6 +45,7 @@ func FormPut(cmd string, params ...string) {
 				if ft == 1 || ft == 0 {
 					filetype = ft
 				}
+				continue
 			}
 			if val, pErr := strconv.ParseBool(param); pErr == nil {
 				overwrite = val
