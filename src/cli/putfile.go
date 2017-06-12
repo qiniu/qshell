@@ -36,17 +36,17 @@ func FormPut(cmd string, params ...string) {
 		mimeType := ""
 		upHost := ""
 		overwrite := false
-		filetype := 0
+		fileType := 0
 
 		optionalParams := params[3:]
 		for _, param := range optionalParams {
 
 			if ft, err := strconv.Atoi(param); err == nil {
 				if ft == 1 || ft == 0 {
-					filetype = ft
+					fileType = ft
 					continue
 				} else {
-					fmt.Println("Wrong Filetype, It should be `0` or `1` ")
+					fmt.Println("Wrong Filetype, It should be 0 or 1 ")
 					os.Exit(qshell.STATUS_ERROR)
 				}
 			}
@@ -91,7 +91,7 @@ func FormPut(cmd string, params ...string) {
 		} else {
 			policy.Scope = bucket
 		}
-		policy.FileType = filetype
+		policy.FileType = fileType
 		policy.Expires = 7 * 24 * 3600
 		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 		putExtra := fio.PutExtra{}
@@ -168,17 +168,17 @@ func ResumablePut(cmd string, params ...string) {
 		mimeType := ""
 		upHost := ""
 		overwrite := false
-		filetype := 0
+		fileType := 0
 
 		optionalParams := params[3:]
 		for _, param := range optionalParams {
 
 			if ft, err := strconv.Atoi(param); err == nil {
 				if ft == 1 || ft == 0 {
-					filetype = ft
+					fileType = ft
 					continue
 				} else {
-					fmt.Println("Wrong Filetype, It should be `0` or `1` ")
+					fmt.Println("Wrong Filetype, It should be 0 or 1 ")
 					os.Exit(qshell.STATUS_ERROR)
 				}
 
@@ -232,7 +232,7 @@ func ResumablePut(cmd string, params ...string) {
 		} else {
 			policy.Scope = bucket
 		}
-		policy.FileType = filetype
+		policy.FileType = fileType
 		policy.Expires = 7 * 24 * 3600
 		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 

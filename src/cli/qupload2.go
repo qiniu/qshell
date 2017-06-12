@@ -118,7 +118,7 @@ func QiniuUpload2(cmd string, params ...string) {
 		}
 	}
 	if uploadConfig.FileType != 1 && uploadConfig.FileType != 0 {
-		logs.Error("Wrong Filetype, It should be `0` or `1` ")
+		logs.Error("Wrong Filetype, It should be 0 or 1 ")
 		os.Exit(qshell.STATUS_HALT)
 	}
 
