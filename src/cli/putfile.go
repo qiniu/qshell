@@ -29,21 +29,31 @@ var upSettings = rio.Settings{
 }
 
 func FormPut(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 || len(params) == 5 || len(params) == 6 {
+	if len(params) >= 3 && len(params) <= 7 {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
 		mimeType := ""
 		upHost := ""
 		overwrite := false
+		fileType := 0
 
 		optionalParams := params[3:]
 		for _, param := range optionalParams {
+
+			if ft, err := strconv.Atoi(param); err == nil {
+				if ft == 1 || ft == 0 {
+					fileType = ft
+					continue
+				} else {
+					fmt.Println("Wrong Filetype, It should be 0 or 1 ")
+					os.Exit(qshell.STATUS_ERROR)
+				}
+			}
 			if val, pErr := strconv.ParseBool(param); pErr == nil {
 				overwrite = val
 				continue
 			}
-
 			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
 				upHost = param
 				continue
@@ -81,6 +91,7 @@ func FormPut(cmd string, params ...string) {
 		} else {
 			policy.Scope = bucket
 		}
+		policy.FileType = fileType
 		policy.Expires = 7 * 24 * 3600
 		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 		putExtra := fio.PutExtra{}
@@ -150,21 +161,32 @@ func FormPut(cmd string, params ...string) {
 }
 
 func ResumablePut(cmd string, params ...string) {
-	if len(params) == 3 || len(params) == 4 || len(params) == 5 || len(params) == 6 {
+	if len(params) >= 3 && len(params) <= 7 {
 		bucket := params[0]
 		key := params[1]
 		localFile := params[2]
 		mimeType := ""
 		upHost := ""
 		overwrite := false
+		fileType := 0
 
 		optionalParams := params[3:]
 		for _, param := range optionalParams {
+
+			if ft, err := strconv.Atoi(param); err == nil {
+				if ft == 1 || ft == 0 {
+					fileType = ft
+					continue
+				} else {
+					fmt.Println("Wrong Filetype, It should be 0 or 1 ")
+					os.Exit(qshell.STATUS_ERROR)
+				}
+
+			}
 			if val, pErr := strconv.ParseBool(param); pErr == nil {
 				overwrite = val
 				continue
 			}
-
 			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
 				upHost = param
 				continue
@@ -210,6 +232,7 @@ func ResumablePut(cmd string, params ...string) {
 		} else {
 			policy.Scope = bucket
 		}
+		policy.FileType = fileType
 		policy.Expires = 7 * 24 * 3600
 		policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 
