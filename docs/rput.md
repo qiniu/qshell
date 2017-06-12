@@ -98,3 +98,21 @@ Fsize: 25538648 ( 24.36 MB )
 MimeType: video/mp4
 Last time: 13.38 s, Average Speed: 1908.6 KB/s
 ```
+
+5. 使用低频存储
+
+```
+$ qshell rput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg true 1
+```
+
+输出：
+
+```
+Uploading /Users/jemy/Documents/qiniu.jpg => if-pbl : 2015/01/18/qiniu.jpg ...
+Progress: 100%
+Put file /Users/jemy/Documents/qiniu.jpg => if-pbl : 2015/01/18/qiniu.jpg success!
+Hash: Ftgm-CkWePC9fzMBTRNmPMhGBcSV
+Fsize: 39335 ( 38.41 KB )
+MimeType: image/jpeg
+Last time: 0.40 s, Average Speed: 98.2 KB/s
+```

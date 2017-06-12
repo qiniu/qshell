@@ -52,6 +52,7 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 }
 ```
 
+
 |参数名|描述|可选参数|
 |-----------|------------|------------|
 |src_dir|本地同步路径，为全路径格式，工具将同步该目录下面所有的文件；在Windows系统下面使用的时候，注意`src_dir`的设置遵循`D:\\jemy\\backup`这种方式。也就是路径里面的`\`要有两个（`\\`）|N|
