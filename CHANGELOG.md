@@ -1,3 +1,6 @@
+# 2.0.9
+1. 修复`sync`命令发送最后一块`Range`请求指定的头部不严格的问题
+
 # 2.0.8
 1. `fput`, `rput`, `stat`, `qupload`, `qupload2`，`batchstat`，`listbucket`命令支持低频存储
 2. 修复`sync`命令不支持链接302的bug
