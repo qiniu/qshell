@@ -418,8 +418,8 @@ func batchStat(client rs.Client, entries []rs.EntryPath) {
 			if item.Code != 200 || item.Data.Error != "" {
 				fmt.Println(entry.Key + "\t" + item.Data.Error)
 			} else {
-				fmt.Println(fmt.Sprintf("%s\t%d\t%s\t%s\t%d", entry.Key,
-					item.Data.Fsize, item.Data.Hash, item.Data.MimeType, item.Data.PutTime))
+				fmt.Println(fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d", entry.Key,
+					item.Data.Fsize, item.Data.Hash, item.Data.MimeType, item.Data.PutTime, item.Data.FileType))
 			}
 		}
 	} else {

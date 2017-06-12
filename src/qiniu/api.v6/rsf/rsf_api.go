@@ -20,7 +20,8 @@ type ListItem struct {
 	Fsize    int64  `json:"fsize"`
 	PutTime  int64  `json:"putTime"`
 	MimeType string `json:"mimeType"`
-	EndUser  string `json:"endUser"`
+	FileType int    `json:"type"`
+	Enduser  string `json:"endUser"`
 }
 
 type ListRet struct {
