@@ -13,10 +13,10 @@
 # 格式
 
 ```
-qshell rput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost]
+qshell rput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost] [FileType]
 ```
 
-其中 `Overwrite`，`MimeType`，`UpHost` 参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
+其中 `Overwrite`，`MimeType`，`UpHost` `FileType`参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
 
 # 鉴权
 
@@ -32,6 +32,8 @@ qshell rput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost]
 |Overwrite|是否覆盖空间已有文件，默认为`false`|Y|
 |MimeType|指定文件的MimeType|Y|
 |UpHost|上传入口地址，默认为空间所在机房的上传加速域名|Y|
+|FileType|文件存储类型，默认为`0`(标准存储） `1`为低频存储|Y|
+
 
 关于 `UpHost` ，这个是用来指定上传所使用的入口域名。在不指定的情况下，程序会自动根据空间来获取其所在的机房，并选择对应的上传加速域名作为上传域名。对于七牛的几大机房，默认的上传加速域名和其他源站域名分别如下表。
 
@@ -95,4 +97,22 @@ Hash: lhsawSRA9-0L8b0s-cXmojaMhGqn
 Fsize: 25538648 ( 24.36 MB )
 MimeType: video/mp4
 Last time: 13.38 s, Average Speed: 1908.6 KB/s
+```
+
+5. 使用低频存储
+
+```
+$ qshell rput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg true 1
+```
+
+输出：
+
+```
+Uploading /Users/jemy/Documents/qiniu.jpg => if-pbl : 2015/01/18/qiniu.jpg ...
+Progress: 100%
+Put file /Users/jemy/Documents/qiniu.jpg => if-pbl : 2015/01/18/qiniu.jpg success!
+Hash: Ftgm-CkWePC9fzMBTRNmPMhGBcSV
+Fsize: 39335 ( 38.41 KB )
+MimeType: image/jpeg
+Last time: 0.40 s, Average Speed: 98.2 KB/s
 ```

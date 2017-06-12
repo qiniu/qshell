@@ -2,11 +2,12 @@
 
 `listbucket`用来获取七牛空间里面的文件列表，可以指定文件前缀获取指定的文件列表，如果不指定，则获取所有文件的列表。
 
-获取的文件列表组织格式如下：
+获取的文件列表组织格式如下（每个字段用Tab分隔）：
 
 ```
-Key\tSize\tHash\tPutTime\tMimeType\tEndUser
+Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 ```
+
 
 参考文档：[资源列举 (list)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/list.html)
 
@@ -65,9 +66,9 @@ qshell listbucket if-pbl '2014/10/07/' if-pbl.prefix.list.txt
 结果：
 
 ```
-hello.jpg	1710619	FlUqUK7zqbqm3NPwzq2q7TMZ-Ijs	14209629320769140	image/jpeg
-hello.mp4	8495868	lns2dAHvO0qYseZFgDn3UqZlMOi-	14207312835630132	video/mp4
-hhh	1492031	FjiRl_U0AeSsVCHXscCGObKyMy8f	14200176147531840	image/jpeg
-jemygraw.jpg	1900176	FtmHAbztWfPEqPMv4t4vMNRYMETK	14208960018750329	application/octet-stream	QiniuAndroid
+hello.jpg	1710619	FlUqUK7zqbqm3NPwzq2q7TMZ-Ijs	14209629320769140	image/jpeg  1
+hello.mp4	8495868	lns2dAHvO0qYseZFgDn3UqZlMOi-	14207312835630132	video/mp4   0
+hhh	1492031	FjiRl_U0AeSsVCHXscCGObKyMy8f	14200176147531840	image/jpeg  1
+jemygraw.jpg	1900176	FtmHAbztWfPEqPMv4t4vMNRYMETK	14208960018750329	application/octet-stream	1   QiniuAndroid
 ```
 

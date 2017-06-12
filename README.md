@@ -9,9 +9,16 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 该工具使用Go语言编写而成，当然为了方便不熟悉Go或者急于使用工具来解决问题的开发者，我们提供了预先编译好的各主流操作系统平台的二进制文件供大家下载使用，由于平台的多样性，我们把这些二进制打包放到一个文件里面，请大家根据下面的说明各自选择合适的版本来使用。在文档中的例子里面，为了方便，我们统一使用`qshell`这个命令来做介绍。
 
-|版本     |支持平台|链接|更新日志|
-|--------|---------|----|------|
-|qshell v2.0.7|Linux (32, 64位，arm平台), Windows(32, 64位), Mac OSX(32, 64位)|[下载](http://devtools.qiniu.com/qshell-v2.0.7.zip)|[查看](CHANGELOG.md)|
+> 更新日志 [查看](CHANGELOG.md)
+
+|版本     |支持平台|链接|
+|--------|---------|----|
+|qshell v2.0.8|Mac OSX(64位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-darwin-x64)|
+|qshell v2.0.8|Linux (arm平台)|[下载](http://devtools.qiniu.com/2.0.8/qshell-linux-arm)|
+|qshell v2.0.8|Linux (64位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-linux-x64)|
+|qshell v2.0.8|Linux (32位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-linux-x86)|
+|qshell v2.0.8|Windows(64位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-windows-x64.exe)|
+|qshell v2.0.8|Windows(32位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-windows-x86.exe)|
 
 ## 安装
 
@@ -19,13 +26,12 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |文件名|描述|
 |-----|-----|
-|qshell_linux_386|Linux 32位系统|
-|qshell_linux_amd64|Linux 64位系统|
+|qshell_linux_x86 |Linux 32位系统|
+|qshell_linux_x64|Linux 64位系统|
 |qshell_linux_arm|Linux ARM CPU|
-|qshell_windows_386.exe|Windows 32位系统|
-|qshell_windows_amd64.exe|Windows 64位系统|
-|qshell_darwin_386|Mac 32位系统，这种系统很老了|
-|qshell_darwin_amd64|Mac 64位系统，主流的系统|
+|qshell_windows_x86.exe|Windows 32位系统|
+|qshell_windows_x64.exe|Windows 64位系统|
+|qshell_darwin_x64|Mac 64位系统，主流的系统|
 
 **Linux和Mac平台**
 

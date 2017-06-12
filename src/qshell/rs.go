@@ -56,6 +56,7 @@ type BatchItemRetData struct {
 	MimeType string `json:"mimeType,omitempty"`
 	PutTime  int64  `json:"putTime,omitempty"`
 	Error    string `json:"error,omitempty"`
+	FileType int    `json:"type"`
 }
 
 func Fetch(mac *digest.Mac, remoteResUrl, bucket, key string) (fetchResult FetchResult, err error) {

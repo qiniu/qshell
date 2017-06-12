@@ -47,9 +47,11 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
    "log_file"           :   "upload.log",
    "log_level"          :   "info",
    "log_rotate"         :   1,
-   "log_stdout"         :   false
+   "log_stdout"         :   false,
+   "file_type"          :   0
 }
 ```
+
 
 |参数名|描述|可选参数|
 |-----------|------------|------------|
@@ -72,6 +74,7 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 |log_file|上传日志的输出文件，如果不指定会输出到qshell工作目录下默认的文件中，文件名可以在终端输出看到|Y|
 |log_rotate|上传日志文件的切换周期，单位为天，默认为1天即切换到新的上传日志文件|Y|
 |log_stdout|上传日志是否同时输出一份到标准终端，默认为false，主要在调试上传功能时可以指定为true|Y|
+|file_type|文件存储类型，默认为`0`(标准存储） `1`为低频存储|Y|
 
 对于那么多的参数，我们可以分为几类来解释：
 

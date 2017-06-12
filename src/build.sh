@@ -1,3 +1,3 @@
 DIR=$(cd ../; pwd)
-export GOPATH=$GOPATH:$DIR
+export GOPATH=$DIR:$GOPATH
 go build main.go
