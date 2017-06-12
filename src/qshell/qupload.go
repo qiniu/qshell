@@ -383,11 +383,9 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 				policy.Scope = fmt.Sprintf("%s:%s", uploadConfig.Bucket, uploadFileKey)
 				policy.InsertOnly = 0
 			}
-			if uploadConfig.FileType == 1 {
-				policy.FileType = 1
-			} else {
-				policy.FileType = 0
-			}
+			
+			policy.FileType = uploadConfig.FileType
+			
 			policy.Expires = 7 * 24 * 3600
 			upToken := policy.Token(&mac)
 

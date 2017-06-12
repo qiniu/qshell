@@ -49,8 +49,13 @@ func QiniuUpload(cmd string, params ...string) {
 			logs.Error("Parse upload config file `%s` errror due to `%s`", uploadConfigFile, err)
 			os.Exit(qshell.STATUS_HALT)
 		}
-		srcFileInfo, err := os.Stat(uploadConfig.SrcDir)
 
+		if uploadConfig.FileType != 1 && uploadConfig.FileType != 0 {
+			logs.Error("Wrong Filetype, It should be `0` or `1` ")
+			os.Exit(qshell.STATUS_HALT)
+		}
+
+		srcFileInfo, err := os.Stat(uploadConfig.SrcDir)
 		if err != nil {
 			logs.Error("Upload config error for parameter `SrcDir`,", err)
 			os.Exit(qshell.STATUS_HALT)

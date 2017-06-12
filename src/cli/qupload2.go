@@ -61,7 +61,7 @@ func QiniuUpload2(cmd string, params ...string) {
 	flagSet.StringVar(&logLevel, "log-level", "info", "log level")
 	flagSet.IntVar(&logRotate, "log-rotate", 1, "log rotate days")
 	flagSet.BoolVar(&watchDir, "watch", false, "watch dir changes after upload completes")
-	flagSet.IntVar(&fileType, "filetype", 0, "use infrequency storage")
+	flagSet.IntVar(&fileType, "filetype", 0, "Select storage filetype")
 
 	flagSet.Parse(params)
 
@@ -116,6 +116,10 @@ func QiniuUpload2(cmd string, params ...string) {
 		} else if threadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
 			threadCount = qshell.MAX_UPLOAD_THREAD_COUNT
 		}
+	}
+	if uploadConfig.FileType != 1 && uploadConfig.FileType != 0 {
+		logs.Error("Wrong Filetype, It should be `0` or `1` ")
+		os.Exit(qshell.STATUS_HALT)
 	}
 
 	qshell.QiniuUpload(int(threadCount), &uploadConfig, watchDir)

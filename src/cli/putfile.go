@@ -44,8 +44,11 @@ func FormPut(cmd string, params ...string) {
 			if ft, err := strconv.Atoi(param); err == nil {
 				if ft == 1 || ft == 0 {
 					filetype = ft
+					continue
+				} else {
+					fmt.Println("Wrong Filetype, It should be `0` or `1` ")
+					os.Exit(qshell.STATUS_ERROR)
 				}
-				continue
 			}
 			if val, pErr := strconv.ParseBool(param); pErr == nil {
 				overwrite = val
@@ -166,15 +169,19 @@ func ResumablePut(cmd string, params ...string) {
 		upHost := ""
 		overwrite := false
 		filetype := 0
-		
+
 		optionalParams := params[3:]
 		for _, param := range optionalParams {
-			
+
 			if ft, err := strconv.Atoi(param); err == nil {
 				if ft == 1 || ft == 0 {
 					filetype = ft
+					continue
+				} else {
+					fmt.Println("Wrong Filetype, It should be `0` or `1` ")
+					os.Exit(qshell.STATUS_ERROR)
 				}
-				continue
+
 			}
 			if val, pErr := strconv.ParseBool(param); pErr == nil {
 				overwrite = val
@@ -184,7 +191,7 @@ func ResumablePut(cmd string, params ...string) {
 				upHost = param
 				continue
 			}
-			
+
 			mimeType = param
 		}
 
