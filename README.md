@@ -26,13 +26,12 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |文件名|描述|
 |-----|-----|
-|qshell_linux_386|Linux 32位系统|
-|qshell_linux_amd64|Linux 64位系统|
+|qshell_linux_x86 |Linux 32位系统|
+|qshell_linux_x64|Linux 64位系统|
 |qshell_linux_arm|Linux ARM CPU|
-|qshell_windows_386.exe|Windows 32位系统|
-|qshell_windows_amd64.exe|Windows 64位系统|
-|qshell_darwin_386|Mac 32位系统，这种系统很老了|
-|qshell_darwin_amd64|Mac 64位系统，主流的系统|
+|qshell_windows_x86.exe|Windows 32位系统|
+|qshell_windows_x64.exe|Windows 64位系统|
+|qshell_darwin_x64|Mac 64位系统，主流的系统|
 
 **Linux和Mac平台**
 

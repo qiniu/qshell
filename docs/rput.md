@@ -13,7 +13,7 @@
 # 格式
 
 ```
-qshell rput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost] [filetype]
+qshell rput <Bucket> <Key> <LocalFile> [Overwrite] [MimeType] [UpHost] [FileType]
 ```
 
 其中 `Overwrite`，`MimeType`，`UpHost` `filetype`参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
