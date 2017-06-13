@@ -145,14 +145,14 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 
 		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
 		logs.Info("Syncing block %d [%s] ...", blkIndex, syncPercent)
-		blkCtx, pErr := rangeMkblkPipe(srcResUrl, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
+		blkCtx, pErr := rangeMkblkPipe(srcResUrl, totalSize, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 		if pErr != nil {
 			logs.Error(pErr.Error())
 			time.Sleep(RETRY_INTERVAL)
 
 			for retryTimes := 1; retryTimes <= RETRY_MAX_TIMES; retryTimes++ {
 				logs.Info("Retrying %d time range & mkblk block [%d]", retryTimes, blkIndex)
-				blkCtx, pErr = rangeMkblkPipe(srcResUrl, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
+				blkCtx, pErr = rangeMkblkPipe(srcResUrl, totalSize, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 				if pErr != nil {
 					logs.Error(pErr)
 					//wait a interval and retry
@@ -197,7 +197,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 	return
 }
 
-func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int64, lastBlock bool,
+func rangeMkblkPipe(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int64, lastBlock bool,
 	putClient rpc.Client) (putRet rio.BlkputRet, err error) {
 	//range get
 	dReq, dReqErr := http.NewRequest("GET", srcResUrl, nil)
@@ -210,6 +210,10 @@ func rangeMkblkPipe(srcResUrl string, rangeStartOffset int64, rangeBlockSize int
 
 	//set range header
 	rangeEndOffset := rangeStartOffset + rangeBlockSize - 1
+	if lastBlock {
+		rangeEndOffset = totalSize - 1
+	}
+
 	dReq.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", rangeStartOffset, rangeEndOffset))
 
 	//set client properties
