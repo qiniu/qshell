@@ -95,7 +95,7 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 		//append entries
 		for _, entry := range entries {
 			lineData := fmt.Sprintf("%s\t%d\t%s\t%d\t%s\t%d\t%s\r\n",
-				entry.Key, entry.Fsize, entry.Hash, entry.PutTime, entry.MimeType, entry.FileType, entry.Enduser)
+				entry.Key, entry.Fsize, entry.Hash, entry.PutTime, entry.MimeType, entry.FileType, entry.EndUser)
 			_, wErr := bWriter.WriteString(lineData)
 			if wErr != nil {
 				logs.Error("Write line data `%s` to list result file failed.", lineData)
