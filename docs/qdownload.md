@@ -26,6 +26,8 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 
 # 配置
 
+【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数！！！】
+
 `qdownload` 功能需要配置文件的支持，配置文件的内容如下：
 
 ```
@@ -66,7 +68,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 
 需要同步空间`qdisk`中的所有以`movies/`开头，并以`.mp4`结尾的文件到本地路径`/Users/jemy/Temp7/backup`下面：
 
-配置文件：
+配置文件：【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数！！！】
 
 ```
 {
