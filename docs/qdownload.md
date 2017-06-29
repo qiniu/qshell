@@ -24,9 +24,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 
 其中 `ThreadCount` 表示支持同时下载多个文件。
 
-# 配置
-
-【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数！！！】
+# 配置【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数！！！】
 
 `qdownload` 功能需要配置文件的支持，配置文件的内容如下：
 
@@ -64,11 +62,9 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 1. 在Windows系统下面使用的时候，注意`dest_dir`的设置遵循`D:\\jemy\\backup`这种方式。也就是路径里面的`\`要有两个（`\\`）。
 2. 在默认不指定`cdn_domain`的情况下，会从存储源站下载资源，这部分下载产生的流量会生成存储源站下载流量的计费，请注意，这部分计费不在七牛CDN免费10G流量覆盖范围。
 
-# 示例
+# 示例 配置文件：【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数！！！】
 
 需要同步空间`qdisk`中的所有以`movies/`开头，并以`.mp4`结尾的文件到本地路径`/Users/jemy/Temp7/backup`下面：
-
-配置文件：【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数！！！】
 
 ```
 {
