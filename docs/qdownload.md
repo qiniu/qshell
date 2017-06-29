@@ -1,4 +1,4 @@
-# 简介
+# 简介 【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数！！！】
 
 `qdownload`可以将七牛空间中的文件同步到本地磁盘中。支持只同步带特定前缀或者后缀的文件，也支持在本地备份路径不变的情况下进行增量同步。
 需要额外指出的是，将文件同步到本地都是走的七牛存储源站的流量而不是CDN的流量，因为CDN通常情况下会认为大量的文件下载操作是非法访问从而进行限制。
@@ -72,6 +72,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 {
 	"dest_dir"	:	"/Users/jemy/Temp7/backup",
 	"bucket"	:	"qdisk",
+	"cdn_domain:    :       "if-pbl.qiniudn.com",
 	"prefix"	:	"movies/",
 	"suffixes"	:	".mp4"
 }
