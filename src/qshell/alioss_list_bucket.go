@@ -3,10 +3,9 @@ package qshell
 import (
 	"bufio"
 	"fmt"
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/astaxie/beego/logs"
-	"github.com/yanunon/oss-go-api/oss"
 	"os"
-	"time"
 )
 
 type AliListBucket struct {
@@ -28,14 +27,32 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 	bw := bufio.NewWriter(fp)
 	//list bucket by prefix
 	marker := ""
+	limit := 1000
 	prefixLen := len(this.Prefix)
-	ossClient := oss.NewClient(this.DataCenter, this.AccessKeyId, this.AccessKeySecret, 0)
+	ossClient, clientErr := oss.New(this.DataCenter, this.AccessKeyId, this.AccessKeySecret)
+	if clientErr != nil {
+		err = clientErr
+		return
+	}
+
+	ossBucket, bucketErr := ossClient.Bucket(this.Bucket)
+	if bucketErr != nil {
+		err = bucketErr
+		return
+	}
+
 	maxRetryTimes := 5
 	retryTimes := 1
 
 	logs.Info("Listing the oss bucket...")
 	for {
-		lbr, lbrErr := ossClient.GetBucket(this.Bucket, this.Prefix, marker, "", "")
+		listOptions := []oss.Option{
+			oss.MaxKeys(limit),
+			oss.Prefix(this.Prefix),
+			oss.Marker(marker),
+		}
+
+		lbr, lbrErr := ossBucket.ListObjects(listOptions...)
 		if lbrErr != nil {
 			err = lbrErr
 			logs.Error("Parse list result error,", "marker=[", marker, "]", lbrErr)
@@ -49,12 +66,8 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 		} else {
 			retryTimes = 1
 		}
-		for _, object := range lbr.Contents {
-			lmdTime, lmdPErr := time.Parse("2006-01-02T15:04:05.999Z", object.LastModified)
-			if lmdPErr != nil {
-				logs.Error("Parse object last modified error, ", lmdPErr)
-				lmdTime = time.Now()
-			}
+		for _, object := range lbr.Objects {
+			lmdTime := object.LastModified
 			bw.WriteString(fmt.Sprintln(fmt.Sprintf("%s\t%d\t%d", object.Key[prefixLen:], object.Size, lmdTime.UnixNano()/100)))
 		}
 		if !lbr.IsTruncated {
