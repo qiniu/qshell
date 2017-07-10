@@ -3,7 +3,9 @@
 ## 简介
 
 qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现的一个方便开发者测试和使用七牛API服务的命令行工具。该工具设计和开发的主要目的就是帮助开发者快速解决问题。目前该工具融合了七牛存储，CDN，以及其他的一些七牛服务中经常使用到的方法对应的便捷命令，比如b64decode，就是用来解码七牛的URL安全的Base64编码用的，所以这是一个面向开发者的工具，任何新的被认为适合加到该工具中的命令需求，都可以在[ISSUE列表](https://github.com/qiniu/qshell/issues)里面提出来，我们会尽快评估实现，以帮助大家更好地使用七牛服务。
-[![asciicast](https://asciinema.org/a/3l4d74sb2s01lwbt2y3k83p5l.png)](https://asciinema.org/a/3l4d74sb2s01lwbt2y3k83p5l)
+
+![qshell-quick-tour.gif](http://devtools.qiniu.com/qshell-quick-tour.gif)
+
 
 ## 下载
 
@@ -13,12 +15,12 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell v2.0.8|Mac OSX(64位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-darwin-x64)|
-|qshell v2.0.8|Linux (arm平台)|[下载](http://devtools.qiniu.com/2.0.8/qshell-linux-arm)|
-|qshell v2.0.8|Linux (64位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-linux-x64)|
-|qshell v2.0.8|Linux (32位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-linux-x86)|
-|qshell v2.0.8|Windows(64位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-windows-x64.exe)|
-|qshell v2.0.8|Windows(32位)|[下载](http://devtools.qiniu.com/2.0.8/qshell-windows-x86.exe)|
+|qshell v2.0.9|Mac OSX(64位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-darwin-x64)|
+|qshell v2.0.9|Linux (arm平台)|[下载](http://devtools.qiniu.com/2.0.9/qshell-linux-arm)|
+|qshell v2.0.9|Linux (64位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-linux-x64)|
+|qshell v2.0.9|Linux (32位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-linux-x86)|
+|qshell v2.0.9|Windows(64位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-windows-x64.exe)|
+|qshell v2.0.9|Windows(32位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-windows-x86.exe)|
 
 ## 安装
 

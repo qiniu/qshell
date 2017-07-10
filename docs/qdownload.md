@@ -1,4 +1,4 @@
-# 简介
+# 简介 【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数，如不设置，需支付源站流量费用，无法减免！！！】
 
 `qdownload`可以将七牛空间中的文件同步到本地磁盘中。支持只同步带特定前缀或者后缀的文件，也支持在本地备份路径不变的情况下进行增量同步。
 需要额外指出的是，将文件同步到本地都是走的七牛存储源站的流量而不是CDN的流量，因为CDN通常情况下会认为大量的文件下载操作是非法访问从而进行限制。
@@ -24,7 +24,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 
 其中 `ThreadCount` 表示支持同时下载多个文件。
 
-# 配置
+# 配置【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数，如不设置，需支付源站流量费用，无法减免！！！】
 
 `qdownload` 功能需要配置文件的支持，配置文件的内容如下：
 
@@ -49,7 +49,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 |bucket|空间名称|N|
 |prefix|只同步指定前缀的文件，默认为空|Y|
 |suffixes|只同步指定后缀的文件，默认为空|Y|
-|cdn_domain|设置下载的CDN域名，默认为空表示从存储源站下载|N|
+|cdn_domain|设置下载的CDN域名，默认为空表示从存储源站下载，【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数，如不设置，需支付源站流量费用，无法减免！！！】|N|
 |referer|如果CDN域名配置了域名白名单防盗链，需要指定一个允许访问的referer地址|N|
 |log_level|上传日志输出级别，可选值为`debug`,`info`,`warn`,`error`,默认`info`|Y|
 |log_file|上传日志的输出文件，如果不指定会输出到qshell工作目录下默认的文件中，文件名可以在终端输出看到|Y|
@@ -62,16 +62,15 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 1. 在Windows系统下面使用的时候，注意`dest_dir`的设置遵循`D:\\jemy\\backup`这种方式。也就是路径里面的`\`要有两个（`\\`）。
 2. 在默认不指定`cdn_domain`的情况下，会从存储源站下载资源，这部分下载产生的流量会生成存储源站下载流量的计费，请注意，这部分计费不在七牛CDN免费10G流量覆盖范围。
 
-# 示例
+# 示例 【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数，如不设置，需支付源站流量费用，无法减免！！！】
 
 需要同步空间`qdisk`中的所有以`movies/`开头，并以`.mp4`结尾的文件到本地路径`/Users/jemy/Temp7/backup`下面：
-
-配置文件：
 
 ```
 {
 	"dest_dir"	:	"/Users/jemy/Temp7/backup",
 	"bucket"	:	"qdisk",
+	"cdn_domain:    :       "if-pbl.qiniudn.com",
 	"prefix"	:	"movies/",
 	"suffixes"	:	".mp4"
 }
