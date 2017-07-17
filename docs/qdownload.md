@@ -70,7 +70,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 {
 	"dest_dir"	:	"/Users/jemy/Temp7/backup",
 	"bucket"	:	"qdisk",
-	"cdn_domain:    :       "if-pbl.qiniudn.com",
+	"cdn_domain":    :      "if-pbl.qiniudn.com",
 	"prefix"	:	"movies/",
 	"suffixes"	:	".mp4"
 }
