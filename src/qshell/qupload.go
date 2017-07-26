@@ -106,6 +106,7 @@ type UploadConfig struct {
 var defaultIgnoreWatchSuffixes = []string{"~", ".swp"}
 
 var upSettings = rio.Settings{
+	Workers:   16,
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  3,
 }
@@ -383,9 +384,9 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 				policy.Scope = fmt.Sprintf("%s:%s", uploadConfig.Bucket, uploadFileKey)
 				policy.InsertOnly = 0
 			}
-			
+
 			policy.FileType = uploadConfig.FileType
-			
+
 			policy.Expires = 7 * 24 * 3600
 			upToken := policy.Token(&mac)
 
