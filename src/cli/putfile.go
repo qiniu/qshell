@@ -24,6 +24,7 @@ type PutRet struct {
 }
 
 var upSettings = rio.Settings{
+	Workers:   16,
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  3,
 }
