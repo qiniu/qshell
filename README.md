@@ -15,12 +15,12 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell v2.0.9|Mac OSX(64位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-darwin-x64)|
-|qshell v2.0.9|Linux (arm平台)|[下载](http://devtools.qiniu.com/2.0.9/qshell-linux-arm)|
-|qshell v2.0.9|Linux (64位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-linux-x64)|
-|qshell v2.0.9|Linux (32位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-linux-x86)|
-|qshell v2.0.9|Windows(64位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-windows-x64.exe)|
-|qshell v2.0.9|Windows(32位)|[下载](http://devtools.qiniu.com/2.0.9/qshell-windows-x86.exe)|
+|qshell v2.1.0|Mac OSX(64位)|[下载](http://devtools.qiniu.com/2.1.0/qshell-darwin-x64)|
+|qshell v2.1.0|Linux (arm平台)|[下载](http://devtools.qiniu.com/2.1.0/qshell-linux-arm)|
+|qshell v2.1.0|Linux (64位)|[下载](http://devtools.qiniu.com/2.1.0/qshell-linux-x64)|
+|qshell v2.1.0|Linux (32位)|[下载](http://devtools.qiniu.com/2.1.0/qshell-linux-x86)|
+|qshell v2.1.0|Windows(64位)|[下载](http://devtools.qiniu.com/2.1.0/qshell-windows-x64.exe)|
+|qshell v2.1.0|Windows(32位)|[下载](http://devtools.qiniu.com/2.1.0/qshell-windows-x86.exe)|
 
 ## 安装
 
