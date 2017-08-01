@@ -106,7 +106,7 @@ type UploadConfig struct {
 var defaultIgnoreWatchSuffixes = []string{"~", ".swp"}
 
 var upSettings = rio.Settings{
-	Workers:   16,
+	Workers:   8,
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  3,
 }
@@ -207,7 +207,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 
 	//use host if not empty, overwrite the default config
 	if uploadConfig.UpHost != "" {
-		conf.UP_HOST = uploadConfig.UpHost
+		conf.UP_HOST = strings.TrimSuffix(uploadConfig.UpHost, "/")
 	}
 	//set resume upload settings
 	rio.SetSettings(&upSettings)
