@@ -99,6 +99,7 @@ func FormPut(cmd string, params ...string) {
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
 		}
+		putExtra.CheckCrc = 1
 
 		uptoken := policy.Token(&mac)
 

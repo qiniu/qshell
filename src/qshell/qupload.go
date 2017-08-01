@@ -669,7 +669,11 @@ func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	}
 
 	putRet := fio.PutRet{}
-	err := fio.PutFile(putClient, nil, &putRet, upToken, uploadFileKey, localFilePath, nil)
+	putExtra := fio.PutExtra{
+		CheckCrc: 1,
+	}
+
+	err := fio.PutFile(putClient, nil, &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
 		if pErr, ok := err.(*rpc.ErrorInfo); ok {
