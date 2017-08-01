@@ -56,7 +56,7 @@ func FormPut(cmd string, params ...string) {
 				continue
 			}
 			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
-				upHost = param
+				upHost = strings.TrimSuffix(param, "/")
 				continue
 			}
 
@@ -189,7 +189,7 @@ func ResumablePut(cmd string, params ...string) {
 				continue
 			}
 			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
-				upHost = param
+				upHost = strings.TrimSuffix(param, "/")
 				continue
 			}
 
