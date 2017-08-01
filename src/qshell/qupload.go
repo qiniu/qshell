@@ -106,6 +106,7 @@ type UploadConfig struct {
 var defaultIgnoreWatchSuffixes = []string{"~", ".swp"}
 
 var upSettings = rio.Settings{
+	Workers:   8,
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  3,
 }
@@ -206,7 +207,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 
 	//use host if not empty, overwrite the default config
 	if uploadConfig.UpHost != "" {
-		conf.UP_HOST = uploadConfig.UpHost
+		conf.UP_HOST = strings.TrimSuffix(uploadConfig.UpHost, "/")
 	}
 	//set resume upload settings
 	rio.SetSettings(&upSettings)
@@ -383,9 +384,9 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 				policy.Scope = fmt.Sprintf("%s:%s", uploadConfig.Bucket, uploadFileKey)
 				policy.InsertOnly = 0
 			}
-			
+
 			policy.FileType = uploadConfig.FileType
-			
+
 			policy.Expires = 7 * 24 * 3600
 			upToken := policy.Token(&mac)
 
@@ -668,7 +669,11 @@ func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	}
 
 	putRet := fio.PutRet{}
-	err := fio.PutFile(putClient, nil, &putRet, upToken, uploadFileKey, localFilePath, nil)
+	putExtra := fio.PutExtra{
+		CheckCrc: 1,
+	}
+
+	err := fio.PutFile(putClient, nil, &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
 		if pErr, ok := err.(*rpc.ErrorInfo); ok {

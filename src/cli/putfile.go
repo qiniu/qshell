@@ -24,6 +24,7 @@ type PutRet struct {
 }
 
 var upSettings = rio.Settings{
+	Workers:   8,
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  3,
 }
@@ -55,7 +56,7 @@ func FormPut(cmd string, params ...string) {
 				continue
 			}
 			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
-				upHost = param
+				upHost = strings.TrimSuffix(param, "/")
 				continue
 			}
 
@@ -98,6 +99,7 @@ func FormPut(cmd string, params ...string) {
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
 		}
+		putExtra.CheckCrc = 1
 
 		uptoken := policy.Token(&mac)
 
@@ -188,7 +190,7 @@ func ResumablePut(cmd string, params ...string) {
 				continue
 			}
 			if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
-				upHost = param
+				upHost = strings.TrimSuffix(param, "/")
 				continue
 			}
 
