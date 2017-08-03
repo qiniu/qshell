@@ -146,6 +146,7 @@ $ qshell -m stat bucket key
 |batchmove|存储|批量移动七牛空间中的文件到另一个空间|[文档](docs/batchmove.md)|
 |batchrename|存储|批量重命名七牛空间中的文件|[文档](docs/batchrename.md)|
 |batchsign|存储|批量根据资源的公开外链生成资源的私有外链|[文档](docs/batchsign.md)|
+|batchstat|存储|批量查询七牛空间中文件的基本信息|[文档](docs/batchstat.md)|
 |privateurl|存储|生成私有空间资源的访问外链|[文档](docs/privateurl.md)|
 |saveas|存储|实时处理的saveas链接快捷生成工具|[文档](docs/saveas.md)|
 |reqid|存储|七牛自定义头部X-Reqid解码工具|[文档](docs/reqid.md)|
