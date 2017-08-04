@@ -11,9 +11,13 @@ import (
 )
 
 func QiniuUpload(cmd string, params ...string) {
-	var watchDir bool
+	var successFname string
+	var failureFname string
+	var overwriteFname string
 	flagSet := flag.NewFlagSet("qupload", flag.ExitOnError)
-	flagSet.BoolVar(&watchDir, "watch", false, "watch dir changes after upload completes")
+	flagSet.StringVar(&successFname, "success-list", "", "upload success (all) file list")
+	flagSet.StringVar(&failureFname, "failure-list", "", "upload failure file list")
+	flagSet.StringVar(&overwriteFname, "overwrite-list", "", "upload success (overwrite) file list")
 	flagSet.Parse(params)
 	cmdParams := flagSet.Args()
 	if len(cmdParams) == 1 || len(cmdParams) == 2 {
@@ -78,7 +82,7 @@ func QiniuUpload(cmd string, params ...string) {
 			}
 		}
 
-		qshell.QiniuUpload(int(threadCount), &uploadConfig, watchDir)
+		qshell.QiniuUpload(int(threadCount), &uploadConfig, successFname, failureFname, overwriteFname)
 	} else {
 		CmdHelp(cmd)
 	}

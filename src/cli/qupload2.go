@@ -34,8 +34,10 @@ func QiniuUpload2(cmd string, params ...string) {
 	var logLevel string
 	var logFile string
 	var logRotate int
-	var watchDir bool
 	var fileType int
+	var successFname string
+	var failureFname string
+	var overwriteFname string
 
 	flagSet.Int64Var(&threadCount, "thread-count", 0, "multiple thread count")
 	flagSet.StringVar(&srcDir, "src-dir", "", "src dir to upload")
@@ -60,8 +62,10 @@ func QiniuUpload2(cmd string, params ...string) {
 	flagSet.StringVar(&logFile, "log-file", "", "log file")
 	flagSet.StringVar(&logLevel, "log-level", "info", "log level")
 	flagSet.IntVar(&logRotate, "log-rotate", 1, "log rotate days")
-	flagSet.BoolVar(&watchDir, "watch", false, "watch dir changes after upload completes")
 	flagSet.IntVar(&fileType, "filetype", 0, "Select storage filetype")
+	flagSet.StringVar(&successFname, "success-list", "", "upload success file list")
+	flagSet.StringVar(&failureFname, "failure-list", "", "upload failure file list")
+	flagSet.StringVar(&overwriteFname, "overwrite-list", "", "upload success (overwrite) file list")
 
 	flagSet.Parse(params)
 
@@ -122,5 +126,5 @@ func QiniuUpload2(cmd string, params ...string) {
 		os.Exit(qshell.STATUS_HALT)
 	}
 
-	qshell.QiniuUpload(int(threadCount), &uploadConfig, watchDir)
+	qshell.QiniuUpload(int(threadCount), &uploadConfig, successFname, failureFname, overwriteFname)
 }

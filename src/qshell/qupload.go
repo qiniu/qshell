@@ -45,8 +45,9 @@ Config file like:
 	"bind_up_ip"		:	"",
 	"bind_rs_ip"		:	"",
 	"bind_nic_ip"		:	"",
-	"rescan_local"		:	false
-}
+	"rescan_local"		:	false,
+	"delete_on_success" :   false
+ }
 
 or the simplest one
 
@@ -101,12 +102,15 @@ type UploadConfig struct {
 	LogFile   string `json:"log_file,omitempty"`
 	LogRotate int    `json:"log_rotate,omitempty"`
 	LogStdout bool   `json:"log_stdout,omitempty"`
+
+	//more settings
+	DeleteOnSuccess bool `json:"delete_on_success,omitempty"`
 }
 
 var defaultIgnoreWatchSuffixes = []string{"~", ".swp"}
 
 var upSettings = rio.Settings{
-	Workers:   8,
+	Workers:   16,
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  3,
 }
@@ -127,7 +131,9 @@ var notOverwriteCount int64
 var failureFileCount int64
 var skippedFileCount int64
 
-func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
+// QiniuUpload
+func QiniuUpload(threadCount int, uploadConfig *UploadConfig,
+	successFname, failureFname, overwriteFname string) {
 	timeStart := time.Now()
 	//create job id
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
@@ -180,6 +186,45 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 	}
 	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
+
+	//init file list writer
+	var successListFp *os.File
+	var failureListFp *os.File
+	var overwriteListFp *os.File
+	var openErr error
+
+	var successListWriter *bufio.Writer
+	var failureListWriter *bufio.Writer
+	var overwriteListWriter *bufio.Writer
+	if successFname != "" {
+		successListFp, openErr = os.Create(successFname)
+		if openErr != nil {
+			logs.Error("Open success list file error, %s", openErr)
+		} else {
+			defer successListFp.Close()
+			successListWriter = bufio.NewWriter(successListFp)
+		}
+	}
+
+	if failureFname != "" {
+		failureListFp, openErr = os.Create(failureFname)
+		if openErr != nil {
+			logs.Error("Open fail list file error, %s", openErr)
+		} else {
+			defer failureListFp.Close()
+			failureListWriter = bufio.NewWriter(failureListFp)
+		}
+	}
+
+	if overwriteFname != "" {
+		overwriteListFp, openErr = os.Create(overwriteFname)
+		if openErr != nil {
+			logs.Error("Open overwrite list file error, %s", openErr)
+		} else {
+			defer overwriteListFp.Close()
+			overwriteListWriter = bufio.NewWriter(overwriteListFp)
+		}
+	}
 
 	//global up settings
 	logs.Info("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
@@ -366,8 +411,10 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 		}
 
 		//check exists
-		if !checkFileNeedToUpload(uploadConfig, &rsClient, ldb, &ldbWOpt, ldbKey, localFilePath,
-			uploadFileKey, localFileLastModified, localFileSize) {
+		needToUpload, isOverwrite := checkFileNeedToUpload(uploadConfig, &rsClient, ldb, &ldbWOpt, ldbKey, localFilePath,
+			uploadFileKey, localFileLastModified, localFileSize)
+		if !needToUpload {
+			//no need to upload
 			continue
 		}
 
@@ -392,15 +439,28 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, watchDir bool) {
 
 			if localFileSize > putThreshold {
 				resumableUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken, storePath,
-					localFilePath, uploadFileKey, localFileLastModified)
+					localFilePath, uploadFileKey, localFileLastModified, isOverwrite, successListWriter, failureListWriter, overwriteListWriter)
 			} else {
 				formUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken,
-					localFilePath, uploadFileKey, localFileLastModified)
+					localFilePath, uploadFileKey, localFileLastModified, isOverwrite, successListWriter, failureListWriter, overwriteListWriter)
 			}
 		}
 	}
 
 	upWaitGroup.Wait()
+
+	//flush
+	if successListWriter != nil {
+		successListWriter.Flush()
+	}
+
+	if failureListWriter != nil {
+		failureListWriter.Flush()
+	}
+
+	if overwriteListWriter != nil {
+		overwriteListWriter.Flush()
+	}
 
 	logs.Informational("-------------Upload Result--------------")
 	logs.Informational("%20s%10d", "Total:", totalFileCount)
@@ -561,7 +621,7 @@ func hitBySuffixes(suffixesStr, localFileRelativePath string) (hit bool, hitSuff
 }
 
 func checkFileNeedToUpload(uploadConfig *UploadConfig, rsClient *rs.Client, ldb *leveldb.DB, ldbWOpt *opt.WriteOptions,
-	ldbKey, localFilePath, uploadFileKey string, localFileLastModified, localFileSize int64) (needToUpload bool) {
+	ldbKey, localFilePath, uploadFileKey string, localFileLastModified, localFileSize int64) (needToUpload, isOverwrite bool) {
 	//default to upload
 	needToUpload = true
 
@@ -592,6 +652,7 @@ func checkFileNeedToUpload(uploadConfig *UploadConfig, rsClient *rs.Client, ldb 
 						atomic.AddInt64(&notOverwriteCount, 1)
 						needToUpload = false
 					} else {
+						isOverwrite = true
 						logs.Informational("File `%s` exists in bucket, but hash not match, go to upload", uploadFileKey)
 					}
 				}
@@ -611,6 +672,7 @@ func checkFileNeedToUpload(uploadConfig *UploadConfig, rsClient *rs.Client, ldb 
 							atomic.AddInt64(&notOverwriteCount, 1)
 							needToUpload = false
 						} else {
+							isOverwrite = true
 							logs.Info("File `%s` exists in bucket, but size not match, go to upload", uploadFileKey)
 						}
 					}
@@ -651,6 +713,8 @@ func checkFileNeedToUpload(uploadConfig *UploadConfig, rsClient *rs.Client, ldb 
 						localFilePath)
 					atomic.AddInt64(&notOverwriteCount, 1)
 					needToUpload = false
+				} else {
+					isOverwrite = true
 				}
 			}
 		}
@@ -660,7 +724,8 @@ func checkFileNeedToUpload(uploadConfig *UploadConfig, rsClient *rs.Client, ldb 
 
 func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string,
-	localFilePath, uploadFileKey string, localFileLastModified int64) {
+	localFilePath, uploadFileKey string, localFileLastModified int64, isOverwrite bool,
+	successListWriter, failureListWriter, overwriteListWriter *bufio.Writer) {
 	var putClient rpc.Client
 	if transport != nil {
 		putClient = rpc.NewClientEx(transport, uploadConfig.BindUpIp)
@@ -676,10 +741,15 @@ func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	err := fio.PutFile(putClient, nil, &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
+		var errMsg string
 		if pErr, ok := err.(*rpc.ErrorInfo); ok {
-			logs.Error("Form upload file `%s` => `%s` failed due to rerror `%s`", localFilePath, uploadFileKey, pErr.Err)
+			errMsg = pErr.Err
 		} else {
-			logs.Error("Form upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, err)
+			errMsg = err.Error()
+		}
+		logs.Error("Form upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, errMsg)
+		if failureListWriter != nil {
+			failureListWriter.WriteString(fmt.Sprintf("%s\t%s\t%s\n", localFilePath, uploadFileKey, errMsg))
 		}
 	} else {
 		atomic.AddInt64(&successFileCount, 1)
@@ -688,12 +758,29 @@ func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 		if putErr != nil {
 			logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)
 		}
+		//delete on success
+		if uploadConfig.DeleteOnSuccess {
+			deleteErr := os.Remove(localFilePath)
+			if deleteErr != nil {
+				logs.Error("Delete `%s` on upload success error due to `%s`", localFilePath, deleteErr)
+			} else {
+				logs.Info("Delete `%s` on upload success done", localFilePath)
+			}
+		}
+
+		if successListWriter != nil {
+			successListWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		}
+		if isOverwrite && overwriteListWriter != nil {
+			overwriteListWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		}
 	}
 }
 
 func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string, storePath,
-	localFilePath, uploadFileKey string, localFileLastModified int64) {
+	localFilePath, uploadFileKey string, localFileLastModified int64, isOverwrite bool,
+	successListWriter, failureListWriter, overwriteListWriter *bufio.Writer) {
 	var putClient rpc.Client
 	if transport != nil {
 		putClient = rio.NewClientEx(upToken, transport, uploadConfig.BindUpIp)
@@ -716,10 +803,15 @@ func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	if err != nil {
 		os.Remove(progressFilePath)
 		atomic.AddInt64(&failureFileCount, 1)
+		var errMsg string
 		if pErr, ok := err.(*rpc.ErrorInfo); ok {
-			logs.Error("Resumable upload file `%s` => `%s` failed due to rerror `%s`", localFilePath, uploadFileKey, pErr.Err)
+			errMsg = pErr.Err
 		} else {
-			logs.Error("Resumable upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, err)
+			errMsg = err.Error()
+		}
+		logs.Error("Resumable upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, errMsg)
+		if failureListWriter != nil {
+			failureListWriter.WriteString(fmt.Sprintf("%s\t%s\t%s\n", localFilePath, uploadFileKey, errMsg))
 		}
 	} else {
 		os.Remove(progressFilePath)
@@ -728,6 +820,22 @@ func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 		putErr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFileLastModified)), ldbWOpt)
 		if putErr != nil {
 			logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)
+		}
+		//delete on success
+		if uploadConfig.DeleteOnSuccess {
+			deleteErr := os.Remove(localFilePath)
+			if deleteErr != nil {
+				logs.Error("Delete `%s` on upload success error due to `%s`", localFilePath, deleteErr)
+			} else {
+				logs.Info("Delete `%s` on upload success done", localFilePath)
+			}
+		}
+
+		if successListWriter != nil {
+			successListWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		}
+		if isOverwrite && overwriteListWriter != nil {
+			overwriteListWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
 		}
 	}
 }
