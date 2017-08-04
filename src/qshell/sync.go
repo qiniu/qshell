@@ -144,7 +144,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 		}
 
 		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
-		logs.Info("Syncing block %d [%s] ...", blkIndex, syncPercent)
+		logs.Info("Syncing block %d [%s%%] ...", blkIndex, syncPercent)
 		blkCtx, pErr := rangeMkblkPipe(srcResUrl, totalSize, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
 		if pErr != nil {
 			logs.Error(pErr.Error())

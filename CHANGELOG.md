@@ -1,3 +1,6 @@
+# 2.1.2
+1. 优化`qupload`的导出的文件列表的写入文件的及时性
+
 # 2.1.1
 1. 为`qupload`增加`delete_on_success`配置，支持上传成功后删除本地文件
 2. 为`qupload`增加`success-list`，`failure-list`以及`overwrite-list`几个命令选项，支持导出上传结果的文件列表

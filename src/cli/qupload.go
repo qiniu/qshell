@@ -82,7 +82,12 @@ func QiniuUpload(cmd string, params ...string) {
 			}
 		}
 
-		qshell.QiniuUpload(int(threadCount), &uploadConfig, successFname, failureFname, overwriteFname)
+		fileExporter := qshell.FileExporter{
+			SuccessFname:   successFname,
+			FailureFname:   failureFname,
+			OverwriteFname: overwriteFname,
+		}
+		qshell.QiniuUpload(int(threadCount), &uploadConfig, &fileExporter)
 	} else {
 		CmdHelp(cmd)
 	}
