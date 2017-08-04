@@ -310,6 +310,7 @@ demo2.gif
 ```
 $ qshell qupload -success-list success.txt upload.conf 
 ```
+特别提示：由于这些选项所指定的文件在每次运行命令时，如果文件已存在，则已有内容会被清空然后写入新的内容，所以注意每次命令运行指定不同的文件。
 
 **绑定网卡IP上传**
 

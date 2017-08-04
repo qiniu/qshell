@@ -131,9 +131,21 @@ var notOverwriteCount int64
 var failureFileCount int64
 var skippedFileCount int64
 
+// FileExporter
+type FileExporter struct {
+	SuccessFname    string
+	SuccessLock     sync.RWMutex
+	SuccessWriter   *bufio.Writer
+	FailureFname    string
+	FailureLock     sync.RWMutex
+	FailureWriter   *bufio.Writer
+	OverwriteFname  string
+	OverwriteLock   sync.RWMutex
+	OverwriteWriter *bufio.Writer
+}
+
 // QiniuUpload
-func QiniuUpload(threadCount int, uploadConfig *UploadConfig,
-	successFname, failureFname, overwriteFname string) {
+func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExporter) {
 	timeStart := time.Now()
 	//create job id
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
@@ -196,33 +208,36 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig,
 	var successListWriter *bufio.Writer
 	var failureListWriter *bufio.Writer
 	var overwriteListWriter *bufio.Writer
-	if successFname != "" {
-		successListFp, openErr = os.Create(successFname)
+	if exporter.SuccessFname != "" {
+		successListFp, openErr = os.Create(exporter.SuccessFname)
 		if openErr != nil {
 			logs.Error("Open success list file error, %s", openErr)
 		} else {
 			defer successListFp.Close()
 			successListWriter = bufio.NewWriter(successListFp)
+			exporter.SuccessWriter = successListWriter
 		}
 	}
 
-	if failureFname != "" {
-		failureListFp, openErr = os.Create(failureFname)
+	if exporter.FailureFname != "" {
+		failureListFp, openErr = os.Create(exporter.FailureFname)
 		if openErr != nil {
 			logs.Error("Open fail list file error, %s", openErr)
 		} else {
 			defer failureListFp.Close()
 			failureListWriter = bufio.NewWriter(failureListFp)
+			exporter.FailureWriter = failureListWriter
 		}
 	}
 
-	if overwriteFname != "" {
-		overwriteListFp, openErr = os.Create(overwriteFname)
+	if exporter.OverwriteFname != "" {
+		overwriteListFp, openErr = os.Create(exporter.OverwriteFname)
 		if openErr != nil {
 			logs.Error("Open overwrite list file error, %s", openErr)
 		} else {
 			defer overwriteListFp.Close()
 			overwriteListWriter = bufio.NewWriter(overwriteListFp)
+			exporter.OverwriteWriter = overwriteListWriter
 		}
 	}
 
@@ -439,10 +454,10 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig,
 
 			if localFileSize > putThreshold {
 				resumableUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken, storePath,
-					localFilePath, uploadFileKey, localFileLastModified, isOverwrite, successListWriter, failureListWriter, overwriteListWriter)
+					localFilePath, uploadFileKey, localFileLastModified, isOverwrite, exporter)
 			} else {
 				formUploadFile(uploadConfig, transport, ldb, &ldbWOpt, ldbKey, upToken,
-					localFilePath, uploadFileKey, localFileLastModified, isOverwrite, successListWriter, failureListWriter, overwriteListWriter)
+					localFilePath, uploadFileKey, localFileLastModified, isOverwrite, exporter)
 			}
 		}
 	}
@@ -450,16 +465,16 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig,
 	upWaitGroup.Wait()
 
 	//flush
-	if successListWriter != nil {
-		successListWriter.Flush()
+	exportWriters := []*bufio.Writer{
+		exporter.SuccessWriter,
+		exporter.FailureWriter,
+		exporter.OverwriteWriter,
 	}
 
-	if failureListWriter != nil {
-		failureListWriter.Flush()
-	}
-
-	if overwriteListWriter != nil {
-		overwriteListWriter.Flush()
+	for _, writer := range exportWriters {
+		if writer != nil {
+			writer.Flush()
+		}
 	}
 
 	logs.Informational("-------------Upload Result--------------")
@@ -724,8 +739,7 @@ func checkFileNeedToUpload(uploadConfig *UploadConfig, rsClient *rs.Client, ldb 
 
 func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string,
-	localFilePath, uploadFileKey string, localFileLastModified int64, isOverwrite bool,
-	successListWriter, failureListWriter, overwriteListWriter *bufio.Writer) {
+	localFilePath, uploadFileKey string, localFileLastModified int64, isOverwrite bool, exporter *FileExporter) {
 	var putClient rpc.Client
 	if transport != nil {
 		putClient = rpc.NewClientEx(transport, uploadConfig.BindUpIp)
@@ -748,8 +762,11 @@ func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 			errMsg = err.Error()
 		}
 		logs.Error("Form upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, errMsg)
-		if failureListWriter != nil {
-			failureListWriter.WriteString(fmt.Sprintf("%s\t%s\t%s\n", localFilePath, uploadFileKey, errMsg))
+		if exporter.FailureWriter != nil {
+			exporter.FailureLock.Lock()
+			exporter.FailureWriter.WriteString(fmt.Sprintf("%s\t%s\t%s\n", localFilePath, uploadFileKey, errMsg))
+			exporter.FailureWriter.Flush()
+			exporter.FailureLock.Unlock()
 		}
 	} else {
 		atomic.AddInt64(&successFileCount, 1)
@@ -768,19 +785,24 @@ func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 			}
 		}
 
-		if successListWriter != nil {
-			successListWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		if exporter.SuccessWriter != nil {
+			exporter.SuccessLock.Lock()
+			exporter.SuccessWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+			exporter.SuccessWriter.Flush()
+			exporter.SuccessLock.Unlock()
 		}
-		if isOverwrite && overwriteListWriter != nil {
-			overwriteListWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		if isOverwrite && exporter.OverwriteWriter != nil {
+			exporter.OverwriteLock.Lock()
+			exporter.OverwriteWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+			exporter.OverwriteWriter.Flush()
+			exporter.OverwriteLock.Unlock()
 		}
 	}
 }
 
 func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string, storePath,
-	localFilePath, uploadFileKey string, localFileLastModified int64, isOverwrite bool,
-	successListWriter, failureListWriter, overwriteListWriter *bufio.Writer) {
+	localFilePath, uploadFileKey string, localFileLastModified int64, isOverwrite bool, exporter *FileExporter) {
 	var putClient rpc.Client
 	if transport != nil {
 		putClient = rio.NewClientEx(upToken, transport, uploadConfig.BindUpIp)
@@ -810,8 +832,11 @@ func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 			errMsg = err.Error()
 		}
 		logs.Error("Resumable upload file `%s` => `%s` failed due to nerror `%s`", localFilePath, uploadFileKey, errMsg)
-		if failureListWriter != nil {
-			failureListWriter.WriteString(fmt.Sprintf("%s\t%s\t%s\n", localFilePath, uploadFileKey, errMsg))
+		if exporter.FailureWriter != nil {
+			exporter.FailureLock.Lock()
+			exporter.FailureWriter.WriteString(fmt.Sprintf("%s\t%s\t%s\n", localFilePath, uploadFileKey, errMsg))
+			exporter.FailureWriter.Flush()
+			exporter.FailureLock.Unlock()
 		}
 	} else {
 		os.Remove(progressFilePath)
@@ -831,11 +856,17 @@ func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 			}
 		}
 
-		if successListWriter != nil {
-			successListWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		if exporter.SuccessWriter != nil {
+			exporter.SuccessLock.Lock()
+			exporter.SuccessWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+			exporter.SuccessWriter.Flush()
+			exporter.SuccessLock.Unlock()
 		}
-		if isOverwrite && overwriteListWriter != nil {
-			overwriteListWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		if isOverwrite && exporter.OverwriteWriter != nil {
+			exporter.OverwriteLock.Lock()
+			exporter.OverwriteWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+			exporter.OverwriteWriter.Flush()
+			exporter.OverwriteLock.Unlock()
 		}
 	}
 }
