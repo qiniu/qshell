@@ -67,7 +67,7 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 	}
 	//create downoad link
 	dnLink := fmt.Sprintf("http://%s/%s", domain, m3u8Key)
-	dnLink = PrivateUrl(mac, dnLink, time.Now().Add(time.Second*3600).Unix())
+	dnLink, _ = PrivateUrl(mac, dnLink, time.Now().Add(time.Second*3600).Unix())
 	//get m3u8 file content
 	dnLink = strings.Replace(dnLink, fmt.Sprintf("http://%s", domain), conf.IO_HOST, -1)
 	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)
@@ -171,7 +171,7 @@ func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain
 	}
 	//create downoad link
 	dnLink := fmt.Sprintf("http://%s/%s", domain, m3u8Key)
-	dnLink = PrivateUrl(mac, dnLink, time.Now().Add(time.Second*3600).Unix())
+	dnLink, _ = PrivateUrl(mac, dnLink, time.Now().Add(time.Second*3600).Unix())
 	//get m3u8 file content
 	dnLink = strings.Replace(dnLink, fmt.Sprintf("http://%s", domain), conf.IO_HOST, -1)
 	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)

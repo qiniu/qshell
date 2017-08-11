@@ -1159,7 +1159,7 @@ func PrivateUrl(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		url := qshell.PrivateUrl(&mac, publicUrl, deadline)
+		url, _ := qshell.PrivateUrl(&mac, publicUrl, deadline)
 		fmt.Println(url)
 	} else {
 		CmdHelp(cmd)
@@ -1206,7 +1206,7 @@ func BatchSign(cmd string, params ...string) {
 			if urlToSign == "" {
 				continue
 			}
-			signedUrl := qshell.PrivateUrl(&mac, urlToSign, deadline)
+			signedUrl, _ := qshell.PrivateUrl(&mac, urlToSign, deadline)
 			fmt.Println(signedUrl)
 		}
 	} else {

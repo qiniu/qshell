@@ -391,7 +391,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 func makePrivateDownloadLink(mac *digest.Mac, domainOfBucket, ioProxyAddress, fileKey string) (fileUrl string) {
 	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, fileKey)
 	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
-	privateUrl := PrivateUrl(mac, publicUrl, deadline)
+	privateUrl, _ := PrivateUrl(mac, publicUrl, deadline)
 
 	//replace the io proxy host
 	fileUrl = strings.Replace(privateUrl, domainOfBucket, ioProxyAddress, -1)
