@@ -62,7 +62,7 @@ func QiniuUpload2(cmd string, params ...string) {
 	flagSet.StringVar(&logFile, "log-file", "", "log file")
 	flagSet.StringVar(&logLevel, "log-level", "info", "log level")
 	flagSet.IntVar(&logRotate, "log-rotate", 1, "log rotate days")
-	flagSet.IntVar(&fileType, "filetype", 0, "Select storage filetype")
+	flagSet.IntVar(&fileType, "file-type", 0, "set storage file type")
 	flagSet.StringVar(&successFname, "success-list", "", "upload success file list")
 	flagSet.StringVar(&failureFname, "failure-list", "", "upload failure file list")
 	flagSet.StringVar(&overwriteFname, "overwrite-list", "", "upload success (overwrite) file list")
