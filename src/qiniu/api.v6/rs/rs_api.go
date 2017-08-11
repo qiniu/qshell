@@ -68,6 +68,14 @@ func (rs Client) ChangeMime(l rpc.Logger, bucket, key, mime string) (err error) 
 	return rs.Conn.Call(l, nil, RS_HOST+URIChangeMime(bucket, key, mime))
 }
 
+func (rs Client) ChangeType(l rpc.Logger, bucket, key string, fileType int) (err error) {
+	return rs.Conn.Call(l, nil, RS_HOST+URIChangeType(bucket, key, fileType))
+}
+
+func (rs Client) DeleteAfterDays(l rpc.Logger, bucket, key string, days int) (err error) {
+	return rs.Conn.Call(l, nil, RS_HOST+URIDeleteAfterDays(bucket, key, days))
+}
+
 func encodeURI(uri string) string {
 	return base64.URLEncoding.EncodeToString([]byte(uri))
 }
@@ -90,6 +98,14 @@ func URIMove(bucketSrc, keySrc, bucketDest, keyDest string, force bool) string {
 
 func URIChangeMime(bucket, key, mime string) string {
 	return fmt.Sprintf("/chgm/%s/mime/%s", encodeURI(bucket+":"+key), encodeURI(mime))
+}
+
+func URIChangeType(bucket, key string, fileType int) string {
+	return fmt.Sprintf("/chtype/%s/type/%d", encodeURI(bucket+":"+key), fileType)
+}
+
+func URIDeleteAfterDays(bucket, key string, days int) string {
+	return fmt.Sprintf("/deleteAfterDays/%s/%d", encodeURI(bucket+":"+key), days)
 }
 
 func URIPrefetch(bucket, key string) string {

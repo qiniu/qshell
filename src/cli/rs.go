@@ -268,6 +268,80 @@ func Chgm(cmd string, params ...string) {
 	}
 }
 
+func Chtype(cmd string, params ...string) {
+	if len(params) == 3 {
+		bucket := params[0]
+		key := params[1]
+		fileTypeStr := params[2]
+		fileType, cErr := strconv.Atoi(fileTypeStr)
+		if cErr != nil {
+			fmt.Println("Invalid file type")
+			os.Exit(qshell.STATUS_HALT)
+			return
+		}
+
+		account, gErr := qshell.GetAccount()
+		if gErr != nil {
+			fmt.Println(gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		mac := digest.Mac{
+			account.AccessKey,
+			[]byte(account.SecretKey),
+		}
+		client := rs.NewMac(&mac)
+		err := client.ChangeType(nil, bucket, key, fileType)
+		if err != nil {
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Printf("Change file type error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
+			} else {
+				fmt.Println("Change file type error,", err)
+			}
+			os.Exit(qshell.STATUS_ERROR)
+		}
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func DeleteAfterDays(cmd string, params ...string) {
+	if len(params) == 3 {
+		bucket := params[0]
+		key := params[1]
+		expireStr := params[2]
+		expire, cErr := strconv.Atoi(expireStr)
+		if cErr != nil {
+			fmt.Println("Invalid deleteAfterDays")
+			os.Exit(qshell.STATUS_HALT)
+			return
+		}
+
+		account, gErr := qshell.GetAccount()
+		if gErr != nil {
+			fmt.Println(gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		mac := digest.Mac{
+			account.AccessKey,
+			[]byte(account.SecretKey),
+		}
+		client := rs.NewMac(&mac)
+		err := client.DeleteAfterDays(nil, bucket, key, expire)
+		if err != nil {
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Printf("Set file deleteAfterDays error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
+			} else {
+				fmt.Println("Set file deleteAfterDays error,", err)
+			}
+			os.Exit(qshell.STATUS_ERROR)
+		}
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
 func Fetch(cmd string, params ...string) {
 	if len(params) == 2 || len(params) == 3 {
 		remoteResUrl := params[0]
@@ -703,6 +777,276 @@ func batchChgm(client rs.Client, entries []qshell.ChgmEntryPath) {
 				fmt.Printf("Batch chgm error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
 				fmt.Println("Batch chgm error,", err)
+			}
+		}
+	}
+}
+
+func BatchChtype(cmd string, params ...string) {
+	var force bool
+	var worker int
+	flagSet := flag.NewFlagSet("batchchtype", flag.ExitOnError)
+	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.IntVar(&worker, "worker", 1, "worker count")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 2 {
+		if !force {
+			//confirm
+			rcode := CreateRandString(6)
+
+			rcode2 := ""
+			if runtime.GOOS == "windows" {
+				fmt.Printf("<DANGER> Input %s to confirm operation: ", rcode)
+			} else {
+				fmt.Printf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode)
+			}
+			fmt.Scanln(&rcode2)
+
+			if rcode != rcode2 {
+				fmt.Println("Task quit!")
+				os.Exit(qshell.STATUS_HALT)
+			}
+		}
+
+		bucket := cmdParams[0]
+		keyTypeMapFile := cmdParams[1]
+
+		account, gErr := qshell.GetAccount()
+		if gErr != nil {
+			fmt.Println(gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		mac := digest.Mac{
+			account.AccessKey,
+			[]byte(account.SecretKey),
+		}
+
+		//get bucket zone info
+		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+		if gErr != nil {
+			fmt.Println("Get bucket region info error,", gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		//set zone info
+		qshell.SetZone(bucketInfo.Region)
+
+		var batchTasks chan func()
+		var initBatchOnce sync.Once
+
+		batchWaitGroup := sync.WaitGroup{}
+		initBatchOnce.Do(func() {
+			batchTasks = make(chan func(), worker)
+			for i := 0; i < worker; i++ {
+				go doBatchOperation(batchTasks)
+			}
+		})
+
+		client := rs.NewMac(&mac)
+		fp, err := os.Open(keyTypeMapFile)
+		if err != nil {
+			fmt.Println("Open key file type map file error")
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+		entries := make([]qshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
+		for scanner.Scan() {
+			line := scanner.Text()
+			items := strings.Split(line, "\t")
+			if len(items) == 2 {
+				key := items[0]
+				fileType, _ := strconv.Atoi(items[1])
+				if key != "" {
+					entry := qshell.ChtypeEntryPath{bucket, key, fileType}
+					entries = append(entries, entry)
+				}
+			}
+			if len(entries) == BATCH_ALLOW_MAX {
+				toChtypeEntries := make([]qshell.ChtypeEntryPath, len(entries))
+				copy(toChtypeEntries, entries)
+
+				batchWaitGroup.Add(1)
+				batchTasks <- func() {
+					defer batchWaitGroup.Done()
+					batchChtype(client, toChtypeEntries)
+				}
+				entries = make([]qshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
+			}
+		}
+		if len(entries) > 0 {
+			toChtypeEntries := make([]qshell.ChtypeEntryPath, len(entries))
+			copy(toChtypeEntries, entries)
+
+			batchWaitGroup.Add(1)
+			batchTasks <- func() {
+				defer batchWaitGroup.Done()
+				batchChtype(client, toChtypeEntries)
+			}
+		}
+
+		batchWaitGroup.Wait()
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func batchChtype(client rs.Client, entries []qshell.ChtypeEntryPath) {
+	ret, err := qshell.BatchChtype(client, entries)
+	if len(ret) > 0 {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Code != 200 || item.Data.Error != "" {
+				logs.Error("Chtype '%s' => '%d' Failed, Code: %d, Error: %s", entry.Key, entry.FileType, item.Code, item.Data.Error)
+			} else {
+				logs.Debug("Chtype '%s' => '%d' success", entry.Key, entry.FileType)
+			}
+		}
+	} else {
+		if err != nil {
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Printf("Batch chtype error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
+			} else {
+				fmt.Println("Batch chtype error,", err)
+			}
+		}
+	}
+}
+
+func BatchDeleteAfterDays(cmd string, params ...string) {
+	var force bool
+	var worker int
+	flagSet := flag.NewFlagSet("batchepxire", flag.ExitOnError)
+	flagSet.BoolVar(&force, "force", false, "force mode")
+	flagSet.IntVar(&worker, "worker", 1, "worker count")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 2 {
+		if !force {
+			//confirm
+			rcode := CreateRandString(6)
+
+			rcode2 := ""
+			if runtime.GOOS == "windows" {
+				fmt.Printf("<DANGER> Input %s to confirm operation: ", rcode)
+			} else {
+				fmt.Printf("\033[31m<DANGER>\033[0m Input \033[32m%s\033[0m to confirm operation: ", rcode)
+			}
+			fmt.Scanln(&rcode2)
+
+			if rcode != rcode2 {
+				fmt.Println("Task quit!")
+				os.Exit(qshell.STATUS_HALT)
+			}
+		}
+
+		bucket := cmdParams[0]
+		keyExpireMapFile := cmdParams[1]
+
+		account, gErr := qshell.GetAccount()
+		if gErr != nil {
+			fmt.Println(gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		mac := digest.Mac{
+			account.AccessKey,
+			[]byte(account.SecretKey),
+		}
+
+		//get bucket zone info
+		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+		if gErr != nil {
+			fmt.Println("Get bucket region info error,", gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		//set zone info
+		qshell.SetZone(bucketInfo.Region)
+
+		var batchTasks chan func()
+		var initBatchOnce sync.Once
+
+		batchWaitGroup := sync.WaitGroup{}
+		initBatchOnce.Do(func() {
+			batchTasks = make(chan func(), worker)
+			for i := 0; i < worker; i++ {
+				go doBatchOperation(batchTasks)
+			}
+		})
+
+		client := rs.NewMac(&mac)
+		fp, err := os.Open(keyExpireMapFile)
+		if err != nil {
+			fmt.Println("Open key expire map file error")
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
+		scanner := bufio.NewScanner(fp)
+		scanner.Split(bufio.ScanLines)
+		entries := make([]qshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
+		for scanner.Scan() {
+			line := scanner.Text()
+			items := strings.Split(line, "\t")
+			if len(items) == 2 {
+				key := items[0]
+				days, _ := strconv.Atoi(items[1])
+				if key != "" {
+					entry := qshell.DeleteAfterDaysEntryPath{bucket, key, days}
+					entries = append(entries, entry)
+				}
+			}
+			if len(entries) == BATCH_ALLOW_MAX {
+				toExpireEntries := make([]qshell.DeleteAfterDaysEntryPath, len(entries))
+				copy(toExpireEntries, entries)
+
+				batchWaitGroup.Add(1)
+				batchTasks <- func() {
+					defer batchWaitGroup.Done()
+					batchDeleteAfterDays(client, toExpireEntries)
+				}
+				entries = make([]qshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
+			}
+		}
+		if len(entries) > 0 {
+			toExpireEntries := make([]qshell.DeleteAfterDaysEntryPath, len(entries))
+			copy(toExpireEntries, entries)
+
+			batchWaitGroup.Add(1)
+			batchTasks <- func() {
+				defer batchWaitGroup.Done()
+				batchDeleteAfterDays(client, toExpireEntries)
+			}
+		}
+
+		batchWaitGroup.Wait()
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
+func batchDeleteAfterDays(client rs.Client, entries []qshell.DeleteAfterDaysEntryPath) {
+	ret, err := qshell.BatchDeleteAfterDays(client, entries)
+	if len(ret) > 0 {
+		for i, entry := range entries {
+			item := ret[i]
+			if item.Code != 200 || item.Data.Error != "" {
+				logs.Error("Expire '%s' => '%d' Failed, Code: %d, Error: %s", entry.Key, entry.DeleteAfterDays, item.Code, item.Data.Error)
+			} else {
+				logs.Debug("Expire '%s' => '%d' success", entry.Key, entry.DeleteAfterDays)
+			}
+		}
+	} else {
+		if err != nil {
+			if v, ok := err.(*rpc.ErrorInfo); ok {
+				fmt.Printf("Batch expire error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
+			} else {
+				fmt.Println("Batch expire error,", err)
 			}
 		}
 	}

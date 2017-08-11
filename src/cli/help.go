@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v2.1.2"
+var version = "v2.1.3"
 
 var optionDocs = map[string]string{
 	"-f": "Force batch operations",
@@ -31,12 +31,16 @@ var cmds = []string{
 	"move",
 	"copy",
 	"chgm",
+	"chtype",
+	"expire",
 	"fetch",
 	"sync",
 	"prefetch",
 	"batchstat",
 	"batchdelete",
 	"batchchgm",
+	"batchchtype",
+	"batchexpire",
 	"batchcopy",
 	"batchmove",
 	"batchrename",
@@ -79,13 +83,17 @@ var cmdDocs = map[string][]string{
 	"delete":        []string{"qshell delete <Bucket> <Key>", "Delete a remote file in the bucket"},
 	"move":          []string{"qshell move [-overwrite] <SrcBucket> <SrcKey> <DestBucket> [<DestKey>]", "Move/Rename a file and save in bucket"},
 	"copy":          []string{"qshell copy [-overwrite] <SrcBucket> <SrcKey> <DestBucket> [<DestKey>]", "Make a copy of a file and save in bucket"},
-	"chgm":          []string{"qshell chgm <Bucket> <Key> <NewMimeType>", "Change the mimeType of a file"},
+	"chgm":          []string{"qshell chgm <Bucket> <Key> <NewMimeType>", "Change the mime type of a file"},
+	"chtype":        []string{"qshell chtype <Bucket> <Key> <FileType>", "Change the file type of a file"},
+	"expire":        []string{"qshell expire <Bucket> <Key> <DeleteAfterDays>", "Set the deleteAfterDays of a file"},
 	"sync":          []string{"qshell sync <SrcResUrl> <Bucket> <Key> [<UpHostIp>]", "Sync big file to qiniu bucket"},
 	"fetch":         []string{"qshell fetch <RemoteResourceUrl> <Bucket> [<Key>]", "Fetch a remote resource by url and save in bucket"},
 	"prefetch":      []string{"qshell prefetch <Bucket> <Key>", "Fetch and update the file in bucket using mirror storage"},
 	"batchstat":     []string{"qshell batchstat <Bucket> <KeyListFile>", "Batch stat files in bucket"},
 	"batchdelete":   []string{"qshell batchdelete [-force] <Bucket> <KeyListFile>", "Batch delete files in bucket"},
-	"batchchgm":     []string{"qshell batchchgm [-force] <Bucket> <KeyMimeMapFile>", "Batch chgm files in bucket"},
+	"batchchgm":     []string{"qshell batchchgm [-force] <Bucket> <KeyMimeMapFile>", "Batch change the mime type of files in bucket"},
+	"batchchtype":   []string{"qshell batchchtype [-force] <Bucket> <KeyFileTypeMapFile>", "Batch change the file type of files in bucket"},
+	"batchexpire":   []string{"qshell batchexpire [-force] <Bucket> <KeyDeleteAfterDaysMapFile>", "Batch set the deleteAfterDays of the files in bucket"},
 	"batchcopy":     []string{"qshell batchcopy [-force] [-overwrite] <SrcBucket> <DestBucket> <SrcDestKeyMapFile>", "Batch copy files from bucket to bucket"},
 	"batchmove":     []string{"qshell batchmove [-force] [-overwrite] <SrcBucket> <DestBucket> <SrcDestKeyMapFile>", "Batch move files from bucket to bucket"},
 	"batchrename":   []string{"qshell batchrename [-force] [-overwrite] <Bucket> <OldNewKeyMapFile>", "Batch rename files in the bucket"},

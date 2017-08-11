@@ -25,6 +25,18 @@ type ChgmEntryPath struct {
 	MimeType string
 }
 
+type ChtypeEntryPath struct {
+	Bucket   string
+	Key      string
+	FileType int
+}
+
+type DeleteAfterDaysEntryPath struct {
+	Bucket          string
+	Key             string
+	DeleteAfterDays int
+}
+
 type RenameEntryPath struct {
 	Bucket string
 	OldKey string
@@ -131,6 +143,24 @@ func BatchChgm(client rs.Client, entries []ChgmEntryPath) (ret []BatchItemRet, e
 	b := make([]string, len(entries))
 	for i, e := range entries {
 		b[i] = rs.URIChangeMime(e.Bucket, e.Key, e.MimeType)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
+}
+
+func BatchChtype(client rs.Client, entries []ChtypeEntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URIChangeType(e.Bucket, e.Key, e.FileType)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
+}
+
+func BatchDeleteAfterDays(client rs.Client, entries []DeleteAfterDaysEntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URIDeleteAfterDays(e.Bucket, e.Key, e.DeleteAfterDays)
 	}
 	err = client.Batch(nil, &ret, b)
 	return
