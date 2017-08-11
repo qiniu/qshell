@@ -770,7 +770,7 @@ func formUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 		}
 	} else {
 		atomic.AddInt64(&successFileCount, 1)
-		logs.Informational("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
+		logs.Informational("Upload file `%s` => `%s : %s` success", localFilePath, uploadConfig.Bucket, uploadFileKey)
 		putErr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFileLastModified)), ldbWOpt)
 		if putErr != nil {
 			logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)

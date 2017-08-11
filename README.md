@@ -15,12 +15,12 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell v2.1.1|Mac OSX(64位)|[下载](http://devtools.qiniu.com/2.1.1/qshell-darwin-x64)|
-|qshell v2.1.1|Linux (arm平台)|[下载](http://devtools.qiniu.com/2.1.1/qshell-linux-arm)|
-|qshell v2.1.1|Linux (64位)|[下载](http://devtools.qiniu.com/2.1.1/qshell-linux-x64)|
-|qshell v2.1.1|Linux (32位)|[下载](http://devtools.qiniu.com/2.1.1/qshell-linux-x86)|
-|qshell v2.1.1|Windows(64位)|[下载](http://devtools.qiniu.com/2.1.1/qshell-windows-x64.exe)|
-|qshell v2.1.1|Windows(32位)|[下载](http://devtools.qiniu.com/2.1.1/qshell-windows-x86.exe)|
+|qshell v2.1.3|Mac OSX(64位)|[下载](http://devtools.qiniu.com/2.1.3/qshell-darwin-x64)|
+|qshell v2.1.3|Linux (arm平台)|[下载](http://devtools.qiniu.com/2.1.3/qshell-linux-arm)|
+|qshell v2.1.3|Linux (64位)|[下载](http://devtools.qiniu.com/2.1.3/qshell-linux-x64)|
+|qshell v2.1.3|Linux (32位)|[下载](http://devtools.qiniu.com/2.1.3/qshell-linux-x86)|
+|qshell v2.1.3|Windows(64位)|[下载](http://devtools.qiniu.com/2.1.3/qshell-windows-x64.exe)|
+|qshell v2.1.3|Windows(32位)|[下载](http://devtools.qiniu.com/2.1.3/qshell-windows-x86.exe)|
 
 ## 安装
 
@@ -137,11 +137,15 @@ $ qshell -m stat bucket key
 |move|存储|移动或重命名七牛空间中的一个文件|[文档](docs/move.md)|
 |copy|存储|复制七牛空间中的一个文件|[文档](docs/copy.md)|
 |chgm|存储|修改七牛空间中的一个文件的MimeType|[文档](docs/chgm.md)|
+|chtype|存储|修改七牛空间中的一个文件的存储类型，支持普通存储（0）和低频存储（1）|[文档](docs/chtype.md)|
+|expire|存储|修改七牛空间中的一个文件的生存时间|[文档](docs/expire.md)|
 |fetch|存储|从Internet上抓取一个资源并存储到七牛空间中|[文档](docs/fetch.md)|
 |sync|存储|从Internet上抓取一个资源并存储到七牛空间中，适合大文件的场合|[文档](docs/sync.md)|
 |prefetch|存储|更新七牛空间中从源站镜像过来的文件|[文档](docs/prefetch.md)|
 |batchdelete|存储|批量删除七牛空间中的文件，可以直接根据`listbucket`的结果来删除|[文档](docs/batchdelete.md)|
 |batchchgm|存储|批量修改七牛空间中文件的MimeType|[文档](docs/batchchgm.md)|
+|batchchtype|存储|批量修改七牛空间中的文件的存储类型，支持普通存储（0）和低频存储（1）|[文档](docs/batchchtype.md)|
+|batchexpire|存储|批量修改七牛空间中的文件的生存时间|[文档](docs/batchexpire.md)|
 |batchcopy|存储|批量复制七牛空间中的文件到另一个空间|[文档](docs/batchcopy.md)|
 |batchmove|存储|批量移动七牛空间中的文件到另一个空间|[文档](docs/batchmove.md)|
 |batchrename|存储|批量重命名七牛空间中的文件|[文档](docs/batchrename.md)|

@@ -25,6 +25,18 @@ type ChgmEntryPath struct {
 	MimeType string
 }
 
+type ChtypeEntryPath struct {
+	Bucket   string
+	Key      string
+	FileType int
+}
+
+type DeleteAfterDaysEntryPath struct {
+	Bucket          string
+	Key             string
+	DeleteAfterDays int
+}
+
 type RenameEntryPath struct {
 	Bucket string
 	OldKey string
@@ -79,10 +91,16 @@ func Prefetch(mac *digest.Mac, bucket, key string) (err error) {
 	return
 }
 
-func PrivateUrl(mac *digest.Mac, publicUrl string, deadline int64) string {
+func PrivateUrl(mac *digest.Mac, publicUrl string, deadline int64) (finalUrl string, err error) {
+	srcUri, pErr := url.Parse(publicUrl)
+	if pErr != nil {
+		err = pErr
+		return
+	}
+
 	h := hmac.New(sha1.New, mac.SecretKey)
 
-	urlToSign := publicUrl
+	urlToSign := srcUri.String()
 	if strings.Contains(publicUrl, "?") {
 		urlToSign = fmt.Sprintf("%s&e=%d", urlToSign, deadline)
 	} else {
@@ -92,8 +110,8 @@ func PrivateUrl(mac *digest.Mac, publicUrl string, deadline int64) string {
 
 	sign := base64.URLEncoding.EncodeToString(h.Sum(nil))
 	token := mac.AccessKey + ":" + sign
-	url := fmt.Sprintf("%s&token=%s", urlToSign, token)
-	return url
+	finalUrl = fmt.Sprintf("%s&token=%s", urlToSign, token)
+	return
 }
 
 func Saveas(mac *digest.Mac, publicUrl string, saveBucket string, saveKey string) (string, error) {
@@ -125,6 +143,24 @@ func BatchChgm(client rs.Client, entries []ChgmEntryPath) (ret []BatchItemRet, e
 	b := make([]string, len(entries))
 	for i, e := range entries {
 		b[i] = rs.URIChangeMime(e.Bucket, e.Key, e.MimeType)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
+}
+
+func BatchChtype(client rs.Client, entries []ChtypeEntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URIChangeType(e.Bucket, e.Key, e.FileType)
+	}
+	err = client.Batch(nil, &ret, b)
+	return
+}
+
+func BatchDeleteAfterDays(client rs.Client, entries []DeleteAfterDaysEntryPath) (ret []BatchItemRet, err error) {
+	b := make([]string, len(entries))
+	for i, e := range entries {
+		b[i] = rs.URIDeleteAfterDays(e.Bucket, e.Key, e.DeleteAfterDays)
 	}
 	err = client.Batch(nil, &ret, b)
 	return
