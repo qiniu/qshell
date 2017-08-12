@@ -7,6 +7,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"os"
+	"syscall"
 	"path/filepath"
 )
 
@@ -40,7 +41,10 @@ func SetAccount(accessKey string, secretKey string) (err error) {
 
 	accountFname := filepath.Join(storageDir, "account.json")
 
-	accountFh, openErr := os.Create(accountFname)
+	accountFh, openErr := os.OpenFile(accountFname,
+		syscall.O_WRONLY|syscall.O_CREATE|syscall.O_TRUNC,
+		0600,
+	)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s", openErr)
 		return
