@@ -107,8 +107,6 @@ type UploadConfig struct {
 	DeleteOnSuccess bool `json:"delete_on_success,omitempty"`
 }
 
-var defaultIgnoreWatchSuffixes = []string{"~", ".swp"}
-
 var upSettings = rio.Settings{
 	Workers:   16,
 	ChunkSize: 4 * 1024 * 1024,
