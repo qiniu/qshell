@@ -18,7 +18,7 @@ qshell expire <Bucket> <Key> <DeleteAfterDays>
 |-----|-----|
 |Bucket|空间名称，可以为公开空间或者私有空间|
 |Key|空间中的文件名|
-| DeleteAfterDays |给文件指定的新过期时间|
+|DeleteAfterDays |给文件指定的新过期时间，单位为：天|
 
 # 示例
 
