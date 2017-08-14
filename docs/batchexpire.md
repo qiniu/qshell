@@ -1,4 +1,4 @@
-#简介
+# 简介
 
 `batchexpire`命令用来为空间中的文件设置过期时间。该操作发生在同一个空间中。（将文件设置为从现在开始xx天后自动删除的状态）
 
@@ -34,14 +34,14 @@ qshell batchexpire [-force] <Bucket> <KeyDeleteAfterDaysMapFile>
 ```
 
 上面，我们将`2015/03/22/qiniu.png`文件设置为3天后过期了，诸如此类。
-把这个内容保存到文件`torename.txt`中，然后使用如下的命令对torename.txt中的所有文件设置过期时间。
+把这个内容保存到文件`toexpire.txt`中，然后使用如下的命令对`toexpire.txt`中的所有文件设置过期时间。
 
 ```
-$ qshell batchexpire if-pbl torename.txt
+$ qshell batchexpire if-pbl toexpire.txt
 ```
 
 2.如果不希望上面的重命名过程出现验证码提示，可以使用 `-force` 选项：
 
 ```
-$ qshell batchexpire -force if-pbl torename.txt
+$ qshell batchexpire -force if-pbl toexpire.txt
 ```
