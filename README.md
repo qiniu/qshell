@@ -24,16 +24,16 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 ## 安装
 
-该工具由于是命令行工具，所以只需要从上面的下载链接下载zip包之后解压即可使用。其中文件名和对应系统关系如下：
+该工具由于是命令行工具，所以只需要从上面的下载之后即可使用。其中文件名和对应系统关系如下：
 
 |文件名|描述|
 |-----|-----|
-|qshell_linux_x86 |Linux 32位系统|
-|qshell_linux_x64|Linux 64位系统|
-|qshell_linux_arm|Linux ARM CPU|
-|qshell_windows_x86.exe|Windows 32位系统|
-|qshell_windows_x64.exe|Windows 64位系统|
-|qshell_darwin_x64|Mac 64位系统，主流的系统|
+|qshell-linux-x86 |Linux 32位系统|
+|qshell-linux-x64|Linux 64位系统|
+|qshell-linux-arm|Linux ARM CPU|
+|qshell-windows-x86.exe|Windows 32位系统|
+|qshell-windows-x64.exe|Windows 64位系统|
+|qshell-darwin-x64|Mac 64位系统，主流的系统|
 
 **Linux和Mac平台**
 
