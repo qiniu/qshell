@@ -51,10 +51,10 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 |suffixes|只同步指定后缀的文件，默认为空|Y|
 |cdn_domain|设置下载的CDN域名，默认为空表示从存储源站下载，【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数，如不设置，需支付源站流量费用，无法减免！！！】|N|
 |referer|如果CDN域名配置了域名白名单防盗链，需要指定一个允许访问的referer地址|N|
-|log_level|上传日志输出级别，可选值为`debug`,`info`,`warn`,`error`,默认`info`|Y|
-|log_file|上传日志的输出文件，如果不指定会输出到qshell工作目录下默认的文件中，文件名可以在终端输出看到|Y|
-|log_rotate|上传日志文件的切换周期，单位为天，默认为1天即切换到新的上传日志文件|Y|
-|log_stdout|上传日志是否同时输出一份到标准终端，默认为false，主要在调试上传功能时可以指定为true|Y|
+|log_level|下载日志输出级别，可选值为`debug`,`info`,`warn`,`error`,默认`info`|Y|
+|log_file|下载日志的输出文件，如果不指定会输出到qshell工作目录下默认的文件中，文件名可以在终端输出看到|Y|
+|log_rotate|下载日志文件的切换周期，单位为天，默认为1天即切换到新的下载日志文件|Y|
+|log_stdout|下载日志是否同时输出一份到标准终端，默认为false，主要在调试下载功能时可以指定为true|Y|
 
 
 **备注：**
