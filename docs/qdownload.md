@@ -35,7 +35,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
     "prefix"     :   "image/",
     "suffixes"   :   ".png,.jpg",
     "cdn_domain" :   "down.example.com",
-    "referer"    :   "http://www.example.com"
+    "referer"    :   "http://www.example.com",
     "log_file"   :   "upload.log",
     "log_level"  :   "info",
     "log_rotate" :   1,
