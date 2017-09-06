@@ -249,7 +249,7 @@ func rangeMkblkPipe(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSiz
 	}
 
 	//if not support range, go back and err
-	if dResp.Header.Get("Accept-Ranges") == "" {
+	if dResp.Header.Get("Content-Range") == "" {
 		err = errors.New("Remote server not support range")
 		return
 	}
