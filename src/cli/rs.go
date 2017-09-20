@@ -84,6 +84,18 @@ func ListBucket(cmd string, params ...string) {
 
 		mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 
+		if !IsHostFileSpecified {
+			//get zone info
+			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+			if gErr != nil {
+				fmt.Println("Failed to get region info of bucket", bucket, gErr)
+				os.Exit(qshell.STATUS_ERROR)
+			}
+
+			//set zone
+			qshell.SetZone(bucketInfo.Region)
+		}
+
 		retErr := qshell.ListBucket(&mac, bucket, prefix, listMarker, listResultFile)
 		if retErr != nil {
 			os.Exit(qshell.STATUS_ERROR)
@@ -362,15 +374,17 @@ func Fetch(cmd string, params ...string) {
 			[]byte(account.SecretKey),
 		}
 
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
+		if !IsHostFileSpecified {
+			//get bucket zone info
+			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+			if gErr != nil {
+				fmt.Println("Get bucket region info error,", gErr)
+				os.Exit(qshell.STATUS_ERROR)
+			}
 
-		//set up host
-		qshell.SetZone(bucketInfo.Region)
+			//set up host
+			qshell.SetZone(bucketInfo.Region)
+		}
 
 		fetchResult, err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
 		if err != nil {

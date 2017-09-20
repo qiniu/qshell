@@ -8,6 +8,8 @@ import (
 
 type CliFunc func(cmd string, params ...string)
 
+var IsHostFileSpecified bool
+
 func Account(cmd string, params ...string) {
 	if len(params) == 0 {
 		account, gErr := qshell.GetAccount()

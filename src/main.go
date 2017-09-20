@@ -2,11 +2,13 @@ package main
 
 import (
 	"cli"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
 	"os/user"
+	"qiniu/api.v6/conf"
 	"qiniu/rpc"
 	"qshell"
 	"runtime"
@@ -65,6 +67,14 @@ var supportedCmds = map[string]cli.CliFunc{
 	"cdnprefetch":   cli.CdnPrefetch,
 }
 
+type HostConfig struct {
+	UpHost  string `json:"up"`
+	ApiHost string `json:"api"`
+	IoHost  string `json:"io"`
+	RsHost  string `json:"rs"`
+	RsfHost string `json:"rsf"`
+}
+
 func main() {
 	//set cpu count
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -85,11 +95,13 @@ func main() {
 	var helpMode bool
 	var versionMode bool
 	var multiUserMode bool
+	var hostFile string
 
 	flag.BoolVar(&debugMode, "d", false, "debug mode")
 	flag.BoolVar(&multiUserMode, "m", false, "multi user mode")
 	flag.BoolVar(&helpMode, "h", false, "show help")
 	flag.BoolVar(&versionMode, "v", false, "show version")
+	flag.StringVar(&hostFile, "f", "", "host file")
 
 	flag.Parse()
 
@@ -125,6 +137,33 @@ func main() {
 			os.Exit(qshell.STATUS_HALT)
 		}
 		qshell.QShellRootPath = curUser.HomeDir
+	}
+
+	//read host file
+	if hostFile != "" {
+		hostFp, openErr := os.Open(hostFile)
+		if openErr != nil {
+			fmt.Println("Error: open specified host file error,", openErr)
+			os.Exit(qshell.STATUS_HALT)
+			return
+		}
+
+		var hostCfg HostConfig
+		decoder := json.NewDecoder(hostFp)
+		decodeErr := decoder.Decode(&hostCfg)
+		if decodeErr != nil {
+			fmt.Println("Error: read host file error,", decodeErr)
+			os.Exit(qshell.STATUS_HALT)
+			return
+		}
+
+		conf.UP_HOST = hostCfg.UpHost
+		conf.RS_HOST = hostCfg.RsHost
+		conf.RSF_HOST = hostCfg.RsfHost
+		conf.IO_HOST = hostCfg.IoHost
+		conf.API_HOST = hostCfg.ApiHost
+
+		cli.IsHostFileSpecified = true
 	}
 
 	//set cmd and params
