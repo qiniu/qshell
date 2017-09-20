@@ -421,15 +421,17 @@ func Prefetch(cmd string, params ...string) {
 			[]byte(account.SecretKey),
 		}
 
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
+		if !IsHostFileSpecified {
+			//get bucket zone info
+			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+			if gErr != nil {
+				fmt.Println("Get bucket region info error,", gErr)
+				os.Exit(qshell.STATUS_ERROR)
+			}
 
-		//set up host
-		qshell.SetZone(bucketInfo.Region)
+			//set up host
+			qshell.SetZone(bucketInfo.Region)
+		}
 
 		err := qshell.Prefetch(&mac, bucket, key)
 		if err != nil {
@@ -563,16 +565,6 @@ func BatchDelete(cmd string, params ...string) {
 			[]byte(account.SecretKey),
 		}
 
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set zone info
-		qshell.SetZone(bucketInfo.Region)
-
 		var batchTasks chan func()
 		var initBatchOnce sync.Once
 
@@ -703,16 +695,6 @@ func BatchChgm(cmd string, params ...string) {
 			[]byte(account.SecretKey),
 		}
 
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set zone info
-		qshell.SetZone(bucketInfo.Region)
-
 		var batchTasks chan func()
 		var initBatchOnce sync.Once
 
@@ -838,16 +820,6 @@ func BatchChtype(cmd string, params ...string) {
 			[]byte(account.SecretKey),
 		}
 
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set zone info
-		qshell.SetZone(bucketInfo.Region)
-
 		var batchTasks chan func()
 		var initBatchOnce sync.Once
 
@@ -972,16 +944,6 @@ func BatchDeleteAfterDays(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set zone info
-		qshell.SetZone(bucketInfo.Region)
 
 		var batchTasks chan func()
 		var initBatchOnce sync.Once
@@ -1110,16 +1072,6 @@ func BatchRename(cmd string, params ...string) {
 			[]byte(account.SecretKey),
 		}
 
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set zone info
-		qshell.SetZone(bucketInfo.Region)
-
 		var batchTasks chan func()
 		var initBatchOnce sync.Once
 
@@ -1247,16 +1199,6 @@ func BatchMove(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, srcBucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set zone info
-		qshell.SetZone(bucketInfo.Region)
 
 		var batchTasks chan func()
 		var initBatchOnce sync.Once
@@ -1392,16 +1334,6 @@ func BatchCopy(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, srcBucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set zone info
-		qshell.SetZone(bucketInfo.Region)
 
 		var batchTasks chan func()
 		var initBatchOnce sync.Once
