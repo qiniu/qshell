@@ -163,6 +163,10 @@ func main() {
 		conf.IO_HOST = hostCfg.IoHost
 		conf.API_HOST = hostCfg.ApiHost
 
+		//bucket domains
+		qshell.BUCKET_RS_HOST = hostCfg.RsHost
+		qshell.BUCKET_API_HOST = hostCfg.ApiHost
+
 		cli.IsHostFileSpecified = true
 	}
 
