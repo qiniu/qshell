@@ -9,6 +9,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"qiniu/api.v6/auth/digest"
@@ -401,7 +402,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 @param ioProxyHost - like http://iovip.qbox.me
 */
 func makePrivateDownloadLink(mac *digest.Mac, domainOfBucket, ioProxyAddress, fileKey string) (fileUrl string) {
-	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, fileKey)
+	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
 	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
 	privateUrl, _ := PrivateUrl(mac, publicUrl, deadline)
 
