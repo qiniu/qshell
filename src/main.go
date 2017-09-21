@@ -172,13 +172,18 @@ func main() {
 
 	//set cmd and params
 	args := flag.Args()
-	cmd := args[0]
-	params := args[1:]
+	if len(args) >= 1 {
+		cmd := args[0]
+		params := args[1:]
 
-	if cliFunc, ok := supportedCmds[cmd]; ok {
-		cliFunc(cmd, params...)
+		if cliFunc, ok := supportedCmds[cmd]; ok {
+			cliFunc(cmd, params...)
+		} else {
+			fmt.Printf("Error: unknown cmd `%s`\n", cmd)
+			os.Exit(qshell.STATUS_HALT)
+		}
 	} else {
-		fmt.Printf("Error: unknown cmd `%s`\n", cmd)
+		fmt.Println("Error: sub cmd is required")
 		os.Exit(qshell.STATUS_HALT)
 	}
 }
