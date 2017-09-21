@@ -87,6 +87,8 @@ func QiniuUpload(cmd string, params ...string) {
 			FailureFname:   failureFname,
 			OverwriteFname: overwriteFname,
 		}
+
+		uploadConfig.IsHostFileSpecified = IsHostFileSpecified
 		qshell.QiniuUpload(int(threadCount), &uploadConfig, &fileExporter)
 	} else {
 		CmdHelp(cmd)

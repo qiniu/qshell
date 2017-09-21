@@ -44,17 +44,6 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 	defer listResultFh.Close()
 	bWriter := bufio.NewWriter(listResultFh)
 
-	//get zone info
-	bucketInfo, gErr := GetBucketInfo(mac, bucket)
-	if gErr != nil {
-		retErr = gErr
-		logs.Error("Failed to get region info of bucket `%s`, %s", bucket, gErr)
-		return
-	}
-
-	//set zone
-	SetZone(bucketInfo.Region)
-
 	//init
 	client := rsf.New(mac)
 	limit := 1000

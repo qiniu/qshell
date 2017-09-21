@@ -29,15 +29,18 @@ func Sync(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
 
-		//set up host
-		qshell.SetZone(bucketInfo.Region)
+		if !IsHostFileSpecified {
+			//get bucket zone info
+			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+			if gErr != nil {
+				fmt.Println("Get bucket region info error,", gErr)
+				os.Exit(qshell.STATUS_ERROR)
+			}
+
+			//set up host
+			qshell.SetZone(bucketInfo.Region)
+		}
 
 		//sync
 		tStart := time.Now()

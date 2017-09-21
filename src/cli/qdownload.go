@@ -68,6 +68,7 @@ func QiniuDownload(cmd string, params ...string) {
 			}
 		}
 
+		downloadConfig.IsHostFileSpecified = IsHostFileSpecified
 		qshell.QiniuDownload(int(threadCount), &downloadConfig)
 	} else {
 		CmdHelp(cmd)

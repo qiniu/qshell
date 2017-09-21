@@ -105,6 +105,8 @@ type UploadConfig struct {
 
 	//more settings
 	DeleteOnSuccess bool `json:"delete_on_success,omitempty"`
+
+	IsHostFileSpecified bool `json:"-"`
 }
 
 var upSettings = rio.Settings{
@@ -247,15 +249,17 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 		os.Exit(STATUS_HALT)
 	}
 	mac := digest.Mac{AccessKey: account.AccessKey, SecretKey: []byte(account.SecretKey)}
-	//get bucket zone info
-	bucketInfo, gErr := GetBucketInfo(&mac, uploadConfig.Bucket)
-	if gErr != nil {
-		logs.Error("Get bucket region info error,", gErr)
-		os.Exit(STATUS_HALT)
-	}
+	if !uploadConfig.IsHostFileSpecified {
+		//get bucket zone info
+		bucketInfo, gErr := GetBucketInfo(&mac, uploadConfig.Bucket)
+		if gErr != nil {
+			logs.Error("Get bucket region info error,", gErr)
+			os.Exit(STATUS_HALT)
+		}
 
-	//set up host
-	SetZone(bucketInfo.Region)
+		//set up host
+		SetZone(bucketInfo.Region)
+	}
 
 	//chunk upload threshold
 	putThreshold := DEFAULT_PUT_THRESHOLD

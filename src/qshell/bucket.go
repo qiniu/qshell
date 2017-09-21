@@ -11,7 +11,7 @@ type BucketInfo struct {
 	Region string `json:"region"`
 }
 
-const (
+var (
 	BUCKET_RS_HOST  = "http://rs.qiniu.com"
 	BUCKET_API_HOST = "http://api.qiniu.com"
 )

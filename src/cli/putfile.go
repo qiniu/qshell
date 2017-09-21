@@ -72,15 +72,17 @@ func FormPut(cmd string, params ...string) {
 		//upload settings
 		mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 		if upHost == "" {
-			//get bucket zone info
-			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-			if gErr != nil {
-				fmt.Println("Get bucket region info error,", gErr)
-				os.Exit(qshell.STATUS_ERROR)
-			}
+			if !IsHostFileSpecified {
+				//get bucket zone info
+				bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+				if gErr != nil {
+					fmt.Println("Get bucket region info error,", gErr)
+					os.Exit(qshell.STATUS_ERROR)
+				}
 
-			//set up host
-			qshell.SetZone(bucketInfo.Region)
+				//set up host
+				qshell.SetZone(bucketInfo.Region)
+			}
 		} else {
 			conf.UP_HOST = upHost
 		}
@@ -213,15 +215,17 @@ func ResumablePut(cmd string, params ...string) {
 		//upload settings
 		mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 		if upHost == "" {
-			//get bucket zone info
-			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-			if gErr != nil {
-				fmt.Println("Get bucket region info error,", gErr)
-				os.Exit(qshell.STATUS_ERROR)
-			}
+			if !IsHostFileSpecified {
+				//get bucket zone info
+				bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+				if gErr != nil {
+					fmt.Println("Get bucket region info error,", gErr)
+					os.Exit(qshell.STATUS_ERROR)
+				}
 
-			//set up host
-			qshell.SetZone(bucketInfo.Region)
+				//set up host
+				qshell.SetZone(bucketInfo.Region)
+			}
 		} else {
 			conf.UP_HOST = upHost
 		}

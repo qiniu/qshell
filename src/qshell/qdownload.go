@@ -47,6 +47,8 @@ type DownloadConfig struct {
 	LogFile   string `json:"log_file,omitempty"`
 	LogRotate int    `json:"log_rotate,omitempty"`
 	LogStdout bool   `json:"log_stdout,omitempty"`
+
+	IsHostFileSpecified bool `json:"-"`
 }
 
 var downloadTasks chan func()
@@ -121,30 +123,35 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		os.Exit(STATUS_ERROR)
 	}
 	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
-	//get bucket zone info
-	bucketInfo, gErr := GetBucketInfo(&mac, downConfig.Bucket)
-	if gErr != nil {
-		logs.Error("Get bucket region info error,", gErr)
-		os.Exit(STATUS_ERROR)
-	}
-	//get domains of bucket
-	domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
-	if gErr != nil {
-		logs.Error("Get domains of bucket error,", gErr)
-		os.Exit(STATUS_ERROR)
+
+	var domainOfBucket string
+	if !downConfig.IsHostFileSpecified {
+		//get bucket zone info
+		bucketInfo, gErr := GetBucketInfo(&mac, downConfig.Bucket)
+		if gErr != nil {
+			logs.Error("Get bucket region info error,", gErr)
+			os.Exit(STATUS_ERROR)
+		}
+		//get domains of bucket
+		domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
+		if gErr != nil {
+			logs.Error("Get domains of bucket error,", gErr)
+			os.Exit(STATUS_ERROR)
+		}
+
+		if len(domainsOfBucket) == 0 {
+			logs.Error("No domains found for bucket", downConfig.Bucket)
+			os.Exit(STATUS_ERROR)
+		}
+
+		domainOfBucket = domainsOfBucket[0]
+
+		//set up host
+		SetZone(bucketInfo.Region)
 	}
 
-	if len(domainsOfBucket) == 0 {
-		logs.Error("No domains found for bucket", downConfig.Bucket)
-		os.Exit(STATUS_ERROR)
-	}
-
-	domainOfBucket := domainsOfBucket[0]
-
-	//set up host
-	SetZone(bucketInfo.Region)
+	//set proxy
 	ioProxyAddress := conf.IO_HOST
-
 	//check whether cdn domain is set
 	if downConfig.CdnDomain != "" {
 		ioProxyAddress = downConfig.CdnDomain
@@ -155,6 +162,11 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	ioProxyAddress = strings.TrimPrefix(ioProxyAddress, "https://")
 	if downConfig.CdnDomain != "" {
 		domainOfBucket = ioProxyAddress
+	}
+
+	if domainOfBucket == "" {
+		logs.Error("No domains found to download files")
+		os.Exit(STATUS_ERROR)
 	}
 
 	jobListFileName := filepath.Join(storePath, fmt.Sprintf("%s.list", jobId))
