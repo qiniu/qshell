@@ -105,6 +105,7 @@ type UploadConfig struct {
 
 	//more settings
 	DeleteOnSuccess bool `json:"delete_on_success,omitempty"`
+	DisableResume   bool `json:"disable_resume,omitempty"`
 
 	IsHostFileSpecified bool `json:"-"`
 }
@@ -816,16 +817,22 @@ func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 	putRet := rio.PutRet{}
 	putExtra := rio.PutExtra{}
 
-	//progress file
-	progressFileKey := Md5Hex(fmt.Sprintf("%s:%s|%s:%s", uploadConfig.SrcDir,
-		uploadConfig.Bucket, localFilePath, uploadFileKey))
-	progressFilePath := filepath.Join(storePath, fmt.Sprintf("%s.progress", progressFileKey))
-	putExtra.ProgressFile = progressFilePath
+	var progressFilePath string
+	if !uploadConfig.DisableResume {
+		//progress file
+		progressFileKey := Md5Hex(fmt.Sprintf("%s:%s|%s:%s", uploadConfig.SrcDir,
+			uploadConfig.Bucket, localFilePath, uploadFileKey))
+		progressFilePath = filepath.Join(storePath, fmt.Sprintf("%s.progress", progressFileKey))
+		putExtra.ProgressFile = progressFilePath
+	}
 
 	//resumable upload
 	err := rio.PutFile(putClient, nil, &putRet, uploadFileKey, localFilePath, &putExtra)
 	if err != nil {
-		os.Remove(progressFilePath)
+		if progressFilePath != "" {
+			os.Remove(progressFilePath)
+		}
+
 		atomic.AddInt64(&failureFileCount, 1)
 		var errMsg string
 		if pErr, ok := err.(*rpc.ErrorInfo); ok {
@@ -841,7 +848,10 @@ func resumableUploadFile(uploadConfig *UploadConfig, transport *http.Transport,
 			exporter.FailureLock.Unlock()
 		}
 	} else {
-		os.Remove(progressFilePath)
+		if progressFilePath != "" {
+			os.Remove(progressFilePath)
+		}
+
 		atomic.AddInt64(&successFileCount, 1)
 		logs.Informational("Upload file `%s` => `%s` success", localFilePath, uploadFileKey)
 		putErr := ldb.Put([]byte(ldbKey), []byte(fmt.Sprintf("%d", localFileLastModified)), ldbWOpt)
