@@ -2,12 +2,11 @@ package qshell
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -27,12 +26,19 @@ import (
 	"bucket"		:	"test-bucket",
 	"prefix"		:	"demo/",
 	"suffixes"		: 	".png,.jpg",
+	"range_bytes"   :   4096,
+	"range_worker"  :   10
 }
 */
 
 const (
 	MIN_DOWNLOAD_THREAD_COUNT = 1
 	MAX_DOWNLOAD_THREAD_COUNT = 2000
+)
+
+const (
+	DEFAULT_RANGE_BLOCK  = 4 * 1024 * 1024
+	DEFAULT_RANGE_WORKER = 1
 )
 
 type DownloadConfig struct {
@@ -50,10 +56,11 @@ type DownloadConfig struct {
 	LogStdout bool   `json:"log_stdout,omitempty"`
 
 	IsHostFileSpecified bool `json:"-"`
-}
 
-var downloadTasks chan func()
-var initDownOnce sync.Once
+	//range download
+	RangeBytes  int64 `json:"range_bytes,omitempty"`
+	RangeWorker int64 `json:"range_worker,omitempty"`
+}
 
 func doDownload(tasks chan func()) {
 	for {
@@ -151,6 +158,15 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		SetZone(bucketInfo.Region)
 	}
 
+	//check range
+	if downConfig.RangeBytes <= 0 {
+		downConfig.RangeBytes = DEFAULT_RANGE_BLOCK
+	}
+
+	if downConfig.RangeWorker <= 0 {
+		downConfig.RangeWorker = DEFAULT_RANGE_WORKER
+	}
+
 	//set proxy
 	ioProxyAddress := conf.IO_HOST
 	//check whether cdn domain is set
@@ -193,7 +209,9 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	}
 
 	//init wait group
-	downWaitGroup := sync.WaitGroup{}
+	var downWaitGroup = sync.WaitGroup{}
+	var downloadTasks chan func()
+	var initDownOnce sync.Once
 
 	initDownOnce.Do(func() {
 		downloadTasks = make(chan func(), threadCount)
@@ -258,13 +276,13 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 				}
 			}
 
-			fileSize, pErr := strconv.ParseInt(items[1], 10, 64)
+			remoteFileSize, pErr := strconv.ParseInt(items[1], 10, 64)
 			if pErr != nil {
 				logs.Error("Invalid list line", line)
 				continue
 			}
 
-			fileMtime, pErr := strconv.ParseInt(items[3], 10, 64)
+			remoteFileMtime, pErr := strconv.ParseInt(items[3], 10, 64)
 			if pErr != nil {
 				logs.Error("Invalid list line", line)
 				continue
@@ -282,12 +300,14 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			//check whether log file exists
 			localFilePath := filepath.Join(downConfig.DestDir, fileKey)
 			localAbsFilePath, _ := filepath.Abs(localFilePath)
-			localFilePathTmp := fmt.Sprintf("%s.tmp", localFilePath)
+
+			//check whether to download new files
+			rKey := localAbsFilePath
+			rVal := fmt.Sprintf("%d|%d", remoteFileMtime, remoteFileSize)
+
+			var updateOldFile bool
+
 			localFileInfo, statErr := os.Stat(localFilePath)
-
-			var downNewFile bool
-			var fromBytes int64
-
 			if statErr == nil {
 				//log file exists, check whether have updates
 				oldFileInfo, notFoundErr := resumeLevelDb.Get([]byte(localFilePath), nil)
@@ -296,7 +316,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 					oldFileInfoItems := strings.Split(string(oldFileInfo), "|")
 					oldFileLmd, _ := strconv.ParseInt(oldFileInfoItems[0], 10, 64)
 					//oldFileSize, _ := strconv.ParseInt(oldFileInfoItems[1], 10, 64)
-					if oldFileLmd == fileMtime && localFileInfo.Size() == fileSize {
+					if oldFileLmd == remoteFileMtime && localFileInfo.Size() == remoteFileSize {
 						//nothing change, ignore
 						logs.Info("Local file `%s` exists, same as in bucket, download skip", localAbsFilePath)
 						existsFileCount += 1
@@ -304,12 +324,12 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 					} else {
 						//somthing changed, must download a new file
 						logs.Info("Local file `%s` exists, but remote file changed, go to download", localAbsFilePath)
-						downNewFile = true
+						updateOldFile = true
 					}
 				} else {
-					if localFileInfo.Size() != fileSize {
+					if localFileInfo.Size() != remoteFileSize {
 						logs.Info("Local file `%s` exists, size not the same as in bucket, go to download", localAbsFilePath)
-						downNewFile = true
+						updateOldFile = true
 					} else {
 						//treat the local file not changed, write to leveldb, though may not accurate
 						//nothing to do
@@ -318,47 +338,9 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 						continue
 					}
 				}
-			} else {
-				//check whether tmp file exists
-				localTmpFileInfo, statErr := os.Stat(localFilePathTmp)
-				if statErr == nil {
-					//if tmp file exists, check whether last modify changed
-					oldFileInfo, notFoundErr := resumeLevelDb.Get([]byte(localFilePath), nil)
-					if notFoundErr == nil {
-						//if exists
-						oldFileInfoItems := strings.Split(string(oldFileInfo), "|")
-						oldFileLmd, _ := strconv.ParseInt(oldFileInfoItems[0], 10, 64)
-						//oldFileSize, _ := strconv.ParseInt(oldFileInfoItems[1], 10, 64)
-						if oldFileLmd == fileMtime {
-							//tmp file exists, file not changed, use range to download
-							if localTmpFileInfo.Size() < fileSize {
-								fromBytes = localTmpFileInfo.Size()
-							} else {
-								//rename it
-								renameErr := os.Rename(localFilePathTmp, localFilePath)
-								if renameErr != nil {
-									logs.Error("Rename temp file `%s` to final file `%s` error", localFilePathTmp, localFilePath, renameErr)
-								}
-								continue
-							}
-						} else {
-							logs.Info("Local tmp file `%s` exists, but remote file changed, go to download", localFilePathTmp)
-							downNewFile = true
-						}
-					} else {
-						//log tmp file exists, but no record in leveldb, download a new log file
-						logs.Info("Local tmp file `%s` exists, but no record in leveldb ,go to download", localFilePathTmp)
-						downNewFile = true
-					}
-				} else {
-					//no log file exists, donwload a new log file
-					downNewFile = true
-				}
 			}
 
 			//set file info in leveldb
-			rKey := localAbsFilePath
-			rVal := fmt.Sprintf("%d|%d", fileMtime, fileSize)
 			resumeLevelDb.Put([]byte(rKey), []byte(rVal), &ldbWOpt)
 
 			//download new
@@ -366,12 +348,12 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			downloadTasks <- func() {
 				defer downWaitGroup.Done()
 
-				downErr := downloadFile(downConfig, fileKey, fileUrl, domainOfBucket, fileSize, fromBytes)
+				downErr := downloadFile(downConfig, fileKey, fileUrl, domainOfBucket, remoteFileSize)
 				if downErr != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 				} else {
 					atomic.AddInt64(&successFileCount, 1)
-					if !downNewFile {
+					if updateOldFile {
 						atomic.AddInt64(&updateFileCount, 1)
 					}
 				}
@@ -412,7 +394,7 @@ func makePrivateDownloadLink(mac *digest.Mac, domainOfBucket, ioProxyAddress, fi
 }
 
 //file key -> mtime
-func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket string, fileSize int64, fromBytes int64) (err error) {
+func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket string, remoteFileSize int64) (err error) {
 	startDown := time.Now().Unix()
 	destDir := downConfig.DestDir
 	localFilePath := filepath.Join(destDir, fileName)
@@ -427,69 +409,155 @@ func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket 
 	}
 
 	logs.Info("Downloading", fileName, "=>", localFilePath)
-	//new request
-	req, reqErr := http.NewRequest("GET", fileUrl, nil)
-	if reqErr != nil {
-		err = reqErr
-		logs.Info("New request", fileName, "failed by url", fileUrl, reqErr)
+	//download worker
+	var downWaitGroup = sync.WaitGroup{}
+	var downloadTasks chan func()
+	var initDownOnce sync.Once
+
+	initDownOnce.Do(func() {
+		downloadTasks = make(chan func(), downConfig.RangeWorker)
+		var i int64
+		for i = 0; i < downConfig.RangeWorker; i++ {
+			go doDownload(downloadTasks)
+		}
+	})
+
+	//create temp file
+	localTempFile, createErr := os.Create(localFilePathTmp)
+	if createErr != nil {
+		err = fmt.Errorf("Create temp file for", fileName, "failed when opening,", createErr)
 		return
 	}
-	//set host
-	req.Host = domainOfBucket
-	if downConfig.Referer != "" {
-		req.Header.Add("Referer", downConfig.Referer)
+	defer localTempFile.Close()
+
+	//fill with zero
+	var i int64
+	// for i = 0; i < remoteFileSize; i++ {
+	// 	//fill with 0
+	// 	_, wErr := localTempFile.Write([]byte("0"))
+	// 	if wErr != nil {
+	// 		err = fmt.Errorf("Create temp file for", fileName, "failed when filling,", wErr)
+	// 		return
+	// 	}
+	// }
+
+	// sErr := localTempFile.Sync()
+	// if sErr != nil {
+	// 	fmt.Errorf("Create temp file for", fileName, "failed when syncing,", sErr)
+	// 	return
+	// }
+
+	//try range download
+	totalTasks := remoteFileSize / downConfig.RangeBytes
+	if remoteFileSize%downConfig.RangeBytes != 0 {
+		totalTasks += 1
 	}
 
-	if fromBytes != 0 {
-		req.Header.Add("Range", fmt.Sprintf("bytes=%d-", fromBytes))
+	downErrs := sync.Map{}
+
+	for i = 0; i < totalTasks; i++ {
+		rangeIndex := i
+		var rangeStart int64 = rangeIndex * downConfig.RangeBytes
+		var rangeEnd int64 = (rangeIndex+1)*downConfig.RangeBytes - 1
+
+		if rangeEnd >= remoteFileSize {
+			rangeEnd = remoteFileSize - 1
+		}
+
+		downWaitGroup.Add(1)
+		downloadTasks <- func() {
+			defer downWaitGroup.Done()
+
+			//try each download
+			downErr := func() (err error) {
+				req, reqErr := http.NewRequest("GET", fileUrl, nil)
+				if reqErr != nil {
+					err = reqErr
+					return
+				}
+
+				//set host
+				req.Host = domainOfBucket
+				//set referer
+				if downConfig.Referer != "" {
+					req.Header.Add("Referer", downConfig.Referer)
+				}
+				//set range
+				req.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", rangeStart, rangeEnd))
+				resp, respErr := http.DefaultClient.Do(req)
+				if respErr != nil {
+					err = respErr
+					return
+				}
+				defer resp.Body.Close()
+
+				//read into memory
+				bodyBytes, readErr := ioutil.ReadAll(resp.Body)
+				if readErr != nil {
+					err = readErr
+					return
+				}
+
+				//Clients of WriteAt can execute parallel WriteAt calls on the same destination
+				//if the ranges do not overlap.
+				wLen, wErr := localTempFile.WriteAt(bodyBytes, rangeStart)
+				if wErr != nil {
+					err = wErr
+					return
+				}
+
+				expectLen := rangeEnd - rangeStart + 1
+				if wLen != int(expectLen) {
+					err = fmt.Errorf("Write range block %d not full error, expect %d, but %d bytes",
+						rangeIndex, expectLen, wLen)
+					return
+				}
+
+				return
+			}()
+
+			if downErr != nil {
+				downErrs.Store(rangeIndex, downErr)
+			}
+		}
 	}
 
-	resp, respErr := http.DefaultClient.Do(req)
-	if respErr != nil {
-		err = respErr
-		logs.Info("Download", fileName, "failed by url", fileUrl, respErr)
+	downWaitGroup.Wait()
+
+	//check down errs
+	for i = 0; i < totalTasks; i++ {
+		downErrVal, _ := downErrs.Load(i)
+		if downErr, _ := downErrVal.(error); downErr != nil {
+			err = downErr
+			logs.Error("Download temp file for %s => %s error, %s", fileName, localFilePath, downErr)
+			return
+		}
+	}
+
+	//sync
+	fErr := localTempFile.Sync()
+	if fErr != nil {
+		err = fErr
+		logs.Error("Sync temp file for %s => %s error, %s", fileName, localFilePath, fErr)
 		return
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode/100 == 2 {
-		var localFp *os.File
-		var openErr error
-		if fromBytes != 0 {
-			localFp, openErr = os.OpenFile(localFilePathTmp, os.O_APPEND|os.O_WRONLY, 0655)
-		} else {
-			localFp, openErr = os.Create(localFilePathTmp)
-		}
 
-		if openErr != nil {
-			err = openErr
-			logs.Error("Open local file", localFilePathTmp, "failed", openErr)
-			return
-		}
-
-		cpCnt, cpErr := io.Copy(localFp, resp.Body)
-		if cpErr != nil {
-			err = cpErr
-			localFp.Close()
-			logs.Error("Download", fileName, "failed", cpErr)
-			return
-		}
-		localFp.Close()
-
-		endDown := time.Now().Unix()
-		avgSpeed := fmt.Sprintf("%.2fKB/s", float64(cpCnt)/float64(endDown-startDown)/1024)
-
-		//move temp file to log file
-		renameErr := os.Rename(localFilePathTmp, localFilePath)
-		if renameErr != nil {
-			err = renameErr
-			logs.Error("Rename temp file to final log file error", renameErr)
-			return
-		}
-		logs.Info("Download", fileName, "=>", localFilePath, "success", avgSpeed)
-	} else {
-		err = errors.New("download failed")
-		logs.Info("Download", fileName, "failed by url", fileUrl, resp.Status)
+	cErr := localTempFile.Close()
+	if cErr != nil {
+		err = cErr
+		logs.Error("Close temp file for %s => %s error, %s", fileName, localFilePath, fErr)
 		return
 	}
+
+	rErr := os.Rename(localFilePathTmp, localFilePath)
+	if rErr != nil {
+		err = rErr
+		logs.Error("Rename temp file for %s => %s error, %s", fileName, localFilePath, rErr)
+	}
+
+	endDown := time.Now().Unix()
+	avgSpeed := fmt.Sprintf("%.2fKB/s", float64(remoteFileSize)/float64(endDown-startDown)/1024)
+	logs.Info("Download", fileName, "=>", localFilePath, "success", avgSpeed)
+
 	return
 }
