@@ -58,8 +58,8 @@ type DownloadConfig struct {
 	IsHostFileSpecified bool `json:"-"`
 
 	//range download
-	RangeBytes  int64 `json:"range_bytes,omitempty"`
-	RangeWorker int64 `json:"range_worker,omitempty"`
+	RangeBytes  int `json:"range_bytes,omitempty"`
+	RangeWorker int `json:"range_worker,omitempty"`
 }
 
 func doDownload(tasks chan func()) {
@@ -416,8 +416,7 @@ func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket 
 
 	initDownOnce.Do(func() {
 		downloadTasks = make(chan func(), downConfig.RangeWorker)
-		var i int64
-		for i = 0; i < downConfig.RangeWorker; i++ {
+		for i := 0; i < downConfig.RangeWorker; i++ {
 			go doDownload(downloadTasks)
 		}
 	})
@@ -430,35 +429,20 @@ func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket 
 	}
 	defer localTempFile.Close()
 
-	//fill with zero
-	var i int64
-	// for i = 0; i < remoteFileSize; i++ {
-	// 	//fill with 0
-	// 	_, wErr := localTempFile.Write([]byte("0"))
-	// 	if wErr != nil {
-	// 		err = fmt.Errorf("Create temp file for", fileName, "failed when filling,", wErr)
-	// 		return
-	// 	}
-	// }
-
-	// sErr := localTempFile.Sync()
-	// if sErr != nil {
-	// 	fmt.Errorf("Create temp file for", fileName, "failed when syncing,", sErr)
-	// 	return
-	// }
-
 	//try range download
-	totalTasks := remoteFileSize / downConfig.RangeBytes
-	if remoteFileSize%downConfig.RangeBytes != 0 {
+	rangeBlockSize := int64(downConfig.RangeBytes)
+	var totalTasks int64 = remoteFileSize / rangeBlockSize
+	if remoteFileSize%int64(downConfig.RangeBytes) != 0 {
 		totalTasks += 1
 	}
 
 	downErrs := sync.Map{}
 
+	var i int64
 	for i = 0; i < totalTasks; i++ {
 		rangeIndex := i
-		var rangeStart int64 = rangeIndex * downConfig.RangeBytes
-		var rangeEnd int64 = (rangeIndex+1)*downConfig.RangeBytes - 1
+		var rangeStart int64 = rangeIndex * rangeBlockSize
+		var rangeEnd int64 = (rangeIndex+1)*rangeBlockSize - 1
 
 		if rangeEnd >= remoteFileSize {
 			rangeEnd = remoteFileSize - 1
