@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"net"
+	"net/http"
 	"os"
 	"qiniu/api.v6/auth/digest"
 	"qiniu/api.v6/rs"
@@ -120,7 +122,14 @@ func Stat(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		entry, err := client.Stat(nil, bucket, key)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
@@ -152,7 +161,14 @@ func Delete(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		err := client.Delete(nil, bucket, key)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
@@ -193,7 +209,14 @@ func Move(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		err := client.Move(nil, srcBucket, srcKey, destBucket, destKey, overwrite)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
@@ -234,7 +257,14 @@ func Copy(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		err := client.Copy(nil, srcBucket, srcKey, destBucket, destKey, overwrite)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
@@ -265,7 +295,14 @@ func Chgm(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		err := client.ChangeMime(nil, bucket, key, newMimeType)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
@@ -302,7 +339,14 @@ func Chtype(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		err := client.ChangeType(nil, bucket, key, fileType)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
@@ -339,7 +383,14 @@ func DeleteAfterDays(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		err := client.DeleteAfterDays(nil, bucket, key, expire)
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
@@ -462,7 +513,14 @@ func BatchStat(cmd string, params ...string) {
 			account.AccessKey,
 			[]byte(account.SecretKey),
 		}
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		fp, err := os.Open(keyListFile)
 		if err != nil {
 			fmt.Println("Open key list file error", err)
@@ -576,7 +634,14 @@ func BatchDelete(cmd string, params ...string) {
 			}
 		})
 
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		fp, err := os.Open(keyListFile)
 		if err != nil {
 			fmt.Println("Open key list file error", err)
@@ -706,7 +771,14 @@ func BatchChgm(cmd string, params ...string) {
 			}
 		})
 
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		fp, err := os.Open(keyMimeMapFile)
 		if err != nil {
 			fmt.Println("Open key mime map file error")
@@ -831,7 +903,14 @@ func BatchChtype(cmd string, params ...string) {
 			}
 		})
 
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		fp, err := os.Open(keyTypeMapFile)
 		if err != nil {
 			fmt.Println("Open key file type map file error")
@@ -956,7 +1035,14 @@ func BatchDeleteAfterDays(cmd string, params ...string) {
 			}
 		})
 
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		fp, err := os.Open(keyExpireMapFile)
 		if err != nil {
 			fmt.Println("Open key expire map file error")
@@ -1083,7 +1169,14 @@ func BatchRename(cmd string, params ...string) {
 			}
 		})
 
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		fp, err := os.Open(oldNewKeyMapFile)
 		if err != nil {
 			fmt.Println("Open old new key map file error")
@@ -1211,7 +1304,14 @@ func BatchMove(cmd string, params ...string) {
 			}
 		})
 
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Println("Open src dest key map file error")
@@ -1346,7 +1446,14 @@ func BatchCopy(cmd string, params ...string) {
 			}
 		})
 
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
+
 		fp, err := os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Println("Open src dest key map file error")
@@ -1563,7 +1670,13 @@ func M3u8Delete(cmd string, params ...string) {
 			fmt.Println(err)
 			os.Exit(qshell.STATUS_ERROR)
 		}
-		client := rs.NewMac(&mac)
+		client := rs.NewMacEx(&mac, &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   time.Duration(60) * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			ResponseHeaderTimeout: time.Second * 60 * 10,
+		}, "")
 		entryCnt := len(m3u8FileList)
 		if entryCnt == 0 {
 			fmt.Println("no m3u8 slices found")

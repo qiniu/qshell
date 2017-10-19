@@ -333,27 +333,24 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 
 	//check bind net interface card
 	var transport *http.Transport
-	var rsClient rs.Client
+	var dialer = net.Dialer{}
 	if uploadConfig.BindNicIp != "" {
-		transport = &http.Transport{
-			Dial: (&net.Dialer{
-				LocalAddr: &net.TCPAddr{
-					IP: net.ParseIP(uploadConfig.BindNicIp),
-				},
-			}).Dial,
+		dialer.LocalAddr = &net.TCPAddr{
+			IP: net.ParseIP(uploadConfig.BindNicIp),
 		}
 	}
 
-	if transport != nil {
-		rsClient = rs.NewMacEx(&mac, transport, "")
-	} else {
-		rsClient = rs.NewMac(&mac)
+	//set keepalive and timeout
+	dialer.Timeout = time.Duration(60) * time.Second
+	dialer.KeepAlive = time.Second * 30
+
+	var rsClient rs.Client
+
+	transport = &http.Transport{
+		Dial: dialer.Dial,
 	}
 
-	//check remote rs ip bind
-	if uploadConfig.BindRsIp != "" {
-		rsClient.Conn.BindRemoteIp = uploadConfig.BindRsIp
-	}
+	rsClient = rs.NewMacEx(&mac, transport, uploadConfig.BindRsIp)
 
 	//scan lines and upload
 	for bScanner.Scan() {
