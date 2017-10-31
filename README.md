@@ -130,7 +130,8 @@ $ qshell -m stat bucket key
 |prefop|存储|查询七牛数据处理的结果|[文档](docs/prefop.md)|
 |fput|存储|以文件表单的方式上传一个文件|[文档](docs/fput.md)|
 |rput|存储|以分片上传的方式上传一个文件|[文档](docs/rput.md)|
-|qupload|存储|同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查|[文档](docs/qupload.md)|
+|qupload|存储|同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（配置式）|[文档](docs/qupload.md)|
+|qupload2|存储|同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（命令式）|[文档](docs/qupload2.md)|
 |qdownload|存储|从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步|[文档](docs/qdownload.md)|
 |stat|存储|查询七牛空间中一个文件的基本信息|[文档](docs/stat.md)|
 |delete|存储|删除七牛空间中的一个文件|[文档](docs/delete.md)|
