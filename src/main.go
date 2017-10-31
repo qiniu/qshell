@@ -48,6 +48,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"b64decode":     cli.Base64Decode,
 	"urlencode":     cli.Urlencode,
 	"urldecode":     cli.Urldecode,
+	"rpcdecode":     cli.RpcDecode,
 	"ts2d":          cli.Timestamp2Date,
 	"tns2d":         cli.TimestampNano2Date,
 	"tms2d":         cli.TimestampMilli2Date,

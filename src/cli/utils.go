@@ -1,12 +1,14 @@
 package cli
 
 import (
+	"bufio"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"net/url"
 	"os"
+	"qiniu/uri"
 	"qshell"
 	"strconv"
 	"time"
@@ -37,6 +39,15 @@ func FormatFsize(fsize int64) (result string) {
 	}
 
 	return
+}
+
+func RpcDecode(cmd string, params ...string) {
+	bScanner := bufio.NewScanner(os.Stdin)
+	for bScanner.Scan() {
+		toDecode := bScanner.Text()
+		decodedStr, _ := uri.Decode(string(toDecode))
+		fmt.Println(decodedStr)
+	}
 }
 
 func Base64Encode(cmd string, params ...string) {
