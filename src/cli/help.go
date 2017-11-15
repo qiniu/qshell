@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v2.1.6"
+var version = "v2.1.7"
 
 var optionDocs = map[string]string{
 	"-f": "Force batch operations",
@@ -59,6 +59,7 @@ var cmds = []string{
 	"b64decode",
 	"urlencode",
 	"urldecode",
+	"rpcencode",
 	"rpcdecode",
 	"ts2d",
 	"tms2d",
@@ -103,6 +104,7 @@ var cmdDocs = map[string][]string{
 	"b64decode":     []string{"qshell b64decode [<UrlSafe>] <DataToDecode>", "Base64 Decode"},
 	"urlencode":     []string{"qshell urlencode <DataToEncode>", "Url encode"},
 	"urldecode":     []string{"qshell urldecode <DataToDecode>", "Url decode"},
+	"rpcencode":     []string{"qshell rpcencode <DataToEncode1> [<DataToEncode2> [...]]", "rpc encode of qiniu"},
 	"rpcdecode":     []string{"qshell rpcdecode <DataToDecode>", "rpc decode of qiniu"},
 	"ts2d":          []string{"qshell ts2d <TimestampInSeconds>", "Convert timestamp in seconds to a date (TZ: Local)"},
 	"tms2d":         []string{"qshell tms2d <TimestampInMilliSeconds>", "Convert timestamp in milli-seconds to a date (TZ: Local)"},

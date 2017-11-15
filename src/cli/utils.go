@@ -50,6 +50,17 @@ func RpcDecode(cmd string, params ...string) {
 	}
 }
 
+func RpcEncode(cmd string, params ...string) {
+	if len(params) > 0 {
+		for _, param := range params {
+			encodedStr := uri.Encode(param)
+			fmt.Println(encodedStr)
+		}
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
 func Base64Encode(cmd string, params ...string) {
 	if len(params) == 1 || len(params) == 2 {
 		urlSafe := true
