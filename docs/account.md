@@ -21,8 +21,8 @@ qshell account <Your AccessKey> <Your SecretKey>
 
 |参数名|描述|
 |--------|--------|
-|AccessKey|七牛账号对应的AccessKey [获取](https://portal.qiniu.com/setting/key)|
-|SecretKey|七牛账号对应的SecretKey [获取](https://portal.qiniu.com/setting/key)|
+|AccessKey|七牛账号对应的AccessKey [获取](https://portal.qiniu.com/user/key)|
+|SecretKey|七牛账号对应的SecretKey [获取](https://portal.qiniu.com/user/key)|
 
 # 示例
 
