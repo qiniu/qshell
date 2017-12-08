@@ -30,15 +30,18 @@ func (acc *Account) String() string {
 }
 
 func SetAccount(accessKey string, secretKey string) (err error) {
-	storageDir := filepath.Join(QShellRootPath, ".qshell")
-	if _, sErr := os.Stat(storageDir); sErr != nil {
-		if mErr := os.MkdirAll(storageDir, 0755); mErr != nil {
-			err = fmt.Errorf("Mkdir `%s` error, %s", storageDir, mErr)
-			return
+	accountFname := QAccountFile
+	if accountFname == "" {
+		storageDir := filepath.Join(QShellRootPath, ".qshell")
+		if _, sErr := os.Stat(storageDir); sErr != nil {
+			if mErr := os.MkdirAll(storageDir, 0755); mErr != nil {
+				err = fmt.Errorf("Mkdir `%s` error, %s", storageDir, mErr)
+				return
+			}
 		}
-	}
 
-	accountFname := filepath.Join(storageDir, "account.json")
+		accountFname = filepath.Join(storageDir, "account.json")
+	}
 
 	accountFh, openErr := os.OpenFile(accountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if openErr != nil {
@@ -76,8 +79,12 @@ func SetAccount(accessKey string, secretKey string) (err error) {
 }
 
 func GetAccount() (account Account, err error) {
-	storageDir := filepath.Join(QShellRootPath, ".qshell")
-	accountFname := filepath.Join(storageDir, "account.json")
+	accountFname := QAccountFile
+	if accountFname == "" {
+		storageDir := filepath.Join(QShellRootPath, ".qshell")
+		accountFname = filepath.Join(storageDir, "account.json")
+	}
+
 	accountFh, openErr := os.Open(accountFname)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s, please use `account` to set AccessKey and SecretKey first", openErr)
@@ -117,6 +124,6 @@ func GetAccount() (account Account, err error) {
 		account.SecretKey = string(secretKeyBytes)
 	}
 
-	logs.Debug("Load account from %s", accountFname)
+	logs.Info("Load account from %s", accountFname)
 	return
 }

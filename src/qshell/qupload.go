@@ -152,7 +152,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
 
 	//local storage path
-	storePath := filepath.Join(QShellRootPath, ".qshell", "qupload", jobId)
+	storePath := filepath.Join(QShellRootPath, ".qshell", QAccountName, "qupload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
 		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		os.Exit(STATUS_HALT)
@@ -243,7 +243,6 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	}
 
 	//global up settings
-	logs.Info("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
 	account, gErr := GetAccount()
 	if gErr != nil {
 		fmt.Println(gErr)

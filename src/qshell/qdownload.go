@@ -68,7 +68,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", downConfig.DestDir, downConfig.Bucket))
 
 	//local storage path
-	storePath := filepath.Join(QShellRootPath, ".qshell", "qdownload", jobId)
+	storePath := filepath.Join(QShellRootPath, ".qshell", QAccountName, "qdownload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
 		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		os.Exit(STATUS_ERROR)
@@ -117,7 +117,6 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
 
-	logs.Info("Load account from %s", filepath.Join(QShellRootPath, ".qshell/account.json"))
 	account, gErr := GetAccount()
 	if gErr != nil {
 		fmt.Println("Get account error,", gErr)

@@ -2,6 +2,8 @@ package qshell
 
 //dir to store some cached files for qshell, like ak, sk
 var QShellRootPath string
+var QAccountName string
+var QAccountFile string
 
 const (
 	BLOCK_BITS = 22 // Indicate that the blocksize is 4M

@@ -8,10 +8,12 @@ import (
 	"github.com/astaxie/beego/logs"
 	"os"
 	"os/user"
+	"path/filepath"
 	"qiniu/api.v6/conf"
 	"qiniu/rpc"
 	"qshell"
 	"runtime"
+	"strings"
 )
 
 var supportedCmds = map[string]cli.CliFunc{
@@ -99,11 +101,15 @@ func main() {
 	var multiUserMode bool
 	var hostFile string
 
+	//account file
+	var accountFile string
+
 	flag.BoolVar(&debugMode, "d", false, "debug mode")
 	flag.BoolVar(&multiUserMode, "m", false, "multi user mode")
 	flag.BoolVar(&helpMode, "h", false, "show help")
 	flag.BoolVar(&versionMode, "v", false, "show version")
 	flag.StringVar(&hostFile, "f", "", "host file")
+	flag.StringVar(&accountFile, "c", "", "account file path")
 
 	flag.Parse()
 
@@ -138,7 +144,14 @@ func main() {
 			fmt.Println("Error: get current user error,", gErr)
 			os.Exit(qshell.STATUS_HALT)
 		}
+
 		qshell.QShellRootPath = curUser.HomeDir
+		//check account file mode
+		if accountFile != "" {
+			accountName := strings.TrimSuffix(filepath.Base(accountFile), filepath.Ext(accountFile))
+			qshell.QAccountName = accountName
+			qshell.QAccountFile = accountFile
+		}
 	}
 
 	//read host file
