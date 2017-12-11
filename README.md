@@ -15,12 +15,7 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell v2.1.6|Mac OSX(64位)|[下载](http://devtools.qiniu.com/2.1.6/qshell-darwin-x64)|
-|qshell v2.1.6|Linux (arm平台)|[下载](http://devtools.qiniu.com/2.1.6/qshell-linux-arm)|
-|qshell v2.1.6|Linux (64位)|[下载](http://devtools.qiniu.com/2.1.6/qshell-linux-x64)|
-|qshell v2.1.6|Linux (32位)|[下载](http://devtools.qiniu.com/2.1.6/qshell-linux-x86)|
-|qshell v2.1.6|Windows(64位)|[下载](http://devtools.qiniu.com/2.1.6/qshell-windows-x64.exe)|
-|qshell v2.1.6|Windows(32位)|[下载](http://devtools.qiniu.com/2.1.6/qshell-windows-x86.exe)|
+|qshell v2.1.7|Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.1.7.zip)|
 
 ## 安装
 
