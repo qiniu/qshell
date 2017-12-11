@@ -9,7 +9,9 @@ import (
 var version = "v2.1.7"
 
 var optionDocs = map[string]string{
-	"-f": "Force batch operations",
+	"-f": "use specified host file",
+	"-m": "use multi-user mode",
+	"-c": "use specified account file",
 	"-d": "Show debug message",
 	"-v": "Show version",
 	"-h": "Show help",
