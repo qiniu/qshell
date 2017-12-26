@@ -3,12 +3,13 @@ package qshell
 import (
 	"bufio"
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"io"
 	"os"
+	"qiniu/rpc"
+
+	"github.com/astaxie/beego/logs"
 	"qiniu/api.v6/auth/digest"
 	"qiniu/api.v6/rsf"
-	"qiniu/rpc"
 )
 
 /*
@@ -54,7 +55,9 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 	//start to list
 	for run {
 		entries, markerOut, listErr := client.ListPrefix(nil, bucket, prefix, marker, limit)
+		limit = 1000
 		if listErr != nil {
+			limit = 1
 			if listErr == io.EOF {
 				run = false
 			} else {
