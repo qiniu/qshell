@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"os"
 	"os/user"
 	"path/filepath"
-	"qiniu/api.v6/conf"
 	"qiniu/rpc"
 	"qshell"
 	"runtime"
 	"strings"
+
+	"github.com/astaxie/beego/logs"
+	"qiniu/api.v6/conf"
 )
 
 var supportedCmds = map[string]cli.CliFunc{
@@ -77,6 +78,40 @@ type HostConfig struct {
 	IoHost  string `json:"io"`
 	RsHost  string `json:"rs"`
 	RsfHost string `json:"rsf"`
+}
+
+func readConfig(confPath string) {
+	confFp, openErr := os.Open(confPath)
+	if openErr != nil {
+		fmt.Println("Error: open specified host file error,", openErr)
+		os.Exit(qshell.STATUS_HALT)
+		return
+	}
+
+	var hostCfg HostConfig
+	decoder := json.NewDecoder(confFp)
+	decodeErr := decoder.Decode(&hostCfg)
+	if decodeErr != nil {
+		fmt.Println("Error: read host file error,", decodeErr)
+		os.Exit(qshell.STATUS_HALT)
+		return
+	}
+
+	if len(hostCfg.UpHost) == 0 {
+		return
+	}
+
+	conf.UP_HOST = hostCfg.UpHost
+	conf.RS_HOST = hostCfg.RsHost
+	conf.RSF_HOST = hostCfg.RsfHost
+	conf.IO_HOST = hostCfg.IoHost
+	conf.API_HOST = hostCfg.ApiHost
+
+	//bucket domains
+	qshell.BUCKET_RS_HOST = hostCfg.RsHost
+	qshell.BUCKET_API_HOST = hostCfg.ApiHost
+
+	cli.IsHostFileSpecified = true
 }
 
 func main() {
@@ -151,38 +186,13 @@ func main() {
 			accountName := strings.TrimSuffix(filepath.Base(accountFile), filepath.Ext(accountFile))
 			qshell.QAccountName = accountName
 			qshell.QAccountFile = accountFile
+			readConfig(accountFile)
 		}
 	}
 
 	//read host file
 	if hostFile != "" {
-		hostFp, openErr := os.Open(hostFile)
-		if openErr != nil {
-			fmt.Println("Error: open specified host file error,", openErr)
-			os.Exit(qshell.STATUS_HALT)
-			return
-		}
-
-		var hostCfg HostConfig
-		decoder := json.NewDecoder(hostFp)
-		decodeErr := decoder.Decode(&hostCfg)
-		if decodeErr != nil {
-			fmt.Println("Error: read host file error,", decodeErr)
-			os.Exit(qshell.STATUS_HALT)
-			return
-		}
-
-		conf.UP_HOST = hostCfg.UpHost
-		conf.RS_HOST = hostCfg.RsHost
-		conf.RSF_HOST = hostCfg.RsfHost
-		conf.IO_HOST = hostCfg.IoHost
-		conf.API_HOST = hostCfg.ApiHost
-
-		//bucket domains
-		qshell.BUCKET_RS_HOST = hostCfg.RsHost
-		qshell.BUCKET_API_HOST = hostCfg.ApiHost
-
-		cli.IsHostFileSpecified = true
+		readConfig(hostFile)
 	}
 
 	//set cmd and params
