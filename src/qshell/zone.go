@@ -17,6 +17,7 @@ const (
 	ZoneBC  = "z1"
 	ZoneHN  = "z2"
 	ZoneNA0 = "na0"
+	ZoneAS0 = "as0"
 )
 
 //zone all defaults to the service source site
@@ -53,6 +54,14 @@ var ZoneNA0Config = ZoneConfig{
 	ApiHost:   "http://api-na0.qiniu.com",
 }
 
+var ZoneSA0Config = ZoneConfig{
+	UpHost:    "http://upload-as0.qiniu.com",
+	IovipHost: "http://iovip-as0.qbox.me",
+	RsHost:    "http://rs-as0.qiniu.com",
+	RsfHost:   "http://rsf-as0.qiniu.com",
+	ApiHost:   "http://api-as0.qiniu.com",
+}
+
 func SetZone(zone string) {
 	var zoneConfig ZoneConfig
 	switch zone {
@@ -62,6 +71,8 @@ func SetZone(zone string) {
 		zoneConfig = ZoneHNConfig
 	case ZoneNA0:
 		zoneConfig = ZoneNA0Config
+	case ZoneAS0:
+		zoneConfig = ZoneSA0Config
 	default:
 		zoneConfig = ZoneNBConfig
 	}
@@ -74,7 +85,7 @@ func SetZone(zone string) {
 
 func IsValidZone(zone string) (valid bool) {
 	switch zone {
-	case ZoneNB, ZoneBC, ZoneHN, ZoneNA0:
+	case ZoneNB, ZoneBC, ZoneHN, ZoneNA0, ZoneAS0:
 		valid = true
 	default:
 		valid = false
