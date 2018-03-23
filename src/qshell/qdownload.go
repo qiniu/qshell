@@ -133,38 +133,35 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 
 	var domainOfBucket string
+
+	//get bucket zone info
+	bucketInfo, gErr := GetBucketInfo(&mac, downConfig.Bucket)
+	if gErr != nil {
+		logs.Error("Get bucket region info error,", gErr)
+		os.Exit(STATUS_ERROR)
+	}
+	//get domains of bucket
+	domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
+	if gErr != nil {
+		logs.Error("Get domains of bucket error,", gErr)
+		os.Exit(STATUS_ERROR)
+	}
+
+	if len(domainsOfBucket) == 0 {
+		logs.Error("No domains found for bucket", downConfig.Bucket)
+		os.Exit(STATUS_ERROR)
+	}
+
+	for _, domain := range domainsOfBucket {
+		if !strings.HasPrefix(domain, ".") {
+			domainOfBucket = domain
+			break
+		}
+	}
+
 	if !downConfig.IsHostFileSpecified {
-		//get bucket zone info
-		bucketInfo, gErr := GetBucketInfo(&mac, downConfig.Bucket)
-		if gErr != nil {
-			logs.Error("Get bucket region info error,", gErr)
-			os.Exit(STATUS_ERROR)
-		}
-		//get domains of bucket
-		domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
-		if gErr != nil {
-			logs.Error("Get domains of bucket error,", gErr)
-			os.Exit(STATUS_ERROR)
-		}
-
-		if len(domainsOfBucket) == 0 {
-			logs.Error("No domains found for bucket", downConfig.Bucket)
-			os.Exit(STATUS_ERROR)
-		}
-
-		domainOfBucket = domainsOfBucket[0]
-
 		//set up host
 		SetZone(bucketInfo.Region)
-	}
-
-	//check range
-	if downConfig.RangeBytes <= 0 {
-		downConfig.RangeBytes = DEFAULT_RANGE_BLOCK
-	}
-
-	if downConfig.RangeWorker <= 0 {
-		downConfig.RangeWorker = DEFAULT_RANGE_WORKER
 	}
 
 	//set proxy
