@@ -37,7 +37,7 @@ RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts
 - 使用如下命令进行批量查询
 
 ```
-$ qshell batchmove 7qiniu listFile
+$ qshell batchstat 7qiniu listFile
 ```
 
 - 输出 Key、Fsize、Hash、MimeType、PutTime 以`\t`分隔：
