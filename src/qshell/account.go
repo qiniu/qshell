@@ -1,18 +1,25 @@
 package qshell
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	_ "github.com/mattn/go-sqlite3"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type Account struct {
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
+	Uid        int
+	Uname      string
+	Primary    bool
+	AccessKey  string
+	SecretKey  string
+	Updatetime int
 }
 
 func (acc *Account) ToJson() (jsonStr string, err error) {
@@ -29,7 +36,7 @@ func (acc *Account) String() string {
 	return fmt.Sprintf("AccessKey: %s\nSecretKey: %s", acc.AccessKey, acc.SecretKey)
 }
 
-func SetAccount(accessKey string, secretKey string) (err error) {
+func SetAccount(uid int, uname string, primary bool, accessKey string, secretKey string) (err error) {
 	accountFname := QAccountFile
 	if accountFname == "" {
 		storageDir := filepath.Join(QShellRootPath, ".qshell")
@@ -78,40 +85,58 @@ func SetAccount(accessKey string, secretKey string) (err error) {
 	return
 }
 
-func GetAccount() (account Account, err error) {
+func GetAccount(uid int) (user Account, err error) {
 	accountFname := QAccountFile
 	if accountFname == "" {
 		storageDir := filepath.Join(QShellRootPath, ".qshell")
-		accountFname = filepath.Join(storageDir, "account.json")
+		accountFname = filepath.Join(storageDir, "account.db")
 	}
-
-	accountFh, openErr := os.Open(accountFname)
-	if openErr != nil {
-		err = fmt.Errorf("Open account file error, %s, please use `account` to set AccessKey and SecretKey first", openErr)
+	if _, err := os.Stat(accountFname); os.IsNotExist(err) {
+		err = fmt.Errorf("please use `account` to set AccessKey and SecretKey first")
 		return
 	}
-	defer accountFh.Close()
-
-	accountBytes, readErr := ioutil.ReadAll(accountFh)
-	if readErr != nil {
-		err = fmt.Errorf("Read account file error, %s", readErr)
+	db, err = sql.Open("sqlite3", accountFname)
+	if err != nil {
+		err = fmt.Errorf("open db: %v", err)
 		return
 	}
-
-	if umError := json.Unmarshal(accountBytes, &account); umError != nil {
-		err = fmt.Errorf("Parse account file error, %s", umError)
+	defer db.Close()
+	sqlTable = `
+	    create table if not exists user (
+	    id integer
+	    name varchar(64)
+	    primary varchar(64)
+	    updatetime datetime)
+	`
+	db.Exec(sqlTable)
+	rows, err := db.Query("select id, name, primary, updatetime where id=?", uid)
+	if err != nil {
+		err = fmt.Errorf("select from table: %v", err)
 		return
 	}
-
+	var user Account
+	for rows.Next() {
+		err = rows.Scan(&user.Uid, &user.Uname, &user.Primary, &user.Updatetime, &user.AccessKey, &user.SecretKey)
+		if err != nil {
+			err = fmt.Errorf("row scan: %s", err)
+			return
+		}
+		statement, err := db.Prepare("update user set updatetime=? where id=?")
+		if err != nil {
+			err = fmt.Errorf("statement prepare: %s", err)
+			return
+		}
+		statement.Exec(time.Now().Unix(), uid)
+	}
 	// backwards compatible with old version of qshell, which encrypt ak/sk based on existing ak/sk
-	if len(account.SecretKey) == 40 {
-		setErr := SetAccount(account.AccessKey, account.SecretKey)
+	if len(user.SecretKey) == 40 {
+		setErr := SetAccount(user.AccessKey, user.SecretKey)
 		if setErr != nil {
 			return
 		}
 	} else {
-		aesKey := Md5Hex(account.AccessKey)
-		encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(account.SecretKey)
+		aesKey := Md5Hex(user.AccessKey)
+		encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(user.SecretKey)
 		if decodeErr != nil {
 			err = decodeErr
 			return
@@ -121,7 +146,7 @@ func GetAccount() (account Account, err error) {
 			err = decryptErr
 			return
 		}
-		account.SecretKey = string(secretKeyBytes)
+		user.SecretKey = string(secretKeyBytes)
 	}
 
 	logs.Info("Load account from %s", accountFname)
