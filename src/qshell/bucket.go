@@ -26,7 +26,7 @@ get bucket info
 */
 func GetBucketInfo(mac *digest.Mac, bucket string) (bucketInfo BucketInfo, err error) {
 	client := rs.NewMac(mac)
-	bucketUri := fmt.Sprintf("%s/bucket/%s", BUCKET_RS_HOST, bucket)
+	bucketUri := fmt.Sprintf("%s/bucket/%s?shared=true", BUCKET_RS_HOST, bucket)
 	callErr := client.Conn.Call(nil, &bucketInfo, bucketUri)
 	if callErr != nil {
 		if v, ok := callErr.(*rpc.ErrorInfo); ok {
