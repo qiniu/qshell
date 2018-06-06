@@ -144,9 +144,9 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		os.Exit(STATUS_ERROR)
 	}
 
-	for _, domain := range domainsOfBucket {
-		if !strings.HasPrefix(domain, ".") {
-			domainOfBucket = domain
+	for _, d := range domainsOfBucket {
+		if !strings.HasPrefix(d.Domain, ".") {
+			domainOfBucket = d.Domain
 			break
 		}
 	}

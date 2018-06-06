@@ -57,8 +57,8 @@ func GetDomainsOfBucket(cmd string, params ...string) {
 			if len(domains) == 0 {
 				fmt.Printf("No domains found for bucket `%s`\n", bucket)
 			} else {
-				for _, domain := range domains {
-					fmt.Println(domain)
+				for _, d := range domains {
+					fmt.Println(d.Domain)
 				}
 			}
 		}

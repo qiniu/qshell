@@ -26,8 +26,8 @@ get bucket info
 */
 func GetBucketInfo(mac *digest.Mac, bucket string) (bucketInfo BucketInfo, err error) {
 	client := rs.NewMac(mac)
-	bucketUri := fmt.Sprintf("%s/bucket/%s?shared=true", BUCKET_RS_HOST, bucket)
-	callErr := client.Conn.Call(nil, &bucketInfo, bucketUri)
+	bucketUrl := fmt.Sprintf("%s/bucket/%s", BUCKET_RS_HOST, bucket)
+	callErr := client.Conn.Call(nil, &bucketInfo, bucketUrl)
 	if callErr != nil {
 		if v, ok := callErr.(*rpc.ErrorInfo); ok {
 			err = fmt.Errorf("code: %d, %s, xreqid: %s", v.Code, v.Err, v.Reqid)
@@ -53,14 +53,16 @@ func GetBuckets(mac *digest.Mac) (buckets []string, err error) {
 	return
 }
 
-func GetDomainsOfBucket(mac *digest.Mac, bucket string) (domains []string, err error) {
-	domains = make([]string, 0)
+type BucketDomain struct {
+	Domain string `json:"domain"`
+	Owner  int    `json:"owner"`
+}
+
+func GetDomainsOfBucket(mac *digest.Mac, bucket string) (domains []BucketDomain, err error) {
+	domains = make([]BucketDomain, 0)
 	client := rs.NewMac(mac)
-	getDomainsUrl := fmt.Sprintf("%s/v6/domain/list", BUCKET_API_HOST)
-	postData := map[string][]string{
-		"tbl": []string{bucket},
-	}
-	callErr := client.Conn.CallWithForm(nil, &domains, getDomainsUrl, postData)
+	getDomainsUrl := fmt.Sprintf("%s/v7/domain/list?tbl=%s", BUCKET_API_HOST, bucket)
+	callErr := client.Conn.Call(nil, &domains, getDomainsUrl)
 	if callErr != nil {
 		if v, ok := callErr.(*rpc.ErrorInfo); ok {
 			err = fmt.Errorf("code: %d, %s, xreqid: %s", v.Code, v.Err, v.Reqid)

@@ -17,8 +17,6 @@ import (
 	"time"
 )
 
-type BucketDomain []string
-
 func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelete []rs.EntryPath, err error) {
 	client := rs.NewMac(mac)
 	//check m3u8 file exists
@@ -32,14 +30,9 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 		return
 	}
 	//get domain list of bucket
-	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", conf.API_HOST)
-	bucketDomainData := map[string][]string{
-		"tbl": []string{bucket},
-	}
-	bucketDomains := BucketDomain{}
-	bErr := client.Conn.CallWithForm(nil, &bucketDomains, bucketDomainUrl, bucketDomainData)
-	if bErr != nil {
-		err = fmt.Errorf("get domain of bucket failed, %s", bErr.Error())
+	bucketDomains, gErr := GetDomainsOfBucket(mac, bucket)
+	if gErr != nil {
+		err = gErr
 		return
 	}
 	if len(bucketDomains) == 0 {
@@ -48,17 +41,17 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 	}
 	var domain string
 	for _, d := range bucketDomains {
-		if strings.HasSuffix(d, "qiniudn.com") ||
-			strings.HasSuffix(d, "clouddn.com") ||
-			strings.HasSuffix(d, "qiniucdn.com") {
-			domain = d
+		if strings.HasSuffix(d.Domain, "qiniudn.com") ||
+			strings.HasSuffix(d.Domain, "clouddn.com") ||
+			strings.HasSuffix(d.Domain, "qiniucdn.com") {
+			domain = d.Domain
 			break
 		}
 	}
 
 	//get first
 	if domain == "" {
-		domain = bucketDomains[0]
+		domain = bucketDomains[0].Domain
 	}
 
 	if domain == "" {
@@ -136,14 +129,9 @@ func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain
 		return
 	}
 	//get domain list of bucket
-	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", conf.API_HOST)
-	bucketDomainData := map[string][]string{
-		"tbl": []string{bucket},
-	}
-	bucketDomains := BucketDomain{}
-	bErr := client.Conn.CallWithForm(nil, &bucketDomains, bucketDomainUrl, bucketDomainData)
-	if bErr != nil {
-		err = fmt.Errorf("get domain of bucket failed, %s", bErr.Error())
+	bucketDomains, gErr := GetDomainsOfBucket(mac, bucket)
+	if gErr != nil {
+		err = gErr
 		return
 	}
 	if len(bucketDomains) == 0 {
@@ -152,17 +140,17 @@ func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain
 	}
 	var domain string
 	for _, d := range bucketDomains {
-		if strings.HasSuffix(d, "qiniudn.com") ||
-			strings.HasSuffix(d, "clouddn.com") ||
-			strings.HasSuffix(d, "qiniucdn.com") {
-			domain = d
+		if strings.HasSuffix(d.Domain, "qiniudn.com") ||
+			strings.HasSuffix(d.Domain, "clouddn.com") ||
+			strings.HasSuffix(d.Domain, "qiniucdn.com") {
+			domain = d.Domain
 			break
 		}
 	}
 
 	//get first
 	if domain == "" {
-		domain = bucketDomains[0]
+		domain = bucketDomains[0].Domain
 	}
 
 	if domain == "" {
