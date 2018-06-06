@@ -38,10 +38,11 @@ func GetBucketInfo(mac *digest.Mac, bucket string) (bucketInfo BucketInfo, err e
 	return
 }
 
+// get all the buckets, including the authorized access buckets
 func GetBuckets(mac *digest.Mac) (buckets []string, err error) {
 	buckets = make([]string, 0)
 	client := rs.NewMac(mac)
-	bucketsUri := fmt.Sprintf("%s/buckets", BUCKET_RS_HOST)
+	bucketsUri := fmt.Sprintf("%s/buckets?shared=rd", BUCKET_RS_HOST)
 	callErr := client.Conn.Call(nil, &buckets, bucketsUri)
 	if callErr != nil {
 		if v, ok := callErr.(*rpc.ErrorInfo); ok {
