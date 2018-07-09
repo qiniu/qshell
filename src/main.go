@@ -20,6 +20,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"account":       cli.Account,
 	"dircache":      cli.DirCache,
 	"listbucket":    cli.ListBucket,
+	"listbucket2":   cli.ListBucket2,
 	"alilistbucket": cli.AliListBucket,
 	"prefop":        cli.Prefop,
 	"stat":          cli.Stat,

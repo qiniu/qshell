@@ -15,13 +15,14 @@ import (
 // ----------------------------------------------------------
 
 type ListItem struct {
-	Key      string `json:"key"`
-	Hash     string `json:"hash"`
-	Fsize    int64  `json:"fsize"`
-	PutTime  int64  `json:"putTime"`
-	MimeType string `json:"mimeType"`
-	FileType int    `json:"type"`
-	EndUser  string `json:"endUser"`
+	Key        string `json:"key"`
+	Hash       string `json:"hash"`
+	Fsize      int64  `json:"fsize"`
+	PutTime    int64  `json:"putTime"`
+	MimeType   string `json:"mimeType"`
+	FileType   int    `json:"type"`
+	FileStatus int    `json:"status"`
+	EndUser    string `json:"endUser"`
 }
 
 type ListRet struct {

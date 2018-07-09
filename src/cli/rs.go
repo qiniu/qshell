@@ -107,6 +107,56 @@ func ListBucket(cmd string, params ...string) {
 	}
 }
 
+func ListBucket2(cmd string, params ...string) {
+	var listMarker string
+	flagSet := flag.NewFlagSet("listbucket", flag.ExitOnError)
+	flagSet.StringVar(&listMarker, "marker", "", "list marker")
+	flagSet.Parse(params)
+
+	cmdParams := flagSet.Args()
+	if len(cmdParams) == 2 || len(cmdParams) == 3 {
+		bucket := cmdParams[0]
+		prefix := ""
+		listResultFile := ""
+		if len(cmdParams) == 2 {
+			listResultFile = cmdParams[1]
+		} else if len(cmdParams) == 3 {
+			prefix = cmdParams[1]
+			listResultFile = cmdParams[2]
+		}
+
+		account, gErr := qshell.GetAccount()
+		if gErr != nil {
+			fmt.Println(gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+		mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
+
+		if !IsHostFileSpecified {
+			//get zone info
+			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+			if gErr != nil {
+				fmt.Println("Failed to get region info of bucket", bucket, gErr)
+				os.Exit(qshell.STATUS_ERROR)
+			}
+
+			//set zone
+			qshell.SetZone(bucketInfo.Region)
+		}
+
+		nextMarker, retErr := qshell.ListBucketV2(&mac, bucket, prefix, listMarker, listResultFile)
+		if nextMarker != "" {
+			fmt.Println("Next Marker:", nextMarker)
+		}
+		if retErr != nil {
+			os.Exit(qshell.STATUS_ERROR)
+		}
+	} else {
+		CmdHelp(cmd)
+	}
+}
+
 func Stat(cmd string, params ...string) {
 	if len(params) == 2 {
 		bucket := params[0]
