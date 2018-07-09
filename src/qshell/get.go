@@ -16,10 +16,15 @@ import (
 // check src domains
 // proxy download
 func GetFileFromBucket(mac *digest.Mac, bucket, key, localFile string) (err error) {
-	localFp, openErr := os.Create(localFile)
-	if openErr != nil {
-		err = openErr
-		return
+	var localFp *os.File
+
+	if localFile == "stdout" {
+		localFp = os.Stdout
+	} else {
+		localFp, err = os.Create(localFile)
+		if err != nil {
+			return
+		}
 	}
 
 	defer localFp.Close()

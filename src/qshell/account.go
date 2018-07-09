@@ -124,6 +124,6 @@ func GetAccount() (account Account, err error) {
 		account.SecretKey = string(secretKeyBytes)
 	}
 
-	logs.Info("Load account from %s", accountFname)
+	logs.Debug("Load account from %s", accountFname)
 	return
 }
