@@ -80,6 +80,7 @@ var cmdDocs = map[string][]string{
 	"prefop":        []string{"qshell prefop <PersistentId>", "Query the pfop status"},
 	"fput":          []string{"qshell fput <Bucket> <Key> <LocalFile> [<Overwrite>] [<MimeType>] [<UpHost>] [<FileType>]", "Form upload a local file"},
 	"rput":          []string{"qshell rput <Bucket> <Key> <LocalFile> [<Overwrite>] [<MimeType>] [<UpHost>] [<FileType>]", "Resumable upload a local file"},
+	"get":           []string{"qshell get <Bucket> <Key> <LocalFile>", "Get file from the bucket"},
 	"qupload":       []string{"qshell qupload [<ThreadCount>] <LocalUploadConfig>", "Batch upload files to the qiniu bucket"},
 	"qupload2":      []string{"qshell qupload2 [options]", "Batch upload files to the qiniu bucket"},
 	"qdownload":     []string{"qshell qdownload [<ThreadCount>] <LocalDownloadConfig>", "Batch download files from the qiniu bucket"},

@@ -68,5 +68,40 @@ func GetDomainsOfBucket(cmd string, params ...string) {
 }
 
 func GetFileFromBucket(cmd string, params ...string) {
+	if len(params) == 3 {
+		bucket := params[0]
+		key := params[1]
+		localFile := params[2]
 
+		account, gErr := qshell.GetAccount()
+		if gErr != nil {
+			fmt.Println(gErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+		mac := digest.Mac{
+			account.AccessKey,
+			[]byte(account.SecretKey),
+		}
+
+		if !IsHostFileSpecified {
+			//get bucket zone info
+			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
+			if gErr != nil {
+				fmt.Println("Get bucket region info error,", gErr)
+				os.Exit(qshell.STATUS_ERROR)
+			}
+
+			//set up host
+			qshell.SetZone(bucketInfo.Region)
+		}
+
+		err := qshell.GetFileFromBucket(&mac, bucket, key, localFile)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(qshell.STATUS_ERROR)
+		}
+
+	} else {
+		CmdHelp(cmd)
+	}
 }

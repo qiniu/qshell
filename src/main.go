@@ -43,6 +43,7 @@ var supportedCmds = map[string]cli.CliFunc{
 	"batchsign":     cli.BatchSign,
 	"fput":          cli.FormPut,
 	"rput":          cli.ResumablePut,
+	"get":           cli.GetFileFromBucket,
 	"qupload":       cli.QiniuUpload,
 	"qupload2":      cli.QiniuUpload2,
 	"qdownload":     cli.QiniuDownload,
