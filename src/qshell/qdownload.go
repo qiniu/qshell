@@ -366,12 +366,12 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 							downNewFile = true
 						}
 					} else {
-						//log tmp file exists, but no record in leveldb, download a new log file
+						//log tmp file exists, but no record in leveldb, download a new file
 						logs.Info("Local tmp file `%s` exists, but no record in leveldb ,go to download", localAbsFilePathTemp)
 						downNewFile = true
 					}
 				} else {
-					//no log file exists, donwload a new log file
+					//no file exists, donwload a new file
 					downNewFile = true
 				}
 			}
