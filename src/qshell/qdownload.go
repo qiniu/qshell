@@ -7,6 +7,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
+	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"net/http"
 	"net/url"
@@ -44,10 +45,11 @@ type DownloadConfig struct {
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
 	//log settings
-	LogLevel  string `json:"log_level,omitempty"`
-	LogFile   string `json:"log_file,omitempty"`
-	LogRotate int    `json:"log_rotate,omitempty"`
-	LogStdout bool   `json:"log_stdout,omitempty"`
+	LogLevel     string `json:"log_level,omitempty"`
+	LogFile      string `json:"log_file,omitempty"`
+	LogRotate    int    `json:"log_rotate,omitempty"`
+	LogStdout    bool   `json:"log_stdout,omitempty"`
+	FileEncoding string `json:"file_encoding,omitempty"`
 
 	IsHostFileSpecified bool `json:"-"`
 }
@@ -286,16 +288,28 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			}
 			//check whether log file exists
 			localFilePath := filepath.Join(downConfig.DestDir, fileKey)
+			localFilePathTemp := fmt.Sprintf("%s.tmp", localFilePath)
+			//make the absolute path
 			localAbsFilePath, _ := filepath.Abs(localFilePath)
-			localFilePathTmp := fmt.Sprintf("%s.tmp", localFilePath)
-			localFileInfo, statErr := os.Stat(localFilePath)
+			localAbsFilePathTemp, _ := filepath.Abs(localFilePathTemp)
 
+			//create the path to check
+			localFilePathToCheck := localAbsFilePath
+			localFilePathTempToCheck := localAbsFilePathTemp
+
+			//add check for gbk file encoding for windows
+			if strings.ToLower(downConfig.FileEncoding) == "gbk" {
+				localFilePathToCheck, _ = utf82GBK(localAbsFilePath)
+				localFilePathTempToCheck, _ = utf82GBK(localAbsFilePathTemp)
+			}
+
+			localFileInfo, statErr := os.Stat(localFilePathToCheck)
 			var downNewFile bool
 			var fromBytes int64
 
 			if statErr == nil {
 				//log file exists, check whether have updates
-				oldFileInfo, notFoundErr := resumeLevelDb.Get([]byte(localFilePath), nil)
+				oldFileInfo, notFoundErr := resumeLevelDb.Get([]byte(localFilePathToCheck), nil)
 				if notFoundErr == nil {
 					//if exists
 					oldFileInfoItems := strings.Split(string(oldFileInfo), "|")
@@ -325,10 +339,10 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 				}
 			} else {
 				//check whether tmp file exists
-				localTmpFileInfo, statErr := os.Stat(localFilePathTmp)
+				localTmpFileInfo, statErr := os.Stat(localFilePathTempToCheck)
 				if statErr == nil {
 					//if tmp file exists, check whether last modify changed
-					oldFileInfo, notFoundErr := resumeLevelDb.Get([]byte(localFilePath), nil)
+					oldFileInfo, notFoundErr := resumeLevelDb.Get([]byte(localFilePathToCheck), nil)
 					if notFoundErr == nil {
 						//if exists
 						oldFileInfoItems := strings.Split(string(oldFileInfo), "|")
@@ -340,19 +354,20 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 								fromBytes = localTmpFileInfo.Size()
 							} else {
 								//rename it
-								renameErr := os.Rename(localFilePathTmp, localFilePath)
+								renameErr := os.Rename(localFilePathTempToCheck, localFilePathToCheck)
 								if renameErr != nil {
-									logs.Error("Rename temp file `%s` to final file `%s` error", localFilePathTmp, localFilePath, renameErr)
+									logs.Error("Rename temp file `%s` to final file `%s` error", localAbsFilePathTemp, localAbsFilePath,
+										renameErr)
 								}
 								continue
 							}
 						} else {
-							logs.Info("Local tmp file `%s` exists, but remote file changed, go to download", localFilePathTmp)
+							logs.Info("Local tmp file `%s` exists, but remote file changed, go to download", localAbsFilePathTemp)
 							downNewFile = true
 						}
 					} else {
 						//log tmp file exists, but no record in leveldb, download a new log file
-						logs.Info("Local tmp file `%s` exists, but no record in leveldb ,go to download", localFilePathTmp)
+						logs.Info("Local tmp file `%s` exists, but no record in leveldb ,go to download", localAbsFilePathTemp)
 						downNewFile = true
 					}
 				} else {
@@ -362,7 +377,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			}
 
 			//set file info in leveldb
-			rKey := localAbsFilePath
+			rKey := localFilePathToCheck
 			rVal := fmt.Sprintf("%d|%d", fileMtime, fileSize)
 			resumeLevelDb.Put([]byte(rKey), []byte(rVal), &ldbWOpt)
 
@@ -417,26 +432,43 @@ func makePrivateDownloadLink(mac *digest.Mac, domainOfBucket, ioProxyAddress, fi
 }
 
 //file key -> mtime
-func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket string, fileSize int64, fromBytes int64) (err error) {
+func downloadFile(downConfig *DownloadConfig, fileKey, fileUrl, domainOfBucket string, fileSize int64,
+	fromBytes int64) (err error) {
 	startDown := time.Now().Unix()
 	destDir := downConfig.DestDir
-	localFilePath := filepath.Join(destDir, fileName)
+	localFilePath := filepath.Join(destDir, fileKey)
 	localFileDir := filepath.Dir(localFilePath)
-	localFilePathTmp := fmt.Sprintf("%s.tmp", localFilePath)
+	localFilePathTemp := fmt.Sprintf("%s.tmp", localFilePath)
 
-	mkdirErr := os.MkdirAll(localFileDir, 0775)
+	//make the absolute path
+	localAbsFilePath, _ := filepath.Abs(localFilePath)
+	localAbsFilePathTemp, _ := filepath.Abs(localFilePathTemp)
+	localAbsFileDir, _ := filepath.Abs(localFileDir)
+
+	localFilePathTarget := localAbsFilePath
+	localFilePathTempTarget := localAbsFilePathTemp
+	localFileDirTarget := localFileDir
+
+	//add check for gbk file encoding for windows
+	if strings.ToLower(downConfig.FileEncoding) == "gbk" {
+		localFilePathTarget, _ = utf82GBK(localAbsFilePath)
+		localFilePathTempTarget, _ = utf82GBK(localAbsFilePathTemp)
+		localFileDirTarget, _ = utf82GBK(localAbsFileDir)
+	}
+
+	mkdirErr := os.MkdirAll(localFileDirTarget, 0775)
 	if mkdirErr != nil {
 		err = mkdirErr
 		logs.Error("MkdirAll failed for", localFileDir, mkdirErr)
 		return
 	}
 
-	logs.Info("Downloading", fileName, "=>", localFilePath)
+	logs.Info("Downloading", fileKey, "=>", localAbsFilePath)
 	//new request
 	req, reqErr := http.NewRequest("GET", fileUrl, nil)
 	if reqErr != nil {
 		err = reqErr
-		logs.Info("New request", fileName, "failed by url", fileUrl, reqErr)
+		logs.Info("New request", fileKey, "failed by url", fileUrl, reqErr)
 		return
 	}
 	//set host
@@ -452,7 +484,7 @@ func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket 
 	resp, respErr := http.DefaultClient.Do(req)
 	if respErr != nil {
 		err = respErr
-		logs.Info("Download", fileName, "failed by url", fileUrl, respErr)
+		logs.Info("Download", fileKey, "failed by url", fileUrl, respErr)
 		return
 	}
 	defer resp.Body.Close()
@@ -460,14 +492,14 @@ func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket 
 		var localFp *os.File
 		var openErr error
 		if fromBytes != 0 {
-			localFp, openErr = os.OpenFile(localFilePathTmp, os.O_APPEND|os.O_WRONLY, 0655)
+			localFp, openErr = os.OpenFile(localFilePathTempTarget, os.O_APPEND|os.O_WRONLY, 0655)
 		} else {
-			localFp, openErr = os.Create(localFilePathTmp)
+			localFp, openErr = os.Create(localFilePathTempTarget)
 		}
 
 		if openErr != nil {
 			err = openErr
-			logs.Error("Open local file", localFilePathTmp, "failed", openErr)
+			logs.Error("Open local file", localAbsFilePathTemp, "failed", openErr)
 			return
 		}
 
@@ -475,7 +507,7 @@ func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket 
 		if cpErr != nil {
 			err = cpErr
 			localFp.Close()
-			logs.Error("Download", fileName, "failed", cpErr)
+			logs.Error("Download", fileKey, "failed", cpErr)
 			return
 		}
 		localFp.Close()
@@ -484,17 +516,22 @@ func downloadFile(downConfig *DownloadConfig, fileName, fileUrl, domainOfBucket 
 		avgSpeed := fmt.Sprintf("%.2fKB/s", float64(cpCnt)/float64(endDown-startDown)/1024)
 
 		//move temp file to log file
-		renameErr := os.Rename(localFilePathTmp, localFilePath)
+		renameErr := os.Rename(localFilePathTempTarget, localFilePathTarget)
 		if renameErr != nil {
 			err = renameErr
 			logs.Error("Rename temp file to final log file error", renameErr)
 			return
 		}
-		logs.Info("Download", fileName, "=>", localFilePath, "success", avgSpeed)
+		logs.Info("Download", fileKey, "=>", localAbsFilePath, "success", avgSpeed)
 	} else {
 		err = errors.New("download failed")
-		logs.Info("Download", fileName, "failed by url", fileUrl, resp.Status)
+		logs.Info("Download", fileKey, "failed by url", fileUrl, resp.Status)
 		return
 	}
 	return
+}
+
+func utf82GBK(text string) (string, error) {
+	var gbkEncoder = simplifiedchinese.GBK.NewEncoder()
+	return gbkEncoder.String(text)
 }

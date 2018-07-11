@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v2.2.0"
+var version = "v2.2.1"
 
 var optionDocs = map[string]string{
 	"-f": "use specified host file",
