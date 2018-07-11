@@ -447,7 +447,7 @@ func downloadFile(downConfig *DownloadConfig, fileKey, fileUrl, domainOfBucket s
 
 	localFilePathTarget := localAbsFilePath
 	localFilePathTempTarget := localAbsFilePathTemp
-	localFileDirTarget := localFileDir
+	localFileDirTarget := localAbsFileDir
 
 	//add check for gbk file encoding for windows
 	if strings.ToLower(downConfig.FileEncoding) == "gbk" {
