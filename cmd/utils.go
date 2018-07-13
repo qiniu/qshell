@@ -33,29 +33,33 @@ var (
 
 var (
 	rpcECmd = &cobra.Command{
-		Use:   "rpcencode <DataToEncode1> [<DataToEncode2> [...]]",
-		Short: "rpcencode of qiniu",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   RpcEncode,
+		Use:        "rpcencode <DataToEncode1> [<DataToEncode2> [...]]",
+		Short:      "rpcencode of qiniu",
+		Args:       cobra.MinimumNArgs(1),
+		SuggestFor: []string{"rpc"},
+		Run:        RpcEncode,
 	}
 	rpcDCmd = &cobra.Command{
-		Use:   "rpcdecode [DataToEncode...]",
-		Short: "rpcdecode of qiniu",
-		Run:   RpcDecode,
+		Use:        "rpcdecode [DataToEncode...]",
+		Short:      "rpcdecode of qiniu",
+		SuggestFor: []string{"rpc"},
+		Run:        RpcDecode,
 	}
 	b64ECmd = &cobra.Command{
-		Use:   "b64encode <DataToEncode>",
-		Short: "Base64 Encode, default not url safe",
-		Long:  "Base64 encode of data, url safe base64 is not turn on by default. Use -safe flag to turn it on",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   Base64Encode,
+		Use:        "b64encode <DataToEncode>",
+		Short:      "Base64 Encode, default not url safe",
+		Long:       "Base64 encode of data, url safe base64 is not turn on by default. Use -safe flag to turn it on",
+		Args:       cobra.MinimumNArgs(1),
+		SuggestFor: []string{"b64"},
+		Run:        Base64Encode,
 	}
 	b64DCmd = &cobra.Command{
-		Use:   "b64decode <DataToDecode>",
-		Short: "Base64 Decode, default nor url safe",
-		Long:  "Base64 Decode of data, urlsafe base64 is not turn on by default. Use -safe flag to turn it on",
-		Args:  cobra.MinimumNArgs(1),
-		Run:   Base64Decode,
+		Use:        "b64decode <DataToDecode>",
+		Short:      "Base64 Decode, default nor url safe",
+		Long:       "Base64 Decode of data, urlsafe base64 is not turn on by default. Use -safe flag to turn it on",
+		Args:       cobra.MinimumNArgs(1),
+		SuggestFor: []string{"b64"},
+		Run:        Base64Decode,
 	}
 	ts2dCmd = &cobra.Command{
 		Use:   "ts2d <TimestampInSeconds>",

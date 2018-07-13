@@ -34,7 +34,7 @@ var (
 	pOverwrite bool
 	mimeType   string
 	upHost     string
-	fileType   string
+	fileType   int
 )
 
 var formPutCmd = &cobra.Command{
@@ -68,7 +68,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 		fmt.Println("Wrong Filetype, It should be 0 or 1 ")
 		os.Exit(qshell.STATUS_ERROR)
 	}
-	if strings.HasPrefix(upHost, "http://") || strings.HasPrefix(param, "https://") {
+	if strings.HasPrefix(upHost, "http://") || strings.HasPrefix(upHost, "https://") {
 		upHost = strings.TrimSuffix(upHost, "/")
 	}
 

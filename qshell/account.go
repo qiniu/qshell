@@ -127,7 +127,7 @@ func SetAccount2(accessKey, secretKey, name string) (err error) {
 		accountFname = filepath.Join(storageDir, "account.json")
 	}
 
-	Accountfh, openErr := os.OpenFile(accountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	accountFh, openErr := os.OpenFile(accountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s", openErr)
 		return
