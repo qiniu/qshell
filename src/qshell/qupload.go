@@ -107,6 +107,9 @@ type UploadConfig struct {
 	DeleteOnSuccess bool `json:"delete_on_success,omitempty"`
 	DisableResume   bool `json:"disable_resume,omitempty"`
 
+	//add file encoding support
+	FileEncoding string `json:"file_encoding,omitempty"`
+
 	IsHostFileSpecified bool `json:"-"`
 }
 
@@ -415,6 +418,11 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 		}
 
 		localFileSize := localFileStat.Size()
+		//check file encoding
+		if strings.ToLower(uploadConfig.FileEncoding) == "gbk" {
+			uploadFileKey, _ = gbk2Utf8(uploadFileKey)
+		}
+
 		ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
 
 		if totalFileCount != 0 {
