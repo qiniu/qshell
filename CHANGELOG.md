@@ -1,5 +1,6 @@
 # 2.2.1
 1. 为qdownload增加file_encoding参数用来支持windows下的gbk编码
+2. 为qupload增加file_encoding参数用来支持windows下的gbk编码
 
 # 2.2.0
 1. 增加get命令直接从源站下载文件
