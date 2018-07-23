@@ -1,0 +1,15 @@
+github.com/aliyun/aliyun-oss-go-sdk v0.0.0-20180615125516-36bf7aa2f916 h1:ploQZaRzPbNcTMk4rp4hsBmKgK1k1YLkY1pOjRJMOYk=
+github.com/aliyun/aliyun-oss-go-sdk v0.0.0-20180615125516-36bf7aa2f916/go.mod h1:T/Aws4fEfogEE9v+HPhhw+CntffsBHJ8nXQCwKr0/g8=
+github.com/astaxie/beego v1.10.0 h1:s0OZ1iUO0rl8+lwWZfPK/0GhQi1tFUcIClTevyz48Pg=
+github.com/astaxie/beego v1.10.0/go.mod h1:0R4++1tUqERR0WYFWdfkcrsyoVBCG4DgpDGokT3yb+U=
+github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db h1:woRePGFeVFfLKN/pOkfl+p/TAqKOfFu+7KPlMVpok/w=
+github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
+github.com/mattn/go-sqlite3 v1.9.0 h1:pDRiWfl+++eC2FEFRy6jXmQlvp4Yh3z1MJKg4UeYM/4=
+github.com/mattn/go-sqlite3 v1.9.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
+github.com/spf13/cobra v0.0.3 h1:ZlrZ4XsMRm04Fr5pSFxBgfND2EBVa1nLpiy1stUsX/8=
+github.com/spf13/cobra v0.0.3/go.mod h1:1l0Ry5zgKvJasoi3XT1TypsSe7PqH0Sj9dhYf7v3XqQ=
+github.com/spf13/pflag v1.0.1 h1:aCvUg6QPl3ibpQUxyLkrEkCHtPqYJL4x9AuhqVqFis4=
+github.com/spf13/pflag v1.0.1/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
+github.com/syndtr/goleveldb v0.0.0-20180708030551-c4c61651e9e3 h1:sAlSBRDl4psFR3ysKXRSE8ss6Mt90+ma1zRTroTNBJA=
+github.com/syndtr/goleveldb v0.0.0-20180708030551-c4c61651e9e3/go.mod h1:Z4AUp2Km+PwemOoO/VB5AOx9XSsIItzFjoJlOSiYmn0=
+golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=

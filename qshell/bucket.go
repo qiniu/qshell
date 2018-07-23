@@ -3,6 +3,7 @@ package qshell
 import (
 	"fmt"
 	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
+	"github.com/tonycai653/iqshell/qiniu/api.v6/conf"
 	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
 	"github.com/tonycai653/iqshell/qiniu/rpc"
 )
@@ -10,11 +11,6 @@ import (
 type BucketInfo struct {
 	Region string `json:"region"`
 }
-
-var (
-	BUCKET_RS_HOST  = "http://rs.qiniu.com"
-	BUCKET_API_HOST = "http://api.qiniu.com"
-)
 
 /*
 get bucket info
@@ -26,7 +22,7 @@ get bucket info
 */
 func GetBucketInfo(mac *digest.Mac, bucket string) (bucketInfo BucketInfo, err error) {
 	client := rs.NewMac(mac)
-	bucketUri := fmt.Sprintf("%s/bucket/%s", BUCKET_RS_HOST, bucket)
+	bucketUri := fmt.Sprintf("%s/bucket/%s", conf.BUCKET_RS_HOST, bucket)
 	callErr := client.Conn.Call(nil, &bucketInfo, bucketUri)
 	if callErr != nil {
 		if v, ok := callErr.(*rpc.ErrorInfo); ok {
@@ -41,7 +37,7 @@ func GetBucketInfo(mac *digest.Mac, bucket string) (bucketInfo BucketInfo, err e
 func GetBuckets(mac *digest.Mac) (buckets []string, err error) {
 	buckets = make([]string, 0)
 	client := rs.NewMac(mac)
-	bucketsUri := fmt.Sprintf("%s/buckets", BUCKET_RS_HOST)
+	bucketsUri := fmt.Sprintf("%s/buckets", conf.BUCKET_RS_HOST)
 	callErr := client.Conn.Call(nil, &buckets, bucketsUri)
 	if callErr != nil {
 		if v, ok := callErr.(*rpc.ErrorInfo); ok {
@@ -56,7 +52,7 @@ func GetBuckets(mac *digest.Mac) (buckets []string, err error) {
 func GetDomainsOfBucket(mac *digest.Mac, bucket string) (domains []string, err error) {
 	domains = make([]string, 0)
 	client := rs.NewMac(mac)
-	getDomainsUrl := fmt.Sprintf("%s/v6/domain/list", BUCKET_API_HOST)
+	getDomainsUrl := fmt.Sprintf("%s/v6/domain/list", conf.BUCKET_API_HOST)
 	postData := map[string][]string{
 		"tbl": []string{bucket},
 	}

@@ -9,7 +9,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -58,9 +57,7 @@ func (acc *Account) String() string {
 }
 
 func setdb(acc Account) (err error) {
-	storageDir := filepath.Join(QShellRootPath, ".qshell")
-	accountFname := filepath.Join(storageDir, "account.db")
-	db, err := sql.Open("sqlite3", accountFname)
+	db, err := sql.Open("sqlite3", AccountDBPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return
@@ -114,20 +111,13 @@ func insertAcc(acc Account, db *sql.DB) (err error) {
 }
 
 func SetAccount2(accessKey, secretKey, name string) (err error) {
-	accountFname := QAccountFile
-	if accountFname == "" {
-		storageDir := filepath.Join(QShellRootPath, ".qshell")
-		if _, sErr := os.Stat(storageDir); sErr != nil {
-			if mErr := os.MkdirAll(storageDir, 0755); mErr != nil {
-				err = fmt.Errorf("Mkdir `%s` error, %s", storageDir, mErr)
-				return
-			}
+	if _, sErr := os.Stat(QShellRootPath); sErr != nil {
+		if mErr := os.MkdirAll(QShellRootPath, 0755); mErr != nil {
+			err = fmt.Errorf("Mkdir `%s` error, %s", QShellRootPath, mErr)
+			return
 		}
-
-		accountFname = filepath.Join(storageDir, "account.json")
 	}
-
-	accountFh, openErr := os.OpenFile(accountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	accountFh, openErr := os.OpenFile(AccountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s", openErr)
 		return
@@ -165,20 +155,14 @@ func SetAccount2(accessKey, secretKey, name string) (err error) {
 }
 
 func SetAccount(accessKey, secretKey string) (err error) {
-	accountFname := QAccountFile
-	if accountFname == "" {
-		storageDir := filepath.Join(QShellRootPath, ".qshell")
-		if _, sErr := os.Stat(storageDir); sErr != nil {
-			if mErr := os.MkdirAll(storageDir, 0755); mErr != nil {
-				err = fmt.Errorf("Mkdir `%s` error, %s", storageDir, mErr)
-				return
-			}
+	if _, sErr := os.Stat(QShellRootPath); sErr != nil {
+		if mErr := os.MkdirAll(QShellRootPath, 0755); mErr != nil {
+			err = fmt.Errorf("Mkdir `%s` error, %s", QShellRootPath, mErr)
+			return
 		}
-
-		accountFname = filepath.Join(storageDir, "account.json")
 	}
 
-	accountFh, openErr := os.OpenFile(accountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	accountFh, openErr := os.OpenFile(AccountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s", openErr)
 		return
@@ -213,13 +197,8 @@ func SetAccount(accessKey, secretKey string) (err error) {
 }
 
 func GetAccount() (account Account, err error) {
-	accountFname := QAccountFile
-	if accountFname == "" {
-		storageDir := filepath.Join(QShellRootPath, ".qshell")
-		accountFname = filepath.Join(storageDir, "account.json")
-	}
 
-	accountFh, openErr := os.Open(accountFname)
+	accountFh, openErr := os.Open(AccountFname)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s, please use `account` to set AccessKey and SecretKey first", openErr)
 		return
@@ -261,9 +240,7 @@ func GetAccount() (account Account, err error) {
 }
 
 func ChUser(uid int) (err error) {
-	storageDir := filepath.Join(QShellRootPath, ".qshell")
-	accountFname := filepath.Join(storageDir, "account.db")
-	db, err := sql.Open("sqlite3", accountFname)
+	db, err := sql.Open("sqlite3", AccountDBPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return
@@ -295,9 +272,7 @@ func ChUser(uid int) (err error) {
 }
 
 func ListUser() (err error) {
-	storageDir := filepath.Join(QShellRootPath, ".qshell")
-	accountFname := filepath.Join(storageDir, "account.db")
-	db, err := sql.Open("sqlite3", accountFname)
+	db, err := sql.Open("sqlite3", AccountDBPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return
@@ -326,18 +301,12 @@ func ListUser() (err error) {
 }
 
 func CleanUser() (err error) {
-	storageDir := filepath.Join(QShellRootPath, ".qshell")
-	err = os.RemoveAll(storageDir)
-	if err != nil {
-		return
-	}
+	err = os.RemoveAll(QShellRootPath)
 	return
 }
 
 func RmUser(uid int) (err error) {
-	storageDir := filepath.Join(QShellRootPath, ".qshell")
-	accountFname := filepath.Join(storageDir, "account.db")
-	db, err := sql.Open("sqlite3", accountFname)
+	db, err := sql.Open("sqlite3", AccountDBPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return
@@ -353,9 +322,7 @@ func RmUser(uid int) (err error) {
 }
 
 func LookUp(userName string) error {
-	storageDir := filepath.Join(QShellRootPath, ".qshell")
-	accountFname := filepath.Join(storageDir, "account.db")
-	db, err := sql.Open("sqlite3", accountFname)
+	db, err := sql.Open("sqlite3", AccountDBPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return err

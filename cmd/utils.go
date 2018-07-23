@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
+	"github.com/tonycai653/iqshell/qiniu/uri"
+	"github.com/tonycai653/iqshell/qshell"
 	"net/url"
 	"os"
-	"qiniu/uri"
-	"qshell"
 	"strconv"
 	"time"
 )

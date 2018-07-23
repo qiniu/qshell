@@ -41,8 +41,8 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 				return
 			}
 		}
+		defer listResultFh.Close()
 	}
-	defer listResultFh.Close()
 	bWriter := bufio.NewWriter(listResultFh)
 
 	//init

@@ -9,15 +9,15 @@ import (
 	"github.com/tonycai653/iqshell/qiniu/rpc"
 )
 
-var UP_HOST = "http://up.qiniu.com"
-var RSF_HOST = "http://rsf.qbox.me"
-var IO_HOST = "http://iovip.qbox.me"
-
-var RS_HOST = "http://rs.qiniu.com"
-var API_HOST = "http://api.qiniu.com"
-
-var ACCESS_KEY string
-var SECRET_KEY string
+var (
+	UP_HOST         = "http://up.qiniu.com"
+	RSF_HOST        = "http://rsf.qbox.me"
+	IO_HOST         = "http://iovip.qbox.me"
+	RS_HOST         = "http://rs.qiniu.com"
+	API_HOST        = "http://api.qiniu.com"
+	BUCKET_RS_HOST  = "http://rs.qiniu.com"
+	BUCKET_API_HOST = "http://api.qiniu.com"
+)
 
 var version = "6.0.6"
 

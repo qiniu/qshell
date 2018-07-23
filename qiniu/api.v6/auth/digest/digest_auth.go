@@ -4,11 +4,9 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
+	"github.com/tonycai653/iqshell/qiniu/bytes/seekable"
 	"io"
 	"net/http"
-
-	. "github.com/tonycai653/iqshell/qiniu/api.v6/conf"
-	"github.com/tonycai653/iqshell/qiniu/bytes/seekable"
 )
 
 // ----------------------------------------------------------
@@ -76,7 +74,7 @@ func (mac *Mac) SignRequest(req *http.Request, incbody bool) (token string, err 
 func Sign(mac *Mac, data []byte) string {
 
 	if mac == nil {
-		mac = &Mac{ACCESS_KEY, []byte(SECRET_KEY)}
+		mac = &Mac{"", []byte("")}
 	}
 	return mac.Sign(data)
 }
@@ -84,7 +82,7 @@ func Sign(mac *Mac, data []byte) string {
 func SignWithData(mac *Mac, data []byte) string {
 
 	if mac == nil {
-		mac = &Mac{ACCESS_KEY, []byte(SECRET_KEY)}
+		mac = &Mac{"", []byte("")}
 	}
 	return mac.SignWithData(data)
 }
@@ -127,8 +125,8 @@ func NewTransport(mac *Mac, transport http.RoundTripper) *Transport {
 	}
 	t := &Transport{transport: transport}
 	if mac == nil {
-		t.mac.AccessKey = ACCESS_KEY
-		t.mac.SecretKey = []byte(SECRET_KEY)
+		t.mac.AccessKey = ""
+		t.mac.SecretKey = []byte("")
 	} else {
 		t.mac = *mac
 	}

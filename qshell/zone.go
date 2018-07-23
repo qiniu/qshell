@@ -1,9 +1,5 @@
 package qshell
 
-import (
-	"github.com/tonycai653/iqshell/qiniu/api.v6/conf"
-)
-
 type ZoneConfig struct {
 	UpHost    string
 	RsHost    string
@@ -76,11 +72,21 @@ func SetZone(zone string) {
 	default:
 		zoneConfig = ZoneNBConfig
 	}
-	conf.UP_HOST = zoneConfig.UpHost
-	conf.RS_HOST = zoneConfig.RsHost
-	conf.RSF_HOST = zoneConfig.RsfHost
-	conf.IO_HOST = zoneConfig.IovipHost
-	conf.API_HOST = zoneConfig.ApiHost
+	if hosts[UpHostId] == "" {
+		hosts[UpHostId] = zoneConfig.UpHost
+	}
+	if hosts[RsHostId] == "" {
+		hosts[RsHostId] = zoneConfig.RsHost
+	}
+	if hosts[RsfHostId] == "" {
+		hosts[RsfHostId] = zoneConfig.RsfHost
+	}
+	if hosts[IoHostId] == "" {
+		hosts[IoHostId] = zoneConfig.IovipHost
+	}
+	if hosts[ApiHostId] == "" {
+		hosts[ApiHostId] = zoneConfig.ApiHost
+	}
 }
 
 func IsValidZone(zone string) (valid bool) {

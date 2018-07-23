@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/conf"
 	fio "github.com/tonycai653/iqshell/qiniu/api.v6/io"
 	rio "github.com/tonycai653/iqshell/qiniu/api.v6/resumable/io"
 	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
 	"github.com/tonycai653/iqshell/qiniu/rpc"
 	"github.com/tonycai653/iqshell/qshell"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -31,21 +29,22 @@ var upSettings = rio.Settings{
 }
 
 var (
-	pOverwrite bool
-	mimeType   string
-	upHost     string
-	fileType   int
+	pOverwrite  bool
+	mimeType    string
+	upHost      string
+	fileType    int
+	workerCount int
 )
 
 var formPutCmd = &cobra.Command{
-	Use:   "fput <Bucket> <Key> <LocalFile> [<Overwrite>] [<MimeType>] [<UpHost>] [<FileType>]",
+	Use:   "fput <Bucket> <Key> <LocalFile>",
 	Short: "Form upload a local file",
 	Args:  cobra.ExactArgs(3),
 	Run:   FormPut,
 }
 
 var RePutCmd = &cobra.Command{
-	Use:   "rput <Bucket> <Key> <LocalFile> [<Overwrite>] [<MimeType>] [<UpHost>] [<FileType>]",
+	Use:   "rput <Bucket> <Key> <LocalFile>",
 	Short: "Resumable upload a local file",
 	Args:  cobra.ExactArgs(3),
 	Run:   ResumablePut,
@@ -56,6 +55,14 @@ func init() {
 	formPutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	formPutCmd.Flags().StringVarP(&upHost, "uphost", "u", "", "upload host")
 	formPutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
+	formPutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
+
+	RePutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
+	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
+	RePutCmd.Flags().StringVarP(&upHost, "uphost", "u", "", "upload host")
+	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
+	RePutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
+
 	RootCmd.AddCommand(formPutCmd, RePutCmd)
 }
 
@@ -80,21 +87,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 
 	//upload settings
 	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
-	if upHost == "" {
-		if HostFile == "" {
-			//get bucket zone info
-			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-			if gErr != nil {
-				fmt.Println("Get bucket region info error,", gErr)
-				os.Exit(qshell.STATUS_ERROR)
-			}
-
-			//set up host
-			qshell.SetZone(bucketInfo.Region)
-		}
-	} else {
-		conf.UP_HOST = upHost
-	}
+	qshell.SetUpHost(&mac, bucket, upHost)
 
 	//create uptoken
 	policy := rs.PutPolicy{}
@@ -174,35 +167,6 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 	localFile := params[2]
-	mimeType := ""
-	upHost := ""
-	overwrite := false
-	fileType := 0
-
-	optionalParams := params[3:]
-	for _, param := range optionalParams {
-
-		if ft, err := strconv.Atoi(param); err == nil {
-			if ft == 1 || ft == 0 {
-				fileType = ft
-				continue
-			} else {
-				fmt.Println("Wrong Filetype, It should be 0 or 1 ")
-				os.Exit(qshell.STATUS_ERROR)
-			}
-
-		}
-		if val, pErr := strconv.ParseBool(param); pErr == nil {
-			overwrite = val
-			continue
-		}
-		if strings.HasPrefix(param, "http://") || strings.HasPrefix(param, "https://") {
-			upHost = strings.TrimSuffix(param, "/")
-			continue
-		}
-
-		mimeType = param
-	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -219,26 +183,14 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 
 	//upload settings
 	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
-	if upHost == "" {
-		if HostFile == "" {
-			//get bucket zone info
-			bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-			if gErr != nil {
-				fmt.Println("Get bucket region info error,", gErr)
-				os.Exit(qshell.STATUS_ERROR)
-			}
+	qshell.SetUpHost(&mac, bucket, upHost)
 
-			//set up host
-			qshell.SetZone(bucketInfo.Region)
-		}
-	} else {
-		conf.UP_HOST = upHost
-	}
+	upSettings.Workers = workerCount
 	rio.SetSettings(&upSettings)
 
 	//create uptoken
 	policy := rs.PutPolicy{}
-	if overwrite {
+	if pOverwrite {
 		policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
 	} else {
 		policy.Scope = bucket

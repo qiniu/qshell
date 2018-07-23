@@ -48,8 +48,6 @@ type DownloadConfig struct {
 	LogFile   string `json:"log_file,omitempty"`
 	LogRotate int    `json:"log_rotate,omitempty"`
 	LogStdout bool   `json:"log_stdout,omitempty"`
-
-	IsHostFileSpecified bool `json:"-"`
 }
 
 var downloadTasks chan func()
@@ -68,7 +66,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", downConfig.DestDir, downConfig.Bucket))
 
 	//local storage path
-	storePath := filepath.Join(QShellRootPath, ".qshell", QAccountName, "qdownload", jobId)
+	storePath := filepath.Join(QShellRootPath, "qdownload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
 		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		os.Exit(STATUS_ERROR)
@@ -126,12 +124,6 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 
 	var domainOfBucket string
 
-	//get bucket zone info
-	bucketInfo, gErr := GetBucketInfo(&mac, downConfig.Bucket)
-	if gErr != nil {
-		logs.Error("Get bucket region info error,", gErr)
-		os.Exit(STATUS_ERROR)
-	}
 	//get domains of bucket
 	domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
 	if gErr != nil {
@@ -149,11 +141,6 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			domainOfBucket = domain
 			break
 		}
-	}
-
-	if !downConfig.IsHostFileSpecified {
-		//set up host
-		SetZone(bucketInfo.Region)
 	}
 
 	//set proxy

@@ -90,6 +90,5 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 		OverwriteFname: overwriteFname,
 	}
 
-	uploadConfig.IsHostFileSpecified = (HostFile != "")
 	qshell.QiniuUpload(int(up2threadCount), &uploadConfig, &fileExporter)
 }

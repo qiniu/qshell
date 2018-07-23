@@ -34,10 +34,10 @@ var (
 		Run: DirCache,
 	}
 	lsBucketCmd = &cobra.Command{
-		Use:   "listbucket <Bucket> [<ListBucketResultFile>]",
+		Use:   "listbucket <Bucket>",
 		Short: "List all the files in the bucket by prefix",
 		Long:  "List all the files in the bucket by prefix to stdout if ListBucketResultFile not specified",
-		Args:  cobra.RangeArgs(1, 2),
+		Args:  cobra.ExactArgs(1),
 		Run:   ListBucket,
 	}
 	statCmd = &cobra.Command{
@@ -121,6 +121,7 @@ var (
 )
 
 var (
+	outFile    string
 	listMarker string
 	prefix     string
 	mOverwrite bool
@@ -130,6 +131,7 @@ var (
 func init() {
 	lsBucketCmd.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
 	lsBucketCmd.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
+	lsBucketCmd.Flags().StringVarP(&outFile, "out", "o", "", "output file")
 
 	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
 	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
@@ -156,10 +158,6 @@ func DirCache(cmd *cobra.Command, params []string) {
 
 func ListBucket(cmd *cobra.Command, params []string) {
 	bucket := params[0]
-	listResultFile := ""
-	if len(params) == 2 {
-		listResultFile = params[1]
-	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -169,19 +167,7 @@ func ListBucket(cmd *cobra.Command, params []string) {
 
 	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
 
-	if HostFile == "" {
-		//get zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Failed to get region info of bucket", bucket, gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set zone
-		qshell.SetZone(bucketInfo.Region)
-	}
-
-	retErr := qshell.ListBucket(&mac, bucket, prefix, listMarker, listResultFile)
+	retErr := qshell.ListBucket(&mac, bucket, prefix, listMarker, outFile)
 	if retErr != nil {
 		os.Exit(qshell.STATUS_ERROR)
 	}
@@ -464,18 +450,6 @@ func Fetch(cmd *cobra.Command, params []string) {
 		[]byte(account.SecretKey),
 	}
 
-	if HostFile == "" {
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set up host
-		qshell.SetZone(bucketInfo.Region)
-	}
-
 	fetchResult, err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
 	if err != nil {
 		if v, ok := err.(*rpc.ErrorInfo); ok {
@@ -505,18 +479,6 @@ func Prefetch(cmd *cobra.Command, params []string) {
 	mac := digest.Mac{
 		account.AccessKey,
 		[]byte(account.SecretKey),
-	}
-
-	if HostFile == "" {
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set up host
-		qshell.SetZone(bucketInfo.Region)
 	}
 
 	err := qshell.Prefetch(&mac, bucket, key)

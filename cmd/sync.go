@@ -4,20 +4,23 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
+	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
+	"github.com/tonycai653/iqshell/qshell"
 	"os"
-	"qiniu/api.v6/auth/digest"
-	"qshell"
 	"time"
 )
 
 var syncCmd = &cobra.Command{
-	Use:   "sync <SrcResUrl> <Bucket> <Key> [<UpHostIp>]",
+	Use:   "sync <SrcResUrl> <Bucket> <Key>",
 	Short: "Sync big file to qiniu bucket",
 	Args:  cobra.RangeArgs(3, 4),
 	Run:   Sync,
 }
 
+var upHostIp string
+
 func init() {
+	syncCmd.Flags().StringVarP(&upHostIp, "uphost", "u", "", "upload host")
 	RootCmd.AddCommand(syncCmd)
 }
 
@@ -25,10 +28,6 @@ func Sync(cmd *cobra.Command, params []string) {
 	srcResUrl := params[0]
 	bucket := params[1]
 	key := params[2]
-	upHostIp := ""
-	if len(params) == 4 {
-		upHostIp = params[3]
-	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -40,22 +39,11 @@ func Sync(cmd *cobra.Command, params []string) {
 		account.AccessKey,
 		[]byte(account.SecretKey),
 	}
-
-	if HostFile == "" {
-		//get bucket zone info
-		bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-		if gErr != nil {
-			fmt.Println("Get bucket region info error,", gErr)
-			os.Exit(qshell.STATUS_ERROR)
-		}
-
-		//set up host
-		qshell.SetZone(bucketInfo.Region)
-	}
+	qshell.SetUpHost(&mac, bucket, upHostIp)
 
 	//sync
 	tStart := time.Now()
-	syncRet, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, upHostIp)
+	syncRet, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, qshell.UpHost())
 	if sErr != nil {
 		logs.Error(sErr)
 		os.Exit(qshell.STATUS_ERROR)

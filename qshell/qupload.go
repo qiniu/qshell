@@ -106,8 +106,6 @@ type UploadConfig struct {
 	//more settings
 	DeleteOnSuccess bool `json:"delete_on_success,omitempty"`
 	DisableResume   bool `json:"disable_resume,omitempty"`
-
-	IsHostFileSpecified bool `json:"-"`
 }
 
 var upSettings = rio.Settings{
@@ -152,7 +150,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket))
 
 	//local storage path
-	storePath := filepath.Join(QShellRootPath, ".qshell", QAccountName, "qupload", jobId)
+	storePath := filepath.Join(QShellRootPath, "qupload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
 		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		os.Exit(STATUS_HALT)
@@ -249,17 +247,6 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 		os.Exit(STATUS_HALT)
 	}
 	mac := digest.Mac{AccessKey: account.AccessKey, SecretKey: []byte(account.SecretKey)}
-	if !uploadConfig.IsHostFileSpecified {
-		//get bucket zone info
-		bucketInfo, gErr := GetBucketInfo(&mac, uploadConfig.Bucket)
-		if gErr != nil {
-			logs.Error("Get bucket region info error,", gErr)
-			os.Exit(STATUS_HALT)
-		}
-
-		//set up host
-		SetZone(bucketInfo.Region)
-	}
 
 	//chunk upload threshold
 	putThreshold := DEFAULT_PUT_THRESHOLD
