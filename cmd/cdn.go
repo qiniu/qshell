@@ -7,6 +7,7 @@ import (
 	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
 	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
 	"github.com/tonycai653/iqshell/qshell"
+	"io"
 	"os"
 	"strings"
 )
@@ -18,16 +19,18 @@ const (
 )
 
 var cdnPreCmd = &cobra.Command{
-	Use:   "cdnprefetch <UrlListFile>",
+	Use:   "cdnprefetch [<UrlListFile>]",
 	Short: "Batch prefetch the urls in the url list file",
-	Args:  cobra.ExactArgs(1),
+	Long:  "Batch prefetch the urls in the url list file or from stdin if UrlListFile not specified",
+	Args:  cobra.RangeArgs(0, 1),
 	Run:   CdnPrefetch,
 }
 
 var cdnRefreshCmd = &cobra.Command{
-	Use:   "cdnrefresh <UrlListFile>",
+	Use:   "cdnrefresh [<UrlListFile>]",
 	Short: "Batch refresh the cdn cache by the url list file",
-	Args:  cobra.ExactArgs(1),
+	Long:  "Batch refresh the cdn cache by the url list file or from stdin if UrlListFile not specified",
+	Args:  cobra.RangeArgs(0, 1),
 	Run:   CdnRefresh,
 }
 
@@ -36,13 +39,19 @@ var (
 )
 
 func init() {
-	cdnRefreshCmd.Flags().BoolVar(&isDir, "dirs", false, "refresh directory")
+	cdnRefreshCmd.Flags().BoolVarP(&isDir, "dirs", "r", false, "refresh directory")
 
 	RootCmd.AddCommand(cdnPreCmd, cdnRefreshCmd)
 }
 
 func CdnRefresh(cmd *cobra.Command, params []string) {
-	urlListFile := params[0]
+	var urlListFile string
+
+	if len(params) == 1 {
+		urlListFile = params[0]
+	} else {
+		urlListFile = "stdin"
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -56,12 +65,20 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 	}
 
 	client := rs.NewMac(&mac)
-	fp, err := os.Open(urlListFile)
-	if err != nil {
-		fmt.Println("Open refresh item list file error,", err)
-		os.Exit(qshell.STATUS_HALT)
+
+	var fp io.ReadCloser
+	var err error
+
+	if urlListFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(urlListFile)
+		if err != nil {
+			fmt.Println("Open refresh item list file error,", err)
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 
@@ -117,7 +134,13 @@ func cdnRefresh(client *rs.Client, urls []string, dirs []string) {
 }
 
 func CdnPrefetch(cmd *cobra.Command, params []string) {
-	urlListFile := params[0]
+	var urlListFile string
+
+	if len(params) == 1 {
+		urlListFile = params[0]
+	} else {
+		urlListFile = "stdin"
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -131,12 +154,20 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 	}
 
 	client := rs.NewMac(&mac)
-	fp, err := os.Open(urlListFile)
-	if err != nil {
-		fmt.Println("Open url list file error,", err)
-		os.Exit(qshell.STATUS_HALT)
+
+	var fp io.ReadCloser
+	var err error
+
+	if urlListFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(urlListFile)
+		if err != nil {
+			fmt.Println("Open url list file error,", err)
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 

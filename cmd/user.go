@@ -14,8 +14,9 @@ var userCmd = &cobra.Command{
 }
 
 var userChCmd = &cobra.Command{
-	Use:   "cu",
+	Use:   "cu <AccountName>",
 	Short: "Change user to AccountName",
+	Args:  cobra.ExactArgs(1),
 	Run:   ChUser,
 }
 
@@ -33,26 +34,25 @@ var userCleanCmd = &cobra.Command{
 }
 
 var userRmCmd = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove users from inner db",
+	Use:   "remove <UID>",
+	Short: "Remove user UID from inner db",
+	Args:  cobra.ExactArgs(1),
 	Run:   RmUser,
 }
 
 var userLookupCmd = &cobra.Command{
-	Use:   "lookup",
-	Short: "Lookup user info by uid",
+	Use:   "lookup <UserName>",
+	Short: "Lookup user info by user name",
+	Args:  cobra.ExactArgs(1),
 	Run:   LookUp,
 }
 
 func init() {
 	userCmd.AddCommand(userChCmd, userLsCmd, userCleanCmd, userRmCmd, userLookupCmd)
+	RootCmd.AddCommand(userCmd)
 }
 
 func ChUser(cmd *cobra.Command, params []string) {
-	if len(params) > 1 || len(params) <= 0 {
-		fmt.Fprintf(os.Stderr, "%s\n", cmd.Use)
-		os.Exit(1)
-	}
 	uid, err := strconv.Atoi(params[0])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "cannot convert %s to integer\n", params[0])
@@ -67,10 +67,6 @@ func ChUser(cmd *cobra.Command, params []string) {
 }
 
 func ListUser(cmd *cobra.Command, params []string) {
-	if len(params) != 0 {
-		fmt.Fprintf(os.Stderr, "%s\n", cmd.Use)
-		os.Exit(1)
-	}
 	err := qshell.ListUser()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "lsuser: %v\n", err)
@@ -79,10 +75,6 @@ func ListUser(cmd *cobra.Command, params []string) {
 }
 
 func CleanUser(cmd *cobra.Command, params []string) {
-	if len(params) != 0 {
-		fmt.Fprintf(os.Stderr, "%s\n", cmd.Use)
-		os.Exit(1)
-	}
 	err := qshell.CleanUser()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CleanUser: %v\n", err)
@@ -91,28 +83,15 @@ func CleanUser(cmd *cobra.Command, params []string) {
 }
 
 func RmUser(cmd *cobra.Command, params []string) {
-	uids := make([]int, len(params))
-	if len(params) > 0 {
-		for ind, u := range params {
-			uid, err := strconv.Atoi(u)
-			if err != nil {
-				fmt.Println("user ids must be integer")
-				os.Exit(1)
-			}
-			uids[ind] = uid
-		}
-	} else {
-		fmt.Fprintf(os.Stderr, "%s\n", cmd.Use)
+	uid, err := strconv.Atoi(params[0])
+	if err != nil {
+		fmt.Println("user id must be integer")
+		os.Exit(1)
 	}
-	qshell.RmUser(uids)
+	qshell.RmUser(uid)
 }
 
 func LookUp(cmd *cobra.Command, params []string) {
-	if len(params) != 1 {
-		fmt.Fprintf(os.Stderr, "lookup need a username\n")
-		fmt.Fprintf(os.Stderr, "%s\n", cmd.Use)
-		os.Exit(1)
-	}
 	err := qshell.LookUp(params[0])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", cmd, err)

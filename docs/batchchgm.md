@@ -5,7 +5,7 @@
 # 格式
 
 ```
-qshell batchchgm [-force] <Bucket> <KeyMimeMapFile>
+qshell batchchgm [--force] <Bucket> <KeyMimeMapFile>
 ```
 
 # 鉴权

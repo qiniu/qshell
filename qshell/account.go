@@ -334,7 +334,7 @@ func CleanUser() (err error) {
 	return
 }
 
-func RmUser(uids []int) (err error) {
+func RmUser(uid int) (err error) {
 	storageDir := filepath.Join(QShellRootPath, ".qshell")
 	accountFname := filepath.Join(storageDir, "account.db")
 	db, err := sql.Open("sqlite3", accountFname)
@@ -347,10 +347,8 @@ func RmUser(uids []int) (err error) {
 	if err != nil {
 		return err
 	}
-	for _, uid := range uids {
-		logs.Debug("Removing user: %d\n", uid)
-		st.Exec(uid)
-	}
+	logs.Debug("Removing user: %d\n", uid)
+	st.Exec(uid)
 	return st.Close()
 }
 

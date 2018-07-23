@@ -9,6 +9,7 @@ import (
 	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
 	"github.com/tonycai653/iqshell/qiniu/rpc"
 	"github.com/tonycai653/iqshell/qshell"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -38,51 +39,59 @@ var (
 
 var (
 	batchStatCmd = &cobra.Command{
-		Use:   "batchstat <Bucket> <KeyListFile>",
+		Use:   "batchstat <Bucket> [<KeyListFile>]",
 		Short: "Batch stat files in bucket",
-		Args:  cobra.ExactArgs(2),
+		Long:  "Batch stat files in bucket, read file list from stdin if KeyListFile not specified",
+		Args:  cobra.RangeArgs(1, 2),
 		Run:   BatchStat,
 	}
 	batchDeleteCmd = &cobra.Command{
-		Use:   "batchdelete [-force] <Bucket> <KeyListFile>",
+		Use:   "batchdelete <Bucket> [<KeyListFile>]",
 		Short: "Batch delete files in bucket",
-		Args:  cobra.ExactArgs(2),
+		Long:  "Batch delete files in bucket, read file list from stdin if KeyListFile not specified",
+		Args:  cobra.RangeArgs(1, 2),
 		Run:   BatchDelete,
 	}
 	batchChgmCmd = &cobra.Command{
-		Use:   "batchchgm <Bucket> <KeyMimeMapFile>",
+		Use:   "batchchgm <Bucket> [<KeyMimeMapFile>]",
 		Short: "Batch change the mime type of files in bucket",
-		Args:  cobra.ExactArgs(2),
+		Long:  "Batch change the mime type of files in bucket, read from stdin if KeyMimeMapFile not specified",
+		Args:  cobra.RangeArgs(1, 2),
 		Run:   BatchChgm,
 	}
 	batchChtypeCmd = &cobra.Command{
-		Use:   "batchchtype <Bucket> <KeyFileTypeMapFile>",
+		Use:   "batchchtype <Bucket> [<KeyFileTypeMapFile>]",
 		Short: "Batch change the file type of files in bucket",
-		Args:  cobra.ExactArgs(2),
+		Long:  "Batch change the file (storage) type of files in bucket, read from stdin if KeyFileTypeMapFile not specified",
+		Args:  cobra.RangeArgs(1, 2),
 		Run:   BatchChtype,
 	}
 	batchDelAfterCmd = &cobra.Command{
-		Use:   "batchexpire <Bucket> <KeyDeleteAfterDaysMapFile>",
+		Use:   "batchexpire <Bucket> [<KeyDeleteAfterDaysMapFile>]",
 		Short: "Batch set the deleteAfterDays of the files in bucket",
-		Args:  cobra.ExactArgs(2),
+		Long:  "Batch set the deleteAfterDays of the files in bucket, read from stdin if KeyDeleteAfterDaysMapFile not specified",
+		Args:  cobra.RangeArgs(1, 2),
 		Run:   BatchDeleteAfterDays,
 	}
 	batchRenameCmd = &cobra.Command{
-		Use:   "batchrename <Bucket> <OldNewKeyMapFile>",
+		Use:   "batchrename <Bucket> [<OldNewKeyMapFile>]",
 		Short: "Batch rename files in the bucket",
-		Args:  cobra.ExactArgs(2),
+		Long:  "Batch rename files in the bucket, read from stdin if OldNewKeyMapFile not specified",
+		Args:  cobra.RangeArgs(1, 2),
 		Run:   BatchRename,
 	}
 	batchMoveCmd = &cobra.Command{
-		Use:   "batchmove <SrcBucket> <DestBucket> <SrcDestKeyMapFile>",
+		Use:   "batchmove <SrcBucket> <DestBucket> [<SrcDestKeyMapFile>]",
 		Short: "Batch move files from bucket to bucket",
-		Args:  cobra.ExactArgs(3),
+		Long:  "Batch move files from bucket to bucket, read from stdin if SrcDestKeyMapFile not specified",
+		Args:  cobra.RangeArgs(2, 3),
 		Run:   BatchMove,
 	}
 	batchCopyCmd = &cobra.Command{
-		Use:   "batchcopy <SrcBucket> <DestBucket> <SrcDestKeyMapFile>",
+		Use:   "batchcopy <SrcBucket> <DestBucket> [<SrcDestKeyMapFile>]",
 		Short: "Batch copy files from bucket to bucket",
-		Args:  cobra.ExactArgs(3),
+		Long:  "Batch copy files from bucket to bucket, read from stdin if SrcDestKeyMapFile not specified",
+		Args:  cobra.RangeArgs(2, 3),
 		Run:   BatchCopy,
 	}
 	batchSignCmd = &cobra.Command{
@@ -94,27 +103,27 @@ var (
 )
 
 func init() {
-	batchDeleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "force mode")
+	batchDeleteCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchDeleteCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 
-	batchChgmCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "force mode")
+	batchChgmCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChgmCmd.Flags().IntVarP(&worker, "worker", "c", 1, "woker count")
 
-	batchChtypeCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "force mode")
+	batchChtypeCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChtypeCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 
-	batchDelAfterCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "force mode")
+	batchDelAfterCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchDelAfterCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 
-	batchRenameCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "force mode")
+	batchRenameCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchRenameCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchRenameCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 
-	batchMoveCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "force mode")
+	batchMoveCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchMoveCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchMoveCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 
-	batchCopyCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "force mode")
+	batchCopyCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchCopyCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchCopyCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 
@@ -124,7 +133,14 @@ func init() {
 
 func BatchStat(cmd *cobra.Command, params []string) {
 	bucket := params[0]
-	keyListFile := params[1]
+
+	var keyListFile string
+
+	if len(params) == 2 {
+		keyListFile = params[1]
+	} else {
+		keyListFile = "stdin"
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -144,18 +160,26 @@ func BatchStat(cmd *cobra.Command, params []string) {
 		ResponseHeaderTimeout: time.Second * 60 * 10,
 	}, "")
 
-	fp, err := os.Open(keyListFile)
-	if err != nil {
-		fmt.Println("Open key list file error", err)
-		os.Exit(qshell.STATUS_HALT)
+	var fp io.ReadCloser
+	var err error
+
+	if keyListFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(keyListFile)
+		if err != nil {
+			fmt.Println("Open key list file error", err)
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
+
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]rs.EntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := strings.Fields(line)
 		if len(items) > 0 {
 			key := items[0]
 			if key != "" {
@@ -221,7 +245,14 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 	}
 
 	bucket := params[0]
-	keyListFile := params[1]
+
+	var keyListFile string
+
+	if len(params) == 2 {
+		keyListFile = params[1]
+	} else {
+		keyListFile = "stdin"
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -253,18 +284,25 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		ResponseHeaderTimeout: time.Second * 60 * 10,
 	}, "")
 
-	fp, err := os.Open(keyListFile)
-	if err != nil {
-		fmt.Println("Open key list file error", err)
-		os.Exit(qshell.STATUS_HALT)
+	var fp io.ReadCloser
+	var err error
+
+	if keyListFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(keyListFile)
+		if err != nil {
+			fmt.Println("Open key list file error", err)
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]rs.EntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := strings.Fields(line)
 		if len(items) > 0 {
 			key := items[0]
 			if key != "" {
@@ -346,7 +384,13 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 	}
 
 	bucket := params[0]
-	keyMimeMapFile := params[1]
+
+	var keyMimeMapFile string
+	if len(params) == 2 {
+		keyMimeMapFile = params[1]
+	} else {
+		keyMimeMapFile = "stdin"
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -378,18 +422,24 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 		ResponseHeaderTimeout: time.Second * 60 * 10,
 	}, "")
 
-	fp, err := os.Open(keyMimeMapFile)
-	if err != nil {
-		fmt.Println("Open key mime map file error")
-		os.Exit(qshell.STATUS_HALT)
+	var fp io.ReadCloser
+	var err error
+	if keyMimeMapFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(keyMimeMapFile)
+		if err != nil {
+			fmt.Printf("Open key mime map file error: %v\n", err)
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]qshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := strings.Fields(line)
 		if len(items) == 2 {
 			key := items[0]
 			mimeType := items[1]
@@ -466,7 +516,13 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 	}
 
 	bucket := params[0]
-	keyTypeMapFile := params[1]
+
+	var keyTypeMapFile string
+	if len(params) == 2 {
+		keyTypeMapFile = params[1]
+	} else {
+		keyTypeMapFile = "stdin"
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -498,18 +554,25 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 		ResponseHeaderTimeout: time.Second * 60 * 10,
 	}, "")
 
-	fp, err := os.Open(keyTypeMapFile)
-	if err != nil {
-		fmt.Println("Open key file type map file error")
-		os.Exit(qshell.STATUS_HALT)
+	var fp io.ReadCloser
+	var err error
+
+	if keyTypeMapFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(keyTypeMapFile)
+		if err != nil {
+			fmt.Printf("Open key file type map file error: %v\n", err)
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]qshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := strings.Fields(line)
 		if len(items) == 2 {
 			key := items[0]
 			fileType, _ := strconv.Atoi(items[1])
@@ -586,7 +649,13 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 	}
 
 	bucket := params[0]
-	keyExpireMapFile := params[1]
+	var keyExpireMapFile string
+
+	if len(params) == 2 {
+		keyExpireMapFile = params[1]
+	} else {
+		keyExpireMapFile = "stdin"
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -618,12 +687,19 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 		ResponseHeaderTimeout: time.Second * 60 * 10,
 	}, "")
 
-	fp, err := os.Open(keyExpireMapFile)
-	if err != nil {
-		fmt.Println("Open key expire map file error")
-		os.Exit(qshell.STATUS_HALT)
+	var fp io.ReadCloser
+	var err error
+
+	if keyExpireMapFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(keyExpireMapFile)
+		if err != nil {
+			fmt.Println("Open key expire map file error")
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]qshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
@@ -706,7 +782,13 @@ func BatchRename(cmd *cobra.Command, params []string) {
 	}
 
 	bucket := params[0]
-	oldNewKeyMapFile := params[1]
+	var oldNewKeyMapFile string
+
+	if len(params) == 2 {
+		oldNewKeyMapFile = "stdin"
+	} else {
+		oldNewKeyMapFile = params[1]
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -738,12 +820,19 @@ func BatchRename(cmd *cobra.Command, params []string) {
 		ResponseHeaderTimeout: time.Second * 60 * 10,
 	}, "")
 
-	fp, err := os.Open(oldNewKeyMapFile)
-	if err != nil {
-		fmt.Println("Open old new key map file error")
-		os.Exit(qshell.STATUS_HALT)
+	var fp io.ReadCloser
+	var err error
+
+	if oldNewKeyMapFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(oldNewKeyMapFile)
+		if err != nil {
+			fmt.Println("Open old new key map file error")
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]qshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
@@ -827,7 +916,13 @@ func BatchMove(cmd *cobra.Command, params []string) {
 
 	srcBucket := params[0]
 	destBucket := params[1]
-	srcDestKeyMapFile := params[2]
+	var srcDestKeyMapFile string
+
+	if len(params) == 3 {
+		srcDestKeyMapFile = params[2]
+	} else {
+		srcDestKeyMapFile = "stdin"
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -859,12 +954,19 @@ func BatchMove(cmd *cobra.Command, params []string) {
 		ResponseHeaderTimeout: time.Second * 60 * 10,
 	}, "")
 
-	fp, err := os.Open(srcDestKeyMapFile)
-	if err != nil {
-		fmt.Println("Open src dest key map file error")
-		os.Exit(qshell.STATUS_HALT)
+	var fp io.ReadCloser
+	var err error
+
+	if srcDestKeyMapFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(srcDestKeyMapFile)
+		if err != nil {
+			fmt.Println("Open src dest key map file error")
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]qshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
@@ -954,7 +1056,14 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 
 	srcBucket := params[0]
 	destBucket := params[1]
-	srcDestKeyMapFile := params[2]
+
+	var srcDestKeyMapFile string
+
+	if len(params) == 3 {
+		srcDestKeyMapFile = params[2]
+	} else {
+		srcDestKeyMapFile = "stdin"
+	}
 
 	account, gErr := qshell.GetAccount()
 	if gErr != nil {
@@ -985,13 +1094,19 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 		}).Dial,
 		ResponseHeaderTimeout: time.Second * 60 * 10,
 	}, "")
+	var fp io.ReadCloser
+	var err error
 
-	fp, err := os.Open(srcDestKeyMapFile)
-	if err != nil {
-		fmt.Println("Open src dest key map file error")
-		os.Exit(qshell.STATUS_HALT)
+	if srcDestKeyMapFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(srcDestKeyMapFile)
+		if err != nil {
+			fmt.Println("Open src dest key map file error")
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
 	}
-	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]qshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)

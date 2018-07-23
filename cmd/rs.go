@@ -36,7 +36,7 @@ var (
 	lsBucketCmd = &cobra.Command{
 		Use:   "listbucket <Bucket> [<ListBucketResultFile>]",
 		Short: "List all the files in the bucket by prefix",
-		Long:  "List all the files in the bucket by prefix to stdout when file not specified by default",
+		Long:  "List all the files in the bucket by prefix to stdout if ListBucketResultFile not specified",
 		Args:  cobra.RangeArgs(1, 2),
 		Run:   ListBucket,
 	}
@@ -129,7 +129,8 @@ var (
 
 func init() {
 	lsBucketCmd.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
-	lsBucketCmd.Flags().StringVarP(&prefix, "prefix", "p", "", "list marker")
+	lsBucketCmd.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
+
 	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
 	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
 
