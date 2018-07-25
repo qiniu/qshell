@@ -49,3 +49,4 @@ qshell move if-pbl qiniu.jpg if-pri 2015/01/19/qiniu.jpg
 ```
 qshell move -overwrite if-pbl qiniu.jpg if-pbl 2015/01/19/qiniu.jpg
 ```
+执行命令之后，此时空间if-pbl里面的qiniu.jpg文件内容覆盖空间if-pbl里面的2015/01/19/qiniu.jpg,2015/01/19/qiniu.jpg文件原有内容完全被qiniu.jpg文件覆盖，即空间if-pbl里面的qiniu.jpg文件此后已不存在，最后剩下2015/01/19/qiniu.jpg文件，文件内容是qiniu.jpg文件的内容。可以简单理解为鸠占鹊巢。
