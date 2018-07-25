@@ -64,7 +64,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 
 # 示例 【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数，如不设置，需支付源站流量费用，无法减免！！！】
 
-需要同步空间`qdisk`中的所有以`movies/`开头，并以`.mp4`结尾的文件到本地路径`/Users/jemy/Temp7/backup`下面：
+需要同步空间`qdisk`中的所有以`movies/`开头(理解为前缀的概念，那么movies/1.mp4,movies/2.mp4等以movies/为前缀的文件都会被下载保存)，并以`.mp4`结尾的文件到本地路径`/Users/jemy/Temp7/backup`下面（把下面的配置内容写入配置文件qdisk_down.conf，该配置文件需要自行创建）：
 
 ```
 {
