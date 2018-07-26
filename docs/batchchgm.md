@@ -33,7 +33,8 @@ data/2015/02/01/bg.png	image/png
 data/2015/02/01/pig.jpg	image/jpeg
 ```
 
-在上面的列表中，`data/2015/02/01/bg.png`的新MimeType就是`image/png`，诸如此类。
+注意：上面文件名和MimeType中间的书写方式不是空格，而是制表符“tab”键，否则执行的时候不会报错，但也不会把MimeType(文件类型)批量修改成功。在上面的列表中，`data/2015/02/01/bg.png`的新MimeType就是`image/png`，诸如此类。
+
 把上面的内容保存在文件`tochange.txt`中，然后使用如下的命令：
 
 ```
