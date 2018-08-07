@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/spf13/cobra"
 	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
 	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
@@ -35,10 +36,17 @@ var (
 	}
 	lsBucketCmd = &cobra.Command{
 		Use:   "listbucket <Bucket>",
-		Short: "List all the files in the bucket by prefix",
-		Long:  "List all the files in the bucket by prefix to stdout if ListBucketResultFile not specified",
+		Short: "List all the files in the bucket",
+		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
 		Args:  cobra.ExactArgs(1),
 		Run:   ListBucket,
+	}
+	lsBucketCmd2 = &cobra.Command{
+		Use:   "listbucket2 <Bucket>",
+		Short: "List all the files in the bucket using v2/list interface",
+		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
+		Args:  cobra.ExactArgs(1),
+		Run:   ListBucket2,
 	}
 	statCmd = &cobra.Command{
 		Use:   "stat <Bucket> <Key>",
@@ -133,12 +141,16 @@ func init() {
 	lsBucketCmd.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
 	lsBucketCmd.Flags().StringVarP(&outFile, "out", "o", "", "output file")
 
+	lsBucketCmd2.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
+	lsBucketCmd2.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
+	lsBucketCmd2.Flags().StringVarP(&outFile, "out", "o", "", "output file")
+
 	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
 	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
 
 	RootCmd.AddCommand(dirCacheCmd, lsBucketCmd, statCmd, delCmd, moveCmd,
 		copyCmd, chgmCmd, chtypeCmd, delafterCmd, fetchCmd, mirrorCmd,
-		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd)
+		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, lsBucketCmd2)
 }
 
 func DirCache(cmd *cobra.Command, params []string) {
@@ -151,6 +163,23 @@ func DirCache(cmd *cobra.Command, params []string) {
 		cacheResultFile = "stdout"
 	}
 	_, retErr := qshell.DirCache(cacheRootPath, cacheResultFile)
+	if retErr != nil {
+		os.Exit(qshell.STATUS_ERROR)
+	}
+}
+
+func ListBucket2(cmd *cobra.Command, params []string) {
+	bucket := params[0]
+
+	account, gErr := qshell.GetAccount()
+	if gErr != nil {
+		fmt.Println(gErr)
+		os.Exit(qshell.STATUS_ERROR)
+	}
+
+	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
+
+	retErr := qshell.ListBucket2(mac, bucket, prefix, listMarker, outFile, "")
 	if retErr != nil {
 		os.Exit(qshell.STATUS_ERROR)
 	}

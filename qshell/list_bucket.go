@@ -3,6 +3,8 @@ package qshell
 import (
 	"bufio"
 	"fmt"
+	"github.com/qiniu/api.v7/auth/qbox"
+	"github.com/qiniu/api.v7/storage"
 	"github.com/tonycai653/iqshell/qiniu/rpc"
 	"io"
 	"os"
@@ -102,4 +104,67 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 	}
 
 	return
+}
+
+func ListBucket2(mac *qbox.Mac, bucket, prefix, marker, listResultFile, delimiter string) (retErr error) {
+	var listResultFh *os.File
+
+	if listResultFile == "" {
+		listResultFh = os.Stdout
+	} else {
+		var openErr error
+		listResultFh, openErr = os.Create(listResultFile)
+		if openErr != nil {
+			retErr = openErr
+			logs.Error("Failed to open list result file `%s`", listResultFile)
+			return
+		}
+		defer listResultFh.Close()
+	}
+
+	bWriter := bufio.NewWriter(listResultFh)
+
+	bm := storage.NewBucketManager(mac, nil)
+
+	for {
+		lastMarker, err := listBucket2(bm, bucket, prefix, delimiter, marker, bWriter)
+
+		if err != nil {
+			marker = lastMarker
+			fmt.Fprintf(os.Stderr, "ListBucket: %v\n", err)
+			fmt.Fprintf(os.Stderr, "marker: %v\n", marker)
+		} else {
+			if lastMarker == "" {
+				break
+			} else {
+				marker = lastMarker
+			}
+		}
+	}
+	return
+}
+
+func listBucket2(bm *storage.BucketManager, bucket, prefix, delimiter, marker string, out *bufio.Writer) (string, error) {
+	var lastMarker string
+
+	entries, err := bm.ListBucket(bucket, prefix, delimiter, marker)
+
+	for listItem := range entries {
+		if listItem.Marker != lastMarker {
+			lastMarker = listItem.Marker
+		}
+
+		lineData := fmt.Sprintf("%s\t%d\t%s\t%d\t%s\t%d\t%s\r\n",
+			listItem.Item.Key, listItem.Item.Fsize, listItem.Item.Hash,
+			listItem.Item.PutTime, listItem.Item.MimeType, listItem.Item.Type, listItem.Item.EndUser)
+		_, wErr := out.WriteString(lineData)
+		if wErr != nil {
+			return lastMarker, wErr
+		}
+	}
+	fErr := out.Flush()
+	if fErr != nil {
+		return lastMarker, fErr
+	}
+	return lastMarker, err
 }
