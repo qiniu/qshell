@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -85,6 +86,9 @@ func (rs Client) Get(l rpc.Logger, bucket, key, destFile string) (err error) {
 		}
 		fmt.Fprintf(os.Stderr, "Qget: http respcode: %d, respbody: %s\n", resp.StatusCode, string(body))
 		os.Exit(1)
+	}
+	if strings.ContainsRune(destFile, os.PathSeparator) {
+		destFile = filepath.Base(destFile)
 	}
 	f, err := os.OpenFile(destFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
