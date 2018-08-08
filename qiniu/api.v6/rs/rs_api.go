@@ -8,6 +8,11 @@ import (
 	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
 	. "github.com/tonycai653/iqshell/qiniu/api.v6/conf"
 	"github.com/tonycai653/iqshell/qiniu/rpc"
+	"github.com/tonycai653/iqshell/qiniu/uri"
+	"io"
+	"io/ioutil"
+	"os"
+	"strings"
 )
 
 // ----------------------------------------------------------
@@ -45,7 +50,51 @@ type Entry struct {
 	FileType int    `json:"type"`
 }
 
+type GetRet struct {
+	URL      string `json:"url"`
+	Hash     string `json:"hash"`
+	MimeType string `json:"mimeType"`
+	Fsize    int64  `json:"fsize"`
+	Expiry   int64  `json:"expires"`
+	Version  string `json:"version"`
+}
+
 // @endgist
+
+func (rs Client) Get(l rpc.Logger, bucket, key, destFile string) (err error) {
+	entryUri := strings.Join([]string{bucket, key}, ":")
+
+	url := strings.Join([]string{RS_HOST, "get", uri.Encode(entryUri)}, "/")
+
+	var data GetRet
+
+	err = rs.Conn.Call(nil, &data, url)
+	if err != nil {
+		return
+	}
+	resp, err := rs.Conn.Get(nil, data.URL)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		body, rerr := ioutil.ReadAll(resp.Body)
+		if rerr != nil {
+			return rerr
+		}
+		fmt.Fprintf(os.Stderr, "Qget: http respcode: %d, respbody: %s\n", resp.StatusCode, string(body))
+		os.Exit(1)
+	}
+	f, err := os.OpenFile(destFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	io.Copy(f, resp.Body)
+	return
+}
 
 func (rs Client) Stat(l rpc.Logger, bucket, key string) (entry Entry, err error) {
 	err = rs.Conn.Call(l, &entry, RS_HOST+URIStat(bucket, key))

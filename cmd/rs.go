@@ -17,6 +17,12 @@ import (
 )
 
 var (
+	qGetCmd = &cobra.Command{
+		Use:   "get <Bucket> <Key>",
+		Short: "Download a single file from bucket",
+		Args:  cobra.ExactArgs(2),
+		Run:   Get,
+	}
 	dirCacheCmd = &cobra.Command{
 		Use:   "dircache <DirCacheRootPath> [<DirCacheResultFile>]",
 		Short: "Cache the directory structure of a file path",
@@ -137,6 +143,8 @@ var (
 )
 
 func init() {
+	qGetCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "save file as specified by this option")
+
 	lsBucketCmd.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
 	lsBucketCmd.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
 	lsBucketCmd.Flags().StringVarP(&outFile, "out", "o", "", "output file")
@@ -148,7 +156,7 @@ func init() {
 	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
 	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
 
-	RootCmd.AddCommand(dirCacheCmd, lsBucketCmd, statCmd, delCmd, moveCmd,
+	RootCmd.AddCommand(qGetCmd, dirCacheCmd, lsBucketCmd, statCmd, delCmd, moveCmd,
 		copyCmd, chgmCmd, chtypeCmd, delafterCmd, fetchCmd, mirrorCmd,
 		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, lsBucketCmd2)
 }
@@ -198,6 +206,41 @@ func ListBucket(cmd *cobra.Command, params []string) {
 
 	retErr := qshell.ListBucket(&mac, bucket, prefix, listMarker, outFile)
 	if retErr != nil {
+		os.Exit(qshell.STATUS_ERROR)
+	}
+}
+
+func Get(cmd *cobra.Command, params []string) {
+
+	bucket := params[0]
+	key := params[1]
+
+	destFile := key
+	if outFile != "" {
+		destFile = outFile
+	}
+
+	account, gErr := qshell.GetAccount()
+	if gErr != nil {
+		fmt.Println(gErr)
+		os.Exit(qshell.STATUS_ERROR)
+	}
+
+	mac := digest.Mac{
+		account.AccessKey,
+		[]byte(account.SecretKey),
+	}
+	client := rs.NewMacEx(&mac, &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout:   time.Duration(60) * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial,
+		ResponseHeaderTimeout: time.Second * 60 * 10,
+	}, "")
+
+	err := client.Get(nil, bucket, key, destFile)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Get error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 }

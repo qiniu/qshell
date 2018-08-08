@@ -16,8 +16,10 @@ var qDownloadCmd = &cobra.Command{
 	Run:   QiniuDownload,
 }
 
-var downloadConfig qshell.DownloadConfig
-var threadCount int
+var (
+	downloadConfig qshell.DownloadConfig
+	threadCount    int
+)
 
 func init() {
 	qDownloadCmd.Flags().StringVarP(&downloadConfig.DestDir, "dest", "t", ".", "dest directory")
