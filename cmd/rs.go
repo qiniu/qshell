@@ -140,6 +140,8 @@ var (
 	prefix     string
 	mOverwrite bool
 	cOverwrite bool
+	startDate  string
+	endDate    string
 )
 
 func init() {
@@ -152,6 +154,8 @@ func init() {
 	lsBucketCmd2.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
 	lsBucketCmd2.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
 	lsBucketCmd2.Flags().StringVarP(&outFile, "out", "o", "", "output file")
+	lsBucketCmd2.Flags().StringVarP(&startDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
+	lsBucketCmd2.Flags().StringVarP(&endDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
 
 	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
 	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
@@ -187,7 +191,38 @@ func ListBucket2(cmd *cobra.Command, params []string) {
 
 	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
 
-	retErr := qshell.ListBucket2(mac, bucket, prefix, listMarker, outFile, "")
+	var dateParser = func(datestr string) (time.Time, error) {
+		var dttm [6]int
+
+		if datestr == "" {
+			return time.Time{}, nil
+		}
+		fields := strings.Split(datestr, "-")
+		if len(fields) > 6 {
+			return time.Time{}, fmt.Errorf("date format must be year-month-day-hour-minute-second\n")
+		}
+		for ind, field := range fields {
+			field, err := strconv.Atoi(field)
+			if err != nil {
+				return time.Time{}, fmt.Errorf("date format must be year-month-day-hour-minute-second, each field must be integer\n")
+			}
+			dttm[ind] = field
+		}
+		return time.Date(dttm[0], time.Month(dttm[1]), dttm[2], dttm[3], dttm[4], dttm[5], 0, time.Local), nil
+	}
+	start, err := dateParser(startDate)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "date parse error: %v\n", err)
+		os.Exit(1)
+	}
+
+	end, err := dateParser(endDate)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "date parse error: %v\n", err)
+		os.Exit(1)
+	}
+
+	retErr := qshell.ListBucket2(mac, bucket, prefix, listMarker, outFile, "", start, end)
 	if retErr != nil {
 		os.Exit(qshell.STATUS_ERROR)
 	}

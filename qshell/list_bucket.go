@@ -3,15 +3,15 @@ package qshell
 import (
 	"bufio"
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
+	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
+	"github.com/tonycai653/iqshell/qiniu/api.v6/rsf"
 	"github.com/tonycai653/iqshell/qiniu/rpc"
 	"io"
 	"os"
-
-	"github.com/astaxie/beego/logs"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/rsf"
+	"time"
 )
 
 /*
@@ -106,8 +106,9 @@ func ListBucket(mac *digest.Mac, bucket, prefix, marker, listResultFile string) 
 	return
 }
 
-func ListBucket2(mac *qbox.Mac, bucket, prefix, marker, listResultFile, delimiter string) (retErr error) {
+func ListBucket2(mac *qbox.Mac, bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time) (retErr error) {
 	var listResultFh *os.File
+	var listAll bool
 
 	if listResultFile == "" {
 		listResultFh = os.Stdout
@@ -122,12 +123,29 @@ func ListBucket2(mac *qbox.Mac, bucket, prefix, marker, listResultFile, delimite
 		defer listResultFh.Close()
 	}
 
+	if startDate.IsZero() && endDate.IsZero() {
+		listAll = true
+	}
+
 	bWriter := bufio.NewWriter(listResultFh)
 
 	bm := storage.NewBucketManager(mac, nil)
 
 	for {
-		lastMarker, err := listBucket2(bm, bucket, prefix, delimiter, marker, bWriter)
+		lastMarker, err := listBucket2(bm, bucket, prefix, delimiter, marker, bWriter, listAll, func(putTime time.Time) bool {
+			switch {
+			case startDate.IsZero() && endDate.IsZero():
+				return true
+			case !startDate.IsZero() && endDate.IsZero() && putTime.After(startDate):
+				return true
+			case !endDate.IsZero() && startDate.IsZero() && putTime.Before(endDate):
+				return true
+			case putTime.After(startDate) && putTime.Before(endDate):
+				return true
+			default:
+				return false
+			}
+		})
 
 		if err != nil {
 			marker = lastMarker
@@ -144,7 +162,8 @@ func ListBucket2(mac *qbox.Mac, bucket, prefix, marker, listResultFile, delimite
 	return
 }
 
-func listBucket2(bm *storage.BucketManager, bucket, prefix, delimiter, marker string, out *bufio.Writer) (string, error) {
+func listBucket2(bm *storage.BucketManager, bucket, prefix, delimiter, marker string, out *bufio.Writer,
+	listAll bool, filter func(time.Time) bool) (string, error) {
 	var lastMarker string
 
 	entries, err := bm.ListBucket(bucket, prefix, delimiter, marker)
@@ -154,12 +173,15 @@ func listBucket2(bm *storage.BucketManager, bucket, prefix, delimiter, marker st
 			lastMarker = listItem.Marker
 		}
 
-		lineData := fmt.Sprintf("%s\t%d\t%s\t%d\t%s\t%d\t%s\r\n",
-			listItem.Item.Key, listItem.Item.Fsize, listItem.Item.Hash,
-			listItem.Item.PutTime, listItem.Item.MimeType, listItem.Item.Type, listItem.Item.EndUser)
-		_, wErr := out.WriteString(lineData)
-		if wErr != nil {
-			return lastMarker, wErr
+		putTime := time.Unix(listItem.Item.PutTime/1e7, 0)
+		if listAll || filter(putTime) {
+			lineData := fmt.Sprintf("%s\t%d\t%s\t%d\t%s\t%d\t%s\r\n",
+				listItem.Item.Key, listItem.Item.Fsize, listItem.Item.Hash,
+				listItem.Item.PutTime, listItem.Item.MimeType, listItem.Item.Type, listItem.Item.EndUser)
+			_, wErr := out.WriteString(lineData)
+			if wErr != nil {
+				return lastMarker, wErr
+			}
 		}
 	}
 	fErr := out.Flush()
