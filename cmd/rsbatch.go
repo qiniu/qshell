@@ -570,63 +570,85 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]qshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
-	for scanner.Scan() {
-		line := scanner.Text()
-		items := strings.Fields(line)
-		if len(items) == 2 {
-			key := items[0]
-			fileType, _ := strconv.Atoi(items[1])
-			if key != "" {
-				entry := qshell.ChtypeEntryPath{bucket, key, fileType}
-				entries = append(entries, entry)
-			}
-		}
-		if len(entries) == BATCH_ALLOW_MAX {
-			toChtypeEntries := make([]qshell.ChtypeEntryPath, len(entries))
-			copy(toChtypeEntries, entries)
 
-			batchWaitGroup.Add(1)
-			batchTasks <- func() {
-				defer batchWaitGroup.Done()
-				batchChtype(client, toChtypeEntries)
-			}
-			entries = make([]qshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
+	var key, line string
+	var fileType int
+	var items []string
+	var entry qshell.ChtypeEntryPath
+
+	for scanner.Scan() {
+		line = scanner.Text()
+		items = strings.Fields(line)
+
+		if len(items) == 2 {
+			fileType, _ = strconv.Atoi(items[1])
+		} else if len(items) == 1 {
+			fileType = 1
+		}
+		key = items[0]
+		if key != "" {
+			entry = qshell.ChtypeEntryPath{bucket, key, fileType}
+			entries = append(entries, entry)
 		}
 	}
-	if len(entries) > 0 {
-		toChtypeEntries := make([]qshell.ChtypeEntryPath, len(entries))
-		copy(toChtypeEntries, entries)
+
+	var errEntries []qshell.ChtypeEntryPath
+
+	var batches = len(entries)/BATCH_ALLOW_MAX + 1
+	var completed int
+
+	for i := 0; i < batches; i++ {
+		var batch []qshell.ChtypeEntryPath
+
+		if i == batches-1 {
+			batch = entries
+		} else {
+			batch = entries[:BATCH_ALLOW_MAX]
+			entries = entries[BATCH_ALLOW_MAX:]
+		}
 
 		batchWaitGroup.Add(1)
 		batchTasks <- func() {
 			defer batchWaitGroup.Done()
-			batchChtype(client, toChtypeEntries)
+			for _, entry := range batchChtype(client, batch) {
+				errEntries = append(errEntries, entry)
+			}
+			completed += 1
+			fmt.Printf("\rComplete: %%%.1f", float64(completed)/float64(batches)*100)
 		}
 	}
-
 	batchWaitGroup.Wait()
+
+	fmt.Println()
+	if len(errEntries) > 0 {
+		fmt.Fprintf(os.Stderr, "Total %d entries failed: \n", len(errEntries))
+		fmt.Fprintf(os.Stderr, "%s\n", strings.Repeat("-", 30))
+		for _, entry := range errEntries {
+			fmt.Fprintf(os.Stderr, "%s\t%d\n", entry.Key, entry.FileType)
+		}
+	}
 }
 
-func batchChtype(client rs.Client, entries []qshell.ChtypeEntryPath) {
+func batchChtype(client rs.Client, entries []qshell.ChtypeEntryPath) (errEntries []qshell.ChtypeEntryPath) {
 	ret, err := qshell.BatchChtype(client, entries)
 	if len(ret) > 0 {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
-				logs.Error("Chtype '%s' => '%d' Failed, Code: %d, Error: %s", entry.Key, entry.FileType, item.Code, item.Data.Error)
-			} else {
-				logs.Debug("Chtype '%s' => '%d' success", entry.Key, entry.FileType)
+				fmt.Fprintf(os.Stderr, "Chtype '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.FileType, item.Code, item.Data.Error)
+				errEntries = append(errEntries, entry)
 			}
 		}
 	} else {
 		if err != nil {
 			if v, ok := err.(*rpc.ErrorInfo); ok {
-				fmt.Printf("Batch chtype error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
+				fmt.Fprintf(os.Stderr, "Batch chtype error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
 			} else {
-				fmt.Println("Batch chtype error,", err)
+				fmt.Fprintf(os.Stderr, "Batch chtype error,", err)
 			}
 		}
 	}
+	return
 }
 
 func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {

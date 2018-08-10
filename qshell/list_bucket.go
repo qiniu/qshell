@@ -151,6 +151,9 @@ func ListBucket2(mac *qbox.Mac, bucket, prefix, marker, listResultFile, delimite
 			marker = lastMarker
 			fmt.Fprintf(os.Stderr, "ListBucket: %v\n", err)
 			fmt.Fprintf(os.Stderr, "marker: %v\n", marker)
+			if lastMarker == "" {
+				break
+			}
 		} else {
 			if lastMarker == "" {
 				break
@@ -167,6 +170,10 @@ func listBucket2(bm *storage.BucketManager, bucket, prefix, delimiter, marker st
 	var lastMarker string
 
 	entries, err := bm.ListBucket(bucket, prefix, delimiter, marker)
+
+	if err != nil {
+		return lastMarker, err
+	}
 
 	for listItem := range entries {
 		if listItem.Marker != lastMarker {
