@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/qiniu/api.v7/auth/qbox"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -16,6 +17,12 @@ type Account struct {
 	Name      string
 	AccessKey string
 	SecretKey string
+}
+
+func (acc *Account) Mac() (mac *qbox.Mac) {
+
+	mac = qbox.NewMac(acc.AccessKey, acc.SecretKey)
+	return
 }
 
 func (acc *Account) EncryptSecretKey() (string, error) {
@@ -237,6 +244,14 @@ func GetAccount() (account Account, err error) {
 		account.SecretKey = string(secretKeyBytes)
 	}
 	return
+}
+
+func GetMac() (mac *qbox.Mac, err error) {
+	account, err := GetAccount()
+	if err != nil {
+		return nil, err
+	}
+	return account.Mac(), nil
 }
 
 func ChUser(uid int) (err error) {
