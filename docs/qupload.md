@@ -168,7 +168,7 @@ Skip upload of changed file `xxx` but no overwrite set
 
 `overwrite` 这个参数设置为 `true` 的时候，覆盖操作会在两种情况下发生：
 
-（1）本地文件的最后修改时间发生了改变（认为该文件内容已变化），并且在设置了 `rescal_local` 为 `true` 的情况下；
+（1）本地文件的最后修改时间发生了改变（认为该文件内容已变化），并且在设置了 `rescan_local` 为 `true` 的情况下；
 
 （2）当开启了 `check_exists` 选项，发现空间已存在同名文件，而且在 `check_hash` 或者 `check_size` 发现文件内容hash或者大小不同的情况下；
 
