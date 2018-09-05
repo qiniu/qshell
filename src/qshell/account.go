@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/astaxie/beego/logs"
 )
 
 type Account struct {
@@ -104,12 +105,7 @@ func GetAccount() (account Account, err error) {
 	}
 
 	// backwards compatible with old version of qshell, which encrypt ak/sk based on existing ak/sk
-	if len(account.SecretKey) == 40 {
-		setErr := SetAccount(account.AccessKey, account.SecretKey)
-		if setErr != nil {
-			return
-		}
-	} else {
+	if len(account.SecretKey) != 40 {
 		aesKey := Md5Hex(account.AccessKey)
 		encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(account.SecretKey)
 		if decodeErr != nil {
