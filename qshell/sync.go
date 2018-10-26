@@ -237,7 +237,6 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key string) (putRet SputRet, err
 	}
 	//range get and mkblk upload
 	var bf *bytes.Buffer
-	var hasError bool
 	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
 		if blkIndex == totalBlkCnt-1 {
 			lastBlock = true
@@ -246,46 +245,42 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key string) (putRet SputRet, err
 		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
 		logs.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
 
-		var ok bool
 		var blkCtx storage.BlkputRet
-		for retryTimes := 0; retryTimes <= RETRY_MAX_TIMES; retryTimes++ {
-			bf, err = getRange(srcResUrl, totalSize, rangeStartOffset, BLOCK_SIZE, lastBlock)
-			if err == nil {
-				ok = true
-				break
+		var retryTimes int
+		var rErr error
+		for {
+			bf, rErr = getRange(srcResUrl, totalSize, rangeStartOffset, BLOCK_SIZE, lastBlock)
+			if rErr != nil && retryTimes >= RETRY_MAX_TIMES {
+				err = errors.New(strings.Join([]string{"Get range block data failed: ", rErr.Error()}, ""))
+				return
 			}
-		}
-		if !ok {
-			err = errors.New("Max retry reached and range & mkblk still failed, check your network")
-			return
+			logs.Error(rErr.Error())
+			time.Sleep(RETRY_INTERVAL)
+			logs.Info("Retrying %d time get range for block [%d]", retryTimes, blkIndex)
+			retryTimes++
 		}
 		data := bf.Bytes()
-		for retryTimes := 1; retryTimes <= RETRY_MAX_TIMES; retryTimes++ {
+		retryTimes = 0
+		for {
 			pErr := resumeUploader.Mkblk(ctx, uptoken, upHost, &blkCtx, BLOCK_SIZE, bytes.NewReader(data), len(data))
-			if pErr == nil {
-				break
-			}
-			if !hasError {
-				hasError = true
+			if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
 				err = pErr
+				return
 			}
 			logs.Error(pErr.Error())
 			time.Sleep(RETRY_INTERVAL)
 
-			logs.Info("Retrying %d time range & mkblk block [%d]", retryTimes, blkIndex)
+			logs.Info("Retrying %d time mkblk for block [%d]", retryTimes, blkIndex)
+			retryTimes++
 		}
-		if hasError {
-			return
-		}
-
 		//advance range offset
 		rangeStartOffset += BLOCK_SIZE
 
 		syncProgress.BlkCtxs = append(syncProgress.BlkCtxs, blkCtx)
 		syncProgress.Offset = rangeStartOffset
 
-		rErr := syncProgress.RecordProgress()
-		if rErr != nil {
+		sErr := syncProgress.RecordProgress()
+		if sErr != nil {
 			logs.Info(rErr.Error())
 		}
 	}
