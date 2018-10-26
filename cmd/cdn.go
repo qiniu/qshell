@@ -3,9 +3,8 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/qiniu/api.v7/cdn"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
 	"github.com/tonycai653/iqshell/qshell"
 	"io"
 	"os"
@@ -53,19 +52,6 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 		urlListFile = "stdin"
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-
-	client := rs.NewMac(&mac)
-
 	var fp io.ReadCloser
 	var err error
 
@@ -79,8 +65,8 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 		}
 		defer fp.Close()
 	}
+	cm := qshell.GetCdnManager()
 	scanner := bufio.NewScanner(fp)
-	scanner.Split(bufio.ScanLines)
 
 	itemsToRefresh := make([]string, 0, 100)
 
@@ -93,7 +79,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 			itemsToRefresh = append(itemsToRefresh, item)
 
 			if len(itemsToRefresh) == BATCH_CDN_REFRESH_DIRS_ALLOW_MAX {
-				cdnRefresh(&client, nil, itemsToRefresh)
+				cdnRefresh(cm, nil, itemsToRefresh)
 				itemsToRefresh = make([]string, 0, 10)
 			}
 		}
@@ -106,7 +92,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 			itemsToRefresh = append(itemsToRefresh, item)
 
 			if len(itemsToRefresh) == BATCH_CDN_REFRESH_URLS_ALLOW_MAX {
-				cdnRefresh(&client, itemsToRefresh, nil)
+				cdnRefresh(cm, itemsToRefresh, nil)
 				itemsToRefresh = make([]string, 0, 100)
 			}
 		}
@@ -115,17 +101,17 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 	//check final items
 	if len(itemsToRefresh) > 0 {
 		if isDir {
-			cdnRefresh(&client, nil, itemsToRefresh)
+			cdnRefresh(cm, nil, itemsToRefresh)
 		} else {
-			cdnRefresh(&client, itemsToRefresh, nil)
+			cdnRefresh(cm, itemsToRefresh, nil)
 		}
 	}
 }
 
-func cdnRefresh(client *rs.Client, urls []string, dirs []string) {
-	resp, err := qshell.BatchRefresh(client, urls, dirs)
+func cdnRefresh(cm *cdn.CdnManager, urls []string, dirs []string) {
+	resp, err := cm.RefreshUrlsAndDirs(urls, dirs)
 	if err != nil {
-		fmt.Println("CDN refresh error,", err)
+		fmt.Fprintf(os.Stderr, "CDN refresh error: %v\n", err)
 	} else {
 		if resp.Error != "" {
 			fmt.Println(fmt.Sprintf("Code: %d, Info: %s", resp.Code, resp.Error))
@@ -142,19 +128,6 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 		urlListFile = "stdin"
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-
-	client := rs.NewMac(&mac)
-
 	var fp io.ReadCloser
 	var err error
 
@@ -168,8 +141,8 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 		}
 		defer fp.Close()
 	}
+	cm := qshell.GetCdnManager()
 	scanner := bufio.NewScanner(fp)
-	scanner.Split(bufio.ScanLines)
 
 	urlsToPrefetch := make([]string, 0, 10)
 	for scanner.Scan() {
@@ -180,20 +153,20 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 		urlsToPrefetch = append(urlsToPrefetch, url)
 
 		if len(urlsToPrefetch) == BATCH_CDN_PREFETCH_ALLOW_MAX {
-			cdnPrefetch(&client, urlsToPrefetch)
+			cdnPrefetch(cm, urlsToPrefetch)
 			urlsToPrefetch = make([]string, 0, 10)
 		}
 	}
 
 	if len(urlsToPrefetch) > 0 {
-		cdnPrefetch(&client, urlsToPrefetch)
+		cdnPrefetch(cm, urlsToPrefetch)
 	}
 }
 
-func cdnPrefetch(client *rs.Client, urls []string) {
-	resp, err := qshell.BatchPrefetch(client, urls)
+func cdnPrefetch(cm *cdn.CdnManager, urls []string) {
+	resp, err := cm.PrefetchUrls(urls)
 	if err != nil {
-		fmt.Println("CDN prefetch error,", err)
+		fmt.Fprintf(os.Stderr, "CDN prefetch error: %v\n", err)
 	} else {
 		if resp.Error != "" {
 			fmt.Println(fmt.Sprintf("Code: %d, Info: %s", resp.Code, resp.Error))

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qiniu/uri"
 	"github.com/tonycai653/iqshell/qshell"
 	"net/url"
 	"os"
@@ -146,14 +145,14 @@ func FormatFsize(fsize int64) (result string) {
 func RpcDecode(cmd *cobra.Command, params []string) {
 	if len(params) > 0 {
 		for _, param := range params {
-			decodedStr, _ := uri.Decode(param)
+			decodedStr, _ := qshell.Decode(param)
 			fmt.Println(decodedStr)
 		}
 	} else {
 		bScanner := bufio.NewScanner(os.Stdin)
 		for bScanner.Scan() {
 			toDecode := bScanner.Text()
-			decodedStr, _ := uri.Decode(string(toDecode))
+			decodedStr, _ := qshell.Decode(string(toDecode))
 			fmt.Println(decodedStr)
 		}
 	}
@@ -161,7 +160,7 @@ func RpcDecode(cmd *cobra.Command, params []string) {
 
 func RpcEncode(cmd *cobra.Command, params []string) {
 	for _, param := range params {
-		encodedStr := uri.Encode(param)
+		encodedStr := qshell.Encode(param)
 		fmt.Println(encodedStr)
 	}
 }

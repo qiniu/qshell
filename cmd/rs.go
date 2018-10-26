@@ -2,14 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/api.v7/auth/qbox"
+	"github.com/qiniu/api.v7/storage"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
-	"github.com/tonycai653/iqshell/qiniu/rpc"
 	"github.com/tonycai653/iqshell/qshell"
-	"net"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -29,11 +24,11 @@ var (
 		Long:  "Cache the directory structure of a file path to a file, \nif <DirCacheResultFile> not specified, cache to stdout",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 && len(args) != 2 {
-				fmt.Errorf("accepts between 1 and 2 arg(s), received %d\n", len(args))
+				return fmt.Errorf("accepts between 1 and 2 arg(s), received %d\n", len(args))
 			}
 			if len(args) == 2 {
 				if args[1] == "" {
-					fmt.Errorf("DirCacheResultFile cannot be be empty\n")
+					return fmt.Errorf("DirCacheResultFile cannot be be empty\n")
 				}
 			}
 			return nil
@@ -87,6 +82,7 @@ var (
 	chtypeCmd = &cobra.Command{
 		Use:   "chtype <Bucket> <Key> <FileType>",
 		Short: "Change the file type of a file",
+		Long:  "Change the file type of a file, file type must be in 0 or 1. And 0 means standard storage, while 1 means low frequency visit storage.",
 		Args:  cobra.ExactArgs(3),
 		Run:   Chtype,
 	}
@@ -138,10 +134,12 @@ var (
 	outFile    string
 	listMarker string
 	prefix     string
+	suffixes   string
 	mOverwrite bool
 	cOverwrite bool
 	startDate  string
 	endDate    string
+	maxRetry   int
 )
 
 func init() {
@@ -153,6 +151,8 @@ func init() {
 
 	lsBucketCmd2.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
 	lsBucketCmd2.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
+	lsBucketCmd2.Flags().StringVarP(&suffixes, "suffixes", "q", "", "list by key suffixes, separated by comma")
+	lsBucketCmd2.Flags().IntVarP(&maxRetry, "max-retry", "x", 5, "max retries when error occurred")
 	lsBucketCmd2.Flags().StringVarP(&outFile, "out", "o", "", "output file")
 	lsBucketCmd2.Flags().StringVarP(&startDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	lsBucketCmd2.Flags().StringVarP(&endDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
@@ -182,14 +182,6 @@ func DirCache(cmd *cobra.Command, params []string) {
 
 func ListBucket2(cmd *cobra.Command, params []string) {
 	bucket := params[0]
-
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
 
 	var dateParser = func(datestr string) (time.Time, error) {
 		var dttm [6]int
@@ -222,7 +214,15 @@ func ListBucket2(cmd *cobra.Command, params []string) {
 		os.Exit(1)
 	}
 
-	retErr := qshell.ListBucket2(mac, bucket, prefix, listMarker, outFile, "", start, end)
+	sf := make([]string, 0)
+	for _, s := range strings.Split(suffixes, ",") {
+		s = strings.TrimSpace(s)
+		if len(s) > 0 {
+			sf = append(sf, strings.TrimSpace(s))
+		}
+	}
+	bm := qshell.GetBucketManager()
+	retErr := bm.ListBucket2(bucket, prefix, listMarker, outFile, "", start, end, sf, maxRetry)
 	if retErr != nil {
 		os.Exit(qshell.STATUS_ERROR)
 	}
@@ -231,15 +231,8 @@ func ListBucket2(cmd *cobra.Command, params []string) {
 func ListBucket(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
-
-	retErr := qshell.ListBucket(&mac, bucket, prefix, listMarker, outFile)
+	bm := qshell.GetBucketManager()
+	retErr := bm.ListFiles(bucket, prefix, listMarker, outFile)
 	if retErr != nil {
 		os.Exit(qshell.STATUS_ERROR)
 	}
@@ -255,25 +248,8 @@ func Get(cmd *cobra.Command, params []string) {
 		destFile = outFile
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	client := rs.NewMacEx(&mac, &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(60) * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Second * 60 * 10,
-	}, "")
-
-	err := client.Get(nil, bucket, key, destFile)
+	bm := qshell.GetBucketManager()
+	err := bm.Get(bucket, key, destFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Get error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
@@ -284,34 +260,13 @@ func Stat(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	client := rs.NewMacEx(&mac, &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(60) * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Second * 60 * 10,
-	}, "")
-
-	entry, err := client.Stat(nil, bucket, key)
+	bm := qshell.GetBucketManager()
+	fileInfo, err := bm.Stat(bucket, key)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Stat error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
-		} else {
-			fmt.Println("Stat error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "Stat error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	} else {
-		printStat(bucket, key, entry)
+		printStat(bucket, key, fileInfo)
 	}
 }
 
@@ -319,31 +274,10 @@ func Delete(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	client := rs.NewMacEx(&mac, &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(60) * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Second * 60 * 10,
-	}, "")
-
-	err := client.Delete(nil, bucket, key)
+	bm := qshell.GetBucketManager()
+	err := bm.Delete(bucket, key)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Delete error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
-		} else {
-			fmt.Println("Delete error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "Delete error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 }
@@ -357,31 +291,10 @@ func Move(cmd *cobra.Command, params []string) {
 		destKey = params[3]
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	client := rs.NewMacEx(&mac, &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(60) * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Second * 60 * 10,
-	}, "")
-
-	err := client.Move(nil, srcBucket, srcKey, destBucket, destKey, mOverwrite)
+	bm := qshell.GetBucketManager()
+	err := bm.Move(srcBucket, srcKey, destBucket, destKey, mOverwrite)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Move error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
-		} else {
-			fmt.Println("Move error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "Move error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 }
@@ -395,31 +308,10 @@ func Copy(cmd *cobra.Command, params []string) {
 		destKey = params[3]
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	client := rs.NewMacEx(&mac, &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(60) * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Second * 60 * 10,
-	}, "")
-
-	err := client.Copy(nil, srcBucket, srcKey, destBucket, destKey, cOverwrite)
+	bm := qshell.GetBucketManager()
+	err := bm.Copy(srcBucket, srcKey, destBucket, destKey, cOverwrite)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Copy error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
-		} else {
-			fmt.Println("Copy error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "Copy error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 }
@@ -429,31 +321,10 @@ func Chgm(cmd *cobra.Command, params []string) {
 	key := params[1]
 	newMimeType := params[2]
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	client := rs.NewMacEx(&mac, &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(60) * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Second * 60 * 10,
-	}, "")
-
-	err := client.ChangeMime(nil, bucket, key, newMimeType)
+	bm := qshell.GetBucketManager()
+	err := bm.ChangeMime(bucket, key, newMimeType)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Change mimetype error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
-		} else {
-			fmt.Println("Change mimetype error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "Change mimetype error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 }
@@ -463,37 +334,16 @@ func Chtype(cmd *cobra.Command, params []string) {
 	key := params[1]
 	fileTypeStr := params[2]
 	fileType, cErr := strconv.Atoi(fileTypeStr)
-	if cErr != nil {
-		fmt.Println("Invalid file type")
+	if cErr != nil || (fileType != 0 && fileType != 1) {
+		fmt.Println("Invalid file type:", fileTypeStr, ", fileType must be 0(standard) or 1(low frequency storage)")
 		os.Exit(qshell.STATUS_HALT)
 		return
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	client := rs.NewMacEx(&mac, &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(60) * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Second * 60 * 10,
-	}, "")
-
-	err := client.ChangeType(nil, bucket, key, fileType)
+	bm := qshell.GetBucketManager()
+	err := bm.ChangeType(bucket, key, fileType)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Change file type error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
-		} else {
-			fmt.Println("Change file type error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "Change file type error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 }
@@ -504,36 +354,15 @@ func DeleteAfterDays(cmd *cobra.Command, params []string) {
 	expireStr := params[2]
 	expire, cErr := strconv.Atoi(expireStr)
 	if cErr != nil {
-		fmt.Println("Invalid deleteAfterDays")
+		fmt.Fprintln(os.Stderr, "Invalid deleteAfterDays: ", expireStr)
 		os.Exit(qshell.STATUS_HALT)
 		return
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	client := rs.NewMacEx(&mac, &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(60) * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Second * 60 * 10,
-	}, "")
-
-	err := client.DeleteAfterDays(nil, bucket, key, expire)
+	bm := qshell.GetBucketManager()
+	err := bm.DeleteAfterDays(bucket, key, expire)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Set file deleteAfterDays error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
-		} else {
-			fmt.Println("Set file deleteAfterDays error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "Set file deleteAfterDays error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 }
@@ -546,24 +375,10 @@ func Fetch(cmd *cobra.Command, params []string) {
 		key = params[2]
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-
-	fetchResult, err := qshell.Fetch(&mac, remoteResUrl, bucket, key)
+	bm := qshell.GetBucketManager()
+	fetchResult, err := bm.Fetch(remoteResUrl, bucket, key)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Fetch error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
-		} else {
-			fmt.Println("Fetch error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "Fetch error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	} else {
 		fmt.Println("Key:", fetchResult.Key)
@@ -577,24 +392,10 @@ func Prefetch(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-
-	err := qshell.Prefetch(&mac, bucket, key)
+	bm := qshell.GetBucketManager()
+	err := bm.Prefetch(bucket, key)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Prefetch error, %d %s, xreqid: %s\n", v.Code, v.Err, v.Reqid)
-		} else {
-			fmt.Println("Prefetch error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "Prefetch error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 }
@@ -604,19 +405,10 @@ func Saveas(cmd *cobra.Command, params []string) {
 	saveBucket := params[1]
 	saveKey := params[2]
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	url, err := qshell.Saveas(&mac, publicUrl, saveBucket, saveKey)
+	bm := qshell.GetBucketManager()
+	url, err := bm.Saveas(publicUrl, saveBucket, saveKey)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "Saveas error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	} else {
 		fmt.Println(url)
@@ -627,46 +419,19 @@ func M3u8Delete(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	m3u8Key := params[1]
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-
-	//get bucket zone info
-	bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-	if gErr != nil {
-		fmt.Println("Get bucket region info error,", gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	//set up host
-	qshell.SetZone(bucketInfo.Region)
-
-	m3u8FileList, err := qshell.M3u8FileList(&mac, bucket, m3u8Key)
+	bm := qshell.GetBucketManager()
+	m3u8FileList, err := bm.M3u8FileList(bucket, m3u8Key)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, "Get m3u8 file list error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
-	client := rs.NewMacEx(&mac, &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(60) * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Second * 60 * 10,
-	}, "")
 	entryCnt := len(m3u8FileList)
 	if entryCnt == 0 {
-		fmt.Println("no m3u8 slices found")
+		fmt.Fprintln(os.Stderr, "no m3u8 slices found")
 		os.Exit(qshell.STATUS_ERROR)
 	}
 	if entryCnt <= BATCH_ALLOW_MAX {
-		batchDelete(client, m3u8FileList)
+		batchDelete(m3u8FileList, bm)
 	} else {
 		batchCnt := entryCnt / BATCH_ALLOW_MAX
 		for i := 0; i < batchCnt; i++ {
@@ -675,7 +440,7 @@ func M3u8Delete(cmd *cobra.Command, params []string) {
 				end = entryCnt
 			}
 			entriesToDelete := m3u8FileList[i*BATCH_ALLOW_MAX : end]
-			batchDelete(client, entriesToDelete)
+			batchDelete(entriesToDelete, bm)
 		}
 	}
 }
@@ -688,34 +453,10 @@ func M3u8Replace(cmd *cobra.Command, params []string) {
 		newDomain = strings.TrimRight(params[2], "/")
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-
-	//get bucket zone info
-	bucketInfo, gErr := qshell.GetBucketInfo(&mac, bucket)
-	if gErr != nil {
-		fmt.Println("Get bucket region info error,", gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	//set up host
-	qshell.SetZone(bucketInfo.Region)
-
-	err := qshell.M3u8ReplaceDomain(&mac, bucket, m3u8Key, newDomain)
+	bm := qshell.GetBucketManager()
+	err := bm.M3u8ReplaceDomain(bucket, m3u8Key, newDomain)
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Println("m3u8 replace domain error,", v.Err)
-		} else {
-			fmt.Println("m3u8 replace domain error,", err)
-		}
+		fmt.Fprintf(os.Stderr, "m3u8 replace domain error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 }
@@ -725,7 +466,7 @@ func PrivateUrl(cmd *cobra.Command, params []string) {
 	var deadline int64
 	if len(params) == 2 {
 		if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
-			fmt.Println("Invalid <Deadline>")
+			fmt.Fprintln(os.Stderr, "Invalid <Deadline>")
 			os.Exit(qshell.STATUS_HALT)
 		} else {
 			deadline = val
@@ -734,21 +475,12 @@ func PrivateUrl(cmd *cobra.Command, params []string) {
 		deadline = time.Now().Add(time.Second * 3600).Unix()
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	url, _ := qshell.PrivateUrl(&mac, publicUrl, deadline)
+	bm := qshell.GetBucketManager()
+	url, _ := bm.PrivateUrl(publicUrl, deadline)
 	fmt.Println(url)
 }
 
-func printStat(bucket string, key string, entry rs.Entry) {
+func printStat(bucket string, key string, entry storage.FileInfo) {
 	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", bucket)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", key)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Hash:", entry.Hash)
@@ -757,10 +489,10 @@ func printStat(bucket string, key string, entry rs.Entry) {
 	putTime := time.Unix(0, entry.PutTime*100)
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "PutTime:", entry.PutTime, putTime.String())
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "MimeType:", entry.MimeType)
-	if entry.FileType == 0 {
-		statInfo += fmt.Sprintf("%-20s%d -> 标准存储\r\n", "FileType:", entry.FileType)
+	if entry.Type == 0 {
+		statInfo += fmt.Sprintf("%-20s%d -> 标准存储\r\n", "FileType:", entry.Type)
 	} else {
-		statInfo += fmt.Sprintf("%-20s%d -> 低频存储\r\n", "FileType:", entry.FileType)
+		statInfo += fmt.Sprintf("%-20s%d -> 低频存储\r\n", "FileType:", entry.Type)
 	}
 	fmt.Println(statInfo)
 }

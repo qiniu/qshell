@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/storage"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qiniu/rpc"
+	"github.com/tonycai653/iqshell/qshell"
 	"runtime"
 )
 
@@ -16,11 +17,16 @@ var RootCmd = &cobra.Command{
 	Use:     "qshell",
 	Short:   "Qiniu commandline tool for managing your bucket and CDN",
 	Version: version,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		//set log level
 		if DebugFlag {
 			logs.SetLevel(logs.LevelDebug)
 		}
+		err := qshell.ReadConfigFile()
+		if err != nil {
+			return err
+		}
+		return nil
 	},
 }
 
@@ -35,7 +41,7 @@ func initConfig() {
 	//set cpu count
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	//set qshell user agent
-	rpc.UserAgent = UserAgent()
+	storage.UserAgent = UserAgent()
 
 	//parse command
 	logs.SetLevel(logs.LevelInformational)

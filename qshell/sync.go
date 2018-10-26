@@ -2,14 +2,12 @@ package qshell
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego/logs"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
-	rio "github.com/tonycai653/iqshell/qiniu/api.v6/resumable/io"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
-	"github.com/tonycai653/iqshell/qiniu/rpc"
+	"github.com/qiniu/api.v7/storage"
 	"io"
 	"net/http"
 	"os"
@@ -27,29 +25,23 @@ const (
 	HTTP_TIMEOUT    = time.Second * 10
 )
 
-type PutRet struct {
-	Key      string `json:"key"`
-	Hash     string `json:"hash"`
-	MimeType string `json:"mimeType"`
-	Fsize    int64  `json:"fsize"`
+type ProgressRecorder struct {
+	BlkCtxs      []storage.BlkputRet `json:"blk_ctxs"`
+	Offset       int64               `json:"offset"`
+	TotalSize    int64               `json:"total_size"`
+	LastModified int                 `json:"last_modified"` // 上传文件的modification time
+	FilePath     string              // 断点续传记录保存文件
 }
 
-type SyncProgress struct {
-	BlkCtxs   []rio.BlkputRet `json:"blk_ctxs"`
-	Offset    int64           `json:"offset"`
-	TotalSize int64           `json:"total_size"`
+func NewProgressRecorder(filePath string) *ProgressRecorder {
+	p := new(ProgressRecorder)
+	p.FilePath = filePath
+	p.BlkCtxs = make([]storage.BlkputRet, 0)
+	return p
 }
 
-func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutRet, err error) {
-	if exists, cErr := checkExists(mac, bucket, key); cErr != nil {
-		err = cErr
-		return
-	} else if exists {
-		err = errors.New("File with same key` already exists in bucket")
-		return
-	}
+func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, err error) {
 
-	syncProgress := SyncProgress{}
 	//create sync id
 	syncId := Md5Hex(fmt.Sprintf("%s:%s:%s", srcResUrl, bucket, key))
 
@@ -57,71 +49,167 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 	storePath := filepath.Join(QShellRootPath, ".qshell", "sync")
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
 		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		err = mkdirErr
 		return
 	}
 
-	progressFile := filepath.Join(storePath, fmt.Sprintf("%s.progress", syncId))
-	if statInfo, statErr := os.Stat(progressFile); statErr == nil {
+	progressFile = filepath.Join(storePath, fmt.Sprintf("%s.progress", syncId))
+	return
+}
+
+func (p *ProgressRecorder) Recover() (err error) {
+	if statInfo, statErr := os.Stat(p.FilePath); statErr == nil {
 		//check file last modified time, if older than one week, ignore
 		if statInfo.ModTime().Add(time.Hour * 24 * 5).After(time.Now()) {
 			//try read old progress
-			progressFh, openErr := os.Open(progressFile)
-			if openErr == nil {
-				decoder := json.NewDecoder(progressFh)
-				decoder.Decode(&syncProgress)
-				progressFh.Close()
+			progressFh, openErr := os.Open(p.FilePath)
+			if openErr != nil {
+				err = openErr
+				return
 			}
+			decoder := json.NewDecoder(progressFh)
+			decoder.Decode(p)
+			progressFh.Close()
 		}
 	}
+	return
+}
+
+func (p *ProgressRecorder) RecoverFromUrl(srcResUrl, bucket, key string) (err error) {
+
+	progressFile, pErr := ProgressFileFromUrl(srcResUrl, bucket, key)
+	if err != nil {
+		err = pErr
+		return
+	}
+	p.FilePath = progressFile
+	return p.Recover()
+}
+
+func (p *ProgressRecorder) Reset() {
+	p.Offset = 0
+	p.TotalSize = 0
+	p.BlkCtxs = make([]storage.BlkputRet, 0)
+}
+
+func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int) {
 
 	//check offset valid or not
-	if syncProgress.Offset%BLOCK_SIZE != 0 {
-		logs.Info("Invalid offset from progress file,", syncProgress.Offset)
-		syncProgress.Offset = 0
-		syncProgress.TotalSize = 0
-		syncProgress.BlkCtxs = make([]rio.BlkputRet, 0)
+	if p.Offset%BLOCK_SIZE != 0 {
+		logs.Info("Invalid offset from progress file,", p.Offset)
+		p.Reset()
+		return
 	}
 
 	//check offset and blk ctxs
-	if syncProgress.Offset != 0 && syncProgress.BlkCtxs != nil {
-		if int(syncProgress.Offset/BLOCK_SIZE) != len(syncProgress.BlkCtxs) {
+	if p.Offset != 0 && p.BlkCtxs != nil {
+		if int(p.Offset/BLOCK_SIZE) != len(p.BlkCtxs) {
 			logs.Info("Invalid offset and block contexts")
-			syncProgress.Offset = 0
-			syncProgress.TotalSize = 0
-			syncProgress.BlkCtxs = make([]rio.BlkputRet, 0)
+			p.Reset()
+			return
 		}
 	}
 
 	//check blk ctxs, when no progress found
-	if syncProgress.Offset == 0 || syncProgress.BlkCtxs == nil {
-		syncProgress.Offset = 0
-		syncProgress.TotalSize = 0
-		syncProgress.BlkCtxs = make([]rio.BlkputRet, 0)
+	if p.Offset == 0 || p.BlkCtxs == nil {
+		p.Reset()
+		return
+	}
+	if fileSize != p.TotalSize {
+		if p.TotalSize != 0 {
+			logs.Warning("Remote file length changed, progress file out of date")
+		}
+		p.Offset = 0
+		p.TotalSize = fileSize
+		p.BlkCtxs = make([]storage.BlkputRet, 0)
+		return
+	}
+	if len(p.BlkCtxs) > 0 {
+		if lastModified != 0 && p.LastModified != lastModified {
+			p.Reset()
+		}
+	}
+}
+
+func (p *ProgressRecorder) RecordProgress() (err error) {
+	fh, openErr := os.Create(p.FilePath)
+	if openErr != nil {
+		err = fmt.Errorf("Open progress file %s error, %s", p.FilePath, openErr.Error())
+		return
+	}
+	defer fh.Close()
+
+	jsonBytes, mErr := json.Marshal(p)
+	if mErr != nil {
+		err = fmt.Errorf("Marshal sync progress error, %s", mErr.Error())
+		return
 	}
 
+	_, wErr := fh.Write(jsonBytes)
+	if wErr != nil {
+		err = fmt.Errorf("Write sync progress error, %s", wErr.Error())
+	}
+
+	return
+}
+
+func (m *BucketManager) CheckExists(bucket, key string) (exists bool, err error) {
+	entry, sErr := m.Stat(bucket, key)
+	if sErr != nil {
+		if v, ok := sErr.(*storage.ErrorInfo); !ok {
+			err = fmt.Errorf("Check file exists error, %s", sErr.Error())
+			return
+		} else {
+			if v.Code != 612 {
+				err = fmt.Errorf("Check file exists error, %s", v.Err)
+				return
+			} else {
+				exists = false
+				return
+			}
+		}
+	}
+	if entry.Hash != "" {
+		exists = true
+	}
+	return
+}
+
+type SputRet struct {
+	Key      string `json:"key"`
+	Hash     string `json:"hash"`
+	MimeType string `json:"mimeType"`
+	Fsize    int64  `json:"fsize"`
+}
+
+func (m *BucketManager) Sync(srcResUrl, bucket, key string) (putRet SputRet, err error) {
+
+	exists, cErr := m.CheckExists(bucket, key)
+	if cErr != nil {
+		err = cErr
+		return
+	}
+	if exists {
+		err = errors.New("File with same key` already exists in bucket")
+		return
+	}
 	//get total size
 	totalSize, hErr := getRemoteFileLength(srcResUrl)
 	if hErr != nil {
 		err = hErr
 		return
 	}
-
-	if totalSize != syncProgress.TotalSize {
-		if syncProgress.TotalSize != 0 {
-			logs.Warning("Remote file length changed, progress file out of date")
-		}
-		syncProgress.Offset = 0
-		syncProgress.TotalSize = totalSize
-		syncProgress.BlkCtxs = make([]rio.BlkputRet, 0)
+	progressFile, fErr := ProgressFileFromUrl(srcResUrl, bucket, key)
+	if err != nil {
+		err = fErr
+		return
 	}
+	syncProgress := NewProgressRecorder(progressFile)
+	syncProgress.RecoverFromUrl(srcResUrl, bucket, key)
+	syncProgress.CheckValid(totalSize, 0)
 
 	//get total block count
-	totalBlkCnt := 0
-	if totalSize%BLOCK_SIZE == 0 {
-		totalBlkCnt = int(totalSize / BLOCK_SIZE)
-	} else {
-		totalBlkCnt = int(totalSize/BLOCK_SIZE) + 1
-	}
+	totalBlkCnt := storage.BlockCount(totalSize)
 
 	//init the range offset
 	rangeStartOffset := syncProgress.Offset
@@ -130,14 +218,26 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 	lastBlock := false
 
 	//create upload token
-	policy := rs.PutPolicy{Scope: bucket}
+	policy := storage.PutPolicy{Scope: bucket}
 	//token is valid for one year
 	policy.Expires = 3600 * 24 * 365
 	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
-	uptoken := policy.Token(mac)
-	putClient := rio.NewClient(uptoken, upHostIp)
+	uptoken := policy.UploadToken(m.GetMac())
+	ctx := context.Background()
 
+	resumeUploader := NewResumeUploader(nil)
+	ak, bucket, err := getAkBucketFromUploadToken(uptoken)
+	if err != nil {
+		return
+	}
+	upHost, eErr := resumeUploader.UpHost(ak, bucket)
+	if err != nil {
+		err = eErr
+		return
+	}
 	//range get and mkblk upload
+	var bf *bytes.Buffer
+	var hasError bool
 	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
 		if blkIndex == totalBlkCnt-1 {
 			lastBlock = true
@@ -145,27 +245,36 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 
 		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
 		logs.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
-		blkCtx, pErr := rangeMkblkPipe(srcResUrl, totalSize, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
-		if pErr != nil {
+
+		var ok bool
+		var blkCtx storage.BlkputRet
+		for retryTimes := 0; retryTimes <= RETRY_MAX_TIMES; retryTimes++ {
+			bf, err = getRange(srcResUrl, totalSize, rangeStartOffset, BLOCK_SIZE, lastBlock)
+			if err == nil {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			err = errors.New("Max retry reached and range & mkblk still failed, check your network")
+			return
+		}
+		data := bf.Bytes()
+		for retryTimes := 1; retryTimes <= RETRY_MAX_TIMES; retryTimes++ {
+			pErr := resumeUploader.Mkblk(ctx, uptoken, upHost, &blkCtx, BLOCK_SIZE, bytes.NewReader(data), len(data))
+			if pErr == nil {
+				break
+			}
+			if !hasError {
+				hasError = true
+				err = pErr
+			}
 			logs.Error(pErr.Error())
 			time.Sleep(RETRY_INTERVAL)
 
-			for retryTimes := 1; retryTimes <= RETRY_MAX_TIMES; retryTimes++ {
-				logs.Info("Retrying %d time range & mkblk block [%d]", retryTimes, blkIndex)
-				blkCtx, pErr = rangeMkblkPipe(srcResUrl, totalSize, rangeStartOffset, BLOCK_SIZE, lastBlock, putClient)
-				if pErr != nil {
-					logs.Error(pErr)
-					//wait a interval and retry
-					time.Sleep(RETRY_INTERVAL)
-					continue
-				} else {
-					break
-				}
-			}
+			logs.Info("Retrying %d time range & mkblk block [%d]", retryTimes, blkIndex)
 		}
-
-		if pErr != nil {
-			err = errors.New("Max retry reached and range & mkblk still failed, check your network")
+		if hasError {
 			return
 		}
 
@@ -175,17 +284,17 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 		syncProgress.BlkCtxs = append(syncProgress.BlkCtxs, blkCtx)
 		syncProgress.Offset = rangeStartOffset
 
-		rErr := recordProgress(progressFile, syncProgress)
+		rErr := syncProgress.RecordProgress()
 		if rErr != nil {
 			logs.Info(rErr.Error())
 		}
 	}
 
 	//make file
-	putExtra := rio.PutExtra{
+	putExtra := storage.RputExtra{
 		Progresses: syncProgress.BlkCtxs,
 	}
-	mkErr := rio.Mkfile(putClient, nil, &putRet, key, true, totalSize, &putExtra)
+	mkErr := resumeUploader.Mkfile(ctx, uptoken, upHost, &putRet, key, true, totalSize, &putExtra)
 	if mkErr != nil {
 		err = fmt.Errorf("Mkfile error, %s", mkErr.Error())
 		return
@@ -197,8 +306,7 @@ func Sync(mac *digest.Mac, srcResUrl, bucket, key, upHostIp string) (putRet PutR
 	return
 }
 
-func rangeMkblkPipe(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int64, lastBlock bool,
-	putClient rpc.Client) (putRet rio.BlkputRet, err error) {
+func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int64, lastBlock bool) (data *bytes.Buffer, err error) {
 	//range get
 	dReq, dReqErr := http.NewRequest("GET", srcResUrl, nil)
 	if dReqErr != nil {
@@ -272,43 +380,7 @@ func rangeMkblkPipe(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSiz
 		return
 	}
 
-	//mkblk
-	blkPutRet := rio.BlkputRet{}
-	blockSize := int(rangeSize)
-	blockDataReader := bytes.NewReader(buffer.Bytes())
-	blockDataSize := buffer.Len()
-
-	mkErr := rio.Mkblock(putClient, nil, &blkPutRet, blockSize, blockDataReader, blockDataSize)
-	if mkErr != nil {
-		err = fmt.Errorf("Mkblk error, %s", mkErr.Error())
-		return
-	}
-
-	putRet = blkPutRet
-
-	return
-}
-
-func recordProgress(progressFile string, syncProgress SyncProgress) (err error) {
-	fh, openErr := os.Create(progressFile)
-	if openErr != nil {
-		err = fmt.Errorf("Open progress file %s error, %s", progressFile, openErr.Error())
-		return
-	}
-	defer fh.Close()
-
-	jsonBytes, mErr := json.Marshal(&syncProgress)
-	if mErr != nil {
-		err = fmt.Errorf("Marshal sync progress error, %s", mErr.Error())
-		return
-	}
-
-	_, wErr := fh.Write(jsonBytes)
-	if wErr != nil {
-		err = fmt.Errorf("Write sync progress error, %s", wErr.Error())
-	}
-
-	return
+	return buffer, nil
 }
 
 func getRemoteFileLength(srcResUrl string) (totalSize int64, err error) {
@@ -326,31 +398,6 @@ func getRemoteFileLength(srcResUrl string) (totalSize int64, err error) {
 	}
 
 	totalSize, _ = strconv.ParseInt(contentLength, 10, 64)
-
-	return
-}
-
-func checkExists(mac *digest.Mac, bucket, key string) (exists bool, err error) {
-	client := rs.NewMac(mac)
-	entry, sErr := client.Stat(nil, bucket, key)
-	if sErr != nil {
-		if v, ok := sErr.(*rpc.ErrorInfo); !ok {
-			err = fmt.Errorf("Check file exists error, %s", sErr.Error())
-			return
-		} else {
-			if v.Code != 612 {
-				err = fmt.Errorf("Check file exists error, %s", v.Err)
-				return
-			} else {
-				exists = false
-				return
-			}
-		}
-	}
-
-	if entry.Hash != "" {
-		exists = true
-	}
 
 	return
 }

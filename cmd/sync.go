@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
 	"github.com/tonycai653/iqshell/qshell"
 	"os"
 	"time"
 )
 
 var syncCmd = &cobra.Command{
-	Use:   "sync <SrcResUrl> <Bucket> <Key>",
+	Use:   "sync <SrcResUrl> <Bucket> [<Key>]",
 	Short: "Sync big file to qiniu bucket",
-	Args:  cobra.RangeArgs(3, 4),
+	Args:  cobra.RangeArgs(2, 3),
 	Run:   Sync,
 }
 
@@ -27,23 +26,23 @@ func init() {
 func Sync(cmd *cobra.Command, params []string) {
 	srcResUrl := params[0]
 	bucket := params[1]
-	key := params[2]
+	var key string
+	var kErr error
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		logs.Error(gErr)
-		os.Exit(qshell.STATUS_ERROR)
+	if len(params) == 3 {
+		key = params[2]
+	} else {
+		key, kErr = qshell.KeyFromUrl(srcResUrl)
+		if kErr != nil {
+			fmt.Fprintf(os.Stderr, "get path as key: %v\n", kErr)
+			os.Exit(qshell.STATUS_ERROR)
+		}
 	}
 
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	qshell.SetUpHost(&mac, bucket, upHostIp)
-
+	bm := qshell.GetBucketManager()
 	//sync
 	tStart := time.Now()
-	syncRet, sErr := qshell.Sync(&mac, srcResUrl, bucket, key, qshell.UpHost())
+	syncRet, sErr := bm.Sync(srcResUrl, bucket, key)
 	if sErr != nil {
 		logs.Error(sErr)
 		os.Exit(qshell.STATUS_ERROR)

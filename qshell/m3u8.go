@@ -5,77 +5,30 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/conf"
-	fio "github.com/tonycai653/iqshell/qiniu/api.v6/io"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
-	"github.com/tonycai653/iqshell/qiniu/rpc"
+	"github.com/qiniu/api.v7/storage"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
 
-type BucketDomain []string
-
-func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelete []rs.EntryPath, err error) {
-	client := rs.NewMac(mac)
-	//check m3u8 file exists
-	_, sErr := client.Stat(nil, bucket, m3u8Key)
-	if sErr != nil {
-		if v, ok := sErr.(*rpc.ErrorInfo); ok {
-			err = fmt.Errorf("stat m3u8 file error, %s", v.Err)
-		} else {
-			err = fmt.Errorf("stat m3u8 file error, %s", sErr)
-		}
+func (m *BucketManager) M3u8FileList(bucket string, m3u8Key string) (slicesToDelete []EntryPath, err error) {
+	dnLink, err := m.DownloadLink(bucket, m3u8Key)
+	if err != nil {
 		return
 	}
-	//get domain list of bucket
-	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", conf.API_HOST)
-	bucketDomainData := map[string][]string{
-		"tbl": []string{bucket},
-	}
-	bucketDomains := BucketDomain{}
-	bErr := client.Conn.CallWithForm(nil, &bucketDomains, bucketDomainUrl, bucketDomainData)
-	if bErr != nil {
-		err = fmt.Errorf("get domain of bucket failed, %s", bErr.Error())
+	dnLink, err = m.PrivateUrl(dnLink, time.Now().Add(time.Second*3600).Unix())
+	if err != nil {
 		return
 	}
-	if len(bucketDomains) == 0 {
-		err = errors.New("no domain found for the bucket")
-		return
-	}
-	var domain string
-	for _, d := range bucketDomains {
-		if strings.HasSuffix(d, "qiniudn.com") ||
-			strings.HasSuffix(d, "clouddn.com") ||
-			strings.HasSuffix(d, "qiniucdn.com") {
-			domain = d
-			break
-		}
-	}
-
-	//get first
-	if domain == "" {
-		domain = bucketDomains[0]
-	}
-
-	if domain == "" {
-		err = errors.New("no valid domain found for the bucket")
-		return
-	}
-	//create downoad link
-	dnLink := fmt.Sprintf("http://%s/%s", domain, m3u8Key)
-	dnLink, _ = PrivateUrl(mac, dnLink, time.Now().Add(time.Second*3600).Unix())
 	//get m3u8 file content
-	dnLink = strings.Replace(dnLink, fmt.Sprintf("http://%s", domain), conf.IO_HOST, -1)
 	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)
 	if reqErr != nil {
 		err = fmt.Errorf("new request for url %s error, %s", dnLink, reqErr)
 		return
 	}
-	m3u8Req.Host = domain
 	m3u8Resp, m3u8Err := http.DefaultClient.Do(m3u8Req)
 	if m3u8Err != nil {
 		err = fmt.Errorf("open url %s error, %s", dnLink, m3u8Err)
@@ -96,9 +49,8 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 		err = errors.New("invalid m3u8 file")
 		return
 	}
-	slicesToDelete = make([]rs.EntryPath, 0)
+	slicesToDelete = make([]EntryPath, 0)
 	bReader := bufio.NewScanner(bytes.NewReader(m3u8Bytes))
-	bReader.Split(bufio.ScanLines)
 	for bReader.Scan() {
 		line := strings.TrimSpace(bReader.Text())
 		if !strings.HasPrefix(line, "#") {
@@ -107,7 +59,7 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 				strings.HasPrefix(line, "https://") {
 				uri, pErr := url.Parse(line)
 				if pErr != nil {
-					fmt.Println("invalid url,", line)
+					fmt.Fprintln(os.Stderr, "invalid url,", line)
 					continue
 				}
 				sliceKey = strings.TrimPrefix(uri.Path, "/")
@@ -115,33 +67,21 @@ func M3u8FileList(mac *digest.Mac, bucket string, m3u8Key string) (slicesToDelet
 				sliceKey = strings.TrimPrefix(line, "/")
 			}
 			//append to delete list
-			slicesToDelete = append(slicesToDelete, rs.EntryPath{bucket, sliceKey})
+			slicesToDelete = append(slicesToDelete, EntryPath{bucket, sliceKey})
 		}
 	}
-	slicesToDelete = append(slicesToDelete, rs.EntryPath{bucket, m3u8Key})
+	slicesToDelete = append(slicesToDelete, EntryPath{bucket, m3u8Key})
 	return
 }
 
-//replace and upload
-func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain string) (err error) {
-	client := rs.NewMac(mac)
-	//check m3u8 file exists
-	_, sErr := client.Stat(nil, bucket, m3u8Key)
+func (m *BucketManager) DownloadLink(bucket, key string) (dnLink string, err error) {
+
+	_, sErr := m.Stat(bucket, key)
 	if sErr != nil {
-		if v, ok := sErr.(*rpc.ErrorInfo); ok {
-			err = fmt.Errorf("stat m3u8 file error, %s", v.Err)
-		} else {
-			err = fmt.Errorf("stat m3u8 file error, %s", sErr)
-		}
+		err = fmt.Errorf("stat m3u8 file error, %s", sErr)
 		return
 	}
-	//get domain list of bucket
-	bucketDomainUrl := fmt.Sprintf("%s/v6/domain/list", conf.API_HOST)
-	bucketDomainData := map[string][]string{
-		"tbl": []string{bucket},
-	}
-	bucketDomains := BucketDomain{}
-	bErr := client.Conn.CallWithForm(nil, &bucketDomains, bucketDomainUrl, bucketDomainData)
+	bucketDomains, bErr := m.DomainsOfBucket(bucket)
 	if bErr != nil {
 		err = fmt.Errorf("get domain of bucket failed, %s", bErr.Error())
 		return
@@ -159,27 +99,30 @@ func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain
 			break
 		}
 	}
-
 	//get first
 	if domain == "" {
 		domain = bucketDomains[0]
 	}
 
 	if domain == "" {
-		err = errors.New("no valid domain found for the bucket")
 		return
 	}
+	dnLink = fmt.Sprintf("http://%s/%s", domain, key)
+	return
+}
+
+//replace and upload
+func (m *BucketManager) M3u8ReplaceDomain(bucket string, m3u8Key string, newDomain string) (err error) {
+	dnLink, err := m.DownloadLink(bucket, m3u8Key)
+
 	//create downoad link
-	dnLink := fmt.Sprintf("http://%s/%s", domain, m3u8Key)
-	dnLink, _ = PrivateUrl(mac, dnLink, time.Now().Add(time.Second*3600).Unix())
+	dnLink, err = m.PrivateUrl(dnLink, time.Now().Add(time.Second*3600).Unix())
 	//get m3u8 file content
-	dnLink = strings.Replace(dnLink, fmt.Sprintf("http://%s", domain), conf.IO_HOST, -1)
 	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)
 	if reqErr != nil {
 		err = fmt.Errorf("new request for url %s error, %s", dnLink, reqErr)
 		return
 	}
-	m3u8Req.Host = domain
 	m3u8Resp, m3u8Err := http.DefaultClient.Do(m3u8Req)
 	if m3u8Err != nil {
 		err = fmt.Errorf("open url %s error, %s", dnLink, m3u8Err)
@@ -238,14 +181,15 @@ func M3u8ReplaceDomain(mac *digest.Mac, bucket string, m3u8Key string, newDomain
 	//join and upload
 	newM3u8Data := []byte(strings.Join(newM3u8Lines, "\n"))
 
-	putPolicy := rs.PutPolicy{
+	putPolicy := storage.PutPolicy{
 		Scope: fmt.Sprintf("%s:%s", bucket, m3u8Key),
 	}
-	upToken := putPolicy.Token(mac)
+	upToken := putPolicy.UploadToken(m.GetMac())
 
-	putClient := rpc.NewClient("")
-	putErr := fio.Put2(putClient, nil, nil, upToken, m3u8Key, bytes.NewReader(newM3u8Data),
-		int64(len(newM3u8Data)), nil)
+	uploader := storage.NewFormUploader(nil)
+	putRet := new(storage.PutRet)
+	putErr := uploader.Put(nil, putRet, upToken, m3u8Key, bytes.NewReader(newM3u8Data), int64(len(newM3u8Data)), nil)
+
 	if putErr != nil {
 		err = putErr
 		return

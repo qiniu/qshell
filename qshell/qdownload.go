@@ -7,11 +7,8 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/conf"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -115,17 +112,12 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
 
-	account, gErr := GetAccount()
-	if gErr != nil {
-		fmt.Println("Get account error,", gErr)
-		os.Exit(STATUS_ERROR)
-	}
-	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
+	bm := GetBucketManager()
 
 	var domainOfBucket string
 
 	//get domains of bucket
-	domainsOfBucket, gErr := GetDomainsOfBucket(&mac, downConfig.Bucket)
+	domainsOfBucket, gErr := bm.DomainsOfBucket(downConfig.Bucket)
 	if gErr != nil {
 		logs.Error("Get domains of bucket error,", gErr)
 		os.Exit(STATUS_ERROR)
@@ -144,7 +136,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	}
 
 	//set proxy
-	ioProxyAddress := conf.IO_HOST
+	ioProxyAddress := IoHost
 	//check whether cdn domain is set
 	if downConfig.CdnDomain != "" {
 		ioProxyAddress = downConfig.CdnDomain
@@ -178,7 +170,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 
 	//list bucket, prepare file list to download
 	logs.Info("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
-	listErr := ListBucket(&mac, downConfig.Bucket, downConfig.Prefix, "", jobListFileName)
+	listErr := bm.ListFiles(downConfig.Bucket, downConfig.Prefix, "", jobListFileName)
 	if listErr != nil {
 		logs.Error("List bucket error", listErr)
 		os.Exit(STATUS_ERROR)
@@ -262,7 +254,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 				continue
 			}
 
-			fileUrl := makePrivateDownloadLink(&mac, domainOfBucket, ioProxyAddress, fileKey)
+			fileUrl := bm.MakePrivateDownloadLink(domainOfBucket, ioProxyAddress, fileKey)
 
 			//progress
 			if totalFileCount != 0 {
@@ -388,19 +380,6 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	if failureFileCount > 0 {
 		os.Exit(STATUS_ERROR)
 	}
-}
-
-/*
-@param ioProxyHost - like http://iovip.qbox.me
-*/
-func makePrivateDownloadLink(mac *digest.Mac, domainOfBucket, ioProxyAddress, fileKey string) (fileUrl string) {
-	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
-	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
-	privateUrl, _ := PrivateUrl(mac, publicUrl, deadline)
-
-	//replace the io proxy host
-	fileUrl = strings.Replace(privateUrl, domainOfBucket, ioProxyAddress, -1)
-	return
 }
 
 //file key -> mtime

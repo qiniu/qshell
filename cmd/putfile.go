@@ -2,27 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/api.v7/storage"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
-	fio "github.com/tonycai653/iqshell/qiniu/api.v6/io"
-	rio "github.com/tonycai653/iqshell/qiniu/api.v6/resumable/io"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/rs"
-	"github.com/tonycai653/iqshell/qiniu/rpc"
 	"github.com/tonycai653/iqshell/qshell"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
-type PutRet struct {
-	Key      string `json:"key"`
-	Hash     string `json:"hash"`
-	MimeType string `json:"mimeType"`
-	Fsize    int64  `json:"fsize"`
-}
-
-var upSettings = rio.Settings{
+var upSettings = storage.Settings{
 	Workers:   16,
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  3,
@@ -66,31 +54,28 @@ func init() {
 	RootCmd.AddCommand(formPutCmd, RePutCmd)
 }
 
+type PutRet struct {
+	Key      string `json:"key"`
+	Hash     string `json:"hash"`
+	MimeType string `json:"mimeType"`
+	Fsize    int64  `json:"fsize"`
+}
+
 func FormPut(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 	localFile := params[2]
 
 	if fileType != 1 && fileType != 0 {
-		fmt.Println("Wrong Filetype, It should be 0 or 1 ")
+		fmt.Fprintln(os.Stderr, "Wrong Filetype, It should be 0 or 1")
 		os.Exit(qshell.STATUS_ERROR)
 	}
 	if strings.HasPrefix(upHost, "http://") || strings.HasPrefix(upHost, "https://") {
 		upHost = strings.TrimSuffix(upHost, "/")
 	}
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
-	//upload settings
-	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
-	qshell.SetUpHost(&mac, bucket, upHost)
-
 	//create uptoken
-	policy := rs.PutPolicy{}
+	policy := storage.PutPolicy{}
 	if pOverwrite {
 		policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
 	} else {
@@ -99,25 +84,30 @@ func FormPut(cmd *cobra.Command, params []string) {
 	policy.FileType = fileType
 	policy.Expires = 7 * 24 * 3600
 	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
-	putExtra := fio.PutExtra{}
+	putExtra := storage.PutExtra{}
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
 	}
-	putExtra.CheckCrc = 1
-
-	uptoken := policy.Token(&mac)
+	mac, err := qshell.GetMac()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Get Mac error: ", err)
+		os.Exit(qshell.STATUS_ERROR)
+	}
+	uptoken := policy.UploadToken(mac)
 
 	//start to upload
 	putRet := PutRet{}
 	startTime := time.Now()
 	fStat, statErr := os.Stat(localFile)
 	if statErr != nil {
-		fmt.Println("Local file error", statErr)
+		fmt.Fprintf(os.Stderr, "Local file error: %v\n", statErr)
 		os.Exit(qshell.STATUS_ERROR)
 	}
 	fsize := fStat.Size()
-	putClient := rpc.NewClient("")
 	fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
+
+	formUploader := storage.NewFormUploader(nil)
+
 	doneSignal := make(chan bool)
 	go func(ch chan bool) {
 		progressSigns := []string{"|", "/", "-", "\\", "|"}
@@ -135,17 +125,18 @@ func FormPut(cmd *cobra.Command, params []string) {
 		}
 	}(doneSignal)
 
-	err := fio.PutFile(putClient, nil, &putRet, uptoken, key, localFile, &putExtra)
+	err = formUploader.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
+
 	doneSignal <- true
 	fmt.Print("\rProgress: 100%")
 	os.Stdout.Sync()
 	fmt.Println()
 
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
-			fmt.Printf("Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
+		if v, ok := err.(*storage.ErrorInfo); ok {
+			fmt.Fprintf(os.Stderr, "Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
 		} else {
-			fmt.Println("Put file error,", err)
+			fmt.Fprintln(os.Stderr, "Put file error: %v\n", err)
 		}
 	} else {
 		fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "success!")
@@ -168,12 +159,6 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	key := params[1]
 	localFile := params[2]
 
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-
 	fStat, statErr := os.Stat(localFile)
 	if statErr != nil {
 		fmt.Println("Local file error", statErr)
@@ -181,15 +166,10 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	}
 	fsize := fStat.Size()
 
-	//upload settings
-	mac := digest.Mac{account.AccessKey, []byte(account.SecretKey)}
-	qshell.SetUpHost(&mac, bucket, upHost)
-
 	upSettings.Workers = workerCount
-	rio.SetSettings(&upSettings)
 
 	//create uptoken
-	policy := rs.PutPolicy{}
+	policy := storage.PutPolicy{}
 	if pOverwrite {
 		policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
 	} else {
@@ -199,31 +179,29 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	policy.Expires = 7 * 24 * 3600
 	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 
-	putExtra := rio.PutExtra{}
+	putExtra := storage.RputExtra{}
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
 	}
 
-	progressHandler := ProgressHandler{
-		rwLock:  &sync.RWMutex{},
-		fsize:   fsize,
-		offsets: make(map[int]int64, 0),
+	mac, err := qshell.GetMac()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Get Mac error: ", err)
+		os.Exit(qshell.STATUS_ERROR)
 	}
-
-	putExtra.Notify = progressHandler.Notify
-	putExtra.NotifyErr = progressHandler.NotifyErr
-	uptoken := policy.Token(&mac)
+	uptoken := policy.UploadToken(mac)
 
 	//start to upload
 	putRet := PutRet{}
 	startTime := time.Now()
 
-	putClient := rio.NewClient(uptoken, "")
 	fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
-	err := rio.PutFile(putClient, nil, &putRet, key, localFile, &putExtra)
+
+	resume_uploader := storage.NewResumeUploader(nil)
+	err = resume_uploader.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
 	fmt.Println()
 	if err != nil {
-		if v, ok := err.(*rpc.ErrorInfo); ok {
+		if v, ok := err.(*storage.ErrorInfo); ok {
 			fmt.Printf("Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
 		} else {
 			fmt.Println("Put file error,", err)
@@ -242,29 +220,4 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	if err != nil {
 		os.Exit(qshell.STATUS_ERROR)
 	}
-}
-
-type ProgressHandler struct {
-	rwLock  *sync.RWMutex
-	offsets map[int]int64
-	fsize   int64
-}
-
-func (this *ProgressHandler) Notify(blkIdx int, blkSize int, ret *rio.BlkputRet) {
-	this.rwLock.Lock()
-	defer this.rwLock.Unlock()
-
-	this.offsets[blkIdx] = int64(ret.Offset)
-	var uploaded int64
-	for _, offset := range this.offsets {
-		uploaded += offset
-	}
-
-	percent := fmt.Sprintf("\rProgress: %.2f%%", float64(uploaded)/float64(this.fsize)*100)
-	fmt.Print(percent)
-	os.Stdout.Sync()
-}
-
-func (this *ProgressHandler) NotifyErr(blkIdx int, blkSize int, err error) {
-
 }

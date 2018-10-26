@@ -3,7 +3,7 @@ package qshell
 import (
 	"bufio"
 	"fmt"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
+	"github.com/qiniu/api.v7/storage"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -19,6 +19,11 @@ var (
 	AccountDBPath  string
 
 	QShellConfigFiles [2]string
+	UpHost            = "upload.qiniup.com"
+	RsfHost           = storage.DefaultRsfHost
+	IoHost            = "iovip.qbox.me"
+	RsHost            = storage.DefaultRsHost
+	ApiHost           = storage.DefaultAPIHost
 )
 
 func init() {
@@ -30,8 +35,7 @@ func init() {
 	QShellRootPath = filepath.Join(curUser.HomeDir, ".qshell")
 	AccountFname = filepath.Join(QShellRootPath, "account.json")
 	AccountDBPath = filepath.Join(QShellRootPath, "account.db")
-	QShellConfigFiles = [2]string{filepath.Join(QShellRootPath, ".qshellrc"),
-		filepath.Join("/etc", "qshellrc")}
+	QShellConfigFiles = [2]string{filepath.Join("/etc/", "qshellrc"), filepath.Join(QShellRootPath, ".qshellrc")}
 }
 
 const (
@@ -47,52 +51,6 @@ const (
 	STATUS_HALT
 )
 
-const (
-	UpHostId = iota
-	ApiHostId
-	IoHostId
-	RsHostId
-	RsfHostId
-	BUCKET_RS_HOST_ID
-	BUCKET_API_HOST_ID
-)
-
-var hosts = map[int]string{
-	UpHostId:           "",
-	ApiHostId:          "",
-	IoHostId:           "",
-	RsHostId:           "",
-	RsfHostId:          "",
-	BUCKET_RS_HOST_ID:  "",
-	BUCKET_API_HOST_ID: "",
-}
-
-func UpHost() string {
-	return hosts[UpHostId]
-}
-
-func setHost(hostId int, mac *digest.Mac, bucket, host string) {
-	if host == "" {
-		if hosts[hostId] == "" {
-			//get bucket zone info
-			bucketInfo, gErr := GetBucketInfo(mac, bucket)
-			if gErr != nil {
-				fmt.Println("Get bucket region info error,", gErr)
-				os.Exit(STATUS_ERROR)
-			}
-
-			//set up host
-			SetZone(bucketInfo.Region)
-		}
-	} else {
-		hosts[hostId] = host
-	}
-}
-
-func SetUpHost(mac *digest.Mac, bucket, host string) {
-	setHost(UpHostId, mac, bucket, host)
-}
-
 func parseConfigFile(filePath string) (err error) {
 	hostFp, openErr := os.Open(filePath)
 	if openErr != nil {
@@ -107,41 +65,27 @@ func parseConfigFile(filePath string) (err error) {
 
 		switch varName {
 		case "UP_HOST":
-			if hosts[UpHostId] == "" {
-				hosts[UpHostId] = varValue
-			}
+			UpHost = varValue
 		case "RS_HOST":
-			if hosts[RsHostId] == "" {
-				hosts[RsHostId] = varValue
-			}
+			RsHost = varValue
 		case "RSF_HOST":
-			if hosts[RsfHostId] == "" {
-				hosts[RsfHostId] = varValue
-			}
+			RsfHost = varValue
 		case "IO_HOST":
-			if hosts[IoHostId] == "" {
-				hosts[IoHostId] = varValue
-			}
+			IoHost = varValue
 		case "API_HOST":
-			if hosts[ApiHostId] == "" {
-				hosts[ApiHostId] = varValue
-			}
-		case "BUCKET_RS_HOST":
-			if hosts[BUCKET_RS_HOST_ID] == "" {
-				hosts[BUCKET_RS_HOST_ID] = varValue
-			}
-		case "BUCKET_API_HOST":
-			if hosts[BUCKET_API_HOST_ID] == "" {
-				hosts[BUCKET_API_HOST_ID] = varValue
-			}
+			ApiHost = varValue
 		}
 	}
 	return
 }
 
-func readConfigFile() {
+func ReadConfigFile() error {
 
 	for _, filePath := range QShellConfigFiles {
-		parseConfigFile(filePath)
+		err := parseConfigFile(filePath)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }

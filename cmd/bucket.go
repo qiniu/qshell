@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qiniu/api.v6/auth/digest"
 	"github.com/tonycai653/iqshell/qshell"
 	"os"
 )
@@ -33,19 +32,12 @@ func init() {
 }
 
 func GetBuckets(cmd *cobra.Command, params []string) {
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	buckets, err := qshell.GetBuckets(&mac)
+
+	bm := qshell.GetBucketManager()
+	buckets, err := bm.Buckets(false)
 	if err != nil {
-		logs.Error("Get buckets error,", err)
-		os.Exit(qshell.STATUS_ERROR)
+		fmt.Fprintf(os.Stderr, "Get buckets error: %v\n", err)
+		os.Exit(1)
 	} else {
 		if len(buckets) == 0 {
 			fmt.Println("No buckets found")
@@ -59,16 +51,9 @@ func GetBuckets(cmd *cobra.Command, params []string) {
 
 func GetDomainsOfBucket(cmd *cobra.Command, params []string) {
 	bucket := params[0]
-	account, gErr := qshell.GetAccount()
-	if gErr != nil {
-		fmt.Println(gErr)
-		os.Exit(qshell.STATUS_ERROR)
-	}
-	mac := digest.Mac{
-		account.AccessKey,
-		[]byte(account.SecretKey),
-	}
-	domains, err := qshell.GetDomainsOfBucket(&mac, bucket)
+	bm := qshell.GetBucketManager()
+	domains, err := bm.DomainsOfBucket(bucket)
+
 	if err != nil {
 		logs.Error("Get domains error,", err)
 		os.Exit(qshell.STATUS_ERROR)
