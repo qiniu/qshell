@@ -220,6 +220,11 @@ func KeyFromUrl(uri string) (key string, err error) {
 		err = pErr
 		return
 	}
-	key = u.Path
+	for _, c := range u.Path {
+		if c != '/' {
+			break
+		}
+		key = u.Path[1:]
+	}
 	return
 }

@@ -209,6 +209,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key string) (putRet SputRet, err
 	syncProgress.CheckValid(totalSize, 0)
 
 	//get total block count
+	fmt.Println("totalSize: ", totalSize)
 	totalBlkCnt := storage.BlockCount(totalSize)
 
 	//init the range offset
@@ -237,6 +238,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key string) (putRet SputRet, err
 	}
 	//range get and mkblk upload
 	var bf *bytes.Buffer
+	var blockSize = BLOCK_SIZE
 	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
 		if blkIndex == totalBlkCnt-1 {
 			lastBlock = true
@@ -254,18 +256,27 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key string) (putRet SputRet, err
 				err = errors.New(strings.Join([]string{"Get range block data failed: ", rErr.Error()}, ""))
 				return
 			}
+			if rErr == nil {
+				break
+			}
 			logs.Error(rErr.Error())
 			time.Sleep(RETRY_INTERVAL)
 			logs.Info("Retrying %d time get range for block [%d]", retryTimes, blkIndex)
 			retryTimes++
 		}
 		data := bf.Bytes()
+		if lastBlock {
+			blockSize = len(data)
+		}
 		retryTimes = 0
 		for {
-			pErr := resumeUploader.Mkblk(ctx, uptoken, upHost, &blkCtx, BLOCK_SIZE, bytes.NewReader(data), len(data))
+			pErr := resumeUploader.Mkblk(ctx, uptoken, upHost, &blkCtx, blockSize, bytes.NewReader(data), len(data))
 			if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
 				err = pErr
 				return
+			}
+			if pErr == nil {
+				break
 			}
 			logs.Error(pErr.Error())
 			time.Sleep(RETRY_INTERVAL)

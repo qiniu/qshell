@@ -64,6 +64,12 @@ type BucketManager struct {
 	cfg    *storage.Config
 }
 
+type BucketDomainsRet []struct {
+	Domain string `json:"domain"`
+	Tbl    string `json:"tbl"`
+	Owner  int    `json:"owner"`
+}
+
 func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err error) {
 	ctx := context.WithValue(context.TODO(), "mac", m.mac)
 	var reqHost string
@@ -76,7 +82,14 @@ func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err er
 	reqHost = fmt.Sprintf("%s%s", scheme, storage.DefaultAPIHost)
 	reqURL := fmt.Sprintf("%s/v7/domain/list?tbl=%v", reqHost, bucket)
 	headers := http.Header{}
-	err = m.client.Call(ctx, &domains, "POST", reqURL, headers)
+	ret := new(BucketDomainsRet)
+	err = m.client.Call(ctx, ret, "POST", reqURL, headers)
+	if err != nil {
+		return
+	}
+	for _, d := range *ret {
+		domains = append(domains, d.Domain)
+	}
 	return
 
 }
@@ -148,7 +161,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 	if err != nil {
 		return
 	}
-	resp, err := storage.DefaultClient.DoRequest(ctx, "GET", data.URL, headers)
+	resp, err := storage.DefaultClient.DoRequest(context.Background(), "GET", data.URL, headers)
 	if err != nil {
 		return
 	}

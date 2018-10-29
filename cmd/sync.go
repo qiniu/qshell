@@ -10,7 +10,7 @@ import (
 )
 
 var syncCmd = &cobra.Command{
-	Use:   "sync <SrcResUrl> <Bucket> [<Key>]",
+	Use:   "sync <SrcResUrl> <Buckets[<Key>]",
 	Short: "Sync big file to qiniu bucket",
 	Args:  cobra.RangeArgs(2, 3),
 	Run:   Sync,

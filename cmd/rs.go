@@ -62,15 +62,15 @@ var (
 		Run:   Delete,
 	}
 	moveCmd = &cobra.Command{
-		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [<DestKey>]",
+		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Move/Rename a file and save in bucket",
-		Args:  cobra.RangeArgs(3, 4),
+		Args:  cobra.ExactArgs(3),
 		Run:   Move,
 	}
 	copyCmd = &cobra.Command{
-		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [<DestKey>]",
+		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Make a copy of a file and save in bucket",
-		Args:  cobra.RangeArgs(3, 4),
+		Args:  cobra.ExactArgs(3),
 		Run:   Copy,
 	}
 	chgmCmd = &cobra.Command{
@@ -93,9 +93,9 @@ var (
 		Run:   DeleteAfterDays,
 	}
 	fetchCmd = &cobra.Command{
-		Use:   "fetch <RemoteResourceUrl> <Bucket> [<Key>]",
+		Use:   "fetch <RemoteResourceUrl> <Bucket> [-k <Key>]",
 		Short: "Fetch a remote resource by url and save in bucket",
-		Args:  cobra.RangeArgs(2, 3),
+		Args:  cobra.ExactArgs(2),
 		Run:   Fetch,
 	}
 	mirrorCmd = &cobra.Command{
@@ -140,6 +140,7 @@ var (
 	startDate  string
 	endDate    string
 	maxRetry   int
+	finalKey   string
 )
 
 func init() {
@@ -158,7 +159,10 @@ func init() {
 	lsBucketCmd2.Flags().StringVarP(&endDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
 
 	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
+	moveCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
 	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
+	copyCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
+	fetchCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
 
 	RootCmd.AddCommand(qGetCmd, dirCacheCmd, lsBucketCmd, statCmd, delCmd, moveCmd,
 		copyCmd, chgmCmd, chtypeCmd, delafterCmd, fetchCmd, mirrorCmd,
@@ -286,13 +290,13 @@ func Move(cmd *cobra.Command, params []string) {
 	srcBucket := params[0]
 	srcKey := params[1]
 	destBucket := params[2]
-	destKey := srcKey
-	if len(params) == 4 {
-		destKey = params[3]
+
+	if finalKey == "" {
+		finalKey = srcKey
 	}
 
 	bm := qshell.GetBucketManager()
-	err := bm.Move(srcBucket, srcKey, destBucket, destKey, mOverwrite)
+	err := bm.Move(srcBucket, srcKey, destBucket, finalKey, mOverwrite)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Move error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
@@ -303,13 +307,12 @@ func Copy(cmd *cobra.Command, params []string) {
 	srcBucket := params[0]
 	srcKey := params[1]
 	destBucket := params[2]
-	destKey := srcKey
-	if len(params) == 4 {
-		destKey = params[3]
+	if finalKey == "" {
+		finalKey = srcKey
 	}
 
 	bm := qshell.GetBucketManager()
-	err := bm.Copy(srcBucket, srcKey, destBucket, destKey, cOverwrite)
+	err := bm.Copy(srcBucket, srcKey, destBucket, finalKey, cOverwrite)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Copy error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
@@ -370,13 +373,18 @@ func DeleteAfterDays(cmd *cobra.Command, params []string) {
 func Fetch(cmd *cobra.Command, params []string) {
 	remoteResUrl := params[0]
 	bucket := params[1]
-	key := ""
-	if len(params) == 3 {
-		key = params[2]
+
+	var err error
+	if finalKey == "" {
+		finalKey, err = qshell.KeyFromUrl(remoteResUrl)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "get key from url failed: %v\n", err)
+			os.Exit(qshell.STATUS_ERROR)
+		}
 	}
 
 	bm := qshell.GetBucketManager()
-	fetchResult, err := bm.Fetch(remoteResUrl, bucket, key)
+	fetchResult, err := bm.Fetch(remoteResUrl, bucket, finalKey)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fetch error: %v\n", err)
 		os.Exit(qshell.STATUS_ERROR)
