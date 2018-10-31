@@ -40,13 +40,14 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 		cacheResultFh = os.Stdout
 	} else {
 		//create result file
-		cacheResultFh, createErr := os.Create(cacheResultFile)
+		cResultFh, createErr := os.Create(cacheResultFile)
 		if createErr != nil {
 			retErr = createErr
 			logs.Error("Failed to open cache file `%s`, %s", cacheResultFile, createErr)
 			return
 		}
-		defer cacheResultFh.Close()
+		defer cResultFh.Close()
+		cacheResultFh = cResultFh
 	}
 
 	bWriter := bufio.NewWriter(cacheResultFh)
@@ -67,9 +68,7 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 		} else {
 			if fi.IsDir() {
 				logs.Debug("Walking through `%s`", path)
-			}
-
-			if !fi.IsDir() {
+			} else {
 				var relPath string
 				if cacheRootPath == "." {
 					relPath = path

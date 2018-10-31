@@ -94,14 +94,13 @@ func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err er
 
 }
 
-func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, ioProxyAddress, fileKey string) (fileUrl string) {
+func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string) (fileUrl string) {
 
 	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
 	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
 	privateUrl, _ := m.PrivateUrl(publicUrl, deadline)
 
-	//replace the io proxy host
-	fileUrl = strings.Replace(privateUrl, domainOfBucket, ioProxyAddress, -1)
+	fileUrl = privateUrl
 	return
 }
 

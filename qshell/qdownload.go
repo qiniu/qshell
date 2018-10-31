@@ -33,6 +33,7 @@ const (
 )
 
 type DownloadConfig struct {
+	KeyFile  string `json:"key_file"`
 	DestDir  string `json:"dest_dir"`
 	Bucket   string `json:"bucket"`
 	Prefix   string `json:"prefix,omitempty"`
@@ -58,6 +59,11 @@ func doDownload(tasks chan func()) {
 }
 
 func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
+	QShellRootPath := RootPath()
+	if QShellRootPath == "" {
+		fmt.Fprintf(os.Stderr, "empty root path\n")
+		os.Exit(1)
+	}
 	timeStart := time.Now()
 	//create job id
 	jobId := Md5Hex(fmt.Sprintf("%s:%s", downConfig.DestDir, downConfig.Bucket))
@@ -135,19 +141,14 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		}
 	}
 
-	//set proxy
-	ioProxyAddress := IoHost
 	//check whether cdn domain is set
 	if downConfig.CdnDomain != "" {
-		ioProxyAddress = downConfig.CdnDomain
+		domainOfBucket = downConfig.CdnDomain
 	}
 
 	//trim http and https prefix
-	ioProxyAddress = strings.TrimPrefix(ioProxyAddress, "http://")
-	ioProxyAddress = strings.TrimPrefix(ioProxyAddress, "https://")
-	if downConfig.CdnDomain != "" {
-		domainOfBucket = ioProxyAddress
-	}
+	domainOfBucket = strings.TrimPrefix(domainOfBucket, "http://")
+	domainOfBucket = strings.TrimPrefix(domainOfBucket, "https://")
 
 	if domainOfBucket == "" {
 		logs.Error("No domains found to download files")
@@ -167,13 +168,58 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	ldbWOpt := opt.WriteOptions{
 		Sync: true,
 	}
+	if downConfig.KeyFile != "" {
+		kFile, kErr := os.Open(downConfig.KeyFile)
+		if kErr != nil {
+			logs.Error("open KeyFile: %s: %v\n", downConfig.KeyFile, kErr)
+			os.Exit(STATUS_ERROR)
+		}
+		defer kFile.Close()
 
-	//list bucket, prepare file list to download
-	logs.Info("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
-	listErr := bm.ListFiles(downConfig.Bucket, downConfig.Prefix, "", jobListFileName)
-	if listErr != nil {
-		logs.Error("List bucket error", listErr)
-		os.Exit(STATUS_ERROR)
+		jobListFh, jErr := os.Create(jobListFileName)
+		if jErr != nil {
+			logs.Error("open jobListFileName: %s: %v\n", jobListFileName, kErr)
+			os.Exit(STATUS_ERROR)
+		}
+		defer jobListFh.Close()
+
+		entries := make([]EntryPath, 0)
+		scanner := bufio.NewScanner(kFile)
+		for scanner.Scan() {
+			line := scanner.Text()
+			line = strings.TrimSpace(line)
+			entry := EntryPath{
+				Bucket: downConfig.Bucket,
+				Key:    line,
+			}
+			entries = append(entries, entry)
+		}
+		batches := len(entries)/1000 + 1
+		for i := 0; i < batches; i++ {
+			ret, err := bm.BatchStat(entries)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Batch stat error: %v\n", err)
+				os.Exit(STATUS_ERROR)
+			}
+			if len(ret) > 0 {
+				for i, entry := range entries {
+					item := ret[i]
+					if item.Code != 200 || item.Data.Error != "" {
+						fmt.Fprintln(os.Stderr, entry.Key+"\t"+item.Data.Error)
+					} else {
+						fmt.Fprintf(jobListFh, "%s\t%d\t%s\t%d\t%s\t%d\n", entry.Key, item.Data.Fsize, item.Data.Hash, item.Data.PutTime, item.Data.MimeType, item.Data.Type)
+					}
+				}
+			}
+		}
+	} else {
+		//list bucket, prepare file list to download
+		logs.Info("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
+		listErr := bm.ListFiles(downConfig.Bucket, downConfig.Prefix, "", jobListFileName)
+		if listErr != nil {
+			logs.Error("List bucket error", listErr)
+			os.Exit(STATUS_ERROR)
+		}
 	}
 
 	//init wait group
@@ -254,7 +300,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 				continue
 			}
 
-			fileUrl := bm.MakePrivateDownloadLink(domainOfBucket, ioProxyAddress, fileKey)
+			fileUrl := bm.MakePrivateDownloadLink(domainOfBucket, fileKey)
 
 			//progress
 			if totalFileCount != 0 {
@@ -273,7 +319,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			var fromBytes int64
 
 			if statErr == nil {
-				//log file exists, check whether have updates
+				//local file exists, check whether have updates
 				oldFileInfo, notFoundErr := resumeLevelDb.Get([]byte(localFilePath), nil)
 				if notFoundErr == nil {
 					//if exists
@@ -335,7 +381,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 						downNewFile = true
 					}
 				} else {
-					//no log file exists, donwload a new log file
+					//no local file exists, donwload a new local file
 					downNewFile = true
 				}
 			}

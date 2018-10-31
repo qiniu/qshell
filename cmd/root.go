@@ -1,33 +1,26 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/api.v7/storage"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/spf13/viper"
+	"os"
+	"os/user"
 	"runtime"
 )
 
 var (
 	DebugFlag   bool
 	VersionFlag bool
+	cfgFile     string
 )
 
 var RootCmd = &cobra.Command{
 	Use:     "qshell",
 	Short:   "Qiniu commandline tool for managing your bucket and CDN",
 	Version: version,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		//set log level
-		if DebugFlag {
-			logs.SetLevel(logs.LevelDebug)
-		}
-		err := qshell.ReadConfigFile()
-		if err != nil {
-			return err
-		}
-		return nil
-	},
 }
 
 func init() {
@@ -35,6 +28,9 @@ func init() {
 
 	RootCmd.PersistentFlags().BoolVarP(&DebugFlag, "debug", "d", false, "debug mode")
 	RootCmd.PersistentFlags().BoolVarP(&VersionFlag, "version", "v", false, "show version")
+	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "C", "", "config file (default is $HOME/.qshell.json)")
+
+	viper.BindPFlag("config", RootCmd.PersistentFlags().Lookup("config"))
 }
 
 func initConfig() {
@@ -46,4 +42,17 @@ func initConfig() {
 	//parse command
 	logs.SetLevel(logs.LevelInformational)
 	logs.SetLogger(logs.AdapterConsole)
+
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		curUser, gErr := user.Current()
+		if gErr != nil {
+			fmt.Fprintf(os.Stderr, "get current user: %v\n", gErr)
+			os.Exit(1)
+		}
+		viper.AddConfigPath(curUser.HomeDir)
+		viper.SetConfigName(".qshell.json")
+	}
+	viper.ReadInConfig()
 }

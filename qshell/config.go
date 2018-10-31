@@ -1,29 +1,12 @@
 package qshell
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/qiniu/api.v7/storage"
+	"github.com/spf13/viper"
 	"os"
 	"os/user"
 	"path/filepath"
-	"strings"
-)
-
-// config files, priority high to low
-
-var (
-	//dir to store some cached files for qshell, like ak, sk
-	QShellRootPath string
-	AccountFname   string
-	AccountDBPath  string
-
-	QShellConfigFiles [2]string
-	UpHost            = "upload.qiniup.com"
-	RsfHost           = storage.DefaultRsfHost
-	IoHost            = "iovip.qbox.me"
-	RsHost            = storage.DefaultRsHost
-	ApiHost           = storage.DefaultAPIHost
 )
 
 func init() {
@@ -32,10 +15,48 @@ func init() {
 		fmt.Println("Error: get current user error,", gErr)
 		os.Exit(STATUS_HALT)
 	}
-	QShellRootPath = filepath.Join(curUser.HomeDir, ".qshell")
-	AccountFname = filepath.Join(QShellRootPath, "account.json")
-	AccountDBPath = filepath.Join(QShellRootPath, "account.db")
-	QShellConfigFiles = [2]string{filepath.Join("/etc/", "qshellrc"), filepath.Join(QShellRootPath, ".qshellrc")}
+	rootPath := filepath.Join(curUser.HomeDir, ".qshell")
+
+	viper.SetDefault("path.root_path", filepath.Join(curUser.HomeDir, ".qshell"))
+	viper.SetDefault("path.acc_db_path", filepath.Join(rootPath, "account.db"))
+	viper.SetDefault("path.acc_path", filepath.Join(rootPath, "account.json"))
+	viper.SetDefault("hosts.up_host", "upload.qiniup.com")
+	viper.SetDefault("hosts.rs_host", storage.DefaultRsHost)
+	viper.SetDefault("hosts.rsf_host", storage.DefaultRsfHost)
+	viper.SetDefault("hosts.io_host", "iovip.qbox.me")
+	viper.SetDefault("hosts.api_host", storage.DefaultAPIHost)
+}
+
+func RootPath() string {
+	return viper.GetString("path.root_path")
+}
+
+func AccDBPath() string {
+	return viper.GetString("path.acc_db_path")
+}
+
+func AccPath() string {
+	return viper.GetString("path.acc_path")
+}
+
+func UpHost() string {
+	return viper.GetString("hosts.up_host")
+}
+
+func RsHost() string {
+	return viper.GetString("hosts.rs_host")
+}
+
+func RsfHost() string {
+	return viper.GetString("hosts.rsf_host")
+}
+
+func IoHost() string {
+	return viper.GetString("hosts.io_host")
+}
+
+func ApiHost() string {
+	return viper.GetString("hosts.api_host")
 }
 
 const (
@@ -51,41 +72,8 @@ const (
 	STATUS_HALT
 )
 
-func parseConfigFile(filePath string) (err error) {
-	hostFp, openErr := os.Open(filePath)
-	if openErr != nil {
-		return
-	}
-	scanner := bufio.NewScanner(hostFp)
-	for scanner.Scan() {
-		line := scanner.Text()
-		splits := strings.SplitN(line, "=", 1)
-		varName := strings.ToUpper(strings.TrimSpace(splits[0]))
-		varValue := strings.ToLower(strings.TrimSpace(splits[1]))
-
-		switch varName {
-		case "UP_HOST":
-			UpHost = varValue
-		case "RS_HOST":
-			RsHost = varValue
-		case "RSF_HOST":
-			RsfHost = varValue
-		case "IO_HOST":
-			IoHost = varValue
-		case "API_HOST":
-			ApiHost = varValue
-		}
-	}
-	return
-}
-
-func ReadConfigFile() error {
-
-	for _, filePath := range QShellConfigFiles {
-		err := parseConfigFile(filePath)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+type FetchItem struct {
+	RemoteUrl string
+	Bucket    string
+	Key       string
 }

@@ -9,13 +9,14 @@ import (
 )
 
 var qUpload2Cmd = &cobra.Command{
-	Use:   "qupload2 [options]",
+	Use:   "qupload2",
 	Short: "Batch upload files to the qiniu bucket",
 	Run:   QiniuUpload2,
 }
 
 var (
-	uploadConfig   qshell.UploadConfig
+	// defined in qupload.go
+	// uploadConfig   qshell.UploadConfig
 	up2threadCount int64
 )
 
@@ -84,11 +85,10 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 		os.Exit(qshell.STATUS_HALT)
 	}
 
-	fileExporter := qshell.FileExporter{
-		SuccessFname:   successFname,
-		FailureFname:   failureFname,
-		OverwriteFname: overwriteFname,
+	fileExporter, fErr := qshell.NewFileExporter(successFname, failureFname, overwriteFname)
+	if fErr != nil {
+		logs.Error("initialize fileExporter: %v\n", fErr)
+		os.Exit(qshell.STATUS_HALT)
 	}
-
-	qshell.QiniuUpload(int(up2threadCount), &uploadConfig, &fileExporter)
+	qshell.QiniuUpload(int(up2threadCount), &uploadConfig, fileExporter)
 }

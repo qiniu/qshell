@@ -2,6 +2,7 @@ package qshell
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
@@ -286,63 +287,90 @@ func doUpload(tasks chan func()) {
 
 // FileExporter
 type FileExporter struct {
-	SuccessFname    string
-	SuccessLock     sync.RWMutex
-	SuccessWriter   *bufio.Writer
-	FailureFname    string
-	FailureLock     sync.RWMutex
-	FailureWriter   *bufio.Writer
-	OverwriteFname  string
-	OverwriteLock   sync.RWMutex
-	OverwriteWriter *bufio.Writer
+	SuccessFhandle   *os.File
+	SuccessLock      sync.RWMutex
+	SuccessWriter    *bufio.Writer
+	FailureFhandle   *os.File
+	FailureLock      sync.RWMutex
+	FailureWriter    *bufio.Writer
+	OverwriteFhandle *os.File
+	OverwriteLock    sync.RWMutex
+	OverwriteWriter  *bufio.Writer
 }
 
-func (ex *FileExporter) PrepareExWriter() {
+func NewFileExporter(successFname, failureFname, overwriteFname string) (ex *FileExporter, err error) {
+	ex = new(FileExporter)
 	//init file list writer
 	var (
 		successListFp   *os.File
 		failureListFp   *os.File
 		overwriteListFp *os.File
 		openErr         error
-
-		successListWriter   *bufio.Writer
-		failureListWriter   *bufio.Writer
-		overwriteListWriter *bufio.Writer
 	)
 
-	if ex.SuccessFname != "" {
-		successListFp, openErr = os.Create(ex.SuccessFname)
+	if successFname != "" {
+		successListFp, openErr = os.Create(successFname)
 		if openErr != nil {
-			logs.Error("Open success list file error, %s", openErr)
-		} else {
-			defer successListFp.Close()
-			successListWriter = bufio.NewWriter(successListFp)
-			ex.SuccessWriter = successListWriter
+			err = fmt.Errorf("open file: %s: %v\n", successFname, openErr)
+			return
 		}
+		ex.SuccessFhandle = successListFp
+		ex.SuccessWriter = bufio.NewWriter(successListFp)
 	}
 
-	if ex.FailureFname != "" {
-		failureListFp, openErr = os.Create(ex.FailureFname)
+	if failureFname != "" {
+		failureListFp, openErr = os.Create(failureFname)
 		if openErr != nil {
-			logs.Error("Open fail list file error, %s", openErr)
-		} else {
-			defer failureListFp.Close()
-			failureListWriter = bufio.NewWriter(failureListFp)
-			ex.FailureWriter = failureListWriter
+			err = fmt.Errorf("open file: %s: %v\n", failureFname, openErr)
+			return
 		}
+		ex.FailureFhandle = failureListFp
+		ex.FailureWriter = bufio.NewWriter(failureListFp)
 	}
 
-	if ex.OverwriteFname != "" {
-		overwriteListFp, openErr = os.Create(ex.OverwriteFname)
+	if overwriteFname != "" {
+		overwriteListFp, openErr = os.Create(overwriteFname)
 		if openErr != nil {
-			logs.Error("Open overwrite list file error, %s", openErr)
-		} else {
-			defer overwriteListFp.Close()
-			overwriteListWriter = bufio.NewWriter(overwriteListFp)
-			ex.OverwriteWriter = overwriteListWriter
+			err = fmt.Errorf("open file: %s: %v\n", overwriteFname, openErr)
+			return
 		}
+		ex.OverwriteFhandle = overwriteListFp
+		ex.OverwriteWriter = bufio.NewWriter(overwriteListFp)
 	}
+	return
+}
 
+func (ex *FileExporter) WriteToFailedWriter(localFilePath, uploadFileKey string, err error) {
+	if ex.FailureWriter != nil {
+		ex.FailureLock.Lock()
+		ex.FailureWriter.WriteString(fmt.Sprintf("%s\t%s\t%v\n", localFilePath, uploadFileKey, err))
+		ex.FailureWriter.Flush()
+		ex.FailureLock.Unlock()
+	}
+}
+
+func (ex *FileExporter) WriteToSuccessWriter(localFilePath, uploadFileKey string) {
+	if ex.SuccessWriter != nil {
+		ex.SuccessLock.Lock()
+		ex.SuccessWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		ex.SuccessWriter.Flush()
+		ex.SuccessLock.Unlock()
+	}
+}
+
+func (ex *FileExporter) WriteToOverwriter(localFilePath, uploadFileKey string) {
+	if ex.OverwriteWriter != nil {
+		ex.OverwriteLock.Lock()
+		ex.OverwriteWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		ex.OverwriteWriter.Flush()
+		ex.OverwriteLock.Unlock()
+	}
+}
+
+func (ex *FileExporter) Close() {
+	ex.SuccessFhandle.Close()
+	ex.FailureFhandle.Close()
+	ex.OverwriteFhandle.Close()
 }
 
 func (ex *FileExporter) FlushWriter() {
@@ -379,11 +407,14 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	timeStart := time.Now()
 	//create job id
 	jobId := uploadConfig.JobId()
+	QShellRootPath := RootPath()
+	if QShellRootPath == "" {
+		logs.Error("Empty root path")
+		os.Exit(STATUS_HALT)
+	}
 	storePath := filepath.Join(QShellRootPath, "qupload", jobId)
 
 	uploadConfig.PrepareLogger(storePath, jobId)
-
-	exporter.PrepareExWriter()
 
 	//chunk upload threshold
 	putThreshold := DEFAULT_PUT_THRESHOLD
@@ -547,6 +578,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 
 	upWaitGroup.Wait()
 	exporter.FlushWriter()
+	exporter.Close()
 
 	logs.Informational("-------------Upload Result--------------")
 	logs.Informational("%20s%10d", "Total:", totalFileCount)
@@ -738,16 +770,11 @@ func formUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.Wr
 	uploader := storage.NewFormUploader(nil)
 	putRet := storage.PutRet{}
 
-	err := uploader.PutFile(nil, &putRet, upToken, uploadFileKey, localFilePath, nil)
+	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, nil)
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
 		logs.Error("Form upload file `%s` => `%s` failed due to nerror `%v`", localFilePath, uploadFileKey, err)
-		if exporter.FailureWriter != nil {
-			exporter.FailureLock.Lock()
-			exporter.FailureWriter.WriteString(fmt.Sprintf("%s\t%s\t%v\n", localFilePath, uploadFileKey, err))
-			exporter.FailureWriter.Flush()
-			exporter.FailureLock.Unlock()
-		}
+		exporter.WriteToFailedWriter(localFilePath, uploadFileKey, err)
 	} else {
 		atomic.AddInt64(&successFileCount, 1)
 		logs.Informational("Upload file `%s` => `%s : %s` success", localFilePath, uploadConfig.Bucket, uploadFileKey)
@@ -765,17 +792,9 @@ func formUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.Wr
 			}
 		}
 
-		if exporter.SuccessWriter != nil {
-			exporter.SuccessLock.Lock()
-			exporter.SuccessWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
-			exporter.SuccessWriter.Flush()
-			exporter.SuccessLock.Unlock()
-		}
-		if uploadConfig.Overwrite && exporter.OverwriteWriter != nil {
-			exporter.OverwriteLock.Lock()
-			exporter.OverwriteWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
-			exporter.OverwriteWriter.Flush()
-			exporter.OverwriteLock.Unlock()
+		exporter.WriteToSuccessWriter(localFilePath, uploadFileKey)
+		if uploadConfig.Overwrite {
+			exporter.WriteToOverwriter(localFilePath, uploadFileKey)
 		}
 	}
 }
@@ -805,16 +824,11 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 	putExtra.Notify = notifyFunc
 
 	//resumable upload
-	err := uploader.PutFile(nil, &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
+	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
 		logs.Error("Resumable upload file `%s` => `%s` failed due to nerror `%v`", localFilePath, uploadFileKey, err)
-		if exporter.FailureWriter != nil {
-			exporter.FailureLock.Lock()
-			exporter.FailureWriter.WriteString(fmt.Sprintf("%s\t%s\t%v\n", localFilePath, uploadFileKey, err))
-			exporter.FailureWriter.Flush()
-			exporter.FailureLock.Unlock()
-		}
+		exporter.WriteToFailedWriter(localFilePath, uploadFileKey, err)
 	} else {
 		if progressFilePath != "" {
 			os.Remove(progressFilePath)
@@ -835,18 +849,9 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 				logs.Info("Delete `%s` on upload success done", localFilePath)
 			}
 		}
-
-		if exporter.SuccessWriter != nil {
-			exporter.SuccessLock.Lock()
-			exporter.SuccessWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
-			exporter.SuccessWriter.Flush()
-			exporter.SuccessLock.Unlock()
-		}
-		if uploadConfig.Overwrite && exporter.OverwriteWriter != nil {
-			exporter.OverwriteLock.Lock()
-			exporter.OverwriteWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
-			exporter.OverwriteWriter.Flush()
-			exporter.OverwriteLock.Unlock()
+		exporter.WriteToSuccessWriter(localFilePath, uploadFileKey)
+		if uploadConfig.Overwrite {
+			exporter.WriteToOverwriter(localFilePath, uploadFileKey)
 		}
 	}
 }

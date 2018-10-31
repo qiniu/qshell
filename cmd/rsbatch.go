@@ -34,6 +34,12 @@ var (
 )
 
 var (
+	batchFetchCmd = &cobra.Command{
+		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
+		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
+		Args:  cobra.ExactArgs(1),
+		Run:   BatchFetch,
+	}
 	batchStatCmd = &cobra.Command{
 		Use:   "batchstat <Bucket> [-i <KeyListFile>]",
 		Short: "Batch stat files in bucket",
@@ -99,6 +105,8 @@ var (
 )
 
 func init() {
+	batchFetchCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "urls list file")
+	batchFetchCmd.Flags().IntVarP(&worker, "worker", "c", 5, "worker count")
 	batchStatCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchCopyCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchMoveCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
@@ -133,7 +141,82 @@ func init() {
 	batchCopyCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 
 	RootCmd.AddCommand(batchStatCmd, batchDeleteCmd, batchChgmCmd, batchChtypeCmd, batchDelAfterCmd,
-		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd)
+		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd, batchFetchCmd)
+}
+
+func BatchFetch(cmd *cobra.Command, params []string) {
+	bucket := params[0]
+	var urlsListFile string
+
+	if inputFile == "" {
+		urlsListFile = "stdin"
+	} else {
+		urlsListFile = inputFile
+	}
+	var fp io.ReadCloser
+	var err error
+
+	if urlsListFile == "stdin" {
+		fp = os.Stdin
+	} else {
+		fp, err = os.Open(urlsListFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Open urls list file: %s : %v\n", urlsListFile, err)
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
+	}
+
+	scanner := bufio.NewScanner(fp)
+
+	var (
+		saveKey   string
+		remoteUrl string
+		pError    error
+		fItemChan chan *qshell.FetchItem = make(chan *qshell.FetchItem)
+	)
+	defer close(fItemChan)
+
+	go batchFetch(fItemChan)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		items := strings.Fields(line)
+		if len(items) <= 0 {
+			continue
+		}
+		remoteUrl = items[0]
+		if remoteUrl == "" {
+			continue
+		}
+		if len(items) <= 1 {
+			saveKey, pError = qshell.KeyFromUrl(remoteUrl)
+			if pError != nil {
+				fmt.Fprintf(os.Stderr, "parse %s: %v\n", remoteUrl, pError)
+				continue
+			}
+		} else {
+			saveKey = items[1]
+		}
+		item := qshell.FetchItem{
+			Bucket:    bucket,
+			Key:       saveKey,
+			RemoteUrl: remoteUrl,
+		}
+		fItemChan <- &item
+	}
+}
+
+func batchFetch(fItemChan chan *qshell.FetchItem) {
+	for i := 0; i < worker; i++ {
+		go func() {
+			bm := qshell.GetBucketManager()
+			for fetchItem := range fItemChan {
+				fetchResult, fErr := bm.Fetch(fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
+				fmt.Println(fetchResult, fErr)
+			}
+		}()
+	}
 }
 
 func BatchStat(cmd *cobra.Command, params []string) {

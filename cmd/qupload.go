@@ -2,17 +2,18 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
 	"github.com/tonycai653/iqshell/qshell"
 	"io/ioutil"
 	"os"
-	"strconv"
 )
 
 var qUploadCmd = &cobra.Command{
-	Use:   "qupload [<ThreadCount>] <LocalUploadConfig>",
+	Use:   "qupload <quploadConfigFile>",
 	Short: "Batch upload files to the qiniu bucket",
+	Args:  cobra.ExactArgs(1),
 	Run:   QiniuUpload,
 }
 
@@ -21,46 +22,50 @@ var (
 	failureFname   string
 	overwriteFname string
 	upthreadCount  int64
+	uploadConfig   qshell.UploadConfig
 )
 
 func init() {
-	qUploadCmd.Flags().StringVar(&successFname, "success-list", "", "upload success (all) file list")
-	qUploadCmd.Flags().StringVar(&failureFname, "failure-list", "", "upload failure file list")
-	qUploadCmd.Flags().StringVar(&overwriteFname, "overwrite-list", "", "upload success (overwrite) file list")
-	qUploadCmd.Flags().Int64Var(&upthreadCount, "c", 1, "upload success (overwrite) file list")
+	qUploadCmd.Flags().StringVarP(&successFname, "success-list", "s", "", "upload success (all) file list")
+	qUploadCmd.Flags().StringVarP(&failureFname, "failure-list", "f", "", "upload failure file list")
+	qUploadCmd.Flags().StringVarP(&overwriteFname, "overwrite-list", "w", "", "upload success (overwrite) file list")
+	qUploadCmd.Flags().Int64VarP(&upthreadCount, "worker", "c", 1, "worker count")
 	RootCmd.AddCommand(qUploadCmd)
 }
 
-func QiniuUpload(cmd *cobra.Command, params []string) {
-	var uploadConfigFile string
-	var err error
-	if len(params) == 2 {
-		upthreadCount, err = strconv.ParseInt(params[0], 10, 64)
-		if err != nil {
-			logs.Error("Invalid <ThreadCount> value,", params[0])
-			os.Exit(2)
-		}
-		uploadConfigFile = params[1]
-	} else {
-		uploadConfigFile = params[0]
-	}
-
+func parseUploadConfigFile(uploadConfigFile string, uploadConfig *qshell.UploadConfig) (err error) {
 	//read upload config
-	fp, err := os.Open(uploadConfigFile)
-	if err != nil {
-		logs.Error("Open upload config file `%s` error due to `%s`", uploadConfigFile, err)
-		os.Exit(qshell.STATUS_HALT)
+	if uploadConfigFile == "" {
+		err = fmt.Errorf("config filename is empty")
+		return
+	}
+	fp, oErr := os.Open(uploadConfigFile)
+	if oErr != nil {
+		err = fmt.Errorf("Open upload config file ``%s`: %v\n", uploadConfigFile, oErr)
+		return
 	}
 	defer fp.Close()
-	configData, err := ioutil.ReadAll(fp)
-	if err != nil {
-		logs.Error("Read upload config file `%s` error due to `%s`", uploadConfigFile, err)
-		os.Exit(qshell.STATUS_HALT)
+
+	configData, rErr := ioutil.ReadAll(fp)
+	if rErr != nil {
+		err = fmt.Errorf("Read upload config file `%s`: %v\n", uploadConfigFile, rErr)
+		return
 	}
-	var uploadConfig qshell.UploadConfig
-	err = json.Unmarshal(configData, &uploadConfig)
-	if err != nil {
-		logs.Error("Parse upload config file `%s` errror due to `%s`", uploadConfigFile, err)
+	uErr := json.Unmarshal(configData, uploadConfig)
+	if uErr != nil {
+		err = fmt.Errorf("Parse upload config file `%s`: %v\n", uploadConfigFile, uErr)
+		return
+	}
+	return
+}
+
+func QiniuUpload(cmd *cobra.Command, params []string) {
+
+	configFile := params[0]
+
+	pErr := parseUploadConfigFile(configFile, &uploadConfig)
+	if pErr != nil {
+		logs.Error(fmt.Sprintf("parse config file: %s: %v\n", configFile, pErr))
 		os.Exit(qshell.STATUS_HALT)
 	}
 
@@ -92,11 +97,10 @@ func QiniuUpload(cmd *cobra.Command, params []string) {
 		}
 	}
 
-	fileExporter := qshell.FileExporter{
-		SuccessFname:   successFname,
-		FailureFname:   failureFname,
-		OverwriteFname: overwriteFname,
+	fileExporter, fErr := qshell.NewFileExporter(successFname, failureFname, overwriteFname)
+	if fErr != nil {
+		logs.Error("initialize fileExporter: ", fErr)
+		os.Exit(qshell.STATUS_HALT)
 	}
-
-	qshell.QiniuUpload(int(upthreadCount), &uploadConfig, &fileExporter)
+	qshell.QiniuUpload(int(upthreadCount), &uploadConfig, fileExporter)
 }

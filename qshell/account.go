@@ -64,7 +64,11 @@ func (acc *Account) String() string {
 }
 
 func setdb(acc Account) (err error) {
-	db, err := sql.Open("sqlite3", AccountDBPath)
+	accDbPath := AccDBPath()
+	if accDbPath == "" {
+		return fmt.Errorf("empty account db path\n")
+	}
+	db, err := sql.Open("sqlite3", accDbPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return
@@ -118,11 +122,19 @@ func insertAcc(acc Account, db *sql.DB) (err error) {
 }
 
 func SetAccount2(accessKey, secretKey, name string) (err error) {
+	QShellRootPath := RootPath()
+	if QShellRootPath == "" {
+		return fmt.Errorf("empty root path\n")
+	}
 	if _, sErr := os.Stat(QShellRootPath); sErr != nil {
 		if mErr := os.MkdirAll(QShellRootPath, 0755); mErr != nil {
 			err = fmt.Errorf("Mkdir `%s` error, %s", QShellRootPath, mErr)
 			return
 		}
+	}
+	AccountFname := AccPath()
+	if AccountFname == "" {
+		return fmt.Errorf("empty account path\n")
 	}
 	accountFh, openErr := os.OpenFile(AccountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if openErr != nil {
@@ -162,6 +174,10 @@ func SetAccount2(accessKey, secretKey, name string) (err error) {
 }
 
 func SetAccount(accessKey, secretKey string) (err error) {
+	QShellRootPath := RootPath()
+	if QShellRootPath == "" {
+		return fmt.Errorf("empty root path\n")
+	}
 	if _, sErr := os.Stat(QShellRootPath); sErr != nil {
 		if mErr := os.MkdirAll(QShellRootPath, 0755); mErr != nil {
 			err = fmt.Errorf("Mkdir `%s` error, %s", QShellRootPath, mErr)
@@ -169,6 +185,10 @@ func SetAccount(accessKey, secretKey string) (err error) {
 		}
 	}
 
+	AccountFname := AccPath()
+	if AccountFname == "" {
+		return fmt.Errorf("empty account path\n")
+	}
 	accountFh, openErr := os.OpenFile(AccountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s", openErr)
@@ -205,6 +225,11 @@ func SetAccount(accessKey, secretKey string) (err error) {
 
 func GetAccount() (account Account, err error) {
 
+	AccountFname := AccPath()
+	if AccountFname == "" {
+		err = fmt.Errorf("empty account path\n")
+		return
+	}
 	accountFh, openErr := os.Open(AccountFname)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s, please use `account` to set AccessKey and SecretKey first", openErr)
@@ -255,6 +280,11 @@ func GetMac() (mac *qbox.Mac, err error) {
 }
 
 func ChUser(uid int) (err error) {
+	AccountDBPath := AccDBPath()
+	if AccountDBPath == "" {
+		err = fmt.Errorf("empty account db path\n")
+		return
+	}
 	db, err := sql.Open("sqlite3", AccountDBPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
@@ -287,6 +317,11 @@ func ChUser(uid int) (err error) {
 }
 
 func ListUser() (err error) {
+	AccountDBPath := AccDBPath()
+	if AccountDBPath == "" {
+		err = fmt.Errorf("empty account db path\n")
+		return
+	}
 	db, err := sql.Open("sqlite3", AccountDBPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
@@ -316,11 +351,20 @@ func ListUser() (err error) {
 }
 
 func CleanUser() (err error) {
+	QShellRootPath := RootPath()
+	if QShellRootPath == "" {
+		return fmt.Errorf("empty root path\n")
+	}
 	err = os.RemoveAll(QShellRootPath)
 	return
 }
 
 func RmUser(uid int) (err error) {
+	AccountDBPath := AccDBPath()
+	if AccountDBPath == "" {
+		err = fmt.Errorf("empty account db path\n")
+		return
+	}
 	db, err := sql.Open("sqlite3", AccountDBPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
@@ -336,7 +380,12 @@ func RmUser(uid int) (err error) {
 	return st.Close()
 }
 
-func LookUp(userName string) error {
+func LookUp(userName string) (err error) {
+	AccountDBPath := AccDBPath()
+	if AccountDBPath == "" {
+		err = fmt.Errorf("empty account db path\n")
+		return
+	}
 	db, err := sql.Open("sqlite3", AccountDBPath)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)

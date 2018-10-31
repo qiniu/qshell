@@ -46,6 +46,11 @@ func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, er
 	syncId := Md5Hex(fmt.Sprintf("%s:%s:%s", srcResUrl, bucket, key))
 
 	//local storage path
+	QShellRootPath := RootPath()
+	if QShellRootPath == "" {
+		err = fmt.Errorf("empty root path\n")
+		return
+	}
 	storePath := filepath.Join(QShellRootPath, ".qshell", "sync")
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
 		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
