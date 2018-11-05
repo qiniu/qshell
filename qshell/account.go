@@ -1,13 +1,13 @@
 package qshell
 
 import (
-	"database/sql"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/qiniu/api.v7/auth/qbox"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -25,9 +25,59 @@ func (acc *Account) Mac() (mac *qbox.Mac) {
 	return
 }
 
-func (acc *Account) EncryptSecretKey() (string, error) {
-	aesKey := Md5Hex(acc.AccessKey)
-	encryptedSecretKeyBytes, encryptedErr := AesEncrypt([]byte(acc.SecretKey), []byte(aesKey[7:23]))
+func (acc *Account) Encrypt() (s string, err error) {
+	encryptedKey, eErr := EncryptSecretKey(acc.AccessKey, acc.SecretKey)
+	if eErr != nil {
+		err = eErr
+		return
+	}
+	s = strings.Join([]string{acc.Name, acc.AccessKey, encryptedKey}, ":")
+	return
+}
+
+func (acc *Account) Value() (v string, err error) {
+	encryptedKey, eErr := EncryptSecretKey(acc.AccessKey, acc.SecretKey)
+	if eErr != nil {
+		err = eErr
+		return
+	}
+	v = Encrypt(acc.AccessKey, encryptedKey, acc.Name)
+	return
+}
+
+func Encrypt(accessKey, encryptedKey, name string) string {
+	return strings.Join([]string{name, accessKey, encryptedKey}, ":")
+}
+
+func splits(joinStr string) []string {
+	return strings.Split(joinStr, ":")
+}
+
+func Decrypt(joinStr string) (acc Account, err error) {
+	ss := splits(joinStr)
+	name, accessKey, encryptedKey := ss[0], ss[1], ss[2]
+	if name == "" || accessKey == "" || encryptedKey == "" {
+		err = fmt.Errorf("name, accessKey and encryptedKey should not be empty")
+		return
+	}
+	secretKey, dErr := DecryptSecretKey(accessKey, encryptedKey)
+	if dErr != nil {
+		err = fmt.Errorf("DecryptSecretKey: %v", dErr)
+		return
+	}
+	acc.Name = name
+	acc.AccessKey = accessKey
+	acc.SecretKey = secretKey
+	return
+}
+
+func (acc *Account) String() string {
+	return fmt.Sprintf("Name: %s\nAccessKey: %s\nSecretKey: %s", acc.Name, acc.AccessKey, acc.SecretKey)
+}
+
+func EncryptSecretKey(accessKey, secretKey string) (string, error) {
+	aesKey := Md5Hex(accessKey)
+	encryptedSecretKeyBytes, encryptedErr := AesEncrypt([]byte(secretKey), []byte(aesKey[7:23]))
 	if encryptedErr != nil {
 		return "", encryptedErr
 	}
@@ -35,9 +85,9 @@ func (acc *Account) EncryptSecretKey() (string, error) {
 	return encryptedSecretKey, nil
 }
 
-func (acc *Account) DecryptSecretKey() (string, error) {
-	aesKey := Md5Hex(acc.AccessKey)
-	encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(acc.SecretKey)
+func DecryptSecretKey(accessKey, encryptedKey string) (string, error) {
+	aesKey := Md5Hex(accessKey)
+	encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(encryptedKey)
 	if decodeErr != nil {
 		return "", decodeErr
 	}
@@ -49,131 +99,52 @@ func (acc *Account) DecryptSecretKey() (string, error) {
 	return secretKey, nil
 }
 
-func (acc *Account) ToJson() (jsonStr string, err error) {
-	jsonData, mErr := json.Marshal(acc)
-	if mErr != nil {
-		err = fmt.Errorf("Marshal account data error, %s", mErr)
-		return
-	}
-	jsonStr = string(jsonData)
-	return
-}
-
-func (acc *Account) String() string {
-	return fmt.Sprintf("Name: %s\nAccessKey: %s\nSecretKey: %s", acc.Name, acc.AccessKey, acc.SecretKey)
-}
-
 func setdb(acc Account) (err error) {
 	accDbPath := AccDBPath()
 	if accDbPath == "" {
-		return fmt.Errorf("empty account db path\n")
+		return fmt.Errorf("empty account db path")
 	}
-	db, err := sql.Open("sqlite3", accDbPath)
-	if err != nil {
+	ldb, lErr := leveldb.OpenFile(accDbPath, nil)
+	if lErr != nil {
 		err = fmt.Errorf("open db: %v", err)
-		return
+		os.Exit(STATUS_HALT)
 	}
-	defer db.Close()
-	sqlTable := `
-	    create table if not exists user (
-            uid integer primary key autoincrement,
-            ak varchar(64),
-            sk varchar(64),
-	    name varchar(64)
-	)
-	`
-	st, err := db.Prepare(sqlTable)
-	if err != nil {
-		return
-	}
-	_, err = st.Exec()
-	if err != nil {
-		return
-	}
-	err = insertAcc(acc, db)
-	if err != nil {
-		return
-	}
-	return db.Close()
-}
+	defer ldb.Close()
 
-func insertAcc(acc Account, db *sql.DB) (err error) {
-	rows, err := db.Query("select * from user where ak=? and sk=?", acc.AccessKey, acc.SecretKey)
-	if err != nil {
-		return fmt.Errorf("select: %v\n", err)
+	ldbWOpt := opt.WriteOptions{
+		Sync: true,
 	}
-	var exists bool
-	for rows.Next() {
-		exists = true
+	ldbValue, mError := acc.Value()
+	if mError != nil {
+		err = fmt.Errorf("Account.Value: %v", mError)
+		return
 	}
-	rows.Close()
-	if !exists {
-		logs.Debug("insert user (%s, %s, %s)", acc.AccessKey, acc.SecretKey, acc.Name)
-		st, err := db.Prepare("insert into user (ak, sk, name) values (?,?,?)")
-		if err != nil {
-			return err
-		}
-		_, err = st.Exec(acc.AccessKey, acc.SecretKey, acc.Name)
-		if err != nil {
-			return err
-		}
+	putErr := ldb.Put([]byte(acc.Name), []byte(ldbValue), &ldbWOpt)
+	if putErr != nil {
+		err = fmt.Errorf("leveldb Put: %v", putErr)
+		return
 	}
 	return
 }
 
-func SetAccount2(accessKey, secretKey, name string) (err error) {
-	QShellRootPath := RootPath()
-	if QShellRootPath == "" {
-		return fmt.Errorf("empty root path\n")
+func SetAccount2(accessKey, secretKey, name, accPath, oldPath string) (err error) {
+	acc := Account{
+		Name:      name,
+		AccessKey: accessKey,
+		SecretKey: secretKey,
 	}
-	if _, sErr := os.Stat(QShellRootPath); sErr != nil {
-		if mErr := os.MkdirAll(QShellRootPath, 0755); mErr != nil {
-			err = fmt.Errorf("Mkdir `%s` error, %s", QShellRootPath, mErr)
-			return
-		}
-	}
-	AccountFname := AccPath()
-	if AccountFname == "" {
-		return fmt.Errorf("empty account path\n")
-	}
-	accountFh, openErr := os.OpenFile(AccountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
-	if openErr != nil {
-		err = fmt.Errorf("Open account file error, %s", openErr)
-		return
-	}
-	defer accountFh.Close()
-
-	//encrypt ak&sk
-	aesKey := Md5Hex(accessKey)
-	encryptedSecretKeyBytes, encryptedErr := AesEncrypt([]byte(secretKey), []byte(aesKey[7:23]))
-	if encryptedErr != nil {
-		return encryptedErr
-	}
-	encryptedSecretKey := base64.URLEncoding.EncodeToString(encryptedSecretKeyBytes)
-
-	//write to local dir
-	var account Account
-	account.AccessKey = accessKey
-	account.SecretKey = encryptedSecretKey
-	account.Name = name
-
-	jsonStr, mErr := account.ToJson()
-	if mErr != nil {
-		err = mErr
+	sErr := SetAccount(acc, accPath, oldPath)
+	if sErr != nil {
+		err = sErr
 		return
 	}
 
-	_, wErr := accountFh.WriteString(jsonStr)
-	if wErr != nil {
-		err = fmt.Errorf("Write account info error, %s", wErr)
-		return
-	}
-	err = setdb(account)
+	err = setdb(acc)
 
 	return
 }
 
-func SetAccount(accessKey, secretKey string) (err error) {
+func SetAccount(acc Account, accPath, oldPath string) (err error) {
 	QShellRootPath := RootPath()
 	if QShellRootPath == "" {
 		return fmt.Errorf("empty root path\n")
@@ -185,36 +156,40 @@ func SetAccount(accessKey, secretKey string) (err error) {
 		}
 	}
 
-	AccountFname := AccPath()
-	if AccountFname == "" {
-		return fmt.Errorf("empty account path\n")
-	}
-	accountFh, openErr := os.OpenFile(AccountFname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	accountFh, openErr := os.OpenFile(accPath, os.O_CREATE|os.O_RDWR, 0600)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s", openErr)
 		return
 	}
 	defer accountFh.Close()
 
-	//encrypt ak&sk
-	aesKey := Md5Hex(accessKey)
-	encryptedSecretKeyBytes, encryptedErr := AesEncrypt([]byte(secretKey), []byte(aesKey[7:23]))
-	if encryptedErr != nil {
-		return encryptedErr
+	oldAccountFh, openErr := os.OpenFile(oldPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	if openErr != nil {
+		err = fmt.Errorf("Open account file error, %s", openErr)
+		return
 	}
-	encryptedSecretKey := base64.URLEncoding.EncodeToString(encryptedSecretKeyBytes)
+	defer oldAccountFh.Close()
 
-	//write to local dir
-	var account Account
-	account.AccessKey = accessKey
-	account.SecretKey = encryptedSecretKey
-
-	jsonStr, mErr := account.ToJson()
+	_, cErr := io.Copy(oldAccountFh, accountFh)
+	if cErr != nil {
+		err = cErr
+		return
+	}
+	jsonStr, mErr := acc.Value()
 	if mErr != nil {
 		err = mErr
 		return
 	}
-
+	_, sErr := accountFh.Seek(0, io.SeekStart)
+	if sErr != nil {
+		err = sErr
+		return
+	}
+	tErr := accountFh.Truncate(0)
+	if tErr != nil {
+		err = tErr
+		return
+	}
 	_, wErr := accountFh.WriteString(jsonStr)
 	if wErr != nil {
 		err = fmt.Errorf("Write account info error, %s", wErr)
@@ -223,14 +198,9 @@ func SetAccount(accessKey, secretKey string) (err error) {
 	return
 }
 
-func GetAccount() (account Account, err error) {
+func getAccount(pt string) (account Account, err error) {
 
-	AccountFname := AccPath()
-	if AccountFname == "" {
-		err = fmt.Errorf("empty account path\n")
-		return
-	}
-	accountFh, openErr := os.Open(AccountFname)
+	accountFh, openErr := os.Open(pt)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s, please use `account` to set AccessKey and SecretKey first", openErr)
 		return
@@ -242,33 +212,33 @@ func GetAccount() (account Account, err error) {
 		err = fmt.Errorf("Read account file error, %s", readErr)
 		return
 	}
+	acc, dErr := Decrypt(string(accountBytes))
+	if dErr != nil {
+		err = fmt.Errorf("Decrypt account bytes: %v", dErr)
+		return
+	}
+	account = acc
+	return
+}
 
-	if umError := json.Unmarshal(accountBytes, &account); umError != nil {
-		err = fmt.Errorf("Parse account file error, %s", umError)
+func GetOldAccount() (account Account, err error) {
+	AccountFname := OldAccPath()
+	if AccountFname == "" {
+		err = fmt.Errorf("empty old account path\n")
 		return
 	}
 
-	// backwards compatible with old version of qshell, which encrypt ak/sk based on existing ak/sk
-	if len(account.SecretKey) == 40 {
-		setErr := SetAccount(account.AccessKey, account.SecretKey)
-		if setErr != nil {
-			return
-		}
-	} else {
-		aesKey := Md5Hex(account.AccessKey)
-		encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(account.SecretKey)
-		if decodeErr != nil {
-			err = decodeErr
-			return
-		}
-		secretKeyBytes, decryptErr := AesDecrypt([]byte(encryptedSecretKeyBytes), []byte(aesKey[7:23]))
-		if decryptErr != nil {
-			err = decryptErr
-			return
-		}
-		account.SecretKey = string(secretKeyBytes)
+	return getAccount(AccountFname)
+}
+
+func GetAccount() (account Account, err error) {
+	AccountFname := AccPath()
+	if AccountFname == "" {
+		err = fmt.Errorf("empty account path\n")
+		return
 	}
-	return
+
+	return getAccount(AccountFname)
 }
 
 func GetMac() (mac *qbox.Mac, err error) {
@@ -279,41 +249,72 @@ func GetMac() (mac *qbox.Mac, err error) {
 	return account.Mac(), nil
 }
 
-func ChUser(uid int) (err error) {
-	AccountDBPath := AccDBPath()
-	if AccountDBPath == "" {
-		err = fmt.Errorf("empty account db path\n")
-		return
-	}
-	db, err := sql.Open("sqlite3", AccountDBPath)
-	if err != nil {
-		err = fmt.Errorf("open db: %v", err)
-		return
-	}
-	defer db.Close()
+func ChUser(userName string) (err error) {
+	if userName != "" {
 
-	rows, err := db.Query("select ak, sk, name from user where uid=?", uid)
-	if err != nil {
-		return fmt.Errorf("select: %v\n", err)
+		AccountDBPath := AccDBPath()
+		if AccountDBPath == "" {
+			err = fmt.Errorf("empty account db path\n")
+			return
+		}
+		db, oErr := leveldb.OpenFile(AccountDBPath, nil)
+		if err != nil {
+			err = fmt.Errorf("open db: %v", oErr)
+			return
+		}
+		defer db.Close()
+
+		value, gErr := db.Get([]byte(userName), nil)
+		if gErr != nil {
+			err = gErr
+			return
+		}
+		user, dErr := Decrypt(string(value))
+		if dErr != nil {
+			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
+			return
+		}
+
+		pt := AccPath()
+		if pt == "" {
+			err = fmt.Errorf("empty account path")
+			return
+		}
+		oldPath := OldAccPath()
+		if oldPath == "" {
+			err = fmt.Errorf("empty account path")
+			return
+		}
+		return SetAccount(user, pt, oldPath)
+	} else {
+		oldPath := OldAccPath()
+		if oldPath == "" {
+			err = fmt.Errorf("empty account path")
+			return
+		}
+		pt := AccPath()
+		if pt == "" {
+			err = fmt.Errorf("empty account path")
+			return
+		}
+		rErr := os.Rename(oldPath, pt+".tmp")
+		if rErr != nil {
+			err = fmt.Errorf("rename file: %v", rErr)
+			return
+		}
+
+		rErr = os.Rename(pt, oldPath)
+		if rErr != nil {
+			err = fmt.Errorf("rename file: %v", rErr)
+			return
+		}
+		rErr = os.Rename(pt+".tmp", pt)
+		if rErr != nil {
+			err = fmt.Errorf("rename file: %v", rErr)
+			return
+		}
 	}
-	var user Account
-	var exists bool
-	for rows.Next() {
-		exists = true
-		rows.Scan(&user.AccessKey, &user.SecretKey, &user.Name)
-		break
-	}
-	rows.Close()
-	decrypted, err := user.DecryptSecretKey()
-	if err != nil {
-		return err
-	}
-	user.SecretKey = decrypted
-	if !exists {
-		fmt.Fprintf(os.Stderr, "account %s not exists\n", user.Name)
-		os.Exit(1)
-	}
-	return SetAccount2(user.AccessKey, user.SecretKey, user.Name)
+	return
 }
 
 func ListUser() (err error) {
@@ -322,32 +323,33 @@ func ListUser() (err error) {
 		err = fmt.Errorf("empty account db path\n")
 		return
 	}
-	db, err := sql.Open("sqlite3", AccountDBPath)
-	if err != nil {
+	db, gErr := leveldb.OpenFile(AccountDBPath, nil)
+	if gErr != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select uid, name, ak, sk from user")
-	if err != nil {
-		return fmt.Errorf("select: %v\n", err)
-	}
-	var uid int
-	var acc Account
-	for rows.Next() {
-		rows.Scan(&uid, &acc.Name, &acc.AccessKey, &acc.SecretKey)
-		fmt.Printf("UID: %d\n", uid)
-		fmt.Printf("Name: %s\n", acc.Name)
-		fmt.Printf("AccessKey: %s\n", acc.AccessKey)
-		secretKey, err := acc.DecryptSecretKey()
-		if err != nil {
-			return err
+	iter := db.NewIterator(nil, nil)
+	var (
+		name  string
+		value string
+	)
+	for iter.Next() {
+		name = string(iter.Key())
+		value = string(iter.Value())
+		acc, dErr := Decrypt(value)
+		if dErr != nil {
+			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
+			return
 		}
-		fmt.Printf("SecretKey: %s\n", secretKey)
+		fmt.Printf("Name: %s\n", name)
+		fmt.Printf("AccessKey: %s\n", acc.AccessKey)
+		fmt.Printf("SecretKey: %s\n", acc.SecretKey)
 		fmt.Println("")
 	}
-	return rows.Close()
+	iter.Release()
+	return
 }
 
 func CleanUser() (err error) {
@@ -359,25 +361,21 @@ func CleanUser() (err error) {
 	return
 }
 
-func RmUser(uid int) (err error) {
+func RmUser(userName string) (err error) {
 	AccountDBPath := AccDBPath()
 	if AccountDBPath == "" {
 		err = fmt.Errorf("empty account db path\n")
 		return
 	}
-	db, err := sql.Open("sqlite3", AccountDBPath)
+	db, err := leveldb.OpenFile(AccountDBPath, nil)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return
 	}
 	defer db.Close()
-	st, err := db.Prepare("delete from user where uid=?")
-	if err != nil {
-		return err
-	}
-	logs.Debug("Removing user: %d\n", uid)
-	st.Exec(uid)
-	return st.Close()
+	db.Delete([]byte(userName), nil)
+	logs.Debug("Removing user: %d\n", userName)
+	return
 }
 
 func LookUp(userName string) (err error) {
@@ -386,32 +384,30 @@ func LookUp(userName string) (err error) {
 		err = fmt.Errorf("empty account db path\n")
 		return
 	}
-	db, err := sql.Open("sqlite3", AccountDBPath)
+	db, err := leveldb.OpenFile(AccountDBPath, nil)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return err
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select uid, name, ak, sk from user")
-	if err != nil {
-		return fmt.Errorf("select: %v\n", err)
-	}
-	var uid int
-	var acc Account
-	for rows.Next() {
-		rows.Scan(&uid, &acc.Name, &acc.AccessKey, &acc.SecretKey)
-		if strings.Contains(acc.Name, userName) {
-			fmt.Printf("UID: %d\n", uid)
-			fmt.Printf("Name: %s\n", acc.Name)
-			fmt.Printf("AccessKey: %s\n", acc.AccessKey)
-			secretKey, err := acc.DecryptSecretKey()
-			if err != nil {
-				return err
-			}
-			fmt.Printf("SecretKey: %s\n", secretKey)
-			fmt.Println("")
+	iter := db.NewIterator(nil, nil)
+	var (
+		name  string
+		value string
+	)
+	for iter.Next() {
+		name = string(iter.Key())
+		value = string(iter.Value())
+		acc, dErr := Decrypt(value)
+		if dErr != nil {
+			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
+			return
+		}
+		if strings.Contains(name, userName) {
+			fmt.Println(acc.String())
 		}
 	}
-	return rows.Close()
+	iter.Release()
+	return
 }

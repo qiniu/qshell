@@ -67,7 +67,7 @@ type BucketManager struct {
 type BucketDomainsRet []struct {
 	Domain string `json:"domain"`
 	Tbl    string `json:"tbl"`
-	Owner  int    `json:"owner"`
+	Owner  string `json:"owner"`
 }
 
 func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err error) {
@@ -99,7 +99,6 @@ func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string) 
 	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
 	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
 	privateUrl, _ := m.PrivateUrl(publicUrl, deadline)
-
 	fileUrl = privateUrl
 	return
 }
@@ -160,7 +159,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 	if err != nil {
 		return
 	}
-	resp, err := storage.DefaultClient.DoRequest(context.Background(), "GET", data.URL, headers)
+	resp, err := storage.DefaultClient.DoRequest(ctx, "GET", data.URL, headers)
 	if err != nil {
 		return
 	}

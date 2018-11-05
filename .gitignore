@@ -11,15 +11,15 @@ bin
 # Architecture specific extensions/prefixes
 *.[568vq]
 [568vq].out
-
+report.xml
 *.cgo1.go
 *.cgo2.c
 _cgo_defun.c
 _cgo_gotypes.go
 _cgo_export.*
-
+.qshell
+qshell_
 _testmain.go
-
 *.exe
 *.test
 *.prof

@@ -39,6 +39,14 @@ func AccPath() string {
 	return viper.GetString("path.acc_path")
 }
 
+func OldAccPath() string {
+	acc_path := viper.GetString("path.acc_path")
+	if acc_path == "" {
+		return ""
+	}
+	return filepath.Join(filepath.Dir(acc_path), "old_"+filepath.Base(acc_path))
+}
+
 func UpHost() string {
 	return viper.GetString("hosts.up_host")
 }

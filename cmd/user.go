@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tonycai653/iqshell/qshell"
 	"os"
-	"strconv"
 )
 
 var userCmd = &cobra.Command{
@@ -14,9 +13,9 @@ var userCmd = &cobra.Command{
 }
 
 var userChCmd = &cobra.Command{
-	Use:   "cu <AccountName>",
+	Use:   "cu [<AccountName>]",
 	Short: "Change user to AccountName",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.RangeArgs(0, 1),
 	Run:   ChUser,
 }
 
@@ -30,7 +29,7 @@ var userCleanCmd = &cobra.Command{
 	Use:   "clean",
 	Short: "clean account db",
 	Long:  "Remove all users from inner dbs.",
-	Run:   ListUser,
+	Run:   CleanUser,
 }
 
 var userRmCmd = &cobra.Command{
@@ -53,13 +52,14 @@ func init() {
 }
 
 func ChUser(cmd *cobra.Command, params []string) {
-	uid, err := strconv.Atoi(params[0])
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "cannot convert %s to integer\n", params[0])
-		fmt.Fprintf(os.Stderr, "%s\n", cmd.Use)
-		os.Exit(1)
+	var err error
+	var userName string
+	if len(params) == 0 {
+		userName = ""
+	} else {
+		userName = params[0]
 	}
-	err = qshell.ChUser(uid)
+	err = qshell.ChUser(userName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "chuser: %v\n", err)
 		os.Exit(1)
@@ -83,16 +83,17 @@ func CleanUser(cmd *cobra.Command, params []string) {
 }
 
 func RmUser(cmd *cobra.Command, params []string) {
-	uid, err := strconv.Atoi(params[0])
+	userName := params[0]
+	err := qshell.RmUser(userName)
 	if err != nil {
-		fmt.Println("user id must be integer")
+		fmt.Fprintf(os.Stderr, "%s: %v\n", cmd, err)
 		os.Exit(1)
 	}
-	qshell.RmUser(uid)
 }
 
 func LookUp(cmd *cobra.Command, params []string) {
-	err := qshell.LookUp(params[0])
+	userName := params[0]
+	err := qshell.LookUp(userName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", cmd, err)
 		os.Exit(1)

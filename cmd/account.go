@@ -35,7 +35,9 @@ func Account(cmd *cobra.Command, params []string) {
 		accessKey := params[0]
 		secretKey := params[1]
 		name := params[2]
-		sErr := qshell.SetAccount2(accessKey, secretKey, name)
+
+		pt, oldPath := qshell.AccPath(), qshell.OldAccPath()
+		sErr := qshell.SetAccount2(accessKey, secretKey, name, pt, oldPath)
 		if sErr != nil {
 			fmt.Println(sErr)
 			os.Exit(qshell.STATUS_ERROR)
