@@ -317,7 +317,39 @@ func ChUser(userName string) (err error) {
 	return
 }
 
-func ListUser() (err error) {
+func GetUsers() (ret []*Account, err error) {
+
+	AccountDBPath := AccDBPath()
+	if AccountDBPath == "" {
+		err = fmt.Errorf("empty account db path\n")
+		return
+	}
+	db, gErr := leveldb.OpenFile(AccountDBPath, nil)
+	if gErr != nil {
+		err = fmt.Errorf("open db: %v", err)
+		return
+	}
+	defer db.Close()
+
+	iter := db.NewIterator(nil, nil)
+	defer iter.Release()
+
+	var (
+		value string
+	)
+	for iter.Next() {
+		value = string(iter.Value())
+		acc, dErr := Decrypt(value)
+		if dErr != nil {
+			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
+			return
+		}
+		ret = append(ret, &acc)
+	}
+	return
+}
+
+func ListUser(userLsName bool) (err error) {
 	AccountDBPath := AccDBPath()
 	if AccountDBPath == "" {
 		err = fmt.Errorf("empty account db path\n")
@@ -343,10 +375,14 @@ func ListUser() (err error) {
 			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
 			return
 		}
-		fmt.Printf("Name: %s\n", name)
-		fmt.Printf("AccessKey: %s\n", acc.AccessKey)
-		fmt.Printf("SecretKey: %s\n", acc.SecretKey)
-		fmt.Println("")
+		if userLsName {
+			fmt.Println(name)
+		} else {
+			fmt.Printf("Name: %s\n", name)
+			fmt.Printf("AccessKey: %s\n", acc.AccessKey)
+			fmt.Printf("SecretKey: %s\n", acc.SecretKey)
+			fmt.Println("")
+		}
 	}
 	iter.Release()
 	return

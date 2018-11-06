@@ -17,10 +17,42 @@ var (
 	cfgFile     string
 )
 
+const (
+	bash_completion_func = `__qshell_parse_get()
+{
+    local qshell_output out
+    if qshell_output=$(qshell user ls --name 2>/dev/null); then
+        out=($(echo "${qshell_output}"))
+        COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
+    fi
+}
+
+__qshell_get_resource()
+{
+    __qshell_parse_get
+    if [[ $? -eq 0 ]]; then
+        return 0
+    fi
+}
+
+__custom_func() {
+    case ${last_command} in
+        qshell_user_cu)
+            __qshell_get_resource
+            return
+            ;;
+        *)
+            ;;
+    esac
+}
+`
+)
+
 var RootCmd = &cobra.Command{
-	Use:     "qshell",
-	Short:   "Qiniu commandline tool for managing your bucket and CDN",
-	Version: version,
+	Use:                    "qshell",
+	Short:                  "Qiniu commandline tool for managing your bucket and CDN",
+	Version:                version,
+	BashCompletionFunction: bash_completion_func,
 }
 
 func init() {

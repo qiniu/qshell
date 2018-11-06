@@ -46,7 +46,12 @@ var userLookupCmd = &cobra.Command{
 	Run:   LookUp,
 }
 
+var (
+	userLsName bool
+)
+
 func init() {
+	userLsCmd.Flags().BoolVarP(&userLsName, "name", "n", false, "only list user names")
 	userCmd.AddCommand(userChCmd, userLsCmd, userCleanCmd, userRmCmd, userLookupCmd)
 	RootCmd.AddCommand(userCmd)
 }
@@ -67,7 +72,7 @@ func ChUser(cmd *cobra.Command, params []string) {
 }
 
 func ListUser(cmd *cobra.Command, params []string) {
-	err := qshell.ListUser()
+	err := qshell.ListUser(userLsName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "lsuser: %v\n", err)
 		os.Exit(1)
