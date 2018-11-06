@@ -17,28 +17,31 @@ const (
 	BATCH_CDN_PREFETCH_ALLOW_MAX     = 100
 )
 
+var (
+	prefetchFile string
+	isDir        bool
+)
+
 var cdnPreCmd = &cobra.Command{
-	Use:   "cdnprefetch [<UrlListFile>]",
+	Use:   "cdnprefetch [-i <UrlListFile>]",
 	Short: "Batch prefetch the urls in the url list file",
 	Long:  "Batch prefetch the urls in the url list file or from stdin if UrlListFile not specified",
-	Args:  cobra.RangeArgs(0, 1),
+	Args:  cobra.ExactArgs(0),
 	Run:   CdnPrefetch,
 }
 
 var cdnRefreshCmd = &cobra.Command{
-	Use:   "cdnrefresh [<UrlListFile>]",
+	Use:   "cdnrefresh [-i <UrlListFile>]",
 	Short: "Batch refresh the cdn cache by the url list file",
 	Long:  "Batch refresh the cdn cache by the url list file or from stdin if UrlListFile not specified",
-	Args:  cobra.RangeArgs(0, 1),
+	Args:  cobra.ExactArgs(0),
 	Run:   CdnRefresh,
 }
 
-var (
-	isDir bool
-)
-
 func init() {
 	cdnRefreshCmd.Flags().BoolVarP(&isDir, "dirs", "r", false, "refresh directory")
+	cdnRefreshCmd.Flags().StringVarP(&prefetchFile, "input-file", "i", "", "input file")
+	cdnPreCmd.Flags().StringVarP(&prefetchFile, "input-file", "i", "", "input file")
 
 	RootCmd.AddCommand(cdnPreCmd, cdnRefreshCmd)
 }
@@ -46,7 +49,7 @@ func init() {
 func CdnRefresh(cmd *cobra.Command, params []string) {
 	var urlListFile string
 
-	if len(params) == 1 {
+	if prefetchFile != "" {
 		urlListFile = params[0]
 	} else {
 		urlListFile = "stdin"
@@ -122,7 +125,7 @@ func cdnRefresh(cm *cdn.CdnManager, urls []string, dirs []string) {
 func CdnPrefetch(cmd *cobra.Command, params []string) {
 	var urlListFile string
 
-	if len(params) == 1 {
+	if prefetchFile != "" {
 		urlListFile = params[0]
 	} else {
 		urlListFile = "stdin"

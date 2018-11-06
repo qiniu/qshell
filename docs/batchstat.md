@@ -5,7 +5,7 @@
 # 格式
 
 ```
-qshell batchstat <Bucket> <KeyListFile>
+qshell batchstat <Bucket> <-i KeyListFile>
 ```
 
 # 鉴权
@@ -37,7 +37,7 @@ RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts
 - 使用如下命令进行批量查询
 
 ```
-$ qshell batchstat 7qiniu listFile
+$ qshell batchstat 7qiniu -i listFile
 ```
 
 - 输出 Key、Fsize、Hash、MimeType、PutTime 以`\t`分隔：
@@ -51,3 +51,6 @@ RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000004.ts 92308   FkYN
 RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts 92120   Fh4Fwhu3dMUGbd3jE5OmRtfVZLv4    video/mp2t  15003760423842522
 ```
 
+# 注意
+
+如果没有指定输入文件， 默认从标准输入读取内容

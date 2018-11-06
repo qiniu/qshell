@@ -6,12 +6,17 @@
 # 格式
 
 ```
-qshell batchchtype [-force] <Bucket> <KeyFileTypeMapFile>
+qshell batchchtype [--force] <Bucket> [-i <KeyFileTypeMapFile>]
 ```
 
 # 鉴权
 
 需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+
+# 帮助 
+```
+qshell batchchtype -h
+```
 
 # 参数
 
@@ -22,7 +27,7 @@ qshell batchchtype [-force] <Bucket> <KeyFileTypeMapFile>
 
 **force选项**
 
-该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`-force`选项。
+该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`--force`选项。
 
 # 示例
 
@@ -37,11 +42,15 @@ qshell batchchtype [-force] <Bucket> <KeyFileTypeMapFile>
 把这个内容保存到文件`tochangetype.txt`中，然后使用如下的命令将 tochangetype.txt中所有的文件进行存储类型改变。
 
 ```
-$ qshell batchchtype if-pbl tochangetype.txt
+$ qshell batchchtype if-pbl -i tochangetype.txt
 ```
 
 2.如果不希望上面的重命名过程出现验证码提示，可以使用 `-force` 选项：
 
 ```
-$ qshell batchchtype -force if-pbl tochangetype.txt
+$ qshell batchchtype --force if-pbl -i tochangetype.txt
 ```
+
+# 注意
+
+如果没有指定输入文件的话，默认会从标准输入读取同样格式的内容

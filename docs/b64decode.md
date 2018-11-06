@@ -5,14 +5,14 @@
 # 格式
 
 ```
-qshell b64decode [<UrlSafe>] <DataToDecode>
+qshell b64decode [-s|--safe] <DataToDecode>
 ```
 
 # 参数
 
 |参数名|描述|可选参数|
 |---------|-----------|----------|
-|UrlSafe|指定是否以URL安全Base64编码格式解码，默认为true。|Y|
+|-s |-s标志开启urlsafe的base64编码 |Y|
 |DataToDecode|待解码字符串|N|
 
 # 示例

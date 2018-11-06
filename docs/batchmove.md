@@ -3,14 +3,19 @@
 `batchmove`命令用来将一个空间中的文件批量移动到另一个空间，另外你可以在移动的过程中，给文件进行重命名。
 
 当然，如果所指定的源空间和目标空间相同的话，如果这个时候源文件和目标文件名相同，那么移动会失败（这个操作其实没有意义）。
-如果复制的目标空间中存在同名的文件，那么默认情况下针对该文件的移动操作也会失败，如果希望强制覆盖，可以指定`-overwrite`选项。
+如果复制的目标空间中存在同名的文件，那么默认情况下针对该文件的移动操作也会失败，如果希望强制覆盖，可以指定`--overwrite`选项。
 
 移动和复制的最大区别就是移动不保留原空间中的文件。
 
 # 格式
 
 ```
-qshell batchmove [-force] [-overwrite] <SrcBucket> <DestBucket> <SrcDestKeyMapFile>
+qshell batchmove [--force] [--overwrite] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
+```
+
+# 帮助
+```
+qshell batchmove -h
 ```
 
 # 鉴权
@@ -27,7 +32,7 @@ qshell batchmove [-force] [-overwrite] <SrcBucket> <DestBucket> <SrcDestKeyMapFi
 
 **force选项**
 
-该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`-force`选项。
+该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`--force`选项。
 
 **overwrite选项**
 
@@ -45,7 +50,7 @@ data/2015/02/01/pig.jpg
 然后使用如下命令就可以以和原来相同的文件名从`if-pbl`移动到`if-pri`了。
 
 ```
-$ qshell batchmove if-pbl if-pri tomove.txt
+$ qshell batchmove if-pbl if-pri -i tomove.txt
 ```
 
 
@@ -59,17 +64,20 @@ data/2015/02/01/pig.jpg
 从上面我们可以看到，你可以为你希望重命名的文件设置一个新的名字，不希望改变的就不用指定。
 
 ```
-$ qshell batchmove if-pbl if-pri tomove.txt
+$ qshell batchmove if-pbl if-pri -i tomove.txt
 ```
 
-3.如果不希望上面的移动过程出现验证码提示，可以使用 `-force` 选项：
+3.如果不希望上面的移动过程出现验证码提示，可以使用 `--force` 选项：
 
 ```
-$ qshell batchmove -force if-pbl if-pri tomove.txt
+$ qshell batchmove --force if-pbl if-pri -i tomove.txt
 ```
 
-4.如果目标空间存在同名的文件，可以使用`-overwrite`选项来强制覆盖：
+4.如果目标空间存在同名的文件，可以使用`--overwrite`选项来强制覆盖：
 
 ```
-$ qshell batchmove -force -overwrite if-pbl if-pri tomove.txt
+$ qshell batchmove --force --overwrite if-pbl if-pri -i tomove.txt
 ```
+
+# 注意
+如果没有指定输入文件的话， 会从标准输入读取内容

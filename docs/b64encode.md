@@ -5,14 +5,14 @@
 # 格式
 
 ```
-qshell b64encode [<UrlSafe>] <DataToEncode>
+qshell b64encode [-s|--s] <DataToEncode>
 ```
 
 # 参数
 
 |参数名|描述|可选参数|
 |---------|-----------|----------|
-|UrlSafe|指定是否以URL安全Base64编码格式编码，默认为true。|Y|
+|-s|该标志开启url safe的base64编码 |Y|
 |DataToEncode|待编码字符串|N|
 
 # 示例

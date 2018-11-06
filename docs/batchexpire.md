@@ -6,7 +6,12 @@
 # 格式
 
 ```
-qshell batchexpire [-force] <Bucket> <KeyDeleteAfterDaysMapFile>
+qshell batchexpire [--force] <Bucket> <-i KeyDeleteAfterDaysMapFile>
+```
+
+# 帮助 
+```
+qshell batchexpire -h
 ```
 
 # 鉴权
@@ -22,7 +27,7 @@ qshell batchexpire [-force] <Bucket> <KeyDeleteAfterDaysMapFile>
 
 **force选项**
 
-该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`-force`选项。
+该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`--force`选项。
 
 # 示例
 
@@ -37,11 +42,15 @@ qshell batchexpire [-force] <Bucket> <KeyDeleteAfterDaysMapFile>
 把这个内容保存到文件`toexpire.txt`中，然后使用如下的命令对`toexpire.txt`中的所有文件设置过期时间。
 
 ```
-$ qshell batchexpire if-pbl toexpire.txt
+$ qshell batchexpire if-pbl -i toexpire.txt
 ```
 
-2.如果不希望上面的重命名过程出现验证码提示，可以使用 `-force` 选项：
+2.如果不希望上面的重命名过程出现验证码提示，可以使用 `--force` 选项：
 
 ```
-$ qshell batchexpire -force if-pbl toexpire.txt
+$ qshell batchexpire --force if-pbl toexpire.txt
 ```
+
+# 注意
+
+如果没有指定输入文件的话， 会从标准输入读取内容

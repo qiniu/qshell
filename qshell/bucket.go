@@ -67,7 +67,7 @@ type BucketManager struct {
 type BucketDomainsRet []struct {
 	Domain string `json:"domain"`
 	Tbl    string `json:"tbl"`
-	Owner  string `json:"owner"`
+	Owner  int    `json:"owner"`
 }
 
 func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err error) {
@@ -159,7 +159,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 	if err != nil {
 		return
 	}
-	resp, err := storage.DefaultClient.DoRequest(ctx, "GET", data.URL, headers)
+	resp, err := storage.DefaultClient.DoRequest(context.Background(), "GET", data.URL, headers)
 	if err != nil {
 		return
 	}

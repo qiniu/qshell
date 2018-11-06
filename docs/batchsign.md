@@ -5,7 +5,7 @@
 # 格式
 
 ```
-qshell batchsign <UrlListFile> [<Deadline>]
+qshell batchsign <-i UrlListFile> [-e <Deadline>]
 ```
 
 # 鉴权
@@ -31,7 +31,7 @@ http://if-pri.qiniudn.com/camera.jpg?imageView2/0/w/100
 使用
 
 ```
-$ qshell batchsign tosign.txt
+$ qshell batchsign -i tosign.txt
 ```
 
 就能生成私有外链：
@@ -44,7 +44,10 @@ http://if-pri.qiniudn.com/camera.jpg?imageView2/0/w/100&e=1473840685&token=TQt-i
 或者指定外链的有效期时间戳：
 
 ```
-$ qshell batchsign tosign.txt 1473840685
+$ qshell batchsign -i tosign.txt -e 1473840685
 ```
 
 这个时间戳可以用`d2ts`命令来生成。
+
+# 注意
+如果没有指定输入文件，默认从标准输入读取内容

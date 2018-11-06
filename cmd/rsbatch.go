@@ -31,6 +31,7 @@ var (
 	overwriteFlag bool
 	worker        int
 	inputFile     string
+	deadline      int
 )
 
 var (
@@ -97,9 +98,9 @@ var (
 		Run:   BatchCopy,
 	}
 	batchSignCmd = &cobra.Command{
-		Use:   "batchsign <UrlListFile> [<Deadline>]",
+		Use:   "batchsign [-i <UrlListFile>] [-e <Deadline>]",
 		Short: "Batch create the private url from the public url list file",
-		Args:  cobra.RangeArgs(1, 2),
+		Args:  cobra.ExactArgs(0),
 		Run:   BatchSign,
 	}
 )
@@ -139,6 +140,9 @@ func init() {
 	batchCopyCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchCopyCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchCopyCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
+
+	batchSignCmd.Flags().IntVarP(&deadline, "deadline", "e", 3600, "deadline in seconds")
+	batchSignCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 
 	RootCmd.AddCommand(batchStatCmd, batchDeleteCmd, batchChgmCmd, batchChtypeCmd, batchDelAfterCmd,
 		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd, batchFetchCmd)
@@ -1150,34 +1154,35 @@ func batchCopy(entries []qshell.CopyEntryPath, bm *qshell.BucketManager) {
 }
 
 func BatchSign(cmd *cobra.Command, params []string) {
-	urlListFile := params[0]
-	var deadline int64
-	if len(params) == 2 {
-		if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
-			fmt.Fprintln(os.Stderr, "Invalid <Deadline>")
-			os.Exit(qshell.STATUS_HALT)
-		} else {
-			deadline = val
-		}
-	} else {
-		deadline = time.Now().Add(time.Second * 3600 * 24 * 365).Unix()
-	}
-
-	bm := qshell.GetBucketManager()
-	fp, openErr := os.Open(urlListFile)
-	if openErr != nil {
-		fmt.Fprintln(os.Stderr, "Open url list file error,", openErr)
+	if deadline <= 0 {
+		fmt.Fprintf(os.Stderr, "Invalid <Deadline>: deadline must be int and greater than 0\n")
 		os.Exit(qshell.STATUS_HALT)
 	}
-	defer fp.Close()
+	d := time.Now().Add(time.Second * time.Duration(deadline) * 24 * 365).Unix()
 
-	bReader := bufio.NewScanner(fp)
-	for bReader.Scan() {
-		urlToSign := strings.TrimSpace(bReader.Text())
+	var bReader io.Reader
+
+	bm := qshell.GetBucketManager()
+
+	if inputFile != "" {
+		fp, openErr := os.Open(inputFile)
+		if openErr != nil {
+			fmt.Fprintln(os.Stderr, "Open url list file error,", openErr)
+			os.Exit(qshell.STATUS_HALT)
+		}
+		defer fp.Close()
+		bReader = fp
+	} else {
+		bReader = os.Stdin
+	}
+
+	scanner := bufio.NewScanner(bReader)
+	for scanner.Scan() {
+		urlToSign := strings.TrimSpace(scanner.Text())
 		if urlToSign == "" {
 			continue
 		}
-		signedUrl, _ := bm.PrivateUrl(urlToSign, deadline)
+		signedUrl, _ := bm.PrivateUrl(urlToSign, d)
 		fmt.Println(signedUrl)
 	}
 }
