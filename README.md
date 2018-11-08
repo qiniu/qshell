@@ -23,12 +23,11 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |文件名|描述|
 |-----|-----|
-|qshell-linux-x86 |Linux 32位系统|
-|qshell-linux-x64|Linux 64位系统|
-|qshell-linux-arm|Linux ARM CPU|
-|qshell-windows-x86.exe|Windows 32位系统|
-|qshell-windows-x64.exe|Windows 64位系统|
-|qshell-darwin-x64|Mac 64位系统，主流的系统|
+|qshell_linux_x86 |Linux 32位系统|
+|qshell_linux_x64|Linux 64位系统|
+|qshell_windows_x86.exe|Windows 32位系统|
+|qshell_windows_x64.exe|Windows 64位系统|
+|qshell_darwin_x64|Mac 64位系统，主流的系统|
 
 **Linux和Mac平台**
 
@@ -63,7 +62,11 @@ export PATH=$PATH:/home/jemy/tools
 $ qshell account ak sk name
 ```
 
-其中name表示该账号的名称。
+其中name表示该账号的名称, 如果ak, sk, name首字母是"-", 需要使用如下的方式添加账号, 这样避免把该项识别成命令行选项:
+
+```
+$ qshell account -- ak sk name
+```
 
 可以连续使用qshell account 添加账号ak, sk, name信息，qshell会保存这些账号的信息， 可以使用qshell user命令列举账号信息，在各个账号之间切换, 删除账号等
 

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/qiniu/api.v7/storage"
 	"github.com/spf13/cobra"
@@ -125,7 +126,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 		}
 	}(doneSignal)
 
-	err = formUploader.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
+	err = formUploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
 
 	doneSignal <- true
 	fmt.Print("\rProgress: 100%")
@@ -198,7 +199,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
 
 	resume_uploader := storage.NewResumeUploader(nil)
-	err = resume_uploader.PutFile(nil, &putRet, uptoken, key, localFile, &putExtra)
+	err = resume_uploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
 	fmt.Println()
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {

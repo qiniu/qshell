@@ -63,7 +63,7 @@ type UploadInfo struct {
 }
 
 type UploadConfig struct {
-	FileEncoding string `json:""file_encoding"`
+	FileEncoding string `json:"file_encoding"`
 	//basic config
 	SrcDir string `json:"src_dir"`
 	Bucket string `json:"bucket"`
