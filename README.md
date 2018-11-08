@@ -72,7 +72,7 @@ $ qshell account ak sk name
 使用qshell user子命令可以用来管理记录的多账户信息。
 1. qshell user ls可以列举账户下所有的账户信息
 2. qshell user cu <userName>可以用来切换账户
-3. qshell user cu 不携带<userName>的话会切换到最近的上个账户；比如我在A账户做完操作后，使用qshell user cu <B>到了B 账户，那么使用qshell user cu可以切回到A账户.
+3. qshell user cu 不携带<userName>的话会切换到最近的上个账户；比如我在A账户做完操作后，使用qshell user cu B到了B 账户，那么使用qshell user cu可以切回到A账户.
 
 ## 开启命令的自动补全
 **linux上，使用bash**
@@ -95,7 +95,7 @@ $ source <(qshell completion bash)
 
 
 ```
-$ echo "source <(kubectl completion bash)" >> ~/.bashrc
+$ echo "source <(qshell completion bash)" >> ~/.bashrc
 ```
 
 **Mac上，使用zsh**
