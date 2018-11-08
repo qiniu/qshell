@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"os"
 )
 
@@ -29,7 +29,7 @@ func init() {
 
 func QiniuDownload(cmd *cobra.Command, params []string) {
 
-	var downloadConfig qshell.DownloadConfig
+	var downloadConfig iqshell.DownloadConfig
 
 	configFile := params[0]
 
@@ -53,18 +53,18 @@ func QiniuDownload(cmd *cobra.Command, params []string) {
 
 	if !destFileInfo.IsDir() {
 		logs.Error("Download dest dir should be a directory")
-		os.Exit(qshell.STATUS_HALT)
+		os.Exit(iqshell.STATUS_HALT)
 	}
 
-	if threadCount < qshell.MIN_DOWNLOAD_THREAD_COUNT || threadCount > qshell.MAX_DOWNLOAD_THREAD_COUNT {
+	if threadCount < iqshell.MIN_DOWNLOAD_THREAD_COUNT || threadCount > iqshell.MAX_DOWNLOAD_THREAD_COUNT {
 		logs.Info("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
-			qshell.MIN_DOWNLOAD_THREAD_COUNT, qshell.MAX_DOWNLOAD_THREAD_COUNT)
+			iqshell.MIN_DOWNLOAD_THREAD_COUNT, iqshell.MAX_DOWNLOAD_THREAD_COUNT)
 
-		if threadCount < qshell.MIN_DOWNLOAD_THREAD_COUNT {
-			threadCount = qshell.MIN_DOWNLOAD_THREAD_COUNT
-		} else if threadCount > qshell.MAX_DOWNLOAD_THREAD_COUNT {
-			threadCount = qshell.MAX_DOWNLOAD_THREAD_COUNT
+		if threadCount < iqshell.MIN_DOWNLOAD_THREAD_COUNT {
+			threadCount = iqshell.MIN_DOWNLOAD_THREAD_COUNT
+		} else if threadCount > iqshell.MAX_DOWNLOAD_THREAD_COUNT {
+			threadCount = iqshell.MAX_DOWNLOAD_THREAD_COUNT
 		}
 	}
-	qshell.QiniuDownload(int(threadCount), &downloadConfig)
+	iqshell.QiniuDownload(int(threadCount), &downloadConfig)
 }

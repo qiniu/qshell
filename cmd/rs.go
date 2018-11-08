@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/qiniu/api.v7/storage"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"os"
 	"strconv"
 	"strings"
@@ -178,9 +178,9 @@ func DirCache(cmd *cobra.Command, params []string) {
 	if cacheResultFile == "" {
 		cacheResultFile = "stdout"
 	}
-	_, retErr := qshell.DirCache(cacheRootPath, cacheResultFile)
+	_, retErr := iqshell.DirCache(cacheRootPath, cacheResultFile)
 	if retErr != nil {
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -225,20 +225,20 @@ func ListBucket2(cmd *cobra.Command, params []string) {
 			sf = append(sf, strings.TrimSpace(s))
 		}
 	}
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	retErr := bm.ListBucket2(bucket, prefix, listMarker, outFile, "", start, end, sf, maxRetry)
 	if retErr != nil {
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
 func ListBucket(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	retErr := bm.ListFiles(bucket, prefix, listMarker, outFile)
 	if retErr != nil {
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -252,11 +252,11 @@ func Get(cmd *cobra.Command, params []string) {
 		destFile = outFile
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	err := bm.Get(bucket, key, destFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Get error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -264,11 +264,11 @@ func Stat(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	fileInfo, err := bm.Stat(bucket, key)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Stat error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	} else {
 		printStat(bucket, key, fileInfo)
 	}
@@ -278,11 +278,11 @@ func Delete(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	err := bm.Delete(bucket, key)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Delete error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -295,11 +295,11 @@ func Move(cmd *cobra.Command, params []string) {
 		finalKey = srcKey
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	err := bm.Move(srcBucket, srcKey, destBucket, finalKey, mOverwrite)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Move error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -311,11 +311,11 @@ func Copy(cmd *cobra.Command, params []string) {
 		finalKey = srcKey
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	err := bm.Copy(srcBucket, srcKey, destBucket, finalKey, cOverwrite)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Copy error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -324,11 +324,11 @@ func Chgm(cmd *cobra.Command, params []string) {
 	key := params[1]
 	newMimeType := params[2]
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	err := bm.ChangeMime(bucket, key, newMimeType)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Change mimetype error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -339,15 +339,15 @@ func Chtype(cmd *cobra.Command, params []string) {
 	fileType, cErr := strconv.Atoi(fileTypeStr)
 	if cErr != nil || (fileType != 0 && fileType != 1) {
 		fmt.Println("Invalid file type:", fileTypeStr, ", fileType must be 0(standard) or 1(low frequency storage)")
-		os.Exit(qshell.STATUS_HALT)
+		os.Exit(iqshell.STATUS_HALT)
 		return
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	err := bm.ChangeType(bucket, key, fileType)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Change file type error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -358,15 +358,15 @@ func DeleteAfterDays(cmd *cobra.Command, params []string) {
 	expire, cErr := strconv.Atoi(expireStr)
 	if cErr != nil {
 		fmt.Fprintln(os.Stderr, "Invalid deleteAfterDays: ", expireStr)
-		os.Exit(qshell.STATUS_HALT)
+		os.Exit(iqshell.STATUS_HALT)
 		return
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	err := bm.DeleteAfterDays(bucket, key, expire)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Set file deleteAfterDays error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -376,18 +376,18 @@ func Fetch(cmd *cobra.Command, params []string) {
 
 	var err error
 	if finalKey == "" {
-		finalKey, err = qshell.KeyFromUrl(remoteResUrl)
+		finalKey, err = iqshell.KeyFromUrl(remoteResUrl)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "get key from url failed: %v\n", err)
-			os.Exit(qshell.STATUS_ERROR)
+			os.Exit(iqshell.STATUS_ERROR)
 		}
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	fetchResult, err := bm.Fetch(remoteResUrl, bucket, finalKey)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fetch error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	} else {
 		fmt.Println("Key:", fetchResult.Key)
 		fmt.Println("Hash:", fetchResult.Hash)
@@ -400,11 +400,11 @@ func Prefetch(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	err := bm.Prefetch(bucket, key)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Prefetch error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -413,11 +413,11 @@ func Saveas(cmd *cobra.Command, params []string) {
 	saveBucket := params[1]
 	saveKey := params[2]
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	url, err := bm.Saveas(publicUrl, saveBucket, saveKey)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Saveas error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	} else {
 		fmt.Println(url)
 	}
@@ -427,16 +427,16 @@ func M3u8Delete(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	m3u8Key := params[1]
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	m3u8FileList, err := bm.M3u8FileList(bucket, m3u8Key)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Get m3u8 file list error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 	entryCnt := len(m3u8FileList)
 	if entryCnt == 0 {
 		fmt.Fprintln(os.Stderr, "no m3u8 slices found")
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 	if entryCnt <= BATCH_ALLOW_MAX {
 		batchDelete(m3u8FileList, bm)
@@ -461,11 +461,11 @@ func M3u8Replace(cmd *cobra.Command, params []string) {
 		newDomain = strings.TrimRight(params[2], "/")
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	err := bm.M3u8ReplaceDomain(bucket, m3u8Key, newDomain)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "m3u8 replace domain error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -475,7 +475,7 @@ func PrivateUrl(cmd *cobra.Command, params []string) {
 	if len(params) == 2 {
 		if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
 			fmt.Fprintln(os.Stderr, "Invalid <Deadline>")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		} else {
 			deadline = val
 		}
@@ -483,7 +483,7 @@ func PrivateUrl(cmd *cobra.Command, params []string) {
 		deadline = time.Now().Add(time.Second * 3600).Unix()
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	url, _ := bm.PrivateUrl(publicUrl, deadline)
 	fmt.Println(url)
 }

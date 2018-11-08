@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"io/ioutil"
 	"os"
 )
@@ -22,7 +22,7 @@ var (
 	failureFname   string
 	overwriteFname string
 	upthreadCount  int64
-	uploadConfig   qshell.UploadConfig
+	uploadConfig   iqshell.UploadConfig
 )
 
 func init() {
@@ -33,7 +33,7 @@ func init() {
 	RootCmd.AddCommand(qUploadCmd)
 }
 
-func parseUploadConfigFile(uploadConfigFile string, uploadConfig *qshell.UploadConfig) (err error) {
+func parseUploadConfigFile(uploadConfigFile string, uploadConfig *iqshell.UploadConfig) (err error) {
 	//read upload config
 	if uploadConfigFile == "" {
 		err = fmt.Errorf("config filename is empty")
@@ -66,41 +66,41 @@ func QiniuUpload(cmd *cobra.Command, params []string) {
 	pErr := parseUploadConfigFile(configFile, &uploadConfig)
 	if pErr != nil {
 		logs.Error(fmt.Sprintf("parse config file: %s: %v\n", configFile, pErr))
-		os.Exit(qshell.STATUS_HALT)
+		os.Exit(iqshell.STATUS_HALT)
 	}
 
 	if uploadConfig.FileType != 1 && uploadConfig.FileType != 0 {
 		logs.Error("Wrong Filetype, It should be 0 or 1 ")
-		os.Exit(qshell.STATUS_HALT)
+		os.Exit(iqshell.STATUS_HALT)
 	}
 
 	srcFileInfo, err := os.Stat(uploadConfig.SrcDir)
 	if err != nil {
 		logs.Error("Upload config error for parameter `SrcDir`,", err)
-		os.Exit(qshell.STATUS_HALT)
+		os.Exit(iqshell.STATUS_HALT)
 	}
 
 	if !srcFileInfo.IsDir() {
 		logs.Error("Upload src dir should be a directory")
-		os.Exit(qshell.STATUS_HALT)
+		os.Exit(iqshell.STATUS_HALT)
 	}
 
 	//upload
-	if upthreadCount < qshell.MIN_UPLOAD_THREAD_COUNT || upthreadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
+	if upthreadCount < iqshell.MIN_UPLOAD_THREAD_COUNT || upthreadCount > iqshell.MAX_UPLOAD_THREAD_COUNT {
 		logs.Info("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
-			qshell.MIN_UPLOAD_THREAD_COUNT, qshell.MAX_UPLOAD_THREAD_COUNT)
+			iqshell.MIN_UPLOAD_THREAD_COUNT, iqshell.MAX_UPLOAD_THREAD_COUNT)
 
-		if upthreadCount < qshell.MIN_UPLOAD_THREAD_COUNT {
-			upthreadCount = qshell.MIN_UPLOAD_THREAD_COUNT
-		} else if upthreadCount > qshell.MAX_UPLOAD_THREAD_COUNT {
-			upthreadCount = qshell.MAX_UPLOAD_THREAD_COUNT
+		if upthreadCount < iqshell.MIN_UPLOAD_THREAD_COUNT {
+			upthreadCount = iqshell.MIN_UPLOAD_THREAD_COUNT
+		} else if upthreadCount > iqshell.MAX_UPLOAD_THREAD_COUNT {
+			upthreadCount = iqshell.MAX_UPLOAD_THREAD_COUNT
 		}
 	}
 
-	fileExporter, fErr := qshell.NewFileExporter(successFname, failureFname, overwriteFname)
+	fileExporter, fErr := iqshell.NewFileExporter(successFname, failureFname, overwriteFname)
 	if fErr != nil {
 		logs.Error("initialize fileExporter: ", fErr)
-		os.Exit(qshell.STATUS_HALT)
+		os.Exit(iqshell.STATUS_HALT)
 	}
-	qshell.QiniuUpload(int(upthreadCount), &uploadConfig, fileExporter)
+	iqshell.QiniuUpload(int(upthreadCount), &uploadConfig, fileExporter)
 }

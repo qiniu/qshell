@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"io"
 	"os"
 	"runtime"
@@ -166,7 +166,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(urlsListFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open urls list file: %s : %v\n", urlsListFile, err)
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -177,7 +177,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 		saveKey   string
 		remoteUrl string
 		pError    error
-		fItemChan chan *qshell.FetchItem = make(chan *qshell.FetchItem)
+		fItemChan chan *iqshell.FetchItem = make(chan *iqshell.FetchItem)
 	)
 	defer close(fItemChan)
 
@@ -194,7 +194,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 			continue
 		}
 		if len(items) <= 1 {
-			saveKey, pError = qshell.KeyFromUrl(remoteUrl)
+			saveKey, pError = iqshell.KeyFromUrl(remoteUrl)
 			if pError != nil {
 				fmt.Fprintf(os.Stderr, "parse %s: %v\n", remoteUrl, pError)
 				continue
@@ -202,7 +202,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 		} else {
 			saveKey = items[1]
 		}
-		item := qshell.FetchItem{
+		item := iqshell.FetchItem{
 			Bucket:    bucket,
 			Key:       saveKey,
 			RemoteUrl: remoteUrl,
@@ -211,10 +211,10 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 	}
 }
 
-func batchFetch(fItemChan chan *qshell.FetchItem) {
+func batchFetch(fItemChan chan *iqshell.FetchItem) {
 	for i := 0; i < worker; i++ {
 		go func() {
-			bm := qshell.GetBucketManager()
+			bm := iqshell.GetBucketManager()
 			for fetchItem := range fItemChan {
 				fetchResult, fErr := bm.Fetch(fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
 				fmt.Println(fetchResult, fErr)
@@ -243,21 +243,21 @@ func BatchStat(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyListFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open key list file: %s, error: %v\n", keyListFile, err)
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	scanner := bufio.NewScanner(fp)
-	entries := make([]qshell.EntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]iqshell.EntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Fields(line)
 		if len(items) > 0 {
 			key := items[0]
 			if key != "" {
-				entry := qshell.EntryPath{
+				entry := iqshell.EntryPath{
 					Bucket: bucket,
 					Key:    key,
 				}
@@ -268,7 +268,7 @@ func BatchStat(cmd *cobra.Command, params []string) {
 		if len(entries) == BATCH_ALLOW_MAX {
 			batchStat(entries, bm)
 			//reset slice
-			entries = make([]qshell.EntryPath, 0)
+			entries = make([]iqshell.EntryPath, 0)
 		}
 	}
 	//stat the last batch
@@ -277,7 +277,7 @@ func BatchStat(cmd *cobra.Command, params []string) {
 	}
 }
 
-func batchStat(entries []qshell.EntryPath, bm *qshell.BucketManager) {
+func batchStat(entries []iqshell.EntryPath, bm *iqshell.BucketManager) {
 	ret, err := bm.BatchStat(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch stat error: %v\n", err)
@@ -310,7 +310,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 	}
 
@@ -324,7 +324,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		keyListFile = inputFile
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 
 	var batchTasks chan func()
 	var initBatchOnce sync.Once
@@ -346,19 +346,19 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyListFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open key list file error", err)
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]qshell.EntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]iqshell.EntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Fields(line)
 		if len(items) > 0 {
 			key := items[0]
 			if key != "" {
-				entry := qshell.EntryPath{
+				entry := iqshell.EntryPath{
 					bucket, key,
 				}
 				entries = append(entries, entry)
@@ -366,7 +366,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		}
 		//check limit
 		if len(entries) == BATCH_ALLOW_MAX {
-			toDeleteEntries := make([]qshell.EntryPath, len(entries))
+			toDeleteEntries := make([]iqshell.EntryPath, len(entries))
 			copy(toDeleteEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -374,12 +374,12 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchDelete(toDeleteEntries, bm)
 			}
-			entries = make([]qshell.EntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]iqshell.EntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	//delete the last batch
 	if len(entries) > 0 {
-		toDeleteEntries := make([]qshell.EntryPath, len(entries))
+		toDeleteEntries := make([]iqshell.EntryPath, len(entries))
 		copy(toDeleteEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -392,7 +392,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchDelete(entries []qshell.EntryPath, bm *qshell.BucketManager) {
+func batchDelete(entries []iqshell.EntryPath, bm *iqshell.BucketManager) {
 	ret, err := bm.BatchDelete(entries)
 
 	if err != nil {
@@ -426,7 +426,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 	}
 
@@ -439,7 +439,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 		keyMimeMapFile = inputFile
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	var batchTasks chan func()
 	var initBatchOnce sync.Once
 
@@ -458,13 +458,13 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyMimeMapFile)
 		if err != nil {
 			fmt.Printf("Open key mime map file error: %v\n", err)
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
-	entries := make([]qshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]iqshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Fields(line)
@@ -472,8 +472,8 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 			key := items[0]
 			mimeType := items[1]
 			if key != "" && mimeType != "" {
-				entry := qshell.ChgmEntryPath{
-					EntryPath: qshell.EntryPath{
+				entry := iqshell.ChgmEntryPath{
+					EntryPath: iqshell.EntryPath{
 						Bucket: bucket,
 						Key:    key,
 					},
@@ -483,7 +483,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toChgmEntries := make([]qshell.ChgmEntryPath, len(entries))
+			toChgmEntries := make([]iqshell.ChgmEntryPath, len(entries))
 			copy(toChgmEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -491,11 +491,11 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchChgm(toChgmEntries, bm)
 			}
-			entries = make([]qshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]iqshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toChgmEntries := make([]qshell.ChgmEntryPath, len(entries))
+		toChgmEntries := make([]iqshell.ChgmEntryPath, len(entries))
 		copy(toChgmEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -508,7 +508,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchChgm(entries []qshell.ChgmEntryPath, bm *qshell.BucketManager) {
+func batchChgm(entries []iqshell.ChgmEntryPath, bm *iqshell.BucketManager) {
 	ret, err := bm.BatchChgm(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch chgm error: %v\n", err)
@@ -540,7 +540,7 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 	}
 
@@ -563,7 +563,7 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -573,17 +573,17 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyTypeMapFile)
 		if err != nil {
 			fmt.Printf("Open key file type map file error: %v\n", err)
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]qshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]iqshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
 
 	var key, line string
 	var fileType int
 	var items []string
-	var entry qshell.ChtypeEntryPath
+	var entry iqshell.ChtypeEntryPath
 
 	for scanner.Scan() {
 		line = scanner.Text()
@@ -596,8 +596,8 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 		}
 		key = items[0]
 		if key != "" {
-			entry = qshell.ChtypeEntryPath{
-				EntryPath: qshell.EntryPath{
+			entry = iqshell.ChtypeEntryPath{
+				EntryPath: iqshell.EntryPath{
 					Bucket: bucket,
 					Key:    key,
 				},
@@ -607,13 +607,13 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 		}
 	}
 
-	var errEntries []qshell.ChtypeEntryPath
+	var errEntries []iqshell.ChtypeEntryPath
 
 	var batches = len(entries)/BATCH_ALLOW_MAX + 1
 	var completed int
 
 	for i := 0; i < batches; i++ {
-		var batch []qshell.ChtypeEntryPath
+		var batch []iqshell.ChtypeEntryPath
 
 		if i == batches-1 {
 			batch = entries
@@ -644,7 +644,7 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 	}
 }
 
-func batchChtype(entries []qshell.ChtypeEntryPath, bm *qshell.BucketManager) (errEntries []qshell.ChtypeEntryPath) {
+func batchChtype(entries []iqshell.ChtypeEntryPath, bm *iqshell.BucketManager) (errEntries []iqshell.ChtypeEntryPath) {
 	ret, err := bm.BatchChtype(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch chtype error: %v\n", err)
@@ -676,7 +676,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 	}
 
@@ -700,7 +700,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -710,12 +710,12 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyExpireMapFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open key expire map file error")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]qshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]iqshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, "\t")
@@ -723,8 +723,8 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 			key := items[0]
 			days, _ := strconv.Atoi(items[1])
 			if key != "" {
-				entry := qshell.DeleteAfterDaysEntryPath{
-					EntryPath: qshell.EntryPath{
+				entry := iqshell.DeleteAfterDaysEntryPath{
+					EntryPath: iqshell.EntryPath{
 						Bucket: bucket,
 						Key:    key,
 					},
@@ -734,7 +734,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toExpireEntries := make([]qshell.DeleteAfterDaysEntryPath, len(entries))
+			toExpireEntries := make([]iqshell.DeleteAfterDaysEntryPath, len(entries))
 			copy(toExpireEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -742,11 +742,11 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchDeleteAfterDays(toExpireEntries, bm)
 			}
-			entries = make([]qshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]iqshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toExpireEntries := make([]qshell.DeleteAfterDaysEntryPath, len(entries))
+		toExpireEntries := make([]iqshell.DeleteAfterDaysEntryPath, len(entries))
 		copy(toExpireEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -759,7 +759,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchDeleteAfterDays(entries []qshell.DeleteAfterDaysEntryPath, bm *qshell.BucketManager) {
+func batchDeleteAfterDays(entries []iqshell.DeleteAfterDaysEntryPath, bm *iqshell.BucketManager) {
 	ret, err := bm.BatchDeleteAfterDays(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch expire error: %v\n", err)
@@ -791,7 +791,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 	}
 
@@ -815,7 +815,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -825,12 +825,12 @@ func BatchRename(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(oldNewKeyMapFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open old new key map file error")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]qshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]iqshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, "\t")
@@ -838,12 +838,12 @@ func BatchRename(cmd *cobra.Command, params []string) {
 			oldKey := items[0]
 			newKey := items[1]
 			if oldKey != "" && newKey != "" {
-				entry := qshell.RenameEntryPath{
-					SrcEntry: qshell.EntryPath{
+				entry := iqshell.RenameEntryPath{
+					SrcEntry: iqshell.EntryPath{
 						Bucket: bucket,
 						Key:    oldKey,
 					},
-					DstEntry: qshell.EntryPath{
+					DstEntry: iqshell.EntryPath{
 						Bucket: bucket,
 						Key:    newKey,
 					},
@@ -853,7 +853,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toRenameEntries := make([]qshell.RenameEntryPath, len(entries))
+			toRenameEntries := make([]iqshell.RenameEntryPath, len(entries))
 			copy(toRenameEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -861,11 +861,11 @@ func BatchRename(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchRename(toRenameEntries, bm)
 			}
-			entries = make([]qshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]iqshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toRenameEntries := make([]qshell.RenameEntryPath, len(entries))
+		toRenameEntries := make([]iqshell.RenameEntryPath, len(entries))
 		copy(toRenameEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -877,7 +877,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchRename(entries []qshell.RenameEntryPath, bm *qshell.BucketManager) {
+func batchRename(entries []iqshell.RenameEntryPath, bm *iqshell.BucketManager) {
 	ret, err := bm.BatchRename(entries)
 
 	if err != nil {
@@ -910,7 +910,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 	}
 
@@ -935,7 +935,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -945,12 +945,12 @@ func BatchMove(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open src dest key map file error")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]qshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]iqshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, "\t")
@@ -961,12 +961,12 @@ func BatchMove(cmd *cobra.Command, params []string) {
 				destKey = items[1]
 			}
 			if srcKey != "" && destKey != "" {
-				entry := qshell.MoveEntryPath{
-					SrcEntry: qshell.EntryPath{
+				entry := iqshell.MoveEntryPath{
+					SrcEntry: iqshell.EntryPath{
 						Bucket: srcBucket,
 						Key:    srcKey,
 					},
-					DstEntry: qshell.EntryPath{
+					DstEntry: iqshell.EntryPath{
 						Bucket: destBucket,
 						Key:    destKey,
 					},
@@ -976,7 +976,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toMoveEntries := make([]qshell.MoveEntryPath, len(entries))
+			toMoveEntries := make([]iqshell.MoveEntryPath, len(entries))
 			copy(toMoveEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -984,11 +984,11 @@ func BatchMove(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchMove(toMoveEntries, bm)
 			}
-			entries = make([]qshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]iqshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toMoveEntries := make([]qshell.MoveEntryPath, len(entries))
+		toMoveEntries := make([]iqshell.MoveEntryPath, len(entries))
 		copy(toMoveEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -1001,7 +1001,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchMove(entries []qshell.MoveEntryPath, bm *qshell.BucketManager) {
+func batchMove(entries []iqshell.MoveEntryPath, bm *iqshell.BucketManager) {
 	ret, err := bm.BatchMove(entries)
 
 	if err != nil {
@@ -1038,7 +1038,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Verification code is not valid")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 	}
 
@@ -1064,7 +1064,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -1074,13 +1074,13 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open src dest key map file error")
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
-	entries := make([]qshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]iqshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, "\t")
@@ -1091,12 +1091,12 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 				destKey = items[1]
 			}
 			if srcKey != "" && destKey != "" {
-				entry := qshell.CopyEntryPath{
-					SrcEntry: qshell.EntryPath{
+				entry := iqshell.CopyEntryPath{
+					SrcEntry: iqshell.EntryPath{
 						Bucket: srcBucket,
 						Key:    srcKey,
 					},
-					DstEntry: qshell.EntryPath{
+					DstEntry: iqshell.EntryPath{
 						Bucket: destBucket,
 						Key:    destKey,
 					},
@@ -1106,7 +1106,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toCopyEntries := make([]qshell.CopyEntryPath, len(entries))
+			toCopyEntries := make([]iqshell.CopyEntryPath, len(entries))
 			copy(toCopyEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -1114,11 +1114,11 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchCopy(toCopyEntries, bm)
 			}
-			entries = make([]qshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]iqshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toCopyEntries := make([]qshell.CopyEntryPath, len(entries))
+		toCopyEntries := make([]iqshell.CopyEntryPath, len(entries))
 		copy(toCopyEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -1131,7 +1131,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchCopy(entries []qshell.CopyEntryPath, bm *qshell.BucketManager) {
+func batchCopy(entries []iqshell.CopyEntryPath, bm *iqshell.BucketManager) {
 	ret, err := bm.BatchCopy(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch copy error: %v\n", err)
@@ -1156,19 +1156,19 @@ func batchCopy(entries []qshell.CopyEntryPath, bm *qshell.BucketManager) {
 func BatchSign(cmd *cobra.Command, params []string) {
 	if deadline <= 0 {
 		fmt.Fprintf(os.Stderr, "Invalid <Deadline>: deadline must be int and greater than 0\n")
-		os.Exit(qshell.STATUS_HALT)
+		os.Exit(iqshell.STATUS_HALT)
 	}
 	d := time.Now().Add(time.Second * time.Duration(deadline) * 24 * 365).Unix()
 
 	var bReader io.Reader
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 
 	if inputFile != "" {
 		fp, openErr := os.Open(inputFile)
 		if openErr != nil {
 			fmt.Fprintln(os.Stderr, "Open url list file error,", openErr)
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 		bReader = fp

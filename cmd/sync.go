@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"os"
 	"time"
 )
@@ -32,20 +32,20 @@ func Sync(cmd *cobra.Command, params []string) {
 	if len(params) == 3 {
 		key = params[2]
 	} else {
-		key, kErr = qshell.KeyFromUrl(srcResUrl)
+		key, kErr = iqshell.KeyFromUrl(srcResUrl)
 		if kErr != nil {
 			fmt.Fprintf(os.Stderr, "get path as key: %v\n", kErr)
-			os.Exit(qshell.STATUS_ERROR)
+			os.Exit(iqshell.STATUS_ERROR)
 		}
 	}
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	//sync
 	tStart := time.Now()
 	syncRet, sErr := bm.Sync(srcResUrl, bucket, key)
 	if sErr != nil {
 		logs.Error(sErr)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 
 	fmt.Printf("Sync %s => %s:%s Success, Duration: %s!\n", srcResUrl, bucket, key, time.Since(tStart))

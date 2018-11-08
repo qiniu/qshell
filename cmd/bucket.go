@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"os"
 )
 
@@ -33,7 +33,7 @@ func init() {
 
 func GetBuckets(cmd *cobra.Command, params []string) {
 
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	buckets, err := bm.Buckets(false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Get buckets error: %v\n", err)
@@ -51,12 +51,12 @@ func GetBuckets(cmd *cobra.Command, params []string) {
 
 func GetDomainsOfBucket(cmd *cobra.Command, params []string) {
 	bucket := params[0]
-	bm := qshell.GetBucketManager()
+	bm := iqshell.GetBucketManager()
 	domains, err := bm.DomainsOfBucket(bucket)
 
 	if err != nil {
 		logs.Error("Get domains error,", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	} else {
 		if len(domains) == 0 {
 			fmt.Printf("No domains found for bucket `%s`\n", bucket)

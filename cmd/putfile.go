@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/qiniu/api.v7/storage"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"os"
 	"strings"
 	"time"
@@ -68,7 +68,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 
 	if fileType != 1 && fileType != 0 {
 		fmt.Fprintln(os.Stderr, "Wrong Filetype, It should be 0 or 1")
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 	if strings.HasPrefix(upHost, "http://") || strings.HasPrefix(upHost, "https://") {
 		upHost = strings.TrimSuffix(upHost, "/")
@@ -88,10 +88,10 @@ func FormPut(cmd *cobra.Command, params []string) {
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
 	}
-	mac, err := qshell.GetMac()
+	mac, err := iqshell.GetMac()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Get Mac error: ", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 	uptoken := policy.UploadToken(mac)
 
@@ -101,7 +101,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 	fStat, statErr := os.Stat(localFile)
 	if statErr != nil {
 		fmt.Fprintf(os.Stderr, "Local file error: %v\n", statErr)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 	fsize := fStat.Size()
 	fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
@@ -150,7 +150,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 	fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
 
 	if err != nil {
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }
 
@@ -162,7 +162,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	fStat, statErr := os.Stat(localFile)
 	if statErr != nil {
 		fmt.Println("Local file error", statErr)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 	fsize := fStat.Size()
 
@@ -184,10 +184,10 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 		putExtra.MimeType = mimeType
 	}
 
-	mac, err := qshell.GetMac()
+	mac, err := iqshell.GetMac()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Get Mac error: ", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 	uptoken := policy.UploadToken(mac)
 
@@ -218,6 +218,6 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
 
 	if err != nil {
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 }

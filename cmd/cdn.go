@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/api.v7/cdn"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"io"
 	"os"
 	"strings"
@@ -64,11 +64,11 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(urlListFile)
 		if err != nil {
 			fmt.Println("Open refresh item list file error,", err)
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
-	cm := qshell.GetCdnManager()
+	cm := iqshell.GetCdnManager()
 	scanner := bufio.NewScanner(fp)
 
 	itemsToRefresh := make([]string, 0, 100)
@@ -140,11 +140,11 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(urlListFile)
 		if err != nil {
 			fmt.Println("Open url list file error,", err)
-			os.Exit(qshell.STATUS_HALT)
+			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
-	cm := qshell.GetCdnManager()
+	cm := iqshell.GetCdnManager()
 	scanner := bufio.NewScanner(fp)
 
 	urlsToPrefetch := make([]string, 0, 10)

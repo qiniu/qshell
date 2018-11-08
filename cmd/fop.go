@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"os"
 )
 
@@ -33,10 +33,10 @@ func init() {
 func Prefop(cmd *cobra.Command, params []string) {
 	persistentId := params[0]
 
-	fopRet, err := qshell.Prefop(persistentId)
+	fopRet, err := iqshell.Prefop(persistentId)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Prefop error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	} else {
 		fmt.Println(fopRet.String())
 	}
@@ -45,10 +45,10 @@ func Prefop(cmd *cobra.Command, params []string) {
 func Fop(cmd *cobra.Command, params []string) {
 	bucket, key, fops := params[0], params[1], params[2]
 
-	persistengId, err := qshell.Pfop(bucket, key, fops, pipeline)
+	persistengId, err := iqshell.Pfop(bucket, key, fops, pipeline)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Prefop error: %v\n", err)
-		os.Exit(qshell.STATUS_ERROR)
+		os.Exit(iqshell.STATUS_ERROR)
 	}
 	fmt.Println(persistengId)
 }

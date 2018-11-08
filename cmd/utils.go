@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"net/url"
 	"os"
 	"strconv"
@@ -145,14 +145,14 @@ func FormatFsize(fsize int64) (result string) {
 func RpcDecode(cmd *cobra.Command, params []string) {
 	if len(params) > 0 {
 		for _, param := range params {
-			decodedStr, _ := qshell.Decode(param)
+			decodedStr, _ := iqshell.Decode(param)
 			fmt.Println(decodedStr)
 		}
 	} else {
 		bScanner := bufio.NewScanner(os.Stdin)
 		for bScanner.Scan() {
 			toDecode := bScanner.Text()
-			decodedStr, _ := qshell.Decode(string(toDecode))
+			decodedStr, _ := iqshell.Decode(string(toDecode))
 			fmt.Println(decodedStr)
 		}
 	}
@@ -160,7 +160,7 @@ func RpcDecode(cmd *cobra.Command, params []string) {
 
 func RpcEncode(cmd *cobra.Command, params []string) {
 	for _, param := range params {
-		encodedStr := qshell.Encode(param)
+		encodedStr := iqshell.Encode(param)
 		fmt.Println(encodedStr)
 	}
 }
@@ -256,7 +256,7 @@ func Urldecode(cmd *cobra.Command, params []string) {
 
 func Qetag(cmd *cobra.Command, params []string) {
 	localFilePath := params[0]
-	qetag, err := qshell.GetEtag(localFilePath)
+	qetag, err := iqshell.GetEtag(localFilePath)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -279,7 +279,7 @@ func Unzip(cmd *cobra.Command, params []string) {
 			return
 		}
 	}
-	unzipErr := qshell.Unzip(zipFilePath, unzipDir)
+	unzipErr := iqshell.Unzip(zipFilePath, unzipDir)
 	if unzipErr != nil {
 		logs.Error("Unzip file failed due to error", unzipErr)
 	}

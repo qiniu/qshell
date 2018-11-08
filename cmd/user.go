@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"os"
 )
 
@@ -64,7 +64,7 @@ func ChUser(cmd *cobra.Command, params []string) {
 	} else {
 		userName = params[0]
 	}
-	err = qshell.ChUser(userName)
+	err = iqshell.ChUser(userName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "chuser: %v\n", err)
 		os.Exit(1)
@@ -72,7 +72,7 @@ func ChUser(cmd *cobra.Command, params []string) {
 }
 
 func ListUser(cmd *cobra.Command, params []string) {
-	err := qshell.ListUser(userLsName)
+	err := iqshell.ListUser(userLsName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "lsuser: %v\n", err)
 		os.Exit(1)
@@ -80,7 +80,7 @@ func ListUser(cmd *cobra.Command, params []string) {
 }
 
 func CleanUser(cmd *cobra.Command, params []string) {
-	err := qshell.CleanUser()
+	err := iqshell.CleanUser()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CleanUser: %v\n", err)
 		os.Exit(1)
@@ -89,7 +89,7 @@ func CleanUser(cmd *cobra.Command, params []string) {
 
 func RmUser(cmd *cobra.Command, params []string) {
 	userName := params[0]
-	err := qshell.RmUser(userName)
+	err := iqshell.RmUser(userName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", cmd, err)
 		os.Exit(1)
@@ -98,7 +98,7 @@ func RmUser(cmd *cobra.Command, params []string) {
 
 func LookUp(cmd *cobra.Command, params []string) {
 	userName := params[0]
-	err := qshell.LookUp(userName)
+	err := iqshell.LookUp(userName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", cmd, err)
 		os.Exit(1)

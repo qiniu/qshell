@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/iqshell/qshell"
+	"github.com/tonycai653/qshell/iqshell"
 	"os"
 )
 
@@ -25,10 +25,10 @@ var cmdAccount = &cobra.Command{
 
 func Account(cmd *cobra.Command, params []string) {
 	if len(params) == 0 {
-		account, gErr := qshell.GetAccount()
+		account, gErr := iqshell.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			os.Exit(qshell.STATUS_ERROR)
+			os.Exit(iqshell.STATUS_ERROR)
 		}
 		fmt.Println(account.String())
 	} else if len(params) == 3 {
@@ -36,11 +36,11 @@ func Account(cmd *cobra.Command, params []string) {
 		secretKey := params[1]
 		name := params[2]
 
-		pt, oldPath := qshell.AccPath(), qshell.OldAccPath()
-		sErr := qshell.SetAccount2(accessKey, secretKey, name, pt, oldPath)
+		pt, oldPath := iqshell.AccPath(), iqshell.OldAccPath()
+		sErr := iqshell.SetAccount2(accessKey, secretKey, name, pt, oldPath)
 		if sErr != nil {
 			fmt.Println(sErr)
-			os.Exit(qshell.STATUS_ERROR)
+			os.Exit(iqshell.STATUS_ERROR)
 		}
 	}
 }
