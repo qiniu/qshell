@@ -61,7 +61,8 @@ export PATH=$PATH:/home/jemy/tools
 
 ```
 $ qshell account ak sk name
-``**
+```
+
 其中name表示该账号的名称。
 
 可以连续使用qshell account 设置过个账号，qshell会保存这些账号的信息.
@@ -77,15 +78,22 @@ $ qshell account ak sk name
 **linux上，使用bash**
 
 在centos上，需要安装bash-completion包，默认该包没有安装
+
 ```
 $ yum install bash-completion -y
+
 ```
 
 给当前的bash加入自动补全， 运行命令
+
 ```
 $ source <(qshell completion bash)
+
 ```
+
 也可以把这个配置加入bash的启动文件中，这样到bash启动的时候，会自动加载qshell的补全配置：
+
+
 ```
 $ echo "source <(kubectl completion bash)" >> ~/.bashrc
 ```
