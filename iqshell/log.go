@@ -1,4 +1,4 @@
-package qshell
+package iqshell
 
 import (
 	"encoding/json"

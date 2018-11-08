@@ -1,4 +1,4 @@
-package qshell
+package iqshell
 
 import (
 	"github.com/qiniu/api.v7/storage"

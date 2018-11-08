@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/tonycai653/iqshell/cmd"
+	"github.com/tonycai653/qshell/cmd"
 	"os"
 )
 

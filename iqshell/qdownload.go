@@ -1,4 +1,4 @@
-package qshell
+package iqshell
 
 import (
 	"bufio"
@@ -34,11 +34,12 @@ const (
 )
 
 type DownloadConfig struct {
-	KeyFile  string `json:"key_file"`
-	DestDir  string `json:"dest_dir"`
-	Bucket   string `json:"bucket"`
-	Prefix   string `json:"prefix,omitempty"`
-	Suffixes string `json:"suffixes,omitempty"`
+	FileEncoding string `json:"file_encoding"`
+	KeyFile      string `json:"key_file"`
+	DestDir      string `json:"dest_dir"`
+	Bucket       string `json:"bucket"`
+	Prefix       string `json:"prefix,omitempty"`
+	Suffixes     string `json:"suffixes,omitempty"`
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
@@ -136,8 +137,8 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	}
 
 	for _, d := range domainsOfBucket {
-		if !strings.HasPrefix(d.Domain, ".") {
-			domainOfBucket = d.Domain
+		if !strings.HasPrefix(d, ".") {
+			domainOfBucket = d
 			break
 		}
 	}

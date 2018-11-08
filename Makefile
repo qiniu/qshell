@@ -1,6 +1,6 @@
 install:
 	GOOS=darwin GOARCH=amd64 go build -o qshell_darwin_amd64 .
-	cp ./qshell_darwin_amd64 /usr/local/bin/qshell
+	cp ./qshell_darwin_amd64 /usr/local/bin/qshell && rm ./qshell_darwin_amd64
 
 all:
 	GOOS=windows GOARCH=386 go build -o qshell_windows_i386 .

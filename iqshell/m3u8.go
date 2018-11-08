@@ -1,4 +1,4 @@
-package qshell
+package iqshell
 
 import (
 	"bufio"
@@ -92,16 +92,16 @@ func (m *BucketManager) DownloadLink(bucket, key string) (dnLink string, err err
 	}
 	var domain string
 	for _, d := range bucketDomains {
-		if strings.HasSuffix(d.Domain, "qiniudn.com") ||
-			strings.HasSuffix(d.Domain, "clouddn.com") ||
-			strings.HasSuffix(d.Domain, "qiniucdn.com") {
-			domain = d.Domain
+		if strings.HasSuffix(d, "qiniudn.com") ||
+			strings.HasSuffix(d, "clouddn.com") ||
+			strings.HasSuffix(d, "qiniucdn.com") {
+			domain = d
 			break
 		}
 	}
 	//get first
 	if domain == "" {
-		domain = bucketDomains[0].Domain
+		domain = bucketDomains[0]
 	}
 
 	if domain == "" {
