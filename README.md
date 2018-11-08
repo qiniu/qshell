@@ -65,7 +65,7 @@ $ qshell account ak sk name
 
 其中name表示该账号的名称。
 
-可以连续使用qshell account 设置过个账号，qshell会保存这些账号的信息.
+可以连续使用qshell account 添加账号ak, sk, name信息，qshell会保存这些账号的信息， 可以使用qshell user命令列举账号信息，在各个账号之间切换, 删除账号等
 
 ## 账户管理
 
