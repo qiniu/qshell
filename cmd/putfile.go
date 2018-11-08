@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tonycai653/qshell/iqshell"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -20,7 +19,6 @@ var upSettings = storage.Settings{
 var (
 	pOverwrite  bool
 	mimeType    string
-	upHost      string
 	fileType    int
 	workerCount int
 )
@@ -42,13 +40,11 @@ var RePutCmd = &cobra.Command{
 func init() {
 	formPutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
 	formPutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
-	formPutCmd.Flags().StringVarP(&upHost, "uphost", "u", "", "upload host")
 	formPutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
 	formPutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
 
 	RePutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
 	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
-	RePutCmd.Flags().StringVarP(&upHost, "uphost", "u", "", "upload host")
 	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
 	RePutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
 
@@ -70,9 +66,6 @@ func FormPut(cmd *cobra.Command, params []string) {
 	if fileType != 1 && fileType != 0 {
 		fmt.Fprintln(os.Stderr, "Wrong Filetype, It should be 0 or 1")
 		os.Exit(iqshell.STATUS_ERROR)
-	}
-	if strings.HasPrefix(upHost, "http://") || strings.HasPrefix(upHost, "https://") {
-		upHost = strings.TrimSuffix(upHost, "/")
 	}
 
 	//create uptoken
@@ -129,9 +122,6 @@ func FormPut(cmd *cobra.Command, params []string) {
 	err = formUploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
 
 	doneSignal <- true
-	fmt.Print("\rProgress: 100%")
-	os.Stdout.Sync()
-	fmt.Println()
 
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {
@@ -140,15 +130,20 @@ func FormPut(cmd *cobra.Command, params []string) {
 			fmt.Fprintln(os.Stderr, "Put file error: %v\n", err)
 		}
 	} else {
+		fmt.Print("\rProgress: 100%")
+		os.Stdout.Sync()
+		fmt.Println()
+
 		fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "success!")
 		fmt.Println("Hash:", putRet.Hash)
 		fmt.Println("Fsize:", putRet.Fsize, "(", FormatFsize(fsize), ")")
 		fmt.Println("MimeType:", putRet.MimeType)
+
+		lastNano := time.Now().UnixNano() - startTime.UnixNano()
+		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
+		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)*1e6/float32(lastNano))
+		fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
 	}
-	lastNano := time.Now().UnixNano() - startTime.UnixNano()
-	lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
-	avgSpeed := fmt.Sprintf("%.1f", float32(fsize)*1e6/float32(lastNano))
-	fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
 
 	if err != nil {
 		os.Exit(iqshell.STATUS_ERROR)
@@ -171,10 +166,10 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 
 	//create uptoken
 	policy := storage.PutPolicy{}
-	if pOverwrite {
-		policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
-	} else {
-		policy.Scope = bucket
+	policy.Scope = fmt.Sprintf("%s:%s", bucket, key)
+
+	if !pOverwrite {
+		policy.InsertOnly = 1
 	}
 	policy.FileType = fileType
 	policy.Expires = 7 * 24 * 3600
@@ -212,11 +207,12 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 		fmt.Println("Hash:", putRet.Hash)
 		fmt.Println("Fsize:", putRet.Fsize, "(", FormatFsize(fsize), ")")
 		fmt.Println("MimeType:", putRet.MimeType)
+
+		lastNano := time.Now().UnixNano() - startTime.UnixNano()
+		lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
+		avgSpeed := fmt.Sprintf("%.1f", float32(fsize)*1e6/float32(lastNano))
+		fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
 	}
-	lastNano := time.Now().UnixNano() - startTime.UnixNano()
-	lastTime := fmt.Sprintf("%.2f", float32(lastNano)/1e9)
-	avgSpeed := fmt.Sprintf("%.1f", float32(fsize)*1e6/float32(lastNano))
-	fmt.Println("Last time:", lastTime, "s, Average Speed:", avgSpeed, "KB/s")
 
 	if err != nil {
 		os.Exit(iqshell.STATUS_ERROR)

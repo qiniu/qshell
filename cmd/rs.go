@@ -19,21 +19,11 @@ var (
 		Run:   Get,
 	}
 	dirCacheCmd = &cobra.Command{
-		Use:   "dircache <DirCacheRootPath> [<DirCacheResultFile>]",
+		Use:   "dircache <DirCacheRootPath>",
 		Short: "Cache the directory structure of a file path",
 		Long:  "Cache the directory structure of a file path to a file, \nif <DirCacheResultFile> not specified, cache to stdout",
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 && len(args) != 2 {
-				return fmt.Errorf("accepts between 1 and 2 arg(s), received %d\n", len(args))
-			}
-			if len(args) == 2 {
-				if args[1] == "" {
-					return fmt.Errorf("DirCacheResultFile cannot be be empty\n")
-				}
-			}
-			return nil
-		},
-		Run: DirCache,
+		Args:  cobra.ExactArgs(1),
+		Run:   DirCache,
 	}
 	lsBucketCmd = &cobra.Command{
 		Use:   "listbucket <Bucket>",
@@ -144,6 +134,7 @@ var (
 )
 
 func init() {
+	dirCacheCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "output filepath")
 	qGetCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "save file as specified by this option")
 
 	lsBucketCmd.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")

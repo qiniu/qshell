@@ -127,7 +127,8 @@ fi
 |------|------------|----------|--------|
 |account|账号|设置或显示当前用户的`AccessKey`和`SecretKey`|[文档](docs/account.md)|
 |dircache|存储|输出本地指定路径下所有的文件列表|[文档](docs/dircache.md)|
-|listbucket/listbucket2|存储|列举七牛空间里面的所有文件|[文档](docs/listbucket.md)|
+|listbucket|存储|列举七牛空间里面的所有文件|[文档](docs/listbucket.md)|
+|listbucket2|存储|列举七牛空间里面的所有文件|[文档](docs/listbucket2.md)|
 |prefop|存储|查询七牛数据处理的结果|[文档](docs/prefop.md)|
 |fput|存储|以文件表单的方式上传一个文件|[文档](docs/fput.md)|
 |rput|存储|以分片上传的方式上传一个文件|[文档](docs/rput.md)|
