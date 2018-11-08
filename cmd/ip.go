@@ -50,6 +50,10 @@ var ipQueryCmd = &cobra.Command{
 	Run:   IpQuery,
 }
 
+func init() {
+	RootCmd.AddCommand(ipQueryCmd)
+}
+
 func IpQuery(cmd *cobra.Command, params []string) {
 	for _, ip := range params {
 		url := fmt.Sprintf("%s?ip=%s", TAOBAO_IP_QUERY, ip)
