@@ -530,6 +530,11 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 		}
 
 		localFileSize := localFileStat.Size()
+		//check file encoding
+		if strings.ToLower(uploadConfig.FileEncoding) == "gbk" {
+			uploadFileKey, _ = gbk2Utf8(uploadFileKey)
+		}
+
 		ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
 
 		if totalFileCount != 0 {

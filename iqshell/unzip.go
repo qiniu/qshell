@@ -12,9 +12,8 @@ import (
 	"unicode/utf8"
 )
 
-var gDecoder = simplifiedchinese.GBK.NewDecoder()
-
 func gbk2Utf8(text string) (string, error) {
+	var gDecoder = simplifiedchinese.GBK.NewDecoder()
 	utf8Dst := make([]byte, len(text)*3)
 	_, _, err := gDecoder.Transform(utf8Dst, []byte(text), true)
 	if err != nil {

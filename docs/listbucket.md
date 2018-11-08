@@ -5,11 +5,13 @@
 获取的文件列表组织格式如下（每个字段用Tab分隔）：
 
 ```
-Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
+Key\tSize\tHash\tPutTime\tMimeType\tFileType\tStatus\tEndUser
 ```
 
 
 参考文档：[资源列举 (list)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/list.html)
+
+备注：有个优化版本的命令叫 `listbucket2` 功能描述和这个命令一样，但是更加适合海量文件的空间列举。
 
 # 格式
 
