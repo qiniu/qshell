@@ -87,12 +87,17 @@ func FormPut(cmd *cobra.Command, params []string) {
 	policy.Expires = 7 * 24 * 3600
 	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 
-	if !strings.HasPrefix(upHost, "http") {
-		upHost = "http://" + upHost
+	var putExtra storage.PutExtra
+
+	if upHost != "" {
+		if !strings.HasPrefix(upHost, "http") {
+			upHost = "http://" + upHost
+		}
+		putExtra = storage.PutExtra{
+			UpHost: upHost,
+		}
 	}
-	putExtra := storage.PutExtra{
-		UpHost: upHost,
-	}
+
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
 	}
@@ -189,11 +194,14 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	policy.Expires = 7 * 24 * 3600
 	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 
-	if !strings.HasPrefix(upHost, "http") {
-		upHost = "http://" + upHost
-	}
-	putExtra := storage.RputExtra{
-		UpHost: upHost,
+	var putExtra storage.RputExtra
+	if upHost != "" {
+		if !strings.HasPrefix(upHost, "http") {
+			upHost = "http://" + upHost
+		}
+		putExtra = storage.RputExtra{
+			UpHost: upHost,
+		}
 	}
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
