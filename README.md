@@ -99,7 +99,7 @@ $ echo "source <(qshell completion bash)" >> ~/.bashrc
 ```
 
 **Mac上，使用zsh**
-把如下代码加入zsh的启动文件中~/.zshrc
+把如下代码加入zsh的启动文件中~/.zshrc, 然后source ~/.zshrc
 
 ```
 if [ $commands[qshell] ]; then
@@ -127,21 +127,29 @@ fi
 
 默认官方的列举空间的文件使用的是rs.qiniu.com域名，如果因为某种原因，比如私有存储，需要替换使用rs-test.qiniu.com这个域名的话，那么只需要
 在家目录下创建文件名字为.qshell.json的配置文件，文件内容为
+
+```json
 {
     "hosts": {
         "rs_host": "rs-test.qiniu.com"
     }
 }
+```
 
 如果想要更改io host为io-test.qiniu.com的话，只需要继续在上面的hosts中添加，如下：
+
+```json
 {
     "hosts": {
         "rs_host": "rs-test.qiniu.com",
         "io_host": "io-test.qiniu.com"
     }
 }
+```
 
 同理如果全部修改的话
+
+```json
 {
     "hosts": {
         "rs_host": "rs-test.qiniu.com",
@@ -150,6 +158,7 @@ fi
         "rsf_host": ""
     }
 }
+```
 
 
 ## 命令列表
@@ -206,6 +215,8 @@ fi
 |ip|工具|根据淘宝的公开API查询ip地址的地理位置|[文档](docs/ip.md)|
 |unzip|工具|解压zip文件，支持UTF-8编码和GBK编码|[文档](docs/unzip.md)|
 |alilistbucket|第三方|列举阿里OSS空间里面的所有文件|[文档](docs/alilistbucket.md)|
+|get|存储|下载存储空间中的文件|[文档](docs/get.md)|
+|pfop|dora异步处理|提交异步音视频处理请求|[文档](docs/pfop.md)
 
 ## 问题反馈
 
