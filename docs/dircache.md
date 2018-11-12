@@ -5,7 +5,7 @@
 # 格式
 
 ```
-qshell dircache <DirCacheRootPath> <DirCacheResultFile>
+qshell dircache <DirCacheRootPath> [-o <DirCacheResultFile>]
 ```
 
 # 参数
@@ -13,14 +13,14 @@ qshell dircache <DirCacheRootPath> <DirCacheResultFile>
 |参数名|描述|
 |------|------|
 |DirCacheRootPath|本地需要对其做快照的路径，最好是绝对路径，比如`/Users/jemy/Demo1`这样的路径|
-|DirCacheResultFile|快照结果的保存文件，可以是绝对路径或者相对路径|
+|DirCacheResultFile|快照结果的保存文件，可以是绝对路径或者相对路径, 如果没有指定，默认输出到标准输出终端 |
 
 # 示例
 
 比如，要获取`/Users/jemy/Temp4`目录下面的文件列表，则使用
 
 ```
-qshell dircache /Users/jemy/Temp4 temp4.list.txt
+qshell dircache /Users/jemy/Temp4 -o temp4.list.txt
 ```
 
 其中`temp4.list.txt`是你保存列表结果的文件。列举的结果以如下格式组织：

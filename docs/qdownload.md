@@ -13,7 +13,7 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 
 # 鉴权
 
-需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+需要在使用了`account`设置了`AccessKey`, `SecretKey`和`Name`的情况下使用。
 
 # 参数
 

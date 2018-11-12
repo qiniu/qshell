@@ -4,9 +4,6 @@
 
 qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现的一个方便开发者测试和使用七牛API服务的命令行工具。该工具设计和开发的主要目的就是帮助开发者快速解决问题。目前该工具融合了七牛存储，CDN，以及其他的一些七牛服务中经常使用到的方法对应的便捷命令，比如b64decode，就是用来解码七牛的URL安全的Base64编码用的，所以这是一个面向开发者的工具，任何新的被认为适合加到该工具中的命令需求，都可以在[ISSUE列表](https://github.com/qiniu/qshell/issues)里面提出来，我们会尽快评估实现，以帮助大家更好地使用七牛服务。
 
-![qshell-quick-tour.gif](http://devtools.qiniu.com/qshell-quick-tour.gif)
-
-
 ## 下载
 
 该工具使用Go语言编写而成，当然为了方便不熟悉Go或者急于使用工具来解决问题的开发者，我们提供了预先编译好的各主流操作系统平台的二进制文件供大家下载使用，由于平台的多样性，我们把这些二进制打包放到一个文件里面，请大家根据下面的说明各自选择合适的版本来使用。在文档中的例子里面，为了方便，我们统一使用`qshell`这个命令来做介绍。
@@ -15,7 +12,7 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell v2.2.0|Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.2.0.zip)|
+|qshell v2.2.1|Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.2.1.zip)|
 
 ## 安装
 
@@ -23,12 +20,11 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |文件名|描述|
 |-----|-----|
-|qshell-linux-x86 |Linux 32位系统|
-|qshell-linux-x64|Linux 64位系统|
-|qshell-linux-arm|Linux ARM CPU|
-|qshell-windows-x86.exe|Windows 32位系统|
-|qshell-windows-x64.exe|Windows 64位系统|
-|qshell-darwin-x64|Mac 64位系统，主流的系统|
+|qshell_linux_x86 |Linux 32位系统|
+|qshell_linux_x64|Linux 64位系统|
+|qshell_windows_x86.exe|Windows 32位系统|
+|qshell_windows_x64.exe|Windows 64位系统|
+|qshell_darwin_x64|Mac 64位系统，主流的系统|
 
 **Linux和Mac平台**
 
@@ -59,48 +55,56 @@ export PATH=$PATH:/home/jemy/tools
 
 需要鉴权的命令都需要依赖七牛账号下的 `AccessKey` 和 `SecretKey`。所以这类命令运行之前，需要使用 `account` 命令来设置下 `AccessKey` ，`SecretKey` 。
 
-**单用户模式：**
-
 ```
-$ qshell account ak sk
+$ qshell account ak sk name
 ```
 
-**多用户模式：**
+其中name表示该账号的名称, 如果ak, sk, name首字母是"-", 需要使用如下的方式添加账号, 这样避免把该项识别成命令行选项:
 
 ```
-$ qshell -m account ak sk
+$ qshell account -- ak sk name
 ```
 
-## 多用户模式
+可以连续使用qshell account 添加账号ak, sk, name信息，qshell会保存这些账号的信息， 可以使用qshell user命令列举账号信息，在各个账号之间切换, 删除账号等
 
-和其他的工具一样，本工具也会在使用的过程中，向本地磁盘写入一些文件，比如上面的`account`设置的 `AccessKey` 和 `SecretKey` 都是加密后保存在本地磁盘上的。另外还有`qupload`和`qdownload`功能也会向本地磁盘写入一些文件。
+## 账户管理
 
-默认情况下，工具的使用模式是单用户模式，用户的所有信息写入到磁盘`$HOME_DIR/.qshell`下面。即如果你用`account`设置了新的密钥，那么这个新的密钥将覆盖旧的密钥。这个`$HOME_DIR`在Linux或者Mac下就是`~`所表示的目录。如果是Windows下则是`C:\Users\jemy`这样的路径。
+使用qshell user子命令可以用来管理记录的多账户信息。
+1. qshell user ls可以列举账户下所有的账户信息
+2. qshell user cu <userName>可以用来切换账户
+3. qshell user cu 不携带<userName>的话会切换到最近的上个账户；比如我在A账户做完操作后，使用qshell user cu B到了B 账户，那么使用qshell user cu可以切回到A账户.
 
-但是有些情况下，我们可能拥有多个账号，比如同时拥有测试环境的账号和线上环境的账号，这种情况下，怎么让`qshell`同时支持多组`AccessKey`和`SecretKey`的设置呢？
+## 开启命令的自动补全
+**linux上，使用bash**
 
-为了解决这个问题，我们引入了选项`-m`。当在使用`qshell`的时候，指定该选项的话，就会切换到多用户模式下，在这种模式下，工具会把所有的临时文件都写到工具执行的目录。
-
-基于上面的功能，我们可以创建一些专用的目录，用来切换到`qshell`的多用户模式运行。假设本地有如目录`/Users/jemy/Temp/qshell/workdir`，这个目录下分别有`env_dev`和`env_prod`两种环境的账号。
-
-我们分别在目录`env_dev`和`env_prod`目录下，运行`qshell -m account ak sk`来设置不同账号的密钥对，结果如下：
-
-```
-$ tree -a
-
-├── env_dev
-│   └── .qshell
-│       └── account.json
-└── env_prod
-    └── .qshell
-        └── account.json
-```
-
-这样其他的依赖`AccessKey`和`SecretKey`的命令都可以使用`-m`选项在这个目录下执行命令，例如`stat`获取文件信息：
+在centos上，需要安装bash-completion包，默认该包没有安装
 
 ```
-$ cd /Users/jemy/Temp/qshell/workdir/env_dev
-$ qshell -m stat bucket key
+$ yum install bash-completion -y
+
+```
+
+给当前的bash加入自动补全， 运行命令
+
+```
+$ source <(qshell completion bash)
+
+```
+
+也可以把这个配置加入bash的启动文件中，这样到bash启动的时候，会自动加载qshell的补全配置：
+
+
+```
+$ echo "source <(qshell completion bash)" >> ~/.bashrc
+```
+
+**Mac上，使用zsh**
+把如下代码加入zsh的启动文件中~/.zshrc
+
+```
+if [ $commands[qshell] ]; then
+  source <(qshell completion zsh)
+fi
 ```
 
 ## 命令选项
@@ -110,9 +114,42 @@ $ qshell -m stat bucket key
 |参数|描述|
 |----|----|
 |-d|设置是否输出DEBUG日志，如果指定这个选项，则输出DEBUG级别的日志|
-|-m|切换到多用户模式，这样所有的临时文件写入都在命令运行的目录下|
 |-h|打印命令列表帮助信息，遇到参数忘记的情况下，可以使用该命令|
 |-v|打印工具版本，反馈问题的时候，请提前告知工具对应版本号|
+|-C|qshell配置文件, 其配置格式请看下一节|
+
+## 配置文件
+
+1. 配置文件格式支持json, 如果需要使用配置文件，需要在家目录下创建文件名为.qshell.json的json文件
+2. 配置文件可以配置如io host, api host, rs hsot, rsf host, 这些如果没有指定，程序会自动选择
+
+例子：
+
+默认官方的列举空间的文件使用的是rs.qiniu.com域名，如果因为某种原因，比如私有存储，需要替换使用rs-test.qiniu.com这个域名的话，那么只需要
+在家目录下创建文件名字为.qshell.json的配置文件，文件内容为
+{
+    "hosts": {
+        "rs_host": "rs-test.qiniu.com"
+    }
+}
+
+如果想要更改io host为io-test.qiniu.com的话，只需要继续在上面的hosts中添加，如下：
+{
+    "hosts": {
+        "rs_host": "rs-test.qiniu.com",
+        "io_host": "io-test.qiniu.com"
+    }
+}
+
+同理如果全部修改的话
+{
+    "hosts": {
+        "rs_host": "rs-test.qiniu.com",
+        "io_host": "io-test.qiniu.com",
+        "api_host": "",
+        "rsf_host": ""
+    }
+}
 
 
 ## 命令列表
@@ -121,7 +158,8 @@ $ qshell -m stat bucket key
 |------|------------|----------|--------|
 |account|账号|设置或显示当前用户的`AccessKey`和`SecretKey`|[文档](docs/account.md)|
 |dircache|存储|输出本地指定路径下所有的文件列表|[文档](docs/dircache.md)|
-|listbucket/listbucket2|存储|列举七牛空间里面的所有文件|[文档](docs/listbucket.md)|
+|listbucket|存储|列举七牛空间里面的所有文件|[文档](docs/listbucket.md)|
+|listbucket2|存储|列举七牛空间里面的所有文件|[文档](docs/listbucket2.md)|
 |prefop|存储|查询七牛数据处理的结果|[文档](docs/prefop.md)|
 |fput|存储|以文件表单的方式上传一个文件|[文档](docs/fput.md)|
 |rput|存储|以分片上传的方式上传一个文件|[文档](docs/rput.md)|
@@ -169,36 +207,6 @@ $ qshell -m stat bucket key
 |unzip|工具|解压zip文件，支持UTF-8编码和GBK编码|[文档](docs/unzip.md)|
 |alilistbucket|第三方|列举阿里OSS空间里面的所有文件|[文档](docs/alilistbucket.md)|
 
-## 项目编译
-
-如果对项目编译感兴趣，请按照如下方式进行：
-
-```
-$ go get github.com/astaxie/beego/logs
-$ go get github.com/fsnotify/fsnotify
-$ go get github.com/syndtr/goleveldb/leveldb
-$ go get github.com/yanunon/oss-go-api/oss
-$ go get golang.org/x/text/encoding/simplifiedchinese
-$ go get golang.org/x/sys/unix
-$ ./build.sh
-```
-
-如果上面的 `golang.org/x`  下面的包因为被墙而无法下载，那么可以使用 `git clone` 分别将依赖的库下载到本地的`GOPATH`中：
-
-```
-git clone https://github.com/golang/sys.git  $GOPATH/src/golang.org/x/sys
-git clone https://github.com/golang/text.git $GOPATH/src/golang.org/x/text
-```
- 
-对于跨平台的编译脚本 `cross-build-main.sh` 编译出来的二进制文件存在的已知问题如下：
-
-[crontab下面引用qshell出错](https://github.com/qiniu/qshell/issues/68)
-
 ## 问题反馈
 
 如果您有任何问题，请写在[ISSUE列表](https://github.com/qiniu/qshell/issues)里面，我们会尽快回复您。
-
-## 技术讨论
-
-如果您希望和在工作中使用`qshell`的其他人进行交流，可以加入QQ群：343822521 。
-

@@ -8,7 +8,7 @@
 # 格式
 
 ```
-qshell fetch <RemoteResourceUrl> <Bucket> [<Key>]
+qshell fetch <RemoteResourceUrl> <Bucket> [-k <Key>]
 ```
 
 # 鉴权
@@ -28,7 +28,7 @@ qshell fetch <RemoteResourceUrl> <Bucket> [<Key>]
 1.抓取一个资源并以指定的文件名保存在七牛的空间里面
 
 ```
-$ qshell fetch https://www.baidu.com/img/bdlogo.png if-pbl bdlogo.png
+$ qshell fetch https://www.baidu.com/img/bdlogo.png if-pbl -k bdlogo.png
 
 Key: bdlogo.png
 Hash: FrUHIqhkDDd77-AtiDcOwi94YIeM

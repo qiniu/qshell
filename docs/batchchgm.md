@@ -5,8 +5,12 @@
 # 格式
 
 ```
-qshell batchchgm [-force] <Bucket> <KeyMimeMapFile>
+qshell batchchgm [--force] <Bucket> [-i <KeyMimeMapFile>]
+
 ```
+
+# 帮助
+qshell batchchgm -h
 
 # 鉴权
 
@@ -21,7 +25,7 @@ qshell batchchgm [-force] <Bucket> <KeyMimeMapFile>
 
 **force选项**
 
-该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`-force`选项。
+该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`--force`选项。
 
 # 示例
 
@@ -38,7 +42,11 @@ data/2015/02/01/pig.jpg	image/jpeg
 把上面的内容保存在文件`tochange.txt`中，然后使用如下的命令：
 
 ```
-$ qshell batchchgm if-pbl tochange.txt
+$ qshell batchchgm if-pbl -i tochange.txt
 ```
 
 如果执行过程中遇到任何错误，会输出到终端，如果没有的话，则没有任何输出。
+
+# 注意
+
+如果没有指定输入文件的话, 默认会从标准输入读取同样格式的内容

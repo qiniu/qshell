@@ -3,12 +3,17 @@
 `batchcopy`命令用来将一个空间中的文件批量复制到另一个空间，另外你可以在复制的过程中，给文件进行重命名。
 
 当然，如果所指定的源空间和目标空间相同的话，如果这个时候源文件和目标文件名相同，那么复制会失败（这个操作其实没有意义）。
-如果复制的目标空间中存在同名的文件，那么默认情况下针对该文件的复制操作也会失败，如果希望强制覆盖，可以指定`-overwrite`选项。
+如果复制的目标空间中存在同名的文件，那么默认情况下针对该文件的复制操作也会失败，如果希望强制覆盖，可以指定`--overwrite`选项。
 
 # 格式
 
 ```
-qshell batchcopy [-force] [-overwrite] <SrcBucket> <DestBucket> <SrcDestKeyMapFile>
+qshell batchcopy [--force] [--overwrite] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
+```
+
+# 帮助
+```
+qshell batchcopy -h
 ```
 
 # 鉴权
@@ -43,7 +48,7 @@ data/2015/02/01/pig.jpg
 然后使用如下命令就可以把上面的文件就以和原来文件相同的文件名从`if-pbl`复制到`if-pri`了。
 
 ```
-$ qshell batchcopy if-pbl if-pri tocopy.txt
+$ qshell batchcopy if-pbl if-pri -i tocopy.txt
 ```
 
 2.如果上面希望在复制的时候，对一些文件进行重命名，那么`SrcDestKeyMapFile`可以是这样：
@@ -56,18 +61,22 @@ data/2015/02/01/pig.jpg
 从上面我们可以看到，你可以为你希望重命名的文件设置一个新的名字，不希望改变的就不用指定。然后使用命令就可以将文件复制过去了。
 
 ```
-$ qshell batchcopy if-pbl if-pri tocopy.txt
+$ qshell batchcopy if-pbl if-pri -i tocopy.txt
 ```
 
-3.如果不希望上面的复制过程出现验证码提示，可以使用 `-force` 选项：
+3.如果不希望上面的复制过程出现验证码提示，可以使用 `--force` 选项：
 
 ```
-$ qshell batchcopy -force if-pbl if-pri tocopy.txt
+$ qshell batchcopy --force if-pbl if-pri -i tocopy.txt
 ```
 
-4.如果目标空间存在同名的文件，可以使用`-overwrite`选项来强制覆盖：
+4.如果目标空间存在同名的文件，可以使用`--overwrite`选项来强制覆盖：
 
 ```
-$ qshell batchcopy -force -overwrite if-pbl if-pri tocopy.txt
+$ qshell batchcopy --force --overwrite if-pbl if-pri -i tocopy.txt
 ```
+
+# 注意
+
+如果没有指定输入文件的话， 会从标准输入读取同样内容格式
 
