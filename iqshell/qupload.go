@@ -775,8 +775,11 @@ func formUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.Wr
 
 	uploader := storage.NewFormUploader(nil)
 	putRet := storage.PutRet{}
+	putExtra := storage.PutExtra{
+		UpHost: uploadConfig.UpHost,
+	}
 
-	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, nil)
+	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
 		logs.Error("Form upload file `%s` => `%s` failed due to nerror `%v`", localFilePath, uploadFileKey, err)
@@ -828,6 +831,7 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 		progressRecorder.Offset += int64(blkSize)
 	}
 	putExtra.Notify = notifyFunc
+	putExtra.UpHost = uploadConfig.UpHost
 
 	//resumable upload
 	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)

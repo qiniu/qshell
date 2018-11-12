@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
+	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -59,9 +60,6 @@ type CopyEntryPath MoveEntryPath
 
 type BucketManager struct {
 	*storage.BucketManager
-	mac    *qbox.Mac
-	client *storage.Client
-	cfg    *storage.Config
 }
 
 type BucketDomainsRet []struct {
@@ -71,20 +69,21 @@ type BucketDomainsRet []struct {
 }
 
 func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err error) {
-	ctx := context.WithValue(context.TODO(), "mac", m.mac)
+	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
 	var reqHost string
 
 	scheme := "http://"
-	if m.cfg.UseHTTPS {
+	if m.Cfg.UseHTTPS {
 		scheme = "https://"
 	}
 
-	reqHost = fmt.Sprintf("%s%s", scheme, storage.DefaultAPIHost)
+	reqHost = fmt.Sprintf("%s%s", scheme, viper.GetString("hosts.api_host"))
 	reqURL := fmt.Sprintf("%s/v7/domain/list?tbl=%v", reqHost, bucket)
 	headers := http.Header{}
 	ret := new(BucketDomainsRet)
-	err = m.client.Call(ctx, ret, "POST", reqURL, headers)
-	if err != nil {
+	cErr := m.Client.Call(ctx, ret, "POST", reqURL, headers)
+	if cErr != nil {
+		err = cErr
 		return
 	}
 	for _, d := range *ret {
@@ -110,7 +109,7 @@ func (m *BucketManager) PrivateUrl(publicUrl string, deadline int64) (finalUrl s
 		return
 	}
 
-	h := hmac.New(sha1.New, m.mac.SecretKey)
+	h := hmac.New(sha1.New, m.Mac.SecretKey)
 
 	urlToSign := srcUri.String()
 	if strings.Contains(publicUrl, "?") {
@@ -121,13 +120,13 @@ func (m *BucketManager) PrivateUrl(publicUrl string, deadline int64) (finalUrl s
 	h.Write([]byte(urlToSign))
 
 	sign := base64.URLEncoding.EncodeToString(h.Sum(nil))
-	token := m.mac.AccessKey + ":" + sign
+	token := m.Mac.AccessKey + ":" + sign
 	finalUrl = fmt.Sprintf("%s&token=%s", urlToSign, token)
 	return
 }
 
 func (m *BucketManager) GetMac() *qbox.Mac {
-	return m.mac
+	return m.Mac
 }
 
 func (m *BucketManager) rsHost(bucket string) (rsHost string, err error) {
@@ -136,23 +135,30 @@ func (m *BucketManager) rsHost(bucket string) (rsHost string, err error) {
 		return
 	}
 
-	rsHost = zone.GetRsHost(m.cfg.UseHTTPS)
+	rsHost = zone.GetRsHost(m.Cfg.UseHTTPS)
 	return
 }
 
 func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 	entryUri := strings.Join([]string{bucket, key}, ":")
 
-	reqHost, reqErr := m.rsHost(bucket)
-	if reqErr != nil {
-		err = reqErr
-		return
+	var (
+		reqHost string
+		reqErr  error
+	)
+	reqHost = viper.GetString("hosts.rs_host")
+	if reqHost == "" {
+		reqHost, reqErr = m.rsHost(bucket)
+		if reqErr != nil {
+			err = reqErr
+			return
+		}
 	}
 	url := strings.Join([]string{reqHost, "get", Encode(entryUri)}, "/")
 
 	var data GetRet
 
-	ctx := context.WithValue(context.TODO(), "mac", m.mac)
+	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
 	headers := http.Header{}
 
 	err = storage.DefaultClient.Call(ctx, &data, "GET", url, headers)
@@ -283,37 +289,16 @@ func (m *BucketManager) BatchSign(urls []string, deadline int64) (ret []string, 
 func NewBucketManager(mac *qbox.Mac, cfg *storage.Config) *BucketManager {
 	bm := storage.NewBucketManager(mac, cfg)
 
-	if cfg == nil {
-		cfg = &storage.Config{}
-	}
-
-	if cfg.CentralRsHost == "" {
-		cfg.CentralRsHost = storage.DefaultRsHost
-	}
 	return &BucketManager{
 		BucketManager: bm,
-		cfg:           cfg,
-		mac:           mac,
-		client:        &storage.DefaultClient,
 	}
 }
 
 // NewBucketManagerEx 用来构建一个新的资源管理对象
 func NewBucketManagerEx(mac *qbox.Mac, cfg *storage.Config, client *storage.Client) *BucketManager {
 	bm := storage.NewBucketManagerEx(mac, cfg, client)
-	if cfg == nil {
-		cfg = &storage.Config{}
-	}
-
-	if client == nil {
-		client = &storage.DefaultClient
-	}
-
 	return &BucketManager{
 		BucketManager: bm,
-		client:        client,
-		mac:           mac,
-		cfg:           cfg,
 	}
 }
 
@@ -324,7 +309,13 @@ func GetBucketManager() *BucketManager {
 		os.Exit(1)
 	}
 	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
-	return NewBucketManager(mac, nil)
+	cfg := storage.Config{
+		IoHost:  viper.GetString("hosts.io_host"),
+		RsHost:  viper.GetString("hosts.rs_host"),
+		ApiHost: viper.GetString("hosts.api_host"),
+		RsfHost: viper.GetString("hosts.rsf_host"),
+	}
+	return NewBucketManager(mac, &cfg)
 }
 
 func GetUpHost(cfg *storage.Config, ak, bucket string) (upHost string, err error) {

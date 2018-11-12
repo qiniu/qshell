@@ -49,7 +49,7 @@ $ qshell batchrename if-pbl -i torename.txt
 2.如果不希望上面的重命名过程出现验证码提示，可以使用 `--force` 选项：
 
 ```
-$ qshell batchrename -force if-pbl -i torename.txt
+$ qshell batchrename --force if-pbl -i torename.txt
 ```
 
 # 注意 

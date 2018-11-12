@@ -84,7 +84,7 @@ func initConfig() {
 			os.Exit(1)
 		}
 		viper.AddConfigPath(curUser.HomeDir)
-		viper.SetConfigName(".qshell.json")
+		viper.SetConfigName(".qshell")
 	}
 	viper.ReadInConfig()
 }

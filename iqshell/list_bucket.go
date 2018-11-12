@@ -83,7 +83,12 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 	notfilterSuffix := len(suffixes) == 0
 
 	for i := 0; i < maxRetry; i++ {
-		entries, retErr := m.ListBucket(bucket, prefix, delimiter, marker)
+		entries, lErr := m.ListBucket(bucket, prefix, delimiter, marker)
+
+		if entries == nil && lErr == nil {
+			// no data
+			return
+		}
 		if retErr != nil {
 			errorWarning(lastMarker, retErr)
 		}
@@ -91,6 +96,9 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		for listItem := range entries {
 			if listItem.Marker != lastMarker {
 				lastMarker = listItem.Marker
+			}
+			if listItem.Item.IsEmpty() {
+				continue
 			}
 			if notfilterSuffix && notfilterTime {
 				lineData := fmt.Sprintf("%s\t%d\t%s\t%d\t%s\t%d\t%s\r\n",

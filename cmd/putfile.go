@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/qiniu/api.v7/storage"
+	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/qshell/iqshell"
+	"github.com/spf13/viper"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -21,6 +23,7 @@ var (
 	mimeType    string
 	fileType    int
 	workerCount int
+	upHost      string
 )
 
 var formPutCmd = &cobra.Command{
@@ -42,11 +45,16 @@ func init() {
 	formPutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	formPutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
 	formPutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
+	formPutCmd.Flags().StringVarP(&upHost, "up-host", "u", "", "uphost")
 
 	RePutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
 	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
 	RePutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
+	RePutCmd.Flags().StringVarP(&upHost, "up-host", "u", "", "uphost")
+
+	viper.BindPFlag("hosts.up_host", formPutCmd.Flags().Lookup("up-host"))
+	viper.BindPFlag("hosts.up_host", RePutCmd.Flags().Lookup("up-host"))
 
 	RootCmd.AddCommand(formPutCmd, RePutCmd)
 }
@@ -78,7 +86,13 @@ func FormPut(cmd *cobra.Command, params []string) {
 	policy.FileType = fileType
 	policy.Expires = 7 * 24 * 3600
 	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
-	putExtra := storage.PutExtra{}
+
+	if !strings.HasPrefix(upHost, "http") {
+		upHost = "http://" + upHost
+	}
+	putExtra := storage.PutExtra{
+		UpHost: upHost,
+	}
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
 	}
@@ -127,7 +141,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 		if v, ok := err.(*storage.ErrorInfo); ok {
 			fmt.Fprintf(os.Stderr, "Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
 		} else {
-			fmt.Fprintln(os.Stderr, "Put file error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Put file error: %v\n", err)
 		}
 	} else {
 		fmt.Print("\rProgress: 100%")
@@ -175,7 +189,12 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	policy.Expires = 7 * 24 * 3600
 	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
 
-	putExtra := storage.RputExtra{}
+	if !strings.HasPrefix(upHost, "http") {
+		upHost = "http://" + upHost
+	}
+	putExtra := storage.RputExtra{
+		UpHost: upHost,
+	}
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
 	}
@@ -198,9 +217,9 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	fmt.Println()
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {
-			fmt.Printf("Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
+			fmt.Fprintf(os.Stderr, "Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
 		} else {
-			fmt.Println("Put file error,", err)
+			fmt.Fprintf(os.Stderr, "Put file error: %v\n", err)
 		}
 	} else {
 		fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "success!")

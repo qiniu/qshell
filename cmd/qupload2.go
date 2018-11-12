@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/qshell/iqshell"
 	"os"
 )
 

@@ -187,7 +187,7 @@ type SputRet struct {
 	Fsize    int64  `json:"fsize"`
 }
 
-func (m *BucketManager) Sync(srcResUrl, bucket, key string) (putRet SputRet, err error) {
+func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string) (putRet SputRet, err error) {
 
 	exists, cErr := m.CheckExists(bucket, key)
 	if cErr != nil {
@@ -232,14 +232,20 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key string) (putRet SputRet, err
 	ctx := context.Background()
 
 	resumeUploader := NewResumeUploader(nil)
-	ak, bucket, err := getAkBucketFromUploadToken(uptoken)
-	if err != nil {
-		return
-	}
-	upHost, eErr := resumeUploader.UpHost(ak, bucket)
-	if err != nil {
-		err = eErr
-		return
+	var (
+		eErr error
+	)
+	if upHost == "" {
+		ak, bucket, gErr := getAkBucketFromUploadToken(uptoken)
+		if err != nil {
+			err = gErr
+			return
+		}
+		upHost, eErr = resumeUploader.UpHost(ak, bucket)
+		if err != nil {
+			err = eErr
+			return
+		}
 	}
 	//range get and mkblk upload
 	var bf *bytes.Buffer

@@ -119,6 +119,40 @@ fi
 |-d|设置是否输出DEBUG日志，如果指定这个选项，则输出DEBUG级别的日志|
 |-h|打印命令列表帮助信息，遇到参数忘记的情况下，可以使用该命令|
 |-v|打印工具版本，反馈问题的时候，请提前告知工具对应版本号|
+|-C|qshell配置文件, 其配置格式请看下一节|
+
+## 配置文件
+
+1. 配置文件格式支持json, 如果需要使用配置文件，需要在家目录下创建文件名为.qshell.json的json文件
+2. 配置文件可以配置如io host, api host, rs hsot, rsf host, 这些如果没有指定，程序会自动选择
+
+例子：
+
+默认官方的列举空间的文件使用的是rs.qiniu.com域名，如果因为某种原因，比如私有存储，需要替换使用rs-test.qiniu.com这个域名的话，那么只需要
+在家目录下创建文件名字为.qshell.json的配置文件，文件内容为
+{
+    "hosts": {
+        "rs_host": "rs-test.qiniu.com"
+    }
+}
+
+如果想要更改io host为io-test.qiniu.com的话，只需要继续在上面的hosts中添加，如下：
+{
+    "hosts": {
+        "rs_host": "rs-test.qiniu.com",
+        "io_host": "io-test.qiniu.com"
+    }
+}
+
+同理如果全部修改的话
+{
+    "hosts": {
+        "rs_host": "rs-test.qiniu.com",
+        "io_host": "io-test.qiniu.com",
+        "api_host": "",
+        "rsf_host": ""
+    }
+}
 
 
 ## 命令列表
@@ -179,7 +213,3 @@ fi
 ## 问题反馈
 
 如果您有任何问题，请写在[ISSUE列表](https://github.com/qiniu/qshell/issues)里面，我们会尽快回复您。
-
-## 技术讨论
-
-如果您希望和在工作中使用`qshell`的其他人进行交流，可以加入QQ群：343822521 。

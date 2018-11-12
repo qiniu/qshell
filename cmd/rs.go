@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/api.v7/storage"
+	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
-	"github.com/tonycai653/qshell/iqshell"
 	"os"
 	"strconv"
 	"strings"

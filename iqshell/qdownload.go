@@ -40,6 +40,7 @@ type DownloadConfig struct {
 	Bucket       string `json:"bucket"`
 	Prefix       string `json:"prefix,omitempty"`
 	Suffixes     string `json:"suffixes,omitempty"`
+	IoHost       string `json:"io_host, omitempty"`
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
@@ -48,6 +49,42 @@ type DownloadConfig struct {
 	LogFile   string `json:"log_file,omitempty"`
 	LogRotate int    `json:"log_rotate,omitempty"`
 	LogStdout bool   `json:"log_stdout,omitempty"`
+}
+
+func (d *DownloadConfig) DomainOfBucket(bm *BucketManager) (domain string, err error) {
+	//get domains of bucket
+	domainsOfBucket, gErr := bm.DomainsOfBucket(d.Bucket)
+	if gErr != nil {
+		err = fmt.Errorf("Get domains of bucket error: %v", gErr)
+		return
+	}
+
+	if len(domainsOfBucket) == 0 {
+		err = fmt.Errorf("No domains found for bucket: %s", d.Bucket)
+		return
+	}
+
+	for _, d := range domainsOfBucket {
+		if !strings.HasPrefix(d, ".") {
+			domain = d
+			break
+		}
+	}
+	return
+}
+
+func (d *DownloadConfig) DownloadDomain(domainOfBucket string) (domain string) {
+	if d.CdnDomain != "" {
+		domain = d.CdnDomain
+	} else if d.IoHost != "" {
+		domain = d.IoHost
+	} else {
+		domain = domainOfBucket
+	}
+	domain = strings.TrimPrefix(domain, "http://")
+	domain = strings.TrimPrefix(domain, "https://")
+
+	return
 }
 
 var downloadTasks chan func()
@@ -122,40 +159,12 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 
 	bm := GetBucketManager()
 
-	var domainOfBucket string
-
-	//get domains of bucket
-	domainsOfBucket, gErr := bm.DomainsOfBucket(downConfig.Bucket)
-	if gErr != nil {
-		logs.Error("Get domains of bucket error,", gErr)
-		os.Exit(STATUS_ERROR)
+	domainOfBucket, dErr := downConfig.DomainOfBucket(bm)
+	if dErr != nil {
+		logs.Error("get domains of bucket: ", dErr)
+		os.Exit(1)
 	}
-
-	if len(domainsOfBucket) == 0 {
-		logs.Error("No domains found for bucket", downConfig.Bucket)
-		os.Exit(STATUS_ERROR)
-	}
-
-	for _, d := range domainsOfBucket {
-		if !strings.HasPrefix(d, ".") {
-			domainOfBucket = d
-			break
-		}
-	}
-
-	//check whether cdn domain is set
-	if downConfig.CdnDomain != "" {
-		domainOfBucket = downConfig.CdnDomain
-	}
-
-	//trim http and https prefix
-	domainOfBucket = strings.TrimPrefix(domainOfBucket, "http://")
-	domainOfBucket = strings.TrimPrefix(domainOfBucket, "https://")
-
-	if domainOfBucket == "" {
-		logs.Error("No domains found to download files")
-		os.Exit(STATUS_ERROR)
-	}
+	downloadDomain := downConfig.DownloadDomain(domainOfBucket)
 
 	jobListFileName := filepath.Join(storePath, fmt.Sprintf("%s.list", jobId))
 	resumeFile := filepath.Join(storePath, fmt.Sprintf("%s.ldb", jobId))
@@ -302,7 +311,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 				continue
 			}
 
-			fileUrl := bm.MakePrivateDownloadLink(domainOfBucket, fileKey)
+			fileUrl := bm.MakePrivateDownloadLink(downloadDomain, fileKey)
 
 			//progress
 			if totalFileCount != 0 {
