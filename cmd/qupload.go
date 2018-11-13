@@ -94,7 +94,11 @@ func QiniuUpload(cmd *cobra.Command, params []string) {
 		fmt.Fprintf(os.Stderr, "callbackUrls and callback must exist at the same time\n")
 		os.Exit(1)
 	}
-	if callbackHost != "" && callbackUrls != "" {
+	if (uploadConfig.CallbackUrls == "" && uploadConfig.CallbackHost != "") || (uploadConfig.CallbackUrls != "" && uploadConfig.CallbackHost == "") {
+		fmt.Fprintf(os.Stderr, "callbackUrls and callback must exist at the same time\n")
+		os.Exit(1)
+	}
+	if (callbackHost != "" && callbackUrls != "") || (uploadConfig.CallbackHost != "" && uploadConfig.CallbackUrls != "") {
 		callbackUrls = strings.Replace(callbackUrls, ",", ";", -1)
 		policy.CallbackHost = callbackHost
 		policy.CallbackURL = callbackUrls

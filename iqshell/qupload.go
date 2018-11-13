@@ -100,8 +100,10 @@ type UploadConfig struct {
 	LogStdout bool   `json:"log_stdout,omitempty"`
 
 	//more settings
-	DeleteOnSuccess bool `json:"delete_on_success,omitempty"`
-	DisableResume   bool `json:"disable_resume,omitempty"`
+	DeleteOnSuccess bool   `json:"delete_on_success,omitempty"`
+	DisableResume   bool   `json:"disable_resume,omitempty"`
+	CallbackUrls    string `json:"callback_urls,omitempty"`
+	CallbackHost    string `json:"callback_host,omitempty"`
 	PutPolicy       storage.PutPolicy
 }
 
