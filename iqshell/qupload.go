@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -101,6 +102,7 @@ type UploadConfig struct {
 	//more settings
 	DeleteOnSuccess bool `json:"delete_on_success,omitempty"`
 	DisableResume   bool `json:"disable_resume,omitempty"`
+	PutPolicy       storage.PutPolicy
 }
 
 func (cfg *UploadConfig) JobId() string {
@@ -274,6 +276,19 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 	}
 	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
+}
+
+func (cfg *UploadConfig) UploadToken(mac *qbox.Mac, uploadFileKey string) string {
+
+	cfg.PutPolicy.Scope = cfg.Bucket
+	if cfg.Overwrite {
+		cfg.PutPolicy.Scope = fmt.Sprintf("%s:%s", cfg.Bucket, uploadFileKey)
+		cfg.PutPolicy.InsertOnly = 0
+	}
+
+	cfg.PutPolicy.FileType = cfg.FileType
+	cfg.PutPolicy.Expires = 7 * 24 * 3600
+	return cfg.PutPolicy.UploadToken(mac)
 }
 
 var uploadTasks chan func()
@@ -560,17 +575,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 		uploadTasks <- func() {
 			defer upWaitGroup.Done()
 
-			policy := storage.PutPolicy{}
-			policy.Scope = uploadConfig.Bucket
-			if uploadConfig.Overwrite {
-				policy.Scope = fmt.Sprintf("%s:%s", uploadConfig.Bucket, uploadFileKey)
-				policy.InsertOnly = 0
-			}
-
-			policy.FileType = uploadConfig.FileType
-
-			policy.Expires = 7 * 24 * 3600
-			upToken := policy.UploadToken(bm.GetMac())
+			upToken := uploadConfig.UploadToken(bm.GetMac(), uploadFileKey)
 
 			if localFileSize > putThreshold {
 				resumableUploadFile(uploadConfig, ldb, &ldbWOpt, ldbKey, upToken, storePath,

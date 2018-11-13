@@ -3,9 +3,11 @@ package cmd
 import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/storage"
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 )
 
 var qUpload2Cmd = &cobra.Command{
@@ -48,6 +50,8 @@ func init() {
 	qUpload2Cmd.Flags().StringVar(&successFname, "success-list", "", "upload success file list")
 	qUpload2Cmd.Flags().StringVar(&failureFname, "failure-list", "", "upload failure file list")
 	qUpload2Cmd.Flags().StringVar(&overwriteFname, "overwrite-list", "", "upload success (overwrite) file list")
+	qUpload2Cmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	qUpload2Cmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
 	RootCmd.AddCommand(qUpload2Cmd)
 }
@@ -69,6 +73,20 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 		logs.Error("Upload config `SrcDir` not exist error,", err)
 		os.Exit(iqshell.STATUS_HALT)
 	}
+	policy := storage.PutPolicy{}
+
+	if (callbackUrls == "" && callbackHost != "") || (callbackUrls != "" && callbackHost == "") {
+		fmt.Fprintf(os.Stderr, "callbackUrls and callback must exist at the same time\n")
+		os.Exit(1)
+	}
+	if callbackHost != "" && callbackUrls != "" {
+		callbackUrls = strings.Replace(callbackUrls, ",", ";", -1)
+		policy.CallbackHost = callbackHost
+		policy.CallbackURL = callbackUrls
+		policy.CallbackBody = "key=$(key)&hash=$(etag)"
+		policy.CallbackBodyType = "application/x-www-form-urlencoded"
+	}
+	uploadConfig.PutPolicy = policy
 
 	if up2threadCount < iqshell.MIN_UPLOAD_THREAD_COUNT || up2threadCount > iqshell.MAX_UPLOAD_THREAD_COUNT {
 		fmt.Printf("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",

@@ -13,7 +13,7 @@
 # 格式
 
 ```
-qshell rput [--overwrite] [--mimetype <MimeType>] [--storage <StorageType> ] <Bucket> <Key> <LocalFile>
+qshell rput [--overwrite] [--mimetype <MimeType>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>] [--storage <StorageType> ] <Bucket> <Key> <LocalFile>
 ```
 
 其中 `Overwrite`，`MimeType`，`StorageType` (0 -> 标准存储， 1 - 低频存储)参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
@@ -24,14 +24,16 @@ qshell rput [--overwrite] [--mimetype <MimeType>] [--storage <StorageType> ] <Bu
 
 # 参数
 
-|参数名称|描述|可选参数|
-|---------|-----------------|----------|
-|Bucket|七牛空间名称，可以为公开空间或私有空间|N|
-|Key|文件保存在七牛空间的名称|N|
-|LocalFile|本地文件的路径|N|
-|Overwrite|是否覆盖空间已有文件，默认为`false`|Y|
-|MimeType|指定文件的MimeType|Y|
-|StorageType|文件存储类型，默认为`0`(标准存储） `1`为低频存储|Y|
+| 参数名称     | 描述                                             | 可选参数 |
+|--------------|--------------------------------------------------|----------|
+| Bucket       | 七牛空间名称，可以为公开空间或私有空间           | N        |
+| Key          | 文件保存在七牛空间的名称                         | N        |
+| LocalFile    | 本地文件的路径                                   | N        |
+| Overwrite    | 是否覆盖空间已有文件，默认为`false`              | Y        |
+| MimeType     | 指定文件的MimeType                               | Y        |
+| StorageType  | 文件存储类型，默认为`0`(标准存储） `1`为低频存储 | Y        |
+| CallbackUrls | 上传回调地址，可以指定多个地址， 以逗号分开      | Y        |
+| CallbackHost     | 上传回调HOST, 必须和CallbackUrls一起指定 | Y        |
 
 
 # 示例

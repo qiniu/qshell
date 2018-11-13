@@ -5,8 +5,9 @@
 # 格式
 
 ```
-qshell qupload [-c <ThreadCount>] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--overwrite-list <OverFileName>] <LocalUploadConfig>
-``**
+qshell qupload [-c <ThreadCount>] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--overwrite-list <OverFileName>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>]
+<LocalUploadConfig>
+```
 
 # 鉴权
 
@@ -33,6 +34,12 @@ ThreadCount ==> 并发上传的协程数量，默认为1，即文件一个个上
 
 **overwrite-list选项**
 接受一个文件名字， 导入存储空间中被覆盖的文件列表到该文件
+
+**callback-urls选项**
+指定上传回调的地址，可以指定多个地址，以逗号分开
+
+**callback-host选项**
+上传回调HOST， 必须和CallbackUrls一起指定
 
 
 # 配置
