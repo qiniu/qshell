@@ -5,7 +5,7 @@
 # 格式
 
 ```
-qshell batchchgm [--force] <Bucket> [-i <KeyMimeMapFile>]
+qshell batchchgm [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] <Bucket> [-i <KeyMimeMapFile>]
 
 ```
 
@@ -14,7 +14,7 @@ qshell batchchgm -h
 
 # 鉴权
 
-需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+需要在使用了`account`设置了`AccessKey`, `SecretKey`和`Name`的情况下使用。
 
 # 参数
 
@@ -22,6 +22,12 @@ qshell batchchgm -h
 |---------|-----------|
 |Bucket|空间名，可以为公开空间或私有空间|
 |KeyMimeMapFile|文件名称和新的MimeType对的列表，每一行是`Key\tNewMimeType`格式，注意格式中间的Tab。|
+
+**success-list选项**
+该选项指定一个文件，qshell会把操作成功的文件行导入到该文件
+
+**failure-list选项**
+该选项指定一个文件， qshell会把操作失败的文件行加上错误状态码，错误的原因导入该文件
 
 **force选项**
 

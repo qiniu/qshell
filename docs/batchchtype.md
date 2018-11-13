@@ -6,12 +6,12 @@
 # 格式
 
 ```
-qshell batchchtype [--force] <Bucket> [-i <KeyFileTypeMapFile>]
+qshell batchchtype [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] <Bucket> [-i <KeyFileTypeMapFile>]
 ```
 
 # 鉴权
 
-需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+需要在使用了`account`设置了`AccessKey`, `SecretKey`和`Name`的情况下使用。
 
 # 帮助 
 ```
@@ -24,6 +24,12 @@ qshell batchchtype -h
 |---------|-----------|
 |Bucket|空间名，可以为公开空间或私有空间|
 | KeyFileTypeMapFile |原文件名和存储类型的列表，存储类型用数字表示，1 为低频存储，0 为普通存储。每行的文件名和存储类型之间用`\t`分隔。|
+
+**success-list选项**
+该选项指定一个文件，qshell会把操作成功的文件行导入到该文件
+
+**failure-list选项**
+该选项指定一个文件， qshell会把操作失败的文件行加上错误状态码，错误的原因导入该文件
 
 **force选项**
 

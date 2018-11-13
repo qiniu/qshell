@@ -429,8 +429,13 @@ func M3u8Delete(cmd *cobra.Command, params []string) {
 		fmt.Fprintln(os.Stderr, "no m3u8 slices found")
 		os.Exit(iqshell.STATUS_ERROR)
 	}
+	fileExporter, nErr := iqshell.NewFileExporter("", "", "")
+	if nErr != nil {
+		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
+		os.Exit(1)
+	}
 	if entryCnt <= BATCH_ALLOW_MAX {
-		batchDelete(m3u8FileList, bm)
+		batchDelete(m3u8FileList, bm, fileExporter)
 	} else {
 		batchCnt := entryCnt / BATCH_ALLOW_MAX
 		for i := 0; i < batchCnt; i++ {
@@ -439,7 +444,7 @@ func M3u8Delete(cmd *cobra.Command, params []string) {
 				end = entryCnt
 			}
 			entriesToDelete := m3u8FileList[i*BATCH_ALLOW_MAX : end]
-			batchDelete(entriesToDelete, bm)
+			batchDelete(entriesToDelete, bm, fileExporter)
 		}
 	}
 }
