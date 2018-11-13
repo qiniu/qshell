@@ -1,3 +1,7 @@
+# 2.3.1
+1. batchdelete, batchchgm, batchchtype, batchmove, batchrename命令运行可导出失败，成功文件列表
+2. rput, fput, qupload上传支持设置回调用 
+
 # 2.3.0
 1. 重构qshell代码，方便后续合并qrsctl, qfetch，和添加新的功能
 2. 加入了user命令， 多用户管理，可以在多个用户之间切换

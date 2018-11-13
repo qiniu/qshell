@@ -9,7 +9,7 @@
 
 ```
 qshell batchrename [--force] [--overwrite] [--success-list <SuccessFileName>] [--failure-list <failureFileName>] <Bucket> [-i <OldNewKeyMapFile>]
-``**
+`****
 
 # 鉴权
 
@@ -20,7 +20,9 @@ qshell batchrename [--force] [--overwrite] [--success-list <SuccessFileName>] [-
 |参数名|描述|
 |---------|-----------|
 |Bucket|空间名，可以为公开空间或私有空间|
-|OldNewKeyMapFile|原文件名和目标文件名对的列表，注意这里目标文件名不可以和原文件名相同，否则对于这个文件来说就是重命名失败。每行的原文件名和目标文件名之间用`\t`分隔。|
+
+**i短选项**
+接受一个文件参数, 内容为原文件名和目标文件名对的列表，注意这里目标文件名不可以和原文件名相同，否则对于这个文件来说就是重命名失败。每行的原文件名和目标文件名之间用`\t`分隔。如果没有指定该选项，默认从标准输入读取内容。
 
 **success-list选项**
 该选项指定一个文件，qshell会把操作成功的文件行导入到该文件

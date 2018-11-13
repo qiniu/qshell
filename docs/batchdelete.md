@@ -11,7 +11,7 @@ qshell batchdelete [--force] [--success-list <SuccessFileName>] [--failure-list 
 # 帮助
 ```
 qshell batchdelete -h
-```
+``**
 
 # 鉴权
 
@@ -22,7 +22,9 @@ qshell batchdelete -h
 |参数名|描述|
 |---------|-----------|
 |Bucket|空间名，可以为公开空间或私有空间|
-|KeyListFile|文件列表文件，该列表文件只要保证第一列是文件名即可，每个列用`\t`分隔，可以直接使用`listbucket`的结果。|
+
+**i短选项**
+接受一个文件参数， 文件列表文件，该列表文件只要保证第一列是文件名即可，每个列用`\t`分隔，可以直接使用`listbucket`的结果。 如果没有指定该选项，默认从标准输入读取内容。
 
 **success-list选项**
 该选项指定一个文件，qshell会把操作成功的文件行导入到该文件

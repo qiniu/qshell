@@ -12,18 +12,20 @@ qshell batchexpire [--force] <Bucket> <-i KeyDeleteAfterDaysMapFile>
 # 帮助 
 ```
 qshell batchexpire -h
-```
+``**
 
 # 鉴权
 
-需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+需要在使用了`account`设置了`AccessKey`, `SecretKey`和`Name`的情况下使用。
 
 # 参数
 
 |参数名|描述|
 |---------|-----------|
 |Bucket|空间名，可以为公开空间或私有空间|
-| KeyDeleteAfterDaysMapFile |原文件名和过期天数的列表，过期天数仅用数字表示即可。每行的文件名和存储类型之间用`\t`分隔。|
+
+**i短选项**
+接受一个文件参数， 内容为原文件名和过期天数的列表，过期天数仅用数字表示即可。每行的文件名和存储类型之间用`\t`分隔。 如果没有指定该文件，默认从标准输入读取内容。
 
 **force选项**
 

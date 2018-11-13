@@ -8,7 +8,7 @@
 # 格式
 
 ```
-qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
+qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 ```
 
 # 鉴权
@@ -19,10 +19,12 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 
 |参数名称|描述|可选参数|取值范围|
 |----------|-----------|----------|---------|
-|ThreadCount|下载的并发协程数量|Y|1-2000，如果不在这个范围内，默认为5|
 |LocalDownloadConfig|本地下载的配置文件，内容包括要下载的文件所在空间，文件前缀等信息，具体参考配置文件说明|N||
 
-其中 `ThreadCount` 表示支持同时下载多个文件。
+其中 `ThreadCount** 表示支持同时下载多个文件。
+
+**c选项**
+-c ThreadCount ==> 下载的并发协程数量, 大小必须在1-2000，如果不在这个范围内，默认为5
 
 # 配置【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数，如不设置，需支付源站流量费用，无法减免！！！】
 
@@ -79,5 +81,5 @@ qshell qdownload [<ThreadCount>] <LocalDownloadConfig>
 运行命令（下载并发数表示可以同时下载10个文件）：
 
 ```
-qshell qdownload 10 qdisk_down.conf
+qshell qdownload -c 10 qdisk_down.conf
 ```

@@ -6,18 +6,20 @@
 
 ```
 qshell batchstat <Bucket> <-i KeyListFile>
-```
+``**
 
 # 鉴权
 
-需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+需要在使用了`account`设置了`AccessKey`, `SecretKey`和`Name`的情况下使用。
 
 # 参数
 
 |参数名|描述|
 |---------|-----------|
 |Bucket|空间名，可以为公开空间或私有空间|
-|KeyListFile|待查询文件名列表，按行分隔|
+
+**i短选项**
+接受一个文件参数，内容为要stat的文件列表, 按行分隔。如果没有指定，从标准输入读取内容。
 
 
 # 示例
