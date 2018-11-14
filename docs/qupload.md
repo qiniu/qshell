@@ -5,7 +5,8 @@
 # 格式
 
 ```
-qshell qupload [<ThreadCount>] <LocalUploadConfig>
+qshell qupload [-c <ThreadCount>] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--overwrite-list <OverFileName>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>]
+<LocalUploadConfig>
 ```
 
 # 鉴权
@@ -16,12 +17,30 @@ qshell qupload [<ThreadCount>] <LocalUploadConfig>
 
 |参数名|描述|可选参数|
 |-----------|--------------------------|-----|
-|ThreadCount|并发上传的协程数量，默认为1，即文件一个个上传，对于大量小文件来说，可以通过提高该参数值来提升同步速度|Y|
 |LocalUploadConfig|数据同步的配置文件，该配置文件里面包含了一些诸如本地同步目录，目标空间名称等信息，详情参考配置文件的讲解|N|
 
-关于 `ThreadCount` 的值，并不是越大越好，所以工具里面限制了范围 [1, 2000]，在实际情况下最好根据所拥有的上传带宽和文件的平均大小来计算下这个并发数，最简单的算法就是带宽除以平均文件大小即可得到并发数。
+**c选项**
+ThreadCount ==> 并发上传的协程数量，默认为1，即文件一个个上传，对于大量小文件来说，可以通过提高该参数值来提升同步速度
+
+关于 `ThreadCount` 的值，并不是越大越好，所以工具里面限制了范围 [1, 2000**，在实际情况下最好根据所拥有的上传带宽和文件的平均大小来计算下这个并发数，最简单的算法就是带宽除以平均文件大小即可得到并发数。
 
 假设上传带宽有10Mbps，文件平均大小500KB，那么利用 10*1024/8/500 = 2.56，那么并发数差不多就是 3-6 左右。
+
+**success-list选项**
+接受一个文件名字，导入上传成功的文件列表到该文件
+
+**failure-list选项**
+接受一个文件名字， 导入上传失败的文件列表到该文件
+
+**overwrite-list选项**
+接受一个文件名字， 导入存储空间中被覆盖的文件列表到该文件
+
+**callback-urls选项**
+指定上传回调的地址，可以指定多个地址，以逗号分开
+
+**callback-host选项**
+上传回调HOST， 必须和CallbackUrls一起指定
+
 
 # 配置
 
@@ -308,7 +327,7 @@ demo2.gif
 命令格式：
 
 ```
-$ qshell qupload -success-list success.txt upload.conf 
+$ qshell qupload --success-list success.txt upload.conf 
 ```
 特别提示：由于这些选项所指定的文件在每次运行命令时，如果文件已存在，则已有内容会被清空然后写入新的内容，所以注意每次命令运行指定不同的文件。
 

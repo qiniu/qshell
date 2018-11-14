@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/storage"
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 var qUploadCmd = &cobra.Command{
@@ -30,6 +33,8 @@ func init() {
 	qUploadCmd.Flags().StringVarP(&failureFname, "failure-list", "f", "", "upload failure file list")
 	qUploadCmd.Flags().StringVarP(&overwriteFname, "overwrite-list", "w", "", "upload success (overwrite) file list")
 	qUploadCmd.Flags().Int64VarP(&upthreadCount, "worker", "c", 1, "worker count")
+	qUploadCmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	qUploadCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 	RootCmd.AddCommand(qUploadCmd)
 }
 
@@ -51,6 +56,8 @@ func parseUploadConfigFile(uploadConfigFile string, uploadConfig *iqshell.Upload
 		err = fmt.Errorf("Read upload config file `%s`: %v\n", uploadConfigFile, rErr)
 		return
 	}
+	//remove UTF-8 BOM
+	configData = bytes.TrimPrefix(configData, []byte("\xef\xbb\xbf"))
 	uErr := json.Unmarshal(configData, uploadConfig)
 	if uErr != nil {
 		err = fmt.Errorf("Parse upload config file `%s`: %v\n", uploadConfigFile, uErr)
@@ -84,6 +91,24 @@ func QiniuUpload(cmd *cobra.Command, params []string) {
 		logs.Error("Upload src dir should be a directory")
 		os.Exit(iqshell.STATUS_HALT)
 	}
+	policy := storage.PutPolicy{}
+
+	if (callbackUrls == "" && callbackHost != "") || (callbackUrls != "" && callbackHost == "") {
+		fmt.Fprintf(os.Stderr, "callbackUrls and callback must exist at the same time\n")
+		os.Exit(1)
+	}
+	if (uploadConfig.CallbackUrls == "" && uploadConfig.CallbackHost != "") || (uploadConfig.CallbackUrls != "" && uploadConfig.CallbackHost == "") {
+		fmt.Fprintf(os.Stderr, "callbackUrls and callback must exist at the same time\n")
+		os.Exit(1)
+	}
+	if (callbackHost != "" && callbackUrls != "") || (uploadConfig.CallbackHost != "" && uploadConfig.CallbackUrls != "") {
+		callbackUrls = strings.Replace(callbackUrls, ",", ";", -1)
+		policy.CallbackHost = callbackHost
+		policy.CallbackURL = callbackUrls
+		policy.CallbackBody = "key=$(key)&hash=$(etag)"
+		policy.CallbackBodyType = "application/x-www-form-urlencoded"
+	}
+	uploadConfig.PutPolicy = policy
 
 	//upload
 	if upthreadCount < iqshell.MIN_UPLOAD_THREAD_COUNT || upthreadCount > iqshell.MAX_UPLOAD_THREAD_COUNT {

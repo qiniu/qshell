@@ -8,17 +8,17 @@
 # 格式
 
 ```
-qshell batchcopy [--force] [--overwrite] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
+qshell batchcopy [--force] [--overwrite] [--success-list <SuccessFileName>] [--failure-list <failureFileName>] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
 ```
 
 # 帮助
 ```
 qshell batchcopy -h
-```
+``**
 
 # 鉴权
 
-需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+需要在使用了`account`设置了`AccessKey`, `SecretKey`和`Name`的情况下使用。
 
 # 参数
 
@@ -26,7 +26,15 @@ qshell batchcopy -h
 |---------|-----------|
 |SrcBucket|原空间名，可以为公开空间或私有空间|
 |DestBucket|目标空间名，可以为公开空间或私有空间|
-|SrcDestKeyMapFile|原文件名和目标文件名对的列表，如果你希望目标文件名和原文件名相同的话，也可以不指定目标文件名，那么这一行就是只有原文件名即可。每行的原文件名和目标文件名之间用`\t`分隔。|
+
+**i短选项**
+该选项接受一个文件参数， 内容是原文件名和目标文件名对的列表，如果你希望目标文件名和原文件名相同的话，也可以不指定目标文件名，那么这一行就是只有原文件名即可。每行的原文件名和目标文件名之间用`\t`分隔。如果没有指定该参数， 从标准输入读取内容。
+
+**success-list选项**
+该选项指定一个文件，qshell会把操作成功的文件行导入到该文件
+
+**failure-list选项**
+该选项指定一个文件， qshell会把操作失败的文件行加上错误状态码，错误的原因导入该文件
 
 **force选项**
 
@@ -74,6 +82,12 @@ $ qshell batchcopy --force if-pbl if-pri -i tocopy.txt
 
 ```
 $ qshell batchcopy --force --overwrite if-pbl if-pri -i tocopy.txt
+```
+
+5. 如果希望导出复制成功和失败的列表， 可以使用--success-list和--failure-list选项
+
+```
+$ qshell batchcopy --success-list success.txt --failure-list failure.txt -i tocopy.txt
 ```
 
 # 注意

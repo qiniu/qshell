@@ -32,6 +32,8 @@ var (
 	worker        int
 	inputFile     string
 	deadline      int
+	bsuccessFname string
+	bfailureFname string
 )
 
 var (
@@ -116,14 +118,20 @@ func init() {
 	batchDeleteCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchDeleteCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchDeleteCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
+	batchDeleteCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "delete success list")
+	batchDeleteCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "delete failure list")
 
 	batchChgmCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChgmCmd.Flags().IntVarP(&worker, "worker", "c", 1, "woker count")
 	batchChgmCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
+	batchChgmCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "change mimetype success list")
+	batchChgmCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "change mimetype failure list")
 
 	batchChtypeCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChtypeCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchChtypeCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
+	batchChtypeCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "change storage type success file list")
+	batchChtypeCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "change storage type failure file list")
 
 	batchDelAfterCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchDelAfterCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
@@ -132,14 +140,20 @@ func init() {
 	batchRenameCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchRenameCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchRenameCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
+	batchRenameCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "rename success list")
+	batchRenameCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "rename failure list")
 
 	batchMoveCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchMoveCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchMoveCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
+	batchMoveCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "move success list")
+	batchMoveCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "move failure list")
 
 	batchCopyCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchCopyCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchCopyCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
+	batchCopyCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "copy success list")
+	batchCopyCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "copy failure list")
 
 	batchSignCmd.Flags().IntVarP(&deadline, "deadline", "e", 3600, "deadline in seconds")
 	batchSignCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
@@ -352,6 +366,11 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 	}
 	scanner := bufio.NewScanner(fp)
 	entries := make([]iqshell.EntryPath, 0, BATCH_ALLOW_MAX)
+	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	if nErr != nil {
+		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
+		os.Exit(1)
+	}
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Fields(line)
@@ -372,7 +391,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 			batchWaitGroup.Add(1)
 			batchTasks <- func() {
 				defer batchWaitGroup.Done()
-				batchDelete(toDeleteEntries, bm)
+				batchDelete(toDeleteEntries, bm, fileExporter)
 			}
 			entries = make([]iqshell.EntryPath, 0, BATCH_ALLOW_MAX)
 		}
@@ -385,14 +404,14 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		batchWaitGroup.Add(1)
 		batchTasks <- func() {
 			defer batchWaitGroup.Done()
-			batchDelete(toDeleteEntries, bm)
+			batchDelete(toDeleteEntries, bm, fileExporter)
 		}
 	}
 
 	batchWaitGroup.Wait()
 }
 
-func batchDelete(entries []iqshell.EntryPath, bm *iqshell.BucketManager) {
+func batchDelete(entries []iqshell.EntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
 	ret, err := bm.BatchDelete(entries)
 
 	if err != nil {
@@ -404,8 +423,10 @@ func batchDelete(entries []iqshell.EntryPath, bm *iqshell.BucketManager) {
 
 			if item.Code != 200 || item.Data.Error != "" {
 				logs.Error("Delete '%s' => '%s' failed, Code: %d, Error: %s", entry.Bucket, entry.Key, item.Code, item.Data.Error)
+				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%d\t%s\n", entry.Key, item.Code, item.Data.Error))
 			} else {
 				logs.Debug("Delete '%s' => '%s' success", entry.Bucket, entry.Key)
+				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
 			}
 		}
 	}
@@ -457,7 +478,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 	} else {
 		fp, err = os.Open(keyMimeMapFile)
 		if err != nil {
-			fmt.Printf("Open key mime map file error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Open key mime map file error: %v\n", err)
 			os.Exit(iqshell.STATUS_HALT)
 		}
 		defer fp.Close()
@@ -465,6 +486,11 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]iqshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
+	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	if nErr != nil {
+		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
+		os.Exit(1)
+	}
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Fields(line)
@@ -489,7 +515,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 			batchWaitGroup.Add(1)
 			batchTasks <- func() {
 				defer batchWaitGroup.Done()
-				batchChgm(toChgmEntries, bm)
+				batchChgm(toChgmEntries, bm, fileExporter)
 			}
 			entries = make([]iqshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
 		}
@@ -501,14 +527,14 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 		batchWaitGroup.Add(1)
 		batchTasks <- func() {
 			defer batchWaitGroup.Done()
-			batchChgm(toChgmEntries, bm)
+			batchChgm(toChgmEntries, bm, fileExporter)
 		}
 	}
 
 	batchWaitGroup.Wait()
 }
 
-func batchChgm(entries []iqshell.ChgmEntryPath, bm *iqshell.BucketManager) {
+func batchChgm(entries []iqshell.ChgmEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
 	ret, err := bm.BatchChgm(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch chgm error: %v\n", err)
@@ -517,8 +543,10 @@ func batchChgm(entries []iqshell.ChgmEntryPath, bm *iqshell.BucketManager) {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
+				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%d\t%s\n", entry.Key, item.Code, item.Data.Error))
 				logs.Error("Chgm '%s' => '%s' Failed, Code: %d, Error: %s", entry.Key, entry.MimeType, item.Code, item.Data.Error)
 			} else {
+				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
 				logs.Debug("Chgm '%s' => '%s' success", entry.Key, entry.MimeType)
 			}
 		}
@@ -585,6 +613,11 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 	var items []string
 	var entry iqshell.ChtypeEntryPath
 
+	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	if nErr != nil {
+		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
+		os.Exit(1)
+	}
 	for scanner.Scan() {
 		line = scanner.Text()
 		items = strings.Fields(line)
@@ -605,46 +638,34 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 			}
 			entries = append(entries, entry)
 		}
-	}
+		if len(entries) == BATCH_ALLOW_MAX {
+			toChtypeEntries := make([]iqshell.ChtypeEntryPath, len(entries))
+			copy(toChtypeEntries, entries)
 
-	var errEntries []iqshell.ChtypeEntryPath
-
-	var batches = len(entries)/BATCH_ALLOW_MAX + 1
-	var completed int
-
-	for i := 0; i < batches; i++ {
-		var batch []iqshell.ChtypeEntryPath
-
-		if i == batches-1 {
-			batch = entries
-		} else {
-			batch = entries[:BATCH_ALLOW_MAX]
-			entries = entries[BATCH_ALLOW_MAX:]
+			batchWaitGroup.Add(1)
+			batchTasks <- func() {
+				defer batchWaitGroup.Done()
+				batchChtype(toChtypeEntries, bm, fileExporter)
+			}
+			entries = make([]iqshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
 		}
+	}
+	if len(entries) > 0 {
+		toChtypeEntries := make([]iqshell.ChtypeEntryPath, len(entries))
+		copy(toChtypeEntries, entries)
 
 		batchWaitGroup.Add(1)
 		batchTasks <- func() {
 			defer batchWaitGroup.Done()
-			for _, entry := range batchChtype(batch, bm) {
-				errEntries = append(errEntries, entry)
-			}
-			completed += 1
-			fmt.Printf("\rComplete: %%%.1f", float64(completed)/float64(batches)*100)
+			batchChtype(toChtypeEntries, bm, fileExporter)
 		}
 	}
+
 	batchWaitGroup.Wait()
 
-	fmt.Println()
-	if len(errEntries) > 0 {
-		fmt.Fprintf(os.Stderr, "Total %d entries failed: \n", len(errEntries))
-		fmt.Fprintf(os.Stderr, "%s\n", strings.Repeat("-", 30))
-		for _, entry := range errEntries {
-			fmt.Fprintf(os.Stderr, "%s\t%d\n", entry.Key, entry.FileType)
-		}
-	}
 }
 
-func batchChtype(entries []iqshell.ChtypeEntryPath, bm *iqshell.BucketManager) (errEntries []iqshell.ChtypeEntryPath) {
+func batchChtype(entries []iqshell.ChtypeEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
 	ret, err := bm.BatchChtype(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch chtype error: %v\n", err)
@@ -653,8 +674,11 @@ func batchChtype(entries []iqshell.ChtypeEntryPath, bm *iqshell.BucketManager) (
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
-				fmt.Fprintf(os.Stderr, "Chtype '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.FileType, item.Code, item.Data.Error)
-				errEntries = append(errEntries, entry)
+				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%d\t%s\n", entry.Key, item.Code, item.Data.Error))
+				logs.Error("Chtype '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.FileType, item.Code, item.Data.Error)
+			} else {
+				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
+				logs.Debug("Chtype '%s' => '%s' success", entry.Key, entry.FileType)
 			}
 		}
 	}
@@ -801,7 +825,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 	if inputFile == "" {
 		oldNewKeyMapFile = "stdin"
 	} else {
-		oldNewKeyMapFile = params[1]
+		oldNewKeyMapFile = inputFile
 	}
 
 	var batchTasks chan func()
@@ -831,6 +855,12 @@ func BatchRename(cmd *cobra.Command, params []string) {
 	}
 	scanner := bufio.NewScanner(fp)
 	entries := make([]iqshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
+
+	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	if nErr != nil {
+		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
+		os.Exit(1)
+	}
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, "\t")
@@ -859,7 +889,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 			batchWaitGroup.Add(1)
 			batchTasks <- func() {
 				defer batchWaitGroup.Done()
-				batchRename(toRenameEntries, bm)
+				batchRename(toRenameEntries, bm, fileExporter)
 			}
 			entries = make([]iqshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
 		}
@@ -871,13 +901,13 @@ func BatchRename(cmd *cobra.Command, params []string) {
 		batchWaitGroup.Add(1)
 		batchTasks <- func() {
 			defer batchWaitGroup.Done()
-			batchRename(toRenameEntries, bm)
+			batchRename(toRenameEntries, bm, fileExporter)
 		}
 	}
 	batchWaitGroup.Wait()
 }
 
-func batchRename(entries []iqshell.RenameEntryPath, bm *iqshell.BucketManager) {
+func batchRename(entries []iqshell.RenameEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
 	ret, err := bm.BatchRename(entries)
 
 	if err != nil {
@@ -887,8 +917,10 @@ func batchRename(entries []iqshell.RenameEntryPath, bm *iqshell.BucketManager) {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
+				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%d\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key, item.Code, item.Data.Error))
 				logs.Error("Rename '%s' => '%s' Failed, Code: %d, Error: %s", entry.SrcEntry.Key, entry.DstEntry.Key, item.Code, item.Data.Error)
 			} else {
+				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key))
 				logs.Debug("Rename '%s' => '%s' success", entry.SrcEntry.Key, entry.DstEntry.Key)
 			}
 		}
@@ -951,6 +983,12 @@ func BatchMove(cmd *cobra.Command, params []string) {
 	}
 	scanner := bufio.NewScanner(fp)
 	entries := make([]iqshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
+
+	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	if nErr != nil {
+		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
+		os.Exit(1)
+	}
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, "\t")
@@ -982,7 +1020,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 			batchWaitGroup.Add(1)
 			batchTasks <- func() {
 				defer batchWaitGroup.Done()
-				batchMove(toMoveEntries, bm)
+				batchMove(toMoveEntries, bm, fileExporter)
 			}
 			entries = make([]iqshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
 		}
@@ -994,14 +1032,14 @@ func BatchMove(cmd *cobra.Command, params []string) {
 		batchWaitGroup.Add(1)
 		batchTasks <- func() {
 			defer batchWaitGroup.Done()
-			batchMove(toMoveEntries, bm)
+			batchMove(toMoveEntries, bm, fileExporter)
 		}
 	}
 
 	batchWaitGroup.Wait()
 }
 
-func batchMove(entries []iqshell.MoveEntryPath, bm *iqshell.BucketManager) {
+func batchMove(entries []iqshell.MoveEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
 	ret, err := bm.BatchMove(entries)
 
 	if err != nil {
@@ -1011,11 +1049,14 @@ func batchMove(entries []iqshell.MoveEntryPath, bm *iqshell.BucketManager) {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
+				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%d\t%s\n", entry.SrcEntry.Key,
+					entry.DstEntry.Key, item.Code, item.Data.Error))
 				logs.Error("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key,
 					entry.DstEntry.Bucket, entry.DstEntry.Key,
 					item.Code, item.Data.Error)
 			} else {
+				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key))
 				logs.Debug("Move '%s:%s' => '%s:%s' success",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key, entry.DstEntry.Bucket, entry.DstEntry.Key)
 			}
@@ -1081,6 +1122,12 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
 	entries := make([]iqshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
+
+	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	if nErr != nil {
+		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
+		os.Exit(1)
+	}
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, "\t")
@@ -1112,7 +1159,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 			batchWaitGroup.Add(1)
 			batchTasks <- func() {
 				defer batchWaitGroup.Done()
-				batchCopy(toCopyEntries, bm)
+				batchCopy(toCopyEntries, bm, fileExporter)
 			}
 			entries = make([]iqshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
 		}
@@ -1124,14 +1171,14 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 		batchWaitGroup.Add(1)
 		batchTasks <- func() {
 			defer batchWaitGroup.Done()
-			batchCopy(toCopyEntries, bm)
+			batchCopy(toCopyEntries, bm, fileExporter)
 		}
 	}
 
 	batchWaitGroup.Wait()
 }
 
-func batchCopy(entries []iqshell.CopyEntryPath, bm *iqshell.BucketManager) {
+func batchCopy(entries []iqshell.CopyEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
 	ret, err := bm.BatchCopy(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch copy error: %v\n", err)
@@ -1140,11 +1187,14 @@ func batchCopy(entries []iqshell.CopyEntryPath, bm *iqshell.BucketManager) {
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
+				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%d\t%s\n", entry.SrcEntry.Key,
+					entry.DstEntry.Key, item.Code, item.Data.Error))
 				logs.Error("Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key,
 					entry.DstEntry.Bucket, entry.DstEntry.Key,
 					item.Code, item.Data.Error)
 			} else {
+				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key))
 				logs.Debug("Copy '%s:%s' => '%s:%s' success",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key,
 					entry.DstEntry.Bucket, entry.DstEntry.Key)

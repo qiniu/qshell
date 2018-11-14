@@ -19,11 +19,13 @@ var upSettings = storage.Settings{
 }
 
 var (
-	pOverwrite  bool
-	mimeType    string
-	fileType    int
-	workerCount int
-	upHost      string
+	pOverwrite   bool
+	mimeType     string
+	fileType     int
+	workerCount  int
+	upHost       string
+	callbackUrls string
+	callbackHost string
 )
 
 var formPutCmd = &cobra.Command{
@@ -46,12 +48,16 @@ func init() {
 	formPutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
 	formPutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
 	formPutCmd.Flags().StringVarP(&upHost, "up-host", "u", "", "uphost")
+	formPutCmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	formPutCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
 	RePutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
 	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
 	RePutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
 	RePutCmd.Flags().StringVarP(&upHost, "up-host", "u", "", "uphost")
+	RePutCmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	RePutCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
 	viper.BindPFlag("hosts.up_host", formPutCmd.Flags().Lookup("up-host"))
 	viper.BindPFlag("hosts.up_host", RePutCmd.Flags().Lookup("up-host"))
@@ -86,6 +92,17 @@ func FormPut(cmd *cobra.Command, params []string) {
 	policy.FileType = fileType
 	policy.Expires = 7 * 24 * 3600
 	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
+	if (callbackUrls == "" && callbackHost != "") || (callbackUrls != "" && callbackHost == "") {
+		fmt.Fprintf(os.Stderr, "callbackUrls and callback must exist at the same time\n")
+		os.Exit(1)
+	}
+	if callbackHost != "" && callbackUrls != "" {
+		callbackUrls = strings.Replace(callbackUrls, ",", ";", -1)
+		policy.CallbackHost = callbackHost
+		policy.CallbackURL = callbackUrls
+		policy.CallbackBody = "key=$(key)&hash=$(etag)"
+		policy.CallbackBodyType = "application/x-www-form-urlencoded"
+	}
 
 	var putExtra storage.PutExtra
 
@@ -193,6 +210,17 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	policy.FileType = fileType
 	policy.Expires = 7 * 24 * 3600
 	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
+	if (callbackUrls == "" && callbackHost != "") || (callbackUrls != "" && callbackHost == "") {
+		fmt.Fprintf(os.Stderr, "callbackUrls and callback must exist at the same time\n")
+		os.Exit(1)
+	}
+	if callbackHost != "" && callbackUrls != "" {
+		callbackUrls = strings.Replace(callbackUrls, ",", ";", -1)
+		policy.CallbackHost = callbackHost
+		policy.CallbackURL = callbackUrls
+		policy.CallbackBody = "key=$(key)&hash=$(etag)"
+		policy.CallbackBodyType = "application/x-www-form-urlencoded"
+	}
 
 	var putExtra storage.RputExtra
 	if upHost != "" {

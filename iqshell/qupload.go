@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -99,8 +100,11 @@ type UploadConfig struct {
 	LogStdout bool   `json:"log_stdout,omitempty"`
 
 	//more settings
-	DeleteOnSuccess bool `json:"delete_on_success,omitempty"`
-	DisableResume   bool `json:"disable_resume,omitempty"`
+	DeleteOnSuccess bool   `json:"delete_on_success,omitempty"`
+	DisableResume   bool   `json:"disable_resume,omitempty"`
+	CallbackUrls    string `json:"callback_urls,omitempty"`
+	CallbackHost    string `json:"callback_host,omitempty"`
+	PutPolicy       storage.PutPolicy
 }
 
 func (cfg *UploadConfig) JobId() string {
@@ -276,6 +280,19 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 	fmt.Println()
 }
 
+func (cfg *UploadConfig) UploadToken(mac *qbox.Mac, uploadFileKey string) string {
+
+	cfg.PutPolicy.Scope = cfg.Bucket
+	if cfg.Overwrite {
+		cfg.PutPolicy.Scope = fmt.Sprintf("%s:%s", cfg.Bucket, uploadFileKey)
+		cfg.PutPolicy.InsertOnly = 0
+	}
+
+	cfg.PutPolicy.FileType = cfg.FileType
+	cfg.PutPolicy.Expires = 7 * 24 * 3600
+	return cfg.PutPolicy.UploadToken(mac)
+}
+
 var uploadTasks chan func()
 var initUpOnce sync.Once
 
@@ -341,28 +358,28 @@ func NewFileExporter(successFname, failureFname, overwriteFname string) (ex *Fil
 	return
 }
 
-func (ex *FileExporter) WriteToFailedWriter(localFilePath, uploadFileKey string, err error) {
+func (ex *FileExporter) WriteToFailedWriter(text string) {
 	if ex.FailureWriter != nil {
 		ex.FailureLock.Lock()
-		ex.FailureWriter.WriteString(fmt.Sprintf("%s\t%s\t%v\n", localFilePath, uploadFileKey, err))
+		ex.FailureWriter.WriteString(text)
 		ex.FailureWriter.Flush()
 		ex.FailureLock.Unlock()
 	}
 }
 
-func (ex *FileExporter) WriteToSuccessWriter(localFilePath, uploadFileKey string) {
+func (ex *FileExporter) WriteToSuccessWriter(text string) {
 	if ex.SuccessWriter != nil {
 		ex.SuccessLock.Lock()
-		ex.SuccessWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		ex.SuccessWriter.WriteString(text)
 		ex.SuccessWriter.Flush()
 		ex.SuccessLock.Unlock()
 	}
 }
 
-func (ex *FileExporter) WriteToOverwriter(localFilePath, uploadFileKey string) {
+func (ex *FileExporter) WriteToOverwriter(text string) {
 	if ex.OverwriteWriter != nil {
 		ex.OverwriteLock.Lock()
-		ex.OverwriteWriter.WriteString(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
+		ex.OverwriteWriter.WriteString(text)
 		ex.OverwriteWriter.Flush()
 		ex.OverwriteLock.Unlock()
 	}
@@ -560,17 +577,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 		uploadTasks <- func() {
 			defer upWaitGroup.Done()
 
-			policy := storage.PutPolicy{}
-			policy.Scope = uploadConfig.Bucket
-			if uploadConfig.Overwrite {
-				policy.Scope = fmt.Sprintf("%s:%s", uploadConfig.Bucket, uploadFileKey)
-				policy.InsertOnly = 0
-			}
-
-			policy.FileType = uploadConfig.FileType
-
-			policy.Expires = 7 * 24 * 3600
-			upToken := policy.UploadToken(bm.GetMac())
+			upToken := uploadConfig.UploadToken(bm.GetMac(), uploadFileKey)
 
 			if localFileSize > putThreshold {
 				resumableUploadFile(uploadConfig, ldb, &ldbWOpt, ldbKey, upToken, storePath,
@@ -783,7 +790,7 @@ func formUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.Wr
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
 		logs.Error("Form upload file `%s` => `%s` failed due to nerror `%v`", localFilePath, uploadFileKey, err)
-		exporter.WriteToFailedWriter(localFilePath, uploadFileKey, err)
+		exporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%v\n", localFilePath, uploadFileKey, err))
 	} else {
 		atomic.AddInt64(&successFileCount, 1)
 		logs.Informational("Upload file `%s` => `%s : %s` success", localFilePath, uploadConfig.Bucket, uploadFileKey)
@@ -801,9 +808,9 @@ func formUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.Wr
 			}
 		}
 
-		exporter.WriteToSuccessWriter(localFilePath, uploadFileKey)
+		exporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
 		if uploadConfig.Overwrite {
-			exporter.WriteToOverwriter(localFilePath, uploadFileKey)
+			exporter.WriteToOverwriter(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
 		}
 	}
 }
@@ -838,7 +845,7 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
 		logs.Error("Resumable upload file `%s` => `%s` failed due to nerror `%v`", localFilePath, uploadFileKey, err)
-		exporter.WriteToFailedWriter(localFilePath, uploadFileKey, err)
+		exporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%v\n", localFilePath, uploadFileKey, err))
 	} else {
 		if progressFilePath != "" {
 			os.Remove(progressFilePath)
@@ -859,9 +866,9 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 				logs.Info("Delete `%s` on upload success done", localFilePath)
 			}
 		}
-		exporter.WriteToSuccessWriter(localFilePath, uploadFileKey)
+		exporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
 		if uploadConfig.Overwrite {
-			exporter.WriteToOverwriter(localFilePath, uploadFileKey)
+			exporter.WriteToOverwriter(fmt.Sprintf("%s\t%s\n", localFilePath, uploadFileKey))
 		}
 	}
 }

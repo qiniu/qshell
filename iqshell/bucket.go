@@ -154,6 +154,9 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 			return
 		}
 	}
+	if !strings.HasPrefix(reqHost, "http") {
+		reqHost = "http://" + reqHost
+	}
 	url := strings.Join([]string{reqHost, "get", Encode(entryUri)}, "/")
 
 	var data GetRet
