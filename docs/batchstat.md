@@ -6,7 +6,7 @@
 
 ```
 qshell batchstat <Bucket> <-i KeyListFile>
-``**
+```
 
 # 鉴权
 

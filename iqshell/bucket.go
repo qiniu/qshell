@@ -313,7 +313,6 @@ func GetBucketManager() *BucketManager {
 	}
 	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
 	cfg := storage.Config{
-		IoHost:  viper.GetString("hosts.io_host"),
 		RsHost:  viper.GetString("hosts.rs_host"),
 		ApiHost: viper.GetString("hosts.api_host"),
 		RsfHost: viper.GetString("hosts.rsf_host"),

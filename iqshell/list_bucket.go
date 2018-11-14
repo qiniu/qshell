@@ -56,7 +56,7 @@ func errorWarning(marker string, err error) {
 *@return listError
  */
 func (m *BucketManager) ListFiles(bucket, prefix, marker, listResultFile string) (retErr error) {
-	return m.ListBucket2(bucket, prefix, marker, listResultFile, "", time.Time{}, time.Time{}, nil, 5)
+	return m.ListBucket2(bucket, prefix, marker, listResultFile, "", time.Time{}, time.Time{}, nil, 20)
 }
 
 func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int) (retErr error) {
@@ -82,14 +82,15 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 	notfilterTime := startDate.IsZero() && endDate.IsZero()
 	notfilterSuffix := len(suffixes) == 0
 
-	for i := 0; i < maxRetry; i++ {
+	c := 0
+	for {
 		entries, lErr := m.ListBucket(bucket, prefix, delimiter, marker)
 
 		if entries == nil && lErr == nil {
 			// no data
 			return
 		}
-		if retErr != nil {
+		if lErr != nil {
 			errorWarning(lastMarker, retErr)
 		}
 
@@ -145,6 +146,16 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		} else {
 			marker = lastMarker
 		}
+
+		if maxRetry >= 0 {
+			c++
+			if c > maxRetry {
+				break
+			}
+		}
+	}
+	if lastMarker != "" {
+		fmt.Println("Marker: ", lastMarker)
 	}
 	return
 }

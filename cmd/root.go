@@ -86,5 +86,9 @@ func initConfig() {
 		viper.AddConfigPath(curUser.HomeDir)
 		viper.SetConfigName(".qshell")
 	}
-	viper.ReadInConfig()
+	if rErr := viper.ReadInConfig(); rErr != nil {
+		if _, ok := rErr.(viper.ConfigFileNotFoundError); !ok {
+			fmt.Fprintf(os.Stderr, "read config file: %v\n", rErr)
+		}
+	}
 }

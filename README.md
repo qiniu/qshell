@@ -49,23 +49,29 @@ export PATH=$PATH:/home/jemy/tools
 
 ![windows-qshell-path-settings.png](http://devtools.qiniu.com/windows-qshell-path-settings.png)
 
-## 密钥设置
+## qshell使用
+
+1. 添加密钥和账户名称
 
 该工具有两类命令，一类需要鉴权，另一类不需要。
 
-需要鉴权的命令都需要依赖七牛账号下的 `AccessKey` 和 `SecretKey`。所以这类命令运行之前，需要使用 `account` 命令来设置下 `AccessKey` ，`SecretKey` 。
+需要鉴权的命令都需要依赖七牛账号下的 `AccessKey`, `SecretKey`和 `Name`。所以这类命令运行之前，需要使用 `account` 命令来添加 `AccessKey` ，`SecretKey`和`Name` 。
+`Name`是用户可以自定义的字符串，用来唯一表示AccessKey/SecretKey账户，qshell会对添加的每一个账户信息加密保存，可以使用自命令`user`进行切换，切换账户的时候，需要使用账户唯一标识
+`Name`。 
 
 ```
-$ qshell account ak sk name
+$ qshell account <Your AccessKey> <Your SecretKey> <Your Name>
 ```
 
 其中name表示该账号的名称, 如果ak, sk, name首字母是"-", 需要使用如下的方式添加账号, 这样避免把该项识别成命令行选项:
 
 ```
-$ qshell account -- ak sk name
+$ qshell account -- <Your AccessKey> <Your SecretKey> <Your Name>
 ```
 
 可以连续使用qshell account 添加账号ak, sk, name信息，qshell会保存这些账号的信息， 可以使用qshell user命令列举账号信息，在各个账号之间切换, 删除账号等
+
+2. 添加完账户后，就可以使用qshell上传，下载文件了
 
 ## 账户管理
 

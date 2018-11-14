@@ -9,7 +9,7 @@
 
 ```
 qshell batchrename [--force] [--overwrite] [--success-list <SuccessFileName>] [--failure-list <failureFileName>] <Bucket> [-i <OldNewKeyMapFile>]
-`****
+```
 
 # 鉴权
 

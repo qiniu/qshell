@@ -1,3 +1,8 @@
+# 2.3.2
+1. 修复fetch incorrect region
+2. 修复docs中文档格式显示问题
+3. 给listbucket2添加不限制重试次数的功能
+
 # 2.3.1
 1. batchdelete, batchchgm, batchchtype, batchmove, batchrename命令运行可导出失败，成功文件列表
 2. rput, fput, qupload上传支持设置回调用 

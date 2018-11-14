@@ -109,7 +109,10 @@ var (
 
 func init() {
 	batchFetchCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "urls list file")
-	batchFetchCmd.Flags().IntVarP(&worker, "worker", "c", 5, "worker count")
+	batchFetchCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
+	batchFetchCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "file to save batch fetch success list")
+	batchFetchCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "file to save batch fetch failure list")
+
 	batchStatCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchCopyCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchMoveCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
@@ -195,11 +198,16 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 	)
 	defer close(fItemChan)
 
-	go batchFetch(fItemChan)
+	fileExporter, fErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	if fErr != nil {
+		fmt.Fprintf(os.Stderr, "create file exporter: %v\n", fErr)
+		os.Exit(1)
+	}
+	go batchFetch(fItemChan, fileExporter)
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Fields(line)
+		items := strings.Split(line, "\t")
 		if len(items) <= 0 {
 			continue
 		}
@@ -225,13 +233,24 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 	}
 }
 
-func batchFetch(fItemChan chan *iqshell.FetchItem) {
+func batchFetch(fItemChan chan *iqshell.FetchItem, fileExporter *iqshell.FileExporter) {
 	for i := 0; i < worker; i++ {
 		go func() {
 			bm := iqshell.GetBucketManager()
 			for fetchItem := range fItemChan {
-				fetchResult, fErr := bm.Fetch(fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
-				fmt.Println(fetchResult, fErr)
+				_, fErr := bm.Fetch(fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
+				if fErr != nil {
+					fmt.Fprintf(os.Stderr, "fetch %s => %s:%s failed\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
+					if fileExporter != nil {
+						fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%v\n", fetchItem.RemoteUrl, fetchItem.Key, fErr))
+					}
+				} else {
+					fmt.Printf("fetch %s => %s:%s success\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
+					if fileExporter != nil {
+						fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", fetchItem.RemoteUrl, fetchItem.Key))
+					}
+
+				}
 			}
 		}()
 	}
