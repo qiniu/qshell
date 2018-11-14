@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
@@ -55,6 +56,8 @@ func parseUploadConfigFile(uploadConfigFile string, uploadConfig *iqshell.Upload
 		err = fmt.Errorf("Read upload config file `%s`: %v\n", uploadConfigFile, rErr)
 		return
 	}
+	//remove UTF-8 BOM
+	configData = bytes.TrimPrefix(configData, []byte("\xef\xbb\xbf"))
 	uErr := json.Unmarshal(configData, uploadConfig)
 	if uErr != nil {
 		err = fmt.Errorf("Parse upload config file `%s`: %v\n", uploadConfigFile, uErr)
