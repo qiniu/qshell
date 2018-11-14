@@ -6,7 +6,7 @@
 
 ```
 qshell batchsign [<-i UrlListFile>] [-e <Deadline>]
-``**
+```
 
 # 鉴权
 

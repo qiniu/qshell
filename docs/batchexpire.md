@@ -12,7 +12,7 @@ qshell batchexpire [--force] <Bucket> <-i KeyDeleteAfterDaysMapFile>
 # 帮助 
 ```
 qshell batchexpire -h
-``**
+```
 
 # 鉴权
 

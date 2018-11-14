@@ -14,7 +14,7 @@ qshell batchcopy [--force] [--overwrite] [--success-list <SuccessFileName>] [--f
 # 帮助
 ```
 qshell batchcopy -h
-``**
+```
 
 # 鉴权
 

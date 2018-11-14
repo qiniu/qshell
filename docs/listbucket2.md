@@ -15,8 +15,10 @@ Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 # 格式
 
 ```
-qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--end <EndDate>] <Bucket> [-o <ListBucketResultFile>]
+qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [-o <ListBucketResultFile>]
 ```
+
+选项max-retry， 默认列举出错的重试次数为20次，如果希望可以列举完文件列表，不限错误次数，可以设置max-retry为负数。
 
 （1）获取空间中所有的文件列表，这种情况下，可以直接指定 `Bucket` 参数和结果保存文件参数 `ListBucketResultFile` 即可。
 

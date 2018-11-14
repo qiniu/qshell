@@ -144,7 +144,7 @@ func init() {
 	lsBucketCmd2.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
 	lsBucketCmd2.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
 	lsBucketCmd2.Flags().StringVarP(&suffixes, "suffixes", "q", "", "list by key suffixes, separated by comma")
-	lsBucketCmd2.Flags().IntVarP(&maxRetry, "max-retry", "x", 5, "max retries when error occurred")
+	lsBucketCmd2.Flags().IntVarP(&maxRetry, "max-retry", "x", 20, "max retries when error occurred")
 	lsBucketCmd2.Flags().StringVarP(&outFile, "out", "o", "", "output file")
 	lsBucketCmd2.Flags().StringVarP(&startDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	lsBucketCmd2.Flags().StringVarP(&endDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")

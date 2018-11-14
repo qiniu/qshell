@@ -11,7 +11,7 @@ qshell batchdelete [--force] [--success-list <SuccessFileName>] [--failure-list 
 # 帮助
 ```
 qshell batchdelete -h
-``**
+```
 
 # 鉴权
 
