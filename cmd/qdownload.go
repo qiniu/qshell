@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"os"
 )
 
@@ -38,9 +40,18 @@ func QiniuDownload(cmd *cobra.Command, params []string) {
 		fmt.Fprintf(os.Stderr, "open file: %s: %v\n", configFile, oErr)
 		os.Exit(1)
 	}
-	dErr := json.NewDecoder(cfh).Decode(&downloadConfig)
-	if dErr != nil {
-		fmt.Fprintf(os.Stderr, "decode configFile content: %v\n", dErr)
+	content, rErr := ioutil.ReadAll(cfh)
+	if rErr != nil {
+		fmt.Fprintf(os.Stderr, "read configFile content: %v\n", rErr)
+		os.Exit(1)
+	}
+
+	// remove windows utf-8 BOM
+	content = bytes.TrimPrefix(content, []byte("\xef\xbb\xbf"))
+	uErr := json.Unmarshal(content, &downloadConfig)
+
+	if uErr != nil {
+		fmt.Fprintf(os.Stderr, "decode configFile content: %v\n", uErr)
 		os.Exit(1)
 	}
 
