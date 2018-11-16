@@ -18,7 +18,25 @@ Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [-o <ListBucketResultFile>]
 ```
 
-选项max-retry， 默认列举出错的重试次数为20次，如果希望可以列举完文件列表，不限错误次数，可以设置max-retry为负数。
+# 鉴权
+
+需要在使用了`account`设置了`AccessKey`, `SecretKey` 和  `Name` 的情况下使用。
+
+
+# 选项和参数
+
+| 参数名               | 描述                                                                                                           | 可选参数 |
+|----------------------|----------------------------------------------------------------------------------------------------------------|----------|
+| Bucket               | 空间名称，可以为私有空间或者公开空间名称                                                                       | N        |
+| Prefix               | 七牛空间中文件名的前缀，该参数为可选参数，如果不指定则获取空间中所有的文件列表                                 | Y        |
+| ListBucketResultFile | 获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用 | Y        |
+| StartDate            | 列举整个空间，然后从中筛选出文件上传日期在<StartDate>之后的文件                                                | Y        |
+| EndDate              | 列举整个空间， 然后从中筛选出文件上传日期在<EndDate>之前的文件                                                 | Y        |
+| RetryCount           | 列举整个空间文件出错以后，最大的尝试次数；超过最大尝试次数以后，程序退出，打印出marker                             |   Y      | 
+| suffixes             | 列举整个空间文件， 然后从中筛选出文件后缀为在[suffixes1, suffixes2, ...]中的文件                              |Y|
+
+
+# 常用使用场景介绍
 
 （1）获取空间中所有的文件列表，这种情况下，可以直接指定 `Bucket` 参数和结果保存文件参数 `ListBucketResultFile` 即可。
 
@@ -56,18 +74,6 @@ qshell listbucket2 [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
  ```
 
 
-# 鉴权
-
-需要在使用了`account`设置了`AccessKey`, `SecretKey` 和  `Name` 的情况下使用。
-
-# 参数
-
-|参数名|描述|可选参数|
-|------|------|----|
-|Bucket|空间名称，可以为私有空间或者公开空间名称|N|
-|Prefix|七牛空间中文件名的前缀，该参数为可选参数，如果不指定则获取空间中所有的文件列表|Y|
-|ListBucketResultFile|获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用|Y|
-
 # 示例
 
 1.获取空间`if-pbl`里面的所有文件列表：
@@ -90,3 +96,11 @@ hello.mp4	8495868	lns2dAHvO0qYseZFgDn3UqZlMOi-	14207312835630132	video/mp4   0
 hhh	1492031	FjiRl_U0AeSsVCHXscCGObKyMy8f	14200176147531840	image/jpeg  1
 jemygraw.jpg	1900176	FtmHAbztWfPEqPMv4t4vMNRYMETK	14208960018750329	application/octet-stream	1   QiniuAndroid
 ```
+
+# FAQ
+1. 为什么列举空间很慢，很长时间没有打印出数据?
+可能是您最近删除了大量的数据，在这种情况下接口会返回空的数据，这种数据不会打印出来，所以终端看到的感觉很慢
+
+2. 为什么加了startDate 或者 endDate 或者 suffixes之后， 列举空间很慢，很长时间终端没有数据打印出来?
+只有prefix选项是在后台提供的，其他的选项是方便用户筛选在命令行加的选项，所以实际上是列举整个空间，然后在这些文件中一个一个筛选符合条件的文件。
+因此，如果您有100亿个文件，相当于把这100亿个文件先列举出来，然后逐一筛选。
