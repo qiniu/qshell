@@ -11,25 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"time"
 )
-
-type UserInfo struct {
-	Uid                   uint32    `json:"uid"`
-	UserId                string    `json:"userid"`
-	Email                 string    `json:"email"`
-	Username              string    `json:"username"`
-	ParentUid             uint32    `json:"parent_uid"`
-	IsActivated           bool      `json:"is_activated"`
-	UserType              uint32    `json:"user_type"`
-	DeviceNum             int       `json:"device_num"`
-	InvitationNum         int       `json:"invitation_num"`
-	LastParentOperationAt time.Time `json:"last_parent_operation_at"`
-}
-
-func (u *UserInfo) String() string {
-	return ""
-}
 
 type Account struct {
 	Name      string

@@ -1,3 +1,7 @@
+# 2.3.3
+1. 修复qdownload配置cdn_domain使用了测试域名作为HOST 引起超过10G流量限制的问题
+2. listbucket2 max-retry选项只限制出错下载次数，不限制接口返回空的次数
+
 # 2.3.2
 1. 修复fetch incorrect region
 2. 修复docs中文档格式显示问题
