@@ -28,6 +28,7 @@ type UserInfo struct {
 }
 
 func (u *UserInfo) String() string {
+	return ""
 }
 
 type Account struct {
