@@ -166,6 +166,10 @@ func init() {
 }
 
 func BatchFetch(cmd *cobra.Command, params []string) {
+	if worker <= 0 || worker > 1000 {
+		fmt.Fprintf(os.Stderr, "threads count: %d is too large, must be (0, 1000]", worker)
+		os.Exit(1)
+	}
 	bucket := params[0]
 	var urlsListFile string
 
@@ -242,7 +246,7 @@ func batchFetch(fItemChan chan *iqshell.FetchItem, fileExporter *iqshell.FileExp
 				if fErr != nil {
 					fmt.Fprintf(os.Stderr, "fetch %s => %s:%s failed\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
 					if fileExporter != nil {
-						fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%v\n", fetchItem.RemoteUrl, fetchItem.Key, fErr))
+						fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%v\n", fetchItem.RemoteUrl, fetchItem.Key, fErr))
 					}
 				} else {
 					fmt.Printf("fetch %s => %s:%s success\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
@@ -312,7 +316,7 @@ func BatchStat(cmd *cobra.Command, params []string) {
 
 func batchStat(entries []iqshell.EntryPath, bm *iqshell.BucketManager) {
 	ret, err := bm.BatchStat(entries)
-	if err != nil {
+	if err != nil && len(ret) <= 0 {
 		fmt.Fprintf(os.Stderr, "Batch stat error: %v\n", err)
 	}
 	if len(ret) > 0 {

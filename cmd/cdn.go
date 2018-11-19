@@ -50,7 +50,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 	var urlListFile string
 
 	if prefetchFile != "" {
-		urlListFile = params[0]
+		urlListFile = prefetchFile
 	} else {
 		urlListFile = "stdin"
 	}
@@ -126,7 +126,7 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 	var urlListFile string
 
 	if prefetchFile != "" {
-		urlListFile = params[0]
+		urlListFile = prefetchFile
 	} else {
 		urlListFile = "stdin"
 	}

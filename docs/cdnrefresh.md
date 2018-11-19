@@ -7,28 +7,28 @@
 刷新链接的命令格式：
 
 ```
-qshell cdnrefresh <UrlListFile>
+qshell cdnrefresh [-i <UrlListFile>]
 ```
 
 刷新目录的命令格式：
 
 ```
-qshell cdnrefresh -dirs <DirListFile>
+qshell cdnrefresh --dirs <DirListFile>
 ```
 
-注意需要刷新的目录，必须以`/`结尾。
+注意需要刷新的目录，必须以`/`结尾。如果没有制定输入文件<UrlListFile>默认从终端读取输入内容
 
 # 鉴权
 
 需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
 
-# 参数
+# 参数和选项
 
 刷新链接
 
 |参数名|描述|
 |---------|-----------|
-|UrlListFile|需要进行刷新的文件访问外链列表，每行一个访问外链|
+|i选项接受一个参数<UrlListFile>|需要进行刷新的文件访问外链列表，每行一个访问外链|
 
 刷新目录
 
@@ -51,7 +51,7 @@ http://if-pbl.qiniudn.com/hello7.txt
 ```
 
 ```
-$ qshell cdnrefresh torefresh.txt
+$ qshell cdnrefresh -i torefresh.txt
 ```
 
 就可以刷新文件`torefresh.txt`中的访问外链了。

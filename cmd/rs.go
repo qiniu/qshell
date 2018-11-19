@@ -176,6 +176,10 @@ func DirCache(cmd *cobra.Command, params []string) {
 }
 
 func ListBucket2(cmd *cobra.Command, params []string) {
+	if maxRetry <= 0 {
+		fmt.Fprintf(os.Stderr, "maxRetry must be greater than 0\n")
+		os.Exit(1)
+	}
 	bucket := params[0]
 
 	var dateParser = func(datestr string) (time.Time, error) {

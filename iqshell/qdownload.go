@@ -420,7 +420,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			downloadTasks <- func() {
 				defer downWaitGroup.Done()
 
-				downErr := downloadFile(downConfig, fileKey, fileUrl, domainOfBucket, fileSize, fromBytes)
+				downErr := downloadFile(downConfig, fileKey, fileUrl, downloadDomain, fileSize, fromBytes)
 				if downErr != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 				} else {
