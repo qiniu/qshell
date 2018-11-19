@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v2.3.2-develop"
+var version = "v2.3.3-develop"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
