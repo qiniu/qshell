@@ -13,7 +13,7 @@ qshell cdnrefresh [-i <UrlListFile>]
 刷新目录的命令格式：
 
 ```
-qshell cdnrefresh --dirs <DirListFile>
+qshell cdnrefresh --dirs -i <DirListFile>
 ```
 
 注意需要刷新的目录，必须以`/`结尾。如果没有制定输入文件<UrlListFile>默认从终端读取输入内容
