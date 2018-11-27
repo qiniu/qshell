@@ -70,12 +70,10 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 	signal.Notify(sigChan, os.Interrupt)
 
 	go func() {
+		// 捕捉Ctrl-C, 退出下面列举的循环
 		<-sigChan
 		cancel()
 		maxRetry = 0
-		if lastMarker != "" {
-			fmt.Println("Marker: ", lastMarker)
-		}
 	}()
 
 	if maxRetry <= 0 {
