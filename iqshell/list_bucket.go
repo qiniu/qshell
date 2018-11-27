@@ -2,6 +2,7 @@ package iqshell
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
@@ -64,14 +65,16 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 	lastMarker := marker
 
 	sigChan := make(chan os.Signal, 1)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	signal.Notify(sigChan, os.Interrupt)
 
 	go func() {
-		for sig := range sigChan {
-			if lastMarker != "" {
-				fmt.Println("Marker: ", lastMarker)
-			}
+		<-sigChan
+		cancel()
+		maxRetry = 0
+		if lastMarker != "" {
+			fmt.Println("Marker: ", lastMarker)
 		}
 	}()
 
@@ -101,7 +104,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 	notfilterSuffix := len(suffixes) == 0
 
 	for c := 0; c < maxRetry; {
-		entries, lErr := m.ListBucket(bucket, prefix, delimiter, marker)
+		entries, lErr := m.ListBucketContext(ctx, bucket, prefix, delimiter, marker)
 
 		if entries == nil && lErr == nil {
 			// no data

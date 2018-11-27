@@ -1,3 +1,6 @@
+# 2.3.4
+1. listbucket， listbucket2增加捕捉interrupt信号(CTR-C), 打印marker
+
 # 2.3.3
 1. 修复qdownload配置cdn_domain使用了测试域名作为HOST 引起超过10G流量限制的问题
 2. listbucket2 max-retry选项只限制出错下载次数，不限制接口返回空的次数
