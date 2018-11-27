@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
+	"os/signal"
 	"strings"
 	"time"
 )
@@ -60,6 +61,20 @@ func (m *BucketManager) ListFiles(bucket, prefix, marker, listResultFile string)
 }
 
 func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int) (retErr error) {
+	lastMarker := marker
+
+	sigChan := make(chan os.Signal, 1)
+
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func() {
+		for sig := range sigChan {
+			if lastMarker != "" {
+				fmt.Println("Marker: ", lastMarker)
+			}
+		}
+	}()
+
 	if maxRetry <= 0 {
 		retErr = fmt.Errorf("maxRetry must be greater than 0")
 		return
@@ -82,7 +97,6 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 
 	bWriter := bufio.NewWriter(listResultFh)
 
-	lastMarker := marker
 	notfilterTime := startDate.IsZero() && endDate.IsZero()
 	notfilterSuffix := len(suffixes) == 0
 
@@ -152,6 +166,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 			marker = lastMarker
 		}
 	}
+
 	if lastMarker != "" {
 		fmt.Println("Marker: ", lastMarker)
 	}
