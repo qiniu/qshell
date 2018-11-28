@@ -9,7 +9,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/qiniu/api.v7 v7.2.5-0.20181112070011-bc6998c1186a+incompatible
+	github.com/qiniu/api.v7 v7.2.6-0.20181128092015-8c3e1ca2eb33+incompatible
 	github.com/qiniu/x v7.0.8+incompatible // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/spf13/cobra v0.0.3

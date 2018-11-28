@@ -76,11 +76,6 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		maxRetry = 0
 	}()
 
-	if maxRetry <= 0 {
-		retErr = fmt.Errorf("maxRetry must be greater than 0")
-		return
-	}
-
 	var listResultFh *os.File
 
 	if listResultFile == "" {
@@ -101,16 +96,26 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 	notfilterTime := startDate.IsZero() && endDate.IsZero()
 	notfilterSuffix := len(suffixes) == 0
 
-	for c := 0; c < maxRetry; {
+	var c int
+	for {
+		if maxRetry >= 0 && c >= maxRetry {
+			break
+		}
 		entries, lErr := m.ListBucketContext(ctx, bucket, prefix, delimiter, marker)
 
 		if entries == nil && lErr == nil {
 			// no data
+			fmt.Fprintf(os.Stderr, "Warning: empty data\n")
 			return
 		}
 		if lErr != nil {
+			retErr = lErr
 			errorWarning(lastMarker, retErr)
-			c++
+			if maxRetry > 0 {
+				c++
+			}
+			time.Sleep(1)
+			continue
 		}
 
 		for listItem := range entries {
@@ -159,7 +164,9 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		if fErr != nil {
 			retErr = fErr
 			errorWarning(lastMarker, retErr)
-			c++
+			if maxRetry > 0 {
+				c++
+			}
 		}
 		if lastMarker == "" {
 			break
