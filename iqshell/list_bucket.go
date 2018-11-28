@@ -58,10 +58,10 @@ func errorWarning(marker string, err error) {
 *@return listError
  */
 func (m *BucketManager) ListFiles(bucket, prefix, marker, listResultFile string) (retErr error) {
-	return m.ListBucket2(bucket, prefix, marker, listResultFile, "", time.Time{}, time.Time{}, nil, 20)
+	return m.ListBucket2(bucket, prefix, marker, listResultFile, "", time.Time{}, time.Time{}, nil, 20, false)
 }
 
-func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int) (retErr error) {
+func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int, appendMode bool) (retErr error) {
 	lastMarker := marker
 
 	sigChan := make(chan os.Signal, 1)
@@ -82,7 +82,14 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		listResultFh = os.Stdout
 	} else {
 		var openErr error
-		listResultFh, openErr = os.Create(listResultFile)
+		var mode int
+
+		if appendMode {
+			mode = os.O_APPEND | os.O_RDWR
+		} else {
+			mode = os.O_CREATE | os.O_RDWR | os.O_TRUNC
+		}
+		listResultFh, openErr = os.OpenFile(listResultFile, mode, 0666)
 		if openErr != nil {
 			retErr = openErr
 			logs.Error("Failed to open list result file `%s`", listResultFile)
