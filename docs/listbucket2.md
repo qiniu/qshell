@@ -15,7 +15,7 @@ Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 # 格式
 
 ```
-qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [-o <ListBucketResultFile>]
+qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [ [-a] -o <ListBucketResultFile>]
 ```
 
 # 鉴权
@@ -32,8 +32,9 @@ qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--sta
 | ListBucketResultFile | 获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用 | Y        |
 | StartDate            | 列举整个空间，然后从中筛选出文件上传日期在<StartDate>之后的文件                                                | Y        |
 | EndDate              | 列举整个空间， 然后从中筛选出文件上传日期在<EndDate>之前的文件                                                 | Y        |
-| RetryCount           | 列举整个空间文件出错以后，最大的尝试次数；超过最大尝试次数以后，程序退出，打印出marker                             |   Y      | 
-| suffixes             | 列举整个空间文件， 然后从中筛选出文件后缀为在[suffixes1, suffixes2, ...]中的文件                              |Y|
+| RetryCount           | 列举整个空间文件出错以后，最大的尝试次数；超过最大尝试次数以后，程序退出，打印出marker                         | Y        |
+| suffixes             | 列举整个空间文件， 然后从中筛选出文件后缀为在[suffixes1, suffixes2, ...]中的文件                               | Y        |
+| a                    | 开启选项o 的append模式， 如果本地保存文件列表的文件已经存在，如果希望像该文件添加内容，使用该选项, 必须和-o选项一起使用   | Y        |
 
 
 # 常用使用场景介绍
@@ -43,31 +44,37 @@ qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--sta
 ```
 qshell listbucket2 <Bucket> -o <ListBucketResultFile>
 ```
+ 
+ (2) 如果本地文件`ListBucketResultFile`已经存在，有上一次列举的内容，如果希望把新的列表添加到该文件中，需要使用选项-a开启-o选项的append 模式
+ 
+ ```
+ qshell listbucket2 <Bucket> -a -o <ListBucketResultFile>
+ ```
 
- (2) 获取空间所有文件，输出到屏幕上(标准输出)
+ (3) 获取空间所有文件，输出到屏幕上(标准输出)
 
  ```
  qshell listbucket2 <Bucket> 
  ```
 
-（3）获取空间中指定前缀的文件列表
+（4）获取空间中指定前缀的文件列表
 
 ```
 qshell listbucket2 [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
 ```
 
- (4) 获取空间中指定前缀的文件列表， 输出到屏幕上
+ (5) 获取空间中指定前缀的文件列表， 输出到屏幕上
  
  ```
  qshell listbucket2 [--prefix <Prefix>] <Bucket>
  ```
  
- (5) 获取2018-10-30到2018-11-02上传的文件
+ (6) 获取2018-10-30到2018-11-02上传的文件
  ```
  qshell listbucket2 --start 2018-10-30 --end 2018-11-02 <Bucket>
  ```
  
- (6) 获取后缀为mp4, html的文件
+ (7) 获取后缀为mp4, html的文件
  
  ```
  qshell listbucket2 --suffixes mp4,html <Bucket>

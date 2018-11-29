@@ -99,7 +99,7 @@ func DecryptSecretKey(accessKey, encryptedKey string) (string, error) {
 	return secretKey, nil
 }
 
-func setdb(acc Account) (err error) {
+func setdb(acc Account, accountOver bool) (err error) {
 	accDbPath := AccDBPath()
 	if accDbPath == "" {
 		return fmt.Errorf("empty account db path")
@@ -111,14 +111,17 @@ func setdb(acc Account) (err error) {
 	}
 	defer ldb.Close()
 
-	exists, hErr := ldb.Has([]byte(acc.Name), nil)
-	if hErr != nil {
-		err = hErr
-		return
-	}
-	if exists {
-		err = fmt.Errorf("Account Name: %s already exist in local db", acc.Name)
-		return
+	if !accountOver {
+
+		exists, hErr := ldb.Has([]byte(acc.Name), nil)
+		if hErr != nil {
+			err = hErr
+			return
+		}
+		if exists {
+			err = fmt.Errorf("Account Name: %s already exist in local db", acc.Name)
+			return
+		}
 	}
 
 	ldbWOpt := opt.WriteOptions{
@@ -137,7 +140,7 @@ func setdb(acc Account) (err error) {
 	return
 }
 
-func SetAccount2(accessKey, secretKey, name, accPath, oldPath string) (err error) {
+func SetAccount2(accessKey, secretKey, name, accPath, oldPath string, accountOver bool) (err error) {
 	acc := Account{
 		Name:      name,
 		AccessKey: accessKey,
@@ -149,7 +152,7 @@ func SetAccount2(accessKey, secretKey, name, accPath, oldPath string) (err error
 		return
 	}
 
-	err = setdb(acc)
+	err = setdb(acc, accountOver)
 
 	return
 }

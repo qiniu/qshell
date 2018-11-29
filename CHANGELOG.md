@@ -1,5 +1,6 @@
 # 2.3.4
 1. listbucket， listbucket2增加捕捉interrupt信号(CTR-C), 打印marker
+2. account在本地记录账号，默认不覆盖
 
 # 2.3.3
 1. 修复qdownload配置cdn_domain使用了测试域名作为HOST 引起超过10G流量限制的问题

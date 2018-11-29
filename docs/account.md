@@ -3,6 +3,9 @@
 `account`命令用来设置当前用户的`AccessKey`和`SecretKey`，这对Key主要用在其他的需要授权的命令中，比如`stat`,`delete`,`listbucket`命令中。
 该命令设置的信息，经过加密保存在命令执行的目录下的`.qshell/account.json`文件中。
 
+本地数据库会记录`account`注册的所有<AccessKey>, <SecretKey> 和<Name>的信息， 所以当用`account`注册账户信息时，如果qshell发现本地数据库有同样的名字为
+<Name>的账户， 那么默认qshell会返回错误信息报告该名字的账户已经存在，如果要覆盖注册，需要使用强制覆盖选项--overwrite 或者 -w
+
 # 格式
 
 ```
@@ -12,10 +15,13 @@ qshell account
 打印当前设置的`AccessKey`, `SecretKey`和`Name`
 
 ```
-qshell account <Your AccessKey> <Your SecretKey> <Your Account Name>
+qshell account [--overwrite | -w]<Your AccessKey> <Your SecretKey> <Your Account Name>
 ``` 
 
-设置当前用户的`AccessKey`, `SecretKey`和`Name`
+设置当前用户的`AccessKey`, `SecretKey`和`Name`, Name是用户可以任意取的名字，表示当前在本地记录的账户的名称，和在七牛注册的邮箱信息没有关系
+
+# 选项
+-w --overwrite 强制覆盖已经存在的账户
 
 # 参数
 
@@ -23,7 +29,7 @@ qshell account <Your AccessKey> <Your SecretKey> <Your Account Name>
 |--------|--------|
 |AccessKey|七牛账号对应的AccessKey [获取](https://portal.qiniu.com/user/key)|
 |SecretKey|七牛账号对应的SecretKey [获取](https://portal.qiniu.com/user/key)|
-|Name|账户的名字|
+|Name|账户的名字, 可以任意取，和在七牛注册的邮箱信息没有关系， 只是qshell本地用来标示<ak, sk>对 |
 
 # 示例
 
