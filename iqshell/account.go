@@ -375,32 +375,7 @@ func ListUser(userLsName bool) (err error) {
 	}
 	defer db.Close()
 
-	iter := db.NewIterator(nil, nil)
-	var (
-		name  string
-		value string
-	)
-	for iter.Next() {
-		name = string(iter.Key())
-		value = string(iter.Value())
-		acc, dErr := Decrypt(value)
-		if dErr != nil {
-			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
-			return
-		}
-		if userLsName {
-			fmt.Println(name)
-		} else {
-			fmt.Printf("Name: %s\n", name)
-			fmt.Printf("AccessKey: %s\n", acc.AccessKey)
-			fmt.Printf("SecretKey: %s\n", acc.SecretKey)
-			fmt.Println("")
-		}
-	}
-	iter.Release()
-	return
-}
-
+	
 func CleanUser() (err error) {
 	QShellRootPath := RootPath()
 	if QShellRootPath == "" {
