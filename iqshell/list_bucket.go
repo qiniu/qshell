@@ -112,7 +112,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 
 		if entries == nil && lErr == nil {
 			// no data
-			return
+			break
 		}
 		if lErr != nil {
 			retErr = lErr
