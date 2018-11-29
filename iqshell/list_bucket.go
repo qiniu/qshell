@@ -115,6 +115,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 			if lastMarker == "" {
 				break
 			} else {
+				fmt.Fprintf(os.Stderr, "meet empty body when list not completed\n")
 				continue
 			}
 		}
