@@ -111,6 +111,16 @@ func setdb(acc Account) (err error) {
 	}
 	defer ldb.Close()
 
+	exists, hErr := ldb.Has([]byte(acc.Name), nil)
+	if hErr != nil {
+		err = hErr
+		return
+	}
+	if exists {
+		err = fmt.Errorf("Account Name: %s already exist in local db", acc.Name)
+		return
+	}
+
 	ldbWOpt := opt.WriteOptions{
 		Sync: true,
 	}

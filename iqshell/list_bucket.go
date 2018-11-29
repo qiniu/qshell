@@ -113,7 +113,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		if entries == nil && lErr == nil {
 			// no data
 			fmt.Fprintf(os.Stderr, "Warning: empty data\n")
-			return
+			break
 		}
 		if lErr != nil {
 			retErr = lErr
