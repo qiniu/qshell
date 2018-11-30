@@ -165,9 +165,8 @@ func init() {
 func DirCache(cmd *cobra.Command, params []string) {
 	var cacheResultFile string
 	cacheRootPath := params[0]
-	if len(params) == 2 {
-		cacheResultFile = params[1]
-	}
+
+	cacheResultFile = outFile
 	if cacheResultFile == "" {
 		cacheResultFile = "stdout"
 	}
