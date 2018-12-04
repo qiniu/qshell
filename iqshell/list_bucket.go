@@ -2,9 +2,11 @@ package iqshell
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
+	"os/signal"
 	"strings"
 	"time"
 )
@@ -56,14 +58,23 @@ func errorWarning(marker string, err error) {
 *@return listError
  */
 func (m *BucketManager) ListFiles(bucket, prefix, marker, listResultFile string) (retErr error) {
-	return m.ListBucket2(bucket, prefix, marker, listResultFile, "", time.Time{}, time.Time{}, nil, 20)
+	return m.ListBucket2(bucket, prefix, marker, listResultFile, "", time.Time{}, time.Time{}, nil, 20, false)
 }
 
-func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int) (retErr error) {
-	if maxRetry <= 0 {
-		retErr = fmt.Errorf("maxRetry must be greater than 0")
-		return
-	}
+func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int, appendMode bool) (retErr error) {
+	lastMarker := marker
+
+	sigChan := make(chan os.Signal, 1)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func() {
+		// 捕捉Ctrl-C, 退出下面列举的循环
+		<-sigChan
+		cancel()
+		maxRetry = 0
+	}()
 
 	var listResultFh *os.File
 
@@ -71,7 +82,14 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		listResultFh = os.Stdout
 	} else {
 		var openErr error
-		listResultFh, openErr = os.Create(listResultFile)
+		var mode int
+
+		if appendMode {
+			mode = os.O_APPEND | os.O_RDWR
+		} else {
+			mode = os.O_CREATE | os.O_RDWR | os.O_TRUNC
+		}
+		listResultFh, openErr = os.OpenFile(listResultFile, mode, 0666)
 		if openErr != nil {
 			retErr = openErr
 			logs.Error("Failed to open list result file `%s`", listResultFile)
@@ -82,20 +100,33 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 
 	bWriter := bufio.NewWriter(listResultFh)
 
-	lastMarker := marker
 	notfilterTime := startDate.IsZero() && endDate.IsZero()
 	notfilterSuffix := len(suffixes) == 0
 
-	for c := 0; c < maxRetry; {
-		entries, lErr := m.ListBucket(bucket, prefix, delimiter, marker)
+	var c int
+	for {
+		if maxRetry >= 0 && c >= maxRetry {
+			break
+		}
+		entries, lErr := m.ListBucketContext(ctx, bucket, prefix, delimiter, marker)
 
 		if entries == nil && lErr == nil {
 			// no data
-			return
+			if lastMarker == "" {
+				break
+			} else {
+				fmt.Fprintf(os.Stderr, "meet empty body when list not completed\n")
+				continue
+			}
 		}
 		if lErr != nil {
+			retErr = lErr
 			errorWarning(lastMarker, retErr)
-			c++
+			if maxRetry > 0 {
+				c++
+			}
+			time.Sleep(1)
+			continue
 		}
 
 		for listItem := range entries {
@@ -144,7 +175,9 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		if fErr != nil {
 			retErr = fErr
 			errorWarning(lastMarker, retErr)
-			c++
+			if maxRetry > 0 {
+				c++
+			}
 		}
 		if lastMarker == "" {
 			break
@@ -152,6 +185,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 			marker = lastMarker
 		}
 	}
+
 	if lastMarker != "" {
 		fmt.Println("Marker: ", lastMarker)
 	}

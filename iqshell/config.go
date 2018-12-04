@@ -1,31 +1,9 @@
 package iqshell
 
 import (
-	"fmt"
-	"github.com/qiniu/api.v7/storage"
 	"github.com/spf13/viper"
-	"os"
-	"os/user"
 	"path/filepath"
 )
-
-func init() {
-	curUser, gErr := user.Current()
-	if gErr != nil {
-		fmt.Println("Error: get current user error,", gErr)
-		os.Exit(STATUS_HALT)
-	}
-	rootPath := filepath.Join(curUser.HomeDir, ".qshell")
-
-	viper.SetDefault("path.root_path", filepath.Join(curUser.HomeDir, ".qshell"))
-	viper.SetDefault("path.acc_db_path", filepath.Join(rootPath, "account.db"))
-	viper.SetDefault("path.acc_path", filepath.Join(rootPath, "account.json"))
-	viper.SetDefault("hosts.up_host", "upload.qiniup.com")
-	viper.SetDefault("hosts.rs_host", storage.DefaultRsHost)
-	viper.SetDefault("hosts.rsf_host", storage.DefaultRsfHost)
-	viper.SetDefault("hosts.io_host", "iovip.qbox.me")
-	viper.SetDefault("hosts.api_host", storage.DefaultAPIHost)
-}
 
 func RootPath() string {
 	return viper.GetString("path.root_path")

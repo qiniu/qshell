@@ -12,7 +12,7 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell-v2.3.3 |Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.3.3.zip)|
+|qshell-v2.3.4 |Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.3.4.zip)|
 
 ## 安装
 
@@ -69,7 +69,8 @@ $ qshell account <Your AccessKey> <Your SecretKey> <Your Name>
 $ qshell account -- <Your AccessKey> <Your SecretKey> <Your Name>
 ```
 
-可以连续使用qshell account 添加账号ak, sk, name信息，qshell会保存这些账号的信息， 可以使用qshell user命令列举账号信息，在各个账号之间切换, 删除账号等
+可以连续使用qshell account 添加账号ak, sk, name信息，qshell会保存这些账号的信息， 可以使用qshell user命令列举账号信息，在各个账号之间切换, 删除账号等。
+如果使用的2.3.0之前的版本account命令记录的账户信息，需要先使用qshell user clean清楚保存的账户信息，然后使用qshell account命令重新记录账户信息。
 
 2. 添加完账户后，就可以使用qshell上传，下载文件了
 
@@ -123,6 +124,7 @@ fi
 |-h|打印命令列表帮助信息，遇到参数忘记的情况下，可以使用该命令|
 |-v|打印工具版本，反馈问题的时候，请提前告知工具对应版本号|
 |-C|qshell配置文件, 其配置格式请看下一节|
+|-L|使用当前工作路径作为qshell的配置目录|
 
 ## 配置文件
 

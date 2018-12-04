@@ -1,3 +1,11 @@
+# 2.3.4
+1. listbucket， listbucket2增加捕捉interrupt信号(CTR-C), 打印marker
+2. account在本地记录账号，默认不覆盖, 加了-w强制覆盖选项 
+3. listbucket2 增加append 模式（-a)开启, 修复列举几亿空间的时候，列举一半左右程序中断问题
+4. 修复dircache 列表没有输出到文件使用-o选项的时候
+5. 修复qupload, qupload2使用多线程上传导致的部分文件上传失败问题
+6. 加了-L 选项到qshell, 使用当前工作路径作为qshell的配置目录
+
 # 2.3.3
 1. 修复qdownload配置cdn_domain使用了测试域名作为HOST 引起超过10G流量限制的问题
 2. listbucket2 max-retry选项只限制出错下载次数，不限制接口返回空的次数

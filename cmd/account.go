@@ -7,7 +7,12 @@ import (
 	"os"
 )
 
+var (
+	accountOver bool
+)
+
 func init() {
+	cmdAccount.Flags().BoolVarP(&accountOver, "overwrite", "w", false, "overwrite account or not when account exists in local db, by default not overwrite")
 	RootCmd.AddCommand(cmdAccount)
 }
 
@@ -37,7 +42,7 @@ func Account(cmd *cobra.Command, params []string) {
 		name := params[2]
 
 		pt, oldPath := iqshell.AccPath(), iqshell.OldAccPath()
-		sErr := iqshell.SetAccount2(accessKey, secretKey, name, pt, oldPath)
+		sErr := iqshell.SetAccount2(accessKey, secretKey, name, pt, oldPath, accountOver)
 		if sErr != nil {
 			fmt.Println(sErr)
 			os.Exit(iqshell.STATUS_ERROR)
