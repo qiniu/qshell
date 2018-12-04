@@ -1,11 +1,7 @@
 package iqshell
 
 import (
-	"fmt"
-	"github.com/qiniu/api.v7/storage"
 	"github.com/spf13/viper"
-	"os"
-	"os/user"
 	"path/filepath"
 )
 
