@@ -12,7 +12,7 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell-v2.3.4 |Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-develop.zip)|
+|qshell-v2.3.4 |Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.3.4.zip)|
 
 ## 安装
 
