@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 )
 
@@ -15,6 +16,7 @@ var (
 	DebugFlag   bool
 	VersionFlag bool
 	cfgFile     string
+	local       bool
 )
 
 const (
@@ -61,8 +63,10 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&DebugFlag, "debug", "d", false, "debug mode")
 	RootCmd.PersistentFlags().BoolVarP(&VersionFlag, "version", "v", false, "show version")
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "C", "", "config file (default is $HOME/.qshell.json)")
+	RootCmd.PersistentFlags().BoolVarP(&local, "local", "L", false, "use current directory as config file path")
 
 	viper.BindPFlag("config", RootCmd.PersistentFlags().Lookup("config"))
+	viper.BindPFlag("local", RootCmd.PersistentFlags().Lookup("local"))
 }
 
 func initConfig() {
@@ -86,6 +90,32 @@ func initConfig() {
 		viper.AddConfigPath(curUser.HomeDir)
 		viper.SetConfigName(".qshell")
 	}
+
+	if local {
+		dir, gErr := os.Getwd()
+		if gErr != nil {
+			fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
+			os.Exit(1)
+		}
+		viper.Set("path.root_path", dir+"/.qshell")
+	} else {
+		curUser, gErr := user.Current()
+		if gErr != nil {
+			fmt.Fprintf(os.Stderr, "Error: get current user error: %v\n", gErr)
+			os.Exit(1)
+		}
+		viper.Set("path.root_path", curUser.HomeDir+"/.qshell")
+	}
+	rootPath := viper.GetString("path.root_path")
+
+	viper.SetDefault("path.acc_db_path", filepath.Join(rootPath, "account.db"))
+	viper.SetDefault("path.acc_path", filepath.Join(rootPath, "account.json"))
+	viper.SetDefault("hosts.up_host", "upload.qiniup.com")
+	viper.SetDefault("hosts.rs_host", storage.DefaultRsHost)
+	viper.SetDefault("hosts.rsf_host", storage.DefaultRsfHost)
+	viper.SetDefault("hosts.io_host", "iovip.qbox.me")
+	viper.SetDefault("hosts.api_host", storage.DefaultAPIHost)
+
 	if rErr := viper.ReadInConfig(); rErr != nil {
 		if _, ok := rErr.(viper.ConfigFileNotFoundError); !ok {
 			fmt.Fprintf(os.Stderr, "read config file: %v\n", rErr)

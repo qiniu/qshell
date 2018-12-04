@@ -105,6 +105,7 @@ type UploadConfig struct {
 	CallbackUrls    string `json:"callback_urls,omitempty"`
 	CallbackHost    string `json:"callback_host,omitempty"`
 	PutPolicy       storage.PutPolicy
+	Plock           sync.Mutex
 }
 
 func (cfg *UploadConfig) JobId() string {
@@ -281,6 +282,9 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 }
 
 func (cfg *UploadConfig) UploadToken(mac *qbox.Mac, uploadFileKey string) string {
+
+	cfg.Plock.Lock()
+	defer cfg.Plock.Unlock()
 
 	cfg.PutPolicy.Scope = cfg.Bucket
 	if cfg.Overwrite {
@@ -578,7 +582,6 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 			defer upWaitGroup.Done()
 
 			upToken := uploadConfig.UploadToken(bm.GetMac(), uploadFileKey)
-
 			if localFileSize > putThreshold {
 				resumableUploadFile(uploadConfig, ldb, &ldbWOpt, ldbKey, upToken, storePath,
 					localFilePath, uploadFileKey, localFileLastModified, exporter)

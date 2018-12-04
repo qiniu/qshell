@@ -164,21 +164,21 @@ func SetAccount(acc Account, accPath, oldPath string) (err error) {
 	}
 	if _, sErr := os.Stat(QShellRootPath); sErr != nil {
 		if mErr := os.MkdirAll(QShellRootPath, 0755); mErr != nil {
-			err = fmt.Errorf("Mkdir `%s` error, %s", QShellRootPath, mErr)
+			err = fmt.Errorf("Mkdir `%s` error: %s", QShellRootPath, mErr)
 			return
 		}
 	}
 
 	accountFh, openErr := os.OpenFile(accPath, os.O_CREATE|os.O_RDWR, 0600)
 	if openErr != nil {
-		err = fmt.Errorf("Open account file error, %s", openErr)
+		err = fmt.Errorf("Open account file error: %s", openErr)
 		return
 	}
 	defer accountFh.Close()
 
 	oldAccountFh, openErr := os.OpenFile(oldPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if openErr != nil {
-		err = fmt.Errorf("Open account file error, %s", openErr)
+		err = fmt.Errorf("Open account file error: %s", openErr)
 		return
 	}
 	defer oldAccountFh.Close()
