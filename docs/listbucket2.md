@@ -71,8 +71,11 @@ qshell listbucket2 [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
  
  (6) 获取2018-10-30到2018-11-02上传的文件
  ```
- qshell listbucket2 --start 2018-10-30 --end 2018-11-02 <Bucket>
+ qshell listbucket2 --start 2018-10-30 --end 2018-11-03 <Bucket>
  ```
+ 
+ 注意startDate 和 endDate 是这种半开半闭区间[startDate, endDate)
+
  
  (7) 获取后缀为mp4, html的文件
  
