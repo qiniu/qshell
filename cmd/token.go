@@ -16,32 +16,28 @@ var (
 	httpBody    string
 	ak          string
 	sk          string
+	qbox        bool
 )
 
 var (
 	cmdToken = &cobra.Command{
-		Use:   "token [-a <AccessKey> -s <SecretKey>]",
+		Use:   "token",
 		Short: "Token related command",
-	}
-	cmdTokenQbox = &cobra.Command{
-		Use:   "qbox <Url>",
-		Short: "Sign QBox administration token using url, http body, contentType",
-		Args:  cobra.ExactArgs(1),
-		Run:   QBoxToken,
+		Long:  "Create QBox administration token, Qiniu token, Upload token and Download token",
+		Run:   Token,
 	}
 )
 
 func init() {
-	cmdTokenQbox.Flags().StringVarP(&contentType, "content-type", "t", conf.CONTENT_TYPE_JSON, "http request content type, application/json by default")
-	cmdTokenQbox.Flags().StringVarP(&httpBody, "http-body", "b", "", "http request body, when content-type is application/x-www-form-urlencoded, http body must be specified")
-
+	cmdToken.Flags().StringVarP(&contentType, "content-type", "t", conf.CONTENT_TYPE_JSON, "http request content type, application/json by default")
+	cmdToken.Flags().StringVarP(&httpBody, "http-body", "b", "", "http request body, when content-type is application/x-www-form-urlencoded, http body must be specified")
 	cmdToken.Flags().StringVarP(&ak, "access-key", "a", "", "access key")
 	cmdToken.Flags().StringVarP(&sk, "secret-key", "s", "", "secret key")
+	cmdToken.Flags().BoolVarP(&qbox, "qbox", "q", true, "QBox admin token")
 	RootCmd.AddCommand(cmdToken)
-	cmdToken.AddCommand(cmdTokenQbox)
 }
 
-func QBoxToken(cmd *cobra.Command, args []string) {
+func Token(cmd *cobra.Command, args []string) {
 	var mac *qbox.Mac
 	var mErr error
 	if ak != "" && sk != "" {
