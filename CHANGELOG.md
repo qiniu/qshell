@@ -1,3 +1,6 @@
+# 2.3.5
+1. 增加token命令，创建Qbox token, qiniuToken, uploadToken and DownloadToken
+
 # 2.3.4
 1. listbucket， listbucket2增加捕捉interrupt信号(CTR-C), 打印marker
 2. account在本地记录账号，默认不覆盖, 加了-w强制覆盖选项 
