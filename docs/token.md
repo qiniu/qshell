@@ -83,12 +83,20 @@ $ url 'http://rs.qiniu.com/stat/dG9ueXB1YmxpYzp0ZXN0Lm1vdg==' -H "Authorization:
 {"fsize":94633760,"hash":"lhuYnUQEvCavdrNrrz82nEWSSqsB","md5":"LPkxXhSLb5fb9fxrLUghkA==","mimeType":"text/html","putTime":15289618585925391,"type":0}
 ```
 
-2. 计算上传token, 上传文件test.txt到`tonypublic`空间， 保存为test.txt
+2. 计算上传token
 
-第一步， 计算上传token, 上传策略配置文件内容为：
+上传策略配置文件upload.conf内容为：
 
 ```json
 {
     "scope": "tonypublic"
 }
 ```
+
+可以使用如下的命令计算：
+
+```
+$ qshell token upload upload.conf
+```
+
+得到`UpToken 3-pH6WfqAXTwzgG2s3FNMUW0NtkUu5cJLQCfU3Hd:EYUNznmCcnlhFU5a126AKwmoHgE=:eyJzY29wZSI6InRvbnlwdWJsaWMiLCJkZWFkbGluZSI6MTU0NDQzMjY5MH0=`
