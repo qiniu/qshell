@@ -245,6 +245,13 @@ func GetOldAccount() (account Account, err error) {
 }
 
 func GetAccount() (account Account, err error) {
+	ak, sk := AccessKey(), SecretKey()
+	if ak != "" && sk != "" {
+		return Account{
+			AccessKey: ak,
+			SecretKey: sk,
+		}, nil
+	}
 	AccountFname := AccPath()
 	if AccountFname == "" {
 		err = fmt.Errorf("empty account path\n")

@@ -130,16 +130,17 @@ fi
 
 1. 配置文件格式支持json, 如果需要使用配置文件，需要在家目录下创建文件名为.qshell.json的json文件
 2. 配置文件可以配置如io host, api host, rs hsot, rsf host, 这些如果没有指定，程序会自动选择
+3. 配置文件支持设置ak, sk
 
 例子：
 
-默认官方的列举空间的文件使用的是rs.qiniu.com域名，如果因为某种原因，比如私有存储，需要替换使用rs-test.qiniu.com这个域名的话，那么只需要
+1. 默认官方的列举空间的文件使用的是rs.qiniu.com域名，如果因为某种原因，比如私有存储，需要替换使用rs-test.qiniu.com这个域名的话，那么只需要
 在家目录下创建文件名字为.qshell.json的配置文件，文件内容为
 
 ```json
 {
     "hosts": {
-        "rs_host": "rs-test.qiniu.com"
+        "rs": "rs-test.qiniu.com"
     }
 }
 ```
@@ -149,8 +150,8 @@ fi
 ```json
 {
     "hosts": {
-        "rs_host": "rs-test.qiniu.com",
-        "io_host": "io-test.qiniu.com"
+        "rs": "rs-test.qiniu.com",
+        "io": "io-test.qiniu.com"
     }
 }
 ```
@@ -160,13 +161,24 @@ fi
 ```json
 {
     "hosts": {
-        "rs_host": "rs-test.qiniu.com",
-        "io_host": "io-test.qiniu.com",
-        "api_host": "",
-        "rsf_host": ""
+        "rs": "rs-test.qiniu.com",
+        "io": "io-test.qiniu.com",
+        "api": "",
+        "rsf": ""
     }
 }
 ```
+
+2. 如果不想使用qshell account ak sk name的方式记录密钥信息，也可以在配置文件中指定ak, sk
+
+```json
+{
+   "access_key": "",
+   "secret_key": "",
+}
+```
+
+这样qshell会优先使用配置文件中配置的ak/sk信息，如果在这个配置文件中没有找到密钥信息，那么会去qshell account记录的本地数据库寻找.
 
 
 ## 命令列表

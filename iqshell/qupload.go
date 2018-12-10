@@ -108,6 +108,13 @@ type UploadConfig struct {
 	Plock           sync.Mutex
 }
 
+func (cfg *UploadConfig) GetUpHost() string {
+	if cfg.UpHost != "" {
+		return cfg.UpHost
+	}
+	return UpHost()
+}
+
 func (cfg *UploadConfig) JobId() string {
 
 	return Md5Hex(fmt.Sprintf("%s:%s", cfg.SrcDir, cfg.Bucket))
@@ -786,7 +793,7 @@ func formUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.Wr
 	uploader := storage.NewFormUploader(nil)
 	putRet := storage.PutRet{}
 	putExtra := storage.PutExtra{
-		UpHost: uploadConfig.UpHost,
+		UpHost: uploadConfig.GetUpHost(),
 	}
 
 	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
@@ -841,7 +848,7 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 		progressRecorder.Offset += int64(blkSize)
 	}
 	putExtra.Notify = notifyFunc
-	putExtra.UpHost = uploadConfig.UpHost
+	putExtra.UpHost = uploadConfig.GetUpHost()
 
 	//resumable upload
 	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
