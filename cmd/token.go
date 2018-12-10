@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/conf"
+	"github.com/qiniu/api.v7/storage"
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -38,6 +42,13 @@ var (
 		Args:  cobra.ExactArgs(1),
 		Run:   QiniuToken,
 	}
+	cmdTokenUpload = &cobra.Command{
+		Use:   "upload <PutPolicyJsonFile>",
+		Short: "Create upload token using put policy",
+		Args:  cobra.ExactArgs(1),
+		Run:   UploadToken,
+	}
+	cmdTokenDownload = &cobra.Command{}
 )
 
 func init() {
@@ -53,7 +64,7 @@ func init() {
 	cmdTokenQiniu.Flags().StringVarP(&method, "method", "m", "GET", "http request method")
 
 	RootCmd.AddCommand(cmdToken)
-	cmdToken.AddCommand(cmdTokenQbox, cmdTokenQiniu)
+	cmdToken.AddCommand(cmdTokenQbox, cmdTokenQiniu, cmdTokenUpload, cmdTokenDownload)
 }
 
 func macRequest(ak, sk, url, body, contentType, method string) (mac *qbox.Mac, req *http.Request, err error) {
@@ -115,4 +126,41 @@ func QiniuToken(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	fmt.Println("Qiniu " + token)
+}
+
+func UploadToken(cmd *cobra.Command, args []string) {
+	fileName := args[0]
+
+	fileInfo, oErr := os.Open(fileName)
+	if oErr != nil {
+		fmt.Fprintf(os.Stderr, "open file %s: %v\n", fileName, oErr)
+		os.Exit(1)
+	}
+	defer fileInfo.Close()
+
+	configData, rErr := ioutil.ReadAll(fileInfo)
+	if rErr != nil {
+		fmt.Fprintf(os.Stderr, "read putPolicy config file `%s`: %v\n", fileName, rErr)
+		os.Exit(1)
+	}
+	//remove UTF-8 BOM
+	configData = bytes.TrimPrefix(configData, []byte("\xef\xbb\xbf"))
+
+	putPolicy := new(storage.PutPolicy)
+	uErr := json.Unmarshal(configData, putPolicy)
+	if uErr != nil {
+		fmt.Fprintf(os.Stderr, "parse upload config file `%s`: %v\n", fileName, uErr)
+		os.Exit(1)
+	}
+	mac, mErr := iqshell.GetMac()
+	if mErr != nil {
+		fmt.Fprintf(os.Stderr, "get mac: %v\n", mErr)
+		os.Exit(1)
+	}
+	uploadToken := putPolicy.UploadToken(mac)
+	fmt.Println("UpToken " + uploadToken)
+}
+
+func DownloadToken(cmd *cobra.Command, args []string) {
+
 }

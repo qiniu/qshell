@@ -12,7 +12,7 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell-v2.3.4 |Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.3.4.zip)|
+|qshell-v2.3.5 |Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.3.4.zip)|
 
 ## 安装
 
@@ -72,14 +72,29 @@ $ qshell account -- <Your AccessKey> <Your SecretKey> <Your Name>
 可以连续使用qshell account 添加账号ak, sk, name信息，qshell会保存这些账号的信息， 可以使用qshell user命令列举账号信息，在各个账号之间切换, 删除账号等。
 如果使用的2.3.0之前的版本account命令记录的账户信息，需要先使用qshell user clean清楚保存的账户信息，然后使用qshell account命令重新记录账户信息。
 
+也可以使用qshell的配置文件添加access_key和secret_key信息，具体配置方法参考下面配置文件一节。
+
 2. 添加完账户后，就可以使用qshell上传，下载文件了
 
 ## 账户管理
+
+qshell支持多种方式的账户管理：
+1. 使用qshell account <AccessKey> <SecretKey> <Name>记录账户信息到本地的数据库
+2. 使用qshell -C <ConfigFile> 配置文件的方式来设置账户信息
+3. 有的qshell子命令支持通过--access-key， --secret-key选项来设置ak/sk信息
+
+那么有可能上面三种方式都提供了账户的信息，因此这三种方式有个优先级（从高到低):
+3 > 2 > 1
+
+也就是说，如果命令行提供了ak/sk那么使用命令行的信息；如果没有提供就使用配置文件中的信息，如果配置文件没有提供ak/sk, 那么会去本地数据库查找当前的用户。
 
 使用qshell user子命令可以用来管理记录的多账户信息。
 1. qshell user ls可以列举账户下所有的账户信息
 2. qshell user cu <userName>可以用来切换账户
 3. qshell user cu 不携带<userName>的话会切换到最近的上个账户；比如我在A账户做完操作后，使用qshell user cu B到了B 账户，那么使用qshell user cu可以切回到A账户.
+4. qshell user lookup <userName> 查找用户是否在本地数据库中
+
+<userName>是使用qshell account <AK> <SK> <Name>记录的时候的<Name>名字，这个名字可以任意指定。
 
 ## 开启命令的自动补全
 **linux上，使用bash**
