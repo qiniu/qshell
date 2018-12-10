@@ -45,10 +45,9 @@ qshell token upload <PutPolicyConfigFile>
 
 # 例子
 
-1. 七牛的stat接口，可以获取一个bucket中的文件信息， 详细[文档](https://developer.qiniu.com/kodo/api/1308/stat)。
+一.七牛的stat接口，可以获取一个bucket中的文件信息， 详细[文档](https://developer.qiniu.com/kodo/api/1308/stat)。
 这个接口需要计算QBox Token, 那么我们可以使用qshell token qbox <Url>这个命令来计算。
-Url的格式如下：
-url = "http://<Host>/<Path>"
+Url的格式为： `http://<Host>/<Path>`
 
 从接口文档，我们可以看到Host是"rs.qiniu.com",  Path是"/stat/<EncodedEntryURI>", <EncodeEntryURI>的计算方式参考
 [文档](https://developer.qiniu.com/kodo/api/1276/data-format), 可以通过qshell b64encode来计算这个值。
@@ -83,7 +82,10 @@ $ url 'http://rs.qiniu.com/stat/dG9ueXB1YmxpYzp0ZXN0Lm1vdg==' -H "Authorization:
 {"fsize":94633760,"hash":"lhuYnUQEvCavdrNrrz82nEWSSqsB","md5":"LPkxXhSLb5fb9fxrLUghkA==","mimeType":"text/html","putTime":15289618585925391,"type":0}
 ```
 
-2. 计算上传token
+
+
+
+二.计算上传token
 
 上传策略配置文件upload.conf内容为：
 
