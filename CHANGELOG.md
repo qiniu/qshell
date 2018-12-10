@@ -1,5 +1,6 @@
 # 2.3.5
 1. 增加token命令，创建Qbox token, qiniuToken, uploadToken and DownloadToken
+2. qshell配置文件支持设置accessKey和secretKey
 
 # 2.3.4
 1. listbucket， listbucket2增加捕捉interrupt信号(CTR-C), 打印marker
