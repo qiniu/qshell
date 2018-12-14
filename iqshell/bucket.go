@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
-	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -77,7 +76,7 @@ func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err er
 		scheme = "https://"
 	}
 
-	reqHost = fmt.Sprintf("%s%s", scheme, viper.GetString("hosts.api_host"))
+	reqHost = fmt.Sprintf("%s%s", scheme, ApiHost())
 	reqURL := fmt.Sprintf("%s/v7/domain/list?tbl=%v", reqHost, bucket)
 	headers := http.Header{}
 	ret := new(BucketDomainsRet)
@@ -146,7 +145,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 		reqHost string
 		reqErr  error
 	)
-	reqHost = viper.GetString("hosts.rs_host")
+	reqHost = RsHost()
 	if reqHost == "" {
 		reqHost, reqErr = m.rsHost(bucket)
 		if reqErr != nil {
@@ -313,9 +312,9 @@ func GetBucketManager() *BucketManager {
 	}
 	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
 	cfg := storage.Config{
-		RsHost:  viper.GetString("hosts.rs_host"),
-		ApiHost: viper.GetString("hosts.api_host"),
-		RsfHost: viper.GetString("hosts.rsf_host"),
+		RsHost:  RsHost(),
+		ApiHost: ApiHost(),
+		RsfHost: RsfHost(),
 	}
 	return NewBucketManager(mac, &cfg)
 }

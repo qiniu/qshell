@@ -15,7 +15,7 @@ Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 # 格式
 
 ```
-qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [ [-a] -o <ListBucketResultFile>]
+qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [--readable] [ [-a] -o <ListBucketResultFile>]
 ```
 
 # 鉴权
@@ -35,6 +35,7 @@ qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--sta
 | RetryCount           | 列举整个空间文件出错以后，最大的尝试次数；超过最大尝试次数以后，程序退出，打印出marker                         | Y        |
 | suffixes             | 列举整个空间文件， 然后从中筛选出文件后缀为在[suffixes1, suffixes2, ...]中的文件                               | Y        |
 | a                    | 开启选项o 的append模式， 如果本地保存文件列表的文件已经存在，如果希望像该文件添加内容，使用该选项, 必须和-o选项一起使用   | Y        |
+| readable | 开启文件大小的可读性选项， 会以合适的KB, MB, GB等显示 | Y |
 
 
 # 常用使用场景介绍
@@ -71,13 +72,22 @@ qshell listbucket2 [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
  
  (6) 获取2018-10-30到2018-11-02上传的文件
  ```
- qshell listbucket2 --start 2018-10-30 --end 2018-11-02 <Bucket>
+ qshell listbucket2 --start 2018-10-30 --end 2018-11-03 <Bucket>
  ```
+ 
+ 注意startDate 和 endDate 是这种半开半闭区间[startDate, endDate)
+
  
  (7) 获取后缀为mp4, html的文件
  
  ```
  qshell listbucket2 --suffixes mp4,html <Bucket>
+ ```
+ 
+ (8) 通常列举的文件的大小都是以字节显示，如果想以人工可读的方式B, KB, MB等显示，可以使用-r 或者--readable选项
+ 
+ ```
+ qshell listbucket2 -r <Bucket>
  ```
 
 

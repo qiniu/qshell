@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/api.v7/storage"
+	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 var (
@@ -76,11 +78,21 @@ func initConfig() {
 	storage.UserAgent = UserAgent()
 
 	//parse command
-	logs.SetLevel(logs.LevelInformational)
+	if DebugFlag {
+		logs.SetLevel(logs.LevelDebug)
+	} else {
+		logs.SetLevel(logs.LevelInformational)
+	}
 	logs.SetLogger(logs.AdapterConsole)
 
+	var jsonConfigFile string
+
 	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
+		if !strings.HasSuffix(cfgFile, ".json") {
+			jsonConfigFile = cfgFile + ".json"
+			os.Rename(cfgFile, jsonConfigFile)
+		}
+		viper.SetConfigFile(jsonConfigFile)
 	} else {
 		curUser, gErr := user.Current()
 		if gErr != nil {
@@ -97,28 +109,28 @@ func initConfig() {
 			fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
 			os.Exit(1)
 		}
-		viper.Set("path.root_path", dir+"/.qshell")
+		iqshell.SetRootPath(dir + "/.qshell")
 	} else {
 		curUser, gErr := user.Current()
 		if gErr != nil {
 			fmt.Fprintf(os.Stderr, "Error: get current user error: %v\n", gErr)
 			os.Exit(1)
 		}
-		viper.Set("path.root_path", curUser.HomeDir+"/.qshell")
+		iqshell.SetRootPath(curUser.HomeDir + "/.qshell")
 	}
-	rootPath := viper.GetString("path.root_path")
+	rootPath := iqshell.RootPath()
 
-	viper.SetDefault("path.acc_db_path", filepath.Join(rootPath, "account.db"))
-	viper.SetDefault("path.acc_path", filepath.Join(rootPath, "account.json"))
-	viper.SetDefault("hosts.up_host", "upload.qiniup.com")
-	viper.SetDefault("hosts.rs_host", storage.DefaultRsHost)
-	viper.SetDefault("hosts.rsf_host", storage.DefaultRsfHost)
-	viper.SetDefault("hosts.io_host", "iovip.qbox.me")
-	viper.SetDefault("hosts.api_host", storage.DefaultAPIHost)
+	iqshell.SetDefaultAccDBPath(filepath.Join(rootPath, "account.db"))
+	iqshell.SetDefaultAccPath(filepath.Join(rootPath, "account.json"))
+	iqshell.SetDefaultRsHost(storage.DefaultRsHost)
+	iqshell.SetDefaultRsfHost(storage.DefaultRsfHost)
+	iqshell.SetDefaultIoHost("iovip.qbox.me")
+	iqshell.SetDefaultApiHost(storage.DefaultAPIHost)
 
 	if rErr := viper.ReadInConfig(); rErr != nil {
 		if _, ok := rErr.(viper.ConfigFileNotFoundError); !ok {
 			fmt.Fprintf(os.Stderr, "read config file: %v\n", rErr)
 		}
 	}
+	os.Rename(jsonConfigFile, cfgFile)
 }

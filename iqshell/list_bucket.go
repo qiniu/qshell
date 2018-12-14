@@ -58,10 +58,10 @@ func errorWarning(marker string, err error) {
 *@return listError
  */
 func (m *BucketManager) ListFiles(bucket, prefix, marker, listResultFile string) (retErr error) {
-	return m.ListBucket2(bucket, prefix, marker, listResultFile, "", time.Time{}, time.Time{}, nil, 20, false)
+	return m.ListBucket2(bucket, prefix, marker, listResultFile, "", time.Time{}, time.Time{}, nil, 20, false, false)
 }
 
-func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int, appendMode bool) (retErr error) {
+func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int, appendMode bool, readable bool) (retErr error) {
 	lastMarker := marker
 
 	sigChan := make(chan os.Signal, 1)
@@ -128,6 +128,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 			time.Sleep(1)
 			continue
 		}
+		var fsizeValue interface{}
 
 		for listItem := range entries {
 			if listItem.Marker != lastMarker {
@@ -136,9 +137,14 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 			if listItem.Item.IsEmpty() {
 				continue
 			}
+			if readable {
+				fsizeValue = BytesToReadable(listItem.Item.Fsize)
+			} else {
+				fsizeValue = listItem.Item.Fsize
+			}
 			if notfilterSuffix && notfilterTime {
-				lineData := fmt.Sprintf("%s\t%d\t%s\t%d\t%s\t%d\t%s\r\n",
-					listItem.Item.Key, listItem.Item.Fsize, listItem.Item.Hash,
+				lineData := fmt.Sprintf("%s\t%v\t%s\t%d\t%s\t%d\t%s\r\n",
+					listItem.Item.Key, fsizeValue, listItem.Item.Hash,
 					listItem.Item.PutTime, listItem.Item.MimeType, listItem.Item.Type, listItem.Item.EndUser)
 				_, wErr := bWriter.WriteString(lineData)
 				if wErr != nil {
@@ -160,8 +166,8 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 				}
 
 				if hasSuffix && putTimeValid {
-					lineData := fmt.Sprintf("%s\t%d\t%s\t%d\t%s\t%d\t%s\r\n",
-						listItem.Item.Key, listItem.Item.Fsize, listItem.Item.Hash,
+					lineData := fmt.Sprintf("%s\t%v\t%s\t%d\t%s\t%d\t%s\r\n",
+						listItem.Item.Key, fsizeValue, listItem.Item.Hash,
 						listItem.Item.PutTime, listItem.Item.MimeType, listItem.Item.Type, listItem.Item.EndUser)
 					_, wErr := bWriter.WriteString(lineData)
 					if wErr != nil {
