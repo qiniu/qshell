@@ -9,7 +9,10 @@ install:
 	GOOS=darwin GOARCH=amd64 go build -o $(DARWIN) .
 	cp ./$(DARWIN) /usr/local/bin/qshell && rm ./$(DARWIN)
 
-all: linux windows arm
+all: linux windows arm darwin
+
+darwin:
+	GOOS=darwin GOARCH=amd64 go build -o $(DARWIN)
 
 linux:
 	GOOS=linux GOARCH=386 go build -o $(LINUX86) .
