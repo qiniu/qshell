@@ -249,6 +249,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 
 	resume_uploader := storage.NewResumeUploader(nil)
 	err = resume_uploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
+
 	fmt.Println()
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {

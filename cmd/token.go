@@ -48,7 +48,6 @@ var (
 		Args:  cobra.ExactArgs(1),
 		Run:   UploadToken,
 	}
-	cmdTokenDownload = &cobra.Command{}
 )
 
 func init() {
@@ -63,8 +62,11 @@ func init() {
 	cmdTokenQiniu.Flags().StringVarP(&sk, "secret-key", "s", "", "secret key")
 	cmdTokenQiniu.Flags().StringVarP(&method, "method", "m", "GET", "http request method")
 
+	cmdTokenUpload.Flags().StringVarP(&ak, "access-key", "a", "", "access key")
+	cmdTokenUpload.Flags().StringVarP(&sk, "secret-key", "s", "", "secret key")
+
 	RootCmd.AddCommand(cmdToken)
-	cmdToken.AddCommand(cmdTokenQbox, cmdTokenQiniu, cmdTokenUpload, cmdTokenDownload)
+	cmdToken.AddCommand(cmdTokenQbox, cmdTokenQiniu, cmdTokenUpload)
 }
 
 func macRequest(ak, sk, url, body, contentType, method string) (mac *qbox.Mac, req *http.Request, err error) {
@@ -152,15 +154,18 @@ func UploadToken(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(os.Stderr, "parse upload config file `%s`: %v\n", fileName, uErr)
 		os.Exit(1)
 	}
-	mac, mErr := iqshell.GetMac()
-	if mErr != nil {
-		fmt.Fprintf(os.Stderr, "get mac: %v\n", mErr)
-		os.Exit(1)
+
+	var mac *qbox.Mac
+	var mErr error
+	if ak != "" && sk != "" {
+		mac = qbox.NewMac(ak, sk)
+	} else {
+		mac, mErr = iqshell.GetMac()
+		if mErr != nil {
+			fmt.Errorf("get mac: %v\n", mErr)
+			os.Exit(1)
+		}
 	}
 	uploadToken := putPolicy.UploadToken(mac)
 	fmt.Println("UpToken " + uploadToken)
-}
-
-func DownloadToken(cmd *cobra.Command, args []string) {
-
 }

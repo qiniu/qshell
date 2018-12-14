@@ -284,6 +284,7 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 		Daily:    true,
 		MaxDays:  logRotate,
 	}
+	logs.SetLevel(logLevel)
 	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
 }
@@ -844,6 +845,7 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 	}
 
 	var notifyFunc = func(blkIdx, blkSize int, ret *storage.BlkputRet) {
+		logs.Debug("uploadFileKey: %s, blkIdx: %d, blkSize: %d, %v", uploadFileKey, blkIdx, blkSize, *ret)
 		progressRecorder.BlkCtxs = append(progressRecorder.BlkCtxs, *ret)
 		progressRecorder.Offset += int64(blkSize)
 	}

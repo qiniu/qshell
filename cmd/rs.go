@@ -132,6 +132,7 @@ var (
 	maxRetry   int
 	finalKey   string
 	appendMode bool
+	readable   bool
 )
 
 func init() {
@@ -150,6 +151,7 @@ func init() {
 	lsBucketCmd2.Flags().StringVarP(&startDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	lsBucketCmd2.Flags().StringVarP(&endDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
 	lsBucketCmd2.Flags().BoolVarP(&appendMode, "append", "a", false, "append to file")
+	lsBucketCmd2.Flags().BoolVarP(&readable, "readable", "r", false, "present file size with human readable format")
 
 	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
 	moveCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
@@ -218,7 +220,7 @@ func ListBucket2(cmd *cobra.Command, params []string) {
 		}
 	}
 	bm := iqshell.GetBucketManager()
-	retErr := bm.ListBucket2(bucket, prefix, listMarker, outFile, "", start, end, sf, maxRetry, appendMode)
+	retErr := bm.ListBucket2(bucket, prefix, listMarker, outFile, "", start, end, sf, maxRetry, appendMode, readable)
 	if retErr != nil {
 		os.Exit(iqshell.STATUS_ERROR)
 	}

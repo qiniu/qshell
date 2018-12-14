@@ -1,6 +1,8 @@
 # 2.3.5
 1. 增加token命令，创建Qbox token, qiniuToken, uploadToken and DownloadToken
 2. qshell配置文件支持设置accessKey和secretKey
+3. 增加了arm版本
+4. listbucket, listbucket2增加文件大小的可读性，可以使用Bytes, KB, MB, GB格式显示
 
 # 2.3.4
 1. listbucket， listbucket2增加捕捉interrupt信号(CTR-C), 打印marker

@@ -1,6 +1,6 @@
 # 简介
 
-`token`是用来计算Qbox token, Qiniu Token, Upload Token和Download Token的命令。
+`token`是用来计算Qbox token, Qiniu Token, Upload Token的命令。
 
 # 格式
 

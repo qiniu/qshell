@@ -78,7 +78,11 @@ func initConfig() {
 	storage.UserAgent = UserAgent()
 
 	//parse command
-	logs.SetLevel(logs.LevelInformational)
+	if DebugFlag {
+		logs.SetLevel(logs.LevelDebug)
+	} else {
+		logs.SetLevel(logs.LevelInformational)
+	}
 	logs.SetLogger(logs.AdapterConsole)
 
 	var jsonConfigFile string
