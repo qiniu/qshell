@@ -16,7 +16,7 @@ qshell batchmove [--force] [--overwrite] [--success-list <SuccessFileName>] [--f
 # 帮助
 ```
 qshell batchmove -h
-``**
+```
 
 # 鉴权
 
