@@ -10,7 +10,7 @@
 # 格式
 
 ```
-qshell batchmove [--force] [--overwrite] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>]<SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
+qshell batchmove [--force] [--overwrite] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>]<SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
 ```
 
 # 帮助
