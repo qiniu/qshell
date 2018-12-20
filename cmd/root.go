@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/qiniu/api.v7/storage"
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
@@ -111,12 +112,12 @@ func initConfig() {
 		}
 		iqshell.SetRootPath(dir + "/.qshell")
 	} else {
-		curUser, gErr := user.Current()
-		if gErr != nil {
-			fmt.Fprintf(os.Stderr, "Error: get current user error: %v\n", gErr)
+		homeDir, hErr := homedir.Dir()
+		if hErr != nil {
+			fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
 			os.Exit(1)
 		}
-		iqshell.SetRootPath(curUser.HomeDir + "/.qshell")
+		iqshell.SetRootPath(homeDir + "/.qshell")
 	}
 	rootPath := iqshell.RootPath()
 
