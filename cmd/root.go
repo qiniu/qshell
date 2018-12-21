@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	DebugFlag   bool
-	VersionFlag bool
+	DebugFlag   bool // debug flag
+	VersionFlag bool // version flag
 	cfgFile     string
 	local       bool
 )
@@ -53,6 +53,7 @@ __custom_func() {
 `
 )
 
+// cobra root cmd
 var RootCmd = &cobra.Command{
 	Use:                    "qshell",
 	Short:                  "Qiniu commandline tool for managing your bucket and CDN",

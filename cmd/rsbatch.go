@@ -246,7 +246,7 @@ func batchFetch(fItemChan chan *iqshell.FetchItem, fileExporter *iqshell.FileExp
 				if fErr != nil {
 					fmt.Fprintf(os.Stderr, "fetch %s => %s:%s failed\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
 					if fileExporter != nil {
-						fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%v\n", fetchItem.RemoteUrl, fetchItem.Key, fErr))
+						fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%v\n", fetchItem.RemoteUrl, fetchItem.Key, fErr))
 					}
 				} else {
 					fmt.Printf("fetch %s => %s:%s success\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)

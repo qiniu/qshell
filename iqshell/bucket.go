@@ -18,6 +18,7 @@ import (
 	"time"
 )
 
+// Get 接口返回的结构
 type GetRet struct {
 	URL      string `json:"url"`
 	Hash     string `json:"hash"`
@@ -32,16 +33,19 @@ type EntryPath struct {
 	Key    string
 }
 
+// 改变文件mime需要的信息
 type ChgmEntryPath struct {
 	EntryPath
 	MimeType string
 }
 
+// 改变文件存储类型需要的信息
 type ChtypeEntryPath struct {
 	EntryPath
 	FileType int
 }
 
+// 设置deleteAfterDays需要的参数
 type DeleteAfterDaysEntryPath struct {
 	EntryPath
 	DeleteAfterDays int
