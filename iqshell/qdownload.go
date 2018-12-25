@@ -405,7 +405,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 						downNewFile = true
 					}
 				} else {
-					//no local file exists, donwload a new local file
+					//no local file exists, download a new local file
 					downNewFile = true
 				}
 			}
