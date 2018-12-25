@@ -40,7 +40,7 @@ type DownloadConfig struct {
 	Bucket       string `json:"bucket"`
 	Prefix       string `json:"prefix,omitempty"`
 	Suffixes     string `json:"suffixes,omitempty"`
-	IoHost       string `json:"io_host, omitempty"`
+	IoHost       string `json:"io_host,omitempty"`
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
