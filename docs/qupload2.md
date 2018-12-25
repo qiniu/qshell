@@ -12,6 +12,7 @@ qshell qupload2 --src-dir=/home/jemy/temp --bucket=test
 jemy•~» qshell qupload2 -h                                                                                                                                                                                                                                      
 ```
 
+```
 Batch upload files to the qiniu bucket
 
 Usage:
@@ -48,3 +49,4 @@ Flags:
       --success-list string         upload success file list
       --thread-count int            multiple thread count
       --up-host string              upload host
+```
