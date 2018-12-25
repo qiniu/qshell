@@ -66,6 +66,7 @@ func parseUploadConfigFile(uploadConfigFile string, uploadConfig *iqshell.Upload
 	return
 }
 
+// upload cmd
 func QiniuUpload(cmd *cobra.Command, params []string) {
 
 	configFile := params[0]

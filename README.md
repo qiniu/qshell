@@ -12,7 +12,7 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell-v2.3.5 |Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.3.5.zip)|
+|qshell-v2.3.6 |Mac OSX, Linux, Windows|[下载](http://devtools.qiniu.com/qshell-v2.3.6.zip)|
 
 ## 安装
 
@@ -252,6 +252,7 @@ fi
 |alilistbucket|第三方|列举阿里OSS空间里面的所有文件|[文档](docs/alilistbucket.md)|
 |get|存储|下载存储空间中的文件|[文档](docs/get.md)|
 |pfop|dora异步处理|提交异步音视频处理请求|[文档](docs/pfop.md)
+|token | 其他 | 计算upToken, Qbox token, Qiniu Token|[文档](docs/token.md)
 
 ## 问题反馈
 

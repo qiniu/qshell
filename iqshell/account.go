@@ -13,18 +13,21 @@ import (
 	"strings"
 )
 
+// Name - 用户自定义的账户名称
 type Account struct {
 	Name      string
 	AccessKey string
 	SecretKey string
 }
 
+// 获取qbox.Mac
 func (acc *Account) Mac() (mac *qbox.Mac) {
 
 	mac = qbox.NewMac(acc.AccessKey, acc.SecretKey)
 	return
 }
 
+// 对SecretKey进行加密， 保存AccessKey, 加密后的SecretKey在本地数据库中
 func (acc *Account) Encrypt() (s string, err error) {
 	encryptedKey, eErr := EncryptSecretKey(acc.AccessKey, acc.SecretKey)
 	if eErr != nil {
@@ -35,6 +38,7 @@ func (acc *Account) Encrypt() (s string, err error) {
 	return
 }
 
+// 对SecretKey加密， 形成最后的数据格式
 func (acc *Account) Value() (v string, err error) {
 	encryptedKey, eErr := EncryptSecretKey(acc.AccessKey, acc.SecretKey)
 	if eErr != nil {
@@ -45,6 +49,7 @@ func (acc *Account) Value() (v string, err error) {
 	return
 }
 
+// 保存在account.json文件中的数据格式
 func Encrypt(accessKey, encryptedKey, name string) string {
 	return strings.Join([]string{name, accessKey, encryptedKey}, ":")
 }
@@ -53,6 +58,7 @@ func splits(joinStr string) []string {
 	return strings.Split(joinStr, ":")
 }
 
+// 对保存在account.json中的文件字符串进行揭秘操作, 返回Account
 func Decrypt(joinStr string) (acc Account, err error) {
 	ss := splits(joinStr)
 	name, accessKey, encryptedKey := ss[0], ss[1], ss[2]
@@ -75,6 +81,7 @@ func (acc *Account) String() string {
 	return fmt.Sprintf("Name: %s\nAccessKey: %s\nSecretKey: %s", acc.Name, acc.AccessKey, acc.SecretKey)
 }
 
+// 对SecretKey加密, 返回加密后的字符串
 func EncryptSecretKey(accessKey, secretKey string) (string, error) {
 	aesKey := Md5Hex(accessKey)
 	encryptedSecretKeyBytes, encryptedErr := AesEncrypt([]byte(secretKey), []byte(aesKey[7:23]))
@@ -85,6 +92,7 @@ func EncryptSecretKey(accessKey, secretKey string) (string, error) {
 	return encryptedSecretKey, nil
 }
 
+// 对加密的SecretKey进行解密， 返回SecretKey
 func DecryptSecretKey(accessKey, encryptedKey string) (string, error) {
 	aesKey := Md5Hex(accessKey)
 	encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(encryptedKey)
@@ -140,6 +148,7 @@ func setdb(acc Account, accountOver bool) (err error) {
 	return
 }
 
+// 保存账户信息到账户文件中， 并保存在本地数据库
 func SetAccount2(accessKey, secretKey, name, accPath, oldPath string, accountOver bool) (err error) {
 	acc := Account{
 		Name:      name,
@@ -157,6 +166,7 @@ func SetAccount2(accessKey, secretKey, name, accPath, oldPath string, accountOve
 	return
 }
 
+// 保存账户信息到账户文件中
 func SetAccount(acc Account, accPath, oldPath string) (err error) {
 	QShellRootPath := RootPath()
 	if QShellRootPath == "" {
@@ -234,6 +244,8 @@ func getAccount(pt string) (account Account, err error) {
 	return
 }
 
+// qshell 会记录当前的user信息，当切换账户后， 老的账户信息会记录下来
+// qshell user cu就可以切换到老的账户信息， 参考cd -回到先前的目录
 func GetOldAccount() (account Account, err error) {
 	AccountFname := OldAccPath()
 	if AccountFname == "" {
@@ -244,6 +256,7 @@ func GetOldAccount() (account Account, err error) {
 	return getAccount(AccountFname)
 }
 
+// 返回Account
 func GetAccount() (account Account, err error) {
 	ak, sk := AccessKey(), SecretKey()
 	if ak != "" && sk != "" {
@@ -261,6 +274,7 @@ func GetAccount() (account Account, err error) {
 	return getAccount(AccountFname)
 }
 
+// 获取Mac
 func GetMac() (mac *qbox.Mac, err error) {
 	account, err := GetAccount()
 	if err != nil {
@@ -269,6 +283,7 @@ func GetMac() (mac *qbox.Mac, err error) {
 	return account.Mac(), nil
 }
 
+// 切换账户
 func ChUser(userName string) (err error) {
 	if userName != "" {
 
@@ -337,6 +352,7 @@ func ChUser(userName string) (err error) {
 	return
 }
 
+// 获取用户列表
 func GetUsers() (ret []*Account, err error) {
 
 	AccountDBPath := AccDBPath()
@@ -369,6 +385,7 @@ func GetUsers() (ret []*Account, err error) {
 	return
 }
 
+// 列举本地数据库记录的用户列表
 func ListUser(userLsName bool) (err error) {
 	AccountDBPath := AccDBPath()
 	if AccountDBPath == "" {
@@ -408,6 +425,7 @@ func ListUser(userLsName bool) (err error) {
 	return
 }
 
+// 清除本地账户数据库
 func CleanUser() (err error) {
 	QShellRootPath := RootPath()
 	if QShellRootPath == "" {
@@ -417,6 +435,7 @@ func CleanUser() (err error) {
 	return
 }
 
+// 从本地数据库删除用户
 func RmUser(userName string) (err error) {
 	AccountDBPath := AccDBPath()
 	if AccountDBPath == "" {
@@ -434,6 +453,7 @@ func RmUser(userName string) (err error) {
 	return
 }
 
+// 查找用户
 func LookUp(userName string) (err error) {
 	AccountDBPath := AccDBPath()
 	if AccountDBPath == "" {

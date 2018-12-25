@@ -1,3 +1,6 @@
+# 2.3.6
+1. 修复m3u8replace 上传的问题
+
 # 2.3.5
 1. 增加token命令，创建Qbox token, qiniuToken, uploadToken
 2. qshell配置文件支持设置accessKey和secretKey

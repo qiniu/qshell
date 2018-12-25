@@ -424,7 +424,7 @@ func M3u8Delete(cmd *cobra.Command, params []string) {
 	bm := iqshell.GetBucketManager()
 	m3u8FileList, err := bm.M3u8FileList(bucket, m3u8Key)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Get m3u8 file list error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Get m3u8 file list error: %v\n", err)
 		os.Exit(iqshell.STATUS_ERROR)
 	}
 	entryCnt := len(m3u8FileList)

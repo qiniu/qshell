@@ -130,6 +130,7 @@ func decode(s string) (v string, err error) {
 	return string(t), nil
 }
 
+// 获取文件行数
 func GetFileLineCount(filePath string) (totalCount int64) {
 	fp, openErr := os.Open(filePath)
 	if openErr != nil {
@@ -167,6 +168,7 @@ func Encode(uri string) string {
 	return "!" + encodedURI
 }
 
+// Decode
 func Decode(encodedURI string) (uri string, err error) {
 
 	size := len(encodedURI)
@@ -215,6 +217,7 @@ func getAkBucketFromUploadToken(token string) (ak, bucket string, err error) {
 	return
 }
 
+// 从URL中获取文件名字
 func KeyFromUrl(uri string) (key string, err error) {
 	u, pErr := url.Parse(uri)
 	if pErr != nil {
@@ -230,6 +233,7 @@ func KeyFromUrl(uri string) (key string, err error) {
 	return
 }
 
+// 表示大小
 type ByteSize int64
 
 const (

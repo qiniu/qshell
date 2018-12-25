@@ -162,7 +162,7 @@ func UploadToken(cmd *cobra.Command, args []string) {
 	} else {
 		mac, mErr = iqshell.GetMac()
 		if mErr != nil {
-			fmt.Errorf("get mac: %v\n", mErr)
+			fmt.Fprintf(os.Stderr, "get mac: %v\n", mErr)
 			os.Exit(1)
 		}
 	}

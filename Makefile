@@ -4,20 +4,20 @@ DARWIN=qshell_darwin_x64
 LINUX86=qshell_linux_x86
 LINUX64=qshell_linux_x64
 LINUXARM=qshell_linux_arm
+LDFLAGS='-extldflags "-static"'
 
-install:
-	GOOS=darwin GOARCH=amd64 go build -o $(DARWIN) .
-	cp ./$(DARWIN) /usr/local/bin/qshell && rm ./$(DARWIN)
+all: linux windows arm darwin
 
-all: linux windows arm
+darwin:
+	GOOS=darwin GOARCH=amd64 go build -o $(DARWIN)
 
 linux:
-	GOOS=linux GOARCH=386 go build -o $(LINUX86) .
-	GOOS=linux GOARCH=amd64 go build -o $(LINUX64) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags  $(LDFLAGS) -o $(LINUX86) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags $(LDFLAGS) -o $(LINUX64) .
 
 windows:
-	GOOS=windows GOARCH=386 go build -o $(WIN86) .
-	GOOS=windows GOARCH=amd64 go build -o $(WIN64) .
+	CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -ldflags $(LDFLAGS) -o $(WIN86) .
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags $(LDFLAGS) -o $(WIN64) .
 
 arm:
-	GOOS=linux GOARCH=arm go build -o $(LINUXARM)
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -ldflags $(LDFLAGS) -o $(LINUXARM)
