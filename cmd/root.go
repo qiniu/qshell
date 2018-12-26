@@ -96,12 +96,12 @@ func initConfig() {
 		}
 		viper.SetConfigFile(jsonConfigFile)
 	} else {
-		curUser, gErr := user.Current()
-		if gErr != nil {
-			fmt.Fprintf(os.Stderr, "get current user: %v\n", gErr)
+		homeDir, hErr := homedir.Dir()
+		if hErr != nil {
+			fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
 			os.Exit(1)
 		}
-		viper.AddConfigPath(curUser.HomeDir)
+		viper.AddConfigPath(homeDir)
 		viper.SetConfigName(".qshell")
 	}
 
