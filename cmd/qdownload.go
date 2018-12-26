@@ -12,7 +12,7 @@ import (
 )
 
 var qDownloadCmd = &cobra.Command{
-	Use:   "qdownload [<ThreadCount>] <LocalDownloadConfig>",
+	Use:   "qdownload [-c <ThreadCount>] <LocalDownloadConfig>",
 	Short: "Batch download files from the qiniu bucket",
 	Long:  "By default qdownload use 5 goroutines to download, it can be customized use -c <count> flag",
 	Args:  cobra.ExactArgs(1),
