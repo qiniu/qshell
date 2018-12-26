@@ -205,16 +205,23 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			}
 			entries = append(entries, entry)
 		}
-		batches := len(entries)/1000 + 1
+
+		var batches int
+		if len(entries)%1000 == 0 {
+			batches = len(entries) / 1000
+		} else {
+			batches = len(entries)/1000 + 1
+		}
 		for i := 0; i < batches; i++ {
-			ret, err := bm.BatchStat(entries)
+			childEntries := entries[i*1000 : i*1000+1000]
+			ret, err := bm.BatchStat(childEntries)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Batch stat error: %v\n", err)
 				os.Exit(STATUS_ERROR)
 			}
-			if len(ret) > 0 {
-				for i, entry := range entries {
-					item := ret[i]
+			if len(childEntries) == len(ret) {
+				for j, entry := range childEntries {
+					item := ret[j]
 					if item.Code != 200 || item.Data.Error != "" {
 						fmt.Fprintln(os.Stderr, entry.Key+"\t"+item.Data.Error)
 					} else {
