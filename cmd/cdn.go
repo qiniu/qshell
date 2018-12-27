@@ -12,9 +12,14 @@ import (
 )
 
 const (
+	// CDN刷新一次性最大的刷新文件列表
 	BATCH_CDN_REFRESH_URLS_ALLOW_MAX = 100
+
+	// CDN目录刷新一次性最大的刷新目录数
 	BATCH_CDN_REFRESH_DIRS_ALLOW_MAX = 10
-	BATCH_CDN_PREFETCH_ALLOW_MAX     = 100
+
+	// 预取一次最大的预取数目
+	BATCH_CDN_PREFETCH_ALLOW_MAX = 100
 )
 
 var (
@@ -46,7 +51,7 @@ func init() {
 	RootCmd.AddCommand(cdnPreCmd, cdnRefreshCmd)
 }
 
-// 刷新CDN
+// 【cdnrefresh】刷新所有CDN节点
 func CdnRefresh(cmd *cobra.Command, params []string) {
 	var urlListFile string
 
@@ -123,7 +128,7 @@ func cdnRefresh(cm *cdn.CdnManager, urls []string, dirs []string) {
 	}
 }
 
-//  CDN 文件预取
+//  【cdnprefetch】CDN 文件预取
 func CdnPrefetch(cmd *cobra.Command, params []string) {
 	var urlListFile string
 

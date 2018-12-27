@@ -15,8 +15,11 @@ import (
 )
 
 var (
-	DebugFlag   bool // debug flag
-	VersionFlag bool // version flag
+	// 开启命令行的调试模式
+	DebugFlag bool
+
+	// qshell 版本信息， qshell -v
+	VersionFlag bool
 	cfgFile     string
 	local       bool
 )
@@ -52,7 +55,7 @@ __custom_func() {
 `
 )
 
-// cobra root cmd
+// cobra root cmd, all other commands is children or subchildren of this root cmd
 var RootCmd = &cobra.Command{
 	Use:                    "qshell",
 	Short:                  "Qiniu commandline tool for managing your bucket and CDN",

@@ -30,6 +30,7 @@ func init() {
 	RootCmd.AddCommand(prefopCmd, fopCmd)
 }
 
+// 【prefop】根据persistentId查询异步处理的进度, 处理结果
 func Prefop(cmd *cobra.Command, params []string) {
 	persistentId := params[0]
 
@@ -42,6 +43,7 @@ func Prefop(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【pfop】 提交异步处理请求
 func Fop(cmd *cobra.Command, params []string) {
 	bucket, key, fops := params[0], params[1], params[2]
 

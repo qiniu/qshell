@@ -28,6 +28,7 @@ var cmdAccount = &cobra.Command{
 	Run: Account,
 }
 
+// 【account】获取本地保存的用户的AK/AK/Name信息； 设置保存用户AK/SK信息到本地
 func Account(cmd *cobra.Command, params []string) {
 	if len(params) == 0 {
 		account, gErr := iqshell.GetAccount()

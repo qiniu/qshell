@@ -16,20 +16,40 @@ const (
 )
 
 const (
-	BLOCK_BITS = 22              // Indicate that the blocksize is 4M
-	BLOCK_SIZE = 1 << BLOCK_BITS // BLOCK SIZE
+	// Indicate that the blocksize is 4M
+	BLOCK_BITS = 22
+
+	// BLOCK SIZE
+	BLOCK_SIZE = 1 << BLOCK_BITS
 )
 
 var (
-	PATH_ROOT  = []string{"path.root", "path.root_path"}    // qshell的工作根目录
-	PATH_ACCDB = []string{"path.accdb", "path.acc_db_path"} // qshell本地数据库文件目录
-	PATH_ACC   = []string{"path.acc", "path.acc_path"}      // qshell 账户文件目录
-	HOST_UP    = []string{"hosts.up", "hosts.up_host"}      // 上传HOST
-	HOST_RS    = []string{"hosts.rs", "hosts.rs_host"}      // RS HOST
-	HOST_RSF   = []string{"hosts.rsf", "hosts.rsf_host"}    // RSF HOST
-	HOST_IO    = []string{"hosts.io", "hosts.io_host"}      // IO HOST
-	HOST_API   = []string{"hosts.api", "hosts.api_host"}    // API HOST
-	ACCESS_KEY = []string{"access_key"}                     // 账户密钥信息
+	// qshell的工作根目录
+	PATH_ROOT = []string{"path.root", "path.root_path"}
+
+	// qshell本地数据库文件目录
+	PATH_ACCDB = []string{"path.accdb", "path.acc_db_path"}
+
+	// qshell 账户文件目录
+	PATH_ACC = []string{"path.acc", "path.acc_path"}
+
+	// 上传HOST
+	HOST_UP = []string{"hosts.up", "hosts.up_host"}
+
+	// RS HOST
+	HOST_RS = []string{"hosts.rs", "hosts.rs_host"}
+
+	// RSF HOST
+	HOST_RSF = []string{"hosts.rsf", "hosts.rsf_host"}
+
+	// IO HOST
+	HOST_IO = []string{"hosts.io", "hosts.io_host"}
+
+	// API HOST
+	HOST_API = []string{"hosts.api", "hosts.api_host"}
+
+	// 账户密钥信息
+	ACCESS_KEY = []string{"access_key"}
 	SECRET_KEY = []string{"secret_key"}
 )
 

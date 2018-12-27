@@ -62,6 +62,7 @@ func init() {
 	RootCmd.AddCommand(formPutCmd, RePutCmd)
 }
 
+// 上传接口返回的文件信息
 type PutRet struct {
 	Key      string `json:"key"`
 	Hash     string `json:"hash"`
@@ -69,6 +70,7 @@ type PutRet struct {
 	Fsize    int64  `json:"fsize"`
 }
 
+// 【fput】使用表单上传本地文件到七牛存储空间
 func FormPut(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
@@ -183,6 +185,8 @@ func FormPut(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 使用分片上传本地文件到七牛存储空间, 一般用于较大文件的上传
+// 文件会被分割成4M大小的块， 一块一块地上传文件
 func ResumablePut(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]

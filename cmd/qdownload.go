@@ -29,6 +29,9 @@ func init() {
 	RootCmd.AddCommand(qDownloadCmd)
 }
 
+// 【qdownload】下载七牛存储空间中的文件
+// 可以根据文件前缀下载符合要求的所有文件，也可以用户给到要下载的文件名字列表下载文件
+// 根据文件列表下载文件功能在文档中还没有公开，遇到有这个需求的客户比较少
 func QiniuDownload(cmd *cobra.Command, params []string) {
 
 	var downloadConfig iqshell.DownloadConfig

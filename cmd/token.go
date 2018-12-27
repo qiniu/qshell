@@ -101,6 +101,7 @@ func macRequest(ak, sk, url, body, contentType, method string) (mac *qbox.Mac, r
 	return
 }
 
+// QBox Token, 一般bucket相关的接口需要这个token
 func QBoxToken(cmd *cobra.Command, args []string) {
 	mac, req, mErr := macRequest(ak, sk, args[0], httpBody, contentType, "")
 	if mErr != nil {
@@ -115,6 +116,7 @@ func QBoxToken(cmd *cobra.Command, args []string) {
 	fmt.Println("QBox " + token)
 }
 
+// 签名七牛token, 一般三鉴接口需要http头文件 Authorization, 这个头的值就是qiniuToken
 func QiniuToken(cmd *cobra.Command, args []string) {
 
 	mac, req, mErr := macRequest(ak, sk, args[0], httpBody, contentType, method)
@@ -130,6 +132,7 @@ func QiniuToken(cmd *cobra.Command, args []string) {
 	fmt.Println("Qiniu " + token)
 }
 
+// 给定上传策略，打印出上传token
 func UploadToken(cmd *cobra.Command, args []string) {
 	fileName := args[0]
 
