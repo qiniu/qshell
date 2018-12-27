@@ -9,15 +9,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
-	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
 )
 
 var (
-	DebugFlag   bool // debug flag
-	VersionFlag bool // version flag
+	// 开启命令行的调试模式
+	DebugFlag bool
+
+	// qshell 版本信息， qshell -v
+	VersionFlag bool
 	cfgFile     string
 	local       bool
 )
@@ -53,7 +55,7 @@ __custom_func() {
 `
 )
 
-// cobra root cmd
+// cobra root cmd, all other commands is children or subchildren of this root cmd
 var RootCmd = &cobra.Command{
 	Use:                    "qshell",
 	Short:                  "Qiniu commandline tool for managing your bucket and CDN",
@@ -96,12 +98,12 @@ func initConfig() {
 		}
 		viper.SetConfigFile(jsonConfigFile)
 	} else {
-		curUser, gErr := user.Current()
-		if gErr != nil {
-			fmt.Fprintf(os.Stderr, "get current user: %v\n", gErr)
+		homeDir, hErr := homedir.Dir()
+		if hErr != nil {
+			fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
 			os.Exit(1)
 		}
-		viper.AddConfigPath(curUser.HomeDir)
+		viper.AddConfigPath(homeDir)
 		viper.SetConfigName(".qshell")
 	}
 

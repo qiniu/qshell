@@ -71,6 +71,7 @@ type BucketDomainsRet []struct {
 	Owner  int    `json:"owner"`
 }
 
+// 获取一个存储空间绑定的CDN域名
 func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err error) {
 	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
 	var reqHost string
@@ -96,6 +97,7 @@ func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err er
 
 }
 
+// 返回私有空间的下载链接， 也可以用于公有空间的下载
 func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string) (fileUrl string) {
 
 	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
@@ -105,6 +107,7 @@ func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string) 
 	return
 }
 
+// 返回私有空间的下载链接， 也可以用于公有空间的下载
 func (m *BucketManager) PrivateUrl(publicUrl string, deadline int64) (finalUrl string, err error) {
 	srcUri, pErr := url.Parse(publicUrl)
 	if pErr != nil {
@@ -142,6 +145,7 @@ func (m *BucketManager) rsHost(bucket string) (rsHost string, err error) {
 	return
 }
 
+// 从存储空间下载文件（不需要绑定CDN域名）
 func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 	entryUri := strings.Join([]string{bucket, key}, ":")
 

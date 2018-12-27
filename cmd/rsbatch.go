@@ -165,6 +165,7 @@ func init() {
 		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd, batchFetchCmd)
 }
 
+// 批量抓取网络资源到七牛存储空间
 func BatchFetch(cmd *cobra.Command, params []string) {
 	if worker <= 0 || worker > 1000 {
 		fmt.Fprintf(os.Stderr, "threads count: %d is too large, must be (0, 1000]", worker)
@@ -260,6 +261,7 @@ func batchFetch(fItemChan chan *iqshell.FetchItem, fileExporter *iqshell.FileExp
 	}
 }
 
+// 批量获取文件列表的信息
 func BatchStat(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 
@@ -332,6 +334,7 @@ func batchStat(entries []iqshell.EntryPath, bm *iqshell.BucketManager) {
 	}
 }
 
+// 批量删除七牛存储空间中的文件
 func BatchDelete(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -455,6 +458,7 @@ func batchDelete(entries []iqshell.EntryPath, bm *iqshell.BucketManager, fileExp
 	}
 }
 
+// 批量修改存储在七牛存储空间中文件的MimeType信息
 func BatchChgm(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -576,6 +580,7 @@ func batchChgm(entries []iqshell.ChgmEntryPath, bm *iqshell.BucketManager, fileE
 	}
 }
 
+// 批量修改存储在七牛存储空间中文件的存储类型信息（标准存储-》低频存储，低频-》标准存储)
 func BatchChtype(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -708,6 +713,7 @@ func batchChtype(entries []iqshell.ChtypeEntryPath, bm *iqshell.BucketManager, f
 	return
 }
 
+// 批量设置七牛存储空间中的删除标志（多少天后删除）
 func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -823,6 +829,7 @@ func batchDeleteAfterDays(entries []iqshell.DeleteAfterDaysEntryPath, bm *iqshel
 	}
 }
 
+// 批量重命名七牛存储空间中的文件
 func BatchRename(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -950,6 +957,7 @@ func batchRename(entries []iqshell.RenameEntryPath, bm *iqshell.BucketManager, f
 	}
 }
 
+// 批量移动七牛存储空间中的文件
 func BatchMove(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -1087,6 +1095,7 @@ func batchMove(entries []iqshell.MoveEntryPath, bm *iqshell.BucketManager, fileE
 	}
 }
 
+// 批量拷贝七牛存储中的文件
 func BatchCopy(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -1226,6 +1235,7 @@ func batchCopy(entries []iqshell.CopyEntryPath, bm *iqshell.BucketManager, fileE
 	}
 }
 
+// 批量签名存储空间中的文件
 func BatchSign(cmd *cobra.Command, params []string) {
 	if deadline <= 0 {
 		fmt.Fprintf(os.Stderr, "Invalid <Deadline>: deadline must be int and greater than 0\n")

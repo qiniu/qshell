@@ -164,6 +164,7 @@ func init() {
 		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, lsBucketCmd2)
 }
 
+// 【dircache】扫描本地文件目录， 形成一个关于文件信息的文本文件
 func DirCache(cmd *cobra.Command, params []string) {
 	var cacheResultFile string
 	cacheRootPath := params[0]
@@ -178,6 +179,7 @@ func DirCache(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【listbucket2】 使用v2接口列举存储空间中的文件
 func ListBucket2(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 
@@ -226,6 +228,7 @@ func ListBucket2(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【listbucket】列举七牛存储空间中的文件列表
 func ListBucket(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 
@@ -236,6 +239,7 @@ func ListBucket(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【get】下载七牛存储中的一个文件， 该命令不需要存储空间绑定有可访问的CDN域名
 func Get(cmd *cobra.Command, params []string) {
 
 	bucket := params[0]
@@ -254,6 +258,7 @@ func Get(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【stat】获取文件的meta信息，包括文件名字，hash， 上传时间，文件大小等信息
 func Stat(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
@@ -268,6 +273,7 @@ func Stat(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【delete】删除七牛存储空间中的文件
 func Delete(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
@@ -280,6 +286,7 @@ func Delete(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【move】 移动一个七牛存储空间的文件到另一个七牛的存储空间，该命令只适用于同属一个存储区域的存储空间中的文件
 func Move(cmd *cobra.Command, params []string) {
 	srcBucket := params[0]
 	srcKey := params[1]
@@ -297,6 +304,7 @@ func Move(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【copy】拷贝一个七牛存储空间的文件到另一个七牛的存储空间，该命令只适用于同属一个存储区域的存储空间中的文件
 func Copy(cmd *cobra.Command, params []string) {
 	srcBucket := params[0]
 	srcKey := params[1]
@@ -313,6 +321,7 @@ func Copy(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【chtype】改变七牛存储空间的文件的MimeType
 func Chgm(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
@@ -326,6 +335,7 @@ func Chgm(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【chtype】改变文件的存储类型，在七牛中存储的文件分为标准存储和低频存储
 func Chtype(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
@@ -345,6 +355,7 @@ func Chtype(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【expire】给存储在七牛空间中的文件设置删除属性，设置以后，到指定时间会自动删除该文件
 func DeleteAfterDays(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
@@ -364,6 +375,7 @@ func DeleteAfterDays(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【fetch】通过http链接抓取网上的资源到七牛存储空间
 func Fetch(cmd *cobra.Command, params []string) {
 	remoteResUrl := params[0]
 	bucket := params[1]
@@ -390,6 +402,7 @@ func Fetch(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【cdnprefetch】CDN文件预取, 预取文件到CDN节点和父层节点
 func Prefetch(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
@@ -402,6 +415,7 @@ func Prefetch(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【saveas】打印输出主动saveas链接
 func Saveas(cmd *cobra.Command, params []string) {
 	publicUrl := params[0]
 	saveBucket := params[1]
@@ -417,6 +431,7 @@ func Saveas(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【m3u8delete】删除m3u8文件，包括m3u8文件本身和分片文件
 func M3u8Delete(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	m3u8Key := params[1]
@@ -452,6 +467,7 @@ func M3u8Delete(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【m3u8replace】替换m3u8文件中的域名信息
 func M3u8Replace(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	m3u8Key := params[1]
@@ -468,6 +484,7 @@ func M3u8Replace(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【privateurl】打印七牛私有空间的文件的下载链接(私有空间的文件下载去要鉴权验证)
 func PrivateUrl(cmd *cobra.Command, params []string) {
 	publicUrl := params[0]
 	var deadline int64

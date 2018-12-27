@@ -66,7 +66,8 @@ func parseUploadConfigFile(uploadConfigFile string, uploadConfig *iqshell.Upload
 	return
 }
 
-// upload cmd
+// [qupload]命令， 上传本地文件到七牛存储中
+// 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中; 可以设置多线程上传，默认的线程区间在[iqshell.MIN_UPLOAD_THREAD_COUNT, iqshell.MAX_UPLOAD_THREAD_COUNT]
 func QiniuUpload(cmd *cobra.Command, params []string) {
 
 	configFile := params[0]

@@ -29,10 +29,11 @@ import (
 */
 
 const (
-	MIN_DOWNLOAD_THREAD_COUNT = 1
-	MAX_DOWNLOAD_THREAD_COUNT = 2000
+	MIN_DOWNLOAD_THREAD_COUNT = 1    // 最小的下载线程数目
+	MAX_DOWNLOAD_THREAD_COUNT = 2000 // 最大下载线程数目
 )
 
+// qdownload子命令用到的配置参数
 type DownloadConfig struct {
 	FileEncoding string `json:"file_encoding"`
 	KeyFile      string `json:"key_file"`
@@ -51,6 +52,7 @@ type DownloadConfig struct {
 	LogStdout bool   `json:"log_stdout,omitempty"`
 }
 
+// 获取一个存储空间的绑定的所有域名
 func (d *DownloadConfig) DomainOfBucket(bm *BucketManager) (domain string, err error) {
 	//get domains of bucket
 	domainsOfBucket, gErr := bm.DomainsOfBucket(d.Bucket)
@@ -73,6 +75,7 @@ func (d *DownloadConfig) DomainOfBucket(bm *BucketManager) (domain string, err e
 	return
 }
 
+// 获取一个存储空间的下载域名， 默认使用用户配置的域名，如果没有就使用接口随机选择一个下载域名
 func (d *DownloadConfig) DownloadDomain(domainOfBucket string) (domain string) {
 	if d.CdnDomain != "" {
 		domain = d.CdnDomain
@@ -97,6 +100,7 @@ func doDownload(tasks chan func()) {
 	}
 }
 
+// 【qdownload] 批量下载文件， 可以下载以前缀的文件，也可以下载一个文件列表
 func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	QShellRootPath := RootPath()
 	if QShellRootPath == "" {
@@ -205,16 +209,23 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			}
 			entries = append(entries, entry)
 		}
-		batches := len(entries)/1000 + 1
+
+		var batches int
+		if len(entries)%1000 == 0 {
+			batches = len(entries) / 1000
+		} else {
+			batches = len(entries)/1000 + 1
+		}
 		for i := 0; i < batches; i++ {
-			ret, err := bm.BatchStat(entries)
+			childEntries := entries[i*1000 : i*1000+1000]
+			ret, err := bm.BatchStat(childEntries)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Batch stat error: %v\n", err)
 				os.Exit(STATUS_ERROR)
 			}
-			if len(ret) > 0 {
-				for i, entry := range entries {
-					item := ret[i]
+			if len(childEntries) == len(ret) {
+				for j, entry := range childEntries {
+					item := ret[j]
 					if item.Code != 200 || item.Data.Error != "" {
 						fmt.Fprintln(os.Stderr, entry.Key+"\t"+item.Data.Error)
 					} else {
