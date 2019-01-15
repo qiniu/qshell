@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/qiniu/api.v7/auth/qbox"
+	"github.com/qiniu/api.v7/conf"
 	"github.com/qiniu/api.v7/storage"
 	"io"
 	"io/ioutil"
@@ -273,6 +274,28 @@ func (m *BucketManager) BatchChtype(entries []ChtypeEntryPath) (ret []storage.Ba
 		ops = append(ops, storage.URIChangeType(entry.Bucket, entry.Key, entry.FileType))
 	}
 	return m.Batch(ops)
+}
+
+// 禁用七牛存储中的对象
+func (m *BucketManager) ChStatus(bucket, key string, forbidden bool) (err error) {
+	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
+	reqHost, reqErr := m.RsReqHost(bucket)
+	if reqErr != nil {
+		err = reqErr
+		return
+	}
+	var status int
+	if forbidden {
+		status = 1
+	} else {
+		status = 0
+	}
+	reqURL := fmt.Sprintf("%s%s", reqHost, fmt.Sprintf("/chstatus/%s/status/%d", storage.EncodedEntry(bucket, key), status))
+	headers := http.Header{}
+	headers.Add("Content-Type", conf.CONTENT_TYPE_FORM)
+	err = m.Client.Call(ctx, nil, "POST", reqURL, headers)
+	return
+
 }
 
 func (m *BucketManager) BatchDeleteAfterDays(entries []DeleteAfterDaysEntryPath) (ret []storage.BatchOpRet, err error) {

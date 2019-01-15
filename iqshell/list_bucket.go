@@ -64,6 +64,12 @@ func (m *BucketManager) ListFiles(bucket, prefix, marker, listResultFile string)
 func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int, appendMode bool, readable bool) (retErr error) {
 	lastMarker := marker
 
+	defer func(lastMarker string) {
+		if lastMarker != "" {
+			fmt.Println("Marker: ", lastMarker)
+		}
+	}(lastMarker)
+
 	sigChan := make(chan os.Signal, 1)
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -192,8 +198,5 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		}
 	}
 
-	if lastMarker != "" {
-		fmt.Println("Marker: ", lastMarker)
-	}
 	return
 }

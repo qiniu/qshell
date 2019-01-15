@@ -23,10 +23,16 @@ var (
 	}
 )
 
-var pipeline string
+var (
+	pipeline    string
+	notifyURL   string
+	notifyForce bool
+)
 
 func init() {
 	fopCmd.Flags().StringVarP(&pipeline, "pipeline", "p", "", "task pipeline")
+	fopCmd.Flags().StringVarP(&notifyURL, "notify-url", "u", "", "notfiy url")
+	fopCmd.Flags().BoolVarP(&notifyForce, "force", "f", false, "force execute")
 	RootCmd.AddCommand(prefopCmd, fopCmd)
 }
 
@@ -47,7 +53,7 @@ func Prefop(cmd *cobra.Command, params []string) {
 func Fop(cmd *cobra.Command, params []string) {
 	bucket, key, fops := params[0], params[1], params[2]
 
-	persistengId, err := iqshell.Pfop(bucket, key, fops, pipeline)
+	persistengId, err := iqshell.Pfop(bucket, key, fops, pipeline, notifyURL, notifyForce)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Prefop error: %v\n", err)
 		os.Exit(iqshell.STATUS_ERROR)
