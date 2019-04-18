@@ -2,16 +2,18 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/qiniu/api.v7/storage"
-	"github.com/qiniu/qshell/iqshell"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/astaxie/beego/logs"
+	homedir "github.com/mitchellh/go-homedir"
+	"github.com/qiniu/api.v7/client"
+	"github.com/qiniu/api.v7/storage"
+	"github.com/qiniu/qshell/iqshell"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -84,6 +86,7 @@ func initConfig() {
 	//parse command
 	if DebugFlag {
 		logs.SetLevel(logs.LevelDebug)
+		client.TurnOnDebug()
 	} else {
 		logs.SetLevel(logs.LevelInformational)
 	}

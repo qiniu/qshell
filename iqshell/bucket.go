@@ -6,9 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"github.com/qiniu/api.v7/auth/qbox"
-	"github.com/qiniu/api.v7/conf"
-	"github.com/qiniu/api.v7/storage"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -17,6 +14,11 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/qiniu/api.v7/auth"
+	"github.com/qiniu/api.v7/auth/qbox"
+	"github.com/qiniu/api.v7/conf"
+	"github.com/qiniu/api.v7/storage"
 )
 
 // Get 接口返回的结构
@@ -74,28 +76,21 @@ type BucketDomainsRet []struct {
 
 // 获取一个存储空间绑定的CDN域名
 func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err error) {
-	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
-	var reqHost string
-
-	scheme := "http://"
-	if m.Cfg.UseHTTPS {
-		scheme = "https://"
+	infos, err := m.ListBucketDomains(bucket)
+	if err != nil {
+		if e, ok := err.(*storage.ErrorInfo); ok {
+			if e.Code != 404 {
+				return
+			}
+			err = nil
+		} else {
+			return
+		}
 	}
-
-	reqHost = fmt.Sprintf("%s%s", scheme, ApiHost())
-	reqURL := fmt.Sprintf("%s/v7/domain/list?tbl=%v", reqHost, bucket)
-	headers := http.Header{}
-	ret := new(BucketDomainsRet)
-	cErr := m.Client.Call(ctx, ret, "POST", reqURL, headers)
-	if cErr != nil {
-		err = cErr
-		return
-	}
-	for _, d := range *ret {
+	for _, d := range infos {
 		domains = append(domains, d.Domain)
 	}
 	return
-
 }
 
 // 返回私有空间的下载链接， 也可以用于公有空间的下载
@@ -169,7 +164,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 
 	var data GetRet
 
-	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
+	ctx := auth.WithCredentials(context.Background(), m.Mac)
 	headers := http.Header{}
 
 	err = storage.DefaultClient.Call(ctx, &data, "GET", url, headers)
@@ -278,7 +273,7 @@ func (m *BucketManager) BatchChtype(entries []ChtypeEntryPath) (ret []storage.Ba
 
 // 禁用七牛存储中的对象
 func (m *BucketManager) ChStatus(bucket, key string, forbidden bool) (err error) {
-	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
+	ctx := auth.WithCredentials(context.Background(), m.Mac)
 	reqHost, reqErr := m.RsReqHost(bucket)
 	if reqErr != nil {
 		err = reqErr

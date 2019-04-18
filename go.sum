@@ -75,6 +75,7 @@ github.com/pelletier/go-toml v1.2.0 h1:T5zMGML61Wp+FlcbWjRDT7yAxhJNAiPPLOFECq181
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/qiniu/api.v7 v7.2.5+incompatible h1:6KKaGt7MbFzVGSniwzv7qsM/Qv0or4SkRJfmak8LqZE=
 github.com/qiniu/api.v7 v7.2.6-0.20181128092015-8c3e1ca2eb33+incompatible h1:L3WEV1XhimkIAI0u1b2KlUIJyURecprw0EW42gsvYTA=
 github.com/qiniu/api.v7 v7.2.6-0.20181128092015-8c3e1ca2eb33+incompatible/go.mod h1:V8/EzlTgLN6q0s0CJmg/I81ytsvldSF22F7h6MI02+c=
 github.com/qiniu/x v7.0.8+incompatible h1:P4LASsfwJY7SoZ13dwqBwGhZh7HKU8cdFVCUkmz0gZ8=
