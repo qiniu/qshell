@@ -338,9 +338,10 @@ func GetBucketManager() *BucketManager {
 	}
 	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
 	cfg := storage.Config{
-		RsHost:  RsHost(),
-		ApiHost: ApiHost(),
-		RsfHost: RsfHost(),
+		RsHost:        RsHost(),
+		ApiHost:       ApiHost(),
+		RsfHost:       RsfHost(),
+		CentralRsHost: RsHost(),
 	}
 	return NewBucketManager(mac, &cfg)
 }
