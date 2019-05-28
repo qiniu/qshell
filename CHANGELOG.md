@@ -1,6 +1,7 @@
 # 2.3.7
 1. 加入forbidden命令，可以禁用或者解禁文件
 2. pfop加入pipeline, 和上传回调
+3. 修复batchfetch bug
 
 # 2.3.6
 1. 修复m3u8replace 上传的问题

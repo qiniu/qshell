@@ -85,13 +85,11 @@ func (d *DownloadConfig) DomainOfBucket(bm *BucketManager) (domain string, err e
 }
 
 // 获取一个存储空间的下载域名， 默认使用用户配置的域名，如果没有就使用接口随机选择一个下载域名
-func (d *DownloadConfig) DownloadDomain(domainOfBucket string) (domain string) {
+func (d *DownloadConfig) DownloadDomain() (domain string) {
 	if d.CdnDomain != "" {
 		domain = d.CdnDomain
 	} else if d.IoHost != "" {
 		domain = d.IoHost
-	} else {
-		domain = domainOfBucket
 	}
 	domain = strings.TrimPrefix(domain, "http://")
 	domain = strings.TrimPrefix(domain, "https://")
@@ -230,12 +228,18 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 
 	bm := GetBucketManager()
 
-	domainOfBucket, dErr := downConfig.DomainOfBucket(bm)
-	if dErr != nil {
-		logs.Error("get domains of bucket: ", dErr)
-		os.Exit(1)
+	downloadDomain := downConfig.DownloadDomain()
+	if downloadDomain == "" {
+		domainOfBucket, dErr := downConfig.DomainOfBucket(bm)
+		if dErr != nil {
+			logs.Error("get domains of bucket: ", dErr)
+			os.Exit(1)
+		}
+		downloadDomain = domainOfBucket
 	}
-	downloadDomain := downConfig.DownloadDomain(domainOfBucket)
+	if downloadDomain == "" {
+		panic("download domain cannot be empty")
+	}
 
 	jobListFileName := filepath.Join(storePath, fmt.Sprintf("%s.list", jobId))
 	resumeFile := filepath.Join(storePath, fmt.Sprintf("%s.ldb", jobId))

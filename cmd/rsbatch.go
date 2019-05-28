@@ -208,9 +208,12 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 		fmt.Fprintf(os.Stderr, "create file exporter: %v\n", fErr)
 		os.Exit(1)
 	}
-	go batchFetch(fItemChan, fileExporter)
-
+	var (
+		ws = make(chan struct{}, worker)
+		bm = iqshell.GetBucketManager()
+	)
 	for scanner.Scan() {
+		ws <- struct{}{}
 		line := scanner.Text()
 		items := strings.Split(line, "\t")
 		if len(items) <= 0 {
@@ -234,11 +237,28 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 			Key:       saveKey,
 			RemoteUrl: remoteUrl,
 		}
-		fItemChan <- &item
+		go func() {
+			_, fErr := bm.Fetch(item.RemoteUrl, item.Bucket, item.Key)
+			if fErr != nil {
+				fmt.Fprintf(os.Stderr, "fetch %s => %s:%s failed\n", item.RemoteUrl, item.Bucket, item.Key)
+				if fileExporter != nil {
+					fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%v\n", item.RemoteUrl, item.Key, fErr))
+				}
+			} else {
+				fmt.Printf("fetch %s => %s:%s success\n", item.RemoteUrl, item.Bucket, item.Key)
+				if fileExporter != nil {
+					fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", item.RemoteUrl, item.Key))
+				}
+			}
+			<-ws
+		}()
+	}
+	for i := 0; i < worker; i++ {
+		ws <- struct{}{}
 	}
 }
 
-func batchFetch(fItemChan chan *iqshell.FetchItem, fileExporter *iqshell.FileExporter) {
+func batchFetch(wg *sync.WaitGroup, fItemChan chan *iqshell.FetchItem, fileExporter *iqshell.FileExporter) {
 	for i := 0; i < worker; i++ {
 		go func() {
 			bm := iqshell.GetBucketManager()
