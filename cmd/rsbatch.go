@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/storage"
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
 	"io"
@@ -35,6 +36,7 @@ var (
 	bsuccessFname string
 	bfailureFname string
 	sep           string
+	bfetchUphost  string
 )
 
 var (
@@ -113,6 +115,7 @@ func init() {
 	batchFetchCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchFetchCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "file to save batch fetch success list")
 	batchFetchCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "file to save batch fetch failure list")
+	batchFetchCmd.Flags().StringVarP(&bfetchUphost, "up-host", "u", "", "fetch uphost")
 
 	batchStatCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchCopyCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
@@ -124,7 +127,7 @@ func init() {
 	batchDeleteCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchDeleteCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "delete success list")
 	batchDeleteCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "delete failure list")
-	batchDeleteCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for line fields")
+	batchDeleteCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields, \t by default")
 
 	batchChgmCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChgmCmd.Flags().IntVarP(&worker, "worker", "c", 1, "woker count")
@@ -211,9 +214,21 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 		os.Exit(1)
 	}
 	var (
-		ws = make(chan struct{}, worker)
-		bm = iqshell.GetBucketManager()
+		ws  = make(chan struct{}, worker)
+		cfg = storage.Config{
+			IoHost: bfetchUphost,
+		}
+		bm = iqshell.GetBucketManagerWithConfig(&cfg)
 	)
+
+	if bfetchUphost == "" {
+		region, rErr := storage.GetRegion(bm.Mac.AccessKey, bucket)
+		if rErr != nil {
+			fmt.Fprintf(os.Stderr, "failed getting fetch host for bucket: %s: %v\n", bucket, rErr)
+			os.Exit(1)
+		}
+		bm.Cfg.IoHost = region.IovipHost
+	}
 	for scanner.Scan() {
 		ws <- struct{}{}
 		line := scanner.Text()

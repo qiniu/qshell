@@ -330,6 +330,17 @@ func NewBucketManagerEx(mac *qbox.Mac, cfg *storage.Config, client *storage.Clie
 	}
 }
 
+// GetBucketManager 返回一个BucketManager 指针
+func GetBucketManagerWithConfig(cfg *storage.Config) *BucketManager {
+	account, gErr := GetAccount()
+	if gErr != nil {
+		fmt.Fprintf(os.Stderr, "GetBucketManager: %v\n", gErr)
+		os.Exit(1)
+	}
+	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
+	return NewBucketManager(mac, cfg)
+}
+
 func GetBucketManager() *BucketManager {
 	account, gErr := GetAccount()
 	if gErr != nil {
