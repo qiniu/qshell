@@ -14,9 +14,11 @@ import (
 var qDownloadCmd = &cobra.Command{
 	Use:   "qdownload [-c <ThreadCount>] <LocalDownloadConfig>",
 	Short: "Batch download files from the qiniu bucket",
-	Long:  "By default qdownload use 5 goroutines to download, it can be customized use -c <count> flag",
-	Args:  cobra.ExactArgs(1),
-	Run:   QiniuDownload,
+	Long: `By default qdownload use 5 goroutines to download, it can be customized use -c <count> flag.
+And qdownload will use batch stat api or list api to get files info so that it have knowledge to tell whether files
+have already in local disk and need to skip download or not.`,
+	Args: cobra.ExactArgs(1),
+	Run:  QiniuDownload,
 }
 
 var (

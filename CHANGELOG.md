@@ -1,3 +1,6 @@
+# 2.3.8 
+1. 添加batchdelete 自定义分隔符
+
 # 2.3.7
 1. 加入forbidden命令，可以禁用或者解禁文件
 2. pfop加入pipeline, 和上传回调

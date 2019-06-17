@@ -24,7 +24,7 @@ require (
 	github.com/mitchellh/go-homedir v1.0.0
 	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/opennota/check v0.0.0-20180911053232-0c771f5545ff // indirect
-	github.com/qiniu/api.v7 v7.2.6-0.20181128092015-8c3e1ca2eb33+incompatible
+	github.com/qiniu/api.v7 v0.0.0-20190520053455-bea02cd22bf4
 	github.com/qiniu/x v7.0.8+incompatible // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/securego/gosec v0.0.0-20181211171558-12400f9a1ca7 // indirect

@@ -34,6 +34,7 @@ var (
 	deadline      int
 	bsuccessFname string
 	bfailureFname string
+	sep           string
 )
 
 var (
@@ -123,6 +124,7 @@ func init() {
 	batchDeleteCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchDeleteCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "delete success list")
 	batchDeleteCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "delete failure list")
+	batchDeleteCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for line fields")
 
 	batchChgmCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChgmCmd.Flags().IntVarP(&worker, "worker", "c", 1, "woker count")
@@ -417,9 +419,12 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
 		os.Exit(1)
 	}
+	if sep == "" {
+		sep = "\t"
+	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Fields(line)
+		items := strings.Split(line, sep)
 		if len(items) > 0 {
 			key := items[0]
 			if key != "" {

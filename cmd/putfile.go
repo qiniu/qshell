@@ -7,6 +7,7 @@ import (
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 )

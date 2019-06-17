@@ -80,6 +80,9 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		<-sigChan
 		cancel()
 		maxRetry = 0
+
+		fmt.Printf("\nMarker: %s\n", lastMarker)
+		os.Exit(1)
 	}()
 
 	var listResultFh *os.File
