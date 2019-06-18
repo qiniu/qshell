@@ -3,10 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/api.v7/storage"
-	"github.com/qiniu/qshell/iqshell"
-	"github.com/spf13/cobra"
 	"io"
 	"os"
 	"runtime"
@@ -14,6 +10,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/storage"
+	"github.com/qiniu/qshell/iqshell"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -170,6 +171,56 @@ func init() {
 		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd, batchFetchCmd)
 }
 
+type fetchConfig struct {
+	upHost string
+
+	threadCount int
+
+	successFname   string
+	failureFname   string
+	overwriteFname string
+
+	fileExporter *iqshell.FileExporter
+	bm           *iqshell.BucketManager
+}
+
+// initFileExporter需要在主goroutine中调用， 原因同initBucketManager
+func (fc *fetchConfig) initFileExporter() {
+	fileExporter, fErr := iqshell.NewFileExporter(fc.successFname, fc.failureFname, "")
+	if fErr != nil {
+		fmt.Fprintf(os.Stderr, "create file exporter: %v\n", fErr)
+		os.Exit(1)
+	}
+	fc.fileExporter = fileExporter
+}
+
+// GetBucketManagerWithConfig 会使用os.Exit推出，因此该方法需要在main gouroutine中调用
+func (fc *fetchConfig) initBucketManager() {
+
+	cfg := storage.Config{
+		IoHost: fc.upHost,
+	}
+	fc.bm = iqshell.GetBucketManagerWithConfig(&cfg)
+}
+
+// initUpHost需要在主goroutine中调用
+func (fc *fetchConfig) initUpHost(bucket string) {
+	if bfetchUphost == "" {
+		acc, aerr := iqshell.GetAccount()
+		if aerr != nil {
+			fmt.Fprintf(os.Stderr, "failed to get accessKey")
+			os.Exit(1)
+		}
+		region, rErr := storage.GetRegion(acc.AccessKey, bucket)
+		if rErr != nil {
+			fmt.Fprintf(os.Stderr, "failed getting fetch host for bucket: %s: %v\n", bucket, rErr)
+			os.Exit(1)
+		}
+		bfetchUphost = region.IovipHost
+	}
+	fc.upHost = bfetchUphost
+}
+
 // 批量抓取网络资源到七牛存储空间
 func BatchFetch(cmd *cobra.Command, params []string) {
 	if worker <= 0 || worker > 1000 {
@@ -208,29 +259,22 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 	)
 	defer close(fItemChan)
 
-	fileExporter, fErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
-	if fErr != nil {
-		fmt.Fprintf(os.Stderr, "create file exporter: %v\n", fErr)
-		os.Exit(1)
-	}
-	var (
-		ws  = make(chan struct{}, worker)
-		cfg = storage.Config{
-			IoHost: bfetchUphost,
-		}
-		bm = iqshell.GetBucketManagerWithConfig(&cfg)
-	)
+	itemc := make(chan *iqshell.FetchItem)
+	donec := make(chan struct{})
 
-	if bfetchUphost == "" {
-		region, rErr := storage.GetRegion(bm.Mac.AccessKey, bucket)
-		if rErr != nil {
-			fmt.Fprintf(os.Stderr, "failed getting fetch host for bucket: %s: %v\n", bucket, rErr)
-			os.Exit(1)
-		}
-		bm.Cfg.IoHost = region.IovipHost
+	fconfig := fetchConfig{
+		threadCount:  worker,
+		successFname: bsuccessFname,
+		failureFname: bfailureFname,
 	}
+
+	fconfig.initUpHost(bucket)
+	fconfig.initBucketManager()
+	fconfig.initFileExporter()
+
+	go fetchChannel(itemc, donec, &fconfig)
+
 	for scanner.Scan() {
-		ws <- struct{}{}
 		line := scanner.Text()
 		items := strings.Split(line, "\t")
 		if len(items) <= 0 {
@@ -254,7 +298,26 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 			Key:       saveKey,
 			RemoteUrl: remoteUrl,
 		}
-		go func() {
+		itemc <- &item
+	}
+	close(itemc)
+
+	<-donec
+}
+
+func fetchChannel(c chan *iqshell.FetchItem, donec chan struct{}, fconfig *fetchConfig) {
+
+	fileExporter := fconfig.fileExporter
+	bm := fconfig.bm
+
+	limitc := make(chan struct{}, fconfig.threadCount)
+	wg := sync.WaitGroup{}
+
+	for item := range c {
+		limitc <- struct{}{}
+		wg.Add(1)
+
+		go func(item *iqshell.FetchItem) {
 			_, fErr := bm.Fetch(item.RemoteUrl, item.Bucket, item.Key)
 			if fErr != nil {
 				fmt.Fprintf(os.Stderr, "fetch %s => %s:%s failed\n", item.RemoteUrl, item.Bucket, item.Key)
@@ -267,35 +330,13 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 					fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", item.RemoteUrl, item.Key))
 				}
 			}
-			<-ws
-		}()
+			<-limitc
+			wg.Done()
+		}(item)
 	}
-	for i := 0; i < worker; i++ {
-		ws <- struct{}{}
-	}
-}
+	wg.Wait()
 
-func batchFetch(wg *sync.WaitGroup, fItemChan chan *iqshell.FetchItem, fileExporter *iqshell.FileExporter) {
-	for i := 0; i < worker; i++ {
-		go func() {
-			bm := iqshell.GetBucketManager()
-			for fetchItem := range fItemChan {
-				_, fErr := bm.Fetch(fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
-				if fErr != nil {
-					fmt.Fprintf(os.Stderr, "fetch %s => %s:%s failed\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
-					if fileExporter != nil {
-						fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%v\n", fetchItem.RemoteUrl, fetchItem.Key, fErr))
-					}
-				} else {
-					fmt.Printf("fetch %s => %s:%s success\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
-					if fileExporter != nil {
-						fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", fetchItem.RemoteUrl, fetchItem.Key))
-					}
-
-				}
-			}
-		}()
-	}
+	donec <- struct{}{}
 }
 
 // 批量获取文件列表的信息

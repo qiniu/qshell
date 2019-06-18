@@ -1,6 +1,8 @@
 # 2.3.8 
 1. 添加batchdelete 自定义分隔符
 2. batchfetch支持自定义上传Host设置
+3. 添加awsfetch抓取亚马逊空间数据到七牛空间
+4. 添加awslist列举亚马逊空间文件
 
 # 2.3.7
 1. 加入forbidden命令，可以禁用或者解禁文件
