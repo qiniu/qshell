@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/qiniu/api.v7/storage"
+	"io"
 	"net/url"
 	"os"
 	"strconv"
@@ -130,6 +131,15 @@ func decode(s string) (v string, err error) {
 	return string(t), nil
 }
 
+// 获取reader中行数
+func GetLineCount(reader io.Reader) (totalCount int64) {
+	bScanner := bufio.NewScanner(reader)
+	for bScanner.Scan() {
+		totalCount += 1
+	}
+	return
+}
+
 // 获取文件行数
 func GetFileLineCount(filePath string) (totalCount int64) {
 	fp, openErr := os.Open(filePath)
@@ -138,11 +148,7 @@ func GetFileLineCount(filePath string) (totalCount int64) {
 	}
 	defer fp.Close()
 
-	bScanner := bufio.NewScanner(fp)
-	for bScanner.Scan() {
-		totalCount += 1
-	}
-	return
+	return GetLineCount(fp)
 }
 
 // URL:

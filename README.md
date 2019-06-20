@@ -151,13 +151,13 @@ fi
 
 例子：
 
-1. 默认官方的列举空间的文件使用的是rs.qiniu.com域名，如果因为某种原因，比如私有存储，需要替换使用rs-test.qiniu.com这个域名的话，那么只需要
+1. 默认官方的列举空间的文件使用的是rsf.qiniu.com域名，如果因为某种原因，比如私有存储，需要替换使用rs-test.qiniu.com这个域名的话，那么只需要
 在家目录下创建文件名字为.qshell.json的配置文件，文件内容为
 
 ```json
 {
     "hosts": {
-        "rs": "rs-test.qiniu.com"
+        "rsf": "rs-test.qiniu.com"
     }
 }
 ```

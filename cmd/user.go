@@ -99,7 +99,7 @@ func RmUser(cmd *cobra.Command, params []string) {
 	userName := params[0]
 	err := iqshell.RmUser(userName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %v\n", cmd, err)
+		fmt.Fprintf(os.Stderr, "RmUser: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -110,7 +110,7 @@ func LookUp(cmd *cobra.Command, params []string) {
 	userName := params[0]
 	err := iqshell.LookUp(userName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %v\n", cmd, err)
+		fmt.Fprintf(os.Stderr, "LookUp: %v\n", err)
 		os.Exit(1)
 	}
 }

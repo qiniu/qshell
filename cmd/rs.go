@@ -76,6 +76,13 @@ var (
 		Args:  cobra.ExactArgs(3),
 		Run:   Chtype,
 	}
+	chstatus = &cobra.Command{
+		Use:   "forbidden <Bucket> <Key>",
+		Short: "Forbidden file in qiniu bucket",
+		Long:  "Forbidden object in qiniu bucket, when used with -r option, unforbidden the object",
+		Args:  cobra.ExactArgs(2),
+		Run:   ChStatus,
+	}
 	delafterCmd = &cobra.Command{
 		Use:   "expire <Bucket> <Key> <DeleteAfterDays>",
 		Short: "Set the deleteAfterDays of a file",
@@ -133,11 +140,13 @@ var (
 	finalKey   string
 	appendMode bool
 	readable   bool
+	reverse    bool
 )
 
 func init() {
 	dirCacheCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "output filepath")
 	qGetCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "save file as specified by this option")
+	chstatus.Flags().BoolVarP(&reverse, "reverse", "r", false, "unforbidden object in qiniu bucket")
 
 	lsBucketCmd.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
 	lsBucketCmd.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
@@ -161,7 +170,22 @@ func init() {
 
 	RootCmd.AddCommand(qGetCmd, dirCacheCmd, lsBucketCmd, statCmd, delCmd, moveCmd,
 		copyCmd, chgmCmd, chtypeCmd, delafterCmd, fetchCmd, mirrorCmd,
-		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, lsBucketCmd2)
+		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, lsBucketCmd2, chstatus)
+}
+
+// 禁用七牛存储空间中的对象，如果使用了-r选项，那么解禁七牛存储中的对象
+// 对象被禁用后在七牛存储空间中看不到该文件
+func ChStatus(cmd *cobra.Command, params []string) {
+	bucket := params[0]
+	key := params[1]
+
+	bm := iqshell.GetBucketManager()
+
+	err := bm.ChStatus(bucket, key, !reverse)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Change file status error: %v\n", err)
+		os.Exit(iqshell.STATUS_ERROR)
+	}
 }
 
 // 【dircache】扫描本地文件目录， 形成一个关于文件信息的文本文件

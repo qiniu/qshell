@@ -5,13 +5,15 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/iqshell"
-	"github.com/spf13/cobra"
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/qshell/iqshell"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -340,4 +342,11 @@ func CreateRandString(num int) (rcode string) {
 	}
 
 	return
+}
+
+func ParseLine(line, sep string) []string {
+	if strings.TrimSpace(sep) == "" {
+		return strings.Fields(line)
+	}
+	return strings.Split(line, sep)
 }

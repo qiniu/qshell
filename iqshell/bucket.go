@@ -6,8 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"github.com/qiniu/api.v7/auth/qbox"
-	"github.com/qiniu/api.v7/storage"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,6 +14,11 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/qiniu/api.v7/auth"
+	"github.com/qiniu/api.v7/auth/qbox"
+	"github.com/qiniu/api.v7/conf"
+	"github.com/qiniu/api.v7/storage"
 )
 
 // Get 接口返回的结构
@@ -73,28 +76,21 @@ type BucketDomainsRet []struct {
 
 // 获取一个存储空间绑定的CDN域名
 func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err error) {
-	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
-	var reqHost string
-
-	scheme := "http://"
-	if m.Cfg.UseHTTPS {
-		scheme = "https://"
+	infos, err := m.ListBucketDomains(bucket)
+	if err != nil {
+		if e, ok := err.(*storage.ErrorInfo); ok {
+			if e.Code != 404 {
+				return
+			}
+			err = nil
+		} else {
+			return
+		}
 	}
-
-	reqHost = fmt.Sprintf("%s%s", scheme, ApiHost())
-	reqURL := fmt.Sprintf("%s/v7/domain/list?tbl=%v", reqHost, bucket)
-	headers := http.Header{}
-	ret := new(BucketDomainsRet)
-	cErr := m.Client.Call(ctx, ret, "POST", reqURL, headers)
-	if cErr != nil {
-		err = cErr
-		return
-	}
-	for _, d := range *ret {
+	for _, d := range infos {
 		domains = append(domains, d.Domain)
 	}
 	return
-
 }
 
 // 返回私有空间的下载链接， 也可以用于公有空间的下载
@@ -168,7 +164,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 
 	var data GetRet
 
-	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
+	ctx := auth.WithCredentials(context.Background(), m.Mac)
 	headers := http.Header{}
 
 	err = storage.DefaultClient.Call(ctx, &data, "GET", url, headers)
@@ -275,6 +271,42 @@ func (m *BucketManager) BatchChtype(entries []ChtypeEntryPath) (ret []storage.Ba
 	return m.Batch(ops)
 }
 
+func (m *BucketManager) CheckAsyncFetchStatus(bucket, id string) (ret storage.AsyncFetchRet, err error) {
+
+	reqUrl, err := m.ApiReqHost(bucket)
+	if err != nil {
+		return
+	}
+
+	reqUrl += ("/sisyphus/fetch?id=" + id)
+
+	ctx := auth.WithCredentialsType(context.Background(), m.Mac, auth.TokenQiniu)
+	err = m.Client.Call(ctx, &ret, "GET", reqUrl, nil)
+	return
+}
+
+// 禁用七牛存储中的对象
+func (m *BucketManager) ChStatus(bucket, key string, forbidden bool) (err error) {
+	ctx := auth.WithCredentials(context.Background(), m.Mac)
+	reqHost, reqErr := m.RsReqHost(bucket)
+	if reqErr != nil {
+		err = reqErr
+		return
+	}
+	var status int
+	if forbidden {
+		status = 1
+	} else {
+		status = 0
+	}
+	reqURL := fmt.Sprintf("%s%s", reqHost, fmt.Sprintf("/chstatus/%s/status/%d", storage.EncodedEntry(bucket, key), status))
+	headers := http.Header{}
+	headers.Add("Content-Type", conf.CONTENT_TYPE_FORM)
+	err = m.Client.Call(ctx, nil, "POST", reqURL, headers)
+	return
+
+}
+
 func (m *BucketManager) BatchDeleteAfterDays(entries []DeleteAfterDaysEntryPath) (ret []storage.BatchOpRet, err error) {
 	ops := make([]string, 0, len(entries))
 	for _, entry := range entries {
@@ -312,6 +344,17 @@ func NewBucketManagerEx(mac *qbox.Mac, cfg *storage.Config, client *storage.Clie
 	}
 }
 
+// GetBucketManager 返回一个BucketManager 指针
+func GetBucketManagerWithConfig(cfg *storage.Config) *BucketManager {
+	account, gErr := GetAccount()
+	if gErr != nil {
+		fmt.Fprintf(os.Stderr, "GetBucketManager: %v\n", gErr)
+		os.Exit(1)
+	}
+	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
+	return NewBucketManager(mac, cfg)
+}
+
 func GetBucketManager() *BucketManager {
 	account, gErr := GetAccount()
 	if gErr != nil {
@@ -320,9 +363,10 @@ func GetBucketManager() *BucketManager {
 	}
 	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
 	cfg := storage.Config{
-		RsHost:  RsHost(),
-		ApiHost: ApiHost(),
-		RsfHost: RsfHost(),
+		RsHost:        RsHost(),
+		ApiHost:       ApiHost(),
+		RsfHost:       RsfHost(),
+		CentralRsHost: RsHost(),
 	}
 	return NewBucketManager(mac, &cfg)
 }
