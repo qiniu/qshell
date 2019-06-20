@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/api.v7/storage"
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
@@ -531,10 +530,10 @@ func batchDelete(entries []iqshell.EntryPath, bm *iqshell.BucketManager, fileExp
 			item := ret[i]
 
 			if item.Code != 200 || item.Data.Error != "" {
-				logs.Error("Delete '%s' => '%s' failed, Code: %d, Error: %s", entry.Bucket, entry.Key, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Delete '%s' => '%s' failed, Code: %d, Error: %s\n", entry.Bucket, entry.Key, item.Code, item.Data.Error)
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%d\t%s\n", entry.Key, item.Code, item.Data.Error))
 			} else {
-				logs.Debug("Delete '%s' => '%s' success", entry.Bucket, entry.Key)
+				fmt.Printf("Delete '%s' => '%s' success\n", entry.Bucket, entry.Key)
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
 			}
 		}
@@ -654,10 +653,10 @@ func batchChgm(entries []iqshell.ChgmEntryPath, bm *iqshell.BucketManager, fileE
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%d\t%s\n", entry.Key, item.Code, item.Data.Error))
-				logs.Error("Chgm '%s' => '%s' Failed, Code: %d, Error: %s", entry.Key, entry.MimeType, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Chgm '%s' => '%s' Failed, Code: %d, Error: %s\n", entry.Key, entry.MimeType, item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
-				logs.Debug("Chgm '%s' => '%s' success", entry.Key, entry.MimeType)
+				fmt.Printf("Chgm '%s' => '%s' success\n", entry.Key, entry.MimeType)
 			}
 		}
 	}
@@ -786,10 +785,10 @@ func batchChtype(entries []iqshell.ChtypeEntryPath, bm *iqshell.BucketManager, f
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%d\t%s\n", entry.Key, item.Code, item.Data.Error))
-				logs.Error("Chtype '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.FileType, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Chtype '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.FileType, item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
-				logs.Debug("Chtype '%s' => '%s' success", entry.Key, entry.FileType)
+				fmt.Printf("Chtype '%s' => '%s' success\n", entry.Key, entry.FileType)
 			}
 		}
 	}
@@ -904,9 +903,9 @@ func batchDeleteAfterDays(entries []iqshell.DeleteAfterDaysEntryPath, bm *iqshel
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
-				logs.Error("Expire '%s' => '%d' Failed, Code: %d, Error: %s", entry.Key, entry.DeleteAfterDays, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Expire '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.DeleteAfterDays, item.Code, item.Data.Error)
 			} else {
-				logs.Debug("Expire '%s' => '%d' success", entry.Key, entry.DeleteAfterDays)
+				fmt.Printf("Expire '%s' => '%d' success\n", entry.Key, entry.DeleteAfterDays)
 			}
 		}
 	}
@@ -1031,10 +1030,10 @@ func batchRename(entries []iqshell.RenameEntryPath, bm *iqshell.BucketManager, f
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%d\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key, item.Code, item.Data.Error))
-				logs.Error("Rename '%s' => '%s' Failed, Code: %d, Error: %s", entry.SrcEntry.Key, entry.DstEntry.Key, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Rename '%s' => '%s' Failed, Code: %d, Error: %s\n", entry.SrcEntry.Key, entry.DstEntry.Key, item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key))
-				logs.Debug("Rename '%s' => '%s' success", entry.SrcEntry.Key, entry.DstEntry.Key)
+				fmt.Printf("Rename '%s' => '%s' success\n", entry.SrcEntry.Key, entry.DstEntry.Key)
 			}
 		}
 	}
@@ -1165,13 +1164,13 @@ func batchMove(entries []iqshell.MoveEntryPath, bm *iqshell.BucketManager, fileE
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%d\t%s\n", entry.SrcEntry.Key,
 					entry.DstEntry.Key, item.Code, item.Data.Error))
-				logs.Error("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
+				fmt.Fprintf(os.Stderr, "Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key,
 					entry.DstEntry.Bucket, entry.DstEntry.Key,
 					item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key))
-				logs.Debug("Move '%s:%s' => '%s:%s' success",
+				fmt.Printf("Move '%s:%s' => '%s:%s' success\n",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key, entry.DstEntry.Bucket, entry.DstEntry.Key)
 			}
 		}
@@ -1304,13 +1303,13 @@ func batchCopy(entries []iqshell.CopyEntryPath, bm *iqshell.BucketManager, fileE
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%d\t%s\n", entry.SrcEntry.Key,
 					entry.DstEntry.Key, item.Code, item.Data.Error))
-				logs.Error("Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
+				fmt.Fprintf(os.Stderr, "Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s\n",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key,
 					entry.DstEntry.Bucket, entry.DstEntry.Key,
 					item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key))
-				logs.Debug("Copy '%s:%s' => '%s:%s' success",
+				fmt.Printf("Copy '%s:%s' => '%s:%s' success\n",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key,
 					entry.DstEntry.Bucket, entry.DstEntry.Key)
 			}

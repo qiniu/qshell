@@ -10,6 +10,7 @@ require (
 	github.com/alexkohler/nakedret v0.0.0-20171106223215-c0e305a4f690 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v0.0.0-20181107013735-cab2ffdaf410
 	github.com/astaxie/beego v1.10.1
+	github.com/aws/aws-sdk-go v1.20.4
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/client9/misspell v0.3.4 // indirect
 	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
