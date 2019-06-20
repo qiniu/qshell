@@ -22,3 +22,17 @@ func TestBytesToReadable(t *testing.T) {
 		}
 	}
 }
+
+func TestKeyFromUrl(t *testing.T) {
+	url := "http://vod4a6mk39q.nosdn.127.net/b258912a66334476851b698d6fe64931_1558331445602_1558331488089_2062207192-00000.mp4?download=%E7%A7%80%E7%9B%B4%E6%92%AD%E7%BC%96%E5%8F%B72114_20190520-135045_20190520-135128.mp4"
+	want := "b258912a66334476851b698d6fe64931_1558331445602_1558331488089_2062207192-00000.mp4"
+
+	key, err := KeyFromUrl(url)
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+
+	if key != want {
+		t.Fatalf("got = %s, want = %s\n", key, want)
+	}
+}

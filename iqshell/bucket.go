@@ -271,6 +271,20 @@ func (m *BucketManager) BatchChtype(entries []ChtypeEntryPath) (ret []storage.Ba
 	return m.Batch(ops)
 }
 
+func (m *BucketManager) CheckAsyncFetchStatus(bucket, id string) (ret storage.AsyncFetchRet, err error) {
+
+	reqUrl, err := m.ApiReqHost(bucket)
+	if err != nil {
+		return
+	}
+
+	reqUrl += ("/sisyphus/fetch?id=" + id)
+
+	ctx := auth.WithCredentialsType(context.Background(), m.Mac, auth.TokenQiniu)
+	err = m.Client.Call(ctx, &ret, "GET", reqUrl, nil)
+	return
+}
+
 // 禁用七牛存储中的对象
 func (m *BucketManager) ChStatus(bucket, key string, forbidden bool) (err error) {
 	ctx := auth.WithCredentials(context.Background(), m.Mac)

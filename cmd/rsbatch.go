@@ -117,6 +117,7 @@ func init() {
 	batchFetchCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "file to save batch fetch success list")
 	batchFetchCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "file to save batch fetch failure list")
 	batchFetchCmd.Flags().StringVarP(&bfetchUphost, "up-host", "u", "", "fetch uphost")
+	batchFetchCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchStatCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchCopyCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
@@ -128,7 +129,7 @@ func init() {
 	batchDeleteCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchDeleteCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "delete success list")
 	batchDeleteCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "delete failure list")
-	batchDeleteCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields, \t by default")
+	batchDeleteCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchChgmCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChgmCmd.Flags().IntVarP(&worker, "worker", "c", 1, "woker count")
@@ -151,18 +152,21 @@ func init() {
 	batchRenameCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchRenameCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "rename success list")
 	batchRenameCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "rename failure list")
+	batchRenameCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchMoveCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchMoveCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchMoveCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchMoveCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "move success list")
 	batchMoveCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "move failure list")
+	batchMoveCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchCopyCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchCopyCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchCopyCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchCopyCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "copy success list")
 	batchCopyCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "copy failure list")
+	batchCopyCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchSignCmd.Flags().IntVarP(&deadline, "deadline", "e", 3600, "deadline in seconds")
 	batchSignCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
@@ -276,7 +280,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := ParseLine(line, sep)
 		if len(items) <= 0 {
 			continue
 		}
@@ -475,20 +479,18 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
 		os.Exit(1)
 	}
-	if sep == "" {
-		sep = "\t"
-	}
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, sep)
-		if len(items) > 0 {
-			key := items[0]
-			if key != "" {
-				entry := iqshell.EntryPath{
-					bucket, key,
-				}
-				entries = append(entries, entry)
+		if len(items) <= 0 {
+			continue
+		}
+		key := items[0]
+		if key != "" {
+			entry := iqshell.EntryPath{
+				bucket, key,
 			}
+			entries = append(entries, entry)
 		}
 		//check limit
 		if len(entries) == BATCH_ALLOW_MAX {
@@ -974,7 +976,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := ParseLine(line, sep)
 		if len(items) == 2 {
 			oldKey := items[0]
 			newKey := items[1]
@@ -1103,7 +1105,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := ParseLine(line, sep)
 		if len(items) == 1 || len(items) == 2 {
 			srcKey := items[0]
 			destKey := srcKey
@@ -1243,7 +1245,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := ParseLine(line, sep)
 		if len(items) == 1 || len(items) == 2 {
 			srcKey := items[0]
 			destKey := srcKey
