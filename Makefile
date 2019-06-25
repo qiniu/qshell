@@ -1,4 +1,4 @@
-VERSION=v2.3.8
+VERSION=v2.4.0
 WIN86=qshell-windows-x86-$(VERSION).exe
 WIN64=qshell-windows-x64-$(VERSION).exe
 DARWIN=qshell-darwin-x64-$(VERSION)
