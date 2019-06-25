@@ -66,7 +66,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 
 	defer func(lastMarker string) {
 		if lastMarker != "" {
-			fmt.Println("Marker: ", lastMarker)
+			fmt.Fprintf(os.Stderr, "Marker: %s\n", lastMarker)
 		}
 	}(lastMarker)
 

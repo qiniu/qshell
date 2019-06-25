@@ -77,7 +77,7 @@ func (lo *awslistOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 				// Message from an error.
 				fmt.Fprintln(os.Stderr, err.Error())
 			}
-			fmt.Fprintln(os.Stderr, input.ContinuationToken)
+			fmt.Fprintf(os.Stderr, "ContinuationToken: %s\n", input.ContinuationToken)
 			os.Exit(1)
 		}
 		for _, obj := range result.Contents {
@@ -166,7 +166,7 @@ func (o *awsfetchOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 				fmt.Fprintln(os.Stderr, err.Error())
 			}
 			close(itemc)
-			fmt.Fprintln(os.Stderr, input.ContinuationToken)
+			fmt.Fprintf(os.Stderr, "ContinuationToken: %s\n", input.ContinuationToken)
 			os.Exit(1)
 		}
 		for _, obj := range result.Contents {

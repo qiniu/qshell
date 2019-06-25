@@ -32,7 +32,7 @@ $ qshell awslist -h
 
 # 参数
 <AwsBucket> 亚马逊存储空间名称
-<AwsRegion> 亚马逊账户所在的地区
+<AwsRegion> 亚马逊存储空间所在的地区
 
 
 # 列举
@@ -47,7 +47,7 @@ AWS_SECRET_KEY = "6789"
 亚马逊存储空间名为：
 AWS_BUCKET = "aws-bucket"
 
-账户所在地区为：
+亚马逊空间所在地区为：
 AWS_REGION = "us-west-2"
 
 可以使用如下命令进行列举：
