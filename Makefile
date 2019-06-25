@@ -40,3 +40,11 @@ cleanbin:
 	@rm $(LINUX86) $(LINUX64) $(LINUXARM) $(DARWIN) $(WIN86) $(WIN64) 2> /dev/null || true
 
 clean: cleanzip	cleanbin
+
+upload:
+	qshell rput devtools $(LINUX86).zip $(LINUX86).zip
+	qshell rput devtools $(LINUX64).zip $(LINUX64).zip
+	qshell rput devtools $(LINUXARM).zip $(LINUXARM).zip
+	qshell rput devtools $(WIN86).zip $(WIN86).zip
+	qshell rput devtools $(WIN64).zip $(WIN64).zip
+	qshell rput devtools $(DARWIN).zip $(DARWIN).zip
