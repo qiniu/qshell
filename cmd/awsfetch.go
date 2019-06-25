@@ -53,10 +53,9 @@ func (lo *awslistOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 
 	svc := s3.New(s3session)
 	input := &s3.ListObjectsV2Input{
-		Bucket:    aws.String(awsBucket),
-		Prefix:    aws.String(lo.prefix),
-		Delimiter: aws.String(lo.delimiter),
-		MaxKeys:   aws.Int64(lo.maxKeys),
+		Bucket:  aws.String(awsBucket),
+		Prefix:  aws.String(lo.prefix),
+		MaxKeys: aws.Int64(lo.maxKeys),
 	}
 	if lo.ctoken != "" {
 		input.ContinuationToken = aws.String(lo.ctoken)
@@ -78,6 +77,7 @@ func (lo *awslistOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 				// Message from an error.
 				fmt.Fprintln(os.Stderr, err.Error())
 			}
+			fmt.Fprintln(os.Stderr, input.ContinuationToken)
 			os.Exit(1)
 		}
 		for _, obj := range result.Contents {
@@ -166,6 +166,7 @@ func (o *awsfetchOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 				fmt.Fprintln(os.Stderr, err.Error())
 			}
 			close(itemc)
+			fmt.Fprintln(os.Stderr, input.ContinuationToken)
 			os.Exit(1)
 		}
 		for _, obj := range result.Contents {

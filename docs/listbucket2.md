@@ -15,7 +15,7 @@ Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 # 格式
 
 ```
-qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [--readable] [ [-a] -o <ListBucketResultFile>]
+qshell listbucket2 [-m|--marker <Marker>][--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [--readable] [ [-a] -o <ListBucketResultFile>]
 ```
 
 # 鉴权
@@ -36,6 +36,7 @@ qshell listbucket2 [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--sta
 | suffixes             | 列举整个空间文件， 然后从中筛选出文件后缀为在[suffixes1, suffixes2, ...]中的文件                               | Y        |
 | a                    | 开启选项o 的append模式， 如果本地保存文件列表的文件已经存在，如果希望像该文件添加内容，使用该选项, 必须和-o选项一起使用   | Y        |
 | readable | 开启文件大小的可读性选项， 会以合适的KB, MB, GB等显示 | Y |
+|marker| Y| marker标记列举过程中的位置， 如果列举的过程中网络断开，会返回一个marker, 可以指定该marker参数继续列举|
 
 
 # 常用使用场景介绍
@@ -77,7 +78,6 @@ qshell listbucket2 [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
  
  注意startDate 和 endDate 是这种半开半闭区间[startDate, endDate)
 
- 
  (7) 获取后缀为mp4, html的文件
  
  ```
@@ -88,6 +88,11 @@ qshell listbucket2 [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
  
  ```
  qshell listbucket2 -r <Bucket>
+ ```
+
+ (9) marker的使用; 假如要列举的bucket名字为"test-marker", marker为"eyJjIjowLCJrIjoiMDkzOWM1ODU4ZmI1NGZiNzk3NTJmNjVkN2U4MWY4MmVfMTUzNTM3NzI2MDMxNV8xNTM1MzgwMjYyNDYxXzgzMjgyODAzOC0wMDAwMS5tcDQifQ=", 如果要接着这个marker位置继续列举，可以使用如下命令
+ ```
+ $ qshell listbucket2 -m eyJjIjowLCJrIjoiMDkzOWM1ODU4ZmI1NGZiNzk3NTJmNjVkN2U4MWY4MmVfMTUzNTM3NzI2MDMxNV8xNTM1MzgwMjYyNDYxXzgzMjgyODAzOC0wMDAwMS5tcDQifQ= test-marker
  ```
 
 
