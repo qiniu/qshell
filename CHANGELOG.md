@@ -1,4 +1,4 @@
-# 2.3.8 
+# 2.4.0 
 1. 添加batchdelete 自定义分隔符
 2. batchfetch支持自定义上传Host设置
 3. 添加awsfetch抓取亚马逊空间数据到七牛空间

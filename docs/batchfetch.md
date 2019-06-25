@@ -11,7 +11,7 @@ qshell batchfetch [-F <Delimiter>] [--success-list <SuccessFileName>] [--failure
 
 # 帮助
 ```
-qshell batchcopy -h
+qshell batchfetch -h
 ```
 
 # 鉴权
