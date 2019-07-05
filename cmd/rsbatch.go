@@ -480,7 +480,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, sep)
+		items := ParseLine(line, sep)
 		if len(items) <= 0 {
 			continue
 		}
@@ -853,7 +853,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 	entries := make([]iqshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := ParseLine(line, sep)
 		if len(items) == 2 {
 			key := items[0]
 			days, _ := strconv.Atoi(items[1])

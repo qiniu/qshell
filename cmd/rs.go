@@ -95,6 +95,12 @@ var (
 		Args:  cobra.ExactArgs(2),
 		Run:   Fetch,
 	}
+	prefetchCmd = &cobra.Command{
+		Use:   "prefetch <Bucket> <Key>",
+		Short: "Fetch object from mirror bucket",
+		Args:  cobra.ExactArgs(2),
+		Run:   Prefetch,
+	}
 	mirrorCmd = &cobra.Command{
 		Use:   "mirrorupdate <Bucket> <Key>",
 		Short: "Fetch and update the file in bucket using mirror storage",
@@ -170,7 +176,7 @@ func init() {
 
 	RootCmd.AddCommand(qGetCmd, dirCacheCmd, lsBucketCmd, statCmd, delCmd, moveCmd,
 		copyCmd, chgmCmd, chtypeCmd, delafterCmd, fetchCmd, mirrorCmd,
-		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, lsBucketCmd2, chstatus)
+		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, lsBucketCmd2, chstatus, prefetchCmd)
 }
 
 // 禁用七牛存储空间中的对象，如果使用了-r选项，那么解禁七牛存储中的对象
@@ -426,7 +432,7 @@ func Fetch(cmd *cobra.Command, params []string) {
 	}
 }
 
-// 【cdnprefetch】CDN文件预取, 预取文件到CDN节点和父层节点
+// 从镜像空间抓取资源
 func Prefetch(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
