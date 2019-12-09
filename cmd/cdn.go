@@ -13,13 +13,13 @@ import (
 
 const (
 	// CDN刷新一次性最大的刷新文件列表
-	BATCH_CDN_REFRESH_URLS_ALLOW_MAX = 100
+	BATCH_CDN_REFRESH_URLS_ALLOW_MAX = 20
 
 	// CDN目录刷新一次性最大的刷新目录数
 	BATCH_CDN_REFRESH_DIRS_ALLOW_MAX = 10
 
 	// 预取一次最大的预取数目
-	BATCH_CDN_PREFETCH_ALLOW_MAX = 100
+	BATCH_CDN_PREFETCH_ALLOW_MAX = 20
 )
 
 var (
