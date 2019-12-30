@@ -51,6 +51,7 @@ func init() {
 	RootCmd.AddCommand(cdnPreCmd, cdnRefreshCmd)
 }
 
+// 【cdnrefresh】刷新所有CDN节点
 func CdnRefresh(cmd *cobra.Command, params []string) {
 	var urlListFile string
 
@@ -127,6 +128,7 @@ func cdnRefresh(cm *cdn.CdnManager, urls []string, dirs []string) {
 	}
 }
 
+//  【cdnprefetch】CDN 文件预取
 func CdnPrefetch(cmd *cobra.Command, params []string) {
 	var urlListFile string
 

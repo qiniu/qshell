@@ -10,9 +10,11 @@ import (
 )
 
 const (
+	// IP信息查询接口地址
 	TAOBAO_IP_QUERY = "http://ip.taobao.com/service/getIpInfo.php"
 )
 
+// 接口返回的IP信息
 type IpInfo struct {
 	Code int    `json:"code"`
 	Data IpData `json:"data"`
@@ -22,6 +24,7 @@ func (this IpInfo) String() string {
 	return fmt.Sprintf("%s", this.Data)
 }
 
+// ip 具体的信息
 type IpData struct {
 	Country   string `json:"country"`
 	CountryId string `json:"country_id"`
@@ -54,6 +57,7 @@ func init() {
 	RootCmd.AddCommand(ipQueryCmd)
 }
 
+// 【ip】查询ip的相关信息
 func IpQuery(cmd *cobra.Command, params []string) {
 	for _, ip := range params {
 		url := fmt.Sprintf("%s?ip=%s", TAOBAO_IP_QUERY, ip)

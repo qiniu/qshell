@@ -3,6 +3,7 @@ package iqshell
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/qiniu/api.v7/storage"
@@ -143,6 +144,9 @@ func (m *BucketManager) M3u8ReplaceDomain(bucket string, m3u8Key string, newDoma
 		err = errors.New("invalid m3u8 file")
 		return
 	}
+	if !strings.HasSuffix(newDomain, "/") {
+		newDomain = newDomain + "/"
+	}
 
 	newM3u8Lines := make([]string, 0, 200)
 	var newLine string
@@ -188,7 +192,8 @@ func (m *BucketManager) M3u8ReplaceDomain(bucket string, m3u8Key string, newDoma
 
 	uploader := storage.NewFormUploader(nil)
 	putRet := new(storage.PutRet)
-	putErr := uploader.Put(nil, putRet, upToken, m3u8Key, bytes.NewReader(newM3u8Data), int64(len(newM3u8Data)), nil)
+	putExtra := storage.PutExtra{}
+	putErr := uploader.Put(context.Background(), putRet, upToken, m3u8Key, bytes.NewReader(newM3u8Data), int64(len(newM3u8Data)), &putExtra)
 
 	if putErr != nil {
 		err = putErr

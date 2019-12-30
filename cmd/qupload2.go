@@ -56,6 +56,7 @@ func init() {
 	RootCmd.AddCommand(qUpload2Cmd)
 }
 
+// 【qupload2】和命令【qupload】的功能一样，只是使用的是命令选项的方式提供配置信息
 func QiniuUpload2(cmd *cobra.Command, params []string) {
 
 	//check params

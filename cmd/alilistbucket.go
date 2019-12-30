@@ -17,6 +17,7 @@ func init() {
 	RootCmd.AddCommand(aliCmd)
 }
 
+// 【alilistbucket】列举阿里空间中的文件列表
 func AliListBucket(cmd *cobra.Command, params []string) {
 	dataCenter := params[0]
 	bucket := params[1]

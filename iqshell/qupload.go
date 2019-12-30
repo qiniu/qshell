@@ -108,6 +108,13 @@ type UploadConfig struct {
 	Plock           sync.Mutex
 }
 
+func (cfg *UploadConfig) GetUpHost() string {
+	if cfg.UpHost != "" {
+		return cfg.UpHost
+	}
+	return UpHost()
+}
+
 func (cfg *UploadConfig) JobId() string {
 
 	return Md5Hex(fmt.Sprintf("%s:%s", cfg.SrcDir, cfg.Bucket))
@@ -277,6 +284,7 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 		Daily:    true,
 		MaxDays:  logRotate,
 	}
+	logs.SetLevel(logLevel)
 	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
 }
@@ -786,7 +794,7 @@ func formUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.Wr
 	uploader := storage.NewFormUploader(nil)
 	putRet := storage.PutRet{}
 	putExtra := storage.PutExtra{
-		UpHost: uploadConfig.UpHost,
+		UpHost: uploadConfig.GetUpHost(),
 	}
 
 	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
@@ -837,11 +845,12 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 	}
 
 	var notifyFunc = func(blkIdx, blkSize int, ret *storage.BlkputRet) {
+		logs.Debug("uploadFileKey: %s, blkIdx: %d, blkSize: %d, %v", uploadFileKey, blkIdx, blkSize, *ret)
 		progressRecorder.BlkCtxs = append(progressRecorder.BlkCtxs, *ret)
 		progressRecorder.Offset += int64(blkSize)
 	}
 	putExtra.Notify = notifyFunc
-	putExtra.UpHost = uploadConfig.UpHost
+	putExtra.UpHost = uploadConfig.GetUpHost()
 
 	//resumable upload
 	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)

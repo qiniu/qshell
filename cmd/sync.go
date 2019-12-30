@@ -27,6 +27,8 @@ func init() {
 	RootCmd.AddCommand(syncCmd)
 }
 
+// 抓取网络中的资源到七牛存储空间，使用与比较大的文件
+// 小文件抓取可以使用fetch接口, qshell fetch命令
 func Sync(cmd *cobra.Command, params []string) {
 	srcResUrl := params[0]
 	bucket := params[1]

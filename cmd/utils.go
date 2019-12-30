@@ -5,16 +5,19 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/iqshell"
-	"github.com/spf13/cobra"
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/qshell/iqshell"
+	"github.com/spf13/cobra"
 )
 
 const (
+	// ASCII英文字母
 	ALPHA_LIST = "abcdefghijklmnopqrstuvwxyz"
 )
 
@@ -126,6 +129,7 @@ func init() {
 		d2tsCmd, urlEcmd, urlDcmd, etagCmd, unzipCmd, reqidCmd)
 }
 
+// 转化文件大小到人工可读的字符串，以相应的单位显示
 func FormatFsize(fsize int64) (result string) {
 	if fsize > TB {
 		result = fmt.Sprintf("%.2f TB", float64(fsize)/float64(TB))
@@ -165,6 +169,7 @@ func RpcEncode(cmd *cobra.Command, params []string) {
 	}
 }
 
+// base64编码数据
 func Base64Encode(cmd *cobra.Command, params []string) {
 	dataToEncode := params[0]
 	dataEncoded := ""
@@ -176,6 +181,7 @@ func Base64Encode(cmd *cobra.Command, params []string) {
 	fmt.Println(dataEncoded)
 }
 
+// 解码base64编码的数据
 func Base64Decode(cmd *cobra.Command, params []string) {
 	var err error
 
@@ -197,6 +203,7 @@ func Base64Decode(cmd *cobra.Command, params []string) {
 	fmt.Println(string(dataDecoded))
 }
 
+// 转化unix时间戳为可读的字符串
 func Timestamp2Date(cmd *cobra.Command, params []string) {
 	ts, err := strconv.ParseInt(params[0], 10, 64)
 	if err != nil {
@@ -207,6 +214,7 @@ func Timestamp2Date(cmd *cobra.Command, params []string) {
 	fmt.Println(t.String())
 }
 
+// 转化纳秒时间戳到人工可读的字符串
 func TimestampNano2Date(cmd *cobra.Command, params []string) {
 	tns, err := strconv.ParseInt(params[0], 10, 64)
 	if err != nil {
@@ -217,6 +225,7 @@ func TimestampNano2Date(cmd *cobra.Command, params []string) {
 	fmt.Println(t.String())
 }
 
+// 转化毫秒时间戳到人工可读的字符串
 func TimestampMilli2Date(cmd *cobra.Command, params []string) {
 	tms, err := strconv.ParseInt(params[0], 10, 64)
 	if err != nil {
@@ -227,6 +236,7 @@ func TimestampMilli2Date(cmd *cobra.Command, params []string) {
 	fmt.Println(t.String())
 }
 
+// 转化时间字符串到unix时间戳
 func Date2Timestamp(cmd *cobra.Command, params []string) {
 	secs, err := strconv.ParseInt(params[0], 10, 64)
 	if err != nil {
@@ -254,6 +264,7 @@ func Urldecode(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 计算文件的hash值，使用七牛的etag算法
 func Qetag(cmd *cobra.Command, params []string) {
 	localFilePath := params[0]
 	qetag, err := iqshell.GetEtag(localFilePath)
@@ -264,6 +275,7 @@ func Qetag(cmd *cobra.Command, params []string) {
 	fmt.Println(qetag)
 }
 
+// 解压使用mkzip压缩的文件
 func Unzip(cmd *cobra.Command, params []string) {
 	zipFilePath := params[0]
 	var err error
@@ -285,6 +297,7 @@ func Unzip(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 解析reqid， 打印人工可读的字符串
 func ReqId(cmd *cobra.Command, params []string) {
 	reqId := params[0]
 	decodedBytes, err := base64.URLEncoding.DecodeString(reqId)
@@ -309,6 +322,7 @@ func ReqId(cmd *cobra.Command, params []string) {
 		dstDate.Hour(), dstDate.Minute()))
 }
 
+// 生成随机的字符串
 func CreateRandString(num int) (rcode string) {
 	if num <= 0 || num > len(ALPHA_LIST) {
 		rcode = ""
@@ -328,4 +342,11 @@ func CreateRandString(num int) (rcode string) {
 	}
 
 	return
+}
+
+func ParseLine(line, sep string) []string {
+	if strings.TrimSpace(sep) == "" {
+		return strings.Fields(line)
+	}
+	return strings.Split(line, sep)
 }

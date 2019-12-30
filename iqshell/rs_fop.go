@@ -14,13 +14,13 @@ func Prefop(persistentId string) (ret storage.PrefopRet, err error) {
 	return
 }
 
-func Pfop(bucket, key, fops, pipeline string) (persistentId string, err error) {
+func Pfop(bucket, key, fops, pipeline, notifyURL string, notifyForce bool) (persistentId string, err error) {
 
 	mac, err := GetMac()
 	if err != nil {
 		return
 	}
 	opManager := storage.NewOperationManager(mac, nil)
-	persistentId, err = opManager.Pfop(bucket, key, fops, pipeline, "", false)
+	persistentId, err = opManager.Pfop(bucket, key, fops, pipeline, notifyURL, notifyForce)
 	return
 }

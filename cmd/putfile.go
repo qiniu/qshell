@@ -6,7 +6,6 @@ import (
 	"github.com/qiniu/api.v7/storage"
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
 	"strings"
 	"time"
@@ -23,7 +22,8 @@ var (
 	mimeType     string
 	fileType     int
 	workerCount  int
-	upHost       string
+	rupHost      string
+	fupHost      string
 	callbackUrls string
 	callbackHost string
 )
@@ -47,7 +47,7 @@ func init() {
 	formPutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	formPutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
 	formPutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
-	formPutCmd.Flags().StringVarP(&upHost, "up-host", "u", "", "uphost")
+	formPutCmd.Flags().StringVarP(&fupHost, "up-host", "u", "", "uphost")
 	formPutCmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	formPutCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
@@ -55,16 +55,14 @@ func init() {
 	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
 	RePutCmd.Flags().IntVarP(&workerCount, "worker", "c", 16, "worker count")
-	RePutCmd.Flags().StringVarP(&upHost, "up-host", "u", "", "uphost")
+	RePutCmd.Flags().StringVarP(&rupHost, "up-host", "u", "", "uphost")
 	RePutCmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	RePutCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
-
-	viper.BindPFlag("hosts.up_host", formPutCmd.Flags().Lookup("up-host"))
-	viper.BindPFlag("hosts.up_host", RePutCmd.Flags().Lookup("up-host"))
 
 	RootCmd.AddCommand(formPutCmd, RePutCmd)
 }
 
+// 上传接口返回的文件信息
 type PutRet struct {
 	Key      string `json:"key"`
 	Hash     string `json:"hash"`
@@ -72,6 +70,7 @@ type PutRet struct {
 	Fsize    int64  `json:"fsize"`
 }
 
+// 【fput】使用表单上传本地文件到七牛存储空间
 func FormPut(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
@@ -105,16 +104,16 @@ func FormPut(cmd *cobra.Command, params []string) {
 	}
 
 	var putExtra storage.PutExtra
+	var upHost string
 
-	if upHost != "" {
-		if !strings.HasPrefix(upHost, "http") {
-			upHost = "http://" + upHost
-		}
-		putExtra = storage.PutExtra{
-			UpHost: upHost,
-		}
+	if fupHost == "" {
+		upHost = iqshell.UpHost()
+	} else {
+		upHost = fupHost
 	}
-
+	putExtra = storage.PutExtra{
+		UpHost: upHost,
+	}
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
 	}
@@ -186,6 +185,8 @@ func FormPut(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 使用分片上传本地文件到七牛存储空间, 一般用于较大文件的上传
+// 文件会被分割成4M大小的块， 一块一块地上传文件
 func ResumablePut(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
@@ -223,13 +224,15 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	}
 
 	var putExtra storage.RputExtra
-	if upHost != "" {
-		if !strings.HasPrefix(upHost, "http") {
-			upHost = "http://" + upHost
-		}
-		putExtra = storage.RputExtra{
-			UpHost: upHost,
-		}
+	var upHost string
+
+	if rupHost == "" {
+		upHost = iqshell.UpHost()
+	} else {
+		upHost = rupHost
+	}
+	putExtra = storage.RputExtra{
+		UpHost: upHost,
 	}
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
@@ -250,6 +253,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 
 	resume_uploader := storage.NewResumeUploader(nil)
 	err = resume_uploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
+
 	fmt.Println()
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {

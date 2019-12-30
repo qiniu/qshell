@@ -1,5 +1,27 @@
+# 2.4.0 
+1. 添加batchdelete 自定义分隔符
+2. batchfetch支持自定义上传Host设置
+3. 添加awsfetch抓取亚马逊空间数据到七牛空间
+4. 添加awslist列举亚马逊空间文件
+5. 添加了异步抓取命令abfetch
+
+# 2.3.7
+1. 加入forbidden命令，可以禁用或者解禁文件
+2. pfop加入pipeline, 和上传回调
+3. 修复batchfetch bug
+
+# 2.3.6
+1. 修复m3u8replace 上传的问题
+2. 加入reportCard检测代码质量
+
+# 2.3.5
+1. 增加token命令，创建Qbox token, qiniuToken, uploadToken
+2. qshell配置文件支持设置accessKey和secretKey
+3. 增加了arm版本
+4. listbucket2增加文件大小的可读性，可以使用Bytes, KB, MB, GB格式显示
+
 # 2.3.4
-1. listbucket， listbucket2增加捕捉interrupt信号(CTR-C), 打印marker
+1. listbucket2增加捕捉interrupt信号(CTR-C), 打印marker
 2. account在本地记录账号，默认不覆盖, 加了-w强制覆盖选项 
 3. listbucket2 增加append 模式（-a)开启, 修复列举几亿空间的时候，列举一半左右程序中断问题
 4. 修复dircache 列表没有输出到文件使用-o选项的时候

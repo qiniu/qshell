@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var version = "v2.3.4"
+var version = "v2.4.0"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
@@ -20,6 +20,7 @@ func init() {
 	RootCmd.AddCommand(versionCmd)
 }
 
+// 生成客户端代理名称
 func UserAgent() string {
 	return fmt.Sprintf("QShell/%s (%s; %s; %s)", version, runtime.GOOS, runtime.GOARCH, runtime.Version())
 }

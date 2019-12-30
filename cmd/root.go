@@ -2,18 +2,25 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/api.v7/storage"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
-	"os/user"
 	"path/filepath"
 	"runtime"
+	"strings"
+
+	"github.com/astaxie/beego/logs"
+	homedir "github.com/mitchellh/go-homedir"
+	"github.com/qiniu/api.v7/client"
+	"github.com/qiniu/api.v7/storage"
+	"github.com/qiniu/qshell/iqshell"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
-	DebugFlag   bool
+	// 开启命令行的调试模式
+	DebugFlag bool
+
+	// qshell 版本信息， qshell -v
 	VersionFlag bool
 	cfgFile     string
 	local       bool
@@ -50,6 +57,7 @@ __custom_func() {
 `
 )
 
+// cobra root cmd, all other commands is children or subchildren of this root cmd
 var RootCmd = &cobra.Command{
 	Use:                    "qshell",
 	Short:                  "Qiniu commandline tool for managing your bucket and CDN",
@@ -76,18 +84,29 @@ func initConfig() {
 	storage.UserAgent = UserAgent()
 
 	//parse command
-	logs.SetLevel(logs.LevelInformational)
+	if DebugFlag {
+		logs.SetLevel(logs.LevelDebug)
+		client.TurnOnDebug()
+	} else {
+		logs.SetLevel(logs.LevelInformational)
+	}
 	logs.SetLogger(logs.AdapterConsole)
 
+	var jsonConfigFile string
+
 	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
+		if !strings.HasSuffix(cfgFile, ".json") {
+			jsonConfigFile = cfgFile + ".json"
+			os.Rename(cfgFile, jsonConfigFile)
+		}
+		viper.SetConfigFile(jsonConfigFile)
 	} else {
-		curUser, gErr := user.Current()
-		if gErr != nil {
-			fmt.Fprintf(os.Stderr, "get current user: %v\n", gErr)
+		homeDir, hErr := homedir.Dir()
+		if hErr != nil {
+			fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
 			os.Exit(1)
 		}
-		viper.AddConfigPath(curUser.HomeDir)
+		viper.AddConfigPath(homeDir)
 		viper.SetConfigName(".qshell")
 	}
 
@@ -97,28 +116,28 @@ func initConfig() {
 			fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
 			os.Exit(1)
 		}
-		viper.Set("path.root_path", dir+"/.qshell")
+		iqshell.SetRootPath(dir + "/.qshell")
 	} else {
-		curUser, gErr := user.Current()
-		if gErr != nil {
-			fmt.Fprintf(os.Stderr, "Error: get current user error: %v\n", gErr)
+		homeDir, hErr := homedir.Dir()
+		if hErr != nil {
+			fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
 			os.Exit(1)
 		}
-		viper.Set("path.root_path", curUser.HomeDir+"/.qshell")
+		iqshell.SetRootPath(homeDir + "/.qshell")
 	}
-	rootPath := viper.GetString("path.root_path")
+	rootPath := iqshell.RootPath()
 
-	viper.SetDefault("path.acc_db_path", filepath.Join(rootPath, "account.db"))
-	viper.SetDefault("path.acc_path", filepath.Join(rootPath, "account.json"))
-	viper.SetDefault("hosts.up_host", "upload.qiniup.com")
-	viper.SetDefault("hosts.rs_host", storage.DefaultRsHost)
-	viper.SetDefault("hosts.rsf_host", storage.DefaultRsfHost)
-	viper.SetDefault("hosts.io_host", "iovip.qbox.me")
-	viper.SetDefault("hosts.api_host", storage.DefaultAPIHost)
+	iqshell.SetDefaultAccDBPath(filepath.Join(rootPath, "account.db"))
+	iqshell.SetDefaultAccPath(filepath.Join(rootPath, "account.json"))
+	iqshell.SetDefaultRsHost(storage.DefaultRsHost)
+	iqshell.SetDefaultRsfHost(storage.DefaultRsfHost)
+	iqshell.SetDefaultIoHost("iovip.qbox.me")
+	iqshell.SetDefaultApiHost(storage.DefaultAPIHost)
 
 	if rErr := viper.ReadInConfig(); rErr != nil {
 		if _, ok := rErr.(viper.ConfigFileNotFoundError); !ok {
 			fmt.Fprintf(os.Stderr, "read config file: %v\n", rErr)
 		}
 	}
+	os.Rename(jsonConfigFile, cfgFile)
 }

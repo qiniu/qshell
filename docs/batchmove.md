@@ -10,13 +10,13 @@
 # 格式
 
 ```
-qshell batchmove [--force] [--overwrite] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>]<SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
+qshell batchmove [-F <Delimiter>] [--force] [--overwrite] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>]<SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
 ```
 
 # 帮助
 ```
 qshell batchmove -h
-``**
+```
 
 # 鉴权
 
@@ -30,7 +30,7 @@ qshell batchmove -h
 |DestBucket|目标空间名，可以为公开空间或私有空间|
 
 **i短选项**
-接受一个文件参数，内容是原文件名和目标文件名对的列表，如果你希望目标文件名和原文件名相同的话，也可以不指定目标文件名，那么这一行就是只有原文件名即可。每行的原文件名和目标文件名之间用`\t`分隔。 如果没有指定该参数，默认从标准输入读取内容。
+接受一个文件参数，内容是原文件名和目标文件名对的列表，如果你希望目标文件名和原文件名相同的话，也可以不指定目标文件名，那么这一行就是只有原文件名即可。每行的原文件名和目标文件名之间用空白分隔（空格， \t, \n), 如果文件命中含有空格，可以使用-F选项指定别的分隔符。 如果没有指定该参数，默认从标准输入读取内容。
 
 **success-list选项**
 该选项指定一个文件，qshell会把操作成功的文件行导入到该文件
@@ -86,6 +86,18 @@ $ qshell batchmove --force if-pbl if-pri -i tomove.txt
 ```
 $ qshell batchmove --force --overwrite if-pbl if-pri -i tomove.txt
 ```
+
+5. 假如文件名为tomove.txt, 文件包含了空格，所以必须使用其他的分隔符， 我们使用","
+
+```
+data/2015/02/01/bg.png,backg round.png
+data/2015/02/01/pi g.jpg
+```
+
+```
+$ qshell batchmove -i tomove.txt -F ',' if-pbl if-pri
+```
+
 
 # 注意
 如果没有指定输入文件的话， 会从标准输入读取内容
