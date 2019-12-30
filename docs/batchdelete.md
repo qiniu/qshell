@@ -5,7 +5,7 @@
 # 格式
 
 ```
-qshell batchdelete [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] <Bucket> [-i <KeyListFile>]
+qshell batchdelete [--force] [-F <Delimiter>] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] <Bucket> [-i <KeyListFile>]
 ```
 
 # 帮助
@@ -24,7 +24,7 @@ qshell batchdelete -h
 |Bucket|空间名，可以为公开空间或私有空间|
 
 **i短选项**
-接受一个文件参数， 文件列表文件，该列表文件只要保证第一列是文件名即可，每个列用`\t`分隔，可以直接使用`listbucket`的结果。 如果没有指定该选项，默认从标准输入读取内容。
+接受一个文件参数， 文件列表文件，该列表文件只要保证第一列是文件名即可，每个列用空白分隔（包括空格， tab, \n)，可以直接使用`listbucket`的结果。 如果没有指定该选项，默认从标准输入读取内容。
 
 **success-list选项**
 该选项指定一个文件，qshell会把操作成功的文件行导入到该文件
@@ -35,6 +35,10 @@ qshell batchdelete -h
 **force选项**
 
 该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用`--force`选项。
+
+# 删除列表格式
+<KeyListFile> 是要删除的文件列表， 每一行一个文件名；如果用户设置了多个列，那么取第一列作为文件名， 其他的列忽略， 使用空白字符（空格， \t, \n) 进行分割。
+如果文件名中包含了空格， 那么可以使用-F选项指定分隔符。
 
 # 示例
 
@@ -60,4 +64,10 @@ $ qshell batchdelete --force if-pbl -i if-pbl.list.txt
 
 ```
 $ qshell batchdelete if-pbl -i if-pbl.list.txt --success-list success.txt --failure-list failure.txt
+```
+
+4. 对于要删除的文件名字包含了空格的情况， 那么可以指定自定义的分隔符对文件每行进行分割, 假如使用\t进行分割
+
+```
+$ qshell batchdelete -F'\t' if-pbl -i todelete.txt
 ```

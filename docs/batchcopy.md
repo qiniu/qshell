@@ -8,7 +8,7 @@
 # 格式
 
 ```
-qshell batchcopy [--force] [--overwrite] [--success-list <SuccessFileName>] [--failure-list <failureFileName>] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
+qshell batchcopy [-F <Delimiter>] [--force] [--overwrite] [--success-list <SuccessFileName>] [--failure-list <failureFileName>] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
 ```
 
 # 帮助
@@ -28,7 +28,7 @@ qshell batchcopy -h
 |DestBucket|目标空间名，可以为公开空间或私有空间|
 
 **i短选项**
-该选项接受一个文件参数， 内容是原文件名和目标文件名对的列表，如果你希望目标文件名和原文件名相同的话，也可以不指定目标文件名，那么这一行就是只有原文件名即可。每行的原文件名和目标文件名之间用`\t`分隔。如果没有指定该参数， 从标准输入读取内容。
+该选项接受一个文件参数， 内容是原文件名和目标文件名对的列表，如果你希望目标文件名和原文件名相同的话，也可以不指定目标文件名，那么这一行就是只有原文件名即可。每行的原文件名和目标文件名之间用空白字符分隔（空格，\t, \n), 如果文件含有空格，可以使用-F选项指定自定义的分隔符。如果没有指定该参数， 从标准输入读取内容。
 
 **success-list选项**
 该选项指定一个文件，qshell会把操作成功的文件行导入到该文件
@@ -87,7 +87,19 @@ $ qshell batchcopy --force --overwrite if-pbl if-pri -i tocopy.txt
 5. 如果希望导出复制成功和失败的列表， 可以使用--success-list和--failure-list选项
 
 ```
-$ qshell batchcopy --success-list success.txt --failure-list failure.txt -i tocopy.txt
+$ qshell batchcopy --success-list success.txt --failure-list failure.txt -i tocopy.txt if-pbl if-pri
+```
+
+6.如果源文件或者目的文件中包含了空格，那么文件需要使用其他的分隔符， 需要手动使用-F选项指定分隔符, 假如使用\t
+
+```
+data/2015/02/01/bg.png\tbackgrou nd.png
+data/2015/02/01/p\tig.jpg
+
+```
+可以使用如下命令处理:
+```
+$qshell batchcopy -i tocopy.txt  -F'\t' if-pbl if-pri
 ```
 
 # 注意

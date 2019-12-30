@@ -31,6 +31,7 @@ func init() {
 	RootCmd.AddCommand(bucketsCmd, domainsCmd)
 }
 
+// 【buckets】获取一个用户的所有的存储空间
 func GetBuckets(cmd *cobra.Command, params []string) {
 
 	bm := iqshell.GetBucketManager()
@@ -49,6 +50,7 @@ func GetBuckets(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 【domains】获取一个空间绑定的CDN域名
 func GetDomainsOfBucket(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	bm := iqshell.GetBucketManager()

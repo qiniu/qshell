@@ -7,7 +7,7 @@
 # 格式
 
 ```
-qshell copy [-overwrite] <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]
+qshell copy [--overwrite] <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]
 ```
 
 # 鉴权

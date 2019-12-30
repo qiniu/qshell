@@ -4,10 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/opt"
-	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"net/http"
 	"os"
@@ -17,6 +13,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
+	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
 /*
@@ -29,10 +30,11 @@ import (
 */
 
 const (
-	MIN_DOWNLOAD_THREAD_COUNT = 1
-	MAX_DOWNLOAD_THREAD_COUNT = 2000
+	MIN_DOWNLOAD_THREAD_COUNT = 1    // 最小的下载线程数目
+	MAX_DOWNLOAD_THREAD_COUNT = 2000 // 最大下载线程数目
 )
 
+// qdownload子命令用到的配置参数
 type DownloadConfig struct {
 	FileEncoding string `json:"file_encoding"`
 	KeyFile      string `json:"key_file"`
@@ -40,7 +42,7 @@ type DownloadConfig struct {
 	Bucket       string `json:"bucket"`
 	Prefix       string `json:"prefix,omitempty"`
 	Suffixes     string `json:"suffixes,omitempty"`
-	IoHost       string `json:"io_host, omitempty"`
+	IoHost       string `json:"io_host,omitempty"`
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
@@ -49,8 +51,17 @@ type DownloadConfig struct {
 	LogFile   string `json:"log_file,omitempty"`
 	LogRotate int    `json:"log_rotate,omitempty"`
 	LogStdout bool   `json:"log_stdout,omitempty"`
+
+	batchNum int
 }
 
+func (d *DownloadConfig) init() {
+	if d.batchNum <= 0 {
+		d.batchNum = 1000
+	}
+}
+
+// 获取一个存储空间的绑定的所有域名
 func (d *DownloadConfig) DomainOfBucket(bm *BucketManager) (domain string, err error) {
 	//get domains of bucket
 	domainsOfBucket, gErr := bm.DomainsOfBucket(d.Bucket)
@@ -73,18 +84,74 @@ func (d *DownloadConfig) DomainOfBucket(bm *BucketManager) (domain string, err e
 	return
 }
 
-func (d *DownloadConfig) DownloadDomain(domainOfBucket string) (domain string) {
+// 获取一个存储空间的下载域名， 默认使用用户配置的域名，如果没有就使用接口随机选择一个下载域名
+func (d *DownloadConfig) DownloadDomain() (domain string) {
 	if d.CdnDomain != "" {
 		domain = d.CdnDomain
 	} else if d.IoHost != "" {
 		domain = d.IoHost
-	} else {
-		domain = domainOfBucket
 	}
 	domain = strings.TrimPrefix(domain, "http://")
 	domain = strings.TrimPrefix(domain, "https://")
 
 	return
+}
+
+// qdownload需要使用文件的大小等信息判断文件是否已经下载
+// 所以批量下载需要使用listBucket接口产生的中间生成文件
+// 对于直接使用文件列表批量下载的方式，为了产生这个中间文件，需要使用
+// batchstat接口来获取文件信息
+func (d *DownloadConfig) generateMiddileFile(bm *BucketManager, jobListFileName string) {
+	kFile, kErr := os.Open(d.KeyFile)
+	if kErr != nil {
+		logs.Error("open KeyFile: %s: %v\n", d.KeyFile, kErr)
+		os.Exit(STATUS_ERROR)
+	}
+	defer kFile.Close()
+
+	jobListFh, jErr := os.Create(jobListFileName)
+	if jErr != nil {
+		logs.Error("open jobListFileName: %s: %v\n", jobListFileName, kErr)
+		os.Exit(STATUS_ERROR)
+	}
+	defer jobListFh.Close()
+
+	scanner := bufio.NewScanner(kFile)
+	entries := make([]EntryPath, 0, d.batchNum)
+
+	writeEntry := func() {
+		bret, _ := bm.BatchStat(entries)
+		if len(bret) == len(entries) {
+			for j, entry := range entries {
+				item := bret[j]
+				if item.Code != 200 || item.Data.Error != "" {
+					fmt.Fprintln(os.Stderr, entry.Key+"\t"+item.Data.Error)
+				} else {
+					fmt.Fprintf(jobListFh, "%s\t%d\t%s\t%d\t%s\t%d\n", entry.Key, item.Data.Fsize, item.Data.Hash, item.Data.PutTime, item.Data.MimeType, item.Data.Type)
+				}
+			}
+		}
+		entries = entries[:0]
+	}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+		entry := EntryPath{
+			Bucket: d.Bucket,
+			Key:    line,
+		}
+		if len(entries) < d.batchNum {
+			entries = append(entries, entry)
+		}
+		if len(entries) == d.batchNum {
+			writeEntry()
+		}
+	}
+	// 最后一批数量小于分割的batchNum
+	if len(entries) > 0 {
+		writeEntry()
+	}
 }
 
 var downloadTasks chan func()
@@ -97,6 +164,7 @@ func doDownload(tasks chan func()) {
 	}
 }
 
+// 【qdownload] 批量下载文件， 可以下载以前缀的文件，也可以下载一个文件列表
 func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	QShellRootPath := RootPath()
 	if QShellRootPath == "" {
@@ -144,6 +212,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	if !downConfig.LogStdout {
 		logs.GetBeeLogger().DelLogger(logs.AdapterConsole)
 	}
+	downConfig.init()
 	//open log file
 	fmt.Println("Writing download log to file", downConfig.LogFile)
 
@@ -159,12 +228,18 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 
 	bm := GetBucketManager()
 
-	domainOfBucket, dErr := downConfig.DomainOfBucket(bm)
-	if dErr != nil {
-		logs.Error("get domains of bucket: ", dErr)
-		os.Exit(1)
+	downloadDomain := downConfig.DownloadDomain()
+	if downloadDomain == "" {
+		domainOfBucket, dErr := downConfig.DomainOfBucket(bm)
+		if dErr != nil {
+			logs.Error("get domains of bucket: ", dErr)
+			os.Exit(1)
+		}
+		downloadDomain = domainOfBucket
 	}
-	downloadDomain := downConfig.DownloadDomain(domainOfBucket)
+	if downloadDomain == "" {
+		panic("download domain cannot be empty")
+	}
 
 	jobListFileName := filepath.Join(storePath, fmt.Sprintf("%s.list", jobId))
 	resumeFile := filepath.Join(storePath, fmt.Sprintf("%s.ldb", jobId))
@@ -180,49 +255,8 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		Sync: true,
 	}
 	if downConfig.KeyFile != "" {
-		kFile, kErr := os.Open(downConfig.KeyFile)
-		if kErr != nil {
-			logs.Error("open KeyFile: %s: %v\n", downConfig.KeyFile, kErr)
-			os.Exit(STATUS_ERROR)
-		}
-		defer kFile.Close()
-
-		jobListFh, jErr := os.Create(jobListFileName)
-		if jErr != nil {
-			logs.Error("open jobListFileName: %s: %v\n", jobListFileName, kErr)
-			os.Exit(STATUS_ERROR)
-		}
-		defer jobListFh.Close()
-
-		entries := make([]EntryPath, 0)
-		scanner := bufio.NewScanner(kFile)
-		for scanner.Scan() {
-			line := scanner.Text()
-			line = strings.TrimSpace(line)
-			entry := EntryPath{
-				Bucket: downConfig.Bucket,
-				Key:    line,
-			}
-			entries = append(entries, entry)
-		}
-		batches := len(entries)/1000 + 1
-		for i := 0; i < batches; i++ {
-			ret, err := bm.BatchStat(entries)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Batch stat error: %v\n", err)
-				os.Exit(STATUS_ERROR)
-			}
-			if len(ret) > 0 {
-				for i, entry := range entries {
-					item := ret[i]
-					if item.Code != 200 || item.Data.Error != "" {
-						fmt.Fprintln(os.Stderr, entry.Key+"\t"+item.Data.Error)
-					} else {
-						fmt.Fprintf(jobListFh, "%s\t%d\t%s\t%d\t%s\t%d\n", entry.Key, item.Data.Fsize, item.Data.Hash, item.Data.PutTime, item.Data.MimeType, item.Data.Type)
-					}
-				}
-			}
-		}
+		fmt.Println("Batch stat file info, this may take a long time, please wait...")
+		downConfig.generateMiddileFile(bm, jobListFileName)
 	} else {
 		//list bucket, prepare file list to download
 		logs.Info("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
@@ -405,7 +439,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 						downNewFile = true
 					}
 				} else {
-					//no local file exists, donwload a new local file
+					//no local file exists, download a new local file
 					downNewFile = true
 				}
 			}

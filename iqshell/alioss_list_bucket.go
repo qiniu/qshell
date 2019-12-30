@@ -8,6 +8,7 @@ import (
 	"os"
 )
 
+// 阿里空间字段
 type AliListBucket struct {
 	DataCenter      string
 	AccessKeyId     string
@@ -16,6 +17,7 @@ type AliListBucket struct {
 	Prefix          string
 }
 
+// 列举阿里空间的文件列表
 func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 	//open result file
 	fp, openErr := os.Create(listResultFile)

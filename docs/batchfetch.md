@@ -6,12 +6,12 @@
 # 格式
 
 ```
-qshell batchfetch [--success-list <SuccessFileName>] [--failure-list <failureFileName>] <Bucket> [-i <FetchUrlsFile>]
+qshell batchfetch [-F <Delimiter>] [--success-list <SuccessFileName>] [--failure-list <failureFileName>] [-i <FetchUrlsFile>] <Bucket>
 ```
 
 # 帮助
 ```
-qshell batchcopy -h
+qshell batchfetch -h
 ```
 
 # 鉴权
@@ -31,12 +31,12 @@ qshell batchcopy -h
 **模式一:**
 
 ```
-文件链接1\t保存名称1
-文件链接2\t保存名称2
-文件链接3\t保存名称3
+文件链接1<Delimiter>保存名称1
+文件链接2<Delimiter>保存名称2
+文件链接3<Delimiter>保存名称3
 ...
 ```
-其中`\t`表示Tab分隔符号。
+其中<Delimiter> 表示分隔符, 默认使用空白进行分隔（空格，\t, \n), 如果要抓取的地址或者保存的文件名中有空格， 可以使用-F选项指定分隔符
 
 例如：
 
@@ -90,7 +90,6 @@ http://img.abc.com/0/000/563/0000563515.fid
 0/000/563/0000563514.fid
 0/000/563/0000563515.fid
 ```
-
 
 # 使用示例
 

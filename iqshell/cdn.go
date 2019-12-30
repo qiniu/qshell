@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// 获取CdnManager
 func GetCdnManager() *cdn.CdnManager {
 	account, gErr := GetAccount()
 	if gErr != nil {

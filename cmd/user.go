@@ -33,7 +33,7 @@ var userCleanCmd = &cobra.Command{
 }
 
 var userRmCmd = &cobra.Command{
-	Use:   "remove <UID>",
+	Use:   "remove <UserName>",
 	Short: "Remove user UID from inner db",
 	Args:  cobra.ExactArgs(1),
 	Run:   RmUser,
@@ -56,6 +56,8 @@ func init() {
 	RootCmd.AddCommand(userCmd)
 }
 
+// 切换用户
+// qshell user cu <Name>
 func ChUser(cmd *cobra.Command, params []string) {
 	var err error
 	var userName string
@@ -71,6 +73,8 @@ func ChUser(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 列举本地数据库记录的账户
+// qshell user ls
 func ListUser(cmd *cobra.Command, params []string) {
 	err := iqshell.ListUser(userLsName)
 	if err != nil {
@@ -79,6 +83,8 @@ func ListUser(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 删除本地记录的数据库
+// qshell user clean
 func CleanUser(cmd *cobra.Command, params []string) {
 	err := iqshell.CleanUser()
 	if err != nil {
@@ -87,20 +93,24 @@ func CleanUser(cmd *cobra.Command, params []string) {
 	}
 }
 
+// 删除用户
+// qshell user remove <UserName>
 func RmUser(cmd *cobra.Command, params []string) {
 	userName := params[0]
 	err := iqshell.RmUser(userName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %v\n", cmd, err)
+		fmt.Fprintf(os.Stderr, "RmUser: %v\n", err)
 		os.Exit(1)
 	}
 }
 
+// 查询用用户是否存在本地数据库中
+// qshell user lookup <UserName>
 func LookUp(cmd *cobra.Command, params []string) {
 	userName := params[0]
 	err := iqshell.LookUp(userName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %v\n", cmd, err)
+		fmt.Fprintf(os.Stderr, "LookUp: %v\n", err)
 		os.Exit(1)
 	}
 }

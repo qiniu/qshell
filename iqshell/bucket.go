@@ -6,9 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"github.com/qiniu/api.v7/auth/qbox"
-	"github.com/qiniu/api.v7/storage"
-	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -17,8 +14,14 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/qiniu/api.v7/auth"
+	"github.com/qiniu/api.v7/auth/qbox"
+	"github.com/qiniu/api.v7/conf"
+	"github.com/qiniu/api.v7/storage"
 )
 
+// Get 接口返回的结构
 type GetRet struct {
 	URL      string `json:"url"`
 	Hash     string `json:"hash"`
@@ -33,16 +36,19 @@ type EntryPath struct {
 	Key    string
 }
 
+// 改变文件mime需要的信息
 type ChgmEntryPath struct {
 	EntryPath
 	MimeType string
 }
 
+// 改变文件存储类型需要的信息
 type ChtypeEntryPath struct {
 	EntryPath
 	FileType int
 }
 
+// 设置deleteAfterDays需要的参数
 type DeleteAfterDaysEntryPath struct {
 	EntryPath
 	DeleteAfterDays int
@@ -68,31 +74,26 @@ type BucketDomainsRet []struct {
 	Owner  int    `json:"owner"`
 }
 
+// 获取一个存储空间绑定的CDN域名
 func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err error) {
-	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
-	var reqHost string
-
-	scheme := "http://"
-	if m.Cfg.UseHTTPS {
-		scheme = "https://"
+	infos, err := m.ListBucketDomains(bucket)
+	if err != nil {
+		if e, ok := err.(*storage.ErrorInfo); ok {
+			if e.Code != 404 {
+				return
+			}
+			err = nil
+		} else {
+			return
+		}
 	}
-
-	reqHost = fmt.Sprintf("%s%s", scheme, viper.GetString("hosts.api_host"))
-	reqURL := fmt.Sprintf("%s/v7/domain/list?tbl=%v", reqHost, bucket)
-	headers := http.Header{}
-	ret := new(BucketDomainsRet)
-	cErr := m.Client.Call(ctx, ret, "POST", reqURL, headers)
-	if cErr != nil {
-		err = cErr
-		return
-	}
-	for _, d := range *ret {
+	for _, d := range infos {
 		domains = append(domains, d.Domain)
 	}
 	return
-
 }
 
+// 返回私有空间的下载链接， 也可以用于公有空间的下载
 func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string) (fileUrl string) {
 
 	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
@@ -102,6 +103,7 @@ func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string) 
 	return
 }
 
+// 返回私有空间的下载链接， 也可以用于公有空间的下载
 func (m *BucketManager) PrivateUrl(publicUrl string, deadline int64) (finalUrl string, err error) {
 	srcUri, pErr := url.Parse(publicUrl)
 	if pErr != nil {
@@ -139,6 +141,7 @@ func (m *BucketManager) rsHost(bucket string) (rsHost string, err error) {
 	return
 }
 
+// 从存储空间下载文件（不需要绑定CDN域名）
 func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 	entryUri := strings.Join([]string{bucket, key}, ":")
 
@@ -146,7 +149,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 		reqHost string
 		reqErr  error
 	)
-	reqHost = viper.GetString("hosts.rs_host")
+	reqHost = RsHost()
 	if reqHost == "" {
 		reqHost, reqErr = m.rsHost(bucket)
 		if reqErr != nil {
@@ -161,7 +164,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 
 	var data GetRet
 
-	ctx := context.WithValue(context.TODO(), "mac", m.Mac)
+	ctx := auth.WithCredentials(context.Background(), m.Mac)
 	headers := http.Header{}
 
 	err = storage.DefaultClient.Call(ctx, &data, "GET", url, headers)
@@ -268,6 +271,42 @@ func (m *BucketManager) BatchChtype(entries []ChtypeEntryPath) (ret []storage.Ba
 	return m.Batch(ops)
 }
 
+func (m *BucketManager) CheckAsyncFetchStatus(bucket, id string) (ret storage.AsyncFetchRet, err error) {
+
+	reqUrl, err := m.ApiReqHost(bucket)
+	if err != nil {
+		return
+	}
+
+	reqUrl += ("/sisyphus/fetch?id=" + id)
+
+	ctx := auth.WithCredentialsType(context.Background(), m.Mac, auth.TokenQiniu)
+	err = m.Client.Call(ctx, &ret, "GET", reqUrl, nil)
+	return
+}
+
+// 禁用七牛存储中的对象
+func (m *BucketManager) ChStatus(bucket, key string, forbidden bool) (err error) {
+	ctx := auth.WithCredentials(context.Background(), m.Mac)
+	reqHost, reqErr := m.RsReqHost(bucket)
+	if reqErr != nil {
+		err = reqErr
+		return
+	}
+	var status int
+	if forbidden {
+		status = 1
+	} else {
+		status = 0
+	}
+	reqURL := fmt.Sprintf("%s%s", reqHost, fmt.Sprintf("/chstatus/%s/status/%d", storage.EncodedEntry(bucket, key), status))
+	headers := http.Header{}
+	headers.Add("Content-Type", conf.CONTENT_TYPE_FORM)
+	err = m.Client.Call(ctx, nil, "POST", reqURL, headers)
+	return
+
+}
+
 func (m *BucketManager) BatchDeleteAfterDays(entries []DeleteAfterDaysEntryPath) (ret []storage.BatchOpRet, err error) {
 	ops := make([]string, 0, len(entries))
 	for _, entry := range entries {
@@ -305,6 +344,17 @@ func NewBucketManagerEx(mac *qbox.Mac, cfg *storage.Config, client *storage.Clie
 	}
 }
 
+// GetBucketManager 返回一个BucketManager 指针
+func GetBucketManagerWithConfig(cfg *storage.Config) *BucketManager {
+	account, gErr := GetAccount()
+	if gErr != nil {
+		fmt.Fprintf(os.Stderr, "GetBucketManager: %v\n", gErr)
+		os.Exit(1)
+	}
+	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
+	return NewBucketManager(mac, cfg)
+}
+
 func GetBucketManager() *BucketManager {
 	account, gErr := GetAccount()
 	if gErr != nil {
@@ -313,9 +363,10 @@ func GetBucketManager() *BucketManager {
 	}
 	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
 	cfg := storage.Config{
-		RsHost:  viper.GetString("hosts.rs_host"),
-		ApiHost: viper.GetString("hosts.api_host"),
-		RsfHost: viper.GetString("hosts.rsf_host"),
+		RsHost:        RsHost(),
+		ApiHost:       ApiHost(),
+		RsfHost:       RsfHost(),
+		CentralRsHost: RsHost(),
 	}
 	return NewBucketManager(mac, &cfg)
 }

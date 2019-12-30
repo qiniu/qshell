@@ -3,9 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/iqshell"
-	"github.com/spf13/cobra"
 	"io"
 	"os"
 	"runtime"
@@ -13,6 +10,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/qiniu/api.v7/storage"
+	"github.com/qiniu/qshell/iqshell"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -34,6 +35,8 @@ var (
 	deadline      int
 	bsuccessFname string
 	bfailureFname string
+	sep           string
+	bfetchUphost  string
 )
 
 var (
@@ -112,6 +115,8 @@ func init() {
 	batchFetchCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchFetchCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "file to save batch fetch success list")
 	batchFetchCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "file to save batch fetch failure list")
+	batchFetchCmd.Flags().StringVarP(&bfetchUphost, "up-host", "u", "", "fetch uphost")
+	batchFetchCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchStatCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchCopyCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
@@ -123,6 +128,7 @@ func init() {
 	batchDeleteCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchDeleteCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "delete success list")
 	batchDeleteCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "delete failure list")
+	batchDeleteCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchChgmCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChgmCmd.Flags().IntVarP(&worker, "worker", "c", 1, "woker count")
@@ -145,18 +151,21 @@ func init() {
 	batchRenameCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchRenameCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "rename success list")
 	batchRenameCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "rename failure list")
+	batchRenameCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchMoveCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchMoveCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchMoveCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchMoveCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "move success list")
 	batchMoveCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "move failure list")
+	batchMoveCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchCopyCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchCopyCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchCopyCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchCopyCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "copy success list")
 	batchCopyCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "copy failure list")
+	batchCopyCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
 
 	batchSignCmd.Flags().IntVarP(&deadline, "deadline", "e", 3600, "deadline in seconds")
 	batchSignCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
@@ -165,6 +174,57 @@ func init() {
 		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd, batchFetchCmd)
 }
 
+type fetchConfig struct {
+	upHost string
+
+	threadCount int
+
+	successFname   string
+	failureFname   string
+	overwriteFname string
+
+	fileExporter *iqshell.FileExporter
+	bm           *iqshell.BucketManager
+}
+
+// initFileExporter需要在主goroutine中调用， 原因同initBucketManager
+func (fc *fetchConfig) initFileExporter() {
+	fileExporter, fErr := iqshell.NewFileExporter(fc.successFname, fc.failureFname, "")
+	if fErr != nil {
+		fmt.Fprintf(os.Stderr, "create file exporter: %v\n", fErr)
+		os.Exit(1)
+	}
+	fc.fileExporter = fileExporter
+}
+
+// GetBucketManagerWithConfig 会使用os.Exit推出，因此该方法需要在main gouroutine中调用
+func (fc *fetchConfig) initBucketManager() {
+
+	cfg := storage.Config{
+		IoHost: fc.upHost,
+	}
+	fc.bm = iqshell.GetBucketManagerWithConfig(&cfg)
+}
+
+// initUpHost需要在主goroutine中调用
+func (fc *fetchConfig) initUpHost(bucket string) {
+	if bfetchUphost == "" {
+		acc, aerr := iqshell.GetAccount()
+		if aerr != nil {
+			fmt.Fprintf(os.Stderr, "failed to get accessKey")
+			os.Exit(1)
+		}
+		region, rErr := storage.GetRegion(acc.AccessKey, bucket)
+		if rErr != nil {
+			fmt.Fprintf(os.Stderr, "failed getting fetch host for bucket: %s: %v\n", bucket, rErr)
+			os.Exit(1)
+		}
+		bfetchUphost = region.IovipHost
+	}
+	fc.upHost = bfetchUphost
+}
+
+// 批量抓取网络资源到七牛存储空间
 func BatchFetch(cmd *cobra.Command, params []string) {
 	if worker <= 0 || worker > 1000 {
 		fmt.Fprintf(os.Stderr, "threads count: %d is too large, must be (0, 1000]", worker)
@@ -202,16 +262,24 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 	)
 	defer close(fItemChan)
 
-	fileExporter, fErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
-	if fErr != nil {
-		fmt.Fprintf(os.Stderr, "create file exporter: %v\n", fErr)
-		os.Exit(1)
+	itemc := make(chan *iqshell.FetchItem)
+	donec := make(chan struct{})
+
+	fconfig := fetchConfig{
+		threadCount:  worker,
+		successFname: bsuccessFname,
+		failureFname: bfailureFname,
 	}
-	go batchFetch(fItemChan, fileExporter)
+
+	fconfig.initUpHost(bucket)
+	fconfig.initBucketManager()
+	fconfig.initFileExporter()
+
+	go fetchChannel(itemc, donec, &fconfig)
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := ParseLine(line, sep)
 		if len(items) <= 0 {
 			continue
 		}
@@ -233,33 +301,48 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 			Key:       saveKey,
 			RemoteUrl: remoteUrl,
 		}
-		fItemChan <- &item
+		itemc <- &item
 	}
+	close(itemc)
+
+	<-donec
 }
 
-func batchFetch(fItemChan chan *iqshell.FetchItem, fileExporter *iqshell.FileExporter) {
-	for i := 0; i < worker; i++ {
-		go func() {
-			bm := iqshell.GetBucketManager()
-			for fetchItem := range fItemChan {
-				_, fErr := bm.Fetch(fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
-				if fErr != nil {
-					fmt.Fprintf(os.Stderr, "fetch %s => %s:%s failed\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
-					if fileExporter != nil {
-						fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%v\n", fetchItem.RemoteUrl, fetchItem.Key, fErr))
-					}
-				} else {
-					fmt.Printf("fetch %s => %s:%s success\n", fetchItem.RemoteUrl, fetchItem.Bucket, fetchItem.Key)
-					if fileExporter != nil {
-						fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", fetchItem.RemoteUrl, fetchItem.Key))
-					}
+func fetchChannel(c chan *iqshell.FetchItem, donec chan struct{}, fconfig *fetchConfig) {
 
+	fileExporter := fconfig.fileExporter
+	bm := fconfig.bm
+
+	limitc := make(chan struct{}, fconfig.threadCount)
+	wg := sync.WaitGroup{}
+
+	for item := range c {
+		limitc <- struct{}{}
+		wg.Add(1)
+
+		go func(item *iqshell.FetchItem) {
+			_, fErr := bm.Fetch(item.RemoteUrl, item.Bucket, item.Key)
+			if fErr != nil {
+				fmt.Fprintf(os.Stderr, "fetch %s => %s:%s failed\n", item.RemoteUrl, item.Bucket, item.Key)
+				if fileExporter != nil {
+					fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%v\n", item.RemoteUrl, item.Key, fErr))
+				}
+			} else {
+				fmt.Printf("fetch %s => %s:%s success\n", item.RemoteUrl, item.Bucket, item.Key)
+				if fileExporter != nil {
+					fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", item.RemoteUrl, item.Key))
 				}
 			}
-		}()
+			<-limitc
+			wg.Done()
+		}(item)
 	}
+	wg.Wait()
+
+	donec <- struct{}{}
 }
 
+// 批量获取文件列表的信息
 func BatchStat(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 
@@ -332,6 +415,7 @@ func batchStat(entries []iqshell.EntryPath, bm *iqshell.BucketManager) {
 	}
 }
 
+// 批量删除七牛存储空间中的文件
 func BatchDelete(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -396,15 +480,16 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Fields(line)
-		if len(items) > 0 {
-			key := items[0]
-			if key != "" {
-				entry := iqshell.EntryPath{
-					bucket, key,
-				}
-				entries = append(entries, entry)
+		items := strings.Split(line, sep)
+		if len(items) <= 0 {
+			continue
+		}
+		key := items[0]
+		if key != "" {
+			entry := iqshell.EntryPath{
+				bucket, key,
 			}
+			entries = append(entries, entry)
 		}
 		//check limit
 		if len(entries) == BATCH_ALLOW_MAX {
@@ -445,16 +530,17 @@ func batchDelete(entries []iqshell.EntryPath, bm *iqshell.BucketManager, fileExp
 			item := ret[i]
 
 			if item.Code != 200 || item.Data.Error != "" {
-				logs.Error("Delete '%s' => '%s' failed, Code: %d, Error: %s", entry.Bucket, entry.Key, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Delete '%s' => '%s' failed, Code: %d, Error: %s\n", entry.Bucket, entry.Key, item.Code, item.Data.Error)
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%d\t%s\n", entry.Key, item.Code, item.Data.Error))
 			} else {
-				logs.Debug("Delete '%s' => '%s' success", entry.Bucket, entry.Key)
+				fmt.Printf("Delete '%s' => '%s' success\n", entry.Bucket, entry.Key)
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
 			}
 		}
 	}
 }
 
+// 批量修改存储在七牛存储空间中文件的MimeType信息
 func BatchChgm(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -567,15 +653,16 @@ func batchChgm(entries []iqshell.ChgmEntryPath, bm *iqshell.BucketManager, fileE
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%d\t%s\n", entry.Key, item.Code, item.Data.Error))
-				logs.Error("Chgm '%s' => '%s' Failed, Code: %d, Error: %s", entry.Key, entry.MimeType, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Chgm '%s' => '%s' Failed, Code: %d, Error: %s\n", entry.Key, entry.MimeType, item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
-				logs.Debug("Chgm '%s' => '%s' success", entry.Key, entry.MimeType)
+				fmt.Printf("Chgm '%s' => '%s' success\n", entry.Key, entry.MimeType)
 			}
 		}
 	}
 }
 
+// 批量修改存储在七牛存储空间中文件的存储类型信息（标准存储-》低频存储，低频-》标准存储)
 func BatchChtype(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -698,16 +785,17 @@ func batchChtype(entries []iqshell.ChtypeEntryPath, bm *iqshell.BucketManager, f
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%d\t%s\n", entry.Key, item.Code, item.Data.Error))
-				logs.Error("Chtype '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.FileType, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Chtype '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.FileType, item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
-				logs.Debug("Chtype '%s' => '%s' success", entry.Key, entry.FileType)
+				fmt.Printf("Chtype '%s' => '%s' success\n", entry.Key, entry.FileType)
 			}
 		}
 	}
 	return
 }
 
+// 批量设置七牛存储空间中的删除标志（多少天后删除）
 func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -815,14 +903,15 @@ func batchDeleteAfterDays(entries []iqshell.DeleteAfterDaysEntryPath, bm *iqshel
 		for i, entry := range entries {
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
-				logs.Error("Expire '%s' => '%d' Failed, Code: %d, Error: %s", entry.Key, entry.DeleteAfterDays, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Expire '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.DeleteAfterDays, item.Code, item.Data.Error)
 			} else {
-				logs.Debug("Expire '%s' => '%d' success", entry.Key, entry.DeleteAfterDays)
+				fmt.Printf("Expire '%s' => '%d' success\n", entry.Key, entry.DeleteAfterDays)
 			}
 		}
 	}
 }
 
+// 批量重命名七牛存储空间中的文件
 func BatchRename(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -886,7 +975,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := ParseLine(line, sep)
 		if len(items) == 2 {
 			oldKey := items[0]
 			newKey := items[1]
@@ -941,15 +1030,16 @@ func batchRename(entries []iqshell.RenameEntryPath, bm *iqshell.BucketManager, f
 			item := ret[i]
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%d\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key, item.Code, item.Data.Error))
-				logs.Error("Rename '%s' => '%s' Failed, Code: %d, Error: %s", entry.SrcEntry.Key, entry.DstEntry.Key, item.Code, item.Data.Error)
+				fmt.Fprintf(os.Stderr, "Rename '%s' => '%s' Failed, Code: %d, Error: %s\n", entry.SrcEntry.Key, entry.DstEntry.Key, item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key))
-				logs.Debug("Rename '%s' => '%s' success", entry.SrcEntry.Key, entry.DstEntry.Key)
+				fmt.Printf("Rename '%s' => '%s' success\n", entry.SrcEntry.Key, entry.DstEntry.Key)
 			}
 		}
 	}
 }
 
+// 批量移动七牛存储空间中的文件
 func BatchMove(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -1014,7 +1104,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := ParseLine(line, sep)
 		if len(items) == 1 || len(items) == 2 {
 			srcKey := items[0]
 			destKey := srcKey
@@ -1074,19 +1164,20 @@ func batchMove(entries []iqshell.MoveEntryPath, bm *iqshell.BucketManager, fileE
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%d\t%s\n", entry.SrcEntry.Key,
 					entry.DstEntry.Key, item.Code, item.Data.Error))
-				logs.Error("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
+				fmt.Fprintf(os.Stderr, "Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key,
 					entry.DstEntry.Bucket, entry.DstEntry.Key,
 					item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key))
-				logs.Debug("Move '%s:%s' => '%s:%s' success",
+				fmt.Printf("Move '%s:%s' => '%s:%s' success\n",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key, entry.DstEntry.Bucket, entry.DstEntry.Key)
 			}
 		}
 	}
 }
 
+// 批量拷贝七牛存储中的文件
 func BatchCopy(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
@@ -1153,7 +1244,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := ParseLine(line, sep)
 		if len(items) == 1 || len(items) == 2 {
 			srcKey := items[0]
 			destKey := srcKey
@@ -1212,13 +1303,13 @@ func batchCopy(entries []iqshell.CopyEntryPath, bm *iqshell.BucketManager, fileE
 			if item.Code != 200 || item.Data.Error != "" {
 				fileExporter.WriteToFailedWriter(fmt.Sprintf("%s\t%s\t%d\t%s\n", entry.SrcEntry.Key,
 					entry.DstEntry.Key, item.Code, item.Data.Error))
-				logs.Error("Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
+				fmt.Fprintf(os.Stderr, "Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s\n",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key,
 					entry.DstEntry.Bucket, entry.DstEntry.Key,
 					item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\t%s\n", entry.SrcEntry.Key, entry.DstEntry.Key))
-				logs.Debug("Copy '%s:%s' => '%s:%s' success",
+				fmt.Printf("Copy '%s:%s' => '%s:%s' success\n",
 					entry.SrcEntry.Bucket, entry.SrcEntry.Key,
 					entry.DstEntry.Bucket, entry.DstEntry.Key)
 			}
@@ -1226,6 +1317,7 @@ func batchCopy(entries []iqshell.CopyEntryPath, bm *iqshell.BucketManager, fileE
 	}
 }
 
+// 批量签名存储空间中的文件
 func BatchSign(cmd *cobra.Command, params []string) {
 	if deadline <= 0 {
 		fmt.Fprintf(os.Stderr, "Invalid <Deadline>: deadline must be int and greater than 0\n")

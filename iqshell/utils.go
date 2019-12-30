@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/qiniu/api.v7/storage"
+	"io"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -129,6 +131,16 @@ func decode(s string) (v string, err error) {
 	return string(t), nil
 }
 
+// 获取reader中行数
+func GetLineCount(reader io.Reader) (totalCount int64) {
+	bScanner := bufio.NewScanner(reader)
+	for bScanner.Scan() {
+		totalCount += 1
+	}
+	return
+}
+
+// 获取文件行数
 func GetFileLineCount(filePath string) (totalCount int64) {
 	fp, openErr := os.Open(filePath)
 	if openErr != nil {
@@ -136,11 +148,7 @@ func GetFileLineCount(filePath string) (totalCount int64) {
 	}
 	defer fp.Close()
 
-	bScanner := bufio.NewScanner(fp)
-	for bScanner.Scan() {
-		totalCount += 1
-	}
-	return
+	return GetLineCount(fp)
 }
 
 // URL:
@@ -166,6 +174,7 @@ func Encode(uri string) string {
 	return "!" + encodedURI
 }
 
+// Decode
 func Decode(encodedURI string) (uri string, err error) {
 
 	size := len(encodedURI)
@@ -214,6 +223,7 @@ func getAkBucketFromUploadToken(token string) (ak, bucket string, err error) {
 	return
 }
 
+// 从URL中获取文件名字
 func KeyFromUrl(uri string) (key string, err error) {
 	u, pErr := url.Parse(uri)
 	if pErr != nil {
@@ -227,4 +237,41 @@ func KeyFromUrl(uri string) (key string, err error) {
 		key = u.Path[1:]
 	}
 	return
+}
+
+// 表示大小
+type ByteSize int64
+
+const (
+	KB ByteSize = 1024
+	MB          = 1024 * KB
+	GB          = 1024 * MB
+	TB          = 1024 * GB
+)
+
+func (b ByteSize) String() string {
+	if b < KB {
+		return strconv.FormatInt(int64(b), 10) + "B"
+	}
+	if b >= KB && b < MB {
+		size := float64(b) / float64(KB)
+		return strconv.FormatFloat(size, 'f', 2, 64) + "KB"
+	}
+	if b >= MB && b < GB {
+		size := float64(b) / float64(MB)
+		return strconv.FormatFloat(size, 'f', 2, 64) + "MB"
+	}
+	if b >= GB && b < TB {
+		size := float64(b) / float64(GB)
+		return strconv.FormatFloat(size, 'f', 2, 64) + "GB"
+	}
+	size := float64(b) / float64(TB)
+	return strconv.FormatFloat(size, 'f', 2, 64) + "TB"
+}
+
+// 将字节转化为人工可读的字符串
+// b - 表示文件大小，单位字节, readable - 可读字符串
+// 比如1304 ==》1304/1024 ==> 1.27KB
+func BytesToReadable(size int64) (readable string) {
+	return ByteSize(size).String()
 }
