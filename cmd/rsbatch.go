@@ -116,59 +116,64 @@ func init() {
 	batchFetchCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "file to save batch fetch success list")
 	batchFetchCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "file to save batch fetch failure list")
 	batchFetchCmd.Flags().StringVarP(&bfetchUphost, "up-host", "u", "", "fetch uphost")
-	batchFetchCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
+	batchFetchCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
 	batchStatCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchCopyCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchMoveCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchRenameCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
+	batchStatCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
+	batchDeleteCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchDeleteCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchDeleteCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchDeleteCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchDeleteCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "delete success list")
 	batchDeleteCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "delete failure list")
-	batchDeleteCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
+	batchDeleteCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
+	batchChgmCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchChgmCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChgmCmd.Flags().IntVarP(&worker, "worker", "c", 1, "woker count")
-	batchChgmCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchChgmCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "change mimetype success list")
 	batchChgmCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "change mimetype failure list")
+	batchChgmCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
+	batchChtypeCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchChtypeCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchChtypeCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchChtypeCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchChtypeCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "change storage type success file list")
 	batchChtypeCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "change storage type failure file list")
+	batchChtypeCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
+	batchDelAfterCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchDelAfterCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchDelAfterCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchDelAfterCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
+	batchDelAfterCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
+	batchRenameCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchRenameCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchRenameCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchRenameCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchRenameCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "rename success list")
 	batchRenameCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "rename failure list")
-	batchRenameCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
+	batchRenameCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
+	batchMoveCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchMoveCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchMoveCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchMoveCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchMoveCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "move success list")
 	batchMoveCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "move failure list")
-	batchMoveCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
+	batchMoveCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
+	batchCopyCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchCopyCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
 	batchCopyCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
 	batchCopyCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
 	batchCopyCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "copy success list")
 	batchCopyCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "copy failure list")
-	batchCopyCmd.Flags().StringVarP(&sep, "sep", "F", "", "Separator used for split line fields")
+	batchCopyCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
-	batchSignCmd.Flags().IntVarP(&deadline, "deadline", "e", 3600, "deadline in seconds")
 	batchSignCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
+	batchSignCmd.Flags().IntVarP(&deadline, "deadline", "e", 3600, "deadline in seconds")
+	batchSignCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
 	RootCmd.AddCommand(batchStatCmd, batchDeleteCmd, batchChgmCmd, batchChtypeCmd, batchDelAfterCmd,
 		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd, batchFetchCmd)
@@ -373,7 +378,7 @@ func BatchStat(cmd *cobra.Command, params []string) {
 	entries := make([]iqshell.EntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Fields(line)
+		items := strings.Split(line, sep)
 		if len(items) > 0 {
 			key := items[0]
 			if key != "" {
@@ -602,7 +607,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Fields(line)
+		items := strings.Split(line, sep)
 		if len(items) == 2 {
 			key := items[0]
 			mimeType := items[1]
@@ -730,7 +735,7 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line = scanner.Text()
-		items = strings.Fields(line)
+		items = strings.Split(line, sep)
 
 		if len(items) == 2 {
 			fileType, _ = strconv.Atoi(items[1])
@@ -853,7 +858,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 	entries := make([]iqshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := strings.Split(line, "\t")
+		items := strings.Split(line, sep)
 		if len(items) == 2 {
 			key := items[0]
 			days, _ := strconv.Atoi(items[1])
@@ -1341,9 +1346,19 @@ func BatchSign(cmd *cobra.Command, params []string) {
 		bReader = os.Stdin
 	}
 
+	var url string
 	scanner := bufio.NewScanner(bReader)
 	for scanner.Scan() {
-		urlToSign := strings.TrimSpace(scanner.Text())
+		line := scanner.Text()
+		items := ParseLine(line, sep)
+		if len(items) <= 0 {
+			continue
+		}
+		url = items[0]
+		if url == "" {
+			continue
+		}
+		urlToSign := strings.TrimSpace(url)
 		if urlToSign == "" {
 			continue
 		}

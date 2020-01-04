@@ -14,12 +14,12 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 |版本     |支持平台|链接|
 |--------|---------|----|
-|qshell v2.4.0|Windows X86|[下载](http://devtools.qiniu.com/qshell-windows-x86-v2.4.0.exe.zip)
-|qshell v2.4.0|Windows amd64|[下载](http://devtools.qiniu.com/qshell-windows-x64-v2.4.0.exe.zip)
-|qshell v2.4.0|Linux X86|[下载](http://devtools.qiniu.com/qshell-linux-x86-v2.4.0.zip)
-|qshell v2.4.0|Linux amd64|[下载](http://devtools.qiniu.com/qshell-linux-x64-v2.4.0.zip)
-|qshell v2.4.0|Linux Arm|[下载](http://devtools.qiniu.com/qshell-linux-arm-v2.4.0.zip)
-|qshell v2.4.0|Mac OS |[下载](http://devtools.qiniu.com/qshell-darwin-x64-v2.4.0.zip)
+|qshell v2.4.1|Windows X86|[下载](http://devtools.qiniu.com/qshell-windows-x86-v2.4.1.exe.zip)
+|qshell v2.4.1|Windows amd64|[下载](http://devtools.qiniu.com/qshell-windows-x64-v2.4.1.exe.zip)
+|qshell v2.4.1|Linux X86|[下载](http://devtools.qiniu.com/qshell-linux-x86-v2.4.1.zip)
+|qshell v2.4.1|Linux amd64|[下载](http://devtools.qiniu.com/qshell-linux-x64-v2.4.1.zip)
+|qshell v2.4.1|Linux Arm|[下载](http://devtools.qiniu.com/qshell-linux-arm-v2.4.1.zip)
+|qshell v2.4.1|Mac OS |[下载](http://devtools.qiniu.com/qshell-darwin-x64-v2.4.1.zip)
 
 ## 安装
 
