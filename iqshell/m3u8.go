@@ -6,13 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/qiniu/api.v7/storage"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/qiniu/api.v7/storage"
 )
 
 func (m *BucketManager) M3u8FileList(bucket string, m3u8Key string) (slicesToDelete []EntryPath, err error) {
@@ -113,7 +114,9 @@ func (m *BucketManager) DownloadLink(bucket, key string) (dnLink string, err err
 }
 
 //replace and upload
-func (m *BucketManager) M3u8ReplaceDomain(bucket string, m3u8Key string, newDomain string) (err error) {
+func (m *BucketManager) M3u8ReplaceDomain(bucket string, m3u8Key string,
+	newDomain string, removeSparePreSlash bool) (err error) {
+	fmt.Printf("%s, %s, %s, %b\n\n", bucket, m3u8Key, newDomain, removeSparePreSlash)
 	dnLink, err := m.DownloadLink(bucket, m3u8Key)
 
 	//create downoad link
@@ -144,41 +147,13 @@ func (m *BucketManager) M3u8ReplaceDomain(bucket string, m3u8Key string, newDoma
 		err = errors.New("invalid m3u8 file")
 		return
 	}
-	if !strings.HasSuffix(newDomain, "/") {
-		newDomain = newDomain + "/"
-	}
 
 	newM3u8Lines := make([]string, 0, 200)
-	var newLine string
 	bReader := bufio.NewScanner(bytes.NewReader(m3u8Bytes))
 	bReader.Split(bufio.ScanLines)
 	for bReader.Scan() {
 		line := strings.TrimSpace(bReader.Text())
-		if !strings.HasPrefix(line, "#") {
-			if strings.HasPrefix(line, "http://") ||
-				strings.HasPrefix(line, "https://") {
-				uri, pErr := url.Parse(line)
-				if pErr != nil {
-					fmt.Println("invalid url,", line)
-					continue
-				}
-
-				if newDomain != "" {
-					newLine = fmt.Sprintf("%s%s", newDomain, uri.Path)
-				} else {
-					newLine = uri.Path
-				}
-			} else {
-				if newDomain != "" {
-					newLine = fmt.Sprintf("%s%s", newDomain, line)
-				} else {
-					newLine = line
-				}
-			}
-		} else {
-			newLine = line
-		}
-
+		newLine := replaceTsNewDomain(line, newDomain, removeSparePreSlash)
 		newM3u8Lines = append(newM3u8Lines, newLine)
 	}
 
@@ -200,4 +175,25 @@ func (m *BucketManager) M3u8ReplaceDomain(bucket string, m3u8Key string, newDoma
 		return
 	}
 	return
+}
+
+func replaceTsNewDomain(line string, newDomain string, removeSparePreSlash bool) (newLine string) {
+	if strings.HasPrefix(line, "#") {
+		return line
+	}
+	if strings.HasPrefix(line, "http://") ||
+		strings.HasPrefix(line, "https://") {
+		uri, pErr := url.Parse(line)
+		if pErr != nil {
+			fmt.Println("invalid url,", line)
+			return line
+		}
+		line = uri.Path
+	}
+	if removeSparePreSlash {
+		if strings.HasSuffix(newDomain, "/") || strings.HasPrefix(line, "/") {
+			return strings.TrimRight(newDomain, "/") + "/" + strings.TrimLeft(line, "/")
+		}
+	}
+	return newDomain + line
 }

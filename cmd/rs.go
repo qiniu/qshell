@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/api.v7/storage"
-	"github.com/qiniu/qshell/iqshell"
-	"github.com/spf13/cobra"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/qiniu/api.v7/storage"
+	"github.com/qiniu/qshell/iqshell"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -128,19 +129,20 @@ var (
 )
 
 var (
-	outFile    string
-	listMarker string
-	prefix     string
-	suffixes   string
-	mOverwrite bool
-	cOverwrite bool
-	startDate  string
-	endDate    string
-	maxRetry   int
-	finalKey   string
-	appendMode bool
-	readable   bool
-	reverse    bool
+	outFile                  string
+	listMarker               string
+	prefix                   string
+	suffixes                 string
+	mOverwrite               bool
+	cOverwrite               bool
+	startDate                string
+	endDate                  string
+	maxRetry                 int
+	finalKey                 string
+	appendMode               bool
+	readable                 bool
+	reverse                  bool
+	tsUrlRemoveSparePreSlash bool
 )
 
 func init() {
@@ -167,6 +169,7 @@ func init() {
 	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
 	copyCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
 	fetchCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
+	m3u8RepCmd.Flags().BoolVarP(&tsUrlRemoveSparePreSlash, "remove-spare-pre-slash", "r", true, "remove spare prefix slash(/) , only keep one slash if ts path has prefix / ")
 
 	RootCmd.AddCommand(qGetCmd, dirCacheCmd, lsBucketCmd, statCmd, delCmd, moveCmd,
 		copyCmd, chgmCmd, chtypeCmd, delafterCmd, fetchCmd, mirrorCmd,
@@ -497,11 +500,10 @@ func M3u8Replace(cmd *cobra.Command, params []string) {
 	m3u8Key := params[1]
 	var newDomain string
 	if len(params) == 3 {
-		newDomain = strings.TrimRight(params[2], "/")
+		newDomain = params[2]
 	}
-
 	bm := iqshell.GetBucketManager()
-	err := bm.M3u8ReplaceDomain(bucket, m3u8Key, newDomain)
+	err := bm.M3u8ReplaceDomain(bucket, m3u8Key, newDomain, tsUrlRemoveSparePreSlash)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "m3u8 replace domain error: %v\n", err)
 		os.Exit(iqshell.STATUS_ERROR)
