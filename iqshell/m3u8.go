@@ -116,7 +116,6 @@ func (m *BucketManager) DownloadLink(bucket, key string) (dnLink string, err err
 //replace and upload
 func (m *BucketManager) M3u8ReplaceDomain(bucket string, m3u8Key string,
 	newDomain string, removeSparePreSlash bool) (err error) {
-	fmt.Printf("%s, %s, %s, %b\n\n", bucket, m3u8Key, newDomain, removeSparePreSlash)
 	dnLink, err := m.DownloadLink(bucket, m3u8Key)
 
 	//create downoad link
