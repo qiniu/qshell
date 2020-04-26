@@ -45,6 +45,8 @@ qshell batchchtype -h
 ```
 2015/03/22/qiniu.png	1
 2015/photo.jpg	1
+2015/03/22/qiniu2.png	0
+2015/photo2.jpg	2
 ```
 
 上面，我们将`2015/03/22/qiniu.png`文件设置为低频存储了，诸如此类。
