@@ -1,10 +1,10 @@
-VERSION=v2.4.1
-WIN86=qshell-windows-x86-$(VERSION).exe
-WIN64=qshell-windows-x64-$(VERSION).exe
-DARWIN=qshell-darwin-x64-$(VERSION)
-LINUX86=qshell-linux-x86-$(VERSION)
-LINUX64=qshell-linux-x64-$(VERSION)
-LINUXARM=qshell-linux-arm-$(VERSION)
+VERSION=v2.4.2
+WIN86=qshell-$(VERSION)-windows-x86.exe
+WIN64=qshell-$(VERSION)-windows-x64.exe
+DARWIN=qshell-$(VERSION)-darwin-x64
+LINUX86=qshell-$(VERSION)-linux-x86
+LINUX64=qshell-$(VERSION)-linux-x64
+LINUXARM=qshell-$(VERSION)-linux-arm
 LDFLAGS='-extldflags "-static"'
 GO=GO111MODULE=on go
 

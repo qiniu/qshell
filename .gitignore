@@ -19,6 +19,7 @@ _cgo_gotypes.go
 _cgo_export.*
 .qshell
 qshell_*
+qshell-*
 _testmain.go
 *.exe
 *.test
