@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/api.v7/storage"
 	"io"
 	"net/http"
 	"os"
@@ -15,6 +13,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/v7/storage"
 )
 
 //range get and chunk upload

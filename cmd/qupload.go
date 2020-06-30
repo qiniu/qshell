@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/api.v7/storage"
-	"github.com/qiniu/qshell/iqshell"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/v7/storage"
+	"github.com/qiniu/qshell/iqshell"
+	"github.com/spf13/cobra"
 )
 
 var qUploadCmd = &cobra.Command{

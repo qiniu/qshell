@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var (
