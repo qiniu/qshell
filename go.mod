@@ -1,27 +1,30 @@
 module github.com/qiniu/qshell
 
 require (
-	github.com/BurntSushi/toml v0.3.1 // indirect
-	github.com/aliyun/aliyun-oss-go-sdk v0.0.0-20181107013735-cab2ffdaf410
-	github.com/astaxie/beego v1.10.1
-	github.com/aws/aws-sdk-go v1.20.4
+	github.com/aliyun/aliyun-oss-go-sdk v2.1.2+incompatible
+	github.com/astaxie/beego v1.12.1
+	github.com/aws/aws-sdk-go v1.32.12
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
-	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
-	github.com/mitchellh/go-homedir v1.0.0
-	github.com/onsi/gomega v1.4.2 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/golang/snappy v0.0.1 // indirect
+	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/mapstructure v1.3.2 // indirect
+	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/qiniu/api.v7/v7 v7.5.0
 	github.com/satori/go.uuid v1.2.0 // indirect
-	github.com/spf13/cobra v0.0.3
-	github.com/spf13/pflag v1.0.2
-	github.com/spf13/viper v1.2.1
-	github.com/stretchr/testify v1.2.2
-	github.com/syndtr/goleveldb v0.0.0-20181105012736-f9080354173f
-	golang.org/x/net v0.0.0-20181107234226-1c5f79cfb164 // indirect
-	golang.org/x/text v0.3.0
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644 // indirect
+	github.com/spf13/afero v1.3.1 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
+	github.com/spf13/cobra v1.0.0
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.7.0
+	github.com/stretchr/testify v1.6.1
+	github.com/syndtr/goleveldb v1.0.0
+	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
+	golang.org/x/text v0.3.3
+	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
+	gopkg.in/ini.v1 v1.57.0 // indirect
 )
 
 go 1.13

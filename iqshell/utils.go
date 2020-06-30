@@ -278,7 +278,10 @@ func BytesToReadable(size int64) (readable string) {
 }
 
 func SimpleUnescape(s *string) string {
-	r := strings.NewReplacer(`\\`, `\`, `\t`, "\t")
-	ns := r.Replace(*s)
-	return ns
+	r := strings.NewReplacer(
+		`\\`, `\`,
+		`\t`, "\t",
+		`\"`, `"`,
+		`\'`, `'`)
+	return r.Replace(*s)
 }

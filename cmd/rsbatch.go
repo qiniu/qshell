@@ -42,7 +42,7 @@ var (
 func unescape(cmd *cobra.Command, args []string) {
 	sep = iqshell.SimpleUnescape(&sep)
 	if DebugFlag {
-		fmt.Printf("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %v, deadline: %v, bsuccessFname: %v, bfailureFname: %v, sep: %v, bfetchUphost: %v\n", forceFlag, overwriteFlag, worker, inputFile, deadline, bsuccessFname, bfailureFname, sep, bfetchUphost)
+		fmt.Printf("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, deadline: %v, bsuccessFname: %q, bfailureFname: %q, sep: %q, bfetchUphost: %q\n", forceFlag, overwriteFlag, worker, inputFile, deadline, bsuccessFname, bfailureFname, sep, bfetchUphost)
 	}
 }
 
