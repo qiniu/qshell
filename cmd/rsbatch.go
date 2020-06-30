@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/qiniu/api.v7/storage"
+	"github.com/qiniu/api.v7/v7/storage"
 	"github.com/qiniu/qshell/iqshell"
 	"github.com/spf13/cobra"
 )
@@ -38,6 +38,13 @@ var (
 	sep           string
 	bfetchUphost  string
 )
+
+func unescape(cmd *cobra.Command, args []string) {
+	sep = iqshell.SimpleUnescape(&sep)
+	if DebugFlag {
+		fmt.Printf("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %v, deadline: %v, bsuccessFname: %v, bfailureFname: %v, sep: %v, bfetchUphost: %v\n", forceFlag, overwriteFlag, worker, inputFile, deadline, bsuccessFname, bfailureFname, sep, bfetchUphost)
+	}
+}
 
 var (
 	batchFetchCmd = &cobra.Command{
@@ -175,8 +182,12 @@ func init() {
 	batchSignCmd.Flags().IntVarP(&deadline, "deadline", "e", 3600, "deadline in seconds")
 	batchSignCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
-	RootCmd.AddCommand(batchStatCmd, batchDeleteCmd, batchChgmCmd, batchChtypeCmd, batchDelAfterCmd,
-		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd, batchFetchCmd)
+	cmds := []*cobra.Command{batchStatCmd, batchDeleteCmd, batchChgmCmd, batchChtypeCmd, batchDelAfterCmd,
+		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd, batchFetchCmd}
+	RootCmd.AddCommand(cmds...)
+	for _, cmd := range cmds {
+		cmd.PersistentPreRun = unescape
+	}
 }
 
 type fetchConfig struct {

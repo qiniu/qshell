@@ -5,13 +5,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/qiniu/api.v7/storage"
 	"io"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/qiniu/api.v7/v7/storage"
 )
 
 const (
@@ -274,4 +275,10 @@ func (b ByteSize) String() string {
 // 比如1304 ==》1304/1024 ==> 1.27KB
 func BytesToReadable(size int64) (readable string) {
 	return ByteSize(size).String()
+}
+
+func SimpleUnescape(s *string) string {
+	r := strings.NewReplacer(`\\`, `\`, `\t`, "\t")
+	ns := r.Replace(*s)
+	return ns
 }

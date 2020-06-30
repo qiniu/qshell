@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/cmd"
 	"os"
+
+	"github.com/qiniu/qshell/cmd"
 )
 
 func main() {

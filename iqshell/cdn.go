@@ -2,9 +2,10 @@ package iqshell
 
 import (
 	"fmt"
-	"github.com/qiniu/api.v7/auth/qbox"
-	"github.com/qiniu/api.v7/cdn"
 	"os"
+
+	"github.com/qiniu/api.v7/v7/auth/qbox"
+	"github.com/qiniu/api.v7/v7/cdn"
 )
 
 // 获取CdnManager

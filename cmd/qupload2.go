@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/api.v7/storage"
-	"github.com/qiniu/qshell/iqshell"
-	"github.com/spf13/cobra"
 	"os"
 	"strings"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/v7/storage"
+	"github.com/qiniu/qshell/iqshell"
+	"github.com/spf13/cobra"
 )
 
 var qUpload2Cmd = &cobra.Command{

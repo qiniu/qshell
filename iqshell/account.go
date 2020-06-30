@@ -3,14 +3,15 @@ package iqshell
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/api.v7/auth/qbox"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/opt"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/api.v7/v7/auth/qbox"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 )
 
 // Name - 用户自定义的账户名称
