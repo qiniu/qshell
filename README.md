@@ -1,6 +1,7 @@
 # qshell
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/qiniu/qshell)](https://goreportcard.com/report/github.com/qiniu/qshell)
+[![codecov](https://codecov.io/gh/qiniu/qshell/branch/master/graph/badge.svg)](https://codecov.io/gh/qiniu/qshell)
 
 ## 简介
 
