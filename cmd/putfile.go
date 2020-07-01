@@ -161,7 +161,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {
-			fmt.Fprintf(os.Stderr, "Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
+			fmt.Fprintf(os.Stderr, "Put file error %d: %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
 		} else {
 			fmt.Fprintf(os.Stderr, "Put file error: %v\n", err)
 		}
@@ -258,7 +258,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	fmt.Println()
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {
-			fmt.Fprintf(os.Stderr, "Put file error, %d %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
+			fmt.Fprintf(os.Stderr, "Put file error %d: %s, Reqid: %s\n", v.Code, v.Err, v.Reqid)
 		} else {
 			fmt.Fprintf(os.Stderr, "Put file error: %v\n", err)
 		}
