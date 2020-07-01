@@ -24,6 +24,7 @@ func NewCmdAsyncFetch() *cobra.Command {
 	}
 
 	asyncFetch.Flags().StringVarP(&options.host, "host", "t", "", "download HOST header")
+
 	asyncFetch.Flags().StringVarP(&options.callbackUrl, "callback-url", "a", "", "callback url")
 	asyncFetch.Flags().StringVarP(&options.callbackBody, "callback-body", "b", "", "callback body")
 	asyncFetch.Flags().StringVarP(&options.callbackHost, "callback-host", "T", "", "callback HOST")
