@@ -92,7 +92,7 @@ func initConfig() {
 	if DebugFlag {
 		logs.SetLevel(logs.LevelDebug)
 		client.TurnOnDebug()
-		// master 已合并, v7.5.0 分支没包含次参数 //
+		// master 已合并, v7.5.0 分支没包含次参数,等待 v7.5.1
 		// client.DeepDebugInfo = DeepDebugInfo
 	} else {
 		logs.SetLevel(logs.LevelInformational)
