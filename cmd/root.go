@@ -18,7 +18,8 @@ import (
 
 var (
 	// 开启命令行的调试模式
-	DebugFlag bool
+	DebugFlag     bool
+	DeepDebugInfo bool
 
 	// qshell 版本信息， qshell -v
 	VersionFlag bool
@@ -69,6 +70,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().BoolVarP(&DebugFlag, "debug", "d", false, "debug mode")
+	RootCmd.PersistentFlags().BoolVarP(&DeepDebugInfo, "ddebug", "D", false, "deep debug mode")
 	RootCmd.PersistentFlags().BoolVarP(&VersionFlag, "version", "v", false, "show version")
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "C", "", "config file (default is $HOME/.qshell.json)")
 	RootCmd.PersistentFlags().BoolVarP(&local, "local", "L", false, "use current directory as config file path")
@@ -83,10 +85,15 @@ func initConfig() {
 	//set qshell user agent
 	storage.UserAgent = UserAgent()
 
+	if DeepDebugInfo {
+		DebugFlag = true
+	}
 	//parse command
 	if DebugFlag {
 		logs.SetLevel(logs.LevelDebug)
 		client.TurnOnDebug()
+		// master 已合并, v7.5.0 分支没包含次参数,等待 v7.5.1
+		// client.DeepDebugInfo = DeepDebugInfo
 	} else {
 		logs.SetLevel(logs.LevelInformational)
 	}
