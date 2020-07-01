@@ -1,0 +1,29 @@
+name: ut-check
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+jobs:
+  run:
+    name: go test
+    strategy:
+      matrix:
+        go-version: [1.13.x, 1.14.x]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      # This step checks out a copy of your repository.
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Go test
+        run: |
+          go test -coverprofile=coverage.txt ./...
+          bash <(curl -s https://codecov.io/bash)
