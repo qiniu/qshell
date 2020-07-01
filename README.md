@@ -1,7 +1,11 @@
 # qshell
 
+[![LICENSE](https://img.shields.io/github/license/qiniu/qshell.svg)](https://github.com/qiniu/qshell/blob/master/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/qiniu/qshell)](https://goreportcard.com/report/github.com/qiniu/qshell)
 [![codecov](https://codecov.io/gh/qiniu/qshell/branch/master/graph/badge.svg)](https://codecov.io/gh/qiniu/qshell)
+![](https://github.com/qiniu/qshell/workflows/ut-check/badge.svg)
+[![GitHub release](https://img.shields.io/github/v/tag/qiniu/qshell.svg?label=release)](https://github.com/qiniu/qshell/releases)
+[![GoDoc](https://img.shields.io/badge/Godoc-reference-blue.svg)](https://pkg.go.dev/github.com/qiniu/qshell)
 
 ## 简介
 
