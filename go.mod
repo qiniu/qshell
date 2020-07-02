@@ -1,4 +1,4 @@
-module github.com/qiniu/qshell
+module github.com/qiniu/qshell/v2
 
 require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.1.2+incompatible

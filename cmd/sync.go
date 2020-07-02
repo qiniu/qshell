@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/iqshell"
-	"github.com/spf13/cobra"
 	"os"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/spf13/cobra"
 )
 
 var syncCmd = &cobra.Command{

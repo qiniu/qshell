@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/qiniu/qshell/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 

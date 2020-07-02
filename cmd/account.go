@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/qiniu/qshell/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 

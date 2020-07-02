@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/qiniu/qshell/cmd"
+	"github.com/qiniu/qshell/v2/cmd"
 )
 
 func main() {

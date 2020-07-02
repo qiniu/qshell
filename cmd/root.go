@@ -11,7 +11,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/qiniu/api.v7/v7/client"
 	"github.com/qiniu/api.v7/v7/storage"
-	"github.com/qiniu/qshell/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
