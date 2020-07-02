@@ -804,7 +804,7 @@ func batchChtype(entries []iqshell.ChtypeEntryPath, bm *iqshell.BucketManager, f
 				fmt.Fprintf(os.Stderr, "Chtype '%s' => '%d' Failed, Code: %d, Error: %s\n", entry.Key, entry.FileType, item.Code, item.Data.Error)
 			} else {
 				fileExporter.WriteToSuccessWriter(fmt.Sprintf("%s\n", entry.Key))
-				fmt.Printf("Chtype '%s' => '%s' success\n", entry.Key, entry.FileType)
+				fmt.Printf("Chtype '%s' => '%d' success\n", entry.Key, entry.FileType)
 			}
 		}
 	}
