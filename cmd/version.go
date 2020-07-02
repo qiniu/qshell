@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"runtime"
+
+	"github.com/spf13/cobra"
 )
 
-var version = "v2.4.1"
+// the version will be injected when publishing
+var version = "UNSTABLE"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
