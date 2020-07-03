@@ -1,17 +1,18 @@
-VERSION=v2.4.2
+VERSION=$(if $(RELEASE_VERSION),$(RELEASE_VERSION),"UNSTABLE")
+$(info VERSION: $(VERSION))
 WIN86=qshell-$(VERSION)-windows-x86.exe
 WIN64=qshell-$(VERSION)-windows-x64.exe
 DARWIN=qshell-$(VERSION)-darwin-x64
 LINUX86=qshell-$(VERSION)-linux-x86
 LINUX64=qshell-$(VERSION)-linux-x64
 LINUXARM=qshell-$(VERSION)-linux-arm
-LDFLAGS='-extldflags "-static"'
+LDFLAGS='-X 'github.com/qiniu/qshell/v2/cmd.version=$(VERSION)' -extldflags '-static''
 GO=GO111MODULE=on go
 
 all: linux windows arm darwin
 
 darwin:
-	@GOOS=darwin GOARCH=amd64 $(GO) build -o $(DARWIN)
+	@GOOS=darwin GOARCH=amd64 $(GO) build -ldflags  $(LDFLAGS) -o $(DARWIN)
 	@zip $(DARWIN).zip $(DARWIN)
 
 linux:
@@ -19,7 +20,6 @@ linux:
 	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUX64) .
 	@zip $(LINUX86).zip $(LINUX86)
 	@zip $(LINUX64).zip $(LINUX64)
-
 
 windows:
 	@CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -ldflags $(LDFLAGS) -o $(WIN86) .

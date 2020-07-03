@@ -1,0 +1,35 @@
+on: 
+    release:
+        types: [published,edited]
+env:
+  CGO_ENABLED: 0
+
+name: Release qshell
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64]
+        exclude:  
+          # windows/386 and darwin/386 seems useless 
+          - goarch: "386"
+            goos: windows 
+          - goarch: "386"
+            goos: darwin         
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set APP_VERSION env
+      run: echo ::set-env name=APP_VERSION::$(cat ${GITHUB_EVENT_PATH} | jq -r .release.tag_name )
+    - name: Environment Printer
+      uses: managedkaos/print-env@v1.0
+
+    - uses: wangyoucao577/go-release-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        goversion: "https://golang.org/dl/go1.14.4.linux-amd64.tar.gz"
+        ldflags: -X "github.com/qiniu/qshell/v2/cmd.version=${{ env.APP_VERSION }}" -extldflags "-static"
