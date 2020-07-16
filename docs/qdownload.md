@@ -38,6 +38,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
     "suffixes"   :   ".png,.jpg",
     "cdn_domain" :   "down.example.com",
     "referer"    :   "http://www.example.com",
+    "use_https"   :  true,
     "public"     :   true,
     "log_file"   :   "download.log",
     "log_level"  :   "info",
@@ -54,6 +55,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 |suffixes|只同步指定后缀的文件，默认为空|Y|
 |cdn_domain|设置下载的CDN域名，默认为空表示从存储源站下载，【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数，如不设置，需支付源站流量费用，无法减免！！！】|N|
 |referer|如果CDN域名配置了域名白名单防盗链，需要指定一个允许访问的referer地址|N|
+|use_https|设置下载的CDN域名是否是使用 HTTPS 协议
 |public|空间为公开空间，下载时不会对下载 URL 进行签名，可以提升CDN域名性能，默认为私有空间|N|
 |log_level|下载日志输出级别，可选值为`debug`,`info`,`warn`,`error`,默认`info`|Y|
 |log_file|下载日志的输出文件，如果不指定会输出到qshell工作目录下默认的文件中，文件名可以在终端输出看到|Y|

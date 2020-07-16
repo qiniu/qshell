@@ -47,7 +47,7 @@ type DownloadConfig struct {
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
-	UseHttps  bool   `json:"useHttps,omitempty"`
+	UseHttps  bool   `json:"use_https,omitempty"`
 	//log settings
 	LogLevel  string `json:"log_level,omitempty"`
 	LogFile   string `json:"log_file,omitempty"`
