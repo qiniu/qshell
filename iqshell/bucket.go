@@ -103,7 +103,6 @@ func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string, 
 	} else {
 		publicUrl = fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
 	}
-	fmt.Println(publicUrl)
 	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
 	privateUrl, _ := m.PrivateUrl(publicUrl, deadline)
 	fileUrl = privateUrl
