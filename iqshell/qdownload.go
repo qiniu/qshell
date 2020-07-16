@@ -46,6 +46,7 @@ type DownloadConfig struct {
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
+	UseHttps  bool   `json:"useHttps,omitempty"`
 	//log settings
 	LogLevel  string `json:"log_level,omitempty"`
 	LogFile   string `json:"log_file,omitempty"`
@@ -93,7 +94,6 @@ func (d *DownloadConfig) DownloadDomain() (domain string) {
 	}
 	domain = strings.TrimPrefix(domain, "http://")
 	domain = strings.TrimPrefix(domain, "https://")
-
 	return
 }
 
@@ -345,7 +345,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 				continue
 			}
 
-			fileUrl := bm.MakePrivateDownloadLink(downloadDomain, fileKey)
+			fileUrl := bm.MakePrivateDownloadLink(downloadDomain, fileKey, downConfig.UseHttps)
 
 			//progress
 			if totalFileCount != 0 {

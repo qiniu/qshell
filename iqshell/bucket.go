@@ -94,9 +94,16 @@ func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err er
 }
 
 // 返回私有空间的下载链接， 也可以用于公有空间的下载
-func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string) (fileUrl string) {
+func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string, scheme bool) (fileUrl string) {
 
-	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
+	var publicUrl string
+	if scheme {
+		publicUrl = fmt.Sprintf("https://%s/%s", domainOfBucket, url.PathEscape(fileKey))
+
+	} else {
+		publicUrl = fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
+	}
+	fmt.Println(publicUrl)
 	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
 	privateUrl, _ := m.PrivateUrl(publicUrl, deadline)
 	fileUrl = privateUrl
