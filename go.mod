@@ -1,9 +1,10 @@
 module github.com/qiniu/qshell/v2
 
 require (
+	github.com/OwnLocal/goes v1.0.0 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.1.2+incompatible
-	github.com/astaxie/beego v1.12.1
-	github.com/aws/aws-sdk-go v1.32.12
+	github.com/astaxie/beego v1.12.2
+	github.com/aws/aws-sdk-go v1.33.0
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
@@ -11,8 +12,11 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/qiniu/api.v7/v7 v7.5.0
+	github.com/qiniu/qshell v2.2.0+incompatible // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644 // indirect
+	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
+	github.com/siddontang/ledisdb v0.0.0-20181029004158-becf5f38d373 // indirect
 	github.com/spf13/afero v1.3.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0
@@ -23,7 +27,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.0
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	golang.org/x/text v0.3.3
-	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )
 
