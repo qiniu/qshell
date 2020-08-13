@@ -6,7 +6,9 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/api.v7/v7/cdn"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
@@ -14,18 +16,22 @@ import (
 
 const (
 	// CDN刷新一次性最大的刷新文件列表
-	BATCH_CDN_REFRESH_URLS_ALLOW_MAX = 20
+	BATCH_CDN_REFRESH_URLS_ALLOW_MAX = 50
 
 	// CDN目录刷新一次性最大的刷新目录数
 	BATCH_CDN_REFRESH_DIRS_ALLOW_MAX = 10
 
 	// 预取一次最大的预取数目
-	BATCH_CDN_PREFETCH_ALLOW_MAX = 20
+	BATCH_CDN_PREFETCH_ALLOW_MAX = 50
 )
 
 var (
 	prefetchFile string
 	isDir        bool
+	itemsLimit   int // 每次提交时 url 数量
+
+	timeTicker *time.Ticker
+	qpsLimit   int // 每秒 http 请求限制
 )
 
 var cdnPreCmd = &cobra.Command{
@@ -45,11 +51,32 @@ var cdnRefreshCmd = &cobra.Command{
 }
 
 func init() {
+	OnInitialize(initOnInitialize)
+
 	cdnRefreshCmd.Flags().BoolVarP(&isDir, "dirs", "r", false, "refresh directory")
 	cdnRefreshCmd.Flags().StringVarP(&prefetchFile, "input-file", "i", "", "input file")
+	cdnRefreshCmd.Flags().IntVar(&qpsLimit, "qps", 0, "qps limit for http call")
+	cdnRefreshCmd.Flags().IntVarP(&itemsLimit, "size", "s", 0, "max item-size pre commit")
+
 	cdnPreCmd.Flags().StringVarP(&prefetchFile, "input-file", "i", "", "input file")
+	cdnPreCmd.Flags().IntVar(&qpsLimit, "qps", 0, "qps limit for http call")
+	cdnPreCmd.Flags().IntVarP(&itemsLimit, "size", "s", 0, "max item-size pre commit")
 
 	RootCmd.AddCommand(cdnPreCmd, cdnRefreshCmd)
+}
+
+func initOnInitialize() {
+	logs.Debug("qps limit: %d, max item-size: %d", qpsLimit, itemsLimit)
+	if qpsLimit > 0 {
+		d := time.Second / time.Duration(qpsLimit)
+		timeTicker = time.NewTicker(d)
+	}
+}
+
+func acquire() {
+	if timeTicker != nil {
+		<-timeTicker.C
+	}
 }
 
 // 【cdnrefresh】刷新所有CDN节点
@@ -88,7 +115,8 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 			}
 			itemsToRefresh = append(itemsToRefresh, item)
 
-			if len(itemsToRefresh) == BATCH_CDN_REFRESH_DIRS_ALLOW_MAX {
+			if len(itemsToRefresh) == BATCH_CDN_REFRESH_DIRS_ALLOW_MAX ||
+				(itemsLimit > 0 && len(itemsToRefresh) >= itemsLimit) {
 				cdnRefresh(cm, nil, itemsToRefresh)
 				itemsToRefresh = make([]string, 0, 10)
 			}
@@ -101,9 +129,10 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 			}
 			itemsToRefresh = append(itemsToRefresh, item)
 
-			if len(itemsToRefresh) == BATCH_CDN_REFRESH_URLS_ALLOW_MAX {
+			if len(itemsToRefresh) == BATCH_CDN_REFRESH_URLS_ALLOW_MAX ||
+				(itemsLimit > 0 && len(itemsToRefresh) >= itemsLimit) {
 				cdnRefresh(cm, itemsToRefresh, nil)
-				itemsToRefresh = make([]string, 0, 100)
+				itemsToRefresh = make([]string, 0, 50)
 			}
 		}
 	}
@@ -119,6 +148,8 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 }
 
 func cdnRefresh(cm *cdn.CdnManager, urls []string, dirs []string) {
+	acquire()
+	logs.Debug("cdnRefresh, url size: %d, dir size: %d", len(urls), len(dirs))
 	resp, err := cm.RefreshUrlsAndDirs(urls, dirs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CDN refresh error: %v\n", err)
@@ -163,7 +194,8 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 		}
 		urlsToPrefetch = append(urlsToPrefetch, url)
 
-		if len(urlsToPrefetch) == BATCH_CDN_PREFETCH_ALLOW_MAX {
+		if len(urlsToPrefetch) == BATCH_CDN_PREFETCH_ALLOW_MAX ||
+			(itemsLimit > 0 && len(urlsToPrefetch) >= itemsLimit) {
 			cdnPrefetch(cm, urlsToPrefetch)
 			urlsToPrefetch = make([]string, 0, 10)
 		}
@@ -175,6 +207,8 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 }
 
 func cdnPrefetch(cm *cdn.CdnManager, urls []string) {
+	acquire()
+	logs.Debug("cdnPrefetch, url size: %d", len(urls))
 	resp, err := cm.PrefetchUrls(urls)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CDN prefetch error: %v\n", err)

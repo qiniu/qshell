@@ -66,8 +66,19 @@ var RootCmd = &cobra.Command{
 	BashCompletionFunction: bash_completion_func,
 }
 
+var initFuncs []func()
+
+func OnInitialize(f ...func()) {
+	initFuncs = append(initFuncs, f...)
+}
+
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(func() {
+		initConfig()
+		for _, f := range initFuncs {
+			f()
+		}
+	})
 
 	RootCmd.PersistentFlags().BoolVarP(&DebugFlag, "debug", "d", false, "debug mode")
 	RootCmd.PersistentFlags().BoolVarP(&DeepDebugInfo, "ddebug", "D", false, "deep debug mode")
