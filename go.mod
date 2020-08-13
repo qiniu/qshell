@@ -1,7 +1,6 @@
 module github.com/qiniu/qshell/v2
 
 require (
-	github.com/OwnLocal/goes v1.0.0 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.1.2+incompatible
 	github.com/astaxie/beego v1.12.2
 	github.com/aws/aws-sdk-go v1.33.0
@@ -12,11 +11,7 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/qiniu/api.v7/v7 v7.5.0
-	github.com/qiniu/qshell v2.2.0+incompatible // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
-	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644 // indirect
-	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
-	github.com/siddontang/ledisdb v0.0.0-20181029004158-becf5f38d373 // indirect
 	github.com/spf13/afero v1.3.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0
