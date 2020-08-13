@@ -77,7 +77,6 @@ func acquire() {
 	if timeTicker != nil {
 		<-timeTicker.C
 	}
-	logs.Debug("time")
 }
 
 // 【cdnrefresh】刷新所有CDN节点
@@ -150,6 +149,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 
 func cdnRefresh(cm *cdn.CdnManager, urls []string, dirs []string) {
 	acquire()
+	logs.Debug("cdnRefresh, url size: %d, dir size: %d", len(urls), len(dirs))
 	resp, err := cm.RefreshUrlsAndDirs(urls, dirs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CDN refresh error: %v\n", err)
@@ -208,6 +208,7 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 
 func cdnPrefetch(cm *cdn.CdnManager, urls []string) {
 	acquire()
+	logs.Debug("cdnPrefetch, url size: %d", len(urls))
 	resp, err := cm.PrefetchUrls(urls)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CDN prefetch error: %v\n", err)
