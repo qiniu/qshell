@@ -43,6 +43,7 @@ type DownloadConfig struct {
 	Prefix       string `json:"prefix,omitempty"`
 	Suffixes     string `json:"suffixes,omitempty"`
 	IoHost       string `json:"io_host,omitempty"`
+	Public       bool   `json:"public,omitempty"`
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
@@ -345,7 +346,12 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 				continue
 			}
 
-			fileUrl := bm.MakePrivateDownloadLink(downloadDomain, fileKey)
+			var fileUrl string
+			if downConfig.Public {
+				fileUrl = bm.MakePublicDownloadLink(downloadDomain, fileKey)
+			} else {
+				fileUrl = bm.MakePrivateDownloadLink(downloadDomain, fileKey)
+			}
 
 			//progress
 			if totalFileCount != 0 {
