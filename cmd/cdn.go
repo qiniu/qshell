@@ -66,7 +66,6 @@ func init() {
 }
 
 func initOnInitialize() {
-	logs.Debug("init qps limit: %d, max item-size: %d", qpsLimit, itemsLimit)
 	if qpsLimit > 0 {
 		d := time.Second / time.Duration(qpsLimit)
 		timeTicker = time.NewTicker(d)
@@ -88,7 +87,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 			itemsLimit = 59
 		}
 	}
-	logs.Debug("qps limit: %d, max item-size: %d", qpsLimit, itemsLimit)
+	logs.Debug("dir: %v, qps limit: %d, max item-size: %d", isDir, qpsLimit, itemsLimit)
 	var urlListFile string
 
 	if prefetchFile != "" {
