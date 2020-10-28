@@ -88,6 +88,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 			itemsLimit = 59
 		}
 	}
+	logs.Debug("qps limit: %d, max item-size: %d", qpsLimit, itemsLimit)
 	var urlListFile string
 
 	if prefetchFile != "" {
@@ -172,6 +173,7 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 	if itemsLimit == -1 {
 		itemsLimit = 59
 	}
+	logs.Debug("qps limit: %d, max item-size: %d", qpsLimit, itemsLimit)
 	var urlListFile string
 
 	if prefetchFile != "" {
