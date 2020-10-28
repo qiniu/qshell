@@ -194,13 +194,17 @@ func (t MyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func initHttpDefaultClient() {
-	t0 := http.DefaultClient.Transport
-	if t0 == nil {
-		t0 = http.DefaultTransport
-	}
+	t0 := http.DefaultTransport
 	if t0 != nil {
-		http.DefaultClient.Transport = MyTransport{
+		http.DefaultTransport = MyTransport{
 			Transport: t0,
+		}
+	}
+
+	t1 := http.DefaultClient.Transport
+	if t1 != nil {
+		http.DefaultClient.Transport = MyTransport{
+			Transport: t1,
 		}
 	}
 }
