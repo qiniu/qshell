@@ -55,18 +55,18 @@ func init() {
 
 	cdnRefreshCmd.Flags().BoolVarP(&isDir, "dirs", "r", false, "refresh directory")
 	cdnRefreshCmd.Flags().StringVarP(&prefetchFile, "input-file", "i", "", "input file")
-	cdnRefreshCmd.Flags().IntVar(&qpsLimit, "qps", 0, "qps limit for http call")
-	cdnRefreshCmd.Flags().IntVarP(&itemsLimit, "size", "s", 0, "max item-size pre commit")
+	cdnRefreshCmd.Flags().IntVar(&qpsLimit, "qps", 1, "qps limit for http call")
+	cdnRefreshCmd.Flags().IntVarP(&itemsLimit, "size", "s", -1, "max item-size pre commit")
 
 	cdnPreCmd.Flags().StringVarP(&prefetchFile, "input-file", "i", "", "input file")
-	cdnPreCmd.Flags().IntVar(&qpsLimit, "qps", 0, "qps limit for http call")
-	cdnPreCmd.Flags().IntVarP(&itemsLimit, "size", "s", 0, "max item-size pre commit")
+	cdnPreCmd.Flags().IntVar(&qpsLimit, "qps", 1, "qps limit for http call")
+	cdnPreCmd.Flags().IntVarP(&itemsLimit, "size", "s", -1, "max item-size pre commit")
 
 	RootCmd.AddCommand(cdnPreCmd, cdnRefreshCmd)
 }
 
 func initOnInitialize() {
-	logs.Debug("qps limit: %d, max item-size: %d", qpsLimit, itemsLimit)
+	logs.Debug("init qps limit: %d, max item-size: %d", qpsLimit, itemsLimit)
 	if qpsLimit > 0 {
 		d := time.Second / time.Duration(qpsLimit)
 		timeTicker = time.NewTicker(d)
@@ -81,6 +81,13 @@ func acquire() {
 
 // 【cdnrefresh】刷新所有CDN节点
 func CdnRefresh(cmd *cobra.Command, params []string) {
+	if itemsLimit == -1 {
+		if isDir {
+			itemsLimit = 9
+		} else {
+			itemsLimit = 59
+		}
+	}
 	var urlListFile string
 
 	if prefetchFile != "" {
@@ -132,7 +139,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 			if len(itemsToRefresh) == BATCH_CDN_REFRESH_URLS_ALLOW_MAX ||
 				(itemsLimit > 0 && len(itemsToRefresh) >= itemsLimit) {
 				cdnRefresh(cm, itemsToRefresh, nil)
-				itemsToRefresh = make([]string, 0, 50)
+				itemsToRefresh = make([]string, 0, 60)
 			}
 		}
 	}
@@ -162,6 +169,9 @@ func cdnRefresh(cm *cdn.CdnManager, urls []string, dirs []string) {
 
 //  【cdnprefetch】CDN 文件预取
 func CdnPrefetch(cmd *cobra.Command, params []string) {
+	if itemsLimit == -1 {
+		itemsLimit = 59
+	}
 	var urlListFile string
 
 	if prefetchFile != "" {
@@ -186,7 +196,7 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 	cm := iqshell.GetCdnManager()
 	scanner := bufio.NewScanner(fp)
 
-	urlsToPrefetch := make([]string, 0, 10)
+	urlsToPrefetch := make([]string, 0, 60)
 	for scanner.Scan() {
 		url := strings.TrimSpace(scanner.Text())
 		if url == "" {
@@ -197,7 +207,7 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 		if len(urlsToPrefetch) == BATCH_CDN_PREFETCH_ALLOW_MAX ||
 			(itemsLimit > 0 && len(urlsToPrefetch) >= itemsLimit) {
 			cdnPrefetch(cm, urlsToPrefetch)
-			urlsToPrefetch = make([]string, 0, 10)
+			urlsToPrefetch = make([]string, 0, 60)
 		}
 	}
 
