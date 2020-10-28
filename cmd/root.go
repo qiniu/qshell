@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptrace"
+	"net/http/httputil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -103,8 +106,8 @@ func initConfig() {
 	if DebugFlag {
 		logs.SetLevel(logs.LevelDebug)
 		client.TurnOnDebug()
-		// master 已合并, v7.5.0 分支没包含次参数,等待 v7.5.1
-		// client.DeepDebugInfo = DeepDebugInfo
+		client.DeepDebugInfo = DeepDebugInfo
+		initHttpDefaultClient()
 	} else {
 		logs.SetLevel(logs.LevelInformational)
 	}
@@ -158,4 +161,46 @@ func initConfig() {
 		}
 	}
 	os.Rename(jsonConfigFile, cfgFile)
+}
+
+type MyTransport struct {
+	Transport http.RoundTripper
+}
+
+func (t MyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if DebugFlag {
+		trace := &httptrace.ClientTrace{
+			GotConn: func(connInfo httptrace.GotConnInfo) {
+				remoteAddr := connInfo.Conn.RemoteAddr()
+				logs.Debug(fmt.Sprintf("Network: %s, Remote ip:%s, URL: %s", remoteAddr.Network(), remoteAddr.String(), req.URL))
+			},
+		}
+		req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
+		bs, bErr := httputil.DumpRequest(req, DeepDebugInfo)
+		if bErr == nil {
+			logs.Debug(string(bs))
+		}
+	}
+
+	resp, err := t.Transport.RoundTrip(req)
+
+	if DebugFlag {
+		bs, dErr := httputil.DumpResponse(resp, DeepDebugInfo)
+		if dErr == nil {
+			logs.Debug(string(bs))
+		}
+	}
+	return resp, err
+}
+
+func initHttpDefaultClient() {
+	t0 := http.DefaultClient.Transport
+	if t0 == nil {
+		t0 = http.DefaultTransport
+	}
+	if t0 != nil {
+		http.DefaultClient.Transport = MyTransport{
+			Transport: t0,
+		}
+	}
 }
