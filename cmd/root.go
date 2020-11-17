@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/astaxie/beego/logs"
 	homedir "github.com/mitchellh/go-homedir"
@@ -170,24 +171,34 @@ type MyTransport struct {
 func (t MyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if DebugFlag {
 		trace := &httptrace.ClientTrace{
+			// 如果 ConnectStart Network 都没有显示，很可能是 DNS 失败
+			ConnectStart: func(network, addr string) {
+				logs.Debug(fmt.Sprintf("ConnectStart Network: %s, Remote ip:%s, URL: %s", network, addr, req.URL))
+			},
 			GotConn: func(connInfo httptrace.GotConnInfo) {
 				remoteAddr := connInfo.Conn.RemoteAddr()
-				logs.Debug(fmt.Sprintf("Network: %s, Remote ip:%s, URL: %s", remoteAddr.Network(), remoteAddr.String(), req.URL))
+				logs.Debug(fmt.Sprintf("GotConn Network: %s, Remote ip:%s, URL: %s", remoteAddr.Network(), remoteAddr.String(), req.URL))
 			},
 		}
 		req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 		bs, bErr := httputil.DumpRequest(req, DeepDebugInfo)
 		if bErr == nil {
 			logs.Debug(string(bs))
+		} else {
+			logs.Debug(bErr)
 		}
 	}
 
 	resp, err := t.Transport.RoundTrip(req)
 
 	if DebugFlag {
-		bs, dErr := httputil.DumpResponse(resp, DeepDebugInfo)
-		if dErr == nil {
-			logs.Debug(string(bs))
+		if err != nil {
+			logs.Debug(err)
+		} else {
+			bs, dErr := httputil.DumpResponse(resp, DeepDebugInfo)
+			if dErr == nil {
+				logs.Debug(string(bs))
+			}
 		}
 	}
 	return resp, err
@@ -206,5 +217,8 @@ func initHttpDefaultClient() {
 		http.DefaultClient.Transport = MyTransport{
 			Transport: t1,
 		}
+	}
+	if http.DefaultClient.Timeout == 0 {
+		http.DefaultClient.Timeout = 180 * time.Second
 	}
 }
