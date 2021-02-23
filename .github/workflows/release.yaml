@@ -19,8 +19,6 @@ jobs:
           # windows/arm,darwin/arm and darwin/386 seems useless 
           - goarch: "arm"
             goos: windows
-          - goarch: "arm"
-            goos: darwin 
           - goarch: "386"
             goos: darwin         
     steps:
