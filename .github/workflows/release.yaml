@@ -9,14 +9,18 @@ jobs:
   releases-matrix:
     name: Release Go Binary
     runs-on: ubuntu-latest
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     strategy:
       matrix:
         goos: [linux, windows, darwin]
-        goarch: ["386", amd64]
+        goarch: ["386", amd64, arm]
         exclude:  
-          # windows/386 and darwin/386 seems useless 
-          - goarch: "386"
-            goos: windows 
+          # windows/arm,darwin/arm and darwin/386 seems useless 
+          - goarch: "arm"
+            goos: windows
+          - goarch: "arm"
+            goos: darwin 
           - goarch: "386"
             goos: darwin         
     steps:
