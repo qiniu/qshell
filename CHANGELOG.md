@@ -1,3 +1,6 @@
+# 2.4.3
+1. 修复buckets bug
+
 # 2.4.0 
 1. 添加batchdelete 自定义分隔符
 2. batchfetch支持自定义上传Host设置
