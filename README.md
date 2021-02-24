@@ -13,30 +13,27 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 ## 下载
 
-该工具使用Go语言编写而成，当然为了方便不熟悉Go或者急于使用工具来解决问题的开发者，我们提供了预先编译好的各主流操作系统平台的二进制文件供大家下载使用，由于平台的多样性，我们把这些二进制打包放到一个文件里面，请大家根据下面的说明各自选择合适的版本来使用。在文档中的例子里面，为了方便，我们统一使用`qshell`这个命令来做介绍。
+该工具使用Go语言编写而成，当然为了方便不熟悉Go或者急于使用工具来解决问题的开发者，我们提供了预先编译好的各主流操作系统平台的二进制文件供大家下载使用，由于平台的多样性，我们把这些二进制打包放到一个文件里面，请大家根据下面的说明各自选择合适的版本来使用。
 
 > 更新日志 [查看](CHANGELOG.md)
 
-|版本     |支持平台|链接|
-|--------|---------|----|
-|qshell v2.4.2|Windows X86|[下载](http://devtools.qiniu.com/qshell-windows-x86-v2.4.2.exe.zip)
-|qshell v2.4.2|Windows amd64|[下载](http://devtools.qiniu.com/qshell-windows-x64-v2.4.2.exe.zip)
-|qshell v2.4.2|Linux X86|[下载](http://devtools.qiniu.com/qshell-linux-x86-v2.4.2.zip)
-|qshell v2.4.2|Linux amd64|[下载](http://devtools.qiniu.com/qshell-linux-x64-v2.4.2.zip)
-|qshell v2.4.2|Linux Arm|[下载](http://devtools.qiniu.com/qshell-linux-arm-v2.4.2.zip)
-|qshell v2.4.2|Mac OS |[下载](http://devtools.qiniu.com/qshell-darwin-x64-v2.4.2.zip)
+|支持平台|链接|
+|---------|----|
+|Windows X86|[下载](https://github.com/qiniu/qshell/releases/download/v2.4.3/qshell-v2.4.3-windows-386.zip)
+|Windows amd64|[下载](https://github.com/qiniu/qshell/releases/download/v2.4.3/qshell-v2.4.3-windows-amd64.zip) 
+|Windows arm|[下载](https://github.com/qiniu/qshell/releases/download/v2.4.3/qshell-v2.4.3-windows-arm.zip) 
+|Linux X86|[下载](https://github.com/qiniu/qshell/releases/download/v2.4.3/qshell-v2.4.3-linux-386.tar.gz)
+|Linux amd64|[下载](https://github.com/qiniu/qshell/releases/download/v2.4.3/qshell-v2.4.3-linux-amd64.tar.gz)
+|Linux arm|[下载](https://github.com/qiniu/qshell/releases/download/v2.4.3/qshell-v2.4.3-linux-arm.tar.gz)
+|Linux arm64|[下载](https://github.com/qiniu/qshell/releases/download/v2.4.3/qshell-v2.4.3-linux-arm64.tar.gz)
+|Mac OS amd64|[下载](https://github.com/qiniu/qshell/releases/download/v2.4.3/qshell-v2.4.3-darwin-amd64.tar.gz)
+|Mac OS arm64 |[下载](https://github.com/qiniu/qshell/releases/download/v2.4.3/qshell-v2.4.3-darwin-arm64.tar.gz)
+
 
 ## 安装
 
-该工具由于是命令行工具，所以只需要从上面的下载之后即可使用。其中文件名和对应系统关系如下：
+该工具由于是命令行工具，所以只需要从上面的下载之后即可使用。
 
-|文件名|描述|
-|-----|-----|
-|qshell_linux_x86 |Linux 32位系统|
-|qshell_linux_x64|Linux 64位系统|
-|qshell_windows_x86.exe|Windows 32位系统|
-|qshell_windows_x64.exe|Windows 64位系统|
-|qshell_darwin_x64|Mac 64位系统，主流的系统|
 
 **Linux和Mac平台**
 
