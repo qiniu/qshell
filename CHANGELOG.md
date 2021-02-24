@@ -1,5 +1,5 @@
 # 2.4.3
-1. 修复buckets bug
+1. 指定空间为公开空间，[下载](https://github.com/qiniu/qshell/blob/master/docs/qdownload.md)不会对下载 URL 进行签名，可以提升CDN域名性能，默认为私有空间
 
 # 2.4.0 
 1. 添加batchdelete 自定义分隔符
