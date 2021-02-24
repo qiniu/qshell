@@ -14,13 +14,15 @@ jobs:
     strategy:
       matrix:
         goos: [linux, windows, darwin]
-        goarch: ["386", amd64, arm]
+        goarch: ["386", amd64]
         exclude:  
-          # windows/arm and darwin/386 seems useless 
-          - goarch: "arm"
-            goos: windows
+          # windows/arm64 , darwin/arm sand darwin/386 seems useless 
           - goarch: "386"
-            goos: darwin         
+            goos: darwin  
+          - goarch: "arm"
+            goos: darwin
+          - goarch: "arm64"
+            goos: windows  
     steps:
     - uses: actions/checkout@v2
     - name: Set APP_VERSION env
