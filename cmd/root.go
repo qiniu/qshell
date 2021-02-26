@@ -2,10 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptrace"
+	"net/http/httputil"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/astaxie/beego/logs"
 	homedir "github.com/mitchellh/go-homedir"
@@ -103,8 +107,8 @@ func initConfig() {
 	if DebugFlag {
 		logs.SetLevel(logs.LevelDebug)
 		client.TurnOnDebug()
-		// master 已合并, v7.5.0 分支没包含次参数,等待 v7.5.1
-		// client.DeepDebugInfo = DeepDebugInfo
+		client.DeepDebugInfo = DeepDebugInfo
+		initHttpDefaultClient()
 	} else {
 		logs.SetLevel(logs.LevelInformational)
 	}
@@ -158,4 +162,63 @@ func initConfig() {
 		}
 	}
 	os.Rename(jsonConfigFile, cfgFile)
+}
+
+type MyTransport struct {
+	Transport http.RoundTripper
+}
+
+func (t MyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if DebugFlag {
+		trace := &httptrace.ClientTrace{
+			// 如果 ConnectStart Network 都没有显示，很可能是 DNS 失败
+			ConnectStart: func(network, addr string) {
+				logs.Debug(fmt.Sprintf("ConnectStart Network: %s, Remote ip:%s, URL: %s", network, addr, req.URL))
+			},
+			GotConn: func(connInfo httptrace.GotConnInfo) {
+				remoteAddr := connInfo.Conn.RemoteAddr()
+				logs.Debug(fmt.Sprintf("GotConn Network: %s, Remote ip:%s, URL: %s", remoteAddr.Network(), remoteAddr.String(), req.URL))
+			},
+		}
+		req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
+		bs, bErr := httputil.DumpRequest(req, DeepDebugInfo)
+		if bErr == nil {
+			logs.Debug(string(bs))
+		} else {
+			logs.Debug(bErr)
+		}
+	}
+
+	resp, err := t.Transport.RoundTrip(req)
+
+	if DebugFlag {
+		if err != nil {
+			logs.Debug(err)
+		} else {
+			bs, dErr := httputil.DumpResponse(resp, DeepDebugInfo)
+			if dErr == nil {
+				logs.Debug(string(bs))
+			}
+		}
+	}
+	return resp, err
+}
+
+func initHttpDefaultClient() {
+	t0 := http.DefaultTransport
+	if t0 != nil {
+		http.DefaultTransport = MyTransport{
+			Transport: t0,
+		}
+	}
+
+	t1 := http.DefaultClient.Transport
+	if t1 != nil {
+		http.DefaultClient.Transport = MyTransport{
+			Transport: t1,
+		}
+	}
+	if http.DefaultClient.Timeout == 0 {
+		http.DefaultClient.Timeout = 180 * time.Second
+	}
 }
