@@ -9,8 +9,8 @@ import (
 
 	"github.com/astaxie/beego/logs"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/qiniu/api.v7/v7/client"
-	"github.com/qiniu/api.v7/v7/storage"
+	"github.com/qiniu/go-sdk/v7/client"
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
