@@ -19,6 +19,7 @@ var upSettings = storage.Settings{
 }
 
 var (
+	isResumeV2   bool
 	pOverwrite   bool
 	mimeType     string
 	fileType     int
@@ -52,6 +53,7 @@ func init() {
 	formPutCmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	formPutCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
+	RePutCmd.Flags().BoolVarP(&isResumeV2, "version2", "", false, "resume V2")
 	RePutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
 	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
@@ -224,19 +226,12 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 		policy.CallbackBodyType = "application/x-www-form-urlencoded"
 	}
 
-	var putExtra storage.RputExtra
 	var upHost string
 
 	if rupHost == "" {
 		upHost = iqshell.UpHost()
 	} else {
 		upHost = rupHost
-	}
-	putExtra = storage.RputExtra{
-		UpHost: upHost,
-	}
-	if mimeType != "" {
-		putExtra.MimeType = mimeType
 	}
 
 	mac, err := iqshell.GetMac()
@@ -252,8 +247,31 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 
 	fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
 
-	resume_uploader := storage.NewResumeUploader(nil)
-	err = resume_uploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
+	if isResumeV2 {
+		fmt.Printf("use resume upload V2")
+
+		resume_uploader := storage.NewResumeUploaderV2(nil)
+
+		putExtra := storage.RputV2Extra{
+			UpHost: upHost,
+		}
+		if mimeType != "" {
+			putExtra.MimeType = mimeType
+		}
+		err = resume_uploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
+	} else {
+		fmt.Printf("use resume upload V1")
+
+		resume_uploader := storage.NewResumeUploader(nil)
+
+		putExtra := storage.RputExtra{
+			UpHost: upHost,
+		}
+		if mimeType != "" {
+			putExtra.MimeType = mimeType
+		}
+		err = resume_uploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
+	}
 
 	fmt.Println()
 	if err != nil {

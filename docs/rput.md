@@ -3,17 +3,13 @@
 `rput`命令使用七牛支持的分片上传的方式来上传一个文件，一般文件大小较大的情况下，可以使用分片上传来有效地保证文件上传的成功。
 
 参考文档：
-
-[创建块 (mkblk)](http://developer.qiniu.com/code/v6/api/kodo-api/up/mkblk.html)
-
-[上传片 (bput)](http://developer.qiniu.com/code/v6/api/kodo-api/up/bput.html)
-
-[创建文件 (mkfile)](http://developer.qiniu.com/code/v6/api/kodo-api/up/mkfile.html)
+[分片上传 V1](https://developer.qiniu.com/kodo/7443/shard-to-upload)
+[分片上传 V2)](https://developer.qiniu.com/kodo/6364/multipartupload-interface)
 
 # 格式
 
 ```
-qshell rput [--overwrite] [--mimetype <MimeType>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>] [--storage <StorageType> ] <Bucket> <Key> <LocalFile>
+qshell rput [--overwrite] [--version2] [--mimetype <MimeType>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>] [--storage <StorageType> ] <Bucket> <Key> <LocalFile>
 ```
 
 其中 `Overwrite`，`MimeType`，`StorageType` (0 -> 标准存储， 1 - 低频存储)参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
@@ -34,6 +30,7 @@ qshell rput [--overwrite] [--mimetype <MimeType>] [--callback-urls <CallbackUrls
 | StorageType  | 文件存储类型，默认为`0`(标准存储） `1`为低频存储 | Y        |
 | CallbackUrls | 上传回调地址，可以指定多个地址， 以逗号分开      | Y        |
 | CallbackHost     | 上传回调HOST, 必须和CallbackUrls一起指定 | Y        |
+| version2 | 使用分片上传 API V2 进行上传，默认为`false`, 使用 V1 上传 | Y |
 
 
 # 示例
