@@ -53,7 +53,7 @@ func init() {
 	formPutCmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	formPutCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
-	RePutCmd.Flags().BoolVarP(&isResumeV2, "version2", "", false, "resume V2")
+	RePutCmd.Flags().BoolVarP(&isResumeV2, "v2", "", false, "resume V2")
 	RePutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
 	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
@@ -248,7 +248,6 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
 
 	if isResumeV2 {
-		fmt.Printf("use resume upload V2")
 
 		resume_uploader := storage.NewResumeUploaderV2(nil)
 
@@ -258,9 +257,9 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
 		}
+
 		err = resume_uploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
 	} else {
-		fmt.Printf("use resume upload V1")
 
 		resume_uploader := storage.NewResumeUploader(nil)
 
@@ -270,6 +269,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
 		}
+
 		err = resume_uploader.PutFile(context.Background(), &putRet, uptoken, key, localFile, &putExtra)
 	}
 
