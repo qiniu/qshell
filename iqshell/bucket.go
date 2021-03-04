@@ -93,10 +93,24 @@ func (m *BucketManager) DomainsOfBucket(bucket string) (domains []string, err er
 	return
 }
 
-// 返回私有空间的下载链接， 也可以用于公有空间的下载
-func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string) (fileUrl string) {
+// 返回公有空间的下载链接，不可以用于私有空间的下载
+func (m *BucketManager) MakePublicDownloadLink(domainOfBucket, fileKey string, useHttps bool) (fileUrl string) {
+	if useHttps {
+		fileUrl = fmt.Sprintf("https://%s/%s", domainOfBucket, url.PathEscape(fileKey))
+	} else {
+		fileUrl = fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
+	}
+	return
+}
 
-	publicUrl := fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
+// 返回私有空间的下载链接， 也可以用于公有空间的下载
+func (m *BucketManager) MakePrivateDownloadLink(domainOfBucket, fileKey string, useHttps bool) (fileUrl string) {
+	var publicUrl string
+	if useHttps {
+		publicUrl = fmt.Sprintf("https://%s/%s", domainOfBucket, url.PathEscape(fileKey))
+	} else {
+		publicUrl = fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
+	}
 	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
 	privateUrl, _ := m.PrivateUrl(publicUrl, deadline)
 	fileUrl = privateUrl

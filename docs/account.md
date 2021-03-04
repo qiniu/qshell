@@ -18,7 +18,7 @@ qshell account
 qshell account [--overwrite | -w]<Your AccessKey> <Your SecretKey> <Your Account Name>
 ``` 
 
-设置当前用户的`AccessKey`, `SecretKey`和`Name`, Name是用户可以任意取的名字，表示当前在本地记录的账户的名称，和在七牛注册的邮箱信息没有关系
+设置当前用户的`AccessKey`, `SecretKey`和`Name`, Name是用户可以任意取的名字，表示当前在本地记录的账户的名称，和在七牛注册的邮箱信息没有关系。如果 `AccessKey`, `SecretKey`, `Name` 首字母是 "-" , 需要使用` $ qshell account -- ak sk name`的方式添加账号, 这样避免把该项识别成命令行选项。
 
 # 选项
 -w --overwrite 强制覆盖已经存在的账户
