@@ -53,7 +53,7 @@ func init() {
 	formPutCmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	formPutCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
-	RePutCmd.Flags().BoolVarP(&isResumeV2, "v2", "", false, "resume V2")
+	RePutCmd.Flags().BoolVarP(&isResumeV2, "v2", "", false, "use resumable upload v2 APIs to upload")
 	RePutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
 	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
