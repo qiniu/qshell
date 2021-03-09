@@ -24,8 +24,8 @@ var (
 )
 
 func init() {
-	qUpload2Cmd.Flags().BoolVarP(&resumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	qUpload2Cmd.Flags().Int64Var(&up2threadCount, "thread-count", 0, "multiple thread count")
+	qUpload2Cmd.Flags().BoolVarP(&uploadConfig.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	qUpload2Cmd.Flags().StringVar(&uploadConfig.SrcDir, "src-dir", "", "src dir to upload")
 	qUpload2Cmd.Flags().StringVar(&uploadConfig.FileList, "file-list", "", "file list to upload")
 	qUpload2Cmd.Flags().StringVar(&uploadConfig.Bucket, "bucket", "", "bucket")
@@ -106,7 +106,6 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 		os.Exit(iqshell.STATUS_HALT)
 	}
 
-	uploadConfig.ResumableAPIV2 = resumableAPIV2
 	fileExporter, fErr := iqshell.NewFileExporter(successFname, failureFname, overwriteFname)
 	if fErr != nil {
 		logs.Error("initialize fileExporter: %v\n", fErr)

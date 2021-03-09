@@ -67,7 +67,8 @@ ThreadCount ==> 并发上传的协程数量，默认为1，即文件一个个上
    "log_level"          :   "info",
    "log_rotate"         :   1,
    "log_stdout"         :   false,
-   "file_type"          :   0
+   "file_type"          :   0,
+   "resumable-api-v2"   :   false
 }
 ```
 
@@ -95,6 +96,7 @@ ThreadCount ==> 并发上传的协程数量，默认为1，即文件一个个上
 |log_stdout|上传日志是否同时输出一份到标准终端，默认为false，主要在调试上传功能时可以指定为true|Y|
 |file_type|文件存储类型，默认为`0`(标准存储） `1`为低频存储|Y|
 |delete_on_success|上传成功的文件，同时删除本地文件，以达到节约磁盘的目的，比如日志归档的场景，默认为`false`，如果需要开启功能，设置为`true`即可。|Y|
+|resumable-api-v2|使用分片 V2 进行上传，默认为`false`使用分片 V1 |Y|
 
 对于那么多的参数，我们可以分为几类来解释：
 
