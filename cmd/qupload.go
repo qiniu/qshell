@@ -26,10 +26,12 @@ var (
 	failureFname   string
 	overwriteFname string
 	upthreadCount  int64
+	resumableAPIV2 bool
 	uploadConfig   iqshell.UploadConfig
 )
 
 func init() {
+	qUploadCmd.Flags().BoolVarP(&resumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	qUploadCmd.Flags().StringVarP(&successFname, "success-list", "s", "", "upload success (all) file list")
 	qUploadCmd.Flags().StringVarP(&failureFname, "failure-list", "f", "", "upload failure file list")
 	qUploadCmd.Flags().StringVarP(&overwriteFname, "overwrite-list", "w", "", "upload success (overwrite) file list")
@@ -125,6 +127,7 @@ func QiniuUpload(cmd *cobra.Command, params []string) {
 		}
 	}
 
+	uploadConfig.ResumableAPIV2 = resumableAPIV2
 	fileExporter, fErr := iqshell.NewFileExporter(successFname, failureFname, overwriteFname)
 	if fErr != nil {
 		logs.Error("initialize fileExporter: ", fErr)

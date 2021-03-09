@@ -26,8 +26,16 @@ const (
 	HTTP_TIMEOUT    = time.Second * 10
 )
 
+type ResumeV2Part struct {
+	storage.UploadPartsRet
+
+	PartNumber int64 `json:"partNumber"`
+	PartSize   int64 `json:"part_size"`
+}
+
 type ProgressRecorder struct {
-	BlkCtxs      []storage.BlkputRet `json:"blk_ctxs"`
+	BlkCtxs      []storage.BlkputRet `json:"blk_ctxs"` // resume v1
+	Parts        []ResumeV2Part      `json:"parts"`    // resume v2
 	Offset       int64               `json:"offset"`
 	TotalSize    int64               `json:"total_size"`
 	LastModified int                 `json:"last_modified"` // 上传文件的modification time
