@@ -24,6 +24,7 @@ qshell sync <SrcResUrl> <Bucket> <Key> [<UpHostIp>]
 |Bucket|空间名称，可以为公开空间或者私有空间|N|
 |Key|该资源保存在空间中的名字|N|
 |UpHostIp|上传入口的IP地址，一般在大文件的情况下，可以指定上传入口的IP来减少DNS环节，提升同步速度|Y|
+|resumable-api-v2|使用分片 v2 进行上传，默认使用 v1|Y|
 
 
 **备注：**

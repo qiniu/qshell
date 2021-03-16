@@ -4,7 +4,7 @@
 
 参考文档：
 [分片上传 V1](https://developer.qiniu.com/kodo/7443/shard-to-upload)
-[分片上传 V2)](https://developer.qiniu.com/kodo/6364/multipartupload-interface)
+[分片上传 V2](https://developer.qiniu.com/kodo/6364/multipartupload-interface)
 
 # 格式
 
