@@ -846,10 +846,9 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 		partSize := int64(BLOCK_SIZE)
 		var notifyFunc = func(partNumber int64, ret *storage.UploadPartsRet) {
 			logs.Debug("uploadFileKey: %s, partIdx: %d, partSize: %d, %v", uploadFileKey, partNumber, partSize, *ret)
-			progressRecorder.Parts = append(progressRecorder.Parts, ResumeV2Part{
-				UploadPartsRet: *ret,
-				PartNumber:     partNumber,
-				PartSize:       partSize,
+			progressRecorder.Parts = append(progressRecorder.Parts, storage.UploadPartInfo{
+				Etag:       ret.Etag,
+				PartNumber: partNumber,
 			})
 			progressRecorder.Offset += partSize
 		}

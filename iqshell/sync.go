@@ -26,26 +26,22 @@ const (
 	HTTP_TIMEOUT    = time.Second * 10
 )
 
-type ResumeV2Part struct {
-	storage.UploadPartsRet
-
-	PartNumber int64 `json:"partNumber"`
-	PartSize   int64 `json:"part_size"`
-}
-
 type ProgressRecorder struct {
-	BlkCtxs      []storage.BlkputRet `json:"blk_ctxs"` // resume v1
-	Parts        []ResumeV2Part      `json:"parts"`    // resume v2
-	Offset       int64               `json:"offset"`
-	TotalSize    int64               `json:"total_size"`
-	LastModified int                 `json:"last_modified"` // 上传文件的modification time
-	FilePath     string              // 断点续传记录保存文件
+	BlkCtxs      []storage.BlkputRet      `json:"blk_ctxs"`    // resume v1
+	Parts        []storage.UploadPartInfo `json:"parts"`       // resume v2
+	UploadId     string                   `json:"upload_id"`   // resume v2
+	ExpireTime   int64                    `json:"expire_time"` // resume v2
+	Offset       int64                    `json:"offset"`
+	TotalSize    int64                    `json:"total_size"`
+	LastModified int                      `json:"last_modified"` // 上传文件的modification time
+	FilePath     string                   // 断点续传记录保存文件
 }
 
 func NewProgressRecorder(filePath string) *ProgressRecorder {
 	p := new(ProgressRecorder)
 	p.FilePath = filePath
 	p.BlkCtxs = make([]storage.BlkputRet, 0)
+	p.Parts = make([]storage.UploadPartInfo, 0)
 	return p
 }
 
@@ -104,9 +100,10 @@ func (p *ProgressRecorder) Reset() {
 	p.Offset = 0
 	p.TotalSize = 0
 	p.BlkCtxs = make([]storage.BlkputRet, 0)
+	p.Parts = make([]storage.UploadPartInfo, 0)
 }
 
-func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int) {
+func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResumableV2 bool) {
 
 	//check offset valid or not
 	if p.Offset%BLOCK_SIZE != 0 {
@@ -115,30 +112,67 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int) {
 		return
 	}
 
-	//check offset and blk ctxs
-	if p.Offset != 0 && p.BlkCtxs != nil {
-		if int(p.Offset/BLOCK_SIZE) != len(p.BlkCtxs) {
-			logs.Info("Invalid offset and block contexts")
+	// 分片 V1
+	if !isResumableV2 {
+		//check offset and blk ctxs
+		if p.Offset != 0 && p.BlkCtxs != nil && int(p.Offset/BLOCK_SIZE) != len(p.BlkCtxs) {
+
+			logs.Info("Invalid offset and block info")
 			p.Reset()
 			return
 		}
+
+		//check blk ctxs, when no progress found
+		if p.Offset == 0 || p.BlkCtxs == nil {
+			p.Reset()
+			return
+		}
+
+		if fileSize != p.TotalSize {
+			if p.TotalSize != 0 {
+				logs.Warning("Remote file length changed, progress file out of date")
+			}
+			p.Offset = 0
+			p.TotalSize = fileSize
+			p.BlkCtxs = make([]storage.BlkputRet, 0)
+			return
+		}
+
+		if len(p.BlkCtxs) > 0 {
+			if lastModified != 0 && p.LastModified != lastModified {
+				p.Reset()
+			}
+		}
+
+		return
 	}
 
-	//check blk ctxs, when no progress found
-	if p.Offset == 0 || p.BlkCtxs == nil {
+	// 分片 V2
+	//check offset and blk ctxs
+	if p.Offset != 0 && p.Parts != nil && int(p.Offset/BLOCK_SIZE) != len(p.Parts) {
+
+		logs.Info("Invalid offset and block info")
 		p.Reset()
 		return
 	}
+
+	//check blk ctxs, when no progress found
+	if p.Offset == 0 || p.Parts == nil {
+		p.Reset()
+		return
+	}
+
 	if fileSize != p.TotalSize {
 		if p.TotalSize != 0 {
 			logs.Warning("Remote file length changed, progress file out of date")
 		}
 		p.Offset = 0
 		p.TotalSize = fileSize
-		p.BlkCtxs = make([]storage.BlkputRet, 0)
+		p.Parts = make([]storage.UploadPartInfo, 0)
 		return
 	}
-	if len(p.BlkCtxs) > 0 {
+
+	if len(p.Parts) > 0 {
 		if lastModified != 0 && p.LastModified != lastModified {
 			p.Reset()
 		}
@@ -196,7 +230,7 @@ type SputRet struct {
 	Fsize    int64  `json:"fsize"`
 }
 
-func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string) (putRet SputRet, err error) {
+func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV2 bool) (putRet SputRet, err error) {
 
 	exists, cErr := m.CheckExists(bucket, key)
 	if cErr != nil {
@@ -220,7 +254,8 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string) (putRet Sput
 	}
 	syncProgress := NewProgressRecorder(progressFile)
 	syncProgress.RecoverFromUrl(srcResUrl, bucket, key)
-	syncProgress.CheckValid(totalSize, 0)
+	syncProgress.CheckValid(totalSize, 0, isResumableV2)
+	syncProgress.TotalSize = totalSize
 
 	//get total block count
 	fmt.Println("totalSize: ", totalSize)
@@ -256,9 +291,48 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string) (putRet Sput
 			return
 		}
 	}
+
+	var uploader IResumeUploader
+	if isResumableV2 {
+		uploader = &resumeUploaderV2{
+			uploader: storage.NewResumeUploaderV2(nil),
+			recorder: syncProgress,
+			upHost:   upHost,
+			bucket:   bucket,
+			uptoken:  uptoken,
+			key:      key,
+		}
+	} else {
+		uploader = &resumeUploaderV1{
+			uploader: storage.NewResumeUploader(nil),
+			recorder: syncProgress,
+			key:      key,
+			upHost:   upHost,
+			uptoken:  uptoken,
+		}
+	}
+
+	// 1. 初始化服务
+	retryTimes := 0
+	for {
+		pErr := uploader.initServer(ctx)
+		if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
+			err = pErr
+			return
+		}
+		if pErr == nil {
+			break
+		}
+		logs.Error(pErr.Error())
+		time.Sleep(RETRY_INTERVAL)
+
+		logs.Info("Retrying %d time for init server", retryTimes)
+		retryTimes++
+	}
+
 	//range get and mkblk upload
 	var bf *bytes.Buffer
-	var blockSize = BLOCK_SIZE
+	var blockSize = int64(BLOCK_SIZE)
 	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
 		if blkIndex == totalBlkCnt-1 {
 			lastBlock = true
@@ -267,11 +341,12 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string) (putRet Sput
 		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
 		logs.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
 
-		var blkCtx storage.BlkputRet
+		// 2.1 获取上传数据
+		//var blkCtx storage.BlkputRet
 		var retryTimes int
 		var rErr error
 		for {
-			bf, rErr = getRange(srcResUrl, totalSize, rangeStartOffset, BLOCK_SIZE, lastBlock)
+			bf, rErr = getRange(srcResUrl, totalSize, rangeStartOffset, blockSize, lastBlock)
 			if rErr != nil && retryTimes >= RETRY_MAX_TIMES {
 				err = errors.New(strings.Join([]string{"Get range block data failed: ", rErr.Error()}, ""))
 				return
@@ -285,12 +360,15 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string) (putRet Sput
 			retryTimes++
 		}
 		data := bf.Bytes()
-		if lastBlock {
-			blockSize = len(data)
-		}
+		//if lastBlock {
+		//	blockSize = int64(len(data))
+		//}
+
+		// 2.2 上传数据到云存储
 		retryTimes = 0
 		for {
-			pErr := resumeUploader.Mkblk(ctx, uptoken, upHost, &blkCtx, blockSize, bytes.NewReader(data), len(data))
+			//pErr := resumeUploader.Mkblk(ctx, uptoken, upHost, &blkCtx, blockSize, bytes.NewReader(data), len(data))
+			pErr := uploader.uploadBlock(ctx, data)
 			if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
 				err = pErr
 				return
@@ -301,14 +379,14 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string) (putRet Sput
 			logs.Error(pErr.Error())
 			time.Sleep(RETRY_INTERVAL)
 
-			logs.Info("Retrying %d time mkblk for block [%d]", retryTimes, blkIndex)
+			logs.Info("Retrying %d time for upload block index:[%d]", retryTimes, blkIndex)
 			retryTimes++
 		}
 		//advance range offset
 		rangeStartOffset += BLOCK_SIZE
 
-		syncProgress.BlkCtxs = append(syncProgress.BlkCtxs, blkCtx)
-		syncProgress.Offset = rangeStartOffset
+		//syncProgress.BlkCtxs = append(syncProgress.BlkCtxs, blkCtx)
+		//syncProgress.Offset = rangeStartOffset
 
 		sErr := syncProgress.RecordProgress()
 		if sErr != nil {
@@ -317,14 +395,31 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string) (putRet Sput
 	}
 
 	//make file
-	putExtra := storage.RputExtra{
-		Progresses: syncProgress.BlkCtxs,
+	retryTimes = 0
+	for {
+		ret, pErr := uploader.complete(ctx)
+		if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
+			err = fmt.Errorf("Mkfile error, %s", err.Error())
+			return
+		}
+		if pErr == nil {
+			putRet = ret
+			break
+		}
+		logs.Error(pErr.Error())
+		time.Sleep(RETRY_INTERVAL)
+
+		logs.Info("Retrying %d time for server to create file", retryTimes)
+		retryTimes++
 	}
-	mkErr := resumeUploader.Mkfile(ctx, uptoken, upHost, &putRet, key, true, totalSize, &putExtra)
-	if mkErr != nil {
-		err = fmt.Errorf("Mkfile error, %s", mkErr.Error())
-		return
-	}
+	//putExtra := storage.RputExtra{
+	//	Progresses: syncProgress.BlkCtxs,
+	//}
+	//mkErr := resumeUploader.Mkfile(ctx, uptoken, upHost, &putRet, key, true, totalSize, &putExtra)
+	//if err != nil {
+	//	err = fmt.Errorf("Mkfile error, %s", mkErr.Error())
+	//	return
+	//}
 
 	//delete progress file
 	os.Remove(progressFile)
