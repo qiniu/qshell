@@ -342,7 +342,6 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 		logs.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
 
 		// 2.1 获取上传数据
-		//var blkCtx storage.BlkputRet
 		var retryTimes int
 		var rErr error
 		for {
@@ -360,14 +359,10 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 			retryTimes++
 		}
 		data := bf.Bytes()
-		//if lastBlock {
-		//	blockSize = int64(len(data))
-		//}
 
 		// 2.2 上传数据到云存储
 		retryTimes = 0
 		for {
-			//pErr := resumeUploader.Mkblk(ctx, uptoken, upHost, &blkCtx, blockSize, bytes.NewReader(data), len(data))
 			pErr := uploader.uploadBlock(ctx, data)
 			if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
 				err = pErr
@@ -384,9 +379,6 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 		}
 		//advance range offset
 		rangeStartOffset += BLOCK_SIZE
-
-		//syncProgress.BlkCtxs = append(syncProgress.BlkCtxs, blkCtx)
-		//syncProgress.Offset = rangeStartOffset
 
 		sErr := syncProgress.RecordProgress()
 		if sErr != nil {
@@ -412,14 +404,6 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 		logs.Info("Retrying %d time for server to create file", retryTimes)
 		retryTimes++
 	}
-	//putExtra := storage.RputExtra{
-	//	Progresses: syncProgress.BlkCtxs,
-	//}
-	//mkErr := resumeUploader.Mkfile(ctx, uptoken, upHost, &putRet, key, true, totalSize, &putExtra)
-	//if err != nil {
-	//	err = fmt.Errorf("Mkfile error, %s", mkErr.Error())
-	//	return
-	//}
 
 	//delete progress file
 	os.Remove(progressFile)
@@ -465,11 +449,6 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 	}
 	defer dResp.Body.Close()
 
-	//fmt.Println("-------------------")
-	//fmt.Println(dResp.StatusCode)
-	//for k, v := range dResp.Header {
-	//	fmt.Println(k, ":", strings.Join(v, ","))
-	//}
 
 	//status error
 	if dResp.StatusCode/100 != 2 {
