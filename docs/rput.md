@@ -46,7 +46,7 @@ $ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4
 使用使用分片上传 API V2
 
 ```
-$ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4 -v2
+$ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4 --v2
 ```
 
 输出：
