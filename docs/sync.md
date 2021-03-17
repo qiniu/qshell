@@ -47,9 +47,9 @@ $ dig up-na0.qiniu.com
 
 # 示例
 
-抓取一个资源并以指定的文件名保存在七牛的空间里面：
+使用分片 v2 抓取一个资源并以指定的文件名保存在七牛的空间里面：
 
 ```
-$ qshell sync http://if-pbl.qiniudn.com/test_big_movie.mp4 if-pbl test.mp4
+$ qshell sync http://if-pbl.qiniudn.com/test_big_movie.mp4 if-pbl test.mp4 --resumable-api-v2
 
 ```

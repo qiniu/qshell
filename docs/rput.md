@@ -37,8 +37,16 @@ qshell rput [--overwrite] [--v2] [--mimetype <MimeType>] [--callback-urls <Callb
 
 1.上传本地文件`/Users/jemy/Documents/qiniu.mp4`到空间`if-pbl`里面。
 
+使用使用分片上传 API V1
+
 ```
 $ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4
+```
+
+使用使用分片上传 API V2
+
+```
+$ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4 -v2
 ```
 
 输出：
