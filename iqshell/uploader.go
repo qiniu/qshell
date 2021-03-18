@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"time"
 )
@@ -97,7 +96,6 @@ func (uploader *resumeUploaderV2) uploadBlock(ctx context.Context, data []byte) 
 	size := len(data)
 	partMd5 := md5.Sum(data)
 	partMd5String := hex.EncodeToString(partMd5[:])
-	fmt.Println("md5:", partMd5String)
 	ret := &storage.UploadPartsRet{}
 	err := uploader.uploader.UploadParts(ctx, uploader.uptoken, uploader.upHost, uploader.bucket,
 		uploader.key, hasKey, uploader.recorder.UploadId, partNumber, partMd5String, ret, bytes.NewReader(data), size)
