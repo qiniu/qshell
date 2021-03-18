@@ -1,3 +1,6 @@
+# 2.5.0
+1. 上传功能支持请求 [分片上传 v2](https://developer.qiniu.com/kodo/7458/multipartupload), 默认兼容是原来的 [分片上传 v1](https://developer.qiniu.com/kodo/1650/chunked-upload)，使用姿势见各种上传功能使用文档说明。
+
 # 2.4.3
 1. 指定空间为公开空间，[下载](https://github.com/qiniu/qshell/blob/master/docs/qdownload.md)不会对下载 URL 进行签名，可以提升CDN域名性能，默认为私有空间
 
