@@ -1,10 +1,10 @@
 # 简介
 
-`account`命令用来设置当前用户的`AccessKey`和`SecretKey`，这对Key主要用在其他的需要授权的命令中，比如`stat`,`delete`,`listbucket`命令中。
-该命令设置的信息，经过加密保存在命令执行的目录下的`.qshell/account.json`文件中。
+`account` 命令用来设置当前用户的 `AccessKey` 和 `SecretKey` ，这对 Key 主要用在其他的需要授权的命令中，比如 `stat` , `delete` , `listbucket` 命令中。
+该命令设置的信息，经过加密保存在 HOME 目录下的 `.qshell/account.json` 文件中。
 
-本地数据库会记录`account`注册的所有<AccessKey>, <SecretKey> 和<Name>的信息， 所以当用`account`注册账户信息时，如果qshell发现本地数据库有同样的名字为
-<Name>的账户， 那么默认qshell会返回错误信息报告该名字的账户已经存在，如果要覆盖注册，需要使用强制覆盖选项--overwrite 或者 -w
+本地数据库会记录 `account` 注册的所有 <AccessKey> ,  <SecretKey>  和 <Name> 的信息， 所以当用 `account` 注册账户信息时，如果 qshell发 现本地数据库有同样的名字为
+<Name> 的账户， 那么默认 qshell 会返回错误信息报告该名字的账户已经存在，如果要覆盖注册，需要使用强制覆盖选项 --overwrite 或者 -w
 
 # 格式
 
