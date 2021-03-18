@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/api.v7/v7/auth/qbox"
-	"github.com/qiniu/api.v7/v7/storage"
+	"github.com/qiniu/go-sdk/v7/auth/qbox"
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 )
@@ -71,6 +71,7 @@ type UploadConfig struct {
 	Bucket string `json:"bucket"`
 
 	//optional config
+	ResumableAPIV2   bool   `json:"resumable_api_v2,omitempty"`
 	FileList         string `json:"file_list,omitempty"`
 	PutThreshold     int64  `json:"put_threshold,omitempty"`
 	KeyPrefix        string `json:"key_prefix,omitempty"`
@@ -831,11 +832,6 @@ var progressRecorder = NewProgressRecorder("")
 
 func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string, storePath, localFilePath, uploadFileKey string, localFileLastModified int64, exporter *FileExporter) {
 
-	uploader := storage.NewResumeUploader(nil)
-	//params
-	putRet := storage.PutRet{}
-	putExtra := storage.RputExtra{}
-
 	var progressFilePath string
 	if !uploadConfig.DisableResume {
 		//progress file
@@ -845,16 +841,48 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 		progressRecorder.FilePath = progressFilePath
 	}
 
-	var notifyFunc = func(blkIdx, blkSize int, ret *storage.BlkputRet) {
-		logs.Debug("uploadFileKey: %s, blkIdx: %d, blkSize: %d, %v", uploadFileKey, blkIdx, blkSize, *ret)
-		progressRecorder.BlkCtxs = append(progressRecorder.BlkCtxs, *ret)
-		progressRecorder.Offset += int64(blkSize)
-	}
-	putExtra.Notify = notifyFunc
-	putExtra.UpHost = uploadConfig.GetUpHost()
+	var err error
+	if uploadConfig.ResumableAPIV2 {
+		partSize := int64(BLOCK_SIZE)
+		var notifyFunc = func(partNumber int64, ret *storage.UploadPartsRet) {
+			logs.Debug("uploadFileKey: %s, partIdx: %d, partSize: %d, %v", uploadFileKey, partNumber, partSize, *ret)
+			progressRecorder.Parts = append(progressRecorder.Parts, storage.UploadPartInfo{
+				Etag:       ret.Etag,
+				PartNumber: partNumber,
+			})
+			progressRecorder.Offset += partSize
+		}
 
-	//resumable upload
-	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
+		//params
+		putRet := storage.UploadPartsRet{}
+		putExtra := storage.RputV2Extra{
+			PartSize: partSize,
+		}
+		putExtra.Notify = notifyFunc
+		putExtra.UpHost = uploadConfig.GetUpHost()
+
+		//resumable upload
+		uploader := storage.NewResumeUploaderV2(nil)
+		err = uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
+	} else {
+
+		var notifyFunc = func(blkIdx, blkSize int, ret *storage.BlkputRet) {
+			logs.Debug("uploadFileKey: %s, blkIdx: %d, blkSize: %d, %v", uploadFileKey, blkIdx, blkSize, *ret)
+			progressRecorder.BlkCtxs = append(progressRecorder.BlkCtxs, *ret)
+			progressRecorder.Offset += int64(blkSize)
+		}
+
+		//params
+		putRet := storage.PutRet{}
+		putExtra := storage.RputExtra{}
+		putExtra.Notify = notifyFunc
+		putExtra.UpHost = uploadConfig.GetUpHost()
+
+		//resumable upload
+		uploader := storage.NewResumeUploader(nil)
+		err = uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
+	}
+
 	if err != nil {
 		atomic.AddInt64(&failureFileCount, 1)
 		logs.Error("Resumable upload file `%s` => `%s` failed due to nerror `%v`", localFilePath, uploadFileKey, err)

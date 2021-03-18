@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/api.v7/v7/auth/qbox"
+	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 )

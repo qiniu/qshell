@@ -15,10 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/qiniu/api.v7/v7/auth"
-	"github.com/qiniu/api.v7/v7/auth/qbox"
-	"github.com/qiniu/api.v7/v7/conf"
-	"github.com/qiniu/api.v7/v7/storage"
+	"github.com/qiniu/go-sdk/v7/auth"
+	"github.com/qiniu/go-sdk/v7/auth/qbox"
+	"github.com/qiniu/go-sdk/v7/conf"
+	"github.com/qiniu/go-sdk/v7/storage"
 )
 
 // Get 接口返回的结构

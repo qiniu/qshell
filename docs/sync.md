@@ -24,6 +24,7 @@ qshell sync <SrcResUrl> <Bucket> <Key> [<UpHostIp>]
 |Bucket|空间名称，可以为公开空间或者私有空间|N|
 |Key|该资源保存在空间中的名字|N|
 |UpHostIp|上传入口的IP地址，一般在大文件的情况下，可以指定上传入口的IP来减少DNS环节，提升同步速度|Y|
+|resumable-api-v2|使用分片 v2 进行上传，默认使用 v1|Y|
 
 
 **备注：**
@@ -46,9 +47,9 @@ $ dig up-na0.qiniu.com
 
 # 示例
 
-抓取一个资源并以指定的文件名保存在七牛的空间里面：
+使用分片 v2 抓取一个资源并以指定的文件名保存在七牛的空间里面：
 
 ```
-$ qshell sync http://if-pbl.qiniudn.com/test_big_movie.mp4 if-pbl test.mp4
+$ qshell sync http://if-pbl.qiniudn.com/test_big_movie.mp4 if-pbl test.mp4 --resumable-api-v2
 
 ```

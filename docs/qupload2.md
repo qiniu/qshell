@@ -49,4 +49,5 @@ Flags:
       --success-list string         upload success file list
       --thread-count int            multiple thread count
       --up-host string              upload host
+      --resumable-api-v2            use resumable upload v2 APIs to upload
 ```

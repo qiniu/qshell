@@ -23,6 +23,7 @@ var (
 )
 
 func init() {
+	syncCmd.Flags().BoolVarP(&isResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	syncCmd.Flags().StringVarP(&upHostIp, "uphost", "u", "", "upload host")
 	syncCmd.Flags().StringVarP(&saveKey, "key", "k", "", "save as <key> in bucket")
 	RootCmd.AddCommand(syncCmd)
@@ -50,7 +51,7 @@ func Sync(cmd *cobra.Command, params []string) {
 	bm := iqshell.GetBucketManager()
 	//sync
 	tStart := time.Now()
-	syncRet, sErr := bm.Sync(srcResUrl, bucket, key, upHostIp)
+	syncRet, sErr := bm.Sync(srcResUrl, bucket, key, upHostIp, isResumeV2)
 	if sErr != nil {
 		logs.Error(sErr)
 		os.Exit(iqshell.STATUS_ERROR)
