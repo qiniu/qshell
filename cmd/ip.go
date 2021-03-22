@@ -60,7 +60,7 @@ func init() {
 // 【ip】查询ip的相关信息
 func IpQuery(cmd *cobra.Command, params []string) {
 	for _, ip := range params {
-		url := fmt.Sprintf("%s?ip=%s", TAOBAO_IP_QUERY, ip)
+		url := fmt.Sprintf("%s?accessKey=alibaba-inc&ip=%s", TAOBAO_IP_QUERY, ip)
 		var ipInfo IpInfo
 		func() {
 			gResp, gErr := http.Get(url)
