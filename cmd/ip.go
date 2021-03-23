@@ -61,7 +61,6 @@ func init() {
 func IpQuery(cmd *cobra.Command, params []string) {
 	for _, ip := range params {
 
-		//url := fmt.Sprintf("%s?accessKey=alibaba-inc&ip=%s", TAOBAO_IP_QUERY, ip)
 		var ipInfo IpInfo
 		func() {
 			req, err := http.NewRequest("GET", TAOBAO_IP_QUERY, nil)
