@@ -60,10 +60,21 @@ func init() {
 // 【ip】查询ip的相关信息
 func IpQuery(cmd *cobra.Command, params []string) {
 	for _, ip := range params {
-		url := fmt.Sprintf("%s?ip=%s", TAOBAO_IP_QUERY, ip)
+
 		var ipInfo IpInfo
 		func() {
-			gResp, gErr := http.Get(url)
+			req, err := http.NewRequest("GET", TAOBAO_IP_QUERY, nil)
+			if err != nil {
+				logs.Error(err)
+				return
+			}
+
+			q := req.URL.Query()
+			q.Add("accessKey", "alibaba-inc")
+			q.Add("ip", ip)
+			req.URL.RawQuery = q.Encode()
+
+			gResp, gErr := http.DefaultClient.Do(req)
 			if gErr != nil {
 				logs.Error("Query ip info failed for %s, %s", ip, gErr)
 				return
