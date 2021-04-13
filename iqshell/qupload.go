@@ -591,7 +591,16 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 		uploadTasks <- func() {
 			defer upWaitGroup.Done()
 
-			uploadConfig.PutPolicy = storage.PutPolicy{}
+			// storage.PutPolicy 固化了基础时间，每次新建一个 PutPolicy
+			// storage.PutPolicy 修复了 t 参数后，可以考虑去掉下面两行代码
+			p := storage.PutPolicy{
+				CallbackHost:     uploadConfig.PutPolicy.CallbackHost,
+				CallbackURL:      uploadConfig.PutPolicy.CallbackURL,
+				CallbackBody:     uploadConfig.PutPolicy.CallbackBody,
+				CallbackBodyType: uploadConfig.PutPolicy.CallbackBodyType,
+			}
+			uploadConfig.PutPolicy = p
+
 			upToken := uploadConfig.UploadToken(bm.GetMac(), uploadFileKey)
 			if localFileSize > putThreshold {
 				resumableUploadFile(uploadConfig, ldb, &ldbWOpt, ldbKey, upToken, storePath,
