@@ -591,6 +591,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 		uploadTasks <- func() {
 			defer upWaitGroup.Done()
 
+			uploadConfig.PutPolicy = storage.PutPolicy{}
 			upToken := uploadConfig.UploadToken(bm.GetMac(), uploadFileKey)
 			if localFileSize > putThreshold {
 				resumableUploadFile(uploadConfig, ldb, &ldbWOpt, ldbKey, upToken, storePath,
