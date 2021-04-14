@@ -30,3 +30,5 @@ _testmain.go
 
 # go test coverage file
 coverage.txt
+
+.DS_Store
