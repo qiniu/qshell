@@ -1,10 +1,13 @@
+# 2.5.1
+1. 修复在 qnupload 命令上传多个文件时，多次签发 Upload Token 过期时间不变的问题
+
 # 2.5.0
 1. 上传功能支持请求 [分片上传 v2](https://developer.qiniu.com/kodo/7458/multipartupload), 默认兼容是原来的 [分片上传 v1](https://developer.qiniu.com/kodo/1650/chunked-upload)，使用姿势见各种上传功能使用文档说明。
 
 # 2.4.3
 1. 指定空间为公开空间，[下载](https://github.com/qiniu/qshell/blob/master/docs/qdownload.md)不会对下载 URL 进行签名，可以提升CDN域名性能，默认为私有空间
 
-# 2.4.0 
+# 2.4.0
 1. 添加batchdelete 自定义分隔符
 2. batchfetch支持自定义上传Host设置
 3. 添加awsfetch抓取亚马逊空间数据到七牛空间
@@ -28,7 +31,7 @@
 
 # 2.3.4
 1. listbucket2增加捕捉interrupt信号(CTR-C), 打印marker
-2. account在本地记录账号，默认不覆盖, 加了-w强制覆盖选项 
+2. account在本地记录账号，默认不覆盖, 加了-w强制覆盖选项
 3. listbucket2 增加append 模式（-a)开启, 修复列举几亿空间的时候，列举一半左右程序中断问题
 4. 修复dircache 列表没有输出到文件使用-o选项的时候
 5. 修复qupload, qupload2使用多线程上传导致的部分文件上传失败问题
@@ -47,7 +50,7 @@
 
 # 2.3.1
 1. batchdelete, batchchgm, batchchtype, batchmove, batchrename命令运行可导出失败，成功文件列表
-2. rput, fput, qupload上传支持设置回调用 
+2. rput, fput, qupload上传支持设置回调用
 3. 修复qdownload, qupload 配置文件Windows下UTF-8 BOM解码出错问题
 
 # 2.3.0
@@ -79,7 +82,7 @@
 1. 增加`rpcdecode`功能，用来解码qiniu编码参数，支持按行解码
 2. 增加`rpcencode`功能，用来支持qiniu编码
 3. 修复`qdownload`对私有云和公有云的兼容性
-4. 增加`-c`选项，支持从指定的账户文件读取信息	
+4. 增加`-c`选项，支持从指定的账户文件读取信息
 
 # 2.1.6
 1. 为资源管理操作添加keepalive的选项，支持海量文件快速管理
@@ -123,7 +126,7 @@
 1. 修复`qdownload`使用`cdn_domain`下载时，可能出现的400和404错误。
 
 # 2.0.6
-1. 为`batchcopy`，`batchdelete`，`batchmove`，`batchchgm`，`batchrename`添加并发操作参数 
+1. 为`batchcopy`，`batchdelete`，`batchmove`，`batchchgm`，`batchrename`添加并发操作参数
 2. 为`qdownload`添加`cdn_domain`和`referer`配置参数，允许用户从CDN域名下载资源
 
 # 2.0.5
@@ -238,7 +241,7 @@
 1. 为`rput`和`fput`添加覆盖上传功能
 
 #1.5.7
-1. 分片上传片大小调整为`4M`，以便于最大化利用带宽 
+1. 分片上传片大小调整为`4M`，以便于最大化利用带宽
 
 #1.5.6
 1. 为工具添加`zone`功能，可以支持多机房的操作
