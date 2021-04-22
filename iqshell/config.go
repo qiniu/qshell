@@ -48,6 +48,9 @@ var (
 	// API HOST
 	HOST_API = []string{"hosts.api", "hosts.api_host"}
 
+	// UC HOST
+	HOST_UC = []string{"hosts.uc", "hosts.uc_host"}
+
 	// 账户密钥信息
 	ACCESS_KEY = []string{"access_key"}
 	SECRET_KEY = []string{"secret_key"}
@@ -191,7 +194,6 @@ func SetRsfHost(val string) {
 }
 
 func SetDefaultRsfHost(val string) {
-
 	for _, key := range HOST_RSF {
 		viper.SetDefault(key, val)
 	}
@@ -233,6 +235,26 @@ func SetApiHost(val string) {
 
 func SetDefaultApiHost(val string) {
 	for _, key := range HOST_API {
+		viper.SetDefault(key, val)
+	}
+}
+
+func UcHost() string {
+	host := viper.GetString(HOST_UC[0])
+	if host != "" {
+		return host
+	}
+	return viper.GetString(HOST_UC[1])
+}
+
+func SetUcHost(val string) {
+	for _, key := range HOST_UC {
+		viper.Set(key, val)
+	}
+}
+
+func SetDefaultUcHost(val string) {
+	for _, key := range HOST_UC {
 		viper.SetDefault(key, val)
 	}
 }
