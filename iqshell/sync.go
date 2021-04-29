@@ -333,6 +333,13 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 	//range get and mkblk upload
 	var bf *bytes.Buffer
 	var blockSize = int64(BLOCK_SIZE)
+	if isResumableV2 {
+		// 检查块大小是否满足实际需求
+		maxParts := int64(9000)
+		if blockSize*maxParts < totalSize {
+			blockSize = totalSize / maxParts + 10 // +10： 避免除不尽
+		}
+	}
 	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
 		if blkIndex == totalBlkCnt-1 {
 			lastBlock = true
@@ -448,7 +455,6 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 		return
 	}
 	defer dResp.Body.Close()
-
 
 	//status error
 	if dResp.StatusCode/100 != 2 {

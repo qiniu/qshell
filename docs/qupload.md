@@ -68,7 +68,8 @@ ThreadCount ==> 并发上传的协程数量，默认为1，即文件一个个上
    "log_rotate"         :   1,
    "log_stdout"         :   false,
    "file_type"          :   0,
-   "resumable-api-v2"   :   false
+   "resumable-api-v2"   :   false,
+   "resumable_api_v2_data_size" : 4194304
 }
 ```
 
@@ -97,6 +98,7 @@ ThreadCount ==> 并发上传的协程数量，默认为1，即文件一个个上
 |file_type|文件存储类型，默认为`0`(标准存储） `1`为低频存储|Y|
 |delete_on_success|上传成功的文件，同时删除本地文件，以达到节约磁盘的目的，比如日志归档的场景，默认为`false`，如果需要开启功能，设置为`true`即可。|Y|
 |resumable-api-v2|使用分片 V2 进行上传，默认为`false`使用分片 V1 |Y|
+|resumable_api_v2_data_size|使用分片 V2 进行上传时定制分片大小，默认4M|N|
 
 对于那么多的参数，我们可以分为几类来解释：
 

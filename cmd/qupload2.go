@@ -26,6 +26,7 @@ var (
 func init() {
 	qUpload2Cmd.Flags().Int64Var(&up2threadCount, "thread-count", 0, "multiple thread count")
 	qUpload2Cmd.Flags().BoolVarP(&uploadConfig.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	qUpload2Cmd.Flags().Int64Var(&uploadConfig.ResumableAPIV2DataSize, "resumable-api-v2-data-size", iqshell.BLOCK_SIZE, "the slice size when use resumable upload v2 APIs to upload")
 	qUpload2Cmd.Flags().StringVar(&uploadConfig.SrcDir, "src-dir", "", "src dir to upload")
 	qUpload2Cmd.Flags().StringVar(&uploadConfig.FileList, "file-list", "", "file list to upload")
 	qUpload2Cmd.Flags().StringVar(&uploadConfig.Bucket, "bucket", "", "bucket")
