@@ -72,7 +72,7 @@ type UploadConfig struct {
 
 	//optional config
 	ResumableAPIV2         bool   `json:"resumable_api_v2,omitempty"`
-	ResumableAPIV2DataSize int64  `json:"resumable_api_v2_data_size,omitempty"`
+	ResumableAPIV2PartSize int64  `json:"resumable_api_v2_part_size,omitempty"`
 	FileList               string `json:"file_list,omitempty"`
 	PutThreshold           int64  `json:"put_threshold,omitempty"`
 	KeyPrefix              string `json:"key_prefix,omitempty"`
@@ -113,12 +113,12 @@ type UploadConfig struct {
 
 func (cfg *UploadConfig) Check() {
 	// 验证大小
-	if cfg.ResumableAPIV2DataSize <= 0 {
-		cfg.ResumableAPIV2DataSize = BLOCK_SIZE
-	} else if cfg.ResumableAPIV2DataSize < int64(KB) {
-		cfg.ResumableAPIV2DataSize = int64(MB)
-	} else if cfg.ResumableAPIV2DataSize > int64(GB) {
-		cfg.ResumableAPIV2DataSize = BLOCK_SIZE
+	if cfg.ResumableAPIV2PartSize <= 0 {
+		cfg.ResumableAPIV2PartSize = BLOCK_SIZE
+	} else if cfg.ResumableAPIV2PartSize < int64(KB) {
+		cfg.ResumableAPIV2PartSize = int64(MB)
+	} else if cfg.ResumableAPIV2PartSize > int64(GB) {
+		cfg.ResumableAPIV2PartSize = BLOCK_SIZE
 	}
 }
 
@@ -856,7 +856,7 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 
 	var err error
 	if uploadConfig.ResumableAPIV2 {
-		partSize := uploadConfig.ResumableAPIV2DataSize
+		partSize := uploadConfig.ResumableAPIV2PartSize
 		logs.Debug("uploadFileKey: %s, partSize: %d", uploadFileKey, partSize)
 		var notifyFunc = func(partNumber int64, ret *storage.UploadPartsRet) {
 			logs.Debug("uploadFileKey: %s, partIdx: %d, partSize: %d, %v", uploadFileKey, partNumber, partSize, *ret)

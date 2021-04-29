@@ -19,15 +19,16 @@ var upSettings = storage.Settings{
 }
 
 var (
-	isResumeV2   bool
-	pOverwrite   bool
-	mimeType     string
-	fileType     int
-	workerCount  int
-	rupHost      string
-	fupHost      string
-	callbackUrls string
-	callbackHost string
+	isResumeV2       bool
+	resumeV2PartSize int64
+	pOverwrite       bool
+	mimeType         string
+	fileType         int
+	workerCount      int
+	rupHost          string
+	fupHost          string
+	callbackUrls     string
+	callbackHost     string
 )
 
 var formPutCmd = &cobra.Command{
@@ -54,6 +55,7 @@ func init() {
 	formPutCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
 	RePutCmd.Flags().BoolVarP(&isResumeV2, "v2", "", false, "use resumable upload v2 APIs to upload")
+	RePutCmd.Flags().Int64VarP(&resumeV2PartSize, "v2-part-size", "", iqshell.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
 	RePutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
 	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
@@ -253,6 +255,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 
 		putExtra := storage.RputV2Extra{
 			UpHost: upHost,
+			PartSize:resumeV2PartSize,
 		}
 		if mimeType != "" {
 			putExtra.MimeType = mimeType

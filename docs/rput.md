@@ -31,6 +31,7 @@ qshell rput [--overwrite] [--v2] [--mimetype <MimeType>] [--callback-urls <Callb
 | CallbackUrls | 上传回调地址，可以指定多个地址， 以逗号分开      | Y        |
 | CallbackHost     | 上传回调HOST, 必须和CallbackUrls一起指定 | Y        |
 | v2 | 使用分片上传 API V2 进行上传，默认为`false`, 使用 V1 上传 | Y |
+| v2-part-size | 使用分片上传 API V2 进行上传时的分片大小，默认为 4M | N |
 
 
 # 示例
