@@ -13,7 +13,7 @@ import (
 )
 
 var upSettings = storage.Settings{
-	Workers:   16,
+	Workers:   4,
 	ChunkSize: 4 * 1024 * 1024,
 	TryTimes:  3,
 }

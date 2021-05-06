@@ -444,7 +444,7 @@ var (
 // QiniuUpload
 func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExporter) {
 	var upSettings = storage.Settings{
-		Workers:   16,
+		Workers:   4,
 		ChunkSize: 4 * 1024 * 1024,
 		TryTimes:  3,
 	}
@@ -913,6 +913,7 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 			logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)
 		}
 		//delete on success
+
 		if uploadConfig.DeleteOnSuccess {
 			deleteErr := os.Remove(localFilePath)
 			if deleteErr != nil {
