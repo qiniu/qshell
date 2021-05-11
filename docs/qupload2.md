@@ -50,5 +50,5 @@ Flags:
       --thread-count int            multiple thread count
       --up-host string              upload host
       --resumable-api-v2            use resumable upload v2 APIs to upload
-      --resumable-api-v2-data-szie  the part size when use resumable upload v2 APIs to upload
+      --resumable-api-v2-part-szie  the part size when use resumable upload v2 APIs to upload
 ```
