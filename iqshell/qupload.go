@@ -115,10 +115,10 @@ func (cfg *UploadConfig) Check() {
 	// 验证大小
 	if cfg.ResumableAPIV2PartSize <= 0 {
 		cfg.ResumableAPIV2PartSize = BLOCK_SIZE
-	} else if cfg.ResumableAPIV2PartSize < int64(KB) {
+	} else if cfg.ResumableAPIV2PartSize < int64(MB) {
 		cfg.ResumableAPIV2PartSize = int64(MB)
 	} else if cfg.ResumableAPIV2PartSize > int64(GB) {
-		cfg.ResumableAPIV2PartSize = BLOCK_SIZE
+		cfg.ResumableAPIV2PartSize = int64(GB)
 	}
 }
 
