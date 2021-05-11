@@ -68,7 +68,7 @@ ThreadCount ==> 并发上传的协程数量，默认为1，即文件一个个上
    "log_rotate"         :   1,
    "log_stdout"         :   false,
    "file_type"          :   0,
-   "resumable-api-v2"   :   false,
+   "resumable_api_v2"   :   false,
    "resumable_api_v2_data_size" : 4194304
 }
 ```
