@@ -335,9 +335,9 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 	var blockSize = int64(BLOCK_SIZE)
 	if isResumableV2 {
 		// 检查块大小是否满足实际需求
-		maxParts := int64(9000)
+		maxParts := int64(10000)
 		if blockSize*maxParts < totalSize {
-			blockSize = totalSize / maxParts + 10 // +10： 避免除不尽
+			blockSize = (totalSize + maxParts - 1) / maxParts
 		}
 	}
 	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
