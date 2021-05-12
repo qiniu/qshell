@@ -74,8 +74,7 @@ type resumeUploaderV2 struct {
 
 func (uploader *resumeUploaderV2) initServer(ctx context.Context) error {
 	// uploadId 存在且有效
-	if now := time.Now().Unix();
-	len(uploader.recorder.UploadId) > 0 && now < uploader.recorder.ExpireTime {
+	if now := time.Now().Unix(); len(uploader.recorder.UploadId) > 0 && now < uploader.recorder.ExpireTime {
 		return nil
 	}
 
