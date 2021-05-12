@@ -254,8 +254,8 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 		resume_uploader := storage.NewResumeUploaderV2(nil)
 
 		putExtra := storage.RputV2Extra{
-			UpHost: upHost,
-			PartSize:resumeV2PartSize,
+			UpHost:   upHost,
+			PartSize: resumeV2PartSize,
 		}
 		if mimeType != "" {
 			putExtra.MimeType = mimeType
