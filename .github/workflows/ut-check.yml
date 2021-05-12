@@ -23,6 +23,8 @@ jobs:
       # This step checks out a copy of your repository.
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Check format
+        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
       - name: Go test
         run: |
           go test -coverprofile=coverage.txt ./...

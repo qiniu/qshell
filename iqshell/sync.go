@@ -449,7 +449,6 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 	}
 	defer dResp.Body.Close()
 
-
 	//status error
 	if dResp.StatusCode/100 != 2 {
 		err = fmt.Errorf("Get resource error, %s", dResp.Status)
