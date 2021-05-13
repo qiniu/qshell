@@ -21,9 +21,10 @@ import (
 //range get and chunk upload
 
 const (
-	RETRY_MAX_TIMES = 5
-	RETRY_INTERVAL  = time.Second * 1
-	HTTP_TIMEOUT    = time.Second * 10
+	ResumableAPIV2MaxPartCount = 10000
+	RETRY_MAX_TIMES            = 5
+	RETRY_INTERVAL             = time.Second * 1
+	HTTP_TIMEOUT               = time.Second * 10
 )
 
 type ProgressRecorder struct {
@@ -335,7 +336,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 	var blockSize = int64(BLOCK_SIZE)
 	if isResumableV2 {
 		// 检查块大小是否满足实际需求
-		maxParts := int64(10000)
+		maxParts :=int64(ResumableAPIV2MaxPartCount)
 		if blockSize*maxParts < totalSize {
 			blockSize = (totalSize + maxParts - 1) / maxParts
 		}
