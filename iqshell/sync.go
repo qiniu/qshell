@@ -336,7 +336,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 	var blockSize = int64(BLOCK_SIZE)
 	if isResumableV2 {
 		// 检查块大小是否满足实际需求
-		maxParts :=int64(ResumableAPIV2MaxPartCount)
+		maxParts := int64(ResumableAPIV2MaxPartCount)
 		if blockSize*maxParts < totalSize {
 			blockSize = (totalSize + maxParts - 1) / maxParts
 		}
