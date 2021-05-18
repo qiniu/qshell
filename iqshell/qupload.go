@@ -71,21 +71,22 @@ type UploadConfig struct {
 	Bucket string `json:"bucket"`
 
 	//optional config
-	ResumableAPIV2   bool   `json:"resumable_api_v2,omitempty"`
-	FileList         string `json:"file_list,omitempty"`
-	PutThreshold     int64  `json:"put_threshold,omitempty"`
-	KeyPrefix        string `json:"key_prefix,omitempty"`
-	IgnoreDir        bool   `json:"ignore_dir,omitempty"`
-	Overwrite        bool   `json:"overwrite,omitempty"`
-	CheckExists      bool   `json:"check_exists,omitempty"`
-	CheckHash        bool   `json:"check_hash,omitempty"`
-	CheckSize        bool   `json:"check_size,omitempty"`
-	SkipFilePrefixes string `json:"skip_file_prefixes,omitempty"`
-	SkipPathPrefixes string `json:"skip_path_prefixes,omitempty"`
-	SkipFixedStrings string `json:"skip_fixed_strings,omitempty"`
-	SkipSuffixes     string `json:"skip_suffixes,omitempty"`
-	RescanLocal      bool   `json:"rescan_local,omitempty"`
-	FileType         int    `json:"file_type,omitempty"`
+	ResumableAPIV2         bool   `json:"resumable_api_v2,omitempty"`
+	ResumableAPIV2PartSize int64  `json:"resumable_api_v2_part_size,omitempty"`
+	FileList               string `json:"file_list,omitempty"`
+	PutThreshold           int64  `json:"put_threshold,omitempty"`
+	KeyPrefix              string `json:"key_prefix,omitempty"`
+	IgnoreDir              bool   `json:"ignore_dir,omitempty"`
+	Overwrite              bool   `json:"overwrite,omitempty"`
+	CheckExists            bool   `json:"check_exists,omitempty"`
+	CheckHash              bool   `json:"check_hash,omitempty"`
+	CheckSize              bool   `json:"check_size,omitempty"`
+	SkipFilePrefixes       string `json:"skip_file_prefixes,omitempty"`
+	SkipPathPrefixes       string `json:"skip_path_prefixes,omitempty"`
+	SkipFixedStrings       string `json:"skip_fixed_strings,omitempty"`
+	SkipSuffixes           string `json:"skip_suffixes,omitempty"`
+	RescanLocal            bool   `json:"rescan_local,omitempty"`
+	FileType               int    `json:"file_type,omitempty"`
 
 	//advanced config
 	UpHost string `json:"up_host,omitempty"`
@@ -108,6 +109,17 @@ type UploadConfig struct {
 	CallbackHost    string `json:"callback_host,omitempty"`
 	PutPolicy       storage.PutPolicy
 	Plock           sync.Mutex
+}
+
+func (cfg *UploadConfig) Check() {
+	// 验证大小
+	if cfg.ResumableAPIV2PartSize <= 0 {
+		cfg.ResumableAPIV2PartSize = BLOCK_SIZE
+	} else if cfg.ResumableAPIV2PartSize < int64(MB) {
+		cfg.ResumableAPIV2PartSize = int64(MB)
+	} else if cfg.ResumableAPIV2PartSize > int64(GB) {
+		cfg.ResumableAPIV2PartSize = int64(GB)
+	}
 }
 
 func (cfg *UploadConfig) GetUpHost() string {
@@ -432,7 +444,7 @@ var (
 // QiniuUpload
 func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExporter) {
 	var upSettings = storage.Settings{
-		Workers:   16,
+		Workers:   4,
 		ChunkSize: 4 * 1024 * 1024,
 		TryTimes:  3,
 	}
@@ -831,6 +843,7 @@ func formUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.Wr
 var progressRecorder = NewProgressRecorder("")
 
 func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string, upToken string, storePath, localFilePath, uploadFileKey string, localFileLastModified int64, exporter *FileExporter) {
+	uploadConfig.Check()
 
 	var progressFilePath string
 	if !uploadConfig.DisableResume {
@@ -843,7 +856,8 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 
 	var err error
 	if uploadConfig.ResumableAPIV2 {
-		partSize := int64(BLOCK_SIZE)
+		partSize := uploadConfig.ResumableAPIV2PartSize
+		logs.Debug("uploadFileKey: %s, partSize: %d", uploadFileKey, partSize)
 		var notifyFunc = func(partNumber int64, ret *storage.UploadPartsRet) {
 			logs.Debug("uploadFileKey: %s, partIdx: %d, partSize: %d, %v", uploadFileKey, partNumber, partSize, *ret)
 			progressRecorder.Parts = append(progressRecorder.Parts, storage.UploadPartInfo{
@@ -899,6 +913,7 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 			logs.Error("Put key `%s` into leveldb error due to `%s`", ldbKey, putErr)
 		}
 		//delete on success
+
 		if uploadConfig.DeleteOnSuccess {
 			deleteErr := os.Remove(localFilePath)
 			if deleteErr != nil {
