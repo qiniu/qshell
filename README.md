@@ -26,7 +26,7 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 | Linux amd64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.0/qshell-v2.6.0-linux-amd64.tar.gz)  |
 | Linux arm               | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.0/qshell-v2.6.0-linux-arm.tar.gz)    |
 | Linux arm64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.0/qshell-v2.6.0-linux-arm64.tar.gz)  |
-| Mac OS(10.12以上) amd64 ｜ [下载](https://github.com/qiniu/qshell/releases/download/v2.6.0/qshell-v2.6.0-darwin-amd64.tar.gz) |
+| Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.0/qshell-v2.6.0-darwin-amd64.tar.gz) |
 | Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.0/qshell-v2.6.0-darwin-arm64.tar.gz) |
 
 
