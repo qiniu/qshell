@@ -250,14 +250,8 @@ func Date2Timestamp(cmd *cobra.Command, params []string) {
 
 func Urlencode(cmd *cobra.Command, params []string) {
 	dataToEncode := params[0]
-	_, err := url.Parse(dataToEncode)
-	if err != nil {
-		dataEncoded := url.PathEscape(dataToEncode)
-		fmt.Println(dataEncoded)
-	} else {
-		dataEncoded := url.PathEscape(dataToEncode)
-		fmt.Println(dataEncoded)
-	}
+	dataEncoded := url.PathEscape(dataToEncode)
+	fmt.Println(dataEncoded)
 }
 
 func Urldecode(cmd *cobra.Command, params []string) {
