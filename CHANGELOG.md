@@ -1,7 +1,10 @@
+# 2.6.1
+1. 兼容域名配置有无 protocol 情况
+2. 修复 url Encode 存在问题
+
 # 2.6.0
 1. 配置文件支持配置 uc host
 2. 分片上传 v2 支持指定每个片的大小，具体使用见命令 rput 、qupload 和 qupload2
-
 
 # 2.5.1
 1. 修复在 qnupload 命令上传多个文件时，多次签发 Upload Token 过期时间不变的问题
