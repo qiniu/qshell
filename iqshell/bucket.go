@@ -203,12 +203,14 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 	for {
 		f, err := os.OpenFile(destFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 		if err == nil {
-			io.Copy(f, resp.Body)
+			if _, err := io.Copy(f, resp.Body); err != nil {
+				fmt.Fprintf(os.Stderr, "Qget: err: %s\n", err)
+			}
 			f.Close()
 			break
 		} else if os.IsNotExist(err) {
 			destDir := filepath.Dir(destFile)
-			if err := os.MkdirAll(destDir, 0766); err != nil {
+			if err := os.MkdirAll(destDir, 0700); err != nil {
 				fmt.Fprintf(os.Stderr, "Qget: err: %s\n", err)
 				break
 			}
