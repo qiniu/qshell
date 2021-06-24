@@ -149,7 +149,6 @@ func initConfig() {
 	iqshell.SetDefaultAccPath(filepath.Join(rootPath, "account.json"))
 	iqshell.SetDefaultRsHost(storage.DefaultRsHost)
 	iqshell.SetDefaultRsfHost(storage.DefaultRsfHost)
-	//iqshell.SetDefaultIoHost("iovip.qbox.me")
 	iqshell.SetDefaultApiHost(storage.DefaultAPIHost)
 	iqshell.SetDefaultUcHost("https://uc.qbox.me")
 

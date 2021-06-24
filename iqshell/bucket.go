@@ -200,10 +200,6 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 		os.Exit(1)
 	}
 
-	//if strings.ContainsRune(destFile, os.PathSeparator) {
-	//	destFile = filepath.Base(destFile)
-	//}
-
 	for {
 		f, err := os.OpenFile(destFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 		if err == nil {
