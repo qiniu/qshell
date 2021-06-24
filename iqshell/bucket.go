@@ -199,16 +199,29 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 		fmt.Fprintf(os.Stderr, "Qget: http respcode: %d, respbody: %s\n", resp.StatusCode, string(body))
 		os.Exit(1)
 	}
-	if strings.ContainsRune(destFile, os.PathSeparator) {
-		destFile = filepath.Base(destFile)
-	}
-	f, err := os.OpenFile(destFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
-	if err != nil {
-		return
-	}
-	defer f.Close()
 
-	io.Copy(f, resp.Body)
+	//if strings.ContainsRune(destFile, os.PathSeparator) {
+	//	destFile = filepath.Base(destFile)
+	//}
+
+	for {
+		f, err := os.OpenFile(destFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+		if err == nil {
+			io.Copy(f, resp.Body)
+			f.Close()
+			break
+		} else if os.IsNotExist(err) {
+			destDir := filepath.Dir(destFile)
+			if err := os.MkdirAll(destDir, 0766); err != nil {
+				fmt.Fprintf(os.Stderr, "Qget: err: %s\n", err)
+				break
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Qget: err: %s\n", err)
+			break
+		}
+	}
+
 	return
 }
 
