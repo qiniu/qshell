@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -241,10 +242,14 @@ func SetDefaultApiHost(val string) {
 
 func UcHost() string {
 	host := viper.GetString(HOST_UC[0])
-	if host != "" {
-		return host
+	if host == "" {
+		host = viper.GetString(HOST_UC[1])
 	}
-	return viper.GetString(HOST_UC[1])
+
+	if !strings.Contains(host, "://") {
+		host = Endpoint(true, host)
+	}
+	return host
 }
 
 func SetUcHost(val string) {

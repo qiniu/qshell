@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -284,4 +285,18 @@ func SimpleUnescape(s *string) string {
 		`\"`, `"`,
 		`\'`, `'`)
 	return r.Replace(*s)
+}
+
+func Endpoint(useHttps bool, host string) string {
+	host = strings.TrimSpace(host)
+	host = strings.TrimLeft(host, "http://")
+	host = strings.TrimLeft(host, "https://")
+	if host == "" {
+		return ""
+	}
+	scheme := "http://"
+	if useHttps {
+		scheme = "https://"
+	}
+	return fmt.Sprintf("%s%s", scheme, host)
 }
