@@ -218,6 +218,7 @@ func (fc *fetchConfig) initBucketManager() {
 
 	cfg := storage.Config{
 		IoHost: fc.upHost,
+		ApiHost: iqshell.ApiHost(),
 	}
 	fc.bm = iqshell.GetBucketManagerWithConfig(&cfg)
 }

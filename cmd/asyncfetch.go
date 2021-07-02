@@ -46,9 +46,6 @@ func NewCmdAsyncCheck() *cobra.Command {
 		Run: func(cmd *cobra.Command, positionalArgs []string) {
 			bm := iqshell.GetBucketManager()
 
-			// let API choose APIHOST
-			bm.Cfg.ApiHost = ""
-
 			ret, err := bm.CheckAsyncFetchStatus(positionalArgs[0], positionalArgs[1])
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "CheckAsyncFetchStatus: %v\n", err)
