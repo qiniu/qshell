@@ -1,3 +1,7 @@
+# 2.6.2
+1. 修复 qshell get -o 保存本地制定路径已知问题
+2. 修复 qshell fetch/prefetch 已知问题
+
 # 2.6.1
 1. 兼容域名配置有无 protocol 情况
 2. 修复 url Encode 存在问题
