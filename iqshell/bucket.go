@@ -32,8 +32,9 @@ type GetRet struct {
 }
 
 type EntryPath struct {
-	Bucket string
-	Key    string
+	Bucket  string
+	Key     string
+	PutTime string
 }
 
 // 改变文件mime需要的信息
@@ -248,10 +249,23 @@ func (m *BucketManager) BatchStat(entries []EntryPath) (ret []storage.BatchOpRet
 	return m.Batch(ops)
 }
 
+func batchURICondition(entry EntryPath) string {
+	cond := ""
+	if entry.PutTime != "" {
+		cond += "putTime=" + entry.PutTime
+	}
+	if cond == "" {
+		return ""
+	}
+	return fmt.Sprintf("/cond/%s", base64.URLEncoding.EncodeToString([]byte(cond)))
+}
+func batchURIDelete(entry EntryPath) string {
+	return fmt.Sprintf("/delete/%s%s", storage.EncodedEntry(entry.Bucket, entry.Key), batchURICondition(entry))
+}
 func (m *BucketManager) BatchDelete(entries []EntryPath) (ret []storage.BatchOpRet, err error) {
 	ops := make([]string, 0, len(entries))
 	for _, entry := range entries {
-		ops = append(ops, storage.URIDelete(entry.Bucket, entry.Key))
+		ops = append(ops, batchURIDelete(entry))
 	}
 	return m.Batch(ops)
 }
