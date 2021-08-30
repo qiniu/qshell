@@ -27,7 +27,7 @@ qshell rput [--overwrite] [--v2] [--mimetype <MimeType>] [--callback-urls <Callb
 | LocalFile    | 本地文件的路径                                   | N        |
 | Overwrite    | 是否覆盖空间已有文件，默认为`false`              | Y        |
 | MimeType     | 指定文件的MimeType                               | Y        |
-| StorageType  | 文件存储类型，默认为`0`(标准存储） `1`为低频存储 | Y        |
+| StorageType  | 文件存储类型，默认为`0`(标准存储） `1`为低频存储 `2`为归档存储 | Y        |
 | CallbackUrls | 上传回调地址，可以指定多个地址， 以逗号分开      | Y        |
 | CallbackHost     | 上传回调HOST, 必须和CallbackUrls一起指定 | Y        |
 | v2 | 使用分片上传 API V2 进行上传，默认为`false`, 使用 V1 上传 | Y |
