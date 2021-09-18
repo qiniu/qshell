@@ -44,15 +44,17 @@ type DownloadConfig struct {
 	Suffixes     string `json:"suffixes,omitempty"`
 	IoHost       string `json:"io_host,omitempty"`
 	Public       bool   `json:"public,omitempty"`
+	CheckHash    bool   `json:"check_hash"`
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
 	UseHttps  bool   `json:"use_https,omitempty"`
 	//log settings
-	LogLevel  string `json:"log_level,omitempty"`
-	LogFile   string `json:"log_file,omitempty"`
-	LogRotate int    `json:"log_rotate,omitempty"`
-	LogStdout bool   `json:"log_stdout,omitempty"`
+	RecordRoot string `json:"record_root,omitempty"`
+	LogLevel   string `json:"log_level,omitempty"`
+	LogFile    string `json:"log_file,omitempty"`
+	LogRotate  int    `json:"log_rotate,omitempty"`
+	LogStdout  bool   `json:"log_stdout,omitempty"`
 
 	batchNum int
 }
@@ -167,14 +169,17 @@ func doDownload(tasks chan func()) {
 
 // 【qdownload] 批量下载文件， 可以下载以前缀的文件，也可以下载一个文件列表
 func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
-	QShellRootPath := RootPath()
+	QShellRootPath := downConfig.RecordRoot
+	if QShellRootPath == "" {
+		QShellRootPath = RootPath()
+	}
 	if QShellRootPath == "" {
 		fmt.Fprintf(os.Stderr, "empty root path\n")
 		os.Exit(1)
 	}
 	timeStart := time.Now()
 	//create job id
-	jobId := Md5Hex(fmt.Sprintf("%s:%s", downConfig.DestDir, downConfig.Bucket))
+	jobId := Md5Hex(fmt.Sprintf("%s:%s:%s", downConfig.DestDir, downConfig.Bucket, downConfig.KeyFile))
 
 	//local storage path
 	storePath := filepath.Join(QShellRootPath, "qdownload", jobId)
@@ -340,6 +345,8 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 				continue
 			}
 
+			fileHash := items[2]
+
 			fileMtime, pErr := strconv.ParseInt(items[3], 10, 64)
 			if pErr != nil {
 				logs.Error("Invalid list line", line)
@@ -389,7 +396,13 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 					oldFileInfoItems := strings.Split(string(oldFileInfo), "|")
 					oldFileLmd, _ := strconv.ParseInt(oldFileInfoItems[0], 10, 64)
 					//oldFileSize, _ := strconv.ParseInt(oldFileInfoItems[1], 10, 64)
-					if oldFileLmd == fileMtime && localFileInfo.Size() == fileSize {
+					oldFileHash := ""
+					if len(oldFileInfoItems) > 2 {
+						oldFileHash = oldFileInfoItems[2]
+					}
+
+					if oldFileLmd == fileMtime && localFileInfo.Size() == fileSize &&
+						(downConfig.CheckHash && (len(oldFileHash) == 0 || oldFileHash == fileHash)) {
 						//nothing change, ignore
 						logs.Info("Local file `%s` exists, same as in bucket, download skip", localAbsFilePath)
 						existsFileCount += 1
@@ -400,6 +413,15 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 						downNewFile = true
 					}
 				} else {
+					// 数据库中不存在
+					if downConfig.CheckHash {
+						// 无法验证信息，重新下载
+						downNewFile = true
+						logs.Info("Local file `%s` exists, but can't find file info from db, go to download", localAbsFilePath)
+						continue
+					}
+
+					// 不验证 hash 仅仅验证 size, size 相同则认为 文件不变
 					if localFileInfo.Size() != fileSize {
 						logs.Info("Local file `%s` exists, size not the same as in bucket, go to download", localAbsFilePath)
 						downNewFile = true
@@ -452,7 +474,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 
 			//set file info in leveldb
 			rKey := localFilePathToCheck
-			rVal := fmt.Sprintf("%d|%d", fileMtime, fileSize)
+			rVal := fmt.Sprintf("%d|%d|%s", fileMtime, fileSize, fileHash)
 			resumeLevelDb.Put([]byte(rKey), []byte(rVal), &ldbWOpt)
 
 			//download new
@@ -460,7 +482,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 			downloadTasks <- func() {
 				defer downWaitGroup.Done()
 
-				downErr := downloadFile(downConfig, fileKey, fileUrl, downloadDomain, fileSize, fromBytes)
+				downErr := downloadFile(downConfig, fileKey, fileUrl, downloadDomain, fileSize, fromBytes, fileHash)
 				if downErr != nil {
 					atomic.AddInt64(&failureFileCount, 1)
 				} else {
@@ -494,7 +516,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 
 //file key -> mtime
 func downloadFile(downConfig *DownloadConfig, fileKey, fileUrl, domainOfBucket string, fileSize int64,
-	fromBytes int64) (err error) {
+	fromBytes int64, fileHash string) (err error) {
 	startDown := time.Now().Unix()
 	destDir := downConfig.DestDir
 	localFilePath := filepath.Join(destDir, fileKey)
@@ -572,6 +594,39 @@ func downloadFile(downConfig *DownloadConfig, fileKey, fileUrl, domainOfBucket s
 			return
 		}
 		localFp.Close()
+
+		if downConfig.CheckHash {
+			logs.Info("Download", fileKey, " check hash")
+
+			hashFile, openTempFileErr := os.Open(localFilePathTempTarget)
+			if openTempFileErr != nil {
+				err = openTempFileErr
+				return
+			}
+
+			downloadFileHash := ""
+			if fileHash != "" && IsSignByEtagV2(fileHash) {
+				bucketManager := GetBucketManager()
+				stat, errs := bucketManager.Stat(downConfig.Bucket, fileKey)
+				if errs == nil {
+					downloadFileHash, err = EtagV2(hashFile, stat.Parts)
+				}
+				logs.Info("Download", fileKey, " v2 local hash:", downloadFileHash, " server hash:", fileHash)
+			} else {
+				downloadFileHash, err = EtagV1(hashFile)
+				logs.Info("Download", fileKey, " v1 local hash:", downloadFileHash, " server hash:", fileHash)
+			}
+			if err != nil {
+				logs.Error("get file hash error", err)
+				return
+			}
+
+			if downloadFileHash != fileHash {
+				err = errors.New(fileKey + ": except hash:" + fileHash + " but is:" + downloadFileHash)
+				logs.Error("file error", err)
+				return
+			}
+		}
 
 		endDown := time.Now().Unix()
 		avgSpeed := fmt.Sprintf("%.2fKB/s", float64(cpCnt)/float64(endDown-startDown)/1024)

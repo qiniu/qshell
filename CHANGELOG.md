@@ -1,3 +1,14 @@
+# 2.6.3
+1. download 支持检测 hash
+
+# 2.6.2
+1. 修复 qshell get -o 保存本地制定路径已知问题
+2. 修复 qshell fetch/prefetch 已知问题
+
+# 2.6.1
+1. 兼容域名配置有无 protocol 情况
+2. 修复 url Encode 处理存在问题
+
 # 2.6.0
 1. 配置文件支持配置 uc host
 2. 分片上传 v2 支持指定每个片的大小，具体使用见命令 rput 、qupload 和 qupload2
