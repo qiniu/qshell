@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultChunkSize = 4*1024*1024
+	defaultChunkSize = 4 * 1024 * 1024
 )
 
 func GetEtag(filename string) (etag string, err error) {

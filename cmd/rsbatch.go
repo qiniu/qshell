@@ -503,7 +503,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		}
 		key := items[0]
 		if key != "" {
-			putTime := "";
+			putTime := ""
 			if len(items) > 1 {
 				putTime = items[1]
 			}
