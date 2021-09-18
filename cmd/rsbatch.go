@@ -503,8 +503,12 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		}
 		key := items[0]
 		if key != "" {
+			putTime := ""
+			if len(items) > 1 {
+				putTime = items[1]
+			}
 			entry := iqshell.EntryPath{
-				bucket, key,
+				Bucket: bucket, Key: key, PutTime: putTime,
 			}
 			entries = append(entries, entry)
 		}

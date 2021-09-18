@@ -36,6 +36,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
     "bucket"     :   "<Bucket>",
     "prefix"     :   "image/",
     "suffixes"   :   ".png,.jpg",
+    "key_file"   :   "<KeyFile>"
     "cdn_domain" :   "down.example.com",
     "referer"    :   "http://www.example.com",
     "use_https"   :  true,
@@ -53,6 +54,8 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 |bucket|空间名称|N|
 |prefix|只同步指定前缀的文件，默认为空|Y|
 |suffixes|只同步指定后缀的文件，默认为空|Y|
+|key_file|配置一个文件，指定需要下载的 keys；默认为空，全量下载 bucket 中的文件|Y|
+|check_hash|是否验证 hash，如果开启可能会耗费较长时间，默认为 false|Y|
 |cdn_domain|设置下载的CDN域名，默认为空表示从存储源站下载，【该功能默认需要计费，如果希望享受10G的免费流量，请自行设置cdn_domain参数，如不设置，需支付源站流量费用，无法减免！！！】|N|
 |referer|如果CDN域名配置了域名白名单防盗链，需要指定一个允许访问的referer地址|N|
 |use_https|设置下载的CDN域名是否是使用 HTTPS 协议
@@ -78,7 +81,8 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 	"bucket"	:	"qdisk",
 	"cdn_domain"    :      "if-pbl.qiniudn.com",
 	"prefix"	:	"movies/",
-	"suffixes"	:	".mp4"
+	"suffixes"	:	".mp4",
+	"check_hash"    : false
 }
 ```
 
@@ -87,3 +91,6 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 ```
 qshell qdownload -c 10 qdisk_down.conf
 ```
+
+key_file 文件格式：
+每行一个 key, 且仅有 key 的内容，除 key 外不能有其他字符。

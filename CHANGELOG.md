@@ -1,3 +1,6 @@
+# 2.6.3
+1. download 支持检测 hash
+
 # 2.6.2
 1. 修复 qshell get -o 保存本地制定路径已知问题
 2. 修复 qshell fetch/prefetch 已知问题
