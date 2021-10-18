@@ -149,7 +149,7 @@ func initConfig() {
 	iqshell.SetDefaultAccPath(filepath.Join(rootPath, "account.json"))
 	iqshell.SetDefaultRsHost(storage.DefaultRsHost)
 	iqshell.SetDefaultRsfHost(storage.DefaultRsfHost)
-	iqshell.SetDefaultUcHost("https://uc.qbox.me")
+	iqshell.SetDefaultUcHost("http://uc.qbox.me")
 
 	if rErr := viper.ReadInConfig(); rErr != nil {
 		if _, ok := rErr.(viper.ConfigFileNotFoundError); !ok {

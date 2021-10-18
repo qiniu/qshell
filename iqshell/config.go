@@ -247,7 +247,7 @@ func UcHost() string {
 	}
 
 	if !strings.Contains(host, "://") {
-		host = Endpoint(true, host)
+		host = Endpoint(false, host)
 	}
 	return host
 }
