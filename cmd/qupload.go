@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
 	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,7 @@ var (
 	failureFname   string
 	overwriteFname string
 	upthreadCount  int64
-	uploadConfig   iqshell.UploadConfig
+	uploadConfig   storage2.UploadConfig
 )
 
 func init() {
@@ -40,7 +40,7 @@ func init() {
 	RootCmd.AddCommand(qUploadCmd)
 }
 
-func parseUploadConfigFile(uploadConfigFile string, uploadConfig *iqshell.UploadConfig) (err error) {
+func parseUploadConfigFile(uploadConfigFile string, uploadConfig *storage2.UploadConfig) (err error) {
 	//read upload config
 	if uploadConfigFile == "" {
 		err = fmt.Errorf("config filename is empty")
@@ -115,21 +115,21 @@ func QiniuUpload(cmd *cobra.Command, params []string) {
 	uploadConfig.PutPolicy = policy
 
 	//upload
-	if upthreadCount < iqshell.MIN_UPLOAD_THREAD_COUNT || upthreadCount > iqshell.MAX_UPLOAD_THREAD_COUNT {
+	if upthreadCount < storage2.MIN_UPLOAD_THREAD_COUNT || upthreadCount > storage2.MAX_UPLOAD_THREAD_COUNT {
 		logs.Info("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
-			iqshell.MIN_UPLOAD_THREAD_COUNT, iqshell.MAX_UPLOAD_THREAD_COUNT)
+			storage2.MIN_UPLOAD_THREAD_COUNT, storage2.MAX_UPLOAD_THREAD_COUNT)
 
-		if upthreadCount < iqshell.MIN_UPLOAD_THREAD_COUNT {
-			upthreadCount = iqshell.MIN_UPLOAD_THREAD_COUNT
-		} else if upthreadCount > iqshell.MAX_UPLOAD_THREAD_COUNT {
-			upthreadCount = iqshell.MAX_UPLOAD_THREAD_COUNT
+		if upthreadCount < storage2.MIN_UPLOAD_THREAD_COUNT {
+			upthreadCount = storage2.MIN_UPLOAD_THREAD_COUNT
+		} else if upthreadCount > storage2.MAX_UPLOAD_THREAD_COUNT {
+			upthreadCount = storage2.MAX_UPLOAD_THREAD_COUNT
 		}
 	}
 
-	fileExporter, fErr := iqshell.NewFileExporter(successFname, failureFname, overwriteFname)
+	fileExporter, fErr := storage2.NewFileExporter(successFname, failureFname, overwriteFname)
 	if fErr != nil {
 		logs.Error("initialize fileExporter: ", fErr)
 		os.Exit(config.STATUS_HALT)
 	}
-	iqshell.QiniuUpload(int(upthreadCount), &uploadConfig, fileExporter)
+	storage2.QiniuUpload(int(upthreadCount), &uploadConfig, fileExporter)
 }

@@ -1,4 +1,4 @@
-package iqshell
+package storage
 
 import (
 	"bufio"
@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/output"
+	"github.com/qiniu/qshell/v2/iqshell/tools"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -116,10 +119,10 @@ func (cfg *UploadConfig) Check() {
 	// 验证大小
 	if cfg.ResumableAPIV2PartSize <= 0 {
 		cfg.ResumableAPIV2PartSize = config.BLOCK_SIZE
-	} else if cfg.ResumableAPIV2PartSize < int64(MB) {
-		cfg.ResumableAPIV2PartSize = int64(MB)
-	} else if cfg.ResumableAPIV2PartSize > int64(GB) {
-		cfg.ResumableAPIV2PartSize = int64(GB)
+	} else if cfg.ResumableAPIV2PartSize < int64(utils.MB) {
+		cfg.ResumableAPIV2PartSize = int64(utils.MB)
+	} else if cfg.ResumableAPIV2PartSize > int64(utils.GB) {
+		cfg.ResumableAPIV2PartSize = int64(utils.GB)
 	}
 }
 
@@ -132,7 +135,7 @@ func (cfg *UploadConfig) GetUpHost() string {
 
 func (cfg *UploadConfig) JobId() string {
 
-	return Md5Hex(fmt.Sprintf("%s:%s", cfg.SrcDir, cfg.Bucket))
+	return utils.Md5Hex(fmt.Sprintf("%s:%s", cfg.SrcDir, cfg.Bucket))
 }
 
 func (cfg *UploadConfig) GetLogLevel() int {
@@ -247,7 +250,7 @@ func (cfg *UploadConfig) CacheFileNameAndCount(storePath, jobId string) (cacheRe
 	if cfg.FileList != "" && localFileStatErr == nil {
 		//use specified file list
 		cacheResultName = cfg.FileList
-		totalFileCount = GetFileLineCount(cacheResultName)
+		totalFileCount = utils.GetFileLineCount(cacheResultName)
 	} else {
 		cacheResultName = filepath.Join(storePath, fmt.Sprintf("%s.cache", jobId))
 		cacheCountName := filepath.Join(storePath, fmt.Sprintf("%s.count", jobId))
@@ -293,7 +296,7 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 	fmt.Println("Writing upload log to file", cfg.LogFile)
 
 	//daily rotate
-	logCfg := BeeLogConfig{
+	logCfg := output.BeeLogConfig{
 		Filename: cfg.LogFile,
 		Level:    logLevel,
 		Daily:    true,
@@ -577,7 +580,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 		localFileSize := localFileStat.Size()
 		//check file encoding
 		if strings.ToLower(uploadConfig.FileEncoding) == "gbk" {
-			uploadFileKey, _ = gbk2Utf8(uploadFileKey)
+			uploadFileKey, _ = utils.Gbk2Utf8(uploadFileKey)
 		}
 
 		ldbKey := fmt.Sprintf("%s => %s", localFilePath, uploadFileKey)
@@ -650,7 +653,7 @@ func prepareCacheFileList(cacheResultName, cacheCountName, srcDir string, rescan
 
 	if rescanLocalDir {
 		logs.Informational("Listing local sync dir, this can take a long time for big directory, please wait patiently")
-		totalFileCount, cacheErr = DirCache(srcDir, cacheTempName)
+		totalFileCount, cacheErr = utils.DirCache(srcDir, cacheTempName)
 		if cacheErr != nil {
 			return
 		}
@@ -693,7 +696,7 @@ func prepareCacheFileList(cacheResultName, cacheCountName, srcDir string, rescan
 			}()
 		} else {
 			logs.Warning("Open local cached count file error %s,", rErr)
-			totalFileCount = GetFileLineCount(cacheResultName)
+			totalFileCount = utils.GetFileLineCount(cacheResultName)
 		}
 	}
 
@@ -720,7 +723,7 @@ func checkFileNeedToUpload(bm *BucketManager, uploadConfig *UploadConfig, ldb *l
 		ldbValue := fmt.Sprintf("%d", localFileLastModified)
 		if uploadConfig.CheckHash {
 			//compare hash
-			localEtag, cErr := GetEtag(localFilePath)
+			localEtag, cErr := tools.GetEtag(localFilePath)
 			if cErr != nil {
 				logs.Error("File `%s` calc local hash failed, %s", uploadFileKey, cErr)
 				atomic.AddInt64(&failureFileCount, 1)
@@ -849,7 +852,7 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 	var progressFilePath string
 	if !uploadConfig.DisableResume {
 		//progress file
-		progressFileKey := Md5Hex(fmt.Sprintf("%s:%s|%s:%s", uploadConfig.SrcDir,
+		progressFileKey := utils.Md5Hex(fmt.Sprintf("%s:%s|%s:%s", uploadConfig.SrcDir,
 			uploadConfig.Bucket, localFilePath, uploadFileKey))
 		progressFilePath = filepath.Join(storePath, fmt.Sprintf("%s.progress", progressFileKey))
 		progressRecorder.FilePath = progressFilePath

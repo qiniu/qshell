@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
 	"os"
 	"strings"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -93,14 +93,14 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 	}
 	uploadConfig.PutPolicy = policy
 
-	if up2threadCount < iqshell.MIN_UPLOAD_THREAD_COUNT || up2threadCount > iqshell.MAX_UPLOAD_THREAD_COUNT {
+	if up2threadCount < storage2.MIN_UPLOAD_THREAD_COUNT || up2threadCount > storage2.MAX_UPLOAD_THREAD_COUNT {
 		fmt.Printf("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
-			iqshell.MIN_UPLOAD_THREAD_COUNT, iqshell.MAX_UPLOAD_THREAD_COUNT)
+			storage2.MIN_UPLOAD_THREAD_COUNT, storage2.MAX_UPLOAD_THREAD_COUNT)
 
-		if up2threadCount < iqshell.MIN_UPLOAD_THREAD_COUNT {
-			up2threadCount = iqshell.MIN_UPLOAD_THREAD_COUNT
-		} else if up2threadCount > iqshell.MAX_UPLOAD_THREAD_COUNT {
-			up2threadCount = iqshell.MAX_UPLOAD_THREAD_COUNT
+		if up2threadCount < storage2.MIN_UPLOAD_THREAD_COUNT {
+			up2threadCount = storage2.MIN_UPLOAD_THREAD_COUNT
+		} else if up2threadCount > storage2.MAX_UPLOAD_THREAD_COUNT {
+			up2threadCount = storage2.MAX_UPLOAD_THREAD_COUNT
 		}
 	}
 	if uploadConfig.FileType != 1 && uploadConfig.FileType != 0 {
@@ -108,10 +108,10 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 		os.Exit(config.STATUS_HALT)
 	}
 
-	fileExporter, fErr := iqshell.NewFileExporter(successFname, failureFname, overwriteFname)
+	fileExporter, fErr := storage2.NewFileExporter(successFname, failureFname, overwriteFname)
 	if fErr != nil {
 		logs.Error("initialize fileExporter: %v\n", fErr)
 		os.Exit(config.STATUS_HALT)
 	}
-	iqshell.QiniuUpload(int(up2threadCount), &uploadConfig, fileExporter)
+	storage2.QiniuUpload(int(up2threadCount), &uploadConfig, fileExporter)
 }

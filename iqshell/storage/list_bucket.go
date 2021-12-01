@@ -1,10 +1,11 @@
-package iqshell
+package storage
 
 import (
 	"bufio"
 	"context"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"os"
 	"os/signal"
 	"strings"
@@ -24,7 +25,6 @@ func filterByPuttime(putTime, startDate, endDate time.Time) bool {
 	default:
 		return false
 	}
-
 }
 
 func filterBySuffixes(key string, suffixes []string) bool {
@@ -147,7 +147,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 				continue
 			}
 			if readable {
-				fsizeValue = BytesToReadable(listItem.Item.Fsize)
+				fsizeValue = utils.BytesToReadable(listItem.Item.Fsize)
 			} else {
 				fsizeValue = listItem.Item.Fsize
 			}

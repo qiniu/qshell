@@ -3,13 +3,14 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -183,7 +184,7 @@ func ChStatus(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 
 	err := bm.ChStatus(bucket, key, !reverse)
 	if err != nil {
@@ -201,7 +202,7 @@ func DirCache(cmd *cobra.Command, params []string) {
 	if cacheResultFile == "" {
 		cacheResultFile = "stdout"
 	}
-	_, retErr := iqshell.DirCache(cacheRootPath, cacheResultFile)
+	_, retErr := utils.DirCache(cacheRootPath, cacheResultFile)
 	if retErr != nil {
 		os.Exit(config.STATUS_ERROR)
 	}
@@ -249,7 +250,7 @@ func ListBucket2(cmd *cobra.Command, params []string) {
 			sf = append(sf, strings.TrimSpace(s))
 		}
 	}
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	retErr := bm.ListBucket2(bucket, prefix, listMarker, outFile, "", start, end, sf, maxRetry, appendMode, readable)
 	if retErr != nil {
 		os.Exit(config.STATUS_ERROR)
@@ -260,7 +261,7 @@ func ListBucket2(cmd *cobra.Command, params []string) {
 func ListBucket(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	retErr := bm.ListFiles(bucket, prefix, listMarker, outFile)
 	if retErr != nil {
 		os.Exit(config.STATUS_ERROR)
@@ -278,7 +279,7 @@ func Get(cmd *cobra.Command, params []string) {
 		destFile = outFile
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	err := bm.Get(bucket, key, destFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Get error: %v\n", err)
@@ -291,7 +292,7 @@ func Stat(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	fileInfo, err := bm.Stat(bucket, key)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Stat error: %v\n", err)
@@ -306,7 +307,7 @@ func Delete(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	err := bm.Delete(bucket, key)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Delete error: %v\n", err)
@@ -324,7 +325,7 @@ func Move(cmd *cobra.Command, params []string) {
 		finalKey = srcKey
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	err := bm.Move(srcBucket, srcKey, destBucket, finalKey, mOverwrite)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Move error: %v\n", err)
@@ -341,7 +342,7 @@ func Copy(cmd *cobra.Command, params []string) {
 		finalKey = srcKey
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	err := bm.Copy(srcBucket, srcKey, destBucket, finalKey, cOverwrite)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Copy error: %v\n", err)
@@ -355,7 +356,7 @@ func Chgm(cmd *cobra.Command, params []string) {
 	key := params[1]
 	newMimeType := params[2]
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	err := bm.ChangeMime(bucket, key, newMimeType)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Change mimetype error: %v\n", err)
@@ -375,7 +376,7 @@ func Chtype(cmd *cobra.Command, params []string) {
 		return
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	err := bm.ChangeType(bucket, key, fileType)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Change file type error: %v\n", err)
@@ -395,7 +396,7 @@ func DeleteAfterDays(cmd *cobra.Command, params []string) {
 		return
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	err := bm.DeleteAfterDays(bucket, key, expire)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Set file deleteAfterDays error: %v\n", err)
@@ -410,14 +411,14 @@ func Fetch(cmd *cobra.Command, params []string) {
 
 	var err error
 	if finalKey == "" {
-		finalKey, err = iqshell.KeyFromUrl(remoteResUrl)
+		finalKey, err = utils.KeyFromUrl(remoteResUrl)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "get key from url failed: %v\n", err)
 			os.Exit(config.STATUS_ERROR)
 		}
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	fetchResult, err := bm.Fetch(remoteResUrl, bucket, finalKey)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fetch error: %v\n", err)
@@ -435,7 +436,7 @@ func Prefetch(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	key := params[1]
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	err := bm.Prefetch(bucket, key)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Prefetch error: %v\n", err)
@@ -449,7 +450,7 @@ func Saveas(cmd *cobra.Command, params []string) {
 	saveBucket := params[1]
 	saveKey := params[2]
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	url, err := bm.Saveas(publicUrl, saveBucket, saveKey)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Saveas error: %v\n", err)
@@ -464,7 +465,7 @@ func M3u8Delete(cmd *cobra.Command, params []string) {
 	bucket := params[0]
 	m3u8Key := params[1]
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	m3u8FileList, err := bm.M3u8FileList(bucket, m3u8Key)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Get m3u8 file list error: %v\n", err)
@@ -475,7 +476,7 @@ func M3u8Delete(cmd *cobra.Command, params []string) {
 		fmt.Fprintln(os.Stderr, "no m3u8 slices found")
 		os.Exit(config.STATUS_ERROR)
 	}
-	fileExporter, nErr := iqshell.NewFileExporter("", "", "")
+	fileExporter, nErr := storage2.NewFileExporter("", "", "")
 	if nErr != nil {
 		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
 		os.Exit(1)
@@ -503,7 +504,7 @@ func M3u8Replace(cmd *cobra.Command, params []string) {
 	if len(params) == 3 {
 		newDomain = params[2]
 	}
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	err := bm.M3u8ReplaceDomain(bucket, m3u8Key, newDomain, tsUrlRemoveSparePreSlash)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "m3u8 replace domain error: %v\n", err)
@@ -526,7 +527,7 @@ func PrivateUrl(cmd *cobra.Command, params []string) {
 		deadline = time.Now().Add(time.Second * 3600).Unix()
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	url, _ := bm.PrivateUrl(publicUrl, deadline)
 	fmt.Println(url)
 }

@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/account"
 	"github.com/qiniu/qshell/v2/iqshell/config"
 	"os"
 
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ var cmdAccount = &cobra.Command{
 // 【account】获取本地保存的用户的AK/AK/Name信息； 设置保存用户AK/SK信息到本地
 func Account(cmd *cobra.Command, params []string) {
 	if len(params) == 0 {
-		account, gErr := iqshell.GetAccount()
+		account, gErr := account.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
 			os.Exit(config.STATUS_ERROR)
@@ -45,7 +45,7 @@ func Account(cmd *cobra.Command, params []string) {
 		name := params[2]
 
 		pt, oldPath := config.AccPath(), config.OldAccPath()
-		sErr := iqshell.SetAccount2(accessKey, secretKey, name, pt, oldPath, accountOver)
+		sErr := account.SetAccount2(accessKey, secretKey, name, pt, oldPath, accountOver)
 		if sErr != nil {
 			fmt.Println(sErr)
 			os.Exit(config.STATUS_ERROR)

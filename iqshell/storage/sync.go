@@ -1,4 +1,4 @@
-package iqshell
+package storage
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"io"
 	"net/http"
 	"os"
@@ -50,7 +51,7 @@ func NewProgressRecorder(filePath string) *ProgressRecorder {
 func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, err error) {
 
 	//create sync id
-	syncId := Md5Hex(fmt.Sprintf("%s:%s:%s", srcResUrl, bucket, key))
+	syncId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", srcResUrl, bucket, key))
 
 	//local storage path
 	QShellRootPath := config.RootPath()
@@ -203,28 +204,6 @@ func (p *ProgressRecorder) RecordProgress() (err error) {
 	return
 }
 
-func (m *BucketManager) CheckExists(bucket, key string) (exists bool, err error) {
-	entry, sErr := m.Stat(bucket, key)
-	if sErr != nil {
-		if v, ok := sErr.(*storage.ErrorInfo); !ok {
-			err = fmt.Errorf("Check file exists error, %s", sErr.Error())
-			return
-		} else {
-			if v.Code != 612 {
-				err = fmt.Errorf("Check file exists error, %s", v.Err)
-				return
-			} else {
-				exists = false
-				return
-			}
-		}
-	}
-	if entry.Hash != "" {
-		exists = true
-	}
-	return
-}
-
 type SputRet struct {
 	Key      string `json:"key"`
 	Hash     string `json:"hash"`
@@ -282,7 +261,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 		eErr error
 	)
 	if upHost == "" {
-		ak, bucket, gErr := getAkBucketFromUploadToken(uptoken)
+		ak, bucket, gErr := utils.GetAkBucketFromUploadToken(uptoken)
 		if err != nil {
 			err = gErr
 			return

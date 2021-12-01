@@ -1,4 +1,4 @@
-package iqshell
+package storage
 
 import (
 	"context"
@@ -6,7 +6,9 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/account"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -176,7 +178,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 	if !strings.HasPrefix(reqHost, "http") {
 		reqHost = "http://" + reqHost
 	}
-	url := strings.Join([]string{reqHost, "get", Encode(entryUri)}, "/")
+	url := strings.Join([]string{reqHost, "get", utils.Encode(entryUri)}, "/")
 
 	var data GetRet
 
@@ -222,6 +224,28 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 		}
 	}
 
+	return
+}
+
+func (m *BucketManager) CheckExists(bucket, key string) (exists bool, err error) {
+	entry, sErr := m.Stat(bucket, key)
+	if sErr != nil {
+		if v, ok := sErr.(*storage.ErrorInfo); !ok {
+			err = fmt.Errorf("Check file exists error, %s", sErr.Error())
+			return
+		} else {
+			if v.Code != 612 {
+				err = fmt.Errorf("Check file exists error, %s", v.Err)
+				return
+			} else {
+				exists = false
+				return
+			}
+		}
+	}
+	if entry.Hash != "" {
+		exists = true
+	}
 	return
 }
 
@@ -386,22 +410,22 @@ func NewBucketManagerEx(mac *qbox.Mac, cfg *storage.Config, client *storage.Clie
 
 // GetBucketManager 返回一个BucketManager 指针
 func GetBucketManagerWithConfig(cfg *storage.Config) *BucketManager {
-	account, gErr := GetAccount()
+	acc, gErr := account.GetAccount()
 	if gErr != nil {
 		fmt.Fprintf(os.Stderr, "GetBucketManager: %v\n", gErr)
 		os.Exit(1)
 	}
-	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
+	mac := qbox.NewMac(acc.AccessKey, acc.SecretKey)
 	return NewBucketManager(mac, cfg)
 }
 
 func GetBucketManager() *BucketManager {
-	account, gErr := GetAccount()
+	acc, gErr := account.GetAccount()
 	if gErr != nil {
 		fmt.Fprintf(os.Stderr, "GetBucketManager: %v\n", gErr)
 		os.Exit(1)
 	}
-	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
+	mac := qbox.NewMac(acc.AccessKey, acc.SecretKey)
 	cfg := storage.Config{
 		UpHost:        config.UpHost(),
 		IoHost:        config.IoHost(),

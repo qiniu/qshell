@@ -1,10 +1,13 @@
-package iqshell
+package storage
 
 import (
 	"bufio"
 	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/output"
+	"github.com/qiniu/qshell/v2/iqshell/tools"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"io"
 	"net/http"
 	"os"
@@ -180,7 +183,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	}
 	timeStart := time.Now()
 	//create job id
-	jobId := Md5Hex(fmt.Sprintf("%s:%s:%s", downConfig.DestDir, downConfig.Bucket, downConfig.KeyFile))
+	jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", downConfig.DestDir, downConfig.Bucket, downConfig.KeyFile))
 
 	//local storage path
 	storePath := filepath.Join(QShellRootPath, "qdownload", jobId)
@@ -224,7 +227,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	fmt.Println("Writing download log to file", downConfig.LogFile)
 
 	//daily rotate
-	logCfg := BeeLogConfig{
+	logCfg := output.BeeLogConfig{
 		Filename: downConfig.LogFile,
 		Level:    logLevel,
 		Daily:    true,
@@ -293,7 +296,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	var failureFileCount int64
 	var skipBySuffixes int64
 
-	totalFileCount = GetFileLineCount(jobListFileName)
+	totalFileCount = utils.GetFileLineCount(jobListFileName)
 
 	//open prepared file list to download files
 	listFp, openErr := os.Open(jobListFileName)
@@ -606,15 +609,15 @@ func downloadFile(downConfig *DownloadConfig, fileKey, fileUrl, domainOfBucket s
 			}
 
 			downloadFileHash := ""
-			if fileHash != "" && IsSignByEtagV2(fileHash) {
+			if fileHash != "" && tools.IsSignByEtagV2(fileHash) {
 				bucketManager := GetBucketManager()
 				stat, errs := bucketManager.Stat(downConfig.Bucket, fileKey)
 				if errs == nil {
-					downloadFileHash, err = EtagV2(hashFile, stat.Parts)
+					downloadFileHash, err = tools.EtagV2(hashFile, stat.Parts)
 				}
 				logs.Info("Download", fileKey, " v2 local hash:", downloadFileHash, " server hash:", fileHash)
 			} else {
-				downloadFileHash, err = EtagV1(hashFile)
+				downloadFileHash, err = tools.EtagV1(hashFile)
 				logs.Info("Download", fileKey, " v1 local hash:", downloadFileHash, " server hash:", fileHash)
 			}
 			if err != nil {

@@ -1,4 +1,4 @@
-package iqshell
+package utils
 
 import (
 	"bufio"
@@ -25,7 +25,7 @@ const (
 	escapeChar = '\''
 )
 
-func genEncoding() []byte {
+func GenEncoding() []byte {
 	var encoding [256]byte
 	for c := 0; c <= 0xff; c++ {
 		encoding[c] = needEscape
@@ -52,7 +52,7 @@ func genEncoding() []byte {
 	return encoding[:]
 }
 
-var encoding = genEncoding()
+var encoding = GenEncoding()
 
 func encode(v string) string {
 	n := 0
@@ -200,7 +200,7 @@ func Decode(encodedURI string) (uri string, err error) {
 	return string(b[:n]), err
 }
 
-func getAkBucketFromUploadToken(token string) (ak, bucket string, err error) {
+func GetAkBucketFromUploadToken(token string) (ak, bucket string, err error) {
 	items := strings.Split(token, ":")
 	if len(items) != 3 {
 		err = errors.New("invalid upload token, format error")

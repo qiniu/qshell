@@ -1,6 +1,7 @@
-package iqshell
+package storage
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"strings"
 	"testing"
 )
@@ -15,7 +16,7 @@ func TestGetLineCount(t *testing.T) {
 		"\nhello\nworld":   3,
 	}
 	for key, want := range lines {
-		got := GetLineCount(strings.NewReader(key))
+		got := utils.GetLineCount(strings.NewReader(key))
 		if got != want {
 			t.Fatalf("key: %q, got=%d, want=%d\n", key, got, want)
 		}

@@ -3,13 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/account"
 	"github.com/qiniu/qshell/v2/iqshell/config"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -123,7 +123,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 	if mimeType != "" {
 		putExtra.MimeType = mimeType
 	}
-	mac, err := iqshell.GetMac()
+	mac, err := account.GetMac()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Get Mac error: ", err)
 		os.Exit(config.STATUS_ERROR)
@@ -237,7 +237,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 		upHost = rupHost
 	}
 
-	mac, err := iqshell.GetMac()
+	mac, err := account.GetMac()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Get Mac error: ", err)
 		os.Exit(config.STATUS_ERROR)

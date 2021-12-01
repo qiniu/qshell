@@ -2,15 +2,8 @@ package config
 
 import (
 	"github.com/qiniu/go-sdk/v7/auth"
+	"github.com/qiniu/qshell/v2/iqshell/data"
 	"strings"
-)
-
-const (
-	TrueString  = "true"
-	FalseString = "false"
-
-	ResumeApiV1 = "v1"
-	ResumeApiV2 = "v2"
 )
 
 type Config struct {
@@ -22,7 +15,7 @@ type Config struct {
 }
 
 func (c *Config) IsUseHttps() bool {
-	return c.UseHttps == TrueString
+	return c.UseHttps == data.FalseString
 }
 
 func (c *Config) HasCredentials() bool {
@@ -73,46 +66,4 @@ func parseHostArray(host string) []string {
 	}
 
 	return strings.Split(host, ",")
-}
-
-func DefaultConfig() *Config {
-	return &Config{
-		Credentials: auth.Credentials{
-			AccessKey: "",
-			SecretKey: nil,
-		},
-		UseHttps:    TrueString,
-		Hosts: Hosts{
-			UC:  "",
-			Api: "",
-			Rs:  "",
-			Rsf: "",
-			Io:  "",
-			Up:  "",
-		},
-		Up: Up{
-			PutThreshold:        1024 * 1024 * 4,
-			ChunkSize:           1024 * 1024 * 2,
-			ResumeApiVersion:    ResumeApiV1,
-			FileConcurrentParts: 10,
-			Tasks: Tasks{
-				ConcurrentCount:       3,
-				StopWhenOneTaskFailed: FalseString,
-			},
-			Retry: Retry{
-				Max:      1,
-				Interval: 1000,
-			},
-		},
-		Download: Download{
-			Tasks: Tasks{
-				ConcurrentCount:       3,
-				StopWhenOneTaskFailed: FalseString,
-			},
-			Retry: Retry{
-				Max:      1,
-				Interval: 1000,
-			},
-		},
-	}
 }

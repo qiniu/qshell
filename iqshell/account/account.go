@@ -1,9 +1,10 @@
-package iqshell
+package account
 
 import (
 	"encoding/base64"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"io"
 	"io/ioutil"
 	"os"
@@ -85,8 +86,8 @@ func (acc *Account) String() string {
 
 // 对SecretKey加密, 返回加密后的字符串
 func EncryptSecretKey(accessKey, secretKey string) (string, error) {
-	aesKey := Md5Hex(accessKey)
-	encryptedSecretKeyBytes, encryptedErr := AesEncrypt([]byte(secretKey), []byte(aesKey[7:23]))
+	aesKey := utils.Md5Hex(accessKey)
+	encryptedSecretKeyBytes, encryptedErr := utils.AesEncrypt([]byte(secretKey), []byte(aesKey[7:23]))
 	if encryptedErr != nil {
 		return "", encryptedErr
 	}
@@ -96,12 +97,12 @@ func EncryptSecretKey(accessKey, secretKey string) (string, error) {
 
 // 对加密的SecretKey进行解密， 返回SecretKey
 func DecryptSecretKey(accessKey, encryptedKey string) (string, error) {
-	aesKey := Md5Hex(accessKey)
+	aesKey := utils.Md5Hex(accessKey)
 	encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(encryptedKey)
 	if decodeErr != nil {
 		return "", decodeErr
 	}
-	secretKeyBytes, decryptErr := AesDecrypt([]byte(encryptedSecretKeyBytes), []byte(aesKey[7:23]))
+	secretKeyBytes, decryptErr := utils.AesDecrypt([]byte(encryptedSecretKeyBytes), []byte(aesKey[7:23]))
 	if decryptErr != nil {
 		return "", decryptErr
 	}

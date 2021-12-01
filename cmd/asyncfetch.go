@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +45,7 @@ func NewCmdAsyncCheck() *cobra.Command {
 		Short: "Check Async fetch status",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, positionalArgs []string) {
-			bm := iqshell.GetBucketManager()
+			bm := storage2.GetBucketManager()
 
 			ret, err := bm.CheckAsyncFetchStatus(positionalArgs[0], positionalArgs[1])
 			if err != nil {
@@ -213,7 +214,7 @@ func (ao *asyncFetchOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 		} else {
 			size = 0
 		}
-		saveKey, pError := iqshell.KeyFromUrl(url)
+		saveKey, pError := utils.KeyFromUrl(url)
 		if pError != nil {
 			ao.fileExporter.WriteToFailedWriter(fmt.Sprintf("%s: %v\n", line, pError))
 			continue

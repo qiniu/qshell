@@ -1,4 +1,4 @@
-package iqshell
+package utils
 
 import (
 	"archive/zip"
@@ -12,7 +12,7 @@ import (
 	"unicode/utf8"
 )
 
-func gbk2Utf8(text string) (string, error) {
+func Gbk2Utf8(text string) (string, error) {
 	var gDecoder = simplifiedchinese.GBK.NewDecoder()
 	utf8Dst := make([]byte, len(text)*3)
 	_, _, err := gDecoder.Transform(utf8Dst, []byte(text), true)
@@ -46,7 +46,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 
 		//check charset utf8 or gbk
 		if !utf8.Valid([]byte(fileName)) {
-			fileName, err = gbk2Utf8(fileName)
+			fileName, err = Gbk2Utf8(fileName)
 			if err != nil {
 				err = errors.New("Unsupported filename encoding")
 				continue
@@ -71,7 +71,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 
 		//check charset utf8 or gbk
 		if !utf8.Valid([]byte(fileName)) {
-			fileName, err = gbk2Utf8(fileName)
+			fileName, err = Gbk2Utf8(fileName)
 			if err != nil {
 				err = errors.New("Unsupported filename encoding")
 				continue

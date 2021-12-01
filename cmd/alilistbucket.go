@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/ali"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +31,7 @@ func AliListBucket(cmd *cobra.Command, params []string) {
 	} else {
 		listBucketResultFile = params[4]
 	}
-	aliListBucket := iqshell.AliListBucket{
+	aliListBucket := ali.AliListBucket{
 		DataCenter:      dataCenter,
 		Bucket:          bucket,
 		AccessKeyId:     accessKeyId,

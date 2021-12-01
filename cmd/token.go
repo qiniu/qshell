@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/account"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/conf"
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -78,7 +78,7 @@ func macRequest(ak, sk, url, body, contentType, method string) (mac *qbox.Mac, r
 	if ak != "" && sk != "" {
 		mac = qbox.NewMac(ak, sk)
 	} else {
-		mac, mErr = iqshell.GetMac()
+		mac, mErr = account.GetMac()
 		if mErr != nil {
 			err = fmt.Errorf("get mac: %v\n", mErr)
 			return
@@ -164,7 +164,7 @@ func UploadToken(cmd *cobra.Command, args []string) {
 	if ak != "" && sk != "" {
 		mac = qbox.NewMac(ak, sk)
 	} else {
-		mac, mErr = iqshell.GetMac()
+		mac, mErr = account.GetMac()
 		if mErr != nil {
 			fmt.Fprintf(os.Stderr, "get mac: %v\n", mErr)
 			os.Exit(1)

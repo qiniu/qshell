@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/tools"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"net/url"
 	"os"
 	"strconv"
@@ -12,7 +14,6 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -149,14 +150,14 @@ func FormatFsize(fsize int64) (result string) {
 func RpcDecode(cmd *cobra.Command, params []string) {
 	if len(params) > 0 {
 		for _, param := range params {
-			decodedStr, _ := iqshell.Decode(param)
+			decodedStr, _ := utils.Decode(param)
 			fmt.Println(decodedStr)
 		}
 	} else {
 		bScanner := bufio.NewScanner(os.Stdin)
 		for bScanner.Scan() {
 			toDecode := bScanner.Text()
-			decodedStr, _ := iqshell.Decode(string(toDecode))
+			decodedStr, _ := utils.Decode(string(toDecode))
 			fmt.Println(decodedStr)
 		}
 	}
@@ -164,7 +165,7 @@ func RpcDecode(cmd *cobra.Command, params []string) {
 
 func RpcEncode(cmd *cobra.Command, params []string) {
 	for _, param := range params {
-		encodedStr := iqshell.Encode(param)
+		encodedStr := utils.Encode(param)
 		fmt.Println(encodedStr)
 	}
 }
@@ -267,7 +268,7 @@ func Urldecode(cmd *cobra.Command, params []string) {
 // 计算文件的hash值，使用七牛的etag算法
 func Qetag(cmd *cobra.Command, params []string) {
 	localFilePath := params[0]
-	qetag, err := iqshell.GetEtag(localFilePath)
+	qetag, err := tools.GetEtag(localFilePath)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -291,7 +292,7 @@ func Unzip(cmd *cobra.Command, params []string) {
 			return
 		}
 	}
-	unzipErr := iqshell.Unzip(zipFilePath, unzipDir)
+	unzipErr := utils.Unzip(zipFilePath, unzipDir)
 	if unzipErr != nil {
 		logs.Error("Unzip file failed due to error", unzipErr)
 	}

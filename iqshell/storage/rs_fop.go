@@ -1,11 +1,12 @@
-package iqshell
+package storage
 
 import (
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/account"
 )
 
 func Prefop(persistentId string) (ret storage.PrefopRet, err error) {
-	mac, err := GetMac()
+	mac, err := account.GetMac()
 	if err != nil {
 		return
 	}
@@ -16,7 +17,7 @@ func Prefop(persistentId string) (ret storage.PrefopRet, err error) {
 
 func Pfop(bucket, key, fops, pipeline, notifyURL string, notifyForce bool) (persistentId string, err error) {
 
-	mac, err := GetMac()
+	mac, err := account.GetMac()
 	if err != nil {
 		return
 	}

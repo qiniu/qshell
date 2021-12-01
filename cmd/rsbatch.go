@@ -3,7 +3,10 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/account"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"io"
 	"os"
 	"runtime"
@@ -13,7 +16,6 @@ import (
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -41,7 +43,7 @@ var (
 )
 
 func unescape(cmd *cobra.Command, args []string) {
-	sep = iqshell.SimpleUnescape(&sep)
+	sep = utils.SimpleUnescape(&sep)
 	if DebugFlag {
 		fmt.Printf("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, deadline: %v, bsuccessFname: %q, bfailureFname: %q, sep: %q, bfetchUphost: %q\n", forceFlag, overwriteFlag, worker, inputFile, deadline, bsuccessFname, bfailureFname, sep, bfetchUphost)
 	}
@@ -200,13 +202,13 @@ type fetchConfig struct {
 	failureFname   string
 	overwriteFname string
 
-	fileExporter *iqshell.FileExporter
-	bm           *iqshell.BucketManager
+	fileExporter *storage2.FileExporter
+	bm           *storage2.BucketManager
 }
 
 // initFileExporter需要在主goroutine中调用， 原因同initBucketManager
 func (fc *fetchConfig) initFileExporter() {
-	fileExporter, fErr := iqshell.NewFileExporter(fc.successFname, fc.failureFname, "")
+	fileExporter, fErr := storage2.NewFileExporter(fc.successFname, fc.failureFname, "")
 	if fErr != nil {
 		fmt.Fprintf(os.Stderr, "create file exporter: %v\n", fErr)
 		os.Exit(1)
@@ -221,13 +223,13 @@ func (fc *fetchConfig) initBucketManager() {
 		IoHost:  fc.upHost,
 		ApiHost: config.ApiHost(),
 	}
-	fc.bm = iqshell.GetBucketManagerWithConfig(&cfg)
+	fc.bm = storage2.GetBucketManagerWithConfig(&cfg)
 }
 
 // initUpHost需要在主goroutine中调用
 func (fc *fetchConfig) initUpHost(bucket string) {
 	if bfetchUphost == "" {
-		acc, aerr := iqshell.GetAccount()
+		acc, aerr := account.GetAccount()
 		if aerr != nil {
 			fmt.Fprintf(os.Stderr, "failed to get accessKey")
 			os.Exit(1)
@@ -306,7 +308,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 			continue
 		}
 		if len(items) <= 1 {
-			saveKey, pError = iqshell.KeyFromUrl(remoteUrl)
+			saveKey, pError = utils.KeyFromUrl(remoteUrl)
 			if pError != nil {
 				fmt.Fprintf(os.Stderr, "parse %s: %v\n", remoteUrl, pError)
 				continue
@@ -386,16 +388,16 @@ func BatchStat(cmd *cobra.Command, params []string) {
 		defer fp.Close()
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	scanner := bufio.NewScanner(fp)
-	entries := make([]iqshell.EntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]storage2.EntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, sep)
 		if len(items) > 0 {
 			key := items[0]
 			if key != "" {
-				entry := iqshell.EntryPath{
+				entry := storage2.EntryPath{
 					Bucket: bucket,
 					Key:    key,
 				}
@@ -406,7 +408,7 @@ func BatchStat(cmd *cobra.Command, params []string) {
 		if len(entries) == BATCH_ALLOW_MAX {
 			batchStat(entries, bm)
 			//reset slice
-			entries = make([]iqshell.EntryPath, 0)
+			entries = make([]storage2.EntryPath, 0)
 		}
 	}
 	//stat the last batch
@@ -415,7 +417,7 @@ func BatchStat(cmd *cobra.Command, params []string) {
 	}
 }
 
-func batchStat(entries []iqshell.EntryPath, bm *iqshell.BucketManager) {
+func batchStat(entries []storage2.EntryPath, bm *storage2.BucketManager) {
 	ret, err := bm.BatchStat(entries)
 	if err != nil && len(ret) <= 0 {
 		fmt.Fprintf(os.Stderr, "Batch stat error: %v\n", err)
@@ -463,7 +465,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		keyListFile = inputFile
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 
 	var batchTasks chan func()
 	var initBatchOnce sync.Once
@@ -490,8 +492,8 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]iqshell.EntryPath, 0, BATCH_ALLOW_MAX)
-	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	entries := make([]storage2.EntryPath, 0, BATCH_ALLOW_MAX)
+	fileExporter, nErr := storage2.NewFileExporter(bsuccessFname, bfailureFname, "")
 	if nErr != nil {
 		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
 		os.Exit(1)
@@ -508,14 +510,14 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 			if len(items) > 1 {
 				putTime = items[1]
 			}
-			entry := iqshell.EntryPath{
+			entry := storage2.EntryPath{
 				Bucket: bucket, Key: key, PutTime: putTime,
 			}
 			entries = append(entries, entry)
 		}
 		//check limit
 		if len(entries) == BATCH_ALLOW_MAX {
-			toDeleteEntries := make([]iqshell.EntryPath, len(entries))
+			toDeleteEntries := make([]storage2.EntryPath, len(entries))
 			copy(toDeleteEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -523,12 +525,12 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchDelete(toDeleteEntries, bm, fileExporter)
 			}
-			entries = make([]iqshell.EntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]storage2.EntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	//delete the last batch
 	if len(entries) > 0 {
-		toDeleteEntries := make([]iqshell.EntryPath, len(entries))
+		toDeleteEntries := make([]storage2.EntryPath, len(entries))
 		copy(toDeleteEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -541,7 +543,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchDelete(entries []iqshell.EntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
+func batchDelete(entries []storage2.EntryPath, bm *storage2.BucketManager, fileExporter *storage2.FileExporter) {
 	ret, err := bm.BatchDelete(entries)
 
 	if err != nil {
@@ -591,7 +593,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 		keyMimeMapFile = inputFile
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	var batchTasks chan func()
 	var initBatchOnce sync.Once
 
@@ -616,8 +618,8 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 	}
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
-	entries := make([]iqshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
-	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	entries := make([]storage2.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
+	fileExporter, nErr := storage2.NewFileExporter(bsuccessFname, bfailureFname, "")
 	if nErr != nil {
 		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
 		os.Exit(1)
@@ -629,8 +631,8 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 			key := items[0]
 			mimeType := items[1]
 			if key != "" && mimeType != "" {
-				entry := iqshell.ChgmEntryPath{
-					EntryPath: iqshell.EntryPath{
+				entry := storage2.ChgmEntryPath{
+					EntryPath: storage2.EntryPath{
 						Bucket: bucket,
 						Key:    key,
 					},
@@ -640,7 +642,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toChgmEntries := make([]iqshell.ChgmEntryPath, len(entries))
+			toChgmEntries := make([]storage2.ChgmEntryPath, len(entries))
 			copy(toChgmEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -648,11 +650,11 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchChgm(toChgmEntries, bm, fileExporter)
 			}
-			entries = make([]iqshell.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]storage2.ChgmEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toChgmEntries := make([]iqshell.ChgmEntryPath, len(entries))
+		toChgmEntries := make([]storage2.ChgmEntryPath, len(entries))
 		copy(toChgmEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -665,7 +667,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchChgm(entries []iqshell.ChgmEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
+func batchChgm(entries []storage2.ChgmEntryPath, bm *storage2.BucketManager, fileExporter *storage2.FileExporter) {
 	ret, err := bm.BatchChgm(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch chgm error: %v\n", err)
@@ -723,7 +725,7 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -738,14 +740,14 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]iqshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]storage2.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
 
 	var key, line string
 	var fileType int
 	var items []string
-	var entry iqshell.ChtypeEntryPath
+	var entry storage2.ChtypeEntryPath
 
-	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	fileExporter, nErr := storage2.NewFileExporter(bsuccessFname, bfailureFname, "")
 	if nErr != nil {
 		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
 		os.Exit(1)
@@ -761,8 +763,8 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 		}
 		key = items[0]
 		if key != "" {
-			entry = iqshell.ChtypeEntryPath{
-				EntryPath: iqshell.EntryPath{
+			entry = storage2.ChtypeEntryPath{
+				EntryPath: storage2.EntryPath{
 					Bucket: bucket,
 					Key:    key,
 				},
@@ -771,7 +773,7 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 			entries = append(entries, entry)
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toChtypeEntries := make([]iqshell.ChtypeEntryPath, len(entries))
+			toChtypeEntries := make([]storage2.ChtypeEntryPath, len(entries))
 			copy(toChtypeEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -779,11 +781,11 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchChtype(toChtypeEntries, bm, fileExporter)
 			}
-			entries = make([]iqshell.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]storage2.ChtypeEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toChtypeEntries := make([]iqshell.ChtypeEntryPath, len(entries))
+		toChtypeEntries := make([]storage2.ChtypeEntryPath, len(entries))
 		copy(toChtypeEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -797,7 +799,7 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 
 }
 
-func batchChtype(entries []iqshell.ChtypeEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
+func batchChtype(entries []storage2.ChtypeEntryPath, bm *storage2.BucketManager, fileExporter *storage2.FileExporter) {
 	ret, err := bm.BatchChtype(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch chtype error: %v\n", err)
@@ -857,7 +859,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -872,7 +874,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]iqshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]storage2.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
 	for scanner.Scan() {
 		line := scanner.Text()
 		items := strings.Split(line, sep)
@@ -880,8 +882,8 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 			key := items[0]
 			days, _ := strconv.Atoi(items[1])
 			if key != "" {
-				entry := iqshell.DeleteAfterDaysEntryPath{
-					EntryPath: iqshell.EntryPath{
+				entry := storage2.DeleteAfterDaysEntryPath{
+					EntryPath: storage2.EntryPath{
 						Bucket: bucket,
 						Key:    key,
 					},
@@ -891,7 +893,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toExpireEntries := make([]iqshell.DeleteAfterDaysEntryPath, len(entries))
+			toExpireEntries := make([]storage2.DeleteAfterDaysEntryPath, len(entries))
 			copy(toExpireEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -899,11 +901,11 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchDeleteAfterDays(toExpireEntries, bm)
 			}
-			entries = make([]iqshell.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]storage2.DeleteAfterDaysEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toExpireEntries := make([]iqshell.DeleteAfterDaysEntryPath, len(entries))
+		toExpireEntries := make([]storage2.DeleteAfterDaysEntryPath, len(entries))
 		copy(toExpireEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -916,7 +918,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchDeleteAfterDays(entries []iqshell.DeleteAfterDaysEntryPath, bm *iqshell.BucketManager) {
+func batchDeleteAfterDays(entries []storage2.DeleteAfterDaysEntryPath, bm *storage2.BucketManager) {
 	ret, err := bm.BatchDeleteAfterDays(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch expire error: %v\n", err)
@@ -973,7 +975,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -988,9 +990,9 @@ func BatchRename(cmd *cobra.Command, params []string) {
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]iqshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]storage2.RenameEntryPath, 0, BATCH_ALLOW_MAX)
 
-	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	fileExporter, nErr := storage2.NewFileExporter(bsuccessFname, bfailureFname, "")
 	if nErr != nil {
 		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
 		os.Exit(1)
@@ -1002,12 +1004,12 @@ func BatchRename(cmd *cobra.Command, params []string) {
 			oldKey := items[0]
 			newKey := items[1]
 			if oldKey != "" && newKey != "" {
-				entry := iqshell.RenameEntryPath{
-					SrcEntry: iqshell.EntryPath{
+				entry := storage2.RenameEntryPath{
+					SrcEntry: storage2.EntryPath{
 						Bucket: bucket,
 						Key:    oldKey,
 					},
-					DstEntry: iqshell.EntryPath{
+					DstEntry: storage2.EntryPath{
 						Bucket: bucket,
 						Key:    newKey,
 					},
@@ -1017,7 +1019,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toRenameEntries := make([]iqshell.RenameEntryPath, len(entries))
+			toRenameEntries := make([]storage2.RenameEntryPath, len(entries))
 			copy(toRenameEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -1025,11 +1027,11 @@ func BatchRename(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchRename(toRenameEntries, bm, fileExporter)
 			}
-			entries = make([]iqshell.RenameEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]storage2.RenameEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toRenameEntries := make([]iqshell.RenameEntryPath, len(entries))
+		toRenameEntries := make([]storage2.RenameEntryPath, len(entries))
 		copy(toRenameEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -1041,7 +1043,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchRename(entries []iqshell.RenameEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
+func batchRename(entries []storage2.RenameEntryPath, bm *storage2.BucketManager, fileExporter *storage2.FileExporter) {
 	ret, err := bm.BatchRename(entries)
 
 	if err != nil {
@@ -1102,7 +1104,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -1117,9 +1119,9 @@ func BatchMove(cmd *cobra.Command, params []string) {
 		defer fp.Close()
 	}
 	scanner := bufio.NewScanner(fp)
-	entries := make([]iqshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]storage2.MoveEntryPath, 0, BATCH_ALLOW_MAX)
 
-	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	fileExporter, nErr := storage2.NewFileExporter(bsuccessFname, bfailureFname, "")
 	if nErr != nil {
 		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
 		os.Exit(1)
@@ -1134,12 +1136,12 @@ func BatchMove(cmd *cobra.Command, params []string) {
 				destKey = items[1]
 			}
 			if srcKey != "" && destKey != "" {
-				entry := iqshell.MoveEntryPath{
-					SrcEntry: iqshell.EntryPath{
+				entry := storage2.MoveEntryPath{
+					SrcEntry: storage2.EntryPath{
 						Bucket: srcBucket,
 						Key:    srcKey,
 					},
-					DstEntry: iqshell.EntryPath{
+					DstEntry: storage2.EntryPath{
 						Bucket: destBucket,
 						Key:    destKey,
 					},
@@ -1149,7 +1151,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toMoveEntries := make([]iqshell.MoveEntryPath, len(entries))
+			toMoveEntries := make([]storage2.MoveEntryPath, len(entries))
 			copy(toMoveEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -1157,11 +1159,11 @@ func BatchMove(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchMove(toMoveEntries, bm, fileExporter)
 			}
-			entries = make([]iqshell.MoveEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]storage2.MoveEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toMoveEntries := make([]iqshell.MoveEntryPath, len(entries))
+		toMoveEntries := make([]storage2.MoveEntryPath, len(entries))
 		copy(toMoveEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -1174,7 +1176,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchMove(entries []iqshell.MoveEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
+func batchMove(entries []storage2.MoveEntryPath, bm *storage2.BucketManager, fileExporter *storage2.FileExporter) {
 	ret, err := bm.BatchMove(entries)
 
 	if err != nil {
@@ -1241,7 +1243,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 		}
 	})
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 	var fp io.ReadCloser
 	var err error
 
@@ -1257,9 +1259,9 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 	}
 	scanner := bufio.NewScanner(fp)
 	scanner.Split(bufio.ScanLines)
-	entries := make([]iqshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
+	entries := make([]storage2.CopyEntryPath, 0, BATCH_ALLOW_MAX)
 
-	fileExporter, nErr := iqshell.NewFileExporter(bsuccessFname, bfailureFname, "")
+	fileExporter, nErr := storage2.NewFileExporter(bsuccessFname, bfailureFname, "")
 	if nErr != nil {
 		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
 		os.Exit(1)
@@ -1274,12 +1276,12 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 				destKey = items[1]
 			}
 			if srcKey != "" && destKey != "" {
-				entry := iqshell.CopyEntryPath{
-					SrcEntry: iqshell.EntryPath{
+				entry := storage2.CopyEntryPath{
+					SrcEntry: storage2.EntryPath{
 						Bucket: srcBucket,
 						Key:    srcKey,
 					},
-					DstEntry: iqshell.EntryPath{
+					DstEntry: storage2.EntryPath{
 						Bucket: destBucket,
 						Key:    destKey,
 					},
@@ -1289,7 +1291,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 			}
 		}
 		if len(entries) == BATCH_ALLOW_MAX {
-			toCopyEntries := make([]iqshell.CopyEntryPath, len(entries))
+			toCopyEntries := make([]storage2.CopyEntryPath, len(entries))
 			copy(toCopyEntries, entries)
 
 			batchWaitGroup.Add(1)
@@ -1297,11 +1299,11 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 				defer batchWaitGroup.Done()
 				batchCopy(toCopyEntries, bm, fileExporter)
 			}
-			entries = make([]iqshell.CopyEntryPath, 0, BATCH_ALLOW_MAX)
+			entries = make([]storage2.CopyEntryPath, 0, BATCH_ALLOW_MAX)
 		}
 	}
 	if len(entries) > 0 {
-		toCopyEntries := make([]iqshell.CopyEntryPath, len(entries))
+		toCopyEntries := make([]storage2.CopyEntryPath, len(entries))
 		copy(toCopyEntries, entries)
 
 		batchWaitGroup.Add(1)
@@ -1314,7 +1316,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 	batchWaitGroup.Wait()
 }
 
-func batchCopy(entries []iqshell.CopyEntryPath, bm *iqshell.BucketManager, fileExporter *iqshell.FileExporter) {
+func batchCopy(entries []storage2.CopyEntryPath, bm *storage2.BucketManager, fileExporter *storage2.FileExporter) {
 	ret, err := bm.BatchCopy(entries)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Batch copy error: %v\n", err)
@@ -1349,7 +1351,7 @@ func BatchSign(cmd *cobra.Command, params []string) {
 
 	var bReader io.Reader
 
-	bm := iqshell.GetBucketManager()
+	bm := storage2.GetBucketManager()
 
 	if inputFile != "" {
 		fp, openErr := os.Open(inputFile)

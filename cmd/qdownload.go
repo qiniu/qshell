@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/storage"
 	"io/ioutil"
 	"os"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +38,7 @@ func init() {
 // 根据文件列表下载文件功能在文档中还没有公开，遇到有这个需求的客户比较少
 func QiniuDownload(cmd *cobra.Command, params []string) {
 
-	var downloadConfig iqshell.DownloadConfig
+	var downloadConfig storage.DownloadConfig
 
 	configFile := params[0]
 
@@ -74,15 +74,15 @@ func QiniuDownload(cmd *cobra.Command, params []string) {
 		os.Exit(config.STATUS_HALT)
 	}
 
-	if threadCount < iqshell.MIN_DOWNLOAD_THREAD_COUNT || threadCount > iqshell.MAX_DOWNLOAD_THREAD_COUNT {
+	if threadCount < storage.MIN_DOWNLOAD_THREAD_COUNT || threadCount > storage.MAX_DOWNLOAD_THREAD_COUNT {
 		logs.Info("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
-			iqshell.MIN_DOWNLOAD_THREAD_COUNT, iqshell.MAX_DOWNLOAD_THREAD_COUNT)
+			storage.MIN_DOWNLOAD_THREAD_COUNT, storage.MAX_DOWNLOAD_THREAD_COUNT)
 
-		if threadCount < iqshell.MIN_DOWNLOAD_THREAD_COUNT {
-			threadCount = iqshell.MIN_DOWNLOAD_THREAD_COUNT
-		} else if threadCount > iqshell.MAX_DOWNLOAD_THREAD_COUNT {
-			threadCount = iqshell.MAX_DOWNLOAD_THREAD_COUNT
+		if threadCount < storage.MIN_DOWNLOAD_THREAD_COUNT {
+			threadCount = storage.MIN_DOWNLOAD_THREAD_COUNT
+		} else if threadCount > storage.MAX_DOWNLOAD_THREAD_COUNT {
+			threadCount = storage.MAX_DOWNLOAD_THREAD_COUNT
 		}
 	}
-	iqshell.QiniuDownload(int(threadCount), &downloadConfig)
+	storage.QiniuDownload(int(threadCount), &downloadConfig)
 }

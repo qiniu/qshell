@@ -1,4 +1,4 @@
-package iqshell
+package storage
 
 import (
 	"bufio"

@@ -3,11 +3,12 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/storage"
+	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"os"
 	"time"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -42,14 +43,14 @@ func Sync(cmd *cobra.Command, params []string) {
 		key = saveKey
 	} else {
 
-		key, kErr = iqshell.KeyFromUrl(srcResUrl)
+		key, kErr = utils.KeyFromUrl(srcResUrl)
 		if kErr != nil {
 			fmt.Fprintf(os.Stderr, "get path as key: %v\n", kErr)
 			os.Exit(config.STATUS_ERROR)
 		}
 	}
 
-	bm := iqshell.GetBucketManager()
+	bm := storage.GetBucketManager()
 	//sync
 	tStart := time.Now()
 	syncRet, sErr := bm.Sync(srcResUrl, bucket, key, upHostIp, isResumeV2)

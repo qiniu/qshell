@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	cdn2 "github.com/qiniu/qshell/v2/iqshell/cdn"
 	"github.com/qiniu/qshell/v2/iqshell/config"
 	"io"
 	"os"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/cdn"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -103,7 +103,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 		}
 		defer fp.Close()
 	}
-	cm := iqshell.GetCdnManager()
+	cm := cdn2.GetCdnManager()
 	scanner := bufio.NewScanner(fp)
 
 	itemsToRefresh := make([]string, 0, 100)
@@ -184,7 +184,7 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 		}
 		defer fp.Close()
 	}
-	cm := iqshell.GetCdnManager()
+	cm := cdn2.GetCdnManager()
 	scanner := bufio.NewScanner(fp)
 
 	urlsToPrefetch := make([]string, 0, 10)

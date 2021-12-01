@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/account"
 	"os"
 
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -67,7 +67,7 @@ func ChUser(cmd *cobra.Command, params []string) {
 	} else {
 		userName = params[0]
 	}
-	err = iqshell.ChUser(userName)
+	err = account.ChUser(userName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "chuser: %v\n", err)
 		os.Exit(1)
@@ -77,7 +77,7 @@ func ChUser(cmd *cobra.Command, params []string) {
 // 列举本地数据库记录的账户
 // qshell user ls
 func ListUser(cmd *cobra.Command, params []string) {
-	err := iqshell.ListUser(userLsName)
+	err := account.ListUser(userLsName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "lsuser: %v\n", err)
 		os.Exit(1)
@@ -87,7 +87,7 @@ func ListUser(cmd *cobra.Command, params []string) {
 // 删除本地记录的数据库
 // qshell user clean
 func CleanUser(cmd *cobra.Command, params []string) {
-	err := iqshell.CleanUser()
+	err := account.CleanUser()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CleanUser: %v\n", err)
 		os.Exit(1)
@@ -98,7 +98,7 @@ func CleanUser(cmd *cobra.Command, params []string) {
 // qshell user remove <UserName>
 func RmUser(cmd *cobra.Command, params []string) {
 	userName := params[0]
-	err := iqshell.RmUser(userName)
+	err := account.RmUser(userName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "RmUser: %v\n", err)
 		os.Exit(1)
@@ -109,7 +109,7 @@ func RmUser(cmd *cobra.Command, params []string) {
 // qshell user lookup <UserName>
 func LookUp(cmd *cobra.Command, params []string) {
 	userName := params[0]
-	err := iqshell.LookUp(userName)
+	err := account.LookUp(userName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "LookUp: %v\n", err)
 		os.Exit(1)

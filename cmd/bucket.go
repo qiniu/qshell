@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/storage"
 	"os"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +36,7 @@ func init() {
 // 【buckets】获取一个用户的所有的存储空间
 func GetBuckets(cmd *cobra.Command, params []string) {
 
-	bm := iqshell.GetBucketManager()
+	bm := storage.GetBucketManager()
 	buckets, err := bm.Buckets(false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Get buckets error: %v\n", err)
@@ -55,7 +55,7 @@ func GetBuckets(cmd *cobra.Command, params []string) {
 // 【domains】获取一个空间绑定的CDN域名
 func GetDomainsOfBucket(cmd *cobra.Command, params []string) {
 	bucket := params[0]
-	bm := iqshell.GetBucketManager()
+	bm := storage.GetBucketManager()
 	domains, err := bm.DomainsOfBucket(bucket)
 
 	if err != nil {

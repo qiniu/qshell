@@ -1,7 +1,8 @@
-package iqshell
+package cdn
 
 import (
 	"fmt"
+	account2 "github.com/qiniu/qshell/v2/iqshell/account"
 	"os"
 
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
@@ -10,7 +11,7 @@ import (
 
 // 获取CdnManager
 func GetCdnManager() *cdn.CdnManager {
-	account, gErr := GetAccount()
+	account, gErr := account2.GetAccount()
 	if gErr != nil {
 		fmt.Fprintf(os.Stderr, "GetCdnManager error: %v\n", gErr)
 		os.Exit(1)
