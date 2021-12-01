@@ -1,6 +1,7 @@
-package iqshell
+package config
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"path/filepath"
@@ -247,7 +248,7 @@ func UcHost() string {
 	}
 
 	if !strings.Contains(host, "://") {
-		host = Endpoint(false, host)
+		host = iqshell.Endpoint(false, host)
 	}
 	return host
 }

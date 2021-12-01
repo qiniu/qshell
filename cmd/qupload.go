@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -76,23 +77,23 @@ func QiniuUpload(cmd *cobra.Command, params []string) {
 	pErr := parseUploadConfigFile(configFile, &uploadConfig)
 	if pErr != nil {
 		logs.Error(fmt.Sprintf("parse config file: %s: %v\n", configFile, pErr))
-		os.Exit(iqshell.STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 
 	if uploadConfig.FileType != 1 && uploadConfig.FileType != 0 {
 		logs.Error("Wrong Filetype, It should be 0 or 1 ")
-		os.Exit(iqshell.STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 
 	srcFileInfo, err := os.Stat(uploadConfig.SrcDir)
 	if err != nil {
 		logs.Error("Upload config error for parameter `SrcDir`,", err)
-		os.Exit(iqshell.STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 
 	if !srcFileInfo.IsDir() {
 		logs.Error("Upload src dir should be a directory")
-		os.Exit(iqshell.STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 	policy := storage.PutPolicy{}
 
@@ -128,7 +129,7 @@ func QiniuUpload(cmd *cobra.Command, params []string) {
 	fileExporter, fErr := iqshell.NewFileExporter(successFname, failureFname, overwriteFname)
 	if fErr != nil {
 		logs.Error("initialize fileExporter: ", fErr)
-		os.Exit(iqshell.STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 	iqshell.QiniuUpload(int(upthreadCount), &uploadConfig, fileExporter)
 }

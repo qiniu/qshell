@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"os"
 	"strings"
 	"time"
@@ -55,7 +56,7 @@ func init() {
 	formPutCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
 	RePutCmd.Flags().BoolVarP(&isResumeV2, "v2", "", false, "use resumable upload v2 APIs to upload")
-	RePutCmd.Flags().Int64VarP(&resumeV2PartSize, "v2-part-size", "", iqshell.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
+	RePutCmd.Flags().Int64VarP(&resumeV2PartSize, "v2-part-size", "", config.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
 	RePutCmd.Flags().BoolVarP(&pOverwrite, "overwrite", "w", false, "overwrite mode")
 	RePutCmd.Flags().StringVarP(&mimeType, "mimetype", "t", "", "file mime type")
 	RePutCmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
@@ -83,7 +84,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 
 	if fileType != 1 && fileType != 0 {
 		fmt.Fprintln(os.Stderr, "Wrong Filetype, It should be 0 or 1")
-		os.Exit(iqshell.STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	}
 
 	//create uptoken
@@ -112,7 +113,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 	var upHost string
 
 	if fupHost == "" {
-		upHost = iqshell.UpHost()
+		upHost = config.UpHost()
 	} else {
 		upHost = fupHost
 	}
@@ -125,7 +126,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 	mac, err := iqshell.GetMac()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Get Mac error: ", err)
-		os.Exit(iqshell.STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	}
 	uptoken := policy.UploadToken(mac)
 
@@ -135,7 +136,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 	fStat, statErr := os.Stat(localFile)
 	if statErr != nil {
 		fmt.Fprintf(os.Stderr, "Local file error: %v\n", statErr)
-		os.Exit(iqshell.STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	}
 	fsize := fStat.Size()
 	fmt.Printf("Uploading %s => %s : %s ...\n", localFile, bucket, key)
@@ -186,7 +187,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 	}
 
 	if err != nil {
-		os.Exit(iqshell.STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	}
 }
 
@@ -200,7 +201,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	fStat, statErr := os.Stat(localFile)
 	if statErr != nil {
 		fmt.Println("Local file error", statErr)
-		os.Exit(iqshell.STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	}
 	fsize := fStat.Size()
 
@@ -231,7 +232,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	var upHost string
 
 	if rupHost == "" {
-		upHost = iqshell.UpHost()
+		upHost = config.UpHost()
 	} else {
 		upHost = rupHost
 	}
@@ -239,7 +240,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	mac, err := iqshell.GetMac()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Get Mac error: ", err)
-		os.Exit(iqshell.STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	}
 	uptoken := policy.UploadToken(mac)
 
@@ -296,6 +297,6 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	}
 
 	if err != nil {
-		os.Exit(iqshell.STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	}
 }

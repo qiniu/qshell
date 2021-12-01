@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"os"
 
 	"github.com/astaxie/beego/logs"
@@ -59,7 +60,7 @@ func GetDomainsOfBucket(cmd *cobra.Command, params []string) {
 
 	if err != nil {
 		logs.Error("Get domains error: ", err)
-		os.Exit(iqshell.STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	} else {
 		if len(domains) == 0 {
 			fmt.Printf("No domains found for bucket `%s`\n", bucket)

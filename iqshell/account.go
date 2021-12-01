@@ -3,6 +3,7 @@ package iqshell
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"io"
 	"io/ioutil"
 	"os"
@@ -109,14 +110,14 @@ func DecryptSecretKey(accessKey, encryptedKey string) (string, error) {
 }
 
 func setdb(acc Account, accountOver bool) (err error) {
-	accDbPath := AccDBPath()
+	accDbPath := config.AccDBPath()
 	if accDbPath == "" {
 		return fmt.Errorf("empty account db path")
 	}
 	ldb, lErr := leveldb.OpenFile(accDbPath, nil)
 	if lErr != nil {
 		err = fmt.Errorf("open db: %v", err)
-		os.Exit(STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 	defer ldb.Close()
 
@@ -169,7 +170,7 @@ func SetAccount2(accessKey, secretKey, name, accPath, oldPath string, accountOve
 
 // 保存账户信息到账户文件中
 func SetAccount(acc Account, accPath, oldPath string) (err error) {
-	QShellRootPath := RootPath()
+	QShellRootPath := config.RootPath()
 	if QShellRootPath == "" {
 		return fmt.Errorf("empty root path\n")
 	}
@@ -248,7 +249,7 @@ func getAccount(pt string) (account Account, err error) {
 // qshell 会记录当前的user信息，当切换账户后， 老的账户信息会记录下来
 // qshell user cu就可以切换到老的账户信息， 参考cd -回到先前的目录
 func GetOldAccount() (account Account, err error) {
-	AccountFname := OldAccPath()
+	AccountFname := config.OldAccPath()
 	if AccountFname == "" {
 		err = fmt.Errorf("empty old account path\n")
 		return
@@ -259,14 +260,14 @@ func GetOldAccount() (account Account, err error) {
 
 // 返回Account
 func GetAccount() (account Account, err error) {
-	ak, sk := AccessKey(), SecretKey()
+	ak, sk := config.AccessKey(), config.SecretKey()
 	if ak != "" && sk != "" {
 		return Account{
 			AccessKey: ak,
 			SecretKey: sk,
 		}, nil
 	}
-	AccountFname := AccPath()
+	AccountFname := config.AccPath()
 	if AccountFname == "" {
 		err = fmt.Errorf("empty account path\n")
 		return
@@ -288,7 +289,7 @@ func GetMac() (mac *qbox.Mac, err error) {
 func ChUser(userName string) (err error) {
 	if userName != "" {
 
-		AccountDBPath := AccDBPath()
+		AccountDBPath := config.AccDBPath()
 		if AccountDBPath == "" {
 			err = fmt.Errorf("empty account db path\n")
 			return
@@ -311,24 +312,24 @@ func ChUser(userName string) (err error) {
 			return
 		}
 
-		pt := AccPath()
+		pt := config.AccPath()
 		if pt == "" {
 			err = fmt.Errorf("empty account path")
 			return
 		}
-		oldPath := OldAccPath()
+		oldPath := config.OldAccPath()
 		if oldPath == "" {
 			err = fmt.Errorf("empty account path")
 			return
 		}
 		return SetAccount(user, pt, oldPath)
 	} else {
-		oldPath := OldAccPath()
+		oldPath := config.OldAccPath()
 		if oldPath == "" {
 			err = fmt.Errorf("empty account path")
 			return
 		}
-		pt := AccPath()
+		pt := config.AccPath()
 		if pt == "" {
 			err = fmt.Errorf("empty account path")
 			return
@@ -356,7 +357,7 @@ func ChUser(userName string) (err error) {
 // 获取用户列表
 func GetUsers() (ret []*Account, err error) {
 
-	AccountDBPath := AccDBPath()
+	AccountDBPath := config.AccDBPath()
 	if AccountDBPath == "" {
 		err = fmt.Errorf("empty account db path\n")
 		return
@@ -388,7 +389,7 @@ func GetUsers() (ret []*Account, err error) {
 
 // 列举本地数据库记录的用户列表
 func ListUser(userLsName bool) (err error) {
-	AccountDBPath := AccDBPath()
+	AccountDBPath := config.AccDBPath()
 	if AccountDBPath == "" {
 		err = fmt.Errorf("empty account db path\n")
 		return
@@ -428,7 +429,7 @@ func ListUser(userLsName bool) (err error) {
 
 // 清除本地账户数据库
 func CleanUser() (err error) {
-	QShellRootPath := RootPath()
+	QShellRootPath := config.RootPath()
 	if QShellRootPath == "" {
 		return fmt.Errorf("empty root path\n")
 	}
@@ -438,7 +439,7 @@ func CleanUser() (err error) {
 
 // 从本地数据库删除用户
 func RmUser(userName string) (err error) {
-	AccountDBPath := AccDBPath()
+	AccountDBPath := config.AccDBPath()
 	if AccountDBPath == "" {
 		err = fmt.Errorf("empty account db path\n")
 		return
@@ -456,7 +457,7 @@ func RmUser(userName string) (err error) {
 
 // 查找用户
 func LookUp(userName string) (err error) {
-	AccountDBPath := AccDBPath()
+	AccountDBPath := config.AccDBPath()
 	if AccountDBPath == "" {
 		err = fmt.Errorf("empty account db path\n")
 		return

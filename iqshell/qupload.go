@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -114,7 +115,7 @@ type UploadConfig struct {
 func (cfg *UploadConfig) Check() {
 	// 验证大小
 	if cfg.ResumableAPIV2PartSize <= 0 {
-		cfg.ResumableAPIV2PartSize = BLOCK_SIZE
+		cfg.ResumableAPIV2PartSize = config.BLOCK_SIZE
 	} else if cfg.ResumableAPIV2PartSize < int64(MB) {
 		cfg.ResumableAPIV2PartSize = int64(MB)
 	} else if cfg.ResumableAPIV2PartSize > int64(GB) {
@@ -126,7 +127,7 @@ func (cfg *UploadConfig) GetUpHost() string {
 	if cfg.UpHost != "" {
 		return cfg.UpHost
 	}
-	return UpHost()
+	return config.UpHost()
 }
 
 func (cfg *UploadConfig) JobId() string {
@@ -274,7 +275,7 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 
 	defaultLogFile, err := cfg.DefaultLogFile(storePath, jobId)
 	if err != nil {
-		os.Exit(STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 	logLevel := cfg.GetLogLevel()
 	logRotate := cfg.GetLogRotate()
@@ -451,10 +452,10 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	timeStart := time.Now()
 	//create job id
 	jobId := uploadConfig.JobId()
-	QShellRootPath := RootPath()
+	QShellRootPath := config.RootPath()
 	if QShellRootPath == "" {
 		logs.Error("Empty root path")
-		os.Exit(STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 	storePath := filepath.Join(QShellRootPath, "qupload", jobId)
 
@@ -474,7 +475,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 
 	cacheResultName, totalFileCount, cErr := uploadConfig.CacheFileNameAndCount(storePath, jobId)
 	if cErr != nil {
-		os.Exit(STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 
 	//leveldb folder
@@ -482,7 +483,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
 		logs.Error("Open leveldb `%s` failed due to %s", leveldbFileName, err)
-		os.Exit(STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 	defer ldb.Close()
 
@@ -490,7 +491,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	cacheResultFileHandle, err := os.Open(cacheResultName)
 	if err != nil {
 		logs.Error("Open list file `%s` failed due to %s", cacheResultName, err)
-		os.Exit(STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 	defer cacheResultFileHandle.Close()
 	bScanner := bufio.NewScanner(cacheResultFileHandle)
@@ -629,9 +630,9 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	fmt.Println("\nSee upload log at path", uploadConfig.LogFile)
 
 	if failureFileCount > 0 {
-		os.Exit(STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	} else {
-		os.Exit(STATUS_OK)
+		os.Exit(config.STATUS_OK)
 	}
 }
 

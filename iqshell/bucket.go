@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -164,7 +165,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 		reqHost string
 		reqErr  error
 	)
-	reqHost = RsHost()
+	reqHost = config.RsHost()
 	if reqHost == "" {
 		reqHost, reqErr = m.rsHost(bucket)
 		if reqErr != nil {
@@ -402,14 +403,14 @@ func GetBucketManager() *BucketManager {
 	}
 	mac := qbox.NewMac(account.AccessKey, account.SecretKey)
 	cfg := storage.Config{
-		UpHost:        UpHost(),
-		IoHost:        IoHost(),
-		RsHost:        RsHost(),
-		ApiHost:       ApiHost(),
-		RsfHost:       RsfHost(),
-		CentralRsHost: RsHost(),
+		UpHost:        config.UpHost(),
+		IoHost:        config.IoHost(),
+		RsHost:        config.RsHost(),
+		ApiHost:       config.ApiHost(),
+		RsfHost:       config.RsfHost(),
+		CentralRsHost: config.RsHost(),
 	}
-	storage.UcHost = UcHost()
+	storage.UcHost = config.UcHost()
 	return NewBucketManager(mac, &cfg)
 }
 

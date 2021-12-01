@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"io/ioutil"
 	"os"
 
@@ -70,7 +71,7 @@ func QiniuDownload(cmd *cobra.Command, params []string) {
 
 	if !destFileInfo.IsDir() {
 		logs.Error("Download dest dir should be a directory")
-		os.Exit(iqshell.STATUS_HALT)
+		os.Exit(config.STATUS_HALT)
 	}
 
 	if threadCount < iqshell.MIN_DOWNLOAD_THREAD_COUNT || threadCount > iqshell.MAX_DOWNLOAD_THREAD_COUNT {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"io"
 	"os"
 	"strings"
@@ -98,7 +99,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(urlListFile)
 		if err != nil {
 			fmt.Println("Open refresh item list file error,", err)
-			os.Exit(iqshell.STATUS_HALT)
+			os.Exit(config.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -179,7 +180,7 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(urlListFile)
 		if err != nil {
 			fmt.Println("Open url list file error,", err)
-			os.Exit(iqshell.STATUS_HALT)
+			os.Exit(config.STATUS_HALT)
 		}
 		defer fp.Close()
 	}

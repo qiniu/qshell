@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"os"
 	"strings"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 )
 
@@ -144,7 +144,7 @@ func (o *awsfetchOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 	if o.ctoken != "" {
 		input.ContinuationToken = aws.String(o.ctoken)
 	}
-	itemc := make(chan *iqshell.FetchItem)
+	itemc := make(chan *config.FetchItem)
 	donec := make(chan struct{})
 
 	go fetchChannel(itemc, donec, &o.fetchConfig)
@@ -174,7 +174,7 @@ func (o *awsfetchOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 				continue
 			}
 
-			item := &iqshell.FetchItem{
+			item := &config.FetchItem{
 				Bucket:    qiniuBucket,
 				Key:       *obj.Key,
 				RemoteUrl: awsUrl(awsBucket, region, *obj.Key),

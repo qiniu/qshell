@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,7 +12,6 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/qiniu/go-sdk/v7/client"
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -134,22 +134,22 @@ func initConfig() {
 			fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
 			os.Exit(1)
 		}
-		iqshell.SetRootPath(dir + "/.qshell")
+		config.SetRootPath(dir + "/.qshell")
 	} else {
 		homeDir, hErr := homedir.Dir()
 		if hErr != nil {
 			fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
 			os.Exit(1)
 		}
-		iqshell.SetRootPath(homeDir + "/.qshell")
+		config.SetRootPath(homeDir + "/.qshell")
 	}
-	rootPath := iqshell.RootPath()
+	rootPath := config.RootPath()
 
-	iqshell.SetDefaultAccDBPath(filepath.Join(rootPath, "account.db"))
-	iqshell.SetDefaultAccPath(filepath.Join(rootPath, "account.json"))
-	iqshell.SetDefaultRsHost(storage.DefaultRsHost)
-	iqshell.SetDefaultRsfHost(storage.DefaultRsfHost)
-	iqshell.SetDefaultUcHost("http://uc.qbox.me")
+	config.SetDefaultAccDBPath(filepath.Join(rootPath, "account.db"))
+	config.SetDefaultAccPath(filepath.Join(rootPath, "account.json"))
+	config.SetDefaultRsHost(storage.DefaultRsHost)
+	config.SetDefaultRsfHost(storage.DefaultRsfHost)
+	config.SetDefaultUcHost("http://uc.qbox.me")
 
 	if rErr := viper.ReadInConfig(); rErr != nil {
 		if _, ok := rErr.(viper.ConfigFileNotFoundError); !ok {

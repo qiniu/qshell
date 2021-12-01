@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 	"os"
 	"time"
 
@@ -44,7 +45,7 @@ func Sync(cmd *cobra.Command, params []string) {
 		key, kErr = iqshell.KeyFromUrl(srcResUrl)
 		if kErr != nil {
 			fmt.Fprintf(os.Stderr, "get path as key: %v\n", kErr)
-			os.Exit(iqshell.STATUS_ERROR)
+			os.Exit(config.STATUS_ERROR)
 		}
 	}
 
@@ -54,7 +55,7 @@ func Sync(cmd *cobra.Command, params []string) {
 	syncRet, sErr := bm.Sync(srcResUrl, bucket, key, upHostIp, isResumeV2)
 	if sErr != nil {
 		logs.Error(sErr)
-		os.Exit(iqshell.STATUS_ERROR)
+		os.Exit(config.STATUS_ERROR)
 	}
 
 	fmt.Printf("Sync %s => %s:%s Success, Duration: %s!\n", srcResUrl, bucket, key, time.Since(tStart))
