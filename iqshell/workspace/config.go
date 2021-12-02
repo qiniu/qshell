@@ -13,14 +13,7 @@ func DefaultConfig() *config.Config {
 			SecretKey: nil,
 		},
 		UseHttps:    data.TrueString,
-		Hosts: config.Hosts{
-			UC:  "",
-			Api: "",
-			Rs:  "",
-			Rsf: "",
-			Io:  "",
-			Up:  "",
-		},
+		Hosts: config.Hosts{},
 		Up: config.Up{
 			PutThreshold:        1024 * 1024 * 4,
 			ChunkSize:           1024 * 1024 * 2,

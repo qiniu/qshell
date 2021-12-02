@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/account"
-	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/data"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -36,7 +36,7 @@ func Account(cmd *cobra.Command, params []string) {
 		account, gErr := account.GetAccount()
 		if gErr != nil {
 			fmt.Println(gErr)
-			os.Exit(config.STATUS_ERROR)
+			os.Exit(data.STATUS_ERROR)
 		}
 		fmt.Println(account.String())
 	} else if len(params) == 3 {
@@ -44,11 +44,16 @@ func Account(cmd *cobra.Command, params []string) {
 		secretKey := params[1]
 		name := params[2]
 
-		pt, oldPath := config.AccPath(), config.OldAccPath()
-		sErr := account.SetAccount2(accessKey, secretKey, name, pt, oldPath, accountOver)
+		//pt, oldPath := config.AccPath(), config.OldAccPath()
+		sErr := account.SaveAccount(account.Account{
+			Name:      name,
+			AccessKey: accessKey,
+			SecretKey: secretKey,
+		}, accountOver)
+
 		if sErr != nil {
 			fmt.Println(sErr)
-			os.Exit(config.STATUS_ERROR)
+			os.Exit(data.STATUS_ERROR)
 		}
 	}
 }

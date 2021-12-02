@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell/utils"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"path/filepath"
 	"strings"
@@ -57,12 +56,6 @@ var (
 	ACCESS_KEY = []string{"access_key"}
 	SECRET_KEY = []string{"secret_key"}
 )
-
-func UpHostBindPFlag(val *pflag.Flag) {
-	for _, key := range HOST_UP {
-		viper.BindPFlag(key, val)
-	}
-}
 
 // 获取AccessKey
 func AccessKey() string {

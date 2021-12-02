@@ -1,9 +1,7 @@
 package workspace
 
 import (
-	"errors"
-	"github.com/qiniu/qshell/v2/iqshell/utils"
-	"path/filepath"
+	"github.com/qiniu/qshell/v2/iqshell/config"
 )
 
 const (
@@ -13,27 +11,13 @@ const (
 	usersWorkspaceDirName = "workspace"
 	taskDirName           = "task"
 	taskDBName            = "task.db"
-	configFileName        = "config.json"
+	configFileName        = ".qshell.json"
 )
 
-var (
-	workspace = func() string {
-		home := utils.GetHomePath()
-		if len(home) == 0 {
-			return ""
-		}
-		return filepath.Join(home, workspaceName)
-	}()
-)
+// config 配置信息
+var cfg = &config.Config{}
 
-// 检查工作目录
-func Load() (err error) {
-	if len(workspace) == 0 {
-		err = errors.New("can't get home dir")
-		return
-	}
-
-	err = utils.CreateDirIfNotExist(workspace)
-
-	return
+// 获取之前需要先 Load
+func GetConfig() config.Config {
+	return *cfg
 }
