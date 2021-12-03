@@ -6,6 +6,13 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
+const (
+	DefaultRsHost  = "rs.qiniu.com"
+	DefaultRsfHost = "rsf.qiniu.com"
+	DefaultAPIHost = "api.qiniu.com"
+	DefaultPubHost = "pu.qbox.me:10200"
+)
+
 func DefaultConfig() *config.Config {
 	return &config.Config{
 		Credentials: auth.Credentials{

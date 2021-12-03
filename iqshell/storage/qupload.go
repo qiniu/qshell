@@ -5,10 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/common/output"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"github.com/qiniu/qshell/v2/iqshell/tools"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -17,6 +13,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/tools"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
@@ -296,7 +297,7 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 	fmt.Println("Writing upload log to file", cfg.LogFile)
 
 	//daily rotate
-	logCfg := output.BeeLogConfig{
+	logCfg := log.Config{
 		Filename: cfg.LogFile,
 		Level:    logLevel,
 		Daily:    true,

@@ -1,6 +1,8 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
 type Option func(i *info)
 
@@ -16,7 +18,7 @@ func GlobalConfigPath(path string) Option {
 	}
 }
 
-func Load(options ...Option) {
+func Load(options ...Option) error {
 	i := new(info)
 	// 设置配置
 	for _, option := range options {
@@ -32,6 +34,15 @@ func Load(options ...Option) {
 		userConfigViper = viper.New()
 		userConfigViper.SetConfigFile(i.userConfigPath)
 	}
+
+	_ = userConfigViper.ReadInConfig()
+	_ = globalConfigViper.ReadInConfig()
+	//if rErr := globalConfigViper.ReadInConfig(); rErr != nil {
+	//	if _, ok := rErr.(viper.ConfigFileNotFoundError); !ok {
+	//		return errors.New("read config file:" + rErr.Error())
+	//	}
+	//}
+	return nil
 }
 
 type info struct {

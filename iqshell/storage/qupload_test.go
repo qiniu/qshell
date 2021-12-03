@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 func TestGetLineCount(t *testing.T) {

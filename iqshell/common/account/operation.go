@@ -2,16 +2,17 @@ package account
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"strings"
+
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"io"
-	"io/ioutil"
-	"os"
-	"strings"
 )
 
 // 保存账户信息到账户文件中， 并保存在本地数据库
@@ -48,7 +49,7 @@ func SetAccountToLocalJson(acc Account) (err error) {
 		err = cErr
 		return
 	}
-	jsonStr, mErr := acc.Value()
+	jsonStr, mErr := acc.value()
 	if mErr != nil {
 		err = mErr
 		return
@@ -95,7 +96,7 @@ func SaveToDB(acc Account, accountOver bool) (err error) {
 	ldbWOpt := opt.WriteOptions{
 		Sync: true,
 	}
-	ldbValue, mError := acc.Value()
+	ldbValue, mError := acc.value()
 	if mError != nil {
 		err = fmt.Errorf("Account.Value: %v", mError)
 		return
@@ -122,7 +123,7 @@ func getAccount(pt string) (account Account, err error) {
 		err = fmt.Errorf("Read account file error, %s", readErr)
 		return
 	}
-	acc, dErr := Decrypt(string(accountBytes))
+	acc, dErr := decrypt(string(accountBytes))
 	if dErr != nil {
 		err = fmt.Errorf("Decrypt account bytes: %v", dErr)
 		return
@@ -139,7 +140,7 @@ func GetOldAccount() (account Account, err error) {
 
 // 返回Account
 func GetAccount() (account Account, err error) {
-	credentials :=  config.GetCredentials(config.ConfigTypeDefault)
+	credentials := config.GetCredentials(config.ConfigTypeDefault)
 	if credentials.AccessKey != "" && credentials.SecretKey != nil {
 		return Account{
 			AccessKey: credentials.AccessKey,
@@ -155,7 +156,7 @@ func GetMac() (mac *qbox.Mac, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return account.Mac(), nil
+	return account.mac(), nil
 }
 
 // 切换账户
@@ -173,7 +174,7 @@ func ChUser(userName string) (err error) {
 			err = gErr
 			return
 		}
-		user, dErr := Decrypt(string(value))
+		user, dErr := decrypt(string(value))
 		if dErr != nil {
 			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
 			return
@@ -220,7 +221,7 @@ func GetUsers() (ret []*Account, err error) {
 	)
 	for iter.Next() {
 		value = string(iter.Value())
-		acc, dErr := Decrypt(value)
+		acc, dErr := decrypt(value)
 		if dErr != nil {
 			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
 			return
@@ -247,7 +248,7 @@ func ListUser(userLsName bool) (err error) {
 	for iter.Next() {
 		name = string(iter.Key())
 		value = string(iter.Value())
-		acc, dErr := Decrypt(value)
+		acc, dErr := decrypt(value)
 		if dErr != nil {
 			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
 			return
@@ -320,7 +321,7 @@ func LookUp(userName string) (err error) {
 	for iter.Next() {
 		name = string(iter.Key())
 		value = string(iter.Value())
-		acc, dErr := Decrypt(value)
+		acc, dErr := decrypt(value)
 		if dErr != nil {
 			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
 			return

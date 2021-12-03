@@ -16,8 +16,10 @@ const (
 	configFileName        = ".qshell.json"
 )
 
-// config 配置信息
-var cfg = &config.Config{}
+var (
+	// config 配置信息
+	cfg = &config.Config{}
+)
 
 // 获取之前需要先 Load
 func GetConfig() config.Config {

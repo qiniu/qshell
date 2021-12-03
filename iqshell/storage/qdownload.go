@@ -14,11 +14,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/common/output"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/tools"
-	"github.com/astaxie/beego/logs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -227,7 +227,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	fmt.Println("Writing download log to file", downConfig.LogFile)
 
 	//daily rotate
-	logCfg := output.BeeLogConfig{
+	logCfg := log.Config{
 		Filename: downConfig.LogFile,
 		Level:    logLevel,
 		Daily:    true,
