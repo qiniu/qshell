@@ -1,13 +1,15 @@
 package workspace
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
 )
 
 const (
 	workspaceName         = ".qshell"
 	usersDirName          = "users"
-	usersDBName           = "users.db"
+	usersDBName           = "account.db"
+	currentUserFileName   = "account.json"
+	oldUserFileName       = "old_account.json"
 	usersWorkspaceDirName = "workspace"
 	taskDirName           = "task"
 	taskDBName            = "task.db"

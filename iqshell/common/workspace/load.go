@@ -2,8 +2,10 @@ package workspace
 
 import (
 	"errors"
-	"github.com/qiniu/qshell/v2/iqshell/config"
-	"github.com/qiniu/qshell/v2/iqshell/utils"
+	"github.com/qiniu/go-sdk/v7/auth"
+	"github.com/qiniu/qshell/v2/iqshell/common/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"path/filepath"
 )
 
@@ -40,6 +42,17 @@ func Load(options ...Option) (err error) {
 		return
 	}
 
+	// 加载账户
+	accountDBPath := filepath.Join(ws.workspace, usersDBName)
+	accountPath := filepath.Join(ws.workspace, currentUserFileName)
+	oldAccountPath := filepath.Join(ws.workspace, oldUserFileName)
+	err = account.Load(account.AccountDBPath(accountDBPath),
+		account.AccountPath(accountPath),
+		account.OldAccountPath(oldAccountPath))
+	if err != nil {
+		return
+	}
+
 	// 设置配置文件路径
 	config.Load(config.UserConfigPath(ws.userConfigPath), config.GlobalConfigPath(ws.globalConfigPath))
 
@@ -48,6 +61,15 @@ func Load(options ...Option) (err error) {
 	cfg.Merge(config.GetGlobal())
 	cfg.Merge(DefaultConfig())
 
+	currentAccount, err := account.GetAccount()
+
+	if err != nil {
+		cfg.Credentials = auth.Credentials{
+			AccessKey: currentAccount.AccessKey,
+			SecretKey: []byte(currentAccount.SecretKey),
+		}
+	}
+
 	return
 }
 
@@ -55,15 +77,4 @@ type workspace struct {
 	workspace        string
 	userConfigPath   string
 	globalConfigPath string
-}
-
-func (w *workspace) init() {
-	home, err := utils.GetHomePath()
-	if len(home) == 0 || err != nil {
-		return
-	}
-
-	w.workspace = filepath.Join(home, workspaceName)
-	w.userConfigPath = filepath.Join(w.workspace, usersDirName, configFileName)
-	w.globalConfigPath = filepath.Join(home, configFileName)
 }

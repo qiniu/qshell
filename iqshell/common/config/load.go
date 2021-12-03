@@ -16,7 +16,7 @@ func GlobalConfigPath(path string) Option {
 	}
 }
 
-func Load(options ... Option) {
+func Load(options ...Option) {
 	i := new(info)
 	// 设置配置
 	for _, option := range options {

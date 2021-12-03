@@ -3,8 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/account"
-	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"os"
 	"strings"
 	"time"

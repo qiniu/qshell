@@ -2,7 +2,7 @@ package cdn
 
 import (
 	"fmt"
-	account2 "github.com/qiniu/qshell/v2/iqshell/account"
+	account2 "github.com/qiniu/qshell/v2/iqshell/common/account"
 	"os"
 
 	"github.com/qiniu/go-sdk/v7/auth/qbox"

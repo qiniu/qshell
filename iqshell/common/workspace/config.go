@@ -2,8 +2,8 @@ package workspace
 
 import (
 	"github.com/qiniu/go-sdk/v7/auth"
-	"github.com/qiniu/qshell/v2/iqshell/config"
-	"github.com/qiniu/qshell/v2/iqshell/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 func DefaultConfig() *config.Config {

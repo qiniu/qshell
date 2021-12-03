@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"io"
 	"io/ioutil"
 	"net/http"

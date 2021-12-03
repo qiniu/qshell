@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/config"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -12,6 +11,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/qiniu/go-sdk/v7/client"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

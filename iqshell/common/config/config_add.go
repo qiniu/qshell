@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/spf13/viper"
 	"path/filepath"
 	"strings"

@@ -2,7 +2,7 @@ package storage
 
 import (
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/account"
 )
 
 func Prefop(persistentId string) (ret storage.PrefopRet, err error) {

@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	cdn2 "github.com/qiniu/qshell/v2/iqshell/cdn"
-	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"io"
 	"os"
 	"strings"

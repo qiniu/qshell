@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/v2/iqshell/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
 	"os/signal"
 	"strings"

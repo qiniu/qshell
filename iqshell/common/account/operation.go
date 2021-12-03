@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
-	"github.com/qiniu/qshell/v2/iqshell/config"
-	"github.com/qiniu/qshell/v2/iqshell/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"io"
@@ -139,11 +139,11 @@ func GetOldAccount() (account Account, err error) {
 
 // 返回Account
 func GetAccount() (account Account, err error) {
-	ak, sk := config.AccessKey(), config.SecretKey()
-	if ak != "" && sk != "" {
+	credentials :=  config.GetCredentials(config.ConfigTypeDefault)
+	if credentials.AccessKey != "" && credentials.SecretKey != nil {
 		return Account{
-			AccessKey: ak,
-			SecretKey: sk,
+			AccessKey: credentials.AccessKey,
+			SecretKey: string(credentials.SecretKey),
 		}, nil
 	}
 	return getAccount(info.accountPath)

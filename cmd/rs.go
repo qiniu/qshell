@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
-	"github.com/qiniu/qshell/v2/iqshell/utils"
 	"os"
 	"strconv"
 	"strings"

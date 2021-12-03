@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
-	"github.com/qiniu/qshell/v2/iqshell/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 // Name - 用户自定义的账户名称

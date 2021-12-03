@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/account"
-	"github.com/qiniu/qshell/v2/iqshell/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"os"
 
 	"github.com/spf13/cobra"
