@@ -15,9 +15,10 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/tools"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -112,14 +113,14 @@ func (d *DownloadConfig) generateMiddileFile(bm *BucketManager, jobListFileName 
 	kFile, kErr := os.Open(d.KeyFile)
 	if kErr != nil {
 		logs.Error("open KeyFile: %s: %v\n", d.KeyFile, kErr)
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	}
 	defer kFile.Close()
 
 	jobListFh, jErr := os.Create(jobListFileName)
 	if jErr != nil {
 		logs.Error("open jobListFileName: %s: %v\n", jobListFileName, kErr)
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	}
 	defer jobListFh.Close()
 
@@ -175,7 +176,7 @@ func doDownload(tasks chan func()) {
 func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	QShellRootPath := downConfig.RecordRoot
 	if QShellRootPath == "" {
-		QShellRootPath = config.RootPath()
+		QShellRootPath = workspace.GetWorkspace()
 	}
 	if QShellRootPath == "" {
 		fmt.Fprintf(os.Stderr, "empty root path\n")
@@ -189,7 +190,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	storePath := filepath.Join(QShellRootPath, "qdownload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
 		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	}
 
 	//init log settings
@@ -256,7 +257,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	resumeLevelDb, openErr := leveldb.OpenFile(resumeFile, nil)
 	if openErr != nil {
 		logs.Error("Open resume record leveldb error", openErr)
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	}
 	defer resumeLevelDb.Close()
 	//sync underlying writes from the OS buffer cache
@@ -273,7 +274,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		listErr := bm.ListFiles(downConfig.Bucket, downConfig.Prefix, "", jobListFileName)
 		if listErr != nil {
 			logs.Error("List bucket error", listErr)
-			os.Exit(config.STATUS_ERROR)
+			os.Exit(data.STATUS_ERROR)
 		}
 	}
 
@@ -302,7 +303,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	listFp, openErr := os.Open(jobListFileName)
 	if openErr != nil {
 		logs.Error("Open list file error", openErr)
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	}
 	defer listFp.Close()
 
@@ -514,7 +515,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	fmt.Println("\nSee download log at path", downConfig.LogFile)
 
 	if failureFileCount > 0 {
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	}
 }
 

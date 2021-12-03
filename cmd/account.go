@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -44,7 +45,6 @@ func Account(cmd *cobra.Command, params []string) {
 		secretKey := params[1]
 		name := params[2]
 
-		//pt, oldPath := config.AccPath(), config.OldAccPath()
 		sErr := account.SaveAccount(account.Account{
 			Name:      name,
 			AccessKey: accessKey,

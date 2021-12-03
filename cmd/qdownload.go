@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/storage"
 	"io/ioutil"
 	"os"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/storage"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
@@ -71,7 +72,7 @@ func QiniuDownload(cmd *cobra.Command, params []string) {
 
 	if !destFileInfo.IsDir() {
 		logs.Error("Download dest dir should be a directory")
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 
 	if threadCount < storage.MIN_DOWNLOAD_THREAD_COUNT || threadCount > storage.MAX_DOWNLOAD_THREAD_COUNT {

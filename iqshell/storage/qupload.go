@@ -14,9 +14,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/tools"
 
 	"github.com/astaxie/beego/logs"
@@ -119,19 +120,12 @@ type UploadConfig struct {
 func (cfg *UploadConfig) Check() {
 	// 验证大小
 	if cfg.ResumableAPIV2PartSize <= 0 {
-		cfg.ResumableAPIV2PartSize = config.BLOCK_SIZE
+		cfg.ResumableAPIV2PartSize = data.BLOCK_SIZE
 	} else if cfg.ResumableAPIV2PartSize < int64(utils.MB) {
 		cfg.ResumableAPIV2PartSize = int64(utils.MB)
 	} else if cfg.ResumableAPIV2PartSize > int64(utils.GB) {
 		cfg.ResumableAPIV2PartSize = int64(utils.GB)
 	}
-}
-
-func (cfg *UploadConfig) GetUpHost() string {
-	if cfg.UpHost != "" {
-		return cfg.UpHost
-	}
-	return config.UpHost()
 }
 
 func (cfg *UploadConfig) JobId() string {
@@ -279,7 +273,7 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 
 	defaultLogFile, err := cfg.DefaultLogFile(storePath, jobId)
 	if err != nil {
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 	logLevel := cfg.GetLogLevel()
 	logRotate := cfg.GetLogRotate()
@@ -456,10 +450,10 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	timeStart := time.Now()
 	//create job id
 	jobId := uploadConfig.JobId()
-	QShellRootPath := config.RootPath()
+	QShellRootPath := workspace.GetWorkspace()
 	if QShellRootPath == "" {
 		logs.Error("Empty root path")
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 	storePath := filepath.Join(QShellRootPath, "qupload", jobId)
 
@@ -479,7 +473,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 
 	cacheResultName, totalFileCount, cErr := uploadConfig.CacheFileNameAndCount(storePath, jobId)
 	if cErr != nil {
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 
 	//leveldb folder
@@ -487,7 +481,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	ldb, err := leveldb.OpenFile(leveldbFileName, nil)
 	if err != nil {
 		logs.Error("Open leveldb `%s` failed due to %s", leveldbFileName, err)
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 	defer ldb.Close()
 
@@ -495,7 +489,7 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	cacheResultFileHandle, err := os.Open(cacheResultName)
 	if err != nil {
 		logs.Error("Open list file `%s` failed due to %s", cacheResultName, err)
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 	defer cacheResultFileHandle.Close()
 	bScanner := bufio.NewScanner(cacheResultFileHandle)
@@ -634,9 +628,9 @@ func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExpo
 	fmt.Println("\nSee upload log at path", uploadConfig.LogFile)
 
 	if failureFileCount > 0 {
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	} else {
-		os.Exit(config.STATUS_OK)
+		os.Exit(data.STATUS_OK)
 	}
 }
 
@@ -810,11 +804,17 @@ func checkFileNeedToUpload(bm *BucketManager, uploadConfig *UploadConfig, ldb *l
 func formUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *opt.WriteOptions, ldbKey string,
 	upToken string, localFilePath, uploadFileKey string, localFileLastModified int64, exporter *FileExporter) {
 
-	uploader := storage.NewFormUploader(nil)
+	cfg := workspace.GetConfig()
+	r := (&cfg).GetRegion()
+	storage.UcHost = cfg.Hosts.UC[0]
+	uploader := storage.NewFormUploader(&storage.Config{
+		UseHTTPS:      cfg.IsUseHttps(),
+		Zone:          r,
+		Region:        r,
+		CentralRsHost: cfg.Hosts.GetOneRs(),
+	})
 	putRet := storage.PutRet{}
-	putExtra := storage.PutExtra{
-		UpHost: uploadConfig.GetUpHost(),
-	}
+	putExtra := storage.PutExtra{}
 
 	err := uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
 	if err != nil {
@@ -859,6 +859,9 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 		progressRecorder.FilePath = progressFilePath
 	}
 
+	cfg := workspace.GetConfig()
+	r := (&cfg).GetRegion()
+	storage.UcHost = cfg.Hosts.UC[0]
 	var err error
 	if uploadConfig.ResumableAPIV2 {
 		partSize := uploadConfig.ResumableAPIV2PartSize
@@ -878,10 +881,14 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 			PartSize: partSize,
 		}
 		putExtra.Notify = notifyFunc
-		putExtra.UpHost = uploadConfig.GetUpHost()
 
 		//resumable upload
-		uploader := storage.NewResumeUploaderV2(nil)
+		uploader := storage.NewResumeUploaderV2(&storage.Config{
+			UseHTTPS:      cfg.IsUseHttps(),
+			Zone:          r,
+			Region:        r,
+			CentralRsHost: cfg.Hosts.GetOneRs(),
+		})
 		err = uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
 	} else {
 
@@ -895,10 +902,14 @@ func resumableUploadFile(uploadConfig *UploadConfig, ldb *leveldb.DB, ldbWOpt *o
 		putRet := storage.PutRet{}
 		putExtra := storage.RputExtra{}
 		putExtra.Notify = notifyFunc
-		putExtra.UpHost = uploadConfig.GetUpHost()
 
 		//resumable upload
-		uploader := storage.NewResumeUploader(nil)
+		uploader := storage.NewResumeUploader(&storage.Config{
+			UseHTTPS:      cfg.IsUseHttps(),
+			Zone:          r,
+			Region:        r,
+			CentralRsHost: cfg.Hosts.GetOneRs(),
+		})
 		err = uploader.PutFile(context.Background(), &putRet, upToken, uploadFileKey, localFilePath, &putExtra)
 	}
 

@@ -6,21 +6,19 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
-const (
-	DefaultRsHost  = "rs.qiniu.com"
-	DefaultRsfHost = "rsf.qiniu.com"
-	DefaultAPIHost = "api.qiniu.com"
-	DefaultPubHost = "pu.qbox.me:10200"
-)
-
-func DefaultConfig() *config.Config {
+func defaultConfig() *config.Config {
 	return &config.Config{
 		Credentials: auth.Credentials{
 			AccessKey: "",
 			SecretKey: nil,
 		},
-		UseHttps:    data.TrueString,
-		Hosts: config.Hosts{},
+		UseHttps: data.TrueString,
+		Hosts: config.Hosts{
+			Rs:  []string{"rs.qiniu.com"},
+			Rsf: []string{"rsf.qiniu.com"},
+			Api: []string{"api.qiniu.com"},
+			UC:  []string{"uc.qbox.me"},
+		},
 		Up: config.Up{
 			PutThreshold:        1024 * 1024 * 4,
 			ChunkSize:           1024 * 1024 * 2,

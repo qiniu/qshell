@@ -3,10 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/account"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
 	"io"
 	"os"
 	"runtime"
@@ -14,6 +10,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
 
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/spf13/cobra"
@@ -219,11 +221,16 @@ func (fc *fetchConfig) initFileExporter() {
 // GetBucketManagerWithConfig 会使用os.Exit推出，因此该方法需要在main gouroutine中调用
 func (fc *fetchConfig) initBucketManager() {
 
-	cfg := storage.Config{
-		IoHost:  fc.upHost,
-		ApiHost: config.ApiHost(),
+	cfg := workspace.GetConfig()
+	region := (&cfg).GetRegion()
+	if len(fc.upHost) > 0 {
+		region.SrcUpHosts = []string{fc.upHost}
+		region.CdnUpHosts = nil
 	}
-	fc.bm = storage2.GetBucketManagerWithConfig(&cfg)
+
+	fc.bm = storage2.GetBucketManagerWithConfig(&storage.Config{
+		Region: region,
+	})
 }
 
 // initUpHost需要在主goroutine中调用
@@ -267,7 +274,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(urlsListFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open urls list file: %s : %v\n", urlsListFile, err)
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -278,11 +285,11 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 		saveKey   string
 		remoteUrl string
 		pError    error
-		fItemChan chan *config.FetchItem = make(chan *config.FetchItem)
+		fItemChan chan *data.FetchItem = make(chan *data.FetchItem)
 	)
 	defer close(fItemChan)
 
-	itemc := make(chan *config.FetchItem)
+	itemc := make(chan *data.FetchItem)
 	donec := make(chan struct{})
 
 	fconfig := fetchConfig{
@@ -316,7 +323,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 		} else {
 			saveKey = items[1]
 		}
-		item := config.FetchItem{
+		item := data.FetchItem{
 			Bucket:    bucket,
 			Key:       saveKey,
 			RemoteUrl: remoteUrl,
@@ -328,7 +335,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 	<-donec
 }
 
-func fetchChannel(c chan *config.FetchItem, donec chan struct{}, fconfig *fetchConfig) {
+func fetchChannel(c chan *data.FetchItem, donec chan struct{}, fconfig *fetchConfig) {
 
 	fileExporter := fconfig.fileExporter
 	bm := fconfig.bm
@@ -340,7 +347,7 @@ func fetchChannel(c chan *config.FetchItem, donec chan struct{}, fconfig *fetchC
 		limitc <- struct{}{}
 		wg.Add(1)
 
-		go func(item *config.FetchItem) {
+		go func(item *data.FetchItem) {
 			_, fErr := bm.Fetch(item.RemoteUrl, item.Bucket, item.Key)
 			if fErr != nil {
 				fmt.Fprintf(os.Stderr, "fetch %s => %s:%s failed\n", item.RemoteUrl, item.Bucket, item.Key)
@@ -383,7 +390,7 @@ func BatchStat(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyListFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open key list file: %s, error: %v\n", keyListFile, err)
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -451,7 +458,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 	}
 
@@ -487,7 +494,7 @@ func BatchDelete(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyListFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open key list file error", err)
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -580,7 +587,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 	}
 
@@ -612,7 +619,7 @@ func BatchChgm(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyMimeMapFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open key mime map file error: %v\n", err)
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -702,7 +709,7 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 	}
 
@@ -735,7 +742,7 @@ func BatchChtype(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyTypeMapFile)
 		if err != nil {
 			fmt.Printf("Open key file type map file error: %v\n", err)
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -835,7 +842,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 	}
 
@@ -869,7 +876,7 @@ func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(keyExpireMapFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open key expire map file error")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -951,7 +958,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 	}
 
@@ -985,7 +992,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(oldNewKeyMapFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open old new key map file error")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -1079,7 +1086,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Task quit!")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 	}
 
@@ -1114,7 +1121,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open src dest key map file error")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -1217,7 +1224,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 
 		if rcode != rcode2 {
 			fmt.Fprintln(os.Stderr, "Verification code is not valid")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 	}
 
@@ -1253,7 +1260,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(srcDestKeyMapFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Open src dest key map file error")
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -1345,7 +1352,7 @@ func batchCopy(entries []storage2.CopyEntryPath, bm *storage2.BucketManager, fil
 func BatchSign(cmd *cobra.Command, params []string) {
 	if deadline <= 0 {
 		fmt.Fprintf(os.Stderr, "Invalid <Deadline>: deadline must be int and greater than 0\n")
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 	d := time.Now().Add(time.Second * time.Duration(deadline) * 24 * 365).Unix()
 
@@ -1357,7 +1364,7 @@ func BatchSign(cmd *cobra.Command, params []string) {
 		fp, openErr := os.Open(inputFile)
 		if openErr != nil {
 			fmt.Fprintln(os.Stderr, "Open url list file error,", openErr)
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 		bReader = fp

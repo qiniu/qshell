@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"github.com/qiniu/qshell/v2/iqshell/storage"
 	"os"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/storage"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
@@ -46,7 +47,7 @@ func Sync(cmd *cobra.Command, params []string) {
 		key, kErr = utils.KeyFromUrl(srcResUrl)
 		if kErr != nil {
 			fmt.Fprintf(os.Stderr, "get path as key: %v\n", kErr)
-			os.Exit(config.STATUS_ERROR)
+			os.Exit(data.STATUS_ERROR)
 		}
 	}
 
@@ -56,7 +57,7 @@ func Sync(cmd *cobra.Command, params []string) {
 	syncRet, sErr := bm.Sync(srcResUrl, bucket, key, upHostIp, isResumeV2)
 	if sErr != nil {
 		logs.Error(sErr)
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	}
 
 	fmt.Printf("Sync %s => %s:%s Success, Duration: %s!\n", srcResUrl, bucket, key, time.Since(tStart))

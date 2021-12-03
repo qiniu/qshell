@@ -19,9 +19,16 @@ const (
 var (
 	// config 配置信息
 	cfg = &config.Config{}
+
+	//
+	workspacePath = ""
 )
 
 // 获取之前需要先 Load
 func GetConfig() config.Config {
 	return *cfg
+}
+
+func GetWorkspace() string {
+	return workspacePath
 }

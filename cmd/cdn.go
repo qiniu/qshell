@@ -3,12 +3,13 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	cdn2 "github.com/qiniu/qshell/v2/iqshell/cdn"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	cdn2 "github.com/qiniu/qshell/v2/iqshell/cdn"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/cdn"
@@ -99,7 +100,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(urlListFile)
 		if err != nil {
 			fmt.Println("Open refresh item list file error,", err)
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}
@@ -180,7 +181,7 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 		fp, err = os.Open(urlListFile)
 		if err != nil {
 			fmt.Println("Open url list file error,", err)
-			os.Exit(config.STATUS_HALT)
+			os.Exit(data.STATUS_HALT)
 		}
 		defer fp.Close()
 	}

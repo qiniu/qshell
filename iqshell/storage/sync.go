@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"io"
 	"net/http"
 	"os"
@@ -15,6 +13,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/storage"
@@ -54,7 +56,7 @@ func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, er
 	syncId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", srcResUrl, bucket, key))
 
 	//local storage path
-	QShellRootPath := config.RootPath()
+	QShellRootPath := workspace.GetWorkspace()
 	if QShellRootPath == "" {
 		err = fmt.Errorf("empty root path\n")
 		return
@@ -109,7 +111,7 @@ func (p *ProgressRecorder) Reset() {
 func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResumableV2 bool) {
 
 	//check offset valid or not
-	if p.Offset%config.BLOCK_SIZE != 0 {
+	if p.Offset%data.BLOCK_SIZE != 0 {
 		logs.Info("Invalid offset from progress file,", p.Offset)
 		p.Reset()
 		return
@@ -118,7 +120,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 	// 分片 V1
 	if !isResumableV2 {
 		//check offset and blk ctxs
-		if p.Offset != 0 && p.BlkCtxs != nil && int(p.Offset/config.BLOCK_SIZE) != len(p.BlkCtxs) {
+		if p.Offset != 0 && p.BlkCtxs != nil && int(p.Offset/data.BLOCK_SIZE) != len(p.BlkCtxs) {
 
 			logs.Info("Invalid offset and block info")
 			p.Reset()
@@ -152,7 +154,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 
 	// 分片 V2
 	//check offset and blk ctxs
-	if p.Offset != 0 && p.Parts != nil && int(p.Offset/config.BLOCK_SIZE) != len(p.Parts) {
+	if p.Offset != 0 && p.Parts != nil && int(p.Offset/data.BLOCK_SIZE) != len(p.Parts) {
 
 		logs.Info("Invalid offset and block info")
 		p.Reset()
@@ -244,7 +246,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 
 	//init the range offset
 	rangeStartOffset := syncProgress.Offset
-	fromBlkIndex := int(rangeStartOffset / config.BLOCK_SIZE)
+	fromBlkIndex := int(rangeStartOffset / data.BLOCK_SIZE)
 
 	lastBlock := false
 
@@ -313,7 +315,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 
 	//range get and mkblk upload
 	var bf *bytes.Buffer
-	var blockSize = int64(config.BLOCK_SIZE)
+	var blockSize = int64(data.BLOCK_SIZE)
 	if isResumableV2 {
 		// 检查块大小是否满足实际需求
 		maxParts := int64(ResumableAPIV2MaxPartCount)
@@ -346,12 +348,12 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 			logs.Info("Retrying %d time get range for block [%d]", retryTimes, blkIndex)
 			retryTimes++
 		}
-		data := bf.Bytes()
+		dataBytes := bf.Bytes()
 
 		// 2.2 上传数据到云存储
 		retryTimes = 0
 		for {
-			pErr := uploader.uploadBlock(ctx, data)
+			pErr := uploader.uploadBlock(ctx, dataBytes)
 			if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
 				err = pErr
 				return
@@ -366,7 +368,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 			retryTimes++
 		}
 		//advance range offset
-		rangeStartOffset += config.BLOCK_SIZE
+		rangeStartOffset += data.BLOCK_SIZE
 
 		sErr := syncProgress.RecordProgress()
 		if sErr != nil {

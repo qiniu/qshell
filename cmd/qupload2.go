@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
 	"os"
 	"strings"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/storage"
@@ -27,7 +28,7 @@ var (
 func init() {
 	qUpload2Cmd.Flags().Int64Var(&up2threadCount, "thread-count", 0, "multiple thread count")
 	qUpload2Cmd.Flags().BoolVarP(&uploadConfig.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
-	qUpload2Cmd.Flags().Int64Var(&uploadConfig.ResumableAPIV2PartSize, "resumable-api-v2-part-size", config.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload")
+	qUpload2Cmd.Flags().Int64Var(&uploadConfig.ResumableAPIV2PartSize, "resumable-api-v2-part-size", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload")
 	qUpload2Cmd.Flags().StringVar(&uploadConfig.SrcDir, "src-dir", "", "src dir to upload")
 	qUpload2Cmd.Flags().StringVar(&uploadConfig.FileList, "file-list", "", "file list to upload")
 	qUpload2Cmd.Flags().StringVar(&uploadConfig.Bucket, "bucket", "", "bucket")
@@ -66,17 +67,17 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 	//check params
 	if uploadConfig.SrcDir == "" {
 		fmt.Println("Upload config no `--src-dir` specified")
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 
 	if uploadConfig.Bucket == "" {
 		fmt.Println("Upload config no `--bucket` specified")
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 
 	if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
 		logs.Error("Upload config `SrcDir` not exist error,", err)
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 	policy := storage.PutPolicy{}
 
@@ -105,13 +106,13 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 	}
 	if uploadConfig.FileType != 1 && uploadConfig.FileType != 0 {
 		logs.Error("Wrong Filetype, It should be 0 or 1 ")
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 
 	fileExporter, fErr := storage2.NewFileExporter(successFname, failureFname, overwriteFname)
 	if fErr != nil {
 		logs.Error("initialize fileExporter: %v\n", fErr)
-		os.Exit(config.STATUS_HALT)
+		os.Exit(data.STATUS_HALT)
 	}
 	storage2.QiniuUpload(int(up2threadCount), &uploadConfig, fileExporter)
 }

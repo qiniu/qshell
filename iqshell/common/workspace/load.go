@@ -2,32 +2,13 @@ package workspace
 
 import (
 	"errors"
+	"path/filepath"
+
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"path/filepath"
 )
-
-type Option func(w *workspace)
-
-func Workspace(path string) Option {
-	return func(w *workspace) {
-		w.workspace = path
-	}
-}
-
-func UserConfigPath(path string) Option {
-	return func(w *workspace) {
-		w.userConfigPath = path
-	}
-}
-
-func CmdConfig(cfg *config.Config) Option {
-	return func(w *workspace) {
-		w.cmdConfig = cfg
-	}
-}
 
 // 加载工作环境
 func Load(options ...Option) (err error) {
@@ -43,6 +24,8 @@ func Load(options ...Option) (err error) {
 		err = errors.New("can't get home dir")
 		return
 	}
+	workspacePath = ws.workspace
+
 	err = utils.CreateDirIfNotExist(ws.workspace)
 	if err != nil {
 		return
@@ -87,7 +70,7 @@ func Load(options ...Option) (err error) {
 	cfg.Merge(ws.cmdConfig)
 	cfg.Merge(config.GetUser())
 	cfg.Merge(config.GetGlobal())
-	cfg.Merge(DefaultConfig())
+	cfg.Merge(defaultConfig())
 
 	if err == nil {
 		cfg.Credentials = auth.Credentials{
@@ -97,6 +80,26 @@ func Load(options ...Option) (err error) {
 	}
 
 	return
+}
+
+type Option func(w *workspace)
+
+func Workspace(path string) Option {
+	return func(w *workspace) {
+		w.workspace = path
+	}
+}
+
+func UserConfigPath(path string) Option {
+	return func(w *workspace) {
+		w.userConfigPath = path
+	}
+}
+
+func CmdConfig(cfg *config.Config) Option {
+	return func(w *workspace) {
+		w.cmdConfig = cfg
+	}
 }
 
 type workspace struct {

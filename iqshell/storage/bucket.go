@@ -6,9 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/account"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -17,6 +14,10 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
@@ -167,7 +168,7 @@ func (m *BucketManager) Get(bucket, key string, destFile string) (err error) {
 		reqHost string
 		reqErr  error
 	)
-	reqHost = config.RsHost()
+	reqHost = workspace.GetConfig().Hosts.GetOneRs()
 	if reqHost == "" {
 		reqHost, reqErr = m.rsHost(bucket)
 		if reqErr != nil {
@@ -426,16 +427,15 @@ func GetBucketManager() *BucketManager {
 		os.Exit(1)
 	}
 	mac := qbox.NewMac(acc.AccessKey, acc.SecretKey)
-	cfg := storage.Config{
-		UpHost:        config.UpHost(),
-		IoHost:        config.IoHost(),
-		RsHost:        config.RsHost(),
-		ApiHost:       config.ApiHost(),
-		RsfHost:       config.RsfHost(),
-		CentralRsHost: config.RsHost(),
-	}
-	storage.UcHost = config.UcHost()
-	return NewBucketManager(mac, &cfg)
+	cfg := workspace.GetConfig()
+	r := (&cfg).GetRegion()
+	storage.UcHost = cfg.Hosts.UC[0]
+	return NewBucketManager(mac, &storage.Config{
+		UseHTTPS:      cfg.IsUseHttps(),
+		Region:        r,
+		Zone:          r,
+		CentralRsHost: cfg.Hosts.GetOneRs(),
+	})
 }
 
 func GetUpHost(cfg *storage.Config, ak, bucket string) (upHost string, err error) {

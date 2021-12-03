@@ -3,15 +3,12 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/astaxie/beego/logs"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/qiniu/go-sdk/v7/client"
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -110,51 +107,33 @@ func initConfig() {
 	}
 	logs.SetLogger(logs.AdapterConsole)
 
-	var jsonConfigFile string
+	// var jsonConfigFile string
 
-	if cfgFile != "" {
-		if !strings.HasSuffix(cfgFile, ".json") {
-			jsonConfigFile = cfgFile + ".json"
-			os.Rename(cfgFile, jsonConfigFile)
-		}
-		viper.SetConfigFile(jsonConfigFile)
-	} else {
-		homeDir, hErr := homedir.Dir()
-		if hErr != nil {
-			fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
-			os.Exit(1)
-		}
-		viper.AddConfigPath(homeDir)
-		viper.SetConfigName(".qshell")
-	}
+	// if cfgFile != "" {
+	// 	if !strings.HasSuffix(cfgFile, ".json") {
+	// 		jsonConfigFile = cfgFile + ".json"
+	// 		os.Rename(cfgFile, jsonConfigFile)
+	// 	}
+	// 	viper.SetConfigFile(jsonConfigFile)
+	// } else {
+	// 	homeDir, hErr := homedir.Dir()
+	// 	if hErr != nil {
+	// 		fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
+	// 		os.Exit(1)
+	// 	}
+	// 	viper.AddConfigPath(homeDir)
+	// 	viper.SetConfigName(".qshell")
+	// }
 
+	workspacePath := ""
 	if local {
 		dir, gErr := os.Getwd()
 		if gErr != nil {
 			fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
 			os.Exit(1)
 		}
-		config.SetRootPath(dir + "/.qshell")
-	} else {
-		homeDir, hErr := homedir.Dir()
-		if hErr != nil {
-			fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
-			os.Exit(1)
-		}
-		config.SetRootPath(homeDir + "/.qshell")
+		workspacePath = dir
 	}
-	rootPath := config.RootPath()
 
-	config.SetDefaultAccDBPath(filepath.Join(rootPath, "account.db"))
-	config.SetDefaultAccPath(filepath.Join(rootPath, "account.json"))
-	config.SetDefaultRsHost(storage.DefaultRsHost)
-	config.SetDefaultRsfHost(storage.DefaultRsfHost)
-	config.SetDefaultUcHost("http://uc.qbox.me")
-
-	if rErr := viper.ReadInConfig(); rErr != nil {
-		if _, ok := rErr.(viper.ConfigFileNotFoundError); !ok {
-			fmt.Fprintf(os.Stderr, "read config file: %v\n", rErr)
-		}
-	}
-	os.Rename(jsonConfigFile, cfgFile)
+	workspace.Load(workspace.Workspace(workspacePath), workspace.UserConfigPath(cfgFile))
 }

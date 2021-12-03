@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"os"
 	"strings"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -144,7 +145,7 @@ func (o *awsfetchOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 	if o.ctoken != "" {
 		input.ContinuationToken = aws.String(o.ctoken)
 	}
-	itemc := make(chan *config.FetchItem)
+	itemc := make(chan *data.FetchItem)
 	donec := make(chan struct{})
 
 	go fetchChannel(itemc, donec, &o.fetchConfig)
@@ -174,7 +175,7 @@ func (o *awsfetchOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 				continue
 			}
 
-			item := &config.FetchItem{
+			item := &data.FetchItem{
 				Bucket:    qiniuBucket,
 				Key:       *obj.Key,
 				RemoteUrl: awsUrl(awsBucket, region, *obj.Key),

@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/storage"
 	"os"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/storage"
 
 	"github.com/spf13/cobra"
 )
@@ -45,7 +46,7 @@ func Prefop(cmd *cobra.Command, params []string) {
 	fopRet, err := storage.Prefop(persistentId)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Prefop error: %v\n", err)
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	} else {
 		fmt.Println(fopRet.String())
 	}
@@ -58,7 +59,7 @@ func Fop(cmd *cobra.Command, params []string) {
 	persistengId, err := storage.Pfop(bucket, key, fops, pipeline, notifyURL, notifyForce)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Prefop error: %v\n", err)
-		os.Exit(config.STATUS_ERROR)
+		os.Exit(data.STATUS_ERROR)
 	}
 	fmt.Println(persistengId)
 }
