@@ -78,16 +78,21 @@ var userRmCmd = &cobra.Command{
 
 var (
 	userLsName bool
-	userAK     string
-	userSK     string
-	userName   string
+
+	userAK        string
+	userSK        string
+	userName      string
+	userOverwrite bool
 )
 
 func init() {
 	userLsCmd.Flags().BoolVarP(&userLsName, "name", "n", false, "only list user names")
+
 	userAddCmd.Flags().StringVarP(&userAK, "ak", "", "", "user's access key of Qiniu")
 	userAddCmd.Flags().StringVarP(&userSK, "sk", "", "", "user's secret key of Qiniu")
 	userAddCmd.Flags().StringVarP(&userName, "name", "", "", "user id of local")
+	userAddCmd.Flags().BoolVarP(&userOverwrite, "overwrite", "w", false, "overwrite user or not when account exists in local db, by default not overwrite")
+
 	userCmd.AddCommand(userAddCmd, userRmCmd, userCleanCmd, userChCmd, userLsCmd, userLookupCmd, userCurrentCmd)
 	RootCmd.AddCommand(userCmd)
 }
@@ -196,11 +201,10 @@ func Add(cmd *cobra.Command, params []string) {
 		Name:      userAK,
 		AccessKey: userSK,
 		SecretKey: userName,
-	}, accountOver)
+	}, userOverwrite)
 
 	if sErr != nil {
 		fmt.Println(sErr)
 		os.Exit(data.STATUS_ERROR)
 	}
-
 }
