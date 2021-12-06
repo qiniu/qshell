@@ -10,8 +10,8 @@ import (
 
 	cdn2 "github.com/qiniu/qshell/v2/iqshell/cdn"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/cdn"
 	"github.com/spf13/cobra"
 )
@@ -68,7 +68,7 @@ func init() {
 }
 
 func initOnInitialize() {
-	logs.Debug("qps limit: %d, max item-size: %d", qpsLimit, itemsLimit)
+	log.Debug("qps limit: %d, max item-size: %d", qpsLimit, itemsLimit)
 	if qpsLimit > 0 {
 		d := time.Second / time.Duration(qpsLimit)
 		timeTicker = time.NewTicker(d)
@@ -151,7 +151,7 @@ func CdnRefresh(cmd *cobra.Command, params []string) {
 
 func cdnRefresh(cm *cdn.CdnManager, urls []string, dirs []string) {
 	acquire()
-	logs.Debug("cdnRefresh, url size: %d, dir size: %d", len(urls), len(dirs))
+	log.Debug("cdnRefresh, url size: %d, dir size: %d", len(urls), len(dirs))
 	resp, err := cm.RefreshUrlsAndDirs(urls, dirs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CDN refresh error: %v\n", err)
@@ -210,7 +210,7 @@ func CdnPrefetch(cmd *cobra.Command, params []string) {
 
 func cdnPrefetch(cm *cdn.CdnManager, urls []string) {
 	acquire()
-	logs.Debug("cdnPrefetch, url size: %d", len(urls))
+	log.Debug("cdnPrefetch, url size: %d", len(urls))
 	resp, err := cm.PrefetchUrls(urls)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CDN prefetch error: %v\n", err)

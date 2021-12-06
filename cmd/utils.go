@@ -5,15 +5,16 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"github.com/qiniu/qshell/v2/iqshell/tools"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/tools"
+
 	"github.com/spf13/cobra"
 )
 
@@ -191,13 +192,13 @@ func Base64Decode(cmd *cobra.Command, params []string) {
 	if urlSafe {
 		dataDecoded, err = base64.URLEncoding.DecodeString(dataToDecode)
 		if err != nil {
-			logs.Error("Failed to decode `", dataToDecode, "' in url safe mode.")
+			log.Error("Failed to decode `", dataToDecode, "' in url safe mode.")
 			return
 		}
 	} else {
 		dataDecoded, err = base64.StdEncoding.DecodeString(dataToDecode)
 		if err != nil {
-			logs.Error("Failed to decode `", dataToDecode, "' in standard mode.")
+			log.Error("Failed to decode `", dataToDecode, "' in standard mode.")
 			return
 		}
 	}
@@ -208,7 +209,7 @@ func Base64Decode(cmd *cobra.Command, params []string) {
 func Timestamp2Date(cmd *cobra.Command, params []string) {
 	ts, err := strconv.ParseInt(params[0], 10, 64)
 	if err != nil {
-		logs.Error("Invalid timestamp value,", params[0])
+		log.Error("Invalid timestamp value,", params[0])
 		return
 	}
 	t := time.Unix(ts, 0)
@@ -219,7 +220,7 @@ func Timestamp2Date(cmd *cobra.Command, params []string) {
 func TimestampNano2Date(cmd *cobra.Command, params []string) {
 	tns, err := strconv.ParseInt(params[0], 10, 64)
 	if err != nil {
-		logs.Error("Invalid nano timestamp value,", params[0])
+		log.Error("Invalid nano timestamp value,", params[0])
 		return
 	}
 	t := time.Unix(0, tns*100)
@@ -230,7 +231,7 @@ func TimestampNano2Date(cmd *cobra.Command, params []string) {
 func TimestampMilli2Date(cmd *cobra.Command, params []string) {
 	tms, err := strconv.ParseInt(params[0], 10, 64)
 	if err != nil {
-		logs.Error("Invalid milli timestamp value,", params[0])
+		log.Error("Invalid milli timestamp value,", params[0])
 		return
 	}
 	t := time.Unix(tms/1000, 0)
@@ -241,7 +242,7 @@ func TimestampMilli2Date(cmd *cobra.Command, params []string) {
 func Date2Timestamp(cmd *cobra.Command, params []string) {
 	secs, err := strconv.ParseInt(params[0], 10, 64)
 	if err != nil {
-		logs.Error("Invalid seconds to now,", params[0])
+		log.Error("Invalid seconds to now,", params[0])
 		return
 	}
 	t := time.Now()
@@ -259,7 +260,7 @@ func Urldecode(cmd *cobra.Command, params []string) {
 	dataToDecode := params[0]
 	dataDecoded, err := url.PathUnescape(dataToDecode)
 	if err != nil {
-		logs.Error("Failed to unescape data `", dataToDecode, "'")
+		log.Error("Failed to unescape data `", dataToDecode, "'")
 	} else {
 		fmt.Println(dataDecoded)
 	}
@@ -283,18 +284,18 @@ func Unzip(cmd *cobra.Command, params []string) {
 	if unzipDir == "" {
 		unzipDir, err = os.Getwd()
 		if err != nil {
-			logs.Error("Get current work directory failed due to error", err)
+			log.Error("Get current work directory failed due to error", err)
 			return
 		}
 	} else {
 		if _, statErr := os.Stat(unzipDir); statErr != nil {
-			logs.Error("Specified <UnzipToDir> is not a valid directory")
+			log.Error("Specified <UnzipToDir> is not a valid directory")
 			return
 		}
 	}
 	unzipErr := utils.Unzip(zipFilePath, unzipDir)
 	if unzipErr != nil {
-		logs.Error("Unzip file failed due to error", unzipErr)
+		log.Error("Unzip file failed due to error", unzipErr)
 	}
 }
 
@@ -303,7 +304,7 @@ func ReqId(cmd *cobra.Command, params []string) {
 	reqId := params[0]
 	decodedBytes, err := base64.URLEncoding.DecodeString(reqId)
 	if err != nil || len(decodedBytes) < 4 {
-		logs.Error("Invalid reqid", reqId, err)
+		log.Error("Invalid reqid", reqId, err)
 		return
 	}
 
@@ -315,7 +316,7 @@ func ReqId(cmd *cobra.Command, params []string) {
 	}
 	unixNano, err := strconv.ParseInt(newStr, 16, 64)
 	if err != nil {
-		logs.Error("Invalid reqid", reqId, err)
+		log.Error("Invalid reqid", reqId, err)
 		return
 	}
 	dstDate := time.Unix(0, unixNano)

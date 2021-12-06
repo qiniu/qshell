@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/spf13/cobra"
 )
@@ -76,7 +76,7 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 	}
 
 	if _, err := os.Stat(uploadConfig.SrcDir); err != nil {
-		logs.Error("Upload config `SrcDir` not exist error,", err)
+		log.Error("Upload config `SrcDir` not exist error,", err)
 		os.Exit(data.STATUS_HALT)
 	}
 	policy := storage.PutPolicy{}
@@ -105,13 +105,13 @@ func QiniuUpload2(cmd *cobra.Command, params []string) {
 		}
 	}
 	if uploadConfig.FileType != 1 && uploadConfig.FileType != 0 {
-		logs.Error("Wrong Filetype, It should be 0 or 1 ")
+		log.Error("Wrong Filetype, It should be 0 or 1 ")
 		os.Exit(data.STATUS_HALT)
 	}
 
 	fileExporter, fErr := storage2.NewFileExporter(successFname, failureFname, overwriteFname)
 	if fErr != nil {
-		logs.Error("initialize fileExporter: %v\n", fErr)
+		log.Error("initialize fileExporter: %v\n", fErr)
 		os.Exit(data.STATUS_HALT)
 	}
 	storage2.QiniuUpload(int(up2threadCount), &uploadConfig, fileExporter)

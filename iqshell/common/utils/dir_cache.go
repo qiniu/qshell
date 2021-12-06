@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
 /*
@@ -25,13 +26,13 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 	rootPathFileInfo, statErr := os.Stat(cacheRootPath)
 	if statErr != nil {
 		retErr = statErr
-		logs.Error("Failed to stat path `%s`, %s", cacheRootPath, statErr)
+		log.Error("Failed to stat path `%s`, %s", cacheRootPath, statErr)
 		return
 	}
 
 	if !rootPathFileInfo.IsDir() {
 		retErr = errors.New("dircache failed")
-		logs.Error("Dir cache failed, `%s` should be a directory rather than a file", cacheRootPath)
+		log.Error("Dir cache failed, `%s` should be a directory rather than a file", cacheRootPath)
 		return
 	}
 
@@ -43,7 +44,7 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 		cResultFh, createErr := os.Create(cacheResultFile)
 		if createErr != nil {
 			retErr = createErr
-			logs.Error("Failed to open cache file `%s`, %s", cacheResultFile, createErr)
+			log.Error("Failed to open cache file `%s`, %s", cacheResultFile, createErr)
 			return
 		}
 		defer cResultFh.Close()
@@ -56,18 +57,18 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 	//walk start
 	walkStart := time.Now()
 
-	logs.Informational("Walk `%s` start from %s", cacheRootPath, walkStart.String())
+	log.Info("Walk `%s` start from %s", cacheRootPath, walkStart.String())
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, walkErr error) error {
 		var retErr error
 		//check error
 		if walkErr != nil {
-			logs.Error("Walk through `%s` error, %s", path, walkErr)
+			log.Error("Walk through `%s` error, %s", path, walkErr)
 
 			//skip this dir
 			retErr = filepath.SkipDir
 		} else {
 			if fi.IsDir() {
-				logs.Debug("Walking through `%s`", path)
+				log.Debug("Walking through `%s`", path)
 			} else {
 				var relPath string
 				if cacheRootPath == "." {
@@ -80,10 +81,10 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 				//Unit is 100ns
 				flmd := fi.ModTime().UnixNano() / 100
 
-				logs.Debug("Meet file `%s`, size: %d, modtime: %d", relPath, fsize, flmd)
+				log.Debug("Meet file `%s`, size: %d, modtime: %d", relPath, fsize, flmd)
 				fmeta := fmt.Sprintf("%s\t%d\t%d\n", relPath, fsize, flmd)
 				if _, err := bWriter.WriteString(fmeta); err != nil {
-					logs.Error("Failed to write data `%s` to cache file `%s`", fmeta, cacheResultFile)
+					log.Error("Failed to write data `%s` to cache file `%s`", fmeta, cacheResultFile)
 				} else {
 					fileCount += 1
 				}
@@ -93,14 +94,14 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 	})
 
 	if fErr := bWriter.Flush(); fErr != nil {
-		logs.Error("Failed to flush to cache file `%s`", cacheResultFile)
+		log.Error("Failed to flush to cache file `%s`", cacheResultFile)
 		retErr = fErr
 		return
 	}
 
 	walkEnd := time.Now()
-	logs.Debug("Walk `%s` end at %s", cacheRootPath, walkEnd.String())
-	logs.Debug("Walk `%s` last for %s", cacheRootPath, time.Since(walkStart))
-	logs.Debug("Total file count cached %d", fileCount)
+	log.Debug("Walk `%s` end at %s", cacheRootPath, walkEnd.String())
+	log.Debug("Walk `%s` last for %s", cacheRootPath, time.Since(walkStart))
+	log.Debug("Total file count cached %d", fileCount)
 	return
 }

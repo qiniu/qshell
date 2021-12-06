@@ -7,12 +7,14 @@ import (
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 // 加载工作环境
 func Load(options ...Option) (err error) {
 	ws := &workspace{}
+	err = ws.initInfo()
 
 	// 设置配置
 	for _, option := range options {
@@ -26,15 +28,17 @@ func Load(options ...Option) (err error) {
 	}
 	workspacePath = ws.workspace
 
-	err = utils.CreateDirIfNotExist(ws.workspace)
+	log.Debug("=== work space:" + workspacePath)
+
+	err = utils.CreateDirIfNotExist(workspacePath)
 	if err != nil {
 		return
 	}
 
 	// 加载账户
-	accountDBPath := filepath.Join(ws.workspace, usersDBName)
-	accountPath := filepath.Join(ws.workspace, currentUserFileName)
-	oldAccountPath := filepath.Join(ws.workspace, oldUserFileName)
+	accountDBPath := filepath.Join(workspacePath, usersDBName)
+	accountPath := filepath.Join(workspacePath, currentUserFileName)
+	oldAccountPath := filepath.Join(workspacePath, oldUserFileName)
 	err = account.Load(account.AccountDBPath(accountDBPath),
 		account.AccountPath(accountPath),
 		account.OldAccountPath(oldAccountPath))
@@ -51,7 +55,7 @@ func Load(options ...Option) (err error) {
 			accountName = currentAccount.AccessKey
 		}
 
-		currentAccountDir = filepath.Join(ws.workspace, accountName)
+		currentAccountDir = filepath.Join(workspacePath, accountName)
 		err := utils.CreateDirIfNotExist(currentAccountDir)
 		if err != nil {
 			return errors.New("create user dir error:" + err.Error())
@@ -86,13 +90,17 @@ type Option func(w *workspace)
 
 func Workspace(path string) Option {
 	return func(w *workspace) {
-		w.workspace = path
+		if len(path) > 0 {
+			w.workspace = path
+		}
 	}
 }
 
 func UserConfigPath(path string) Option {
 	return func(w *workspace) {
-		w.userConfigPath = path
+		if len(path) > 0 {
+			w.userConfigPath = path
+		}
 	}
 }
 

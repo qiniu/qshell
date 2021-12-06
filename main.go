@@ -8,7 +8,9 @@ import (
 )
 
 func main() {
-	os.Args = []string{"qshell", "user", "ls"}
+	if len(os.Args) == 0 {
+		os.Args = []string{"qshell", "user", "ls"}
+	}
 
 	if err := cmd.RootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

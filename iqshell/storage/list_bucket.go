@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
 	"os/signal"
 	"strings"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 func filterByPuttime(putTime, startDate, endDate time.Time) bool {
@@ -101,7 +102,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		listResultFh, openErr = os.OpenFile(listResultFile, mode, 0666)
 		if openErr != nil {
 			retErr = openErr
-			logs.Error("Failed to open list result file `%s`", listResultFile)
+			log.Error("Failed to open list result file `%s`", listResultFile)
 			return
 		}
 		defer listResultFh.Close()

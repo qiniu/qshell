@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
 )
 
@@ -60,7 +60,7 @@ func GetDomainsOfBucket(cmd *cobra.Command, params []string) {
 	domains, err := bm.DomainsOfBucket(bucket)
 
 	if err != nil {
-		logs.Error("Get domains error: ", err)
+		log.Error("Get domains error: ", err)
 		os.Exit(data.STATUS_ERROR)
 	} else {
 		if len(domains) == 0 {

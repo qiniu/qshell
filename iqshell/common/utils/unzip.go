@@ -4,12 +4,13 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"os"
 	"path/filepath"
 	"unicode/utf8"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
 func Gbk2Utf8(text string) (string, error) {
@@ -55,7 +56,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 
 		fullPath := filepath.Join(unzipPath, fileName)
 		if fileInfo.IsDir() {
-			logs.Debug("Mkdir", fullPath)
+			log.Debug("Mkdir", fullPath)
 			mErr := os.MkdirAll(fullPath, 0775)
 			if mErr != nil {
 				err = fmt.Errorf("Mkdir error, %s", mErr)
@@ -88,7 +89,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 				continue
 			}
 
-			logs.Debug("Creating file", fullPath)
+			log.Debug("Creating file", fullPath)
 			localFp, openErr := os.OpenFile(fullPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, zipFile.Mode())
 			if openErr != nil {
 				err = fmt.Errorf("Open local file error, %s", openErr)

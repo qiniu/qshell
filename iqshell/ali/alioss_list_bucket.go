@@ -3,9 +3,10 @@ package ali
 import (
 	"bufio"
 	"fmt"
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/astaxie/beego/logs"
 	"os"
+
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
 // 阿里空间字段
@@ -46,7 +47,7 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 	maxRetryTimes := 5
 	retryTimes := 1
 
-	logs.Info("Listing the oss bucket...")
+	log.Info("Listing the oss bucket...")
 	for {
 		listOptions := []oss.Option{
 			oss.MaxKeys(limit),
@@ -57,9 +58,9 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 		lbr, lbrErr := ossBucket.ListObjects(listOptions...)
 		if lbrErr != nil {
 			err = lbrErr
-			logs.Error("Parse list result error,", "marker=[", marker, "]", lbrErr)
+			log.Error("Parse list result error,", "marker=[", marker, "]", lbrErr)
 			if retryTimes <= maxRetryTimes {
-				logs.Warning("Retry marker=", marker, "] for", retryTimes, "time...")
+				log.Warning("Retry marker=", marker, "] for", retryTimes, "time...")
 				retryTimes += 1
 				continue
 			} else {
@@ -79,7 +80,7 @@ func (this *AliListBucket) ListBucket(listResultFile string) (err error) {
 	}
 	fErr := bw.Flush()
 	if fErr != nil {
-		logs.Error("Write data to buffer writer failed", fErr)
+		log.Error("Write data to buffer writer failed", fErr)
 		err = fErr
 		return
 	}

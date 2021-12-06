@@ -3,10 +3,11 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/spf13/cobra"
 	"net/http"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -65,7 +66,7 @@ func IpQuery(cmd *cobra.Command, params []string) {
 		func() {
 			req, err := http.NewRequest("GET", TAOBAO_IP_QUERY, nil)
 			if err != nil {
-				logs.Error(err)
+				log.Error("%v", err)
 				return
 			}
 
@@ -76,7 +77,7 @@ func IpQuery(cmd *cobra.Command, params []string) {
 
 			gResp, gErr := http.DefaultClient.Do(req)
 			if gErr != nil {
-				logs.Error("Query ip info failed for %s, %s", ip, gErr)
+				log.Error("Query ip info failed for %s, %s", ip, gErr)
 				return
 			}
 			defer gResp.Body.Close()
@@ -84,7 +85,7 @@ func IpQuery(cmd *cobra.Command, params []string) {
 			decoder := json.NewDecoder(gResp.Body)
 			decodeErr := decoder.Decode(&ipInfo)
 			if decodeErr != nil {
-				logs.Error("Parse ip info body failed for %s, %s", ip, decodeErr)
+				log.Error("Parse ip info body failed for %s, %s", ip, decodeErr)
 				return
 			}
 

@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
 )
 
@@ -56,7 +56,7 @@ func Sync(cmd *cobra.Command, params []string) {
 	tStart := time.Now()
 	syncRet, sErr := bm.Sync(srcResUrl, bucket, key, upHostIp, isResumeV2)
 	if sErr != nil {
-		logs.Error(sErr)
+		log.Error("%v", sErr)
 		os.Exit(data.STATUS_ERROR)
 	}
 

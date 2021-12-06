@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/spf13/cobra"
 )
 
@@ -71,12 +71,12 @@ func QiniuDownload(cmd *cobra.Command, params []string) {
 	}
 
 	if !destFileInfo.IsDir() {
-		logs.Error("Download dest dir should be a directory")
+		log.Error("Download dest dir should be a directory")
 		os.Exit(data.STATUS_HALT)
 	}
 
 	if threadCount < storage.MIN_DOWNLOAD_THREAD_COUNT || threadCount > storage.MAX_DOWNLOAD_THREAD_COUNT {
-		logs.Info("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
+		log.Info("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
 			storage.MIN_DOWNLOAD_THREAD_COUNT, storage.MAX_DOWNLOAD_THREAD_COUNT)
 
 		if threadCount < storage.MIN_DOWNLOAD_THREAD_COUNT {

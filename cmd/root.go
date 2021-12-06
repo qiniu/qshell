@@ -5,12 +5,11 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/client"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -82,9 +81,6 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&VersionFlag, "version", "v", false, "show version")
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "C", "", "config file (default is $HOME/.qshell.json)")
 	RootCmd.PersistentFlags().BoolVarP(&local, "local", "L", false, "use current directory as config file path")
-
-	viper.BindPFlag("config", RootCmd.PersistentFlags().Lookup("config"))
-	viper.BindPFlag("local", RootCmd.PersistentFlags().Lookup("local"))
 }
 
 func initConfig() {
@@ -93,38 +89,18 @@ func initConfig() {
 	//set qshell user agent
 	storage.UserAgent = UserAgent()
 
-	if DeepDebugInfo {
-		DebugFlag = true
-	}
-	//parse command
+	// 加载 log
+	logLevel := log.LevelInfo
 	if DebugFlag {
-		logs.SetLevel(logs.LevelDebug)
-		client.TurnOnDebug()
-		// master 已合并, v7.5.0 分支没包含次参数,等待 v7.5.1
-		// client.DeepDebugInfo = DeepDebugInfo
-	} else {
-		logs.SetLevel(logs.LevelInformational)
+		logLevel = log.LevelDebug
 	}
-	logs.SetLogger(logs.AdapterConsole)
+	if DeepDebugInfo {
+		logLevel = log.LevelVerbose
+		client.TurnOnDebug()
+	}
+	log.LoadConsole(logLevel)
 
-	// var jsonConfigFile string
-
-	// if cfgFile != "" {
-	// 	if !strings.HasSuffix(cfgFile, ".json") {
-	// 		jsonConfigFile = cfgFile + ".json"
-	// 		os.Rename(cfgFile, jsonConfigFile)
-	// 	}
-	// 	viper.SetConfigFile(jsonConfigFile)
-	// } else {
-	// 	homeDir, hErr := homedir.Dir()
-	// 	if hErr != nil {
-	// 		fmt.Fprintf(os.Stderr, "get current home directory: %v\n", hErr)
-	// 		os.Exit(1)
-	// 	}
-	// 	viper.AddConfigPath(homeDir)
-	// 	viper.SetConfigName(".qshell")
-	// }
-
+	// 加载工作区
 	workspacePath := ""
 	if local {
 		dir, gErr := os.Getwd()

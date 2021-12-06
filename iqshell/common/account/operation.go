@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 )
@@ -296,7 +296,7 @@ func RmUser(userName string) (err error) {
 	}
 	defer db.Close()
 	err = db.Delete([]byte(userName), nil)
-	logs.Debug("Removing user: %d\n", userName)
+	log.Debug("Removing user: %d\n", userName)
 	return
 }
 

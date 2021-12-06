@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/storage"
 )
 
@@ -63,7 +63,7 @@ func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, er
 	}
 	storePath := filepath.Join(QShellRootPath, ".qshell", "sync")
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		logs.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		log.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		err = mkdirErr
 		return
 	}
@@ -112,7 +112,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 
 	//check offset valid or not
 	if p.Offset%data.BLOCK_SIZE != 0 {
-		logs.Info("Invalid offset from progress file,", p.Offset)
+		log.Info("Invalid offset from progress file,", p.Offset)
 		p.Reset()
 		return
 	}
@@ -122,7 +122,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 		//check offset and blk ctxs
 		if p.Offset != 0 && p.BlkCtxs != nil && int(p.Offset/data.BLOCK_SIZE) != len(p.BlkCtxs) {
 
-			logs.Info("Invalid offset and block info")
+			log.Info("Invalid offset and block info")
 			p.Reset()
 			return
 		}
@@ -135,7 +135,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 
 		if fileSize != p.TotalSize {
 			if p.TotalSize != 0 {
-				logs.Warning("Remote file length changed, progress file out of date")
+				log.Warning("Remote file length changed, progress file out of date")
 			}
 			p.Offset = 0
 			p.TotalSize = fileSize
@@ -156,7 +156,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 	//check offset and blk ctxs
 	if p.Offset != 0 && p.Parts != nil && int(p.Offset/data.BLOCK_SIZE) != len(p.Parts) {
 
-		logs.Info("Invalid offset and block info")
+		log.Info("Invalid offset and block info")
 		p.Reset()
 		return
 	}
@@ -169,7 +169,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 
 	if fileSize != p.TotalSize {
 		if p.TotalSize != 0 {
-			logs.Warning("Remote file length changed, progress file out of date")
+			log.Warning("Remote file length changed, progress file out of date")
 		}
 		p.Offset = 0
 		p.TotalSize = fileSize
@@ -306,10 +306,10 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 		if pErr == nil {
 			break
 		}
-		logs.Error(pErr.Error())
+		log.Error(pErr.Error())
 		time.Sleep(RETRY_INTERVAL)
 
-		logs.Info("Retrying %d time for init server", retryTimes)
+		log.Info("Retrying %d time for init server", retryTimes)
 		retryTimes++
 	}
 
@@ -329,7 +329,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 		}
 
 		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
-		logs.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
+		log.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
 
 		// 2.1 获取上传数据
 		var retryTimes int
@@ -343,9 +343,9 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 			if rErr == nil {
 				break
 			}
-			logs.Error(rErr.Error())
+			log.Error(rErr.Error())
 			time.Sleep(RETRY_INTERVAL)
-			logs.Info("Retrying %d time get range for block [%d]", retryTimes, blkIndex)
+			log.Info("Retrying %d time get range for block [%d]", retryTimes, blkIndex)
 			retryTimes++
 		}
 		dataBytes := bf.Bytes()
@@ -361,10 +361,10 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 			if pErr == nil {
 				break
 			}
-			logs.Error(pErr.Error())
+			log.Error(pErr.Error())
 			time.Sleep(RETRY_INTERVAL)
 
-			logs.Info("Retrying %d time for upload block index:[%d]", retryTimes, blkIndex)
+			log.Info("Retrying %d time for upload block index:[%d]", retryTimes, blkIndex)
 			retryTimes++
 		}
 		//advance range offset
@@ -372,7 +372,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 
 		sErr := syncProgress.RecordProgress()
 		if sErr != nil {
-			logs.Info(rErr.Error())
+			log.Info(rErr.Error())
 		}
 	}
 
@@ -388,10 +388,10 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 			putRet = ret
 			break
 		}
-		logs.Error(pErr.Error())
+		log.Error(pErr.Error())
 		time.Sleep(RETRY_INTERVAL)
 
-		logs.Info("Retrying %d time for server to create file", retryTimes)
+		log.Info("Retrying %d time for server to create file", retryTimes)
 		retryTimes++
 	}
 

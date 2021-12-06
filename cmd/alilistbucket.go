@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/qshell/v2/iqshell/ali"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/spf13/cobra"
 )
 
@@ -40,8 +40,8 @@ func AliListBucket(cmd *cobra.Command, params []string) {
 	}
 	err := aliListBucket.ListBucket(listBucketResultFile)
 	if err != nil {
-		logs.Error("List bucket error,", err)
+		log.Error("List bucket error,", err)
 		return
 	}
-	logs.Info("List bucket done!")
+	log.Info("List bucket done!")
 }
