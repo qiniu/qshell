@@ -3,11 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/account/operations"
-	"os"
-
-	"github.com/qiniu/qshell/v2/iqshell/common/account"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-
 	"github.com/spf13/cobra"
 )
 
@@ -35,12 +30,7 @@ var cmdAccount = &cobra.Command{
 // 【account】获取本地保存的用户的AK/AK/Name信息； 设置保存用户AK/SK信息到本地
 func Account(cmd *cobra.Command, params []string) {
 	if len(params) == 0 {
-		account, gErr := account.GetAccount()
-		if gErr != nil {
-			fmt.Println(gErr)
-			os.Exit(data.STATUS_ERROR)
-		}
-		fmt.Println(account.String())
+		operations.Current()
 	} else if len(params) == 3 {
 		accessKey := params[0]
 		secretKey := params[1]

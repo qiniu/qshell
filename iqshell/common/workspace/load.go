@@ -28,7 +28,7 @@ func Load(options ...Option) (err error) {
 	}
 	workspacePath = ws.workspace
 
-	log.Debug("=== work space:" + workspacePath)
+	log.DebugF("=== work space:" + workspacePath)
 
 	err = utils.CreateDirIfNotExist(workspacePath)
 	if err != nil {

@@ -1,14 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/account/operations"
-	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/spf13/cobra"
 )
 
@@ -22,40 +15,29 @@ var userCmdBuilder = func() *cobra.Command {
 
 // 列举本地数据库记录的账户
 var userLsCmdBuilder = func() *cobra.Command {
-	var name = false
-	var cmdEg = `qshell user ls`
+	var info = operations.ListInfo{}
 	var cmd = &cobra.Command{
 		Use:     "ls",
 		Short:   "List all user registered",
-		Example: cmdEg,
+		Example: `qshell user ls`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := account.ListUser(name)
-			if err != nil {
-				log.Error("lsuser: %v", err)
-				os.Exit(1)
-			}
+			operations.List(info)
 		},
 	}
 
-	cmd.Flags().BoolVarP(&name, "name", "n", false, "only list user names")
+	cmd.Flags().BoolVarP(&info.OnlyListName, "name", "n", false, "only list user names")
 
 	return cmd
 }
 
 // 获取当前账户信息
 var userCurrentCmdBuilder = func() *cobra.Command {
-	var cmdEg = `qshell user current`
 	var cmd = &cobra.Command{
 		Use:     "current",
 		Short:   "get current user info",
-		Example: cmdEg,
+		Example: `qshell user current`,
 		Run: func(cmd *cobra.Command, args []string) {
-			account, gErr := account.GetAccount()
-			if gErr != nil {
-				log.Error("user current: %v", gErr)
-				os.Exit(data.STATUS_ERROR)
-			}
-			log.Alert(account.String())
+			operations.Current()
 		},
 	}
 	return cmd
@@ -63,22 +45,16 @@ var userCurrentCmdBuilder = func() *cobra.Command {
 
 // 查询用用户是否存在本地数据库中
 var userLookupCmdBuilder = func() *cobra.Command {
-	var cmdEg = `qshell user lookup <UserName>`
+	var info = operations.LookUpInfo{}
 	var cmd = &cobra.Command{
 		Use:     "lookup <UserName>",
 		Short:   "Lookup user info by user name",
-		Example: cmdEg,
+		Example: `qshell user lookup <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
-				log.Error(alert.CannotEmpty("user name", cmdEg))
-				return
+			if len(args) > 1 {
+				info.Name = args[0]
 			}
-			userName := args[0]
-			err := account.LookUp(userName)
-			if err != nil {
-				log.Error("LookUp: %v\n", err)
-				os.Exit(1)
-			}
+			operations.LookUp(info)
 		},
 	}
 	return cmd
@@ -88,35 +64,18 @@ var userLookupCmdBuilder = func() *cobra.Command {
 var userAddCmdBuilder = func() *cobra.Command {
 
 	var cmdInfo = operations.AddInfo{}
-	var addCmdEg = ` qshell user add <AK> <SK> <UserName>
- or
- qshell user add --ak <AK> --sk <SK> --name <UserName>`
-
 	var cmd = &cobra.Command{
 		Use:     "add",
 		Short:   "add user info to local",
-		Example: addCmdEg,
+		Example:  `qshell user add <AK> <SK> <UserName>
+ or
+ qshell user add --ak <AK> --sk <SK> --name <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 3 {
 				cmdInfo.AccessKey = args[0]
 				cmdInfo.SecretKey = args[1]
 				cmdInfo.Name = args[2]
 			}
-
-			// check
-			if len(cmdInfo.Name) == 0 {
-				log.Error(alert.CannotEmpty("user name", addCmdEg))
-				return
-			}
-			if len(cmdInfo.AccessKey) == 0 {
-				log.Error(alert.CannotEmpty("user ak", addCmdEg))
-				return
-			}
-			if len(cmdInfo.SecretKey) == 0 {
-				log.Error(alert.CannotEmpty("user sk", addCmdEg))
-				return
-			}
-
 			operations.Add(cmdInfo)
 		},
 	}
@@ -131,24 +90,16 @@ var userAddCmdBuilder = func() *cobra.Command {
 
 // 切换用户
 var userChCmdBuilder = func() *cobra.Command {
-	var changeUserCmdEg = `qshell user cu <UserName>`
+	var info = operations.ChangeInfo{}
 	var cmd = &cobra.Command{
 		Use:     "cu [<UserName>]",
 		Short:   "Change user to UserName",
-		Example: changeUserCmdEg,
+		Example: `qshell user cu <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
-			var err error
-			var userName string
-			if len(args) == 0 {
-				userName = ""
-			} else {
-				userName = args[0]
+			if len(args) > 0 {
+				info.Name = args[0]
 			}
-			err = account.ChUser(userName)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "chuser: %v\n", err)
-				os.Exit(1)
-			}
+			operations.Change(info)
 		},
 	}
 	return cmd
@@ -156,18 +107,13 @@ var userChCmdBuilder = func() *cobra.Command {
 
 // 删除本地记录的数据库
 var userCleanCmdBuilder = func() *cobra.Command {
-	var cleanCmdEg = `qshell user clean`
 	var cmd = &cobra.Command{
 		Use:     "clean",
 		Short:   "clean account db",
 		Long:    "Remove all users from inner dbs.",
-		Example: cleanCmdEg,
+		Example: `qshell user clean`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := account.CleanUser()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "CleanUser: %v\n", err)
-				os.Exit(1)
-			}
+			operations.Clean()
 		},
 	}
 	return cmd
@@ -175,22 +121,18 @@ var userCleanCmdBuilder = func() *cobra.Command {
 
 // 删除用户
 var userRmCmdBuilder = func() *cobra.Command {
-	var rmCmdEg = `qshell user remove <UserName>`
+	var info = operations.RemoveInfo{}
 	var cmd = &cobra.Command{
 		Use:     "remove <UserName>",
 		Short:   "Remove user info from inner db",
-		Example: rmCmdEg,
+		Example: `qshell user remove <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
-				log.Error(alert.CannotEmpty("user name", rmCmdEg))
+			if len(args) > 0 {
+				info.Name = args[0]
 				return
 			}
-			userName := args[0]
-			err := account.RmUser(userName)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "RmUser: %v\n", err)
-				os.Exit(1)
-			}
+
+			operations.Remove(info)
 		},
 	}
 	return cmd

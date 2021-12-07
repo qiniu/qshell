@@ -46,9 +46,9 @@ func Load(options ...Option) error {
 		return fmt.Errorf("empty old account db path\n")
 	}
 
-	log.Debug("account db path:" + info.accountDBPath)
-	log.Debug("account path:" + info.accountPath)
-	log.Debug("account old path:" + info.oldAccountPath)
+	log.DebugF("account db path:" + info.accountDBPath)
+	log.DebugF("account path:" + info.accountPath)
+	log.DebugF("account old path:" + info.oldAccountPath)
 	return nil
 }
 

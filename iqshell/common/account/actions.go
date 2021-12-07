@@ -210,32 +210,7 @@ func GetUsers() (ret []*Account, err error) {
 	defer iter.Release()
 
 	var (
-		value string
-	)
-	for iter.Next() {
-		value = string(iter.Value())
-		acc, dErr := decrypt(value)
-		if dErr != nil {
-			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
-			return
-		}
-		ret = append(ret, &acc)
-	}
-	return
-}
-
-// 列举本地数据库记录的用户列表
-func ListUser(userLsName bool) (err error) {
-	db, gErr := leveldb.OpenFile(info.accountDBPath, nil)
-	if gErr != nil {
-		err = fmt.Errorf("open db: %v", err)
-		return
-	}
-	defer db.Close()
-
-	iter := db.NewIterator(nil, nil)
-	var (
-		name  string
+		name string
 		value string
 	)
 	for iter.Next() {
@@ -243,19 +218,11 @@ func ListUser(userLsName bool) (err error) {
 		value = string(iter.Value())
 		acc, dErr := decrypt(value)
 		if dErr != nil {
-			log.Warning("Decrypt account:%v error: %v", name, dErr)
+			log.WarningF("Decrypt account:%v error: %v", name, dErr)
 			continue
 		}
-
-		if userLsName {
-			log.Alert(name)
-		} else {
-			log.Alert("Name: %s", name)
-			log.Alert("AccessKey: %s", acc.AccessKey)
-			log.Alert("SecretKey: %s", acc.SecretKey)
-		}
+		ret = append(ret, &acc)
 	}
-	iter.Release()
 	return
 }
 
@@ -289,40 +256,39 @@ func RmUser(userName string) (err error) {
 	}
 	defer db.Close()
 	err = db.Delete([]byte(userName), nil)
-	log.Debug("Removing user: %d\n", userName)
+	log.DebugF("Removing user: %d\n", userName)
 	return
 }
 
 // 查找用户
-func LookUp(userName string) (err error) {
+func LookUp(userName string) (acc Account, err error) {
 	if len(info.accountDBPath) == 0 {
 		err = fmt.Errorf("empty account db path\n")
 		return
 	}
+
 	db, err := leveldb.OpenFile(info.accountDBPath, nil)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
-		return err
+		return
 	}
 	defer db.Close()
 
 	iter := db.NewIterator(nil, nil)
-	var (
-		name  string
-		value string
-	)
+	defer iter.Release()
+	var name  string
+	var	value string
 	for iter.Next() {
 		name = string(iter.Key())
-		value = string(iter.Value())
-		acc, dErr := decrypt(value)
-		if dErr != nil {
-			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
-			return
-		}
 		if strings.Contains(name, userName) {
-			log.Alert(acc.String())
+			value = string(iter.Value())
+			acc, err = decrypt(value)
+			if err != nil {
+				err = fmt.Errorf("Decrypt account bytes: %v", err)
+				return
+			}
+			break
 		}
 	}
-	iter.Release()
 	return
 }

@@ -6,5 +6,5 @@ import (
 
 func TestProgress(t *testing.T) {
 	LoadConsole(LevelDebug)
-	Debug("progress:%v", " debug")
+	DebugF("progress:%v", " debug")
 }
