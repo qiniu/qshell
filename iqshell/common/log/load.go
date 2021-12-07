@@ -1,18 +1,22 @@
 package log
 
-import "github.com/astaxie/beego/logs"
+import (
+	"errors"
+	"github.com/astaxie/beego/logs"
+)
 
-func LoadConsole(logLevel Level) error {
-	progressStdoutLog.SetLogger(adapterConsole)
+func LoadConsole(logLevel Level) (err error) {
+	err = progressStdoutLog.SetLogger(adapterConsole)
+	if err != nil {
+		err = errors.New("load console error when set logger:" + err.Error())
+		return
+	}
 	progressStdoutLog.SetLevel(int(logLevel))
-	progressStdoutLog.DelLogger(logs.AdapterConsole)
-	// resultLog.SetLogger(logs.AdapterFile, log.Config{
-	// 	Filename: downConfig.LogFile,
-	// 	Level:    logLevel,
-	// 	Daily:    true,
-	// 	MaxDays:  logRotate,
-	// })
-	return nil
+	err = progressStdoutLog.DelLogger(logs.AdapterConsole)
+	if err != nil {
+		err = errors.New("load console error when del logger:" + err.Error())
+	}
+	return
 }
 
 func LoadFileLogger(cfg Config) (err error) {
