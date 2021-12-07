@@ -7,12 +7,11 @@ import (
 )
 
 const (
-	LevelSlient  Level = -10
-	LevelVerbose Level = logs.LevelDebug
-	LevelDebug   Level = logs.LevelInformational
-	LevelInfo    Level = logs.LevelNotice
-	LevelWarning Level = logs.LevelWarning
+	LevelAlert   Level = logs.LevelAlert
 	LevelError   Level = logs.LevelError
+	LevelWarning Level = logs.LevelWarning
+	LevelInfo    Level = logs.LevelInformational
+	LevelDebug   Level = logs.LevelDebug
 )
 
 type Level int

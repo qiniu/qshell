@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/account/operations"
 	"os"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
@@ -45,15 +46,11 @@ func Account(cmd *cobra.Command, params []string) {
 		secretKey := params[1]
 		name := params[2]
 
-		sErr := account.SaveAccount(account.Account{
+		operations.Add(operations.AddInfo{
 			Name:      name,
 			AccessKey: accessKey,
 			SecretKey: secretKey,
-		}, accountOver)
-
-		if sErr != nil {
-			fmt.Println(sErr)
-			os.Exit(data.STATUS_ERROR)
-		}
+			Over:      accountOver,
+		})
 	}
 }

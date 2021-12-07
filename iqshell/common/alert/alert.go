@@ -3,7 +3,7 @@ package alert
 func CannotEmpty(words string, suggest string) string {
 	desc := words
 	if len(words) > 0 {
-		desc += desc + " can't empty"
+		desc += " can't empty"
 	}
 	return Description(desc, suggest)
 }

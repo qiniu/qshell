@@ -5,22 +5,27 @@ import (
 )
 
 var (
-	progressLog = new(logs.BeeLogger)
-	resultLog   = new(logs.BeeLogger)
+	progressStdoutLog = new(logs.BeeLogger)
+	progressFileLog   = new(logs.BeeLogger)
+	resultLog         = new(logs.BeeLogger)
 )
 
 func Debug(format string, v ...interface{}) {
-	progressLog.Debug(format, v...)
+	progressStdoutLog.Debug(format, v...)
 }
 
 func Info(format string, v ...interface{}) {
-	progressLog.Info(format, v...)
+	progressStdoutLog.Info(format, v...)
 }
 
 func Warning(format string, v ...interface{}) {
-	progressLog.Warn(format, v...)
+	progressStdoutLog.Warn(format, v...)
 }
 
 func Error(format string, v ...interface{}) {
-	progressLog.Error(format, v...)
+	progressStdoutLog.Error(format, v...)
+}
+
+func Alert(format string, v ...interface{}) {
+	progressStdoutLog.Alert(format, v...)
 }

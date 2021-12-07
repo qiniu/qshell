@@ -15,19 +15,6 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 )
 
-// 保存账户信息到账户文件中， 并保存在本地数据库
-func SaveAccount(acc Account, accountOver bool) (err error) {
-	sErr := SetAccountToLocalJson(acc)
-	if sErr != nil {
-		err = sErr
-		return
-	}
-
-	err = SaveToDB(acc, accountOver)
-
-	return
-}
-
 // 保存账户信息到账户文件中
 func SetAccountToLocalJson(acc Account) (err error) {
 	accountFh, openErr := os.OpenFile(info.accountPath, os.O_CREATE|os.O_RDWR, 0600)
@@ -123,6 +110,12 @@ func getAccount(pt string) (account Account, err error) {
 		err = fmt.Errorf("Read account file error, %s", readErr)
 		return
 	}
+
+	if len(accountBytes) == 0 {
+		err = fmt.Errorf("Read account file error, account is empty")
+		return
+	}
+
 	acc, dErr := decrypt(string(accountBytes))
 	if dErr != nil {
 		err = fmt.Errorf("Decrypt account bytes: %v", dErr)
@@ -250,16 +243,16 @@ func ListUser(userLsName bool) (err error) {
 		value = string(iter.Value())
 		acc, dErr := decrypt(value)
 		if dErr != nil {
-			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
-			return
+			log.Warning("Decrypt account:%v error: %v", name, dErr)
+			continue
 		}
+
 		if userLsName {
-			fmt.Println(name)
+			log.Alert(name)
 		} else {
-			fmt.Printf("Name: %s\n", name)
-			fmt.Printf("AccessKey: %s\n", acc.AccessKey)
-			fmt.Printf("SecretKey: %s\n", acc.SecretKey)
-			fmt.Println("")
+			log.Alert("Name: %s", name)
+			log.Alert("AccessKey: %s", acc.AccessKey)
+			log.Alert("SecretKey: %s", acc.SecretKey)
 		}
 	}
 	iter.Release()
@@ -327,7 +320,7 @@ func LookUp(userName string) (err error) {
 			return
 		}
 		if strings.Contains(name, userName) {
-			fmt.Println(acc.String())
+			log.Alert(acc.String())
 		}
 	}
 	iter.Release()

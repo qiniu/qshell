@@ -3,8 +3,9 @@ package log
 import "github.com/astaxie/beego/logs"
 
 func LoadConsole(logLevel Level) error {
-	progressLog.SetLogger(logs.AdapterConsole)
-	progressLog.SetLevel(int(logLevel))
+	progressStdoutLog.SetLogger(adapterConsole)
+	progressStdoutLog.SetLevel(int(logLevel))
+	progressStdoutLog.DelLogger(logs.AdapterConsole)
 	// resultLog.SetLogger(logs.AdapterFile, log.Config{
 	// 	Filename: downConfig.LogFile,
 	// 	Level:    logLevel,
@@ -15,6 +16,7 @@ func LoadConsole(logLevel Level) error {
 }
 
 func LoadFileLogger(cfg Config) (err error) {
-	err = progressLog.SetLogger(logs.AdapterFile, cfg.ToJson())
+	err = progressFileLog.SetLogger(logs.AdapterFile, cfg.ToJson())
+	progressStdoutLog.DelLogger(logs.AdapterConsole)
 	return
 }

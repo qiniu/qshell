@@ -77,6 +77,7 @@ func init() {
 	})
 
 	RootCmd.PersistentFlags().BoolVarP(&DebugFlag, "debug", "d", false, "debug mode")
+	// ddebug 开启 client debug
 	RootCmd.PersistentFlags().BoolVarP(&DeepDebugInfo, "ddebug", "D", false, "deep debug mode")
 	RootCmd.PersistentFlags().BoolVarP(&VersionFlag, "version", "v", false, "show version")
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "C", "", "config file (default is $HOME/.qshell.json)")
@@ -91,11 +92,10 @@ func initConfig() {
 
 	// 加载 log
 	logLevel := log.LevelInfo
-	if DebugFlag {
+	if DebugFlag || DeepDebugInfo {
 		logLevel = log.LevelDebug
 	}
 	if DeepDebugInfo {
-		logLevel = log.LevelVerbose
 		client.TurnOnDebug()
 	}
 	log.LoadConsole(logLevel)
