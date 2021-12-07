@@ -45,13 +45,13 @@ func Add(info AddInfo) {
 	}
 
 	if err := account.SetAccountToLocalJson(acc); err != nil {
-		log.ErrorF("%v", err)
+		log.ErrorF("user add: set current error:%v", err)
 		os.Exit(data.STATUS_ERROR)
 		return
 	}
 
 	if err := account.SaveToDB(acc, info.Over); err != nil {
-		log.ErrorF("%v", err)
+		log.ErrorF("user add: save user to db error:%v", err)
 		os.Exit(data.STATUS_ERROR)
 		return
 	}

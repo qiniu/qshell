@@ -35,7 +35,7 @@ func List(info ListInfo) {
 func Current() {
 	acc, err := account.GetAccount()
 	if err != nil {
-		log.ErrorF("user current: %v", err)
+		log.ErrorF("user current error: %v", err)
 		os.Exit(data.STATUS_ERROR)
 	}
 	log.AlertF(acc.String())
