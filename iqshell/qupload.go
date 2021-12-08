@@ -444,6 +444,7 @@ var (
 // QiniuUpload
 func QiniuUpload(threadCount int, uploadConfig *UploadConfig, exporter *FileExporter) {
 	var upSettings = storage.Settings{
+		TaskQsize: 8,
 		Workers:   4,
 		ChunkSize: 4 * 1024 * 1024,
 		TryTimes:  3,
