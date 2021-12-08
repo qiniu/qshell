@@ -92,5 +92,8 @@ func initConfig() {
 		ConfigFilePath: cfgFile,
 		WorkspacePath:  workspacePath,
 	})
-	_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
+
+	if err != nil{
+		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
+	}
 }

@@ -1,9 +1,44 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/account/operations"
 	"github.com/spf13/cobra"
 )
+
+var accountCmdBuilder = func() *cobra.Command {
+
+	var accountOver bool
+	var cmd = &cobra.Command{
+		Use:   "account [<AccessKey> <SecretKey> <Name>]",
+		Short: "Get/Set current account's AccessKey and SecretKey",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 0 && len(args) != 3 {
+				return fmt.Errorf("command account receives zero or three args, received %d\n", len(args))
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				operations.Current()
+			} else if len(args) == 3 {
+				accessKey := args[0]
+				secretKey := args[1]
+				name := args[2]
+				operations.Add(operations.AddInfo{
+					Name:      name,
+					AccessKey: accessKey,
+					SecretKey: secretKey,
+					Over:      accountOver,
+				})
+			}
+		},
+	}
+
+	cmd.Flags().BoolVarP(&accountOver, "overwrite", "w", false, "overwrite account or not when account exists in local db, by default not overwrite")
+
+	return cmd
+}
 
 var userCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
@@ -65,9 +100,9 @@ var userAddCmdBuilder = func() *cobra.Command {
 
 	var cmdInfo = operations.AddInfo{}
 	var cmd = &cobra.Command{
-		Use:     "add",
-		Short:   "add user info to local",
-		Example:  `qshell user add <AK> <SK> <UserName>
+		Use:   "add",
+		Short: "add user info to local",
+		Example: `qshell user add <AK> <SK> <UserName>
  or
  qshell user add --ak <AK> --sk <SK> --name <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -149,5 +184,9 @@ func init() {
 		userLookupCmdBuilder(),  // 查看某个用户的信息
 		userCurrentCmdBuilder(), // 查看当前用户信息
 	)
-	RootCmd.AddCommand(userCmd)
+
+	RootCmd.AddCommand(
+		accountCmdBuilder(),
+		userCmd,
+		)
 }
