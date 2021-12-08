@@ -3,6 +3,7 @@ package cmd
 import (
 	"crypto/rand"
 	"fmt"
+	"github.com/qiniu/go-sdk/v7/conf"
 	"github.com/qiniu/qshell/v2/iqshell/tools"
 	"github.com/spf13/cobra"
 	"strings"
@@ -250,6 +251,86 @@ var IpCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
+var TokenCmdBuilder = func() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "token",
+		Short: "Token related command",
+		Long:  "Create QBox token, Qiniu token, Upload token and Download token",
+	}
+
+	cmd.AddCommand(
+		QboxTokenCmdBuilder(),
+		QiniuTokenCmdBuilder(),
+		UploadTokenCmdBuilder(),
+		)
+	return cmd
+}
+
+var QboxTokenCmdBuilder = func() *cobra.Command {
+	var info = tools.TokenInfo{}
+	var cmd = &cobra.Command{
+		Use:   "qbox <Url>",
+		Short: "Create QBox token",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Url = args[0]
+			}
+			tools.CreateQBoxToken(info)
+		},
+	}
+
+	cmd.Flags().StringVarP(&info.ContentType, "content-type", "t", conf.CONTENT_TYPE_JSON, "http request content type, application/json by default")
+	cmd.Flags().StringVarP(&info.Body, "http-body", "b", "", "http request body, when content-type is application/x-www-form-urlencoded, http body must be specified")
+	cmd.Flags().StringVarP(&info.AccessKey, "access-key", "a", "", "access key")
+	cmd.Flags().StringVarP(&info.SecretKey, "secret-key", "s", "", "secret key")
+
+	return cmd
+}
+
+var QiniuTokenCmdBuilder = func() *cobra.Command {
+	var info = tools.TokenInfo{}
+	var cmd = &cobra.Command{
+		Use:   "qiniu <Url>",
+		Short: "Create Qiniu Token",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Url = args[0]
+			}
+			tools.CreateQiniuToken(info)
+		},
+	}
+
+	cmd.Flags().StringVarP(&info.ContentType, "content-type", "t", conf.CONTENT_TYPE_JSON, "http request content type, application/json by default")
+	cmd.Flags().StringVarP(&info.Body, "http-body", "b", "", "http request body, when content-type is application/x-www-form-urlencoded, http body must be specified")
+	cmd.Flags().StringVarP(&info.AccessKey, "access-key", "a", "", "access key")
+	cmd.Flags().StringVarP(&info.SecretKey, "secret-key", "s", "", "secret key")
+	cmd.Flags().StringVarP(&info.Method, "method", "m", "GET", "http request method")
+
+	return cmd
+}
+
+var UploadTokenCmdBuilder = func() *cobra.Command {
+	var info = tools.TokenInfo{}
+	var cmd = &cobra.Command{
+		Use:   "upload <PutPolicyJsonFile>",
+		Short: "Create upload token using put policy",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Url = args[0]
+			}
+			tools.CreateUploadToken(info)
+		},
+	}
+
+	cmd.Flags().StringVarP(&info.AccessKey, "access-key", "a", "", "access key")
+	cmd.Flags().StringVarP(&info.SecretKey, "secret-key", "s", "", "secret key")
+
+	return cmd
+}
+
 func init() {
 	RootCmd.AddCommand(
 		rpcEncodeCmdBuilder(),
@@ -266,6 +347,7 @@ func init() {
 		unzipCmdBuilder(),
 		reqIdCmdBuilder(),
 		IpCmdBuilder(),
+		TokenCmdBuilder(),
 	)
 }
 
