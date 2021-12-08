@@ -62,6 +62,6 @@ func Sync(cmd *cobra.Command, params []string) {
 
 	fmt.Printf("Sync %s => %s:%s Success, Duration: %s!\n", srcResUrl, bucket, key, time.Since(tStart))
 	fmt.Println("Hash:", syncRet.Hash)
-	fmt.Printf("Fsize: %d (%s)\n", syncRet.Fsize, FormatFsize(syncRet.Fsize))
+	fmt.Printf("Fsize: %d (%s)\n", syncRet.Fsize, utils.FormatFileSize(syncRet.Fsize))
 	fmt.Println("Mime:", syncRet.MimeType)
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
 	"strings"
 	"time"
@@ -181,7 +182,7 @@ func FormPut(cmd *cobra.Command, params []string) {
 
 		fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "success!")
 		fmt.Println("Hash:", putRet.Hash)
-		fmt.Println("Fsize:", putRet.Fsize, "(", FormatFsize(fsize), ")")
+		fmt.Println("Fsize:", putRet.Fsize, "(", utils.FormatFileSize(fsize), ")")
 		fmt.Println("MimeType:", putRet.MimeType)
 
 		lastNano := time.Now().UnixNano() - startTime.UnixNano()
@@ -293,7 +294,7 @@ func ResumablePut(cmd *cobra.Command, params []string) {
 	} else {
 		fmt.Println("Put file", localFile, "=>", bucket, ":", putRet.Key, "success!")
 		fmt.Println("Hash:", putRet.Hash)
-		fmt.Println("Fsize:", putRet.Fsize, "(", FormatFsize(fsize), ")")
+		fmt.Println("Fsize:", putRet.Fsize, "(", utils.FormatFileSize(fsize), ")")
 		fmt.Println("MimeType:", putRet.MimeType)
 
 		lastNano := time.Now().UnixNano() - startTime.UnixNano()

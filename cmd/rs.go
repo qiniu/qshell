@@ -427,7 +427,7 @@ func Fetch(cmd *cobra.Command, params []string) {
 	} else {
 		fmt.Println("Key:", fetchResult.Key)
 		fmt.Println("Hash:", fetchResult.Hash)
-		fmt.Printf("Fsize: %d (%s)\n", fetchResult.Fsize, FormatFsize(fetchResult.Fsize))
+		fmt.Printf("Fsize: %d (%s)\n", fetchResult.Fsize, utils.FormatFileSize(fetchResult.Fsize))
 		fmt.Println("Mime:", fetchResult.MimeType)
 	}
 }
@@ -537,7 +537,7 @@ func printStat(bucket string, key string, entry storage.FileInfo) {
 	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", bucket)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", key)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Hash:", entry.Hash)
-	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Fsize:", entry.Fsize, FormatFsize(entry.Fsize))
+	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Fsize:", entry.Fsize, utils.FormatFileSize(entry.Fsize))
 
 	putTime := time.Unix(0, entry.PutTime*100)
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "PutTime:", entry.PutTime, putTime.String())

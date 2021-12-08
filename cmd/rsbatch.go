@@ -306,7 +306,7 @@ func BatchFetch(cmd *cobra.Command, params []string) {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := ParseLine(line, sep)
+		items := utils.SplitString(line, sep)
 		if len(items) <= 0 {
 			continue
 		}
@@ -446,7 +446,7 @@ func batchStat(entries []storage2.EntryPath, bm *storage2.BucketManager) {
 func BatchDelete(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
-		rcode := CreateRandString(6)
+		rcode := utils.CreateRandString(6)
 
 		rcode2 := ""
 		if runtime.GOOS == "windows" {
@@ -575,7 +575,7 @@ func batchDelete(entries []storage2.EntryPath, bm *storage2.BucketManager, fileE
 func BatchChgm(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
-		rcode := CreateRandString(6)
+		rcode := utils.CreateRandString(6)
 
 		rcode2 := ""
 		if runtime.GOOS == "windows" {
@@ -697,7 +697,7 @@ func batchChgm(entries []storage2.ChgmEntryPath, bm *storage2.BucketManager, fil
 func BatchChtype(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
-		rcode := CreateRandString(6)
+		rcode := utils.CreateRandString(6)
 
 		rcode2 := ""
 		if runtime.GOOS == "windows" {
@@ -830,7 +830,7 @@ func batchChtype(entries []storage2.ChtypeEntryPath, bm *storage2.BucketManager,
 func BatchDeleteAfterDays(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
-		rcode := CreateRandString(6)
+		rcode := utils.CreateRandString(6)
 
 		rcode2 := ""
 		if runtime.GOOS == "windows" {
@@ -946,7 +946,7 @@ func batchDeleteAfterDays(entries []storage2.DeleteAfterDaysEntryPath, bm *stora
 func BatchRename(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
-		rcode := CreateRandString(6)
+		rcode := utils.CreateRandString(6)
 
 		rcode2 := ""
 		if runtime.GOOS == "windows" {
@@ -1006,7 +1006,7 @@ func BatchRename(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := ParseLine(line, sep)
+		items := utils.SplitString(line, sep)
 		if len(items) == 2 {
 			oldKey := items[0]
 			newKey := items[1]
@@ -1074,7 +1074,7 @@ func batchRename(entries []storage2.RenameEntryPath, bm *storage2.BucketManager,
 func BatchMove(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
-		rcode := CreateRandString(6)
+		rcode := utils.CreateRandString(6)
 
 		rcode2 := ""
 		if runtime.GOOS == "windows" {
@@ -1135,7 +1135,7 @@ func BatchMove(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := ParseLine(line, sep)
+		items := utils.SplitString(line, sep)
 		if len(items) == 1 || len(items) == 2 {
 			srcKey := items[0]
 			destKey := srcKey
@@ -1212,7 +1212,7 @@ func batchMove(entries []storage2.MoveEntryPath, bm *storage2.BucketManager, fil
 func BatchCopy(cmd *cobra.Command, params []string) {
 	if !forceFlag {
 		//confirm
-		rcode := CreateRandString(6)
+		rcode := utils.CreateRandString(6)
 
 		rcode2 := ""
 		if runtime.GOOS == "windows" {
@@ -1275,7 +1275,7 @@ func BatchCopy(cmd *cobra.Command, params []string) {
 	}
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := ParseLine(line, sep)
+		items := utils.SplitString(line, sep)
 		if len(items) == 1 || len(items) == 2 {
 			srcKey := items[0]
 			destKey := srcKey
@@ -1376,7 +1376,7 @@ func BatchSign(cmd *cobra.Command, params []string) {
 	scanner := bufio.NewScanner(bReader)
 	for scanner.Scan() {
 		line := scanner.Text()
-		items := ParseLine(line, sep)
+		items := utils.SplitString(line, sep)
 		if len(items) <= 0 {
 			continue
 		}

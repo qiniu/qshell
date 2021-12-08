@@ -1,24 +1,9 @@
 package cmd
 
 import (
-	"crypto/rand"
-	"fmt"
 	"github.com/qiniu/go-sdk/v7/conf"
 	"github.com/qiniu/qshell/v2/iqshell/tools"
 	"github.com/spf13/cobra"
-	"strings"
-)
-
-const (
-	// ASCII英文字母
-	ALPHA_LIST = "abcdefghijklmnopqrstuvwxyz"
-)
-
-const (
-	KB = 1024
-	MB = 1024 * KB
-	GB = 1024 * MB
-	TB = 1024 * GB
 )
 
 var rpcEncodeCmdBuilder = func() *cobra.Command {
@@ -349,50 +334,4 @@ func init() {
 		IpCmdBuilder(),
 		TokenCmdBuilder(),
 	)
-}
-
-// 转化文件大小到人工可读的字符串，以相应的单位显示
-func FormatFsize(fsize int64) (result string) {
-	if fsize > TB {
-		result = fmt.Sprintf("%.2f TB", float64(fsize)/float64(TB))
-	} else if fsize > GB {
-		result = fmt.Sprintf("%.2f GB", float64(fsize)/float64(GB))
-	} else if fsize > MB {
-		result = fmt.Sprintf("%.2f MB", float64(fsize)/float64(MB))
-	} else if fsize > KB {
-		result = fmt.Sprintf("%.2f KB", float64(fsize)/float64(KB))
-	} else {
-		result = fmt.Sprintf("%d B", fsize)
-	}
-
-	return
-}
-
-// 生成随机的字符串
-func CreateRandString(num int) (rcode string) {
-	if num <= 0 || num > len(ALPHA_LIST) {
-		rcode = ""
-		return
-	}
-
-	buffer := make([]byte, num)
-	_, err := rand.Read(buffer)
-	if err != nil {
-		rcode = ""
-		return
-	}
-
-	for _, b := range buffer {
-		index := int(b) / len(ALPHA_LIST)
-		rcode += string(ALPHA_LIST[index])
-	}
-
-	return
-}
-
-func ParseLine(line, sep string) []string {
-	if strings.TrimSpace(sep) == "" {
-		return strings.Fields(line)
-	}
-	return strings.Split(line, sep)
 }

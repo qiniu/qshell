@@ -109,17 +109,17 @@ func (i *asyncItem) degrade() {
 func (i *asyncItem) estimatDuration() {
 	if i.duration == 0 {
 		switch {
-		case i.size >= 500*MB:
+		case i.size >= 500*utils.MB:
 			i.duration = 40
-		case i.size > 200*MB && i.size < 500*MB:
+		case i.size > 200*utils.MB && i.size < 500*utils.MB:
 			i.duration = 30
-		case i.size > 100*MB && i.size <= 200*MB:
+		case i.size > 100*utils.MB && i.size <= 200*utils.MB:
 			i.duration = 20
-		case i.size <= 10*MB:
+		case i.size <= 10*utils.MB:
 			i.duration = 3
-		case i.size <= 10*MB:
+		case i.size <= 10*utils.MB:
 			i.duration = 6
-		case i.size <= 100*MB:
+		case i.size <= 100*utils.MB:
 			i.duration = 10
 		default:
 			i.duration = 3
@@ -200,7 +200,7 @@ func (ao *asyncFetchOptions) Run(cmd *cobra.Command, positionalArgs []string) {
 	for line := range lc {
 		limitc <- struct{}{}
 
-		fields := ParseLine(line, "")
+		fields := utils.SplitString(line, "")
 		if len(fields) <= 0 {
 			continue
 		}

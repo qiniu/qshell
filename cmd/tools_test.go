@@ -1,8 +1,6 @@
 package cmd
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestParseLine(t *testing.T) {
 	s := "hel lo"
