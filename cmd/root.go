@@ -9,14 +9,10 @@ import (
 )
 
 var (
-	// 开启命令行的调试模式
-	DebugFlag     bool
-	DeepDebugInfo bool
-
-	// qshell 版本信息， qshell -v
-	VersionFlag bool
-	cfgFile     string
-	local       bool
+	DebugFlag     bool   // 开启命令行的调试模式
+	DeepDebugInfo bool   // go SDK client 和命令行开启调试模式
+	cfgFile       string // 配置文件路径，用户可以指定配置文件
+	local         bool   // 是否使用当前文件夹作为工作区
 )
 
 const (
@@ -75,7 +71,6 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&DebugFlag, "debug", "d", false, "debug mode")
 	// ddebug 开启 client debug
 	RootCmd.PersistentFlags().BoolVarP(&DeepDebugInfo, "ddebug", "D", false, "deep debug mode")
-	RootCmd.PersistentFlags().BoolVarP(&VersionFlag, "version", "v", false, "show version")
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "C", "", "config file (default is $HOME/.qshell.json)")
 	RootCmd.PersistentFlags().BoolVarP(&local, "local", "L", false, "use current directory as config file path")
 }
