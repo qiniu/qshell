@@ -2,14 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"runtime"
-
-	"github.com/qiniu/go-sdk/v7/client"
-	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var (
@@ -58,7 +54,7 @@ __custom_func() {
 var RootCmd = &cobra.Command{
 	Use:                    "qshell",
 	Short:                  "Qiniu commandline tool for managing your bucket and CDN",
-	Version:                version,
+	Version:                data.Version,
 	BashCompletionFunction: bash_completion_func,
 }
 
@@ -85,31 +81,21 @@ func init() {
 }
 
 func initConfig() {
-	//set cpu count
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	//set qshell user agent
-	storage.UserAgent = UserAgent()
-
-	// 加载 log
-	logLevel := log.LevelInfo
-	if DebugFlag || DeepDebugInfo {
-		logLevel = log.LevelDebug
-	}
-	if DeepDebugInfo {
-		client.TurnOnDebug()
-	}
-	log.LoadConsole(logLevel)
-
-	// 加载工作区
 	workspacePath := ""
 	if local {
 		dir, gErr := os.Getwd()
 		if gErr != nil {
-			fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
+			_, _ = fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
 			os.Exit(1)
 		}
 		workspacePath = dir
 	}
 
-	workspace.Load(workspace.Workspace(workspacePath), workspace.UserConfigPath(cfgFile))
+	err := iqshell.Load(iqshell.Config{
+		DebugEnable:    DebugFlag,
+		DDebugEnable:   DeepDebugInfo,
+		ConfigFilePath: cfgFile,
+		WorkspacePath:  workspacePath,
+	})
+	_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
 }
