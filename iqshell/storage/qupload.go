@@ -14,14 +14,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/qiniu/go-sdk/v7/auth/qbox"
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/tools"
-
-	"github.com/qiniu/go-sdk/v7/auth/qbox"
-	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 )
@@ -717,7 +715,7 @@ func checkFileNeedToUpload(bm *BucketManager, uploadConfig *UploadConfig, ldb *l
 		ldbValue := fmt.Sprintf("%d", localFileLastModified)
 		if uploadConfig.CheckHash {
 			//compare hash
-			localEtag, cErr := tools.GetEtag(localFilePath)
+			localEtag, cErr := utils.GetEtag(localFilePath)
 			if cErr != nil {
 				log.Error("File `%s` calc local hash failed, %s", uploadFileKey, cErr)
 				atomic.AddInt64(&failureFileCount, 1)

@@ -18,7 +18,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/tools"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -611,15 +610,15 @@ func downloadFile(downConfig *DownloadConfig, fileKey, fileUrl, domainOfBucket s
 			}
 
 			downloadFileHash := ""
-			if fileHash != "" && tools.IsSignByEtagV2(fileHash) {
+			if fileHash != "" && utils.IsSignByEtagV2(fileHash) {
 				bucketManager := GetBucketManager()
 				stat, errs := bucketManager.Stat(downConfig.Bucket, fileKey)
 				if errs == nil {
-					downloadFileHash, err = tools.EtagV2(hashFile, stat.Parts)
+					downloadFileHash, err = utils.EtagV2(hashFile, stat.Parts)
 				}
 				log.Info("Download", fileKey, " v2 local hash:", downloadFileHash, " server hash:", fileHash)
 			} else {
-				downloadFileHash, err = tools.EtagV1(hashFile)
+				downloadFileHash, err = utils.EtagV1(hashFile)
 				log.Info("Download", fileKey, " v1 local hash:", downloadFileHash, " server hash:", fileHash)
 			}
 			if err != nil {

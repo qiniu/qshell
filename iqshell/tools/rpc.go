@@ -2,6 +2,7 @@ package tools
 
 import (
 	"bufio"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"os"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -9,12 +10,12 @@ import (
 )
 
 type RpcInfo struct {
-	params []string
+	Params []string
 }
 
 func RpcDecode(info RpcInfo) {
-	if len(info.params) > 0 {
-		for _, param := range info.params {
+	if len(info.Params) > 0 {
+		for _, param := range info.Params {
 			decodedStr, _ := utils.Decode(param)
 			log.Alert(decodedStr)
 		}
@@ -29,7 +30,11 @@ func RpcDecode(info RpcInfo) {
 }
 
 func RpcEncode(info RpcInfo) {
-	for _, param := range info.params {
+	if len(info.Params) == 0 {
+		log.Error(alert.CannotEmpty("rpc encode Value", ""))
+		return
+	}
+	for _, param := range info.Params {
 		encodedStr := utils.Encode(param)
 		log.Alert(encodedStr)
 	}
