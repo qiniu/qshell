@@ -82,6 +82,9 @@ func Load(options ...Option) (err error) {
 		}
 	}
 
+	// 在工作区加载之后监听
+	observerCmdInterrupt()
+
 	return
 }
 

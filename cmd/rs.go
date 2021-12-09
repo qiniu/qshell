@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"os"
 	"strconv"
 	"strings"
@@ -14,6 +15,34 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/spf13/cobra"
 )
+
+var listBucketCmd2Builder = func() *cobra.Command {
+	var info = operations.ListInfo{}
+	var cmd = &cobra.Command{
+		Use:   "listbucket2 <Bucket>",
+		Short: "List all the files in the bucket using v2/list interface",
+		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.ApiInfo.Bucket = args[0]
+			}
+			operations.List(info)
+		},
+	}
+
+	cmd.Flags().StringVarP(&info.ApiInfo.Marker, "marker", "m", "", "list marker")
+	cmd.Flags().StringVarP(&info.ApiInfo.Prefix, "prefix", "p", "", "list by prefix")
+	cmd.Flags().StringVarP(&info.Suffixes, "suffixes", "q", "", "list by key suffixes, separated by comma")
+	cmd.Flags().IntVarP(&info.ApiInfo.MaxRetry, "max-retry", "x", -1, "max retries when error occurred")
+	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
+	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
+	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
+	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "append to file")
+	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
+
+	return cmd
+}
 
 var (
 	qGetCmd = &cobra.Command{
@@ -36,13 +65,7 @@ var (
 		Args:  cobra.ExactArgs(1),
 		Run:   ListBucket,
 	}
-	lsBucketCmd2 = &cobra.Command{
-		Use:   "listbucket2 <Bucket>",
-		Short: "List all the files in the bucket using v2/list interface",
-		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run:   ListBucket2,
-	}
+
 	statCmd = &cobra.Command{
 		Use:   "stat <Bucket> <Key>",
 		Short: "Get the basic info of a remote file",
@@ -157,16 +180,6 @@ func init() {
 	lsBucketCmd.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
 	lsBucketCmd.Flags().StringVarP(&outFile, "out", "o", "", "output file")
 
-	lsBucketCmd2.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
-	lsBucketCmd2.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
-	lsBucketCmd2.Flags().StringVarP(&suffixes, "suffixes", "q", "", "list by key suffixes, separated by comma")
-	lsBucketCmd2.Flags().IntVarP(&maxRetry, "max-retry", "x", -1, "max retries when error occurred")
-	lsBucketCmd2.Flags().StringVarP(&outFile, "out", "o", "", "output file")
-	lsBucketCmd2.Flags().StringVarP(&startDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
-	lsBucketCmd2.Flags().StringVarP(&endDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
-	lsBucketCmd2.Flags().BoolVarP(&appendMode, "append", "a", false, "append to file")
-	lsBucketCmd2.Flags().BoolVarP(&readable, "readable", "r", false, "present file size with human readable format")
-
 	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
 	moveCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
 	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
@@ -176,7 +189,7 @@ func init() {
 
 	RootCmd.AddCommand(qGetCmd, dirCacheCmd, lsBucketCmd, statCmd, delCmd, moveCmd,
 		copyCmd, chgmCmd, chtypeCmd, delafterCmd, fetchCmd, mirrorCmd,
-		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, lsBucketCmd2, chstatus)
+		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, listBucketCmd2Builder(), chstatus)
 }
 
 // 禁用七牛存储空间中的对象，如果使用了-r选项，那么解禁七牛存储中的对象

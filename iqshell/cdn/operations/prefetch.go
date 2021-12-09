@@ -29,8 +29,8 @@ func Prefetch(info PrefetchInfo) {
 			log.ErrorF("Open url list file error:%v", err)
 			os.Exit(data.STATUS_HALT)
 		}
+		defer urlReader.Close()
 	}
-	defer urlReader.Close()
 
 	createQpsLimitIfNeeded(info.QpsLimit)
 
