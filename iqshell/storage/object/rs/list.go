@@ -19,7 +19,7 @@ type ListApiInfo struct {
 type ListItem storage.ListItem
 
 // List list 某个 bucket 所有的文件
-func List(ctx context.Context, info ListApiInfo) (<-chan ListItem, error) {
+func List(ctx context.Context, info *ListApiInfo) (<-chan ListItem, error) {
 	objects := make(chan ListItem)
 
 	bucketManager, err := bucket.GetBucketManager()
@@ -32,10 +32,9 @@ func List(ctx context.Context, info ListApiInfo) (<-chan ListItem, error) {
 	return objects, nil
 }
 
-func listObjectOfBucketToChan(ctx context.Context, manager *storage.BucketManager, info ListApiInfo, objects chan ListItem) {
+func listObjectOfBucketToChan(ctx context.Context, manager *storage.BucketManager, info *ListApiInfo, objects chan ListItem) {
 	complete := false
 	for retryCount := 0; !complete  && (info.MaxRetry < 0 || retryCount <= info.MaxRetry); retryCount++ {
-		//TODO: ListBucketContext 取消不掉
 		entries, err := manager.ListBucketContext(ctx, info.Bucket, info.Prefix, info.Delimiter, info.Marker)
 		if entries == nil && err == nil {
 			// no data

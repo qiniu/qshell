@@ -76,6 +76,8 @@ func (info ListInfo) getResultWitter() []string {
 }
 
 func List(info ListInfo) {
+	apiInfo := &info.ApiInfo
+
 	startDate, err := info.getStartDate()
 	if err != nil {
 		log.ErrorF("date parse error: %v", err)
@@ -87,12 +89,6 @@ func List(info ListInfo) {
 		log.ErrorF("date parse error: %v", err)
 		os.Exit(data.STATUS_ERROR)
 	}
-
-	defer func(lastMarker string) {
-		if lastMarker != "" {
-			log.ErrorF("Marker: %s\n", lastMarker)
-		}
-	}(info.ApiInfo.Marker)
 
 	var resultWitter *os.File
 	if len(info.SaveToFile) == 0 {
@@ -148,7 +144,7 @@ func List(info ListInfo) {
 		return hasSuffix
 	}
 
-	objects, err := rs.List(workspace.GetContext(), info.ApiInfo)
+	objects, err := rs.List(workspace.GetContext(), apiInfo)
 	if err != nil {
 		log.Error(err)
 		return
@@ -174,14 +170,18 @@ func List(info ListInfo) {
 			object.PutTime, object.MimeType, object.Type, object.EndUser)
 		_, err := bWriter.WriteString(lineData)
 		if err != nil {
-			log.ErrorF("marker: %s", info.ApiInfo.Marker)
+			log.ErrorF("marker: %s", apiInfo.Marker)
 			log.ErrorF("listbucket Error: %v", err)
 		}
 
 		err = bWriter.Flush()
 		if err != nil {
-			log.ErrorF("marker: %s", info.ApiInfo.Marker)
+			log.ErrorF("marker: %s", apiInfo.Marker)
 			log.ErrorF("listbucket flush Error: %v", err)
 		}
+	}
+
+	if apiInfo.Marker != "" {
+		log.ErrorF("Marker: %s\n", apiInfo.Marker)
 	}
 }
