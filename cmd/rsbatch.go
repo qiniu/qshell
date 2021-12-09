@@ -115,7 +115,7 @@ var (
 		Run:   BatchCopy,
 	}
 	batchSignCmd = &cobra.Command{
-		Use:   "batchsign [-i <UrlListFile>] [-e <Deadline>]",
+		Use:   "batchsign [-i <ItemListFile>] [-e <Deadline>]",
 		Short: "Batch create the private url from the public url list file",
 		Args:  cobra.ExactArgs(0),
 		Run:   BatchSign,

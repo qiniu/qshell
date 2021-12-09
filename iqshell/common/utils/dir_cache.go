@@ -13,13 +13,11 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
-/*
-generate the file list for the specified directory
-
-@param cacheRootPath - dir to generate cache file
-@param cacheResultFile - cache result file path
-
-@return (fileCount, retErr) - total file count and any error meets
+/**
+ * generate the file list for the specified directory
+ * @param cacheRootPath - dir to generate cache file
+ * @param cacheResultFile - cache result file path
+ * @return (fileCount, retErr) - total file count and any error meets
 */
 func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, retErr error) {
 	//check dir
