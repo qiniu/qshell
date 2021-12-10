@@ -12,7 +12,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
 
-	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +21,7 @@ var listBucketCmdBuilder = func() *cobra.Command {
 		EndDate:    "",
 		AppendMode: false,
 		Readable:   false,
-		ApiInfo:    rs.ListApiInfo{
+		ApiInfo: rs.ListApiInfo{
 			Delimiter: "",
 			MaxRetry:  20,
 		},
@@ -73,6 +72,160 @@ var listBucketCmd2Builder = func() *cobra.Command {
 	return cmd
 }
 
+var statCmdBuilder = func() *cobra.Command {
+	var info = rs.StatusApiInfo{}
+	var cmd = &cobra.Command{
+		Use:   "stat <Bucket> <Key>",
+		Short: "Get the basic info of a remote file",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 1 {
+				info.Bucket = args[0]
+				info.Key = args[1]
+			}
+			operations.Status(info)
+		},
+	}
+	return cmd
+}
+
+var forbiddenCmdBuilder = func() *cobra.Command {
+	var info = operations.ForbiddenInfo{}
+	var cmd = &cobra.Command{
+		Use:   "forbidden <Bucket> <Key>",
+		Short: "forbidden file in qiniu bucket",
+		Long:  "forbidden object in qiniu bucket, when used with -r option, unforbidden the object",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 1 {
+				info.Bucket = args[0]
+				info.Key = args[1]
+			}
+			operations.ForbiddenObject(info)
+		},
+	}
+	cmd.Flags().BoolVarP(&info.UnForbidden, "reverse", "r", false, "unforbidden object in qiniu bucket")
+	return cmd
+}
+
+var deleteCmdBuilder = func() *cobra.Command {
+	var info = operations.DeleteInfo{}
+	var cmd = &cobra.Command{
+		Use:   "delete <Bucket> <Key>",
+		Short: "Delete a remote file in the bucket",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 1 {
+				info.Bucket = args[0]
+				info.Key = args[1]
+			}
+			operations.Delete(info)
+		},
+	}
+	return cmd
+}
+
+var deleteAfterCmdBuilder = func() *cobra.Command {
+	var info = operations.DeleteInfo{}
+	var cmd = &cobra.Command{
+		Use:   "expire <Bucket> <Key> <DeleteAfterDays>",
+		Short: "Set the deleteAfterDays of a file",
+		Args:  cobra.ExactArgs(3),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 2 {
+				info.Bucket = args[0]
+				info.Key = args[1]
+				info.AfterDays = args[2]
+			}
+			operations.Delete(info)
+		},
+	}
+	return cmd
+}
+
+var moveCmdBuilder = func() *cobra.Command {
+	var info = rs.MoveApiInfo{}
+	var cmd = &cobra.Command{
+		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
+		Short: "Move/Rename a file and save in bucket",
+		Args:  cobra.ExactArgs(3),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 2 {
+				info.SourceBucket = args[0]
+				info.SourceKey = args[1]
+				info.DestBucket = args[2]
+			}
+			if len(info.DestKey) == 0 {
+				info.DestKey = info.SourceKey
+			}
+			operations.Move(info)
+		},
+	}
+	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
+	cmd.Flags().StringVarP(&info.DestKey, "key", "k", "", "filename saved in bucket")
+	return cmd
+}
+
+var copyCmdBuilder = func() *cobra.Command {
+	var info = rs.CopyApiInfo{}
+	var cmd = &cobra.Command{
+		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
+		Short: "Make a copy of a file and save in bucket",
+		Args:  cobra.ExactArgs(3),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 2 {
+				info.SourceBucket = args[0]
+				info.SourceKey = args[1]
+				info.DestBucket = args[2]
+			}
+			if len(info.DestKey) == 0 {
+				info.DestKey = info.SourceKey
+			}
+			operations.Copy(info)
+		},
+	}
+	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
+	cmd.Flags().StringVarP(&info.DestKey, "key", "k", "", "filename saved in bucket")
+	return cmd
+}
+
+var changeMimeCmdBuilder = func() *cobra.Command {
+	var info = rs.ChangeMimeApiInfo{}
+	var cmd = &cobra.Command{
+		Use:   "chgm <Bucket> <Key> <NewMimeType>",
+		Short: "Change the mime type of a file",
+		Args:  cobra.ExactArgs(3),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 2 {
+				info.Bucket = args[0]
+				info.Key = args[1]
+				info.Mime = args[2]
+			}
+			operations.ChangeMime(info)
+		},
+	}
+	return cmd
+}
+
+var changeTypeCmdBuilder = func() *cobra.Command {
+	var info = operations.ChangeTypeInfo{}
+	var cmd = &cobra.Command{
+		Use:   "chtype <Bucket> <Key> <FileType>",
+		Short: "Change the file type of a file",
+		Long:  "Change the file type of a file, file type must be in 0 or 1. And 0 means standard storage, while 1 means low frequency visit storage.",
+		Args:  cobra.ExactArgs(3),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 2 {
+				info.Bucket = args[0]
+				info.Key = args[1]
+				info.Type = args[2]
+			}
+			operations.ChangeType(info)
+		},
+	}
+	return cmd
+}
+
 var (
 	qGetCmd = &cobra.Command{
 		Use:   "get <Bucket> <Key>",
@@ -86,57 +239,6 @@ var (
 		Long:  "Cache the directory structure of a file path to a file, \nif <DirCacheResultFile> not specified, cache to stdout",
 		Args:  cobra.ExactArgs(1),
 		Run:   DirCache,
-	}
-
-	statCmd = &cobra.Command{
-		Use:   "stat <Bucket> <Key>",
-		Short: "Get the basic info of a remote file",
-		Args:  cobra.ExactArgs(2),
-		Run:   Stat,
-	}
-	delCmd = &cobra.Command{
-		Use:   "delete <Bucket> <Key>",
-		Short: "Delete a remote file in the bucket",
-		Args:  cobra.ExactArgs(2),
-		Run:   Delete,
-	}
-	moveCmd = &cobra.Command{
-		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
-		Short: "Move/Rename a file and save in bucket",
-		Args:  cobra.ExactArgs(3),
-		Run:   Move,
-	}
-	copyCmd = &cobra.Command{
-		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
-		Short: "Make a copy of a file and save in bucket",
-		Args:  cobra.ExactArgs(3),
-		Run:   Copy,
-	}
-	chgmCmd = &cobra.Command{
-		Use:   "chgm <Bucket> <Key> <NewMimeType>",
-		Short: "Change the mime type of a file",
-		Args:  cobra.ExactArgs(3),
-		Run:   Chgm,
-	}
-	chtypeCmd = &cobra.Command{
-		Use:   "chtype <Bucket> <Key> <FileType>",
-		Short: "Change the file type of a file",
-		Long:  "Change the file type of a file, file type must be in 0 or 1. And 0 means standard storage, while 1 means low frequency visit storage.",
-		Args:  cobra.ExactArgs(3),
-		Run:   Chtype,
-	}
-	chstatus = &cobra.Command{
-		Use:   "forbidden <Bucket> <Key>",
-		Short: "Forbidden file in qiniu bucket",
-		Long:  "Forbidden object in qiniu bucket, when used with -r option, unforbidden the object",
-		Args:  cobra.ExactArgs(2),
-		Run:   ChStatus,
-	}
-	delafterCmd = &cobra.Command{
-		Use:   "expire <Bucket> <Key> <DeleteAfterDays>",
-		Short: "Set the deleteAfterDays of a file",
-		Args:  cobra.ExactArgs(3),
-		Run:   DeleteAfterDays,
 	}
 	fetchCmd = &cobra.Command{
 		Use:   "fetch <RemoteResourceUrl> <Bucket> [-k <Key>]",
@@ -178,48 +280,33 @@ var (
 
 var (
 	outFile                  string
-	mOverwrite               bool
 	cOverwrite               bool
 	finalKey                 string
-	reverse                  bool
 	tsUrlRemoveSparePreSlash bool
 )
 
 func init() {
 	dirCacheCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "output filepath")
 	qGetCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "save file as specified by this option")
-	chstatus.Flags().BoolVarP(&reverse, "reverse", "r", false, "unforbidden object in qiniu bucket")
 
-	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
-	moveCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
-	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
-	copyCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
 	fetchCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
 	m3u8RepCmd.Flags().BoolVarP(&tsUrlRemoveSparePreSlash, "remove-spare-pre-slash", "r", true, "remove spare prefix slash(/) , only keep one slash if ts path has prefix / ")
 
 	RootCmd.AddCommand(
 		listBucketCmdBuilder(),
 		listBucketCmd2Builder(),
-		)
+		statCmdBuilder(),
+		forbiddenCmdBuilder(),
+		deleteCmdBuilder(),
+		deleteAfterCmdBuilder(),
+		moveCmdBuilder(),
+		copyCmdBuilder(),
+		changeMimeCmdBuilder(),
+		changeTypeCmdBuilder(),
+	)
 
-	RootCmd.AddCommand(qGetCmd, dirCacheCmd, statCmd, delCmd, moveCmd,
-		copyCmd, chgmCmd, chtypeCmd, delafterCmd, fetchCmd, mirrorCmd,
-		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, chstatus)
-}
-
-// 禁用七牛存储空间中的对象，如果使用了-r选项，那么解禁七牛存储中的对象
-// 对象被禁用后在七牛存储空间中看不到该文件
-func ChStatus(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-	key := params[1]
-
-	bm := storage2.GetBucketManager()
-
-	err := bm.ChStatus(bucket, key, !reverse)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Change file status error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
+	RootCmd.AddCommand(qGetCmd, dirCacheCmd, fetchCmd, mirrorCmd,
+		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd)
 }
 
 // 【dircache】扫描本地文件目录， 形成一个关于文件信息的文本文件
@@ -256,52 +343,6 @@ func Get(cmd *cobra.Command, params []string) {
 	}
 }
 
-// 【stat】获取文件的meta信息，包括文件名字，hash， 上传时间，文件大小等信息
-func Stat(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-	key := params[1]
-
-	bm := storage2.GetBucketManager()
-	fileInfo, err := bm.Stat(bucket, key)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Stat error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	} else {
-		printStat(bucket, key, fileInfo)
-	}
-}
-
-// 【delete】删除七牛存储空间中的文件
-func Delete(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-	key := params[1]
-
-	bm := storage2.GetBucketManager()
-	err := bm.Delete(bucket, key)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Delete error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-// 【move】 移动一个七牛存储空间的文件到另一个七牛的存储空间，该命令只适用于同属一个存储区域的存储空间中的文件
-func Move(cmd *cobra.Command, params []string) {
-	srcBucket := params[0]
-	srcKey := params[1]
-	destBucket := params[2]
-
-	if finalKey == "" {
-		finalKey = srcKey
-	}
-
-	bm := storage2.GetBucketManager()
-	err := bm.Move(srcBucket, srcKey, destBucket, finalKey, mOverwrite)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Move error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
-}
-
 // 【copy】拷贝一个七牛存储空间的文件到另一个七牛的存储空间，该命令只适用于同属一个存储区域的存储空间中的文件
 func Copy(cmd *cobra.Command, params []string) {
 	srcBucket := params[0]
@@ -315,60 +356,6 @@ func Copy(cmd *cobra.Command, params []string) {
 	err := bm.Copy(srcBucket, srcKey, destBucket, finalKey, cOverwrite)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Copy error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-// 【chtype】改变七牛存储空间的文件的MimeType
-func Chgm(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-	key := params[1]
-	newMimeType := params[2]
-
-	bm := storage2.GetBucketManager()
-	err := bm.ChangeMime(bucket, key, newMimeType)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Change mimetype error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-// 【chtype】改变文件的存储类型，在七牛中存储的文件分为标准存储和低频存储
-func Chtype(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-	key := params[1]
-	fileTypeStr := params[2]
-	fileType, cErr := strconv.Atoi(fileTypeStr)
-	if cErr != nil || (fileType != 0 && fileType != 1) {
-		fmt.Println("Invalid file type:", fileTypeStr, ", fileType must be 0(standard) or 1(low frequency storage)")
-		os.Exit(data.STATUS_HALT)
-		return
-	}
-
-	bm := storage2.GetBucketManager()
-	err := bm.ChangeType(bucket, key, fileType)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Change file type error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-// 【expire】给存储在七牛空间中的文件设置删除属性，设置以后，到指定时间会自动删除该文件
-func DeleteAfterDays(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-	key := params[1]
-	expireStr := params[2]
-	expire, cErr := strconv.Atoi(expireStr)
-	if cErr != nil {
-		fmt.Fprintln(os.Stderr, "Invalid deleteAfterDays: ", expireStr)
-		os.Exit(data.STATUS_HALT)
-		return
-	}
-
-	bm := storage2.GetBucketManager()
-	err := bm.DeleteAfterDays(bucket, key, expire)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Set file deleteAfterDays error: %v\n", err)
 		os.Exit(data.STATUS_ERROR)
 	}
 }
@@ -501,19 +488,3 @@ func PrivateUrl(cmd *cobra.Command, params []string) {
 	fmt.Println(url)
 }
 
-func printStat(bucket string, key string, entry storage.FileInfo) {
-	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", bucket)
-	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", key)
-	statInfo += fmt.Sprintf("%-20s%s\r\n", "Hash:", entry.Hash)
-	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Fsize:", entry.Fsize, utils.FormatFileSize(entry.Fsize))
-
-	putTime := time.Unix(0, entry.PutTime*100)
-	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "PutTime:", entry.PutTime, putTime.String())
-	statInfo += fmt.Sprintf("%-20s%s\r\n", "MimeType:", entry.MimeType)
-	if entry.Type == 0 {
-		statInfo += fmt.Sprintf("%-20s%d -> 标准存储\r\n", "FileType:", entry.Type)
-	} else {
-		statInfo += fmt.Sprintf("%-20s%d -> 低频存储\r\n", "FileType:", entry.Type)
-	}
-	fmt.Println(statInfo)
-}

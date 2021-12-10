@@ -32,7 +32,7 @@ func List(ctx context.Context, info *ListApiInfo) (<-chan ListItem, error) {
 	return objects, nil
 }
 
-func listObjectOfBucketToChan(ctx context.Context, manager *storage.BucketManager, info *ListApiInfo, objects chan ListItem) {
+func listObjectOfBucketToChan(ctx context.Context, manager *storage.BucketManager, info *ListApiInfo, objects chan<- ListItem) {
 	complete := false
 	for retryCount := 0; !complete  && (info.MaxRetry < 0 || retryCount <= info.MaxRetry); retryCount++ {
 		entries, err := manager.ListBucketContext(ctx, info.Bucket, info.Prefix, info.Delimiter, info.Marker)
