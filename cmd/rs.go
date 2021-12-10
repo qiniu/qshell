@@ -2,15 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
-	"os"
-	"strconv"
-	"time"
-
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -226,6 +223,25 @@ var changeTypeCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
+var privateUrlCmdBuilder = func() *cobra.Command {
+	var info = operations.PrivateUrlInfo{}
+	var cmd = &cobra.Command{
+		Use:   "privateurl <PublicUrl> [<Deadline>]",
+		Short: "Create private resource access url",
+		Args:  cobra.RangeArgs(1, 2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.PublicUrl = args[0]
+			}
+			if len(args) > 1 {
+				info.Deadline = args[1]
+			}
+			operations.PrivateUrl(info)
+		},
+	}
+	return cmd
+}
+
 var (
 	qGetCmd = &cobra.Command{
 		Use:   "get <Bucket> <Key>",
@@ -270,12 +286,6 @@ var (
 		Args:  cobra.RangeArgs(2, 3),
 		Run:   M3u8Replace,
 	}
-	privateUrlCmd = &cobra.Command{
-		Use:   "privateurl <PublicUrl> [<Deadline>]",
-		Short: "Create private resource access url",
-		Args:  cobra.RangeArgs(1, 2),
-		Run:   PrivateUrl,
-	}
 )
 
 var (
@@ -303,10 +313,11 @@ func init() {
 		copyCmdBuilder(),
 		changeMimeCmdBuilder(),
 		changeTypeCmdBuilder(),
+		privateUrlCmdBuilder(),
 	)
 
 	RootCmd.AddCommand(qGetCmd, dirCacheCmd, fetchCmd, mirrorCmd,
-		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd)
+		saveAsCmd, m3u8DelCmd, m3u8RepCmd)
 }
 
 // 【dircache】扫描本地文件目录， 形成一个关于文件信息的文本文件
@@ -339,23 +350,6 @@ func Get(cmd *cobra.Command, params []string) {
 	err := bm.Get(bucket, key, destFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Get error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-// 【copy】拷贝一个七牛存储空间的文件到另一个七牛的存储空间，该命令只适用于同属一个存储区域的存储空间中的文件
-func Copy(cmd *cobra.Command, params []string) {
-	srcBucket := params[0]
-	srcKey := params[1]
-	destBucket := params[2]
-	if finalKey == "" {
-		finalKey = srcKey
-	}
-
-	bm := storage2.GetBucketManager()
-	err := bm.Copy(srcBucket, srcKey, destBucket, finalKey, cOverwrite)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Copy error: %v\n", err)
 		os.Exit(data.STATUS_ERROR)
 	}
 }
@@ -466,25 +460,5 @@ func M3u8Replace(cmd *cobra.Command, params []string) {
 		fmt.Fprintf(os.Stderr, "m3u8 replace domain error: %v\n", err)
 		os.Exit(data.STATUS_ERROR)
 	}
-}
-
-// 【privateurl】打印七牛私有空间的文件的下载链接(私有空间的文件下载去要鉴权验证)
-func PrivateUrl(cmd *cobra.Command, params []string) {
-	publicUrl := params[0]
-	var deadline int64
-	if len(params) == 2 {
-		if val, err := strconv.ParseInt(params[1], 10, 64); err != nil {
-			fmt.Fprintln(os.Stderr, "Invalid <Deadline>")
-			os.Exit(data.STATUS_HALT)
-		} else {
-			deadline = val
-		}
-	} else {
-		deadline = time.Now().Add(time.Second * 3600).Unix()
-	}
-
-	bm := storage2.GetBucketManager()
-	url, _ := bm.PrivateUrl(publicUrl, deadline)
-	fmt.Println(url)
 }
 
