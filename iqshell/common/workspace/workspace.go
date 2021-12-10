@@ -2,6 +2,9 @@ package workspace
 
 import (
 	"context"
+	"fmt"
+	"github.com/qiniu/go-sdk/v7/auth/qbox"
+	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 )
 
@@ -34,6 +37,21 @@ func GetConfig() config.Config {
 
 func GetWorkspace() string {
 	return workspacePath
+}
+
+func GetAccount() (account.Account, error) {
+	return account.GetAccount()
+}
+
+func GetMac() (mac *qbox.Mac, err error) {
+	acc, gErr := account.GetAccount()
+	if gErr != nil {
+		err = fmt.Errorf("GetBucketManager: %v", gErr)
+		return
+	}
+
+	mac = qbox.NewMac(acc.AccessKey, acc.SecretKey)
+	return
 }
 
 func GetContext() context.Context {

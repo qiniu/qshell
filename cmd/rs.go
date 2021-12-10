@@ -242,6 +242,24 @@ var privateUrlCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
+var saveAsCmdBuilder = func() *cobra.Command {
+	var info = rs.SaveAsApiInfo{}
+	var cmd = &cobra.Command{
+		Use:   "saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>",
+		Short: "Create a resource access url with fop and saveas",
+		Args:  cobra.ExactArgs(3),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 2 {
+				info.PublicUrl = args[0]
+				info.SaveBucket = args[1]
+				info.SaveKey = args[2]
+			}
+			operations.SaveAs(info)
+		},
+	}
+	return cmd
+}
+
 var (
 	qGetCmd = &cobra.Command{
 		Use:   "get <Bucket> <Key>",
@@ -260,12 +278,6 @@ var (
 		Short: "Fetch and update the file in bucket using mirror storage",
 		Args:  cobra.ExactArgs(2),
 		Run:   Prefetch,
-	}
-	saveAsCmd = &cobra.Command{
-		Use:   "saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>",
-		Short: "Create a resource access url with fop and saveas",
-		Args:  cobra.ExactArgs(3),
-		Run:   Saveas,
 	}
 	m3u8DelCmd = &cobra.Command{
 		Use:   "m3u8delete <Bucket> <M3u8Key>",
@@ -306,25 +318,10 @@ func init() {
 		changeMimeCmdBuilder(),
 		changeTypeCmdBuilder(),
 		privateUrlCmdBuilder(),
+		saveAsCmdBuilder(),
 	)
 
-	RootCmd.AddCommand(qGetCmd, fetchCmd, mirrorCmd,
-		saveAsCmd, m3u8DelCmd, m3u8RepCmd)
-}
-
-// 【dircache】扫描本地文件目录， 形成一个关于文件信息的文本文件
-func DirCache(cmd *cobra.Command, params []string) {
-	var cacheResultFile string
-	cacheRootPath := params[0]
-
-	cacheResultFile = outFile
-	if cacheResultFile == "" {
-		cacheResultFile = "stdout"
-	}
-	_, retErr := utils.DirCache(cacheRootPath, cacheResultFile)
-	if retErr != nil {
-		os.Exit(data.STATUS_ERROR)
-	}
+	RootCmd.AddCommand(qGetCmd, fetchCmd, mirrorCmd, m3u8DelCmd, m3u8RepCmd)
 }
 
 // 【get】下载七牛存储中的一个文件， 该命令不需要存储空间绑定有可访问的CDN域名
@@ -383,22 +380,6 @@ func Prefetch(cmd *cobra.Command, params []string) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Prefetch error: %v\n", err)
 		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-// 【saveas】打印输出主动saveas链接
-func Saveas(cmd *cobra.Command, params []string) {
-	publicUrl := params[0]
-	saveBucket := params[1]
-	saveKey := params[2]
-
-	bm := storage2.GetBucketManager()
-	url, err := bm.Saveas(publicUrl, saveBucket, saveKey)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Saveas error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	} else {
-		fmt.Println(url)
 	}
 }
 
