@@ -8,8 +8,10 @@ import (
 	"time"
 )
 
-func Status(info rs.StatusApiInfo) {
-	result, err := rs.Status(info)
+type StatusInfo rs.StatusApiInfo
+
+func Status(info StatusInfo) {
+	result, err := rs.Status(rs.StatusApiInfo(info))
 	if err != nil {
 		log.ErrorF("Stat error:%v", err)
 		return
@@ -18,18 +20,17 @@ func Status(info rs.StatusApiInfo) {
 	log.Alert(getStatusInfo(info, result))
 }
 
+//func BatchStatus(info rs.StatusApiInfo) {
+//	result, err := rs.Status(info)
+//	if err != nil {
+//		log.Error(err)
+//		return
+//	}
+//
+//	log.Alert(getStatusInfo(info, result))
+//}
 
-func BatchStatus(info rs.StatusApiInfo) {
-	result, err := rs.Status(info)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	log.Alert(getStatusInfo(info, result))
-}
-
-func getStatusInfo(info rs.StatusApiInfo, status rs.StatusApiResult) string {
+func getStatusInfo(info StatusInfo, status rs.StatusApiResult) string {
 	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", info.Bucket)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", info.Key)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Hash:", status.Hash)

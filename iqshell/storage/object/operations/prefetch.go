@@ -7,14 +7,12 @@ import (
 	"os"
 )
 
-type SaveAsInfo rs.SaveAsApiInfo
+type MirrorUpdateInfo rs.PrefetchApiInfo
 
-func SaveAs(info SaveAsInfo) {
-	url, err := rs.SaveAs(rs.SaveAsApiInfo(info))
+func MirrorUpdate(info MirrorUpdateInfo) {
+	err := rs.Prefetch(rs.PrefetchApiInfo(info))
 	if err != nil {
-		log.ErrorF("save as error: %v", err)
+		log.ErrorF("Prefetch error: %v", err)
 		os.Exit(data.STATUS_ERROR)
-	} else {
-		log.Alert(url)
 	}
 }

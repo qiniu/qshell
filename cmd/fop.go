@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +22,7 @@ var preFopStatusCmdBuilder = func() *cobra.Command {
 }
 
 var preFopCmdBuilder = func() *cobra.Command {
-	var info = rs.PreFopApiInfo{}
+	var info = operations.PreFopInfo{}
 	var cmd = &cobra.Command{
 		Use:   "pfop <Bucket> <Key> <fopCommand>",
 		Short: "issue a request to process file in bucket",

@@ -5,8 +5,10 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 )
 
-func Move(info rs.MoveApiInfo) {
-	result, err := rs.Move(info)
+type MoveInfo rs.MoveApiInfo
+
+func Move(info MoveInfo) {
+	result, err := rs.Move(rs.MoveApiInfo(info))
 	if err != nil {
 		log.ErrorF("Move error:%v", err)
 		return

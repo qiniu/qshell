@@ -70,7 +70,7 @@ var listBucketCmd2Builder = func() *cobra.Command {
 }
 
 var statCmdBuilder = func() *cobra.Command {
-	var info = rs.StatusApiInfo{}
+	var info = operations.StatusInfo{}
 	var cmd = &cobra.Command{
 		Use:   "stat <Bucket> <Key>",
 		Short: "Get the basic info of a remote file",
@@ -141,7 +141,7 @@ var deleteAfterCmdBuilder = func() *cobra.Command {
 }
 
 var moveCmdBuilder = func() *cobra.Command {
-	var info = rs.MoveApiInfo{}
+	var info = operations.MoveInfo{}
 	var cmd = &cobra.Command{
 		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Move/Rename a file and save in bucket",
@@ -164,7 +164,7 @@ var moveCmdBuilder = func() *cobra.Command {
 }
 
 var copyCmdBuilder = func() *cobra.Command {
-	var info = rs.CopyApiInfo{}
+	var info = operations.CopyInfo{}
 	var cmd = &cobra.Command{
 		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Make a copy of a file and save in bucket",
@@ -187,7 +187,7 @@ var copyCmdBuilder = func() *cobra.Command {
 }
 
 var changeMimeCmdBuilder = func() *cobra.Command {
-	var info = rs.ChangeMimeApiInfo{}
+	var info = operations.ChangeMimeInfo{}
 	var cmd = &cobra.Command{
 		Use:   "chgm <Bucket> <Key> <NewMimeType>",
 		Short: "Change the mime type of a file",
@@ -243,7 +243,7 @@ var privateUrlCmdBuilder = func() *cobra.Command {
 }
 
 var saveAsCmdBuilder = func() *cobra.Command {
-	var info = rs.SaveAsApiInfo{}
+	var info = operations.SaveAsInfo{}
 	var cmd = &cobra.Command{
 		Use:   "saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>",
 		Short: "Create a resource access url with fop and saveas",
@@ -255,6 +255,23 @@ var saveAsCmdBuilder = func() *cobra.Command {
 				info.SaveKey = args[2]
 			}
 			operations.SaveAs(info)
+		},
+	}
+	return cmd
+}
+
+var mirrorUpdateCmdBuilder = func() *cobra.Command {
+	var info = operations.MirrorUpdateInfo{}
+	var cmd = &cobra.Command{
+		Use:   "mirrorupdate <Bucket> <Key>",
+		Short: "Fetch and update the file in bucket using mirror storage",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 1 {
+				info.Bucket = args[0]
+				info.Key = args[1]
+			}
+			operations.MirrorUpdate(info)
 		},
 	}
 	return cmd
@@ -273,12 +290,6 @@ var (
 		Args:  cobra.ExactArgs(2),
 		Run:   Fetch,
 	}
-	mirrorCmd = &cobra.Command{
-		Use:   "mirrorupdate <Bucket> <Key>",
-		Short: "Fetch and update the file in bucket using mirror storage",
-		Args:  cobra.ExactArgs(2),
-		Run:   Prefetch,
-	}
 	m3u8DelCmd = &cobra.Command{
 		Use:   "m3u8delete <Bucket> <M3u8Key>",
 		Short: "Delete m3u8 playlist and the slices it references",
@@ -295,7 +306,6 @@ var (
 
 var (
 	outFile                  string
-	cOverwrite               bool
 	finalKey                 string
 	tsUrlRemoveSparePreSlash bool
 )
@@ -319,9 +329,10 @@ func init() {
 		changeTypeCmdBuilder(),
 		privateUrlCmdBuilder(),
 		saveAsCmdBuilder(),
+		mirrorUpdateCmdBuilder(),
 	)
 
-	RootCmd.AddCommand(qGetCmd, fetchCmd, mirrorCmd, m3u8DelCmd, m3u8RepCmd)
+	RootCmd.AddCommand(qGetCmd, fetchCmd, m3u8DelCmd, m3u8RepCmd)
 }
 
 // 【get】下载七牛存储中的一个文件， 该命令不需要存储空间绑定有可访问的CDN域名
@@ -367,19 +378,6 @@ func Fetch(cmd *cobra.Command, params []string) {
 		fmt.Println("Hash:", fetchResult.Hash)
 		fmt.Printf("Fsize: %d (%s)\n", fetchResult.Fsize, utils.FormatFileSize(fetchResult.Fsize))
 		fmt.Println("Mime:", fetchResult.MimeType)
-	}
-}
-
-// 【cdnprefetch】CDN文件预取, 预取文件到CDN节点和父层节点
-func Prefetch(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-	key := params[1]
-
-	bm := storage2.GetBucketManager()
-	err := bm.Prefetch(bucket, key)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Prefetch error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
 	}
 }
 

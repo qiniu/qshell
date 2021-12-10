@@ -5,8 +5,10 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 )
 
-func ChangeMime(info rs.ChangeMimeApiInfo) {
-	result, err := rs.ChangeMime(info)
+type ChangeMimeInfo rs.ChangeMimeApiInfo
+
+func ChangeMime(info ChangeMimeInfo) {
+	result, err := rs.ChangeMime(rs.ChangeMimeApiInfo(info))
 	if err != nil {
 		log.ErrorF("Change Mime error:%v", err)
 		return

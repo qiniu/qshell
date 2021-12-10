@@ -19,8 +19,10 @@ func PreFopStatus(info PreFopStatusInfo) {
 	log.Alert(ret.String())
 }
 
-func PreFop(info rs.PreFopApiInfo) {
-	persistentId, err := rs.PreFop(info)
+type PreFopInfo rs.PreFopApiInfo
+
+func PreFop(info PreFopInfo) {
+	persistentId, err := rs.PreFop(rs.PreFopApiInfo(info))
 	if err != nil {
 		log.ErrorF("pre fog error:%v", err)
 		return

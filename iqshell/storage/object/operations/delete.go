@@ -18,6 +18,7 @@ func (d DeleteInfo) getAfterDaysOfInt() (int, error) {
 	}
 	return strconv.Atoi(d.AfterDays)
 }
+
 func Delete(info DeleteInfo) {
 	afterDays, err := info.getAfterDaysOfInt()
 	if err != nil {
