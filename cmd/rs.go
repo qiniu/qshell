@@ -249,13 +249,6 @@ var (
 		Args:  cobra.ExactArgs(2),
 		Run:   Get,
 	}
-	dirCacheCmd = &cobra.Command{
-		Use:   "dircache <DirCacheRootPath>",
-		Short: "Cache the directory structure of a file path",
-		Long:  "Cache the directory structure of a file path to a file, \nif <DirCacheResultFile> not specified, cache to stdout",
-		Args:  cobra.ExactArgs(1),
-		Run:   DirCache,
-	}
 	fetchCmd = &cobra.Command{
 		Use:   "fetch <RemoteResourceUrl> <Bucket> [-k <Key>]",
 		Short: "Fetch a remote resource by url and save in bucket",
@@ -296,7 +289,6 @@ var (
 )
 
 func init() {
-	dirCacheCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "output filepath")
 	qGetCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "save file as specified by this option")
 
 	fetchCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
@@ -316,7 +308,7 @@ func init() {
 		privateUrlCmdBuilder(),
 	)
 
-	RootCmd.AddCommand(qGetCmd, dirCacheCmd, fetchCmd, mirrorCmd,
+	RootCmd.AddCommand(qGetCmd, fetchCmd, mirrorCmd,
 		saveAsCmd, m3u8DelCmd, m3u8RepCmd)
 }
 
@@ -461,4 +453,3 @@ func M3u8Replace(cmd *cobra.Command, params []string) {
 		os.Exit(data.STATUS_ERROR)
 	}
 }
-

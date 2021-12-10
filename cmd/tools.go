@@ -316,6 +316,24 @@ var UploadTokenCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
+var dirCacheCmdBuilder = func() *cobra.Command {
+	var info = tools.DirCacheInfo{}
+	var cmd = &cobra.Command{
+		Use:   "dircache <DirCacheRootPath>",
+		Short: "Cache the directory structure of a file path",
+		Long:  "Cache the directory structure of a file path to a file, \nif <DirCacheResultFile> not specified, cache to stdout",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Dir = args[0]
+			}
+			tools.DirCache(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.SaveToFile, "outfile", "o", "", "output filepath")
+	return cmd
+}
+
 func init() {
 	RootCmd.AddCommand(
 		rpcEncodeCmdBuilder(),
@@ -333,5 +351,6 @@ func init() {
 		reqIdCmdBuilder(),
 		IpCmdBuilder(),
 		TokenCmdBuilder(),
+		dirCacheCmdBuilder(),
 	)
 }
