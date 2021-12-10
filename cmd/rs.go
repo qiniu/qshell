@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -15,6 +15,35 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/spf13/cobra"
 )
+
+var listBucketCmdBuilder = func() *cobra.Command {
+	var info = operations.ListInfo{
+		StartDate:  "",
+		EndDate:    "",
+		AppendMode: false,
+		Readable:   false,
+		ApiInfo:    rs.ListApiInfo{
+			Delimiter: "",
+			MaxRetry:  20,
+		},
+	}
+	var cmd = &cobra.Command{
+		Use:   "listbucket <Bucket>",
+		Short: "List all the files in the bucket",
+		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.ApiInfo.Bucket = args[0]
+			}
+			operations.List(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.ApiInfo.Marker, "marker", "m", "", "list marker")
+	cmd.Flags().StringVarP(&info.ApiInfo.Prefix, "prefix", "p", "", "list by prefix")
+	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
+	return cmd
+}
 
 var listBucketCmd2Builder = func() *cobra.Command {
 	var info = operations.ListInfo{}
@@ -57,13 +86,6 @@ var (
 		Long:  "Cache the directory structure of a file path to a file, \nif <DirCacheResultFile> not specified, cache to stdout",
 		Args:  cobra.ExactArgs(1),
 		Run:   DirCache,
-	}
-	lsBucketCmd = &cobra.Command{
-		Use:   "listbucket <Bucket>",
-		Short: "List all the files in the bucket",
-		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run:   ListBucket,
 	}
 
 	statCmd = &cobra.Command{
@@ -156,17 +178,9 @@ var (
 
 var (
 	outFile                  string
-	listMarker               string
-	prefix                   string
-	suffixes                 string
 	mOverwrite               bool
 	cOverwrite               bool
-	startDate                string
-	endDate                  string
-	maxRetry                 int
 	finalKey                 string
-	appendMode               bool
-	readable                 bool
 	reverse                  bool
 	tsUrlRemoveSparePreSlash bool
 )
@@ -176,10 +190,6 @@ func init() {
 	qGetCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "save file as specified by this option")
 	chstatus.Flags().BoolVarP(&reverse, "reverse", "r", false, "unforbidden object in qiniu bucket")
 
-	lsBucketCmd.Flags().StringVarP(&listMarker, "marker", "m", "", "list marker")
-	lsBucketCmd.Flags().StringVarP(&prefix, "prefix", "p", "", "list by prefix")
-	lsBucketCmd.Flags().StringVarP(&outFile, "out", "o", "", "output file")
-
 	moveCmd.Flags().BoolVarP(&mOverwrite, "overwrite", "w", false, "overwrite mode")
 	moveCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
 	copyCmd.Flags().BoolVarP(&cOverwrite, "overwrite", "w", false, "overwrite mode")
@@ -187,9 +197,14 @@ func init() {
 	fetchCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
 	m3u8RepCmd.Flags().BoolVarP(&tsUrlRemoveSparePreSlash, "remove-spare-pre-slash", "r", true, "remove spare prefix slash(/) , only keep one slash if ts path has prefix / ")
 
-	RootCmd.AddCommand(qGetCmd, dirCacheCmd, lsBucketCmd, statCmd, delCmd, moveCmd,
+	RootCmd.AddCommand(
+		listBucketCmdBuilder(),
+		listBucketCmd2Builder(),
+		)
+
+	RootCmd.AddCommand(qGetCmd, dirCacheCmd, statCmd, delCmd, moveCmd,
 		copyCmd, chgmCmd, chtypeCmd, delafterCmd, fetchCmd, mirrorCmd,
-		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, listBucketCmd2Builder(), chstatus)
+		saveAsCmd, m3u8DelCmd, m3u8RepCmd, privateUrlCmd, chstatus)
 }
 
 // 禁用七牛存储空间中的对象，如果使用了-r选项，那么解禁七牛存储中的对象
@@ -217,66 +232,6 @@ func DirCache(cmd *cobra.Command, params []string) {
 		cacheResultFile = "stdout"
 	}
 	_, retErr := utils.DirCache(cacheRootPath, cacheResultFile)
-	if retErr != nil {
-		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-// 【listbucket2】 使用v2接口列举存储空间中的文件
-func ListBucket2(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-
-	var dateParser = func(datestr string) (time.Time, error) {
-		var dttm [6]int
-
-		if datestr == "" {
-			return time.Time{}, nil
-		}
-		fields := strings.Split(datestr, "-")
-		if len(fields) > 6 {
-			return time.Time{}, fmt.Errorf("date format must be year-month-day-hour-minute-second\n")
-		}
-		for ind, field := range fields {
-			field, err := strconv.Atoi(field)
-			if err != nil {
-				return time.Time{}, fmt.Errorf("date format must be year-month-day-hour-minute-second, each field must be integer\n")
-			}
-			dttm[ind] = field
-		}
-		return time.Date(dttm[0], time.Month(dttm[1]), dttm[2], dttm[3], dttm[4], dttm[5], 0, time.Local), nil
-	}
-	start, err := dateParser(startDate)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "date parse error: %v\n", err)
-		os.Exit(1)
-	}
-
-	end, err := dateParser(endDate)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "date parse error: %v\n", err)
-		os.Exit(1)
-	}
-
-	sf := make([]string, 0)
-	for _, s := range strings.Split(suffixes, ",") {
-		s = strings.TrimSpace(s)
-		if len(s) > 0 {
-			sf = append(sf, strings.TrimSpace(s))
-		}
-	}
-	bm := storage2.GetBucketManager()
-	retErr := bm.ListBucket2(bucket, prefix, listMarker, outFile, "", start, end, sf, maxRetry, appendMode, readable)
-	if retErr != nil {
-		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-// 【listbucket】列举七牛存储空间中的文件列表
-func ListBucket(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-
-	bm := storage2.GetBucketManager()
-	retErr := bm.ListFiles(bucket, prefix, listMarker, outFile)
 	if retErr != nil {
 		os.Exit(data.STATUS_ERROR)
 	}
