@@ -247,7 +247,7 @@ var TokenCmdBuilder = func() *cobra.Command {
 		QboxTokenCmdBuilder(),
 		QiniuTokenCmdBuilder(),
 		UploadTokenCmdBuilder(),
-		)
+	)
 	return cmd
 }
 

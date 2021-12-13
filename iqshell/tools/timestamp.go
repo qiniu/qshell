@@ -33,7 +33,6 @@ func TimestampMilli2Date(info TimestampInfo) {
 	log.Alert(t.String())
 }
 
-
 // 转化纳秒时间戳到人工可读的字符串, 百纳秒为单位，主要是对接七牛服务时间戳
 func TimestampNano2Date(info TimestampInfo) {
 	tns, err := strconv.ParseInt(info.Value, 10, 64)

@@ -19,6 +19,7 @@ func Clean() {
 type RemoveInfo struct {
 	Name string
 }
+
 func Remove(info RemoveInfo) {
 	if len(info.Name) == 0 {
 		log.Error(alert.CannotEmpty("user name", ""))

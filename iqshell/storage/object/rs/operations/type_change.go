@@ -14,7 +14,7 @@ type ChangeTypeInfo struct {
 	Type   string
 }
 
-func (c ChangeTypeInfo)getTypeOfInt() (int, error) {
+func (c ChangeTypeInfo) getTypeOfInt() (int, error) {
 	if len(c.Type) == 0 {
 		return -1, errors.New(alert.CannotEmpty("type", ""))
 	}

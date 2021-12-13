@@ -10,7 +10,7 @@ var bucketsCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "buckets",
 		Short: "Get all buckets of the account",
-		Args: cobra.ExactArgs(0),
+		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			operations.List(info)
 		},
@@ -34,10 +34,9 @@ var domainsCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-
 func init() {
 	RootCmd.AddCommand(
 		bucketsCmdBuilder(), // 列举所有 bucket
 		domainsCmdBuilder(), // 列举某个 bucket 的 domain
-		)
+	)
 }

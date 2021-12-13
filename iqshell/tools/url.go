@@ -8,6 +8,7 @@ import (
 type UrlInfo struct {
 	Url string
 }
+
 func UrlEncode(info UrlInfo) {
 	dataEncoded := url.PathEscape(info.Url)
 	log.Alert(dataEncoded)

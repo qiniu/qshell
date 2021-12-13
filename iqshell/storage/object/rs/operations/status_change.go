@@ -11,7 +11,7 @@ type ForbiddenInfo struct {
 	UnForbidden bool
 }
 
-func (c ForbiddenInfo)getStatus() int {
+func (c ForbiddenInfo) getStatus() int {
 	// 0:启用  1:禁用
 	if c.UnForbidden {
 		return 0

@@ -1,14 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
-	"os"
-
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs/operations"
 	"github.com/spf13/cobra"
 )
 
@@ -277,44 +271,47 @@ var mirrorUpdateCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var (
-	qGetCmd = &cobra.Command{
+var getCmdBuilder = func() *cobra.Command {
+	var info operations.GetInfo
+	var cmd = &cobra.Command{
 		Use:   "get <Bucket> <Key>",
 		Short: "Download a single file from bucket",
 		Args:  cobra.ExactArgs(2),
-		Run:   Get,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 1 {
+				info.Bucket = args[0]
+				info.Key = args[1]
+			}
+			operations.GetObject(info)
+		},
 	}
-	fetchCmd = &cobra.Command{
+
+	cmd.Flags().StringVarP(&info.SaveToFile, "outfile", "o", "", "save file as specified by this option")
+
+	return cmd
+}
+
+var fetchCmdBuilder = func() *cobra.Command {
+	var info operations.FetchInfo
+	var cmd = &cobra.Command{
 		Use:   "fetch <RemoteResourceUrl> <Bucket> [-k <Key>]",
 		Short: "Fetch a remote resource by url and save in bucket",
 		Args:  cobra.ExactArgs(2),
-		Run:   Fetch,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 1 {
+				info.FromUrl = args[0]
+				info.Bucket = args[1]
+			}
+			operations.Fetch(info)
+		},
 	}
-	m3u8DelCmd = &cobra.Command{
-		Use:   "m3u8delete <Bucket> <M3u8Key>",
-		Short: "Delete m3u8 playlist and the slices it references",
-		Args:  cobra.ExactArgs(2),
-		Run:   M3u8Delete,
-	}
-	m3u8RepCmd = &cobra.Command{
-		Use:   "m3u8replace <Bucket> <M3u8Key> [<NewDomain>]",
-		Short: "Replace m3u8 domain in the playlist",
-		Args:  cobra.RangeArgs(2, 3),
-		Run:   M3u8Replace,
-	}
-)
 
-var (
-	outFile                  string
-	finalKey                 string
-	tsUrlRemoveSparePreSlash bool
-)
+	cmd.Flags().StringVarP(&info.Key, "key", "k", "", "filename saved in bucket")
+
+	return cmd
+}
 
 func init() {
-	qGetCmd.Flags().StringVarP(&outFile, "outfile", "o", "", "save file as specified by this option")
-
-	fetchCmd.Flags().StringVarP(&finalKey, "key", "k", "", "filename saved in bucket")
-	m3u8RepCmd.Flags().BoolVarP(&tsUrlRemoveSparePreSlash, "remove-spare-pre-slash", "r", true, "remove spare prefix slash(/) , only keep one slash if ts path has prefix / ")
 
 	RootCmd.AddCommand(
 		listBucketCmdBuilder(),
@@ -330,105 +327,7 @@ func init() {
 		privateUrlCmdBuilder(),
 		saveAsCmdBuilder(),
 		mirrorUpdateCmdBuilder(),
+		getCmdBuilder(),
+		fetchCmdBuilder(),
 	)
-
-	RootCmd.AddCommand(qGetCmd, fetchCmd, m3u8DelCmd, m3u8RepCmd)
-}
-
-// 【get】下载七牛存储中的一个文件， 该命令不需要存储空间绑定有可访问的CDN域名
-func Get(cmd *cobra.Command, params []string) {
-
-	bucket := params[0]
-	key := params[1]
-
-	destFile := key
-	if outFile != "" {
-		destFile = outFile
-	}
-
-	bm := storage2.GetBucketManager()
-	err := bm.Get(bucket, key, destFile)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Get error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-// 【fetch】通过http链接抓取网上的资源到七牛存储空间
-func Fetch(cmd *cobra.Command, params []string) {
-	remoteResUrl := params[0]
-	bucket := params[1]
-
-	var err error
-	if finalKey == "" {
-		finalKey, err = utils.KeyFromUrl(remoteResUrl)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "get key from url failed: %v\n", err)
-			os.Exit(data.STATUS_ERROR)
-		}
-	}
-
-	bm := storage2.GetBucketManager()
-	fetchResult, err := bm.Fetch(remoteResUrl, bucket, finalKey)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fetch error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	} else {
-		fmt.Println("Key:", fetchResult.Key)
-		fmt.Println("Hash:", fetchResult.Hash)
-		fmt.Printf("Fsize: %d (%s)\n", fetchResult.Fsize, utils.FormatFileSize(fetchResult.Fsize))
-		fmt.Println("Mime:", fetchResult.MimeType)
-	}
-}
-
-// 【m3u8delete】删除m3u8文件，包括m3u8文件本身和分片文件
-func M3u8Delete(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-	m3u8Key := params[1]
-
-	bm := storage2.GetBucketManager()
-	m3u8FileList, err := bm.M3u8FileList(bucket, m3u8Key)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Get m3u8 file list error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
-	entryCnt := len(m3u8FileList)
-	if entryCnt == 0 {
-		fmt.Fprintln(os.Stderr, "no m3u8 slices found")
-		os.Exit(data.STATUS_ERROR)
-	}
-	fileExporter, nErr := storage2.NewFileExporter("", "", "")
-	if nErr != nil {
-		fmt.Fprintf(os.Stderr, "create FileExporter: %v\n", nErr)
-		os.Exit(1)
-	}
-	if entryCnt <= BATCH_ALLOW_MAX {
-		batchDelete(m3u8FileList, bm, fileExporter)
-	} else {
-		batchCnt := entryCnt / BATCH_ALLOW_MAX
-		for i := 0; i < batchCnt; i++ {
-			end := (i + 1) * BATCH_ALLOW_MAX
-			if end > entryCnt {
-				end = entryCnt
-			}
-			entriesToDelete := m3u8FileList[i*BATCH_ALLOW_MAX : end]
-			batchDelete(entriesToDelete, bm, fileExporter)
-		}
-	}
-}
-
-// 【m3u8replace】替换m3u8文件中的域名信息
-func M3u8Replace(cmd *cobra.Command, params []string) {
-	bucket := params[0]
-	m3u8Key := params[1]
-	var newDomain string
-	if len(params) == 3 {
-		newDomain = params[2]
-	}
-	bm := storage2.GetBucketManager()
-	err := bm.M3u8ReplaceDomain(bucket, m3u8Key, newDomain, tsUrlRemoveSparePreSlash)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "m3u8 replace domain error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
-	}
 }

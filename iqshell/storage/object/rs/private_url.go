@@ -14,7 +14,7 @@ import (
 
 type PrivateUrlApiInfo struct {
 	PublicUrl string
-	Deadline int64
+	Deadline  int64
 }
 
 func PrivateUrl(info PrivateUrlApiInfo) (finalUrl string, err error) {

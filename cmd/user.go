@@ -188,5 +188,5 @@ func init() {
 	RootCmd.AddCommand(
 		accountCmdBuilder(),
 		userCmd,
-		)
+	)
 }

@@ -46,7 +46,7 @@ func GetAccount() (account.Account, error) {
 func GetMac() (mac *qbox.Mac, err error) {
 	acc, gErr := account.GetAccount()
 	if gErr != nil {
-		err = fmt.Errorf("GetBucketManager: %v", gErr)
+		err = fmt.Errorf("get account: %v", gErr)
 		return
 	}
 

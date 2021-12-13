@@ -28,7 +28,6 @@ func getCdnManager() (cdnManager *cdn.CdnManager, err error) {
 	return
 }
 
-
 func Prefetch(urls []string) (err error) {
 	cdnManager, err := getCdnManager()
 	if err != nil {
@@ -43,7 +42,6 @@ func Prefetch(urls []string) (err error) {
 	}
 	return
 }
-
 
 func Refresh(urls []string, dirs []string) (err error) {
 	cdnManager, err := getCdnManager()

@@ -13,7 +13,7 @@ type PrivateUrlInfo struct {
 	Deadline  string
 }
 
-func (p PrivateUrlInfo)getDeadlineOfInt() (int64, error) {
+func (p PrivateUrlInfo) getDeadlineOfInt() (int64, error) {
 	if len(p.Deadline) == 0 {
 		return time.Now().Add(time.Second * 3600).Unix(), nil
 	}

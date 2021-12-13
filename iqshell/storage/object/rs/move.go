@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 )
 
 type MoveApiInfo struct {
@@ -35,7 +36,7 @@ func newMoveApiResult(ret storage.BatchOpRet) MoveApiResult {
 }
 
 func Move(info MoveApiInfo) (MoveApiResult, error) {
-	ret, err := BatchOne(info)
+	ret, err := batch.One(info)
 	if err != nil {
 		return MoveApiResult{}, err
 	}
@@ -47,12 +48,12 @@ func BatchMove(infos []MoveApiInfo) ([]MoveApiResult, error) {
 		return nil, nil
 	}
 
-	operations := make([]BatchOperation, len(infos))
+	operations := make([]batch.BatchOperation, len(infos))
 	for _, info := range infos {
 		operations = append(operations, info)
 	}
 
-	result, err := Batch(operations)
+	result, err := batch.Batch(operations)
 	if result == nil || len(result) == 0 {
 		return nil, err
 	}

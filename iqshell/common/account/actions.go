@@ -210,7 +210,7 @@ func GetUsers() (ret []*Account, err error) {
 	defer iter.Release()
 
 	var (
-		name string
+		name  string
 		value string
 	)
 	for iter.Next() {
@@ -276,8 +276,8 @@ func LookUp(userName string) (acc Account, err error) {
 
 	iter := db.NewIterator(nil, nil)
 	defer iter.Release()
-	var name  string
-	var	value string
+	var name string
+	var value string
 	for iter.Next() {
 		name = string(iter.Key())
 		if strings.Contains(name, userName) {

@@ -1,4 +1,4 @@
-package storage
+package m3u8
 
 import (
 	"testing"

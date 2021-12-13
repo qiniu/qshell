@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 )
 
 type ChangeMimeApiInfo struct {
@@ -37,7 +38,7 @@ func newChangeMimeApiResult(ret storage.BatchOpRet) ChangeMimeApiResult {
 }
 
 func ChangeMime(info ChangeMimeApiInfo) (ChangeMimeApiResult, error) {
-	ret, err := BatchOne(info)
+	ret, err := batch.One(info)
 	if err != nil {
 		return ChangeMimeApiResult{}, err
 	}
@@ -49,12 +50,12 @@ func BatchChangeMime(infos []ChangeMimeApiInfo) ([]ChangeMimeApiResult, error) {
 		return nil, nil
 	}
 
-	operations := make([]BatchOperation, len(infos))
+	operations := make([]batch.BatchOperation, len(infos))
 	for _, info := range infos {
 		operations = append(operations, info)
 	}
 
-	result, err := Batch(operations)
+	result, err := batch.Batch(operations)
 	if result == nil || len(result) == 0 {
 		return nil, err
 	}

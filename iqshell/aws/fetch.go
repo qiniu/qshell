@@ -2,7 +2,6 @@ package aws
 
 type FetchInfo struct {
 	AwsBucketInfo ListBucketInfo
-
 }
 
 //func Fetch(info FetchInfo) {

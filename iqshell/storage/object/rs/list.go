@@ -34,7 +34,7 @@ func List(ctx context.Context, info *ListApiInfo) (<-chan ListItem, error) {
 
 func listObjectOfBucketToChan(ctx context.Context, manager *storage.BucketManager, info *ListApiInfo, objects chan<- ListItem) {
 	complete := false
-	for retryCount := 0; !complete  && (info.MaxRetry < 0 || retryCount <= info.MaxRetry); retryCount++ {
+	for retryCount := 0; !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry); retryCount++ {
 		entries, err := manager.ListBucketContext(ctx, info.Bucket, info.Prefix, info.Delimiter, info.Marker)
 		if entries == nil && err == nil {
 			// no data
@@ -63,7 +63,7 @@ func listObjectOfBucketToChan(ctx context.Context, manager *storage.BucketManage
 				continue
 			}
 
-			objects<- ListItem(listItem.Item)
+			objects <- ListItem(listItem.Item)
 		}
 		complete = true
 	}

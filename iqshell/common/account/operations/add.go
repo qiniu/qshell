@@ -19,7 +19,6 @@ type AddInfo struct {
 	Over      bool
 }
 
-
 // 保存账户信息到账户文件中， 并保存在本地数据库
 func Add(info AddInfo) {
 	if len(info.Name) == 0 {

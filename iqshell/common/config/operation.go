@@ -15,7 +15,7 @@ func NewConfigWithPath(path string) (config *Config, err error) {
 	}
 
 	defer func(file *os.File) {
-		if e := file.Close(); (e != nil && err != nil) {
+		if e := file.Close(); e != nil && err != nil {
 			err = e
 		}
 	}(file)
@@ -29,14 +29,14 @@ func NewConfigWithPath(path string) (config *Config, err error) {
 	return
 }
 
-func (c *Config)UpdateToLocal(path string) (err error) {
-	file, err := os.OpenFile(path, os.O_WRONLY | os.O_CREATE | os.O_TRUNC | os.O_SYNC, 0666)
+func (c *Config) UpdateToLocal(path string) (err error) {
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0666)
 	if err != nil || file == nil {
 		return
 	}
 
 	defer func(file *os.File) {
-		if e := file.Close(); (e != nil && err != nil) {
+		if e := file.Close(); e != nil && err != nil {
 			err = e
 		}
 	}(file)
@@ -59,7 +59,7 @@ func (c *Config)UpdateToLocal(path string) (err error) {
 	return
 }
 
-func (c *Config)Merge(from *Config) {
+func (c *Config) Merge(from *Config) {
 	if from == nil {
 		return
 	}
@@ -107,7 +107,6 @@ func (c *Hosts) merge(from *Hosts) {
 	}
 }
 
-
 func (up *Up) merge(from *Up) {
 	if from == nil {
 		return
@@ -133,7 +132,7 @@ func (up *Up) merge(from *Up) {
 	up.Retry.merge(&from.Retry)
 }
 
-func (d *Download)merge(from *Download) {
+func (d *Download) merge(from *Download) {
 	if from == nil {
 		return
 	}
@@ -142,7 +141,7 @@ func (d *Download)merge(from *Download) {
 	d.Retry.merge(&from.Retry)
 }
 
-func (t *Tasks)merge(from *Tasks) {
+func (t *Tasks) merge(from *Tasks) {
 	if from == nil {
 		return
 	}
@@ -156,7 +155,7 @@ func (t *Tasks)merge(from *Tasks) {
 	}
 }
 
-func (r *Retry)merge(from *Retry) {
+func (r *Retry) merge(from *Retry) {
 	if from == nil {
 		return
 	}

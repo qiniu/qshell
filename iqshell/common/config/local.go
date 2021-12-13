@@ -167,12 +167,12 @@ func getStringArrayValueFromLocalByViper(viper *viper.Viper, localKey []string) 
 
 func getVipersWithConfigType(configType ConfigType) []*viper.Viper {
 	var ret []*viper.Viper = nil
-	addGlobalViper := func () {
+	addGlobalViper := func() {
 		if globalConfigViper != nil {
 			ret = append(ret, globalConfigViper)
 		}
 	}
-	addUserViper := func () {
+	addUserViper := func() {
 		if userConfigViper != nil {
 			ret = append(ret, userConfigViper)
 		}

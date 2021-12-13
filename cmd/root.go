@@ -93,7 +93,7 @@ func initConfig() {
 		WorkspacePath:  workspacePath,
 	})
 
-	if err != nil{
+	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
 	}
 }
