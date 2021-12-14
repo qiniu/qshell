@@ -4,13 +4,13 @@ import (
 	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 )
 
 type DeleteApiInfo struct {
 	Bucket    string
 	Key       string
 	AfterDays int
+	Condition OperationCondition
 }
 
 func (d DeleteApiInfo) ToOperation() (string, error) {
@@ -18,10 +18,11 @@ func (d DeleteApiInfo) ToOperation() (string, error) {
 		return "", errors.New(alert.CannotEmpty("delete operation bucket or key", ""))
 	}
 
+	condition := OperationConditionURI(d.Condition)
 	if d.AfterDays > 0 {
-		return storage.URIDeleteAfterDays(d.Bucket, d.Key, d.AfterDays), nil
+		return storage.URIDeleteAfterDays(d.Bucket, d.Key, d.AfterDays) + condition, nil
 	} else {
-		return storage.URIDelete(d.Bucket, d.Key), nil
+		return storage.URIDelete(d.Bucket, d.Key) + condition, nil
 	}
 }
 
@@ -38,33 +39,9 @@ func newDeleteApiResult(ret storage.BatchOpRet) DeleteApiResult {
 }
 
 func Delete(info DeleteApiInfo) (DeleteApiResult, error) {
-	ret, err := batch.One(info)
+	ret, err := BatchOne(info)
 	if err != nil {
 		return DeleteApiResult{}, err
 	}
 	return newDeleteApiResult(ret), err
-}
-
-func BatchDelete(apiInfoChan <-chan DeleteApiInfo) (<-chan DeleteApiResult, <-chan error) {
-	if len(apiInfoChan) == 0 {
-		return nil, nil
-	}
-
-	batchInfoChan := make(chan batch.BatchOperation)
-	go func() {
-		for apiInfo := range apiInfoChan {
-			batchInfoChan <- apiInfo
-		}
-	}()
-
-	batchResultChan, errChan := batch.BatchWithChannel(batchInfoChan)
-
-	apiResultChan := make(chan DeleteApiResult)
-	go func() {
-		for item := range batchResultChan {
-			apiResultChan <- newDeleteApiResult(item)
-		}
-	}()
-
-	return apiResultChan, errChan
 }

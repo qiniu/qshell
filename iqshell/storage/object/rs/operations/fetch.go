@@ -22,3 +22,4 @@ func Fetch(info FetchInfo) {
 		log.AlertF("Mime:%s", result.MimeType)
 	}
 }
+

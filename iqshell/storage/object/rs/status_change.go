@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 )
 
 type ChangeStatusApiInfo struct {
@@ -34,7 +33,7 @@ func newChangeStatusApiResult(ret storage.BatchOpRet) ChangeStatusApiResult {
 }
 
 func ChangeStatus(info ChangeStatusApiInfo) (ChangeStatusApiResult, error) {
-	ret, err := batch.One(info)
+	ret, err := BatchOne(info)
 	if err != nil {
 		return ChangeStatusApiResult{}, err
 	}
@@ -46,12 +45,12 @@ func BatchChangeStatus(infos []ChangeStatusApiInfo) ([]ChangeStatusApiResult, er
 		return nil, nil
 	}
 
-	operations := make([]batch.BatchOperation, len(infos))
+	operations := make([]BatchOperation, len(infos))
 	for _, info := range infos {
 		operations = append(operations, info)
 	}
 
-	result, err := batch.Batch(operations)
+	result, err := Batch(operations)
 	if result == nil || len(result) == 0 {
 		return nil, err
 	}

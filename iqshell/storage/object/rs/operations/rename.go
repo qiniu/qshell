@@ -6,28 +6,30 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 )
 
-type MoveInfo rs.MoveApiInfo
+// rename 实际用的还是 move
 
-func Move(info MoveInfo) {
+type RenameInfo rs.MoveApiInfo
+
+func Rename(info RenameInfo) {
 	result, err := rs.Move(rs.MoveApiInfo(info))
 	if err != nil {
-		log.ErrorF("Move error:%v", err)
+		log.ErrorF("Rename error:%v", err)
 		return
 	}
 
 	if len(result.Error) != 0 {
-		log.ErrorF("Move error:%v", result.Error)
+		log.ErrorF("Rename error:%v", result.Error)
 		return
 	}
 }
 
-type BatchMoveInfo struct {
+type BatchRenameInfo struct {
 	BatchInfo    BatchInfo
 	SourceBucket string
 	DestBucket   string
 }
 
-func BatchMove(info BatchMoveInfo) {
+func BatchRename(info BatchRenameInfo) {
 	if !prepareToBatch(info.BatchInfo) {
 		return
 	}
@@ -44,26 +46,26 @@ func BatchMove(info BatchMoveInfo) {
 		return
 	}
 
-	rs.BatchWithHandler(&batchMoveHandler{
+	rs.BatchWithHandler(&batchRenameHandler{
 		scanner:      scanner,
 		info:         &info,
 		resultExport: resultExport,
 	})
 }
 
-type batchMoveHandler struct {
+type batchRenameHandler struct {
 	scanner      *batchScanner
-	info         *BatchMoveInfo
+	info         *BatchRenameInfo
 	resultExport *BatchResultExport
 }
 
-var _ rs.BatchHandler = (*batchMoveHandler)(nil)
+var _ rs.BatchHandler = (*batchRenameHandler)(nil)
 
-func (b batchMoveHandler) WorkCount() int {
+func (b batchRenameHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchMoveHandler) ReadOperation() rs.BatchOperation {
+func (b batchRenameHandler) ReadOperation() rs.BatchOperation {
 	var info *rs.MoveApiInfo
 
 	for {
@@ -73,15 +75,12 @@ func (b batchMoveHandler) ReadOperation() rs.BatchOperation {
 		}
 
 		items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
-		if len(items) > 0 {
-			srcKey, destKey := items[0], items[0]
-			if len(items) > 1 {
-				destKey = items[1]
-			}
-			if srcKey != "" && destKey != "" {
+		if len(items) > 1 {
+			sourceKey, destKey := items[0], items[1]
+			if sourceKey != "" && destKey != "" {
 				info = &rs.MoveApiInfo{
 					SourceBucket: b.info.SourceBucket,
-					SourceKey:    srcKey,
+					SourceKey:    sourceKey,
 					DestBucket:   b.info.DestBucket,
 					DestKey:      destKey,
 					Force:        b.info.BatchInfo.Force,
@@ -94,27 +93,27 @@ func (b batchMoveHandler) ReadOperation() rs.BatchOperation {
 	return info
 }
 
-func (b batchMoveHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {
+func (b batchRenameHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {
 	apiInfo, ok := (operation).(rs.MoveApiInfo)
 	if !ok {
 		return
 	}
 
-	info := MoveInfo(apiInfo)
+	info := RenameInfo(apiInfo)
 	if result.Code != 200 || result.Error != "" {
 		b.resultExport.Fail.ExportF("%s\t%s\t%d\t%s\n", info.SourceKey, info.DestKey, result.Code, result.Error)
-		log.ErrorF("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
+		log.ErrorF("Rename '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
 			result.Code, result.Error)
 	} else {
 		b.resultExport.Success.ExportF("%s\t%s\n", info.SourceKey, info.DestKey)
-		log.ErrorF("Move '%s:%s' => '%s:%s' success\n",
+		log.ErrorF("Rename '%s:%s' => '%s:%s' success\n",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
 	}
 }
 
-func (b batchMoveHandler) HandlerError(err error) {
-	log.ErrorF("batch move error:%v:", err)
+func (b batchRenameHandler) HandlerError(err error) {
+	log.ErrorF("batch rename error:%v:", err)
 }

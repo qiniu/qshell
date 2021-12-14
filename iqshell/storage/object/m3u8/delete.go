@@ -26,39 +26,21 @@ func Delete(info DeleteApiInfo) (err error) {
 		return errors.New("no m3u8 slices found")
 	}
 
-	handlerGroup := &sync.WaitGroup{}
-	handlerGroup.Add(3)
-
-	batchInfoChan := make(chan rs.DeleteApiInfo)
-	go func() {
-		for _, file := range m3u8FileList {
-			batchInfoChan <- rs.DeleteApiInfo{
-				Bucket:    file.Bucket,
-				Key:       file.Key,
-				AfterDays: 0,
-			}
+	operations := make([]rs.BatchOperation,0, len(m3u8FileList))
+	for _, file := range m3u8FileList {
+		operations = append(operations, rs.DeleteApiInfo{
+			Bucket:    file.Bucket,
+			Key:       file.Key,
+			AfterDays: 0,
+		})
+	}
+	results, err := rs.Batch(operations)
+	for result := range results {
+		//TODO: 输出位置须再处理
+		if result.Code != 200 || len(result.Error) > 0 {
+			log.ErrorF("result error:%s", result.Error)
 		}
+	}
 
-		handlerGroup.Done()
-	}()
-
-	resultChan, errChan := rs.BatchDelete(batchInfoChan)
-	go func() {
-		err = <-errChan
-		err = errors.New("batch error:" + err.Error())
-		handlerGroup.Done()
-	}()
-
-	go func() {
-		for result := range resultChan {
-			//TODO: 输出位置须再处理
-			if result.Code != 200 || len(result.Error) > 0 {
-				log.ErrorF("result error:%s", result.Error)
-			}
-		}
-		handlerGroup.Done()
-	}()
-
-	handlerGroup.Wait()
 	return
 }
