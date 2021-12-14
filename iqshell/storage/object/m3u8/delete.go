@@ -2,9 +2,7 @@ package m3u8
 
 import (
 	"errors"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
-	"sync"
 )
 
 type DeleteApiInfo struct {
@@ -12,18 +10,18 @@ type DeleteApiInfo struct {
 	Key    string
 }
 
-func Delete(info DeleteApiInfo) (err error) {
+func Delete(info DeleteApiInfo) ([]rs.OperationResult, error) {
 	m3u8FileList, err := Slices(SliceListApiInfo{
 		Bucket: info.Bucket,
 		Key:    info.Key,
 	})
 
 	if err != nil {
-		return errors.New("Get m3u8 file list error:" + err.Error())
+		return nil, errors.New("Get m3u8 file list error:" + err.Error())
 	}
 
 	if len(m3u8FileList) == 0 {
-		return errors.New("no m3u8 slices found")
+		return nil, errors.New("no m3u8 slices found")
 	}
 
 	operations := make([]rs.BatchOperation,0, len(m3u8FileList))
@@ -34,13 +32,6 @@ func Delete(info DeleteApiInfo) (err error) {
 			AfterDays: 0,
 		})
 	}
-	results, err := rs.Batch(operations)
-	for result := range results {
-		//TODO: 输出位置须再处理
-		if result.Code != 200 || len(result.Error) > 0 {
-			log.ErrorF("result error:%s", result.Error)
-		}
-	}
 
-	return
+	return rs.Batch(operations)
 }

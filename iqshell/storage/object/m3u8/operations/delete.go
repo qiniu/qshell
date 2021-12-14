@@ -10,7 +10,13 @@ import (
 type DeleteInfo m3u8.DeleteApiInfo
 
 func Delete(info DeleteInfo) {
-	err := m3u8.Delete(m3u8.DeleteApiInfo(info))
+	results, err := m3u8.Delete(m3u8.DeleteApiInfo(info))
+	for _, result := range results {
+		if result.Code != 200 || len(result.Error) > 0 {
+			log.ErrorF("result error:%s", result.Error)
+		}
+	}
+
 	if err != nil {
 		log.ErrorF("m3u8 delete error: %v", err)
 		os.Exit(data.STATUS_ERROR)
