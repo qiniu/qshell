@@ -12,6 +12,7 @@ import (
 type Export interface {
 	Export(a ...interface{})
 	ExportF(format string, a ...interface{})
+	Close() error
 }
 
 func New(file string) (Export, error) {
@@ -32,6 +33,10 @@ func New(file string) (Export, error) {
 	}, nil
 }
 
+func Empty() Export {
+	return &export{}
+}
+
 type export struct {
 	file   *os.File
 	lock   sync.RWMutex
@@ -39,6 +44,13 @@ type export struct {
 }
 
 var _ Export = (*export)(nil)
+
+func (e *export) Close() error {
+	if e == nil || e.file == nil {
+		return nil
+	}
+	return e.file.Close()
+}
 
 func (e *export) Export(a ...interface{}) {
 	e.export(fmt.Sprint(a...))
@@ -49,7 +61,7 @@ func (e *export) ExportF(format string, a ...interface{}) {
 }
 
 func (e *export) export(text string) {
-	if e.writer != nil {
+	if e != nil && e.writer != nil {
 		e.lock.Lock()
 		e.writer.WriteString(text)
 		e.writer.Flush()

@@ -129,11 +129,11 @@ func (b batchChangeTypeHandler) HandlerResult(operation rs.BatchOperation, resul
 	}
 
 	if result.Code != 200 || result.Error != "" {
-		b.resultExport.Fail.ExportF("%s\t%d\t%d\t%s\n", info.Key, info.Type, result.Code, result.Error)
+		b.resultExport.Fail().ExportF("%s\t%d\t%d\t%s\n", info.Key, info.Type, result.Code, result.Error)
 		log.ErrorF("Change Type '%s' => '%s' Failed, Code: %d, Error: %s\n",
 			info.Key, info.Type, result.Code, result.Error)
 	} else {
-		b.resultExport.Success.ExportF("%s\t%d\n", info.Key, info.Type)
+		b.resultExport.Success().ExportF("%s\t%d\n", info.Key, info.Type)
 		log.ErrorF("Change Type '%s' => '%d' success\n", info.Key, info.Type)
 	}
 }

@@ -57,11 +57,11 @@ type batchStatusHandler struct {
 
 var _ rs.BatchHandler = (*batchStatusHandler)(nil)
 
-func (b batchStatusHandler) WorkCount() int {
+func (b *batchStatusHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchStatusHandler) ReadOperation() (rs.BatchOperation, bool) {
+func (b *batchStatusHandler) ReadOperation() (rs.BatchOperation, bool) {
 	var info rs.BatchOperation = nil
 
 	line, success := b.scanner.scanLine()
@@ -83,7 +83,7 @@ func (b batchStatusHandler) ReadOperation() (rs.BatchOperation, bool) {
 	return info, false
 }
 
-func (b batchStatusHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {
+func (b *batchStatusHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {
 	apiInfo, ok := (operation).(rs.StatusApiInfo)
 	if !ok {
 		return
@@ -91,15 +91,15 @@ func (b batchStatusHandler) HandlerResult(operation rs.BatchOperation, result rs
 
 	info := StatusInfo(apiInfo)
 	if result.Code != 200 || result.Error != "" {
-		b.resultExport.Fail.ExportF("%s\t%d\t%s\n", info.Key, result.Code, result.Error)
+		b.resultExport.Fail().ExportF("%s\t%d\t%s\n", info.Key, result.Code, result.Error)
 		log.ErrorF("Status '%s' Failed, Code: %d, Error: %s", info.Key, result.Code, result.Error)
 	} else {
-		b.resultExport.Success.ExportF("%s\n", info.Key)
+		b.resultExport.Success().ExportF("%s\n", info.Key)
 		log.ErrorF("Status '%s' success\n", info.Key)
 	}
 }
 
-func (b batchStatusHandler) HandlerError(err error) {
+func (b *batchStatusHandler) HandlerError(err error) {
 	log.ErrorF("batch Status error:%v:", err)
 }
 

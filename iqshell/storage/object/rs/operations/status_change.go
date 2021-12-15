@@ -114,11 +114,11 @@ func (b batchChangeStatusHandler) HandlerResult(operation rs.BatchOperation, res
 	}
 
 	if result.Code != 200 || result.Error != "" {
-		b.resultExport.Fail.ExportF("%s\t%d\t%d\t%s\n", info.Key, info.Status, result.Code, result.Error)
+		b.resultExport.Fail().ExportF("%s\t%d\t%d\t%s\n", info.Key, info.Status, result.Code, result.Error)
 		log.ErrorF("Change status '%s' => '%s' Failed, Code: %d, Error: %s\n",
 			info.Key, info.Status, result.Code, result.Error)
 	} else {
-		b.resultExport.Success.ExportF("%s\t%d\n", info.Key, info.Status)
+		b.resultExport.Success().ExportF("%s\t%d\n", info.Key, info.Status)
 		log.ErrorF("Change status '%s' => '%d' success\n", info.Key, info.Status)
 	}
 }

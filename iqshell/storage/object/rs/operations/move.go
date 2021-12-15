@@ -98,13 +98,13 @@ func (b batchMoveHandler) HandlerResult(operation rs.BatchOperation, result rs.O
 
 	info := MoveInfo(apiInfo)
 	if result.Code != 200 || result.Error != "" {
-		b.resultExport.Fail.ExportF("%s\t%s\t%d\t%s\n", info.SourceKey, info.DestKey, result.Code, result.Error)
+		b.resultExport.Fail().ExportF("%s\t%s\t%d\t%s\n", info.SourceKey, info.DestKey, result.Code, result.Error)
 		log.ErrorF("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
 			result.Code, result.Error)
 	} else {
-		b.resultExport.Success.ExportF("%s\t%s\n", info.SourceKey, info.DestKey)
+		b.resultExport.Success().ExportF("%s\t%s\n", info.SourceKey, info.DestKey)
 		log.ErrorF("Move '%s:%s' => '%s:%s' success\n",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)

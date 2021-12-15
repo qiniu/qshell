@@ -93,11 +93,11 @@ func (b batchChangeMimeHandler) HandlerResult(operation rs.BatchOperation, resul
 
 	info := ChangeMimeInfo(apiInfo)
 	if result.Code != 200 || result.Error != "" {
-		b.resultExport.Fail.ExportF("%s\t%s\t%d\t%s\n", info.Key, info.Mime, result.Code, result.Error)
+		b.resultExport.Fail().ExportF("%s\t%s\t%d\t%s\n", info.Key, info.Mime, result.Code, result.Error)
 		log.ErrorF("Chgm '%s' => '%s' Failed, Code: %d, Error: %s\n",
 			info.Key, info.Mime, result.Code, result.Error)
 	} else {
-		b.resultExport.Success.ExportF("%s\t%s\n", info.Key, info.Mime)
+		b.resultExport.Success().ExportF("%s\t%s\n", info.Key, info.Mime)
 		log.ErrorF("Chgm '%s' => '%s' success\n", info.Key, info.Mime)
 	}
 }

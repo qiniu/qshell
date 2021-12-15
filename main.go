@@ -8,8 +8,10 @@ import (
 )
 
 func main() {
-	if len(os.Args) == 0 {
-		os.Args = []string{"qshell", "user", "ls"}
+	fmt.Printf("cmd args:%v", os.Args)
+
+	if len(os.Args) < 2 {
+		os.Args = []string{"qshell", "batchstat", "testna0", "-d"}
 	}
 
 	if err := cmd.RootCmd.Execute(); err != nil {

@@ -95,8 +95,8 @@ func Batch(operations []BatchOperation) ([]OperationResult, error) {
 			}
 
 			if bEerr != nil {
-				 err = bEerr
-				 break
+				err = bEerr
+				break
 			}
 		}
 	}
@@ -115,10 +115,16 @@ func BatchWithHandler(handler BatchHandler) {
 		return
 	}
 
-	waitGroup := sync.WaitGroup{}
 	workCount := handler.WorkCount()
-	waitGroup.Add(workCount + 1)
+	if workCount == 0 {
+		workCount = 1
+	}
 
+	log.Debug("batch: start")
+	log.DebugF("work count: %d", workCount)
+
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(workCount + 1)
 	batchOperationChan := make(chan batchTask)
 	go func() {
 		batchTaskProduct(bm, handler, batchOperationChan)
@@ -133,6 +139,8 @@ func BatchWithHandler(handler BatchHandler) {
 	}
 
 	waitGroup.Wait()
+
+	log.Debug("batch: end")
 }
 
 type batchTask struct {
@@ -148,25 +156,27 @@ func batchTaskProduct(bucketManager *storage.BucketManager, handler BatchHandler
 		operationStrings: make([]string, 0, MaxOperationCountPerRequest),
 	}
 
-	log.Debug("product operation task start")
+	log.Debug("batch task producer: start")
 	for {
 		if workspace.IsCmdInterrupt() {
 			break
 		}
 
-		log.Info("read operation")
 		operation, complete := handler.ReadOperation()
 		if complete {
+			log.Debug("batch task producer: read operation complete")
 			batchTaskChan <- task
 			break
 		}
 
 		if operation == nil {
+			log.Debug("batch task producer: operation invalid")
 			continue
 		}
 
 		operationString, err := operation.ToOperation()
 		if err != nil {
+			log.Debug("batch task producer: parse operation error")
 			log.Warning(err)
 			continue
 		}
@@ -180,29 +190,33 @@ func batchTaskProduct(bucketManager *storage.BucketManager, handler BatchHandler
 				operations:       make([]BatchOperation, 0, MaxOperationCountPerRequest),
 				operationStrings: make([]string, 0, MaxOperationCountPerRequest),
 			}
+			log.Debug("batch task producer: produce one task: task count:%d", len(task.operations))
 		}
 	}
 	close(batchTaskChan)
-	log.Debug("product operation task end")
+	log.Debug("batch task producer: end")
 }
 
 func batchTaskConsume(handler BatchHandler, batchTaskChan <-chan batchTask) {
-	log.Debug("consume operation task start")
+	log.Debug("batch task consumer: start")
 	for task := range batchTaskChan {
 		if workspace.IsCmdInterrupt() {
 			break
 		}
 
-		log.Debug("batch operations")
+		log.Debug("batch task consumer: get new task")
 		if len(task.operations) == 0 {
+			log.Debug("batch task consumer: task invalid")
 			continue
 		}
 
 		results, err := task.manager.Batch(task.operationStrings)
 		if err != nil {
+			log.Debug("batch task consumer: batch error")
 			handler.HandlerError(err)
 		}
 
+		log.Debug("batch task consumer: batch success")
 		for i, result := range results {
 			handler.HandlerResult(
 				task.operations[i],
@@ -217,5 +231,5 @@ func batchTaskConsume(handler BatchHandler, batchTaskChan <-chan batchTask) {
 				})
 		}
 	}
-	log.Debug("consume operation task end")
+	log.Debug("batch task consumer: end")
 }

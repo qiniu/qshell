@@ -11,8 +11,16 @@ import (
 )
 
 type BatchResultExport struct {
-	Success export.Export
-	Fail    export.Export
+	success export.Export
+	fail    export.Export
+}
+
+func (b *BatchResultExport) Success() export.Export {
+	return b.success
+}
+
+func (b *BatchResultExport) Fail() export.Export {
+	return b.fail
 }
 
 func NewBatchResultExport(info BatchInfo) (*BatchResultExport, error) {
@@ -22,16 +30,20 @@ func NewBatchResultExport(info BatchInfo) (*BatchResultExport, error) {
 		if e, err := export.New(info.SuccessExportFilePath); err != nil {
 			return nil, err
 		} else {
-			resultExport.Success = e
+			resultExport.success = e
 		}
+	} else {
+		resultExport.success = export.Empty()
 	}
 
 	if len(info.FailExportFilePath) > 0 {
 		if e, err := export.New(info.FailExportFilePath); err != nil {
 			return nil, err
 		} else {
-			resultExport.Fail = e
+			resultExport.fail = e
 		}
+	} else {
+		resultExport.fail = export.Empty()
 	}
 
 	return resultExport, nil

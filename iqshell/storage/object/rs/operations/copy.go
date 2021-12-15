@@ -99,13 +99,13 @@ func (b batchCopyHandler) HandlerResult(operation rs.BatchOperation, result rs.O
 
 	info := CopyInfo(apiInfo)
 	if result.Code != 200 || result.Error != "" {
-		b.resultExport.Fail.ExportF("%s\t%s\t%d\t%s\n", info.SourceKey, info.DestKey, result.Code, result.Error)
+		b.resultExport.Fail().ExportF("%s\t%s\t%d\t%s\n", info.SourceKey, info.DestKey, result.Code, result.Error)
 		log.ErrorF("Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
 			result.Code, result.Error)
 	} else {
-		b.resultExport.Success.ExportF("%s\t%s\n", info.SourceKey, info.DestKey)
+		b.resultExport.Success().ExportF("%s\t%s\n", info.SourceKey, info.DestKey)
 		log.ErrorF("Copy '%s:%s' => '%s:%s' success\n",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)

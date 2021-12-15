@@ -24,7 +24,7 @@ func Delete(info DeleteApiInfo) ([]rs.OperationResult, error) {
 		return nil, errors.New("no m3u8 slices found")
 	}
 
-	operations := make([]rs.BatchOperation,0, len(m3u8FileList))
+	operations := make([]rs.BatchOperation, 0, len(m3u8FileList))
 	for _, file := range m3u8FileList {
 		operations = append(operations, &rs.DeleteApiInfo{
 			Bucket:    file.Bucket,
