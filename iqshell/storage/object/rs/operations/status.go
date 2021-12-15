@@ -94,8 +94,10 @@ func (b *batchStatusHandler) HandlerResult(operation rs.BatchOperation, result r
 		b.resultExport.Fail().ExportF("%s\t%d\t%s\n", info.Key, result.Code, result.Error)
 		log.ErrorF("Status '%s' Failed, Code: %d, Error: %s", info.Key, result.Code, result.Error)
 	} else {
-		b.resultExport.Success().ExportF("%s\n", info.Key)
-		log.ErrorF("Status '%s' success\n", info.Key)
+		status := fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d",
+			info.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
+		b.resultExport.Success().Export(status)
+		log.Alert(status)
 	}
 }
 

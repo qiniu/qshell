@@ -61,7 +61,10 @@ type BatchInfo struct {
 }
 
 func prepareToBatch(info BatchInfo) bool {
-	if info.Force {
+	log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, bsuccessFname: %q, bfailureFname: %q, sep: %q",
+		info.Force, info.Overwrite, info.Worker, info.InputFile, info.SuccessExportFilePath, info.FailExportFilePath, info.ItemSeparate)
+
+	if !info.Force {
 		return true
 	}
 

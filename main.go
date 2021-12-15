@@ -8,8 +8,6 @@ import (
 )
 
 func main() {
-	fmt.Printf("cmd args:%v", os.Args)
-
 	if len(os.Args) < 2 {
 		os.Args = []string{"qshell", "batchstat", "testna0", "-d"}
 	}
