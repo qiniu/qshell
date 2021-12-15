@@ -11,7 +11,7 @@ import (
 type StatusInfo rs.StatusApiInfo
 
 func Status(info StatusInfo) {
-	result, err := rs.Status(rs.StatusApiInfo(info))
+	result, err := rs.BatchOne(rs.StatusApiInfo(info))
 	if err != nil {
 		log.ErrorF("Stat error:%v", err)
 		return
@@ -61,29 +61,26 @@ func (b batchStatusHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchStatusHandler) ReadOperation() rs.BatchOperation {
-	var info *rs.StatusApiInfo
+func (b batchStatusHandler) ReadOperation() (rs.BatchOperation, bool) {
+	var info rs.BatchOperation = nil
 
-	for {
-		line, complete := b.scanner.scanLine()
-		if complete {
-			break
-		}
+	line, success := b.scanner.scanLine()
+	if !success {
+		return nil, true
+	}
 
-		items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
-		if len(items) > 0 {
-			key := items[0]
-			if key != "" {
-				info = &rs.StatusApiInfo{
-					Bucket: b.info.Bucket,
-					Key:    key,
-				}
-				break
+	items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
+	if len(items) > 0 {
+		key := items[0]
+		if key != "" {
+			info = rs.StatusApiInfo{
+				Bucket: b.info.Bucket,
+				Key:    key,
 			}
 		}
 	}
 
-	return info
+	return info, false
 }
 
 func (b batchStatusHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {
@@ -106,7 +103,7 @@ func (b batchStatusHandler) HandlerError(err error) {
 	log.ErrorF("batch Status error:%v:", err)
 }
 
-func getStatusInfo(info StatusInfo, status rs.StatusApiResult) string {
+func getStatusInfo(info StatusInfo, status rs.OperationResult) string {
 	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", info.Bucket)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", info.Key)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Hash:", status.Hash)

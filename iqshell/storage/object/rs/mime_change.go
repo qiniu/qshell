@@ -28,18 +28,3 @@ type ChangeMimeApiResult struct {
 	Code  int    `json:"code"`
 	Error string `json:"error"`
 }
-
-func newChangeMimeApiResult(ret storage.BatchOpRet) ChangeMimeApiResult {
-	return ChangeMimeApiResult{
-		Code:  ret.Code,
-		Error: ret.Data.Error,
-	}
-}
-
-func ChangeMime(info ChangeMimeApiInfo) (ChangeMimeApiResult, error) {
-	ret, err := BatchOne(info)
-	if err != nil {
-		return ChangeMimeApiResult{}, err
-	}
-	return newChangeMimeApiResult(ret), err
-}

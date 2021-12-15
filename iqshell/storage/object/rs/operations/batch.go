@@ -41,7 +41,8 @@ func NewBatchResultExport(info BatchInfo) (*BatchResultExport, error) {
 type BatchInfo struct {
 	ItemSeparate          string
 	InputFile             string
-	Force                 bool
+	Force                 bool // 无需验证即可 batch 操作，类似于二维码验证
+	Overwrite             bool // 强制执行，服务端参数
 	Worker                int
 	FailExportFilePath    string
 	SuccessExportFilePath string
@@ -90,9 +91,10 @@ type batchScanner struct {
 	scanner *bufio.Scanner
 }
 
-func (b *batchScanner) scanLine() (line string, complete bool) {
-	complete = b.scanner.Scan()
+func (b *batchScanner) scanLine() (line string, success bool) {
+	success = b.scanner.Scan()
 	line = b.scanner.Text()
+	log.DebugF("scan line:%s success:%t", line, success)
 	return
 }
 

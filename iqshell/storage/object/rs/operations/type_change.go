@@ -38,7 +38,7 @@ func ChangeType(info ChangeTypeInfo) {
 		return
 	}
 
-	result, err := rs.ChangeType(rs.ChangeTypeApiInfo{
+	result, err := rs.BatchOne(rs.ChangeTypeApiInfo{
 		Bucket: info.Bucket,
 		Key:    info.Key,
 		Type:   t,
@@ -96,35 +96,30 @@ func (b batchChangeTypeHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchChangeTypeHandler) ReadOperation() rs.BatchOperation {
-	var info *rs.ChangeTypeApiInfo
+func (b batchChangeTypeHandler) ReadOperation() (rs.BatchOperation, bool) {
+	var info rs.BatchOperation = nil
 
-	for {
-		line, complete := b.scanner.scanLine()
-		if complete {
-			break
-		}
+	line, success := b.scanner.scanLine()
+	if !success {
+		return nil, true
+	}
 
-		items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
-		if len(items) > 1 {
-			key, t := items[0], items[1]
-			tInt, err := strconv.Atoi(t)
-			if err != nil {
-				continue
-			}
-
-			if key != "" && t != "" {
-				info = &rs.ChangeTypeApiInfo{
-					Bucket: b.info.Bucket,
-					Key:    key,
-					Type:   tInt,
-				}
-				break
+	items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
+	if len(items) > 1 {
+		key, t := items[0], items[1]
+		tInt, err := strconv.Atoi(t)
+		if err != nil {
+			log.ErrorF("parse type error:%v", err)
+		} else if key != "" && t != "" {
+			info = rs.ChangeTypeApiInfo{
+				Bucket: b.info.Bucket,
+				Key:    key,
+				Type:   tInt,
 			}
 		}
 	}
 
-	return info
+	return info, false
 }
 
 func (b batchChangeTypeHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {

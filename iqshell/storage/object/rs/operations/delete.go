@@ -27,7 +27,7 @@ func Delete(info DeleteInfo) {
 		return
 	}
 
-	result, err := rs.Delete(rs.DeleteApiInfo{
+	result, err := rs.BatchOne(rs.DeleteApiInfo{
 		Bucket:    info.Bucket,
 		Key:       info.Key,
 		AfterDays: afterDays,
@@ -85,37 +85,34 @@ func (b batchDeleteHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchDeleteHandler) ReadOperation() rs.BatchOperation {
-	var info *rs.DeleteApiInfo
+func (b batchDeleteHandler) ReadOperation() (rs.BatchOperation, bool) {
+	var info rs.BatchOperation = nil
 
-	for {
-		line, complete := b.scanner.scanLine()
-		if complete {
-			break
+	line, success := b.scanner.scanLine()
+	if !success {
+		return nil, true
+	}
+
+	items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
+	if len(items) > 0 {
+		key := items[0]
+		putTime := ""
+		if len(items) > 1 {
+			putTime = items[1]
 		}
 
-		items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
-		if len(items) > 0 {
-			key := items[0]
-			putTime := ""
-			if len(items) > 1 {
-				putTime = items[1]
-			}
-
-			if key != "" {
-				info = &rs.DeleteApiInfo{
-					Bucket: b.info.Bucket,
-					Key:    key,
-					Condition: rs.OperationCondition{
-						PutTime: putTime,
-					},
-				}
-				break
+		if key != "" {
+			info = rs.DeleteApiInfo{
+				Bucket: b.info.Bucket,
+				Key:    key,
+				Condition: rs.OperationCondition{
+					PutTime: putTime,
+				},
 			}
 		}
 	}
 
-	return info
+	return info, false
 }
 
 func (b batchDeleteHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {
@@ -173,41 +170,35 @@ func (b batchDeleteAfterHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchDeleteAfterHandler) ReadOperation() rs.BatchOperation {
-	var info *rs.DeleteApiInfo
+func (b batchDeleteAfterHandler) ReadOperation() (rs.BatchOperation, bool) {
+	var info rs.BatchOperation = nil
 
-	for {
-		line, complete := b.scanner.scanLine()
-		if complete {
-			break
+	line, success := b.scanner.scanLine()
+	if !success {
+		return nil, true
+	}
+
+	items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
+	if len(items) > 0 {
+		key := items[0]
+		after := ""
+		if len(items) > 1 {
+			after = items[1]
 		}
 
-		items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
-		if len(items) > 0 {
-			key := items[0]
-			after := ""
-			if len(items) > 1 {
-				after = items[1]
-			}
-
-			afterDays, err := getAfterDaysOfInt(after)
-			if err != nil {
-				log.ErrorF("parse after days error:%v from:%s", err, after)
-				continue
-			}
-
-			if key != "" {
-				info = &rs.DeleteApiInfo{
-					Bucket:    b.info.Bucket,
-					Key:       key,
-					AfterDays: afterDays,
-				}
-				break
+		afterDays, err := getAfterDaysOfInt(after)
+		if err != nil {
+			log.ErrorF("parse after days error:%v from:%s", err, after)
+		} else if key != "" {
+			info = rs.DeleteApiInfo{
+				Bucket:    b.info.Bucket,
+				Key:       key,
+				AfterDays: afterDays,
 			}
 		}
 	}
 
-	return info
+	return info, false
 }
 
 func (b batchDeleteAfterHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {

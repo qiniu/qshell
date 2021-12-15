@@ -9,7 +9,7 @@ import (
 type ChangeMimeInfo rs.ChangeMimeApiInfo
 
 func ChangeMime(info ChangeMimeInfo) {
-	result, err := rs.ChangeMime(rs.ChangeMimeApiInfo(info))
+	result, err := rs.BatchOne(rs.ChangeMimeApiInfo(info))
 	if err != nil {
 		log.ErrorF("Change Mime error:%v", err)
 		return
@@ -62,30 +62,27 @@ func (b batchChangeMimeHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchChangeMimeHandler) ReadOperation() rs.BatchOperation {
-	var info *rs.ChangeMimeApiInfo
+func (b batchChangeMimeHandler) ReadOperation() (rs.BatchOperation, bool) {
+	var info rs.BatchOperation = nil
 
-	for {
-		line, complete := b.scanner.scanLine()
-		if complete {
-			break
-		}
+	line, success := b.scanner.scanLine()
+	if !success {
+		return nil, true
+	}
 
-		items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
-		if len(items) > 1 {
-			key, mime := items[0], items[1]
-			if key != "" && mime != "" {
-				info = &rs.ChangeMimeApiInfo{
-					Bucket: b.info.Bucket,
-					Key:    key,
-					Mime:   mime,
-				}
-				break
+	items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
+	if len(items) > 1 {
+		key, mime := items[0], items[1]
+		if key != "" && mime != "" {
+			info = rs.ChangeMimeApiInfo{
+				Bucket: b.info.Bucket,
+				Key:    key,
+				Mime:   mime,
 			}
 		}
 	}
 
-	return info
+	return info, false
 }
 
 func (b batchChangeMimeHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {

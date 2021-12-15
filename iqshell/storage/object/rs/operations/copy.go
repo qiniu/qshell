@@ -63,35 +63,32 @@ func (b batchCopyHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchCopyHandler) ReadOperation() rs.BatchOperation {
-	var info *rs.CopyApiInfo
+func (b batchCopyHandler) ReadOperation() (rs.BatchOperation, bool) {
+	var info rs.BatchOperation = nil
 
-	for {
-		line, complete := b.scanner.scanLine()
-		if complete {
-			break
+	line, success := b.scanner.scanLine()
+	if !success {
+		return nil, true
+	}
+
+	items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
+	if len(items) > 0 {
+		srcKey, destKey := items[0], items[0]
+		if len(items) > 1 {
+			destKey = items[1]
 		}
-
-		items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
-		if len(items) > 0 {
-			srcKey, destKey := items[0], items[0]
-			if len(items) > 1 {
-				destKey = items[1]
-			}
-			if srcKey != "" && destKey != "" {
-				info = &rs.CopyApiInfo{
-					SourceBucket: b.info.SourceBucket,
-					SourceKey:    srcKey,
-					DestBucket:   b.info.DestBucket,
-					DestKey:      destKey,
-					Force:        b.info.BatchInfo.Force,
-				}
-				break
+		if srcKey != "" && destKey != "" {
+			info = rs.CopyApiInfo{
+				SourceBucket: b.info.SourceBucket,
+				SourceKey:    srcKey,
+				DestBucket:   b.info.DestBucket,
+				DestKey:      destKey,
+				Force:        b.info.BatchInfo.Force,
 			}
 		}
 	}
 
-	return info
+	return info, false
 }
 
 func (b batchCopyHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {

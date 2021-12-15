@@ -23,7 +23,7 @@ func (c ForbiddenInfo) getStatus() int {
 }
 
 func ForbiddenObject(info ForbiddenInfo) {
-	result, err := rs.ChangeStatus(rs.ChangeStatusApiInfo{
+	result, err := rs.BatchOne(rs.ChangeStatusApiInfo{
 		Bucket: info.Bucket,
 		Key:    info.Key,
 		Status: info.getStatus(),
@@ -81,35 +81,30 @@ func (b batchChangeStatusHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchChangeStatusHandler) ReadOperation() rs.BatchOperation {
-	var info *rs.ChangeStatusApiInfo
+func (b batchChangeStatusHandler) ReadOperation() (rs.BatchOperation, bool) {
+	var info rs.BatchOperation = nil
 
-	for {
-		line, complete := b.scanner.scanLine()
-		if complete {
-			break
-		}
+	line, success := b.scanner.scanLine()
+	if !success {
+		return nil, true
+	}
 
-		items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
-		if len(items) > 1 {
-			key, status := items[0], items[1]
-			statusInt, err := strconv.Atoi(status)
-			if err != nil {
-				continue
-			}
-
-			if key != "" && status != "" {
-				info = &rs.ChangeStatusApiInfo{
-					Bucket: b.info.Bucket,
-					Key:    key,
-					Status: statusInt,
-				}
-				break
+	items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
+	if len(items) > 1 {
+		key, status := items[0], items[1]
+		statusInt, err := strconv.Atoi(status)
+		if err != nil {
+			log.ErrorF("parse status error:", err)
+		} else if key != "" && status != "" {
+			info = rs.ChangeStatusApiInfo{
+				Bucket: b.info.Bucket,
+				Key:    key,
+				Status: statusInt,
 			}
 		}
 	}
 
-	return info
+	return info, false
 }
 
 func (b batchChangeStatusHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {

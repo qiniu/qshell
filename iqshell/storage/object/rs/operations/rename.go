@@ -11,7 +11,7 @@ import (
 type RenameInfo rs.MoveApiInfo
 
 func Rename(info RenameInfo) {
-	result, err := rs.Move(rs.MoveApiInfo(info))
+	result, err := rs.BatchOne(rs.MoveApiInfo(info))
 	if err != nil {
 		log.ErrorF("Rename error:%v", err)
 		return
@@ -24,9 +24,8 @@ func Rename(info RenameInfo) {
 }
 
 type BatchRenameInfo struct {
-	BatchInfo    BatchInfo
-	SourceBucket string
-	DestBucket   string
+	BatchInfo BatchInfo
+	Bucket    string
 }
 
 func BatchRename(info BatchRenameInfo) {
@@ -65,32 +64,29 @@ func (b batchRenameHandler) WorkCount() int {
 	return b.info.BatchInfo.Worker
 }
 
-func (b batchRenameHandler) ReadOperation() rs.BatchOperation {
-	var info *rs.MoveApiInfo
+func (b batchRenameHandler) ReadOperation() (rs.BatchOperation, bool) {
+	var info rs.BatchOperation = nil
 
-	for {
-		line, complete := b.scanner.scanLine()
-		if complete {
-			break
-		}
+	line, success := b.scanner.scanLine()
+	if !success {
+		return nil, true
+	}
 
-		items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
-		if len(items) > 1 {
-			sourceKey, destKey := items[0], items[1]
-			if sourceKey != "" && destKey != "" {
-				info = &rs.MoveApiInfo{
-					SourceBucket: b.info.SourceBucket,
-					SourceKey:    sourceKey,
-					DestBucket:   b.info.DestBucket,
-					DestKey:      destKey,
-					Force:        b.info.BatchInfo.Force,
-				}
-				break
+	items := utils.SplitString(line, b.info.BatchInfo.ItemSeparate)
+	if len(items) > 1 {
+		sourceKey, destKey := items[0], items[1]
+		if sourceKey != "" && destKey != "" {
+			info = rs.MoveApiInfo{
+				SourceBucket: b.info.Bucket,
+				SourceKey:    sourceKey,
+				DestBucket:   b.info.Bucket,
+				DestKey:      destKey,
+				Force:        b.info.BatchInfo.Force,
 			}
 		}
 	}
 
-	return info
+	return info, false
 }
 
 func (b batchRenameHandler) HandlerResult(operation rs.BatchOperation, result rs.OperationResult) {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs/operations"
 	"io"
 	"os"
 	"runtime"
@@ -51,68 +52,195 @@ func unescape(cmd *cobra.Command, args []string) {
 	}
 }
 
+var batchStatCmdBuilder = func() *cobra.Command {
+	var info = operations.BatchStatusInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchstat <Bucket> [-i <KeyListFile>]",
+		Short: "Batch stat files in bucket",
+		Long:  "Batch stat files in bucket, read file list from stdin if KeyListFile not specified",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.BatchStatus(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
+
+var batchDeleteCmdBuilder = func() *cobra.Command {
+	var info = operations.BatchDeleteInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchdelete <Bucket> [-i <KeyListFile>]",
+		Short: "Batch delete files in bucket",
+		Long:  "Batch delete files in bucket, read file list from stdin if KeyListFile not specified",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.BatchDelete(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Force, "force", "y", false, "force mode")
+	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "delete success list")
+	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "delete failure list")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
+
+var batchChangeMimeCmdBuilder = func() *cobra.Command {
+	var info = operations.BatchChangeMimeInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchchgm <Bucket> [-i <KeyMimeMapFile>]",
+		Short: "Batch change the mime type of files in bucket",
+		Long:  "Batch change the mime type of files in bucket, read from stdin if KeyMimeMapFile not specified",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.BatchChangeMime(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Force, "force", "y", false, "force mode")
+	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "delete success list")
+	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "delete failure list")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
+
+var batchChangeTypeCmdBuilder = func() *cobra.Command {
+	var info = operations.BatchChangeTypeInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchchtype <Bucket> [-i <KeyFileTypeMapFile>]",
+		Short: "Batch change the file type of files in bucket",
+		Long:  "Batch change the file (storage) type of files in bucket, read from stdin if KeyFileTypeMapFile not specified",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.BatchChangeType(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Force, "force", "y", false, "force mode")
+	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "delete success list")
+	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "delete failure list")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
+
+var batchDeleteAfterCmdBuilder = func() *cobra.Command {
+	var info = operations.BatchDeleteInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchexpire <Bucket> [-i <KeyDeleteAfterDaysMapFile>]",
+		Short: "Batch set the deleteAfterDays of the files in bucket",
+		Long:  "Batch set the deleteAfterDays of the files in bucket, read from stdin if KeyDeleteAfterDaysMapFile not specified",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.BatchDeleteAfter(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Force, "force", "y", false, "force mode")
+	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
+
+var batchMoveCmdBuilder = func() *cobra.Command {
+	var info = operations.BatchMoveInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchmove <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
+		Short: "Batch move files from bucket to bucket",
+		Long:  "Batch move files from bucket to bucket, read from stdin if SrcDestKeyMapFile not specified",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 1 {
+				info.SourceBucket = args[0]
+				info.DestBucket = args[1]
+			}
+			operations.BatchMove(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Force, "force", "y", false, "force mode")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Overwrite, "overwrite", "w", false, "overwrite mode")
+	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "rename success list")
+	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "rename failure list")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
+
+var batchRenameCmdBuilder = func() *cobra.Command {
+	var info = operations.BatchRenameInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchrename <Bucket> [-i <OldNewKeyMapFile>]",
+		Short: "Batch rename files in the bucket",
+		Long:  "Batch rename files in the bucket, read from stdin if OldNewKeyMapFile not specified",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.BatchRename(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Force, "force", "y", false, "force mode")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Overwrite, "overwrite", "w", false, "overwrite mode")
+	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "rename success list")
+	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "rename failure list")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
+
+var batchCopyCmdBuilder = func() *cobra.Command {
+	var info = operations.BatchCopyInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchcopy <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
+		Short: "Batch copy files from bucket to bucket",
+		Long:  "Batch copy files from bucket to bucket, read from stdin if SrcDestKeyMapFile not specified",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 1 {
+				info.SourceBucket = args[0]
+				info.DestBucket = args[1]
+			}
+			operations.BatchCopy(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Force, "force", "y", false, "force mode")
+	cmd.Flags().BoolVarP(&info.BatchInfo.Overwrite, "overwrite", "w", false, "overwrite mode")
+	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "rename success list")
+	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "rename failure list")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
+
 var (
 	batchFetchCmd = &cobra.Command{
 		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
 		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
 		Args:  cobra.ExactArgs(1),
 		Run:   BatchFetch,
-	}
-	batchStatCmd = &cobra.Command{
-		Use:   "batchstat <Bucket> [-i <KeyListFile>]",
-		Short: "Batch stat files in bucket",
-		Long:  "Batch stat files in bucket, read file list from stdin if KeyListFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run:   BatchStat,
-	}
-	batchDeleteCmd = &cobra.Command{
-		Use:   "batchdelete <Bucket> [-i <KeyListFile>]",
-		Short: "Batch delete files in bucket",
-		Long:  "Batch delete files in bucket, read file list from stdin if KeyListFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run:   BatchDelete,
-	}
-	batchChgmCmd = &cobra.Command{
-		Use:   "batchchgm <Bucket> [-i <KeyMimeMapFile>]",
-		Short: "Batch change the mime type of files in bucket",
-		Long:  "Batch change the mime type of files in bucket, read from stdin if KeyMimeMapFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run:   BatchChgm,
-	}
-	batchChtypeCmd = &cobra.Command{
-		Use:   "batchchtype <Bucket> [-i <KeyFileTypeMapFile>]",
-		Short: "Batch change the file type of files in bucket",
-		Long:  "Batch change the file (storage) type of files in bucket, read from stdin if KeyFileTypeMapFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run:   BatchChtype,
-	}
-	batchDelAfterCmd = &cobra.Command{
-		Use:   "batchexpire <Bucket> [-i <KeyDeleteAfterDaysMapFile>]",
-		Short: "Batch set the deleteAfterDays of the files in bucket",
-		Long:  "Batch set the deleteAfterDays of the files in bucket, read from stdin if KeyDeleteAfterDaysMapFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run:   BatchDeleteAfterDays,
-	}
-	batchRenameCmd = &cobra.Command{
-		Use:   "batchrename <Bucket> [-i <OldNewKeyMapFile>]",
-		Short: "Batch rename files in the bucket",
-		Long:  "Batch rename files in the bucket, read from stdin if OldNewKeyMapFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run:   BatchRename,
-	}
-	batchMoveCmd = &cobra.Command{
-		Use:   "batchmove <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
-		Short: "Batch move files from bucket to bucket",
-		Long:  "Batch move files from bucket to bucket, read from stdin if SrcDestKeyMapFile not specified",
-		Args:  cobra.ExactArgs(2),
-		Run:   BatchMove,
-	}
-	batchCopyCmd = &cobra.Command{
-		Use:   "batchcopy <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
-		Short: "Batch copy files from bucket to bucket",
-		Long:  "Batch copy files from bucket to bucket, read from stdin if SrcDestKeyMapFile not specified",
-		Args:  cobra.ExactArgs(2),
-		Run:   BatchCopy,
 	}
 	batchSignCmd = &cobra.Command{
 		Use:   "batchsign [-i <ItemListFile>] [-e <Deadline>]",
@@ -130,65 +258,21 @@ func init() {
 	batchFetchCmd.Flags().StringVarP(&bfetchUphost, "up-host", "u", "", "fetch uphost")
 	batchFetchCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
-	batchStatCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchStatCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
-	batchDeleteCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchDeleteCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
-	batchDeleteCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchDeleteCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "delete success list")
-	batchDeleteCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "delete failure list")
-	batchDeleteCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
-	batchChgmCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchChgmCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
-	batchChgmCmd.Flags().IntVarP(&worker, "worker", "c", 1, "woker count")
-	batchChgmCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "change mimetype success list")
-	batchChgmCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "change mimetype failure list")
-	batchChgmCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
-	batchChtypeCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchChtypeCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
-	batchChtypeCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchChtypeCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "change storage type success file list")
-	batchChtypeCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "change storage type failure file list")
-	batchChtypeCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
-	batchDelAfterCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchDelAfterCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
-	batchDelAfterCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchDelAfterCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
-	batchRenameCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchRenameCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
-	batchRenameCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
-	batchRenameCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchRenameCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "rename success list")
-	batchRenameCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "rename failure list")
-	batchRenameCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
-	batchMoveCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchMoveCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
-	batchMoveCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
-	batchMoveCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchMoveCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "move success list")
-	batchMoveCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "move failure list")
-	batchMoveCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
-	batchCopyCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchCopyCmd.Flags().BoolVarP(&forceFlag, "force", "y", false, "force mode")
-	batchCopyCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "w", false, "overwrite mode")
-	batchCopyCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchCopyCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "copy success list")
-	batchCopyCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "copy failure list")
-	batchCopyCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
 	batchSignCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
 	batchSignCmd.Flags().IntVarP(&deadline, "deadline", "e", 3600, "deadline in seconds")
 	batchSignCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
-	cmds := []*cobra.Command{batchStatCmd, batchDeleteCmd, batchChgmCmd, batchChtypeCmd, batchDelAfterCmd,
-		batchRenameCmd, batchMoveCmd, batchCopyCmd, batchSignCmd, batchFetchCmd}
+	cmds := []*cobra.Command{
+		batchStatCmdBuilder(),
+		batchCopyCmdBuilder(),
+		batchMoveCmdBuilder(),
+		batchRenameCmdBuilder(),
+		batchDeleteCmdBuilder(),
+		batchDeleteAfterCmdBuilder(),
+		batchChangeMimeCmdBuilder(),
+		batchChangeTypeCmdBuilder(),
+		batchSignCmd, batchFetchCmd,
+	}
 	RootCmd.AddCommand(cmds...)
 	for _, cmd := range cmds {
 		cmd.PersistentPreRun = unescape

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"sync"
 )
@@ -44,7 +45,7 @@ type OperationResult struct {
 
 type BatchHandler interface {
 	WorkCount() int
-	ReadOperation() BatchOperation
+	ReadOperation() (operation BatchOperation, complete bool)
 	HandlerResult(operation BatchOperation, result OperationResult)
 	HandlerError(err error)
 }
@@ -68,6 +69,9 @@ func Batch(operations []BatchOperation) ([]OperationResult, error) {
 	ret := make([]OperationResult, 0, len(operations))
 	operationStrings := make([]string, MaxOperationCountPerRequest)
 	for i, operation := range operations {
+		if workspace.IsCmdInterrupt() {
+			break
+		}
 
 		if operationString, err := operation.ToOperation(); err == nil {
 			operationStrings = append(operationStrings, operationString)
@@ -123,7 +127,6 @@ func BatchWithHandler(handler BatchHandler) {
 
 	for i := 0; i < workCount; i++ {
 		go func() {
-			waitGroup.Wait()
 			batchTaskConsume(handler, batchOperationChan)
 			waitGroup.Done()
 		}()
@@ -145,13 +148,21 @@ func batchTaskProduct(bucketManager *storage.BucketManager, handler BatchHandler
 		operationStrings: make([]string, 0, MaxOperationCountPerRequest),
 	}
 
+	log.Debug("product operation task start")
 	for {
-		operation := handler.ReadOperation()
-		if operation == nil {
-			if len(task.operationStrings) > 0 {
-				batchTaskChan <- task
-			}
+		if workspace.IsCmdInterrupt() {
 			break
+		}
+
+		log.Info("read operation")
+		operation, complete := handler.ReadOperation()
+		if complete {
+			batchTaskChan <- task
+			break
+		}
+
+		if operation == nil {
+			continue
 		}
 
 		operationString, err := operation.ToOperation()
@@ -171,10 +182,22 @@ func batchTaskProduct(bucketManager *storage.BucketManager, handler BatchHandler
 			}
 		}
 	}
+	close(batchTaskChan)
+	log.Debug("product operation task end")
 }
 
 func batchTaskConsume(handler BatchHandler, batchTaskChan <-chan batchTask) {
+	log.Debug("consume operation task start")
 	for task := range batchTaskChan {
+		if workspace.IsCmdInterrupt() {
+			break
+		}
+
+		log.Debug("batch operations")
+		if len(task.operations) == 0 {
+			continue
+		}
+
 		results, err := task.manager.Batch(task.operationStrings)
 		if err != nil {
 			handler.HandlerError(err)
@@ -194,4 +217,5 @@ func batchTaskConsume(handler BatchHandler, batchTaskChan <-chan batchTask) {
 				})
 		}
 	}
+	log.Debug("consume operation task end")
 }

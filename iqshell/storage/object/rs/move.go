@@ -26,18 +26,3 @@ type MoveApiResult struct {
 	Code  int    `json:"code"`
 	Error string `json:"error"`
 }
-
-func newMoveApiResult(ret storage.BatchOpRet) MoveApiResult {
-	return MoveApiResult{
-		Code:  ret.Code,
-		Error: ret.Data.Error,
-	}
-}
-
-func Move(info MoveApiInfo) (MoveApiResult, error) {
-	ret, err := BatchOne(info)
-	if err != nil {
-		return MoveApiResult{}, err
-	}
-	return newMoveApiResult(ret), err
-}

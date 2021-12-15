@@ -30,18 +30,3 @@ type DeleteApiResult struct {
 	Code  int    `json:"code"`
 	Error string `json:"error"`
 }
-
-func newDeleteApiResult(ret storage.BatchOpRet) DeleteApiResult {
-	return DeleteApiResult{
-		Code:  ret.Code,
-		Error: ret.Data.Error,
-	}
-}
-
-func Delete(info DeleteApiInfo) (DeleteApiResult, error) {
-	ret, err := BatchOne(info)
-	if err != nil {
-		return DeleteApiResult{}, err
-	}
-	return newDeleteApiResult(ret), err
-}
