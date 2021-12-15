@@ -235,18 +235,27 @@ var batchCopyCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
+var batchSignCmdBuilder = func() *cobra.Command {
+	var info = operations.BatchPrivateUrlInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchsign [-i <ItemListFile>] [-e <Deadline>]",
+		Short: "Batch create the private url from the public url list file",
+		Args:  cobra.ExactArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			operations.BatchPrivateUrl(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().StringVarP(&info.Deadline, "deadline", "e", "3600", "deadline in seconds")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
 var (
 	batchFetchCmd = &cobra.Command{
 		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
 		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
 		Args:  cobra.ExactArgs(1),
 		Run:   BatchFetch,
-	}
-	batchSignCmd = &cobra.Command{
-		Use:   "batchsign [-i <ItemListFile>] [-e <Deadline>]",
-		Short: "Batch create the private url from the public url list file",
-		Args:  cobra.ExactArgs(0),
-		Run:   BatchSign,
 	}
 )
 
@@ -258,10 +267,6 @@ func init() {
 	batchFetchCmd.Flags().StringVarP(&bfetchUphost, "up-host", "u", "", "fetch uphost")
 	batchFetchCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
 
-	batchSignCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "input file")
-	batchSignCmd.Flags().IntVarP(&deadline, "deadline", "e", 3600, "deadline in seconds")
-	batchSignCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
 	cmds := []*cobra.Command{
 		batchStatCmdBuilder(),
 		batchCopyCmdBuilder(),
@@ -271,7 +276,8 @@ func init() {
 		batchDeleteAfterCmdBuilder(),
 		batchChangeMimeCmdBuilder(),
 		batchChangeTypeCmdBuilder(),
-		batchSignCmd, batchFetchCmd,
+		batchSignCmdBuilder(),
+		batchFetchCmd,
 	}
 	RootCmd.AddCommand(cmds...)
 	for _, cmd := range cmds {

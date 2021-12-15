@@ -108,7 +108,9 @@ type batchScanner struct {
 
 func (b *batchScanner) scanLine() (line string, success bool) {
 	success = b.scanner.Scan()
-	line = b.scanner.Text()
+	if success {
+		line = b.scanner.Text()
+	}
 	log.DebugF("scan line:%s success:%t", line, success)
 	return
 }
