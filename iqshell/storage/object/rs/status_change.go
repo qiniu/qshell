@@ -19,8 +19,3 @@ func (c ChangeStatusApiInfo) ToOperation() (string, error) {
 	}
 	return fmt.Sprintf("/chstatus/%s/status/%c", storage.EncodedEntry(c.Bucket, c.Key), c.Status), nil
 }
-
-type ChangeStatusApiResult struct {
-	Code  int    `json:"code"`
-	Error string `json:"error"`
-}

@@ -23,8 +23,3 @@ func (c ChangeMimeApiInfo) ToOperation() (string, error) {
 
 	return storage.URIChangeMime(c.Bucket, c.Key, c.Mime), nil
 }
-
-type ChangeMimeApiResult struct {
-	Code  int    `json:"code"`
-	Error string `json:"error"`
-}

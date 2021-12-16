@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 )
@@ -32,6 +33,8 @@ func Fetch(info FetchApiInfo) (FetchResult, error) {
 	if len(info.FromUrl) == 0 {
 		return FetchResult{}, errors.New(alert.CannotEmpty("from url", ""))
 	}
+
+	log.InfoF("fetch info: bucket:%s key:%s fromUrl:%s", info.Bucket, info.Key, info.FromUrl)
 
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {

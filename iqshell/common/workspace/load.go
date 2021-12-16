@@ -75,6 +75,16 @@ func Load(options ...Option) (err error) {
 	cfg.Merge(config.GetGlobal())
 	cfg.Merge(defaultConfig())
 
+	log.DebugF("cmd    config:\n%v", ws.cmdConfig)
+	log.DebugF("user   config:\n%v", config.GetUser())
+	log.DebugF("global config:\n%v", config.GetGlobal())
+	log.DebugF("final  config:\n%v", cfg)
+
+	err = checkConfig(cfg)
+	if err != nil {
+		return
+	}
+
 	if err == nil {
 		cfg.Credentials = auth.Credentials{
 			AccessKey: currentAccount.AccessKey,

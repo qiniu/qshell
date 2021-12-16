@@ -25,8 +25,3 @@ func (d DeleteApiInfo) ToOperation() (string, error) {
 		return storage.URIDelete(d.Bucket, d.Key) + condition, nil
 	}
 }
-
-type DeleteApiResult struct {
-	Code  int    `json:"code"`
-	Error string `json:"error"`
-}

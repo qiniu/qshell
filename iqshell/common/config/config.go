@@ -1,17 +1,18 @@
 package config
 
 import (
+	"encoding/json"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 type Config struct {
-	Credentials auth.Credentials
-	UseHttps    string
-	Hosts       Hosts
-	Up          Up
-	Download    Download
+	Credentials auth.Credentials `json:"-"`
+	UseHttps    string           `json:"use_https,omitempty"`
+	Hosts       Hosts            `json:"hosts,omitempty"`
+	Up          Up               `json:"up,omitempty"`
+	Download    Download         `json:"download,omitempty"`
 }
 
 func (c Config) IsUseHttps() bool {
@@ -23,6 +24,11 @@ func (c Config) HasCredentials() bool {
 }
 
 func (c Config) GetRegion() *storage.Region {
+	if len(c.Hosts.Api) == 0 && len(c.Hosts.Rs) == 0 && len(c.Hosts.Rsf) == 0 &&
+		len(c.Hosts.Io) == 0 && len(c.Hosts.Up) == 0 {
+		return nil
+	}
+
 	return &storage.Region{
 		SrcUpHosts: c.Hosts.Up,
 		CdnUpHosts: c.Hosts.Up,
@@ -33,13 +39,21 @@ func (c Config) GetRegion() *storage.Region {
 	}
 }
 
+func (c Config) String() string {
+	if desc, err := json.MarshalIndent(c, "", "\t"); err == nil {
+		return string(desc)
+	} else {
+		return ""
+	}
+}
+
 type Hosts struct {
-	UC  []string
-	Api []string
-	Rs  []string
-	Rsf []string
-	Io  []string
-	Up  []string
+	UC  []string `json:"uc,omitempty"`
+	Api []string `json:"api,omitempty"`
+	Rs  []string `json:"rs,omitempty"`
+	Rsf []string `json:"rsf,omitempty"`
+	Io  []string `json:"io,omitempty"`
+	Up  []string `json:"up,omitempty"`
 }
 
 func (h Hosts) GetOneUc() string {
@@ -75,25 +89,25 @@ func getOneHostFromStringArray(hosts []string) string {
 }
 
 type Retry struct {
-	Max      int
-	Interval int
+	Max      int `json:"max,omitempty"`
+	Interval int `json:"interval,omitempty"`
 }
 
 type Up struct {
-	PutThreshold        int
-	ChunkSize           int
-	ResumeApiVersion    string
-	FileConcurrentParts int
-	Tasks               Tasks
-	Retry               Retry
+	PutThreshold        int    `json:"put_threshold,omitempty"`
+	ChunkSize           int    `json:"chunk_size,omitempty"`
+	ResumeApiVersion    string `json:"resume_api_version,omitempty"`
+	FileConcurrentParts int    `json:"file_concurrent_parts"`
+	Tasks               Tasks  `json:"tasks,omitempty"`
+	Retry               Retry  `json:"retry,omitempty"`
 }
 
 type Download struct {
-	Tasks Tasks
-	Retry Retry
+	Tasks Tasks `json:"tasks,omitempty"`
+	Retry Retry `json:"retry,omitempty"`
 }
 
 type Tasks struct {
-	ConcurrentCount       int
-	StopWhenOneTaskFailed string
+	ConcurrentCount       int    `json:"concurrent_count,omitempty"`
+	StopWhenOneTaskFailed string `json:"stop_when_one_task_failed,omitempty"`
 }

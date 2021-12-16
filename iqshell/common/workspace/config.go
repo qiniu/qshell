@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"errors"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -14,9 +15,9 @@ func defaultConfig() *config.Config {
 		},
 		UseHttps: data.TrueString,
 		Hosts: config.Hosts{
-			Rs:  []string{"rs.qiniu.com"},
-			Rsf: []string{"rsf.qiniu.com"},
-			Api: []string{"api.qiniu.com"},
+			//Rs:  []string{"rs.qiniu.com"},
+			//Rsf: []string{"rsf.qiniu.com"},
+			//Api: []string{"api.qiniu.com"},
 			UC:  []string{"uc.qbox.me"},
 		},
 		Up: config.Up{
@@ -44,4 +45,28 @@ func defaultConfig() *config.Config {
 			},
 		},
 	}
+}
+
+func checkConfig(cfg *config.Config) (err error) {
+	// host
+	configHostCount := 0
+	if len(cfg.Hosts.Api) > 0 {
+		configHostCount += 1
+	}
+	if len(cfg.Hosts.Rs) > 0 {
+		configHostCount += 1
+	}
+	if len(cfg.Hosts.Rsf) > 0 {
+		configHostCount += 1
+	}
+	if len(cfg.Hosts.Io) > 0 {
+		configHostCount += 1
+	}
+	if len(cfg.Hosts.Up) > 0 {
+		configHostCount += 1
+	}
+	if configHostCount != 0 && configHostCount != 5 {
+		err = errors.New("hosts: api/rs/rsf/io/up should config all")
+	}
+	return
 }

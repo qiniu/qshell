@@ -2,6 +2,7 @@ package rs
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -10,9 +11,13 @@ import (
 	"sync"
 )
 
-const (
-	MaxOperationCountPerRequest = 1000
+var (
+	maxOperationCountPerRequest = 1000
 )
+
+func SetOperationCountPerRequest(max int) {
+	maxOperationCountPerRequest = max
+}
 
 type OperationCondition struct {
 	PutTime string
@@ -66,22 +71,27 @@ func Batch(operations []BatchOperation) ([]OperationResult, error) {
 		return nil, err
 	}
 
+	log.Debug("batch operations: start")
+
 	ret := make([]OperationResult, 0, len(operations))
-	operationStrings := make([]string, MaxOperationCountPerRequest)
+	operationStrings := make([]string, 0, maxOperationCountPerRequest)
 	for i, operation := range operations {
 		if workspace.IsCmdInterrupt() {
 			break
 		}
 
 		if operationString, err := operation.ToOperation(); err == nil {
+			log.DebugF("batch operations: add:%s", operationString)
 			operationStrings = append(operationStrings, operationString)
 		} else {
 			log.Warning(err)
 		}
 
-		if i == len(operations) || len(operationStrings) >= MaxOperationCountPerRequest {
-			operationStrings = make([]string, MaxOperationCountPerRequest)
+		if (i == (len(operations)-1) && len(operationStrings) > 0) || len(operationStrings) >= maxOperationCountPerRequest {
+			log.Debug("batch operations: one operation start")
+			operationStrings = make([]string, maxOperationCountPerRequest)
 			results, bEerr := bm.Batch(operationStrings)
+			log.Debug("batch operations: one operation end")
 			for _, result := range results {
 				ret = append(ret, OperationResult{
 					Code:     result.Code,
@@ -101,6 +111,11 @@ func Batch(operations []BatchOperation) ([]OperationResult, error) {
 		}
 	}
 
+	if len(ret) == 0 {
+		err = errors.New("no operations result found")
+	}
+
+	log.Debug("batch operations: end")
 	return ret, err
 }
 
@@ -152,8 +167,8 @@ type batchTask struct {
 func batchTaskProduct(bucketManager *storage.BucketManager, handler BatchHandler, batchTaskChan chan<- batchTask) {
 	task := batchTask{
 		manager:          bucketManager,
-		operations:       make([]BatchOperation, 0, MaxOperationCountPerRequest),
-		operationStrings: make([]string, 0, MaxOperationCountPerRequest),
+		operations:       make([]BatchOperation, 0, maxOperationCountPerRequest),
+		operationStrings: make([]string, 0, maxOperationCountPerRequest),
 	}
 
 	log.Debug("batch task producer: start")
@@ -184,11 +199,11 @@ func batchTaskProduct(bucketManager *storage.BucketManager, handler BatchHandler
 		task.operations = append(task.operations, operation)
 		task.operationStrings = append(task.operationStrings, operationString)
 
-		if len(task.operationStrings) >= MaxOperationCountPerRequest {
+		if len(task.operationStrings) >= maxOperationCountPerRequest {
 			batchTaskChan <- task
 			task = batchTask{
-				operations:       make([]BatchOperation, 0, MaxOperationCountPerRequest),
-				operationStrings: make([]string, 0, MaxOperationCountPerRequest),
+				operations:       make([]BatchOperation, 0, maxOperationCountPerRequest),
+				operationStrings: make([]string, 0, maxOperationCountPerRequest),
 			}
 			log.Debug("batch task producer: produce one task: task count:%d", len(task.operations))
 		}

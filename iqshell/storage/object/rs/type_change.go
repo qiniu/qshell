@@ -19,8 +19,3 @@ func (c ChangeTypeApiInfo) ToOperation() (string, error) {
 
 	return storage.URIChangeType(c.Bucket, c.Key, c.Type), nil
 }
-
-type ChangeTypeApiResult struct {
-	Code  int    `json:"code"`
-	Error string `json:"error"`
-}

@@ -21,8 +21,3 @@ func (m MoveApiInfo) ToOperation() (string, error) {
 
 	return storage.URIMove(m.SourceBucket, m.SourceKey, m.DestBucket, m.DestKey, m.Force), nil
 }
-
-type MoveApiResult struct {
-	Code  int    `json:"code"`
-	Error string `json:"error"`
-}
