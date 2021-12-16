@@ -97,10 +97,11 @@ type UploadConfig struct {
 	BindNicIp string `json:"bind_nic_ip,omitempty"`
 
 	//log settings
-	LogLevel  string `json:"log_level,omitempty"`
-	LogFile   string `json:"log_file,omitempty"`
-	LogRotate int    `json:"log_rotate,omitempty"`
-	LogStdout bool   `json:"log_stdout,omitempty"`
+	LogLevel        string `json:"log_level,omitempty"`
+	LogFile         string `json:"log_file,omitempty"`
+	LogRotate       int    `json:"log_rotate,omitempty"`
+	LogMinFileCount int    `json:"log_min_file_count"` // 日志最小保存文件数量
+	LogStdout       bool   `json:"log_stdout,omitempty"`
 
 	//more settings
 	DeleteOnSuccess bool   `json:"delete_on_success,omitempty"`
@@ -293,13 +294,14 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 
 	//daily rotate
 	logCfg := BeeLogConfig{
-		Filename: cfg.LogFile,
-		Level:    logLevel,
-		Daily:    true,
-		MaxDays:  logRotate,
+		Filename:     cfg.LogFile,
+		Level:        logLevel,
+		Daily:        true,
+		MaxDays:      logRotate,
+		MinFileCount: cfg.LogMinFileCount,
 	}
+	logs.SetLogger(QiniuAdapterFile, logCfg.ToJson())
 	logs.SetLevel(logLevel)
-	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
 	fmt.Println()
 }
 

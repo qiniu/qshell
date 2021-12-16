@@ -50,11 +50,12 @@ type DownloadConfig struct {
 	CdnDomain string `json:"cdn_domain,omitempty"`
 	UseHttps  bool   `json:"use_https,omitempty"`
 	//log settings
-	RecordRoot string `json:"record_root,omitempty"`
-	LogLevel   string `json:"log_level,omitempty"`
-	LogFile    string `json:"log_file,omitempty"`
-	LogRotate  int    `json:"log_rotate,omitempty"`
-	LogStdout  bool   `json:"log_stdout,omitempty"`
+	RecordRoot      string `json:"record_root,omitempty"`
+	LogLevel        string `json:"log_level,omitempty"`
+	LogFile         string `json:"log_file,omitempty"`
+	LogRotate       int    `json:"log_rotate,omitempty"`
+	LogMinFileCount int    `json:"log_min_file_count"` // 日志最小保存文件数量
+	LogStdout       bool   `json:"log_stdout,omitempty"`
 
 	batchNum int
 }
@@ -228,8 +229,9 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		Level:    logLevel,
 		Daily:    true,
 		MaxDays:  logRotate,
+		MinFileCount: downConfig.LogMinFileCount,
 	}
-	logs.SetLogger(logs.AdapterFile, logCfg.ToJson())
+	logs.SetLogger(QiniuAdapterFile, logCfg.ToJson())
 	fmt.Println()
 
 	bm := GetBucketManager()
