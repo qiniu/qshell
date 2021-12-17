@@ -4,60 +4,21 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
 )
 
-type BatchResultExport struct {
-	success export.Export
-	fail    export.Export
-}
-
-func (b *BatchResultExport) Success() export.Export {
-	return b.success
-}
-
-func (b *BatchResultExport) Fail() export.Export {
-	return b.fail
-}
-
-func NewBatchResultExport(info BatchInfo) (*BatchResultExport, error) {
-	resultExport := &BatchResultExport{}
-
-	if len(info.SuccessExportFilePath) > 0 {
-		if e, err := export.New(info.SuccessExportFilePath); err != nil {
-			return nil, err
-		} else {
-			resultExport.success = e
-		}
-	} else {
-		resultExport.success = export.Empty()
-	}
-
-	if len(info.FailExportFilePath) > 0 {
-		if e, err := export.New(info.FailExportFilePath); err != nil {
-			return nil, err
-		} else {
-			resultExport.fail = e
-		}
-	} else {
-		resultExport.fail = export.Empty()
-	}
-
-	return resultExport, nil
-}
-
 // BatchInfo Batch 参数
 type BatchInfo struct {
-	ItemSeparate          string
-	InputFile             string
-	Force                 bool // 无需验证即可 batch 操作，类似于二维码验证
-	Overwrite             bool // 强制执行，服务端参数
-	Worker                int
-	FailExportFilePath    string
-	SuccessExportFilePath string
+	ItemSeparate           string
+	InputFile              string
+	Force                  bool // 无需验证即可 batch 操作，类似于二维码验证
+	Overwrite              bool // 强制执行，服务端参数
+	Worker                 int
+	FailExportFilePath     string
+	SuccessExportFilePath  string
+	OverrideExportFilePath string
 }
 
 func prepareToBatch(info BatchInfo) bool {

@@ -116,18 +116,6 @@ func (up *Up) merge(from *Up) {
 		up.PutThreshold = from.PutThreshold
 	}
 
-	if up.ChunkSize == 0 {
-		up.ChunkSize = from.ChunkSize
-	}
-
-	if len(up.ResumeApiVersion) == 0 {
-		up.ResumeApiVersion = from.ResumeApiVersion
-	}
-
-	if up.FileConcurrentParts == 0 {
-		up.FileConcurrentParts = from.FileConcurrentParts
-	}
-
 	up.Tasks.merge(&from.Tasks)
 	up.Retry.merge(&from.Retry)
 }

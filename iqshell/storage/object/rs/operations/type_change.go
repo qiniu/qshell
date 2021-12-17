@@ -3,6 +3,7 @@ package operations
 import (
 	"errors"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
@@ -65,7 +66,11 @@ func BatchChangeType(info BatchChangeTypeInfo) {
 		return
 	}
 
-	resultExport, err := NewBatchResultExport(info.BatchInfo)
+	resultExport, err := export.NewFileExport(export.FileExporterConfig{
+		SuccessExportFilePath:  info.BatchInfo.SuccessExportFilePath,
+		FailExportFilePath:     info.BatchInfo.FailExportFilePath,
+		OverrideExportFilePath: info.BatchInfo.OverrideExportFilePath,
+	})
 	if err != nil {
 		log.ErrorF("get export error:%v", err)
 		return
@@ -87,7 +92,7 @@ func BatchChangeType(info BatchChangeTypeInfo) {
 type batchChangeTypeHandler struct {
 	scanner      *batchScanner
 	info         *BatchChangeTypeInfo
-	resultExport *BatchResultExport
+	resultExport *export.FileExporter
 }
 
 var _ rs.BatchHandler = (*batchChangeTypeHandler)(nil)

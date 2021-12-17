@@ -93,13 +93,45 @@ type Retry struct {
 	Interval int `json:"interval,omitempty"`
 }
 
+type UpPolicy storage.PutPolicy
 type Up struct {
-	PutThreshold        int    `json:"put_threshold,omitempty"`
-	ChunkSize           int    `json:"chunk_size,omitempty"`
-	ResumeApiVersion    string `json:"resume_api_version,omitempty"`
-	FileConcurrentParts int    `json:"file_concurrent_parts"`
-	Tasks               Tasks  `json:"tasks,omitempty"`
-	Retry               Retry  `json:"retry,omitempty"`
+	SrcDir           string `json:"-"`
+	FileList         string `json:"-"`
+	IgnoreDir        bool   `json:"-"`
+	SkipFilePrefixes string `json:"-"`
+	SkipPathPrefixes string `json:"-"`
+	SkipFixedStrings string `json:"-"`
+	SkipSuffixes     string `json:"-"`
+
+	UpHost    string `json:"up_host,omitempty"`
+	BindUpIp  string `json:"bind_up_ip,omitempty"`
+	BindRsIp  string `json:"bind_rs_ip,omitempty"`
+	BindNicIp string `json:"bind_nic_ip,omitempty"` //local network interface card config
+
+	FileEncoding           string `json:"file_encoding"`
+	Bucket                 string `json:"bucket"`
+	ResumableAPIV2         bool   `json:"resumable_api_v2,omitempty"`
+	ResumableAPIV2PartSize int64  `json:"resumable_api_v2_part_size,omitempty"`
+	PutThreshold           int64  `json:"put_threshold,omitempty"`
+	KeyPrefix              string `json:"key_prefix,omitempty"`
+	Overwrite              bool   `json:"overwrite,omitempty"`
+	CheckExists            bool   `json:"check_exists,omitempty"`
+	CheckHash              bool   `json:"check_hash,omitempty"`
+	CheckSize              bool   `json:"check_size,omitempty"`
+	RescanLocal            bool   `json:"rescan_local,omitempty"`
+	FileType               int    `json:"file_type,omitempty"`
+	DeleteOnSuccess        bool   `json:"delete_on_success,omitempty"`
+	DisableResume          bool   `json:"disable_resume,omitempty"`
+
+	//log settings
+	LogLevel  string `json:"log_level,omitempty"`
+	LogFile   string `json:"log_file,omitempty"`
+	LogRotate int    `json:"log_rotate,omitempty"`
+	LogStdout bool   `json:"log_stdout,omitempty"`
+
+	Tasks  Tasks    `json:"tasks,omitempty"`
+	Retry  Retry    `json:"retry,omitempty"`
+	Policy UpPolicy `json:"policy"`
 }
 
 type Download struct {

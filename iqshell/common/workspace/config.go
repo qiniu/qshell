@@ -22,9 +22,6 @@ func defaultConfig() *config.Config {
 		},
 		Up: config.Up{
 			PutThreshold:        1024 * 1024 * 4,
-			ChunkSize:           1024 * 1024 * 2,
-			ResumeApiVersion:    data.ResumeApiV1,
-			FileConcurrentParts: 10,
 			Tasks: config.Tasks{
 				ConcurrentCount:       3,
 				StopWhenOneTaskFailed: data.FalseString,

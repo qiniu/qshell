@@ -110,14 +110,14 @@ func (d *DownloadConfig) DownloadDomain() (domain string) {
 func (d *DownloadConfig) generateMiddileFile(bm *BucketManager, jobListFileName string) {
 	kFile, kErr := os.Open(d.KeyFile)
 	if kErr != nil {
-		log.Error("open KeyFile: %s: %v\n", d.KeyFile, kErr)
+		log.ErrorF("open KeyFile: %s: %v\n", d.KeyFile, kErr)
 		os.Exit(data.STATUS_ERROR)
 	}
 	defer kFile.Close()
 
 	jobListFh, jErr := os.Create(jobListFileName)
 	if jErr != nil {
-		log.Error("open jobListFileName: %s: %v\n", jobListFileName, kErr)
+		log.ErrorF("open jobListFileName: %s: %v\n", jobListFileName, kErr)
 		os.Exit(data.STATUS_ERROR)
 	}
 	defer jobListFh.Close()
@@ -187,7 +187,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	//local storage path
 	storePath := filepath.Join(QShellRootPath, "qdownload", jobId)
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		log.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		log.ErrorF("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		os.Exit(data.STATUS_ERROR)
 	}
 
@@ -270,7 +270,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		downConfig.generateMiddileFile(bm, jobListFileName)
 	} else {
 		//list bucket, prepare file list to download
-		log.Info("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
+		log.InfoF("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
 		listErr := bm.ListFiles(downConfig.Bucket, downConfig.Prefix, "", jobListFileName)
 		if listErr != nil {
 			log.Error("List bucket error", listErr)
@@ -339,14 +339,14 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 
 				if !goAhead {
 					skipBySuffixes += 1
-					log.Info("Skip download `%s`, suffix filter not match", fileKey)
+					log.InfoF("Skip download `%s`, suffix filter not match", fileKey)
 					continue
 				}
 			}
 
 			fileSize, pErr := strconv.ParseInt(items[1], 10, 64)
 			if pErr != nil {
-				log.Error("Invalid list line", line)
+				log.ErrorF("Invalid list line", line)
 				continue
 			}
 
@@ -409,12 +409,12 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 					if oldFileLmd == fileMtime && localFileInfo.Size() == fileSize &&
 						(downConfig.CheckHash && (len(oldFileHash) == 0 || oldFileHash == fileHash)) {
 						//nothing change, ignore
-						log.Info("Local file `%s` exists, same as in bucket, download skip", localAbsFilePath)
+						log.InfoF("Local file `%s` exists, same as in bucket, download skip", localAbsFilePath)
 						existsFileCount += 1
 						continue
 					} else {
 						//somthing changed, must download a new file
-						log.Info("Local file `%s` exists, but remote file changed, go to download", localAbsFilePath)
+						log.InfoF("Local file `%s` exists, but remote file changed, go to download", localAbsFilePath)
 						downNewFile = true
 					}
 				} else {
@@ -422,18 +422,18 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 					if downConfig.CheckHash {
 						// 无法验证信息，重新下载
 						downNewFile = true
-						log.Info("Local file `%s` exists, but can't find file info from db, go to download", localAbsFilePath)
+						log.InfoF("Local file `%s` exists, but can't find file info from db, go to download", localAbsFilePath)
 						continue
 					}
 
 					// 不验证 hash 仅仅验证 size, size 相同则认为 文件不变
 					if localFileInfo.Size() != fileSize {
-						log.Info("Local file `%s` exists, size not the same as in bucket, go to download", localAbsFilePath)
+						log.InfoF("Local file `%s` exists, size not the same as in bucket, go to download", localAbsFilePath)
 						downNewFile = true
 					} else {
 						//treat the local file not changed, write to leveldb, though may not accurate
 						//nothing to do
-						log.Warning("Local file `%s` exists with same size as `%s`, treat it not changed", localAbsFilePath, fileKey)
+						log.WarningF("Local file `%s` exists with same size as `%s`, treat it not changed", localAbsFilePath, fileKey)
 						atomic.AddInt64(&existsFileCount, 1)
 						continue
 					}
@@ -457,18 +457,18 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 								//rename it
 								renameErr := os.Rename(localFilePathTempToCheck, localFilePathToCheck)
 								if renameErr != nil {
-									log.Error("Rename temp file `%s` to final file `%s` error", localAbsFilePathTemp, localAbsFilePath,
+									log.ErrorF("Rename temp file `%s` to final file `%s` error", localAbsFilePathTemp, localAbsFilePath,
 										renameErr)
 								}
 								continue
 							}
 						} else {
-							log.Info("Local tmp file `%s` exists, but remote file changed, go to download", localAbsFilePathTemp)
+							log.InfoF("Local tmp file `%s` exists, but remote file changed, go to download", localAbsFilePathTemp)
 							downNewFile = true
 						}
 					} else {
 						//log tmp file exists, but no record in leveldb, download a new file
-						log.Info("Local tmp file `%s` exists, but no record in leveldb ,go to download", localAbsFilePathTemp)
+						log.InfoF("Local tmp file `%s` exists, but no record in leveldb ,go to download", localAbsFilePathTemp)
 						downNewFile = true
 					}
 				} else {
@@ -503,15 +503,15 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	//wait for all tasks done
 	downWaitGroup.Wait()
 
-	log.Info("-------Download Result-------")
-	log.Info("%10s%10d", "Total:", totalFileCount)
-	log.Info("%10s%10d", "Skipped:", skipBySuffixes)
-	log.Info("%10s%10d", "Exists:", existsFileCount)
-	log.Info("%10s%10d", "Success:", successFileCount)
-	log.Info("%10s%10d", "Update:", updateFileCount)
-	log.Info("%10s%10d", "Failure:", failureFileCount)
-	log.Info("%10s%15s", "Duration:", time.Since(timeStart))
-	log.Info("-----------------------------")
+	log.InfoF("-------Download Result-------")
+	log.InfoF("%10s%10d", "Total:", totalFileCount)
+	log.InfoF("%10s%10d", "Skipped:", skipBySuffixes)
+	log.InfoF("%10s%10d", "Exists:", existsFileCount)
+	log.InfoF("%10s%10d", "Success:", successFileCount)
+	log.InfoF("%10s%10d", "Update:", updateFileCount)
+	log.InfoF("%10s%10d", "Failure:", failureFileCount)
+	log.InfoF("%10s%15s", "Duration:", time.Since(timeStart))
+	log.InfoF("-----------------------------")
 	fmt.Println("\nSee download log at path", downConfig.LogFile)
 
 	if failureFileCount > 0 {

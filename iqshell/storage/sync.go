@@ -63,7 +63,7 @@ func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, er
 	}
 	storePath := filepath.Join(QShellRootPath, ".qshell", "sync")
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		log.Error("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		log.ErrorF("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		err = mkdirErr
 		return
 	}
@@ -309,7 +309,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 		log.Error(pErr.Error())
 		time.Sleep(RETRY_INTERVAL)
 
-		log.Info("Retrying %d time for init server", retryTimes)
+		log.InfoF("Retrying %d time for init server", retryTimes)
 		retryTimes++
 	}
 
@@ -345,7 +345,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 			}
 			log.Error(rErr.Error())
 			time.Sleep(RETRY_INTERVAL)
-			log.Info("Retrying %d time get range for block [%d]", retryTimes, blkIndex)
+			log.InfoF("Retrying %d time get range for block [%d]", retryTimes, blkIndex)
 			retryTimes++
 		}
 		dataBytes := bf.Bytes()
@@ -364,7 +364,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 			log.Error(pErr.Error())
 			time.Sleep(RETRY_INTERVAL)
 
-			log.Info("Retrying %d time for upload block index:[%d]", retryTimes, blkIndex)
+			log.InfoF("Retrying %d time for upload block index:[%d]", retryTimes, blkIndex)
 			retryTimes++
 		}
 		//advance range offset
@@ -391,7 +391,7 @@ func (m *BucketManager) Sync(srcResUrl, bucket, key, upHost string, isResumableV
 		log.Error(pErr.Error())
 		time.Sleep(RETRY_INTERVAL)
 
-		log.Info("Retrying %d time for server to create file", retryTimes)
+		log.InfoF("Retrying %d time for server to create file", retryTimes)
 		retryTimes++
 	}
 

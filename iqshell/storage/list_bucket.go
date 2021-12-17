@@ -102,7 +102,7 @@ func (m *BucketManager) ListBucket2(bucket, prefix, marker, listResultFile, deli
 		listResultFh, openErr = os.OpenFile(listResultFile, mode, 0666)
 		if openErr != nil {
 			retErr = openErr
-			log.Error("Failed to open list result file `%s`", listResultFile)
+			log.ErrorF("Failed to open list result file `%s`", listResultFile)
 			return
 		}
 		defer listResultFh.Close()

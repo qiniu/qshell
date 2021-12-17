@@ -2,65 +2,63 @@ package export
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"os"
 	"sync"
 )
 
-type Export interface {
+type Exporter interface {
 	Export(a ...interface{})
 	ExportF(format string, a ...interface{})
 	Close() error
 }
 
-func New(file string) (Export, error) {
+func New(file string) (Exporter, error) {
 	if len(file) == 0 {
-		return nil, errors.New(alert.CannotEmpty("file path", ""))
+		return empty(), nil
 	}
 
 	fileHandler, err := os.Create(file)
 	if err != nil {
 		err = fmt.Errorf("open file: %s: %v\n", file, err)
-		return nil, err
+		return empty(), err
 	}
 
-	return &export{
+	return &exporter{
 		file:   fileHandler,
 		lock:   sync.RWMutex{},
 		writer: bufio.NewWriter(fileHandler),
 	}, nil
 }
 
-func Empty() Export {
-	return &export{}
+func empty() Exporter {
+	return &exporter{}
 }
 
-type export struct {
+type exporter struct {
 	file   *os.File
 	lock   sync.RWMutex
 	writer *bufio.Writer
 }
 
-var _ Export = (*export)(nil)
+var _ Exporter = (*exporter)(nil)
 
-func (e *export) Close() error {
+func (e *exporter) Close() error {
 	if e == nil || e.file == nil {
 		return nil
 	}
 	return e.file.Close()
 }
 
-func (e *export) Export(a ...interface{}) {
+func (e *exporter) Export(a ...interface{}) {
 	e.export(fmt.Sprint(a...))
 }
 
-func (e *export) ExportF(format string, a ...interface{}) {
+func (e *exporter) ExportF(format string, a ...interface{}) {
 	e.export(fmt.Sprintf(format, a...))
 }
 
-func (e *export) export(text string) {
+func (e *exporter) export(text string) {
 	if e != nil && e.writer != nil {
 		e.lock.Lock()
 		e.writer.WriteString(text)

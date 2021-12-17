@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
@@ -33,7 +34,11 @@ func BatchRename(info BatchRenameInfo) {
 		return
 	}
 
-	resultExport, err := NewBatchResultExport(info.BatchInfo)
+	resultExport, err := export.NewFileExport(export.FileExporterConfig{
+		SuccessExportFilePath:  info.BatchInfo.SuccessExportFilePath,
+		FailExportFilePath:     info.BatchInfo.FailExportFilePath,
+		OverrideExportFilePath: info.BatchInfo.OverrideExportFilePath,
+	})
 	if err != nil {
 		log.ErrorF("get export error:%v", err)
 		return
@@ -55,7 +60,7 @@ func BatchRename(info BatchRenameInfo) {
 type batchRenameHandler struct {
 	scanner      *batchScanner
 	info         *BatchRenameInfo
-	resultExport *BatchResultExport
+	resultExport *export.FileExporter
 }
 
 var _ rs.BatchHandler = (*batchRenameHandler)(nil)
