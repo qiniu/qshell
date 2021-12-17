@@ -12,7 +12,7 @@ type ReqIdInfo struct {
 	ReqId string
 }
 
-// 解析reqid， 打印人工可读的字符串
+// DecodeReqId 解析reqid， 打印人工可读的字符串
 func DecodeReqId(info ReqIdInfo) {
 	decodedBytes, err := base64.URLEncoding.DecodeString(info.ReqId)
 	if err != nil || len(decodedBytes) < 4 {

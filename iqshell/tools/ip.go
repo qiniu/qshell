@@ -68,7 +68,7 @@ func (this IpInfo) String() string {
 	return fmt.Sprintf("%s", this.Data)
 }
 
-// ip 具体的信息
+// IpData ip 具体的信息
 type IpData struct {
 	Country   string `json:"country"`
 	CountryId string `json:"country_id"`

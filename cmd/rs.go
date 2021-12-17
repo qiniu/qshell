@@ -26,6 +26,7 @@ var listBucketCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.ApiInfo.Bucket = args[0]
 			}
+			loadConfig()
 			operations.List(info)
 		},
 	}
@@ -46,6 +47,7 @@ var listBucketCmd2Builder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.ApiInfo.Bucket = args[0]
 			}
+			loadConfig()
 			operations.List(info)
 		},
 	}
@@ -74,6 +76,7 @@ var statCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
+			loadConfig()
 			operations.Status(info)
 		},
 	}
@@ -92,6 +95,7 @@ var forbiddenCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
+			loadConfig()
 			operations.ForbiddenObject(info)
 		},
 	}
@@ -110,6 +114,7 @@ var deleteCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
+			loadConfig()
 			operations.Delete(info)
 		},
 	}
@@ -128,6 +133,7 @@ var deleteAfterCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 				info.AfterDays = args[2]
 			}
+			loadConfig()
 			operations.Delete(info)
 		},
 	}
@@ -149,6 +155,7 @@ var moveCmdBuilder = func() *cobra.Command {
 			if len(info.DestKey) == 0 {
 				info.DestKey = info.SourceKey
 			}
+			loadConfig()
 			operations.Move(info)
 		},
 	}
@@ -172,6 +179,7 @@ var copyCmdBuilder = func() *cobra.Command {
 			if len(info.DestKey) == 0 {
 				info.DestKey = info.SourceKey
 			}
+			loadConfig()
 			operations.Copy(info)
 		},
 	}
@@ -192,6 +200,7 @@ var changeMimeCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 				info.Mime = args[2]
 			}
+			loadConfig()
 			operations.ChangeMime(info)
 		},
 	}
@@ -211,6 +220,7 @@ var changeTypeCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 				info.Type = args[2]
 			}
+			loadConfig()
 			operations.ChangeType(info)
 		},
 	}
@@ -230,6 +240,7 @@ var privateUrlCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Deadline = args[1]
 			}
+			loadConfig()
 			operations.PrivateUrl(info)
 		},
 	}
@@ -248,6 +259,7 @@ var saveAsCmdBuilder = func() *cobra.Command {
 				info.SaveBucket = args[1]
 				info.SaveKey = args[2]
 			}
+			loadConfig()
 			operations.SaveAs(info)
 		},
 	}
@@ -265,6 +277,7 @@ var mirrorUpdateCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
+			loadConfig()
 			operations.MirrorUpdate(info)
 		},
 	}
@@ -282,6 +295,7 @@ var getCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
+			loadConfig()
 			operations.GetObject(info)
 		},
 	}
@@ -302,6 +316,7 @@ var fetchCmdBuilder = func() *cobra.Command {
 				info.FromUrl = args[0]
 				info.Bucket = args[1]
 			}
+			loadConfig()
 			operations.Fetch(info)
 		},
 	}

@@ -10,7 +10,7 @@ type TimestampInfo struct {
 	Value string
 }
 
-// 转化unix时间戳为可读的字符串
+// Timestamp2Date 转化unix时间戳为可读的字符串
 func Timestamp2Date(info TimestampInfo) {
 	ts, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {
@@ -22,7 +22,7 @@ func Timestamp2Date(info TimestampInfo) {
 	log.Alert(t.String())
 }
 
-// 转化毫秒时间戳到人工可读的字符串
+// TimestampMilli2Date 转化毫秒时间戳到人工可读的字符串
 func TimestampMilli2Date(info TimestampInfo) {
 	tms, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {

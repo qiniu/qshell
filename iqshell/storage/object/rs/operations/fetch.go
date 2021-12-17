@@ -28,31 +28,58 @@ type BatchFetchInfo struct {
 	Bucket    string
 }
 
-// BatchFetch 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
-//func BatchFetch(info BatchFetchInfo) {
-//	if !prepareToBatch(info.BatchInfo) {
-//		return
-//	}
-//
-//	resultExport, err := NewBatchResultExport(info.BatchInfo)
-//	if err != nil {
-//		log.ErrorF("get export error:%v", err)
-//		return
-//	}
-//
-//	scanner, err := newBatchScanner(info.BatchInfo)
-//	if err != nil {
-//		log.ErrorF("get scanner error:%v", err)
-//		return
-//	}
-//
-//	rs.BatchWithHandler(&batchFetchHandler{
-//		scanner:      scanner,
-//		info:         &info,
-//		resultExport: resultExport,
-//	})
-//
-//}
+//BatchFetch 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
+func BatchFetch(info BatchFetchInfo) {
+	if !prepareToBatch(info.BatchInfo) {
+		return
+	}
+
+	resultExport, err := NewBatchResultExport(info.BatchInfo)
+	if err != nil {
+		log.ErrorF("get export error:%v", err)
+		return
+	}
+
+	scanner, err := newBatchScanner(info.BatchInfo)
+	if err != nil {
+		log.ErrorF("get scanner error:%v", err)
+		return
+	}
+
+	for {
+		line, success := scanner.scanLine()
+		if !success {
+			break
+		}
+
+		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
+		key, fromUrl := "", ""
+		if len(items) > 0 {
+			fromUrl = items[0]
+			if len(items) > 1 {
+				key = items[1]
+			} else if k, err := utils.KeyFromUrl(fromUrl); err == nil {
+				key = k
+			}
+		}
+		if key != "" && fromUrl != "" {
+			_, err := rs.Fetch(rs.FetchApiInfo{
+				Bucket:  info.Bucket,
+				Key:     key,
+				FromUrl: fromUrl,
+			})
+
+			if err != nil {
+				resultExport.Fail().ExportF("%s\t%s\t%v", fromUrl, key, err)
+				log.ErrorF("Fetch '%s' => %s:%s Failed, Error: %v", fromUrl, info.Bucket, key, err)
+			} else {
+				resultExport.Success().ExportF("%s\t%s", fromUrl, info.Bucket)
+				log.AlertF("Fetch '%s' => %s:%s Success", fromUrl, info.Bucket, key)
+			}
+		}
+	}
+}
+
 //
 //type batchFetchHandler struct {
 //	scanner      *batchScanner

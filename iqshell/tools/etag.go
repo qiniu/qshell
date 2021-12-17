@@ -10,7 +10,7 @@ type EtagInfo struct {
 	FilePath string
 }
 
-// 计算文件的hash值，使用七牛的etag算法
+// CreateEtag 计算文件的hash值，使用七牛的etag算法
 func CreateEtag(info EtagInfo) {
 	if len(info.FilePath) == 0 {
 		log.Error(alert.CannotEmpty("file path", ""))

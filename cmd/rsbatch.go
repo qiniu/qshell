@@ -47,9 +47,9 @@ var (
 
 func unescape(cmd *cobra.Command, args []string) {
 	sep = utils.SimpleUnescape(&sep)
-	if DebugFlag {
-		fmt.Printf("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, deadline: %v, bsuccessFname: %q, bfailureFname: %q, sep: %q, bfetchUphost: %q\n", forceFlag, overwriteFlag, worker, inputFile, deadline, bsuccessFname, bfailureFname, sep, bfetchUphost)
-	}
+	//if DebugFlag {
+	//	fmt.Printf("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, deadline: %v, bsuccessFname: %q, bfailureFname: %q, sep: %q, bfetchUphost: %q\n", forceFlag, overwriteFlag, worker, inputFile, deadline, bsuccessFname, bfailureFname, sep, bfetchUphost)
+	//}
 }
 
 var batchStatCmdBuilder = func() *cobra.Command {
@@ -63,6 +63,7 @@ var batchStatCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
+			loadConfig()
 			operations.BatchStatus(info)
 		},
 	}
@@ -82,6 +83,7 @@ var batchDeleteCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
+			loadConfig()
 			operations.BatchDelete(info)
 		},
 	}
@@ -105,6 +107,7 @@ var batchChangeMimeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
+			loadConfig()
 			operations.BatchChangeMime(info)
 		},
 	}
@@ -128,6 +131,7 @@ var batchChangeTypeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
+			loadConfig()
 			operations.BatchChangeType(info)
 		},
 	}
@@ -151,6 +155,7 @@ var batchDeleteAfterCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
+			loadConfig()
 			operations.BatchDeleteAfter(info)
 		},
 	}
@@ -173,6 +178,7 @@ var batchMoveCmdBuilder = func() *cobra.Command {
 				info.SourceBucket = args[0]
 				info.DestBucket = args[1]
 			}
+			loadConfig()
 			operations.BatchMove(info)
 		},
 	}
@@ -197,6 +203,7 @@ var batchRenameCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
+			loadConfig()
 			operations.BatchRename(info)
 		},
 	}
@@ -222,6 +229,7 @@ var batchCopyCmdBuilder = func() *cobra.Command {
 				info.SourceBucket = args[0]
 				info.DestBucket = args[1]
 			}
+			loadConfig()
 			operations.BatchCopy(info)
 		},
 	}
@@ -242,6 +250,7 @@ var batchSignCmdBuilder = func() *cobra.Command {
 		Short: "Batch create the private url from the public url list file",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
+			loadConfig()
 			operations.BatchPrivateUrl(info)
 		},
 	}
@@ -250,6 +259,35 @@ var batchSignCmdBuilder = func() *cobra.Command {
 	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
 	return cmd
 }
+
+var batchFetchCmdBuilder = func() *cobra.Command {
+	//TODO: uphost 配置
+	var upHost = ""
+	var info = operations.BatchFetchInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
+		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			if len(upHost) > 0 {
+				cfg.CmdCfg.Hosts.Up = []string{upHost}
+			}
+			loadConfig()
+			operations.BatchFetch(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
+	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "rename success list")
+	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "rename failure list")
+	cmd.Flags().StringVarP(&upHost, "up-host", "u", "", "fetch uphost")
+	cmd.Flags().StringVarP(&info.BatchInfo.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields")
+	return cmd
+}
+
 var (
 	batchFetchCmd = &cobra.Command{
 		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
@@ -277,12 +315,9 @@ func init() {
 		batchChangeMimeCmdBuilder(),
 		batchChangeTypeCmdBuilder(),
 		batchSignCmdBuilder(),
-		batchFetchCmd,
+		batchFetchCmdBuilder(),
 	}
 	RootCmd.AddCommand(cmds...)
-	for _, cmd := range cmds {
-		cmd.PersistentPreRun = unescape
-	}
 }
 
 type fetchConfig struct {

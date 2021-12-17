@@ -26,7 +26,7 @@ type TokenInfo struct {
 	PutPolicyFilePath string
 }
 
-// QBox Token, 一般bucket相关的接口需要这个token
+// CreateQBoxToken QBox Token, 一般bucket相关的接口需要这个token
 func CreateQBoxToken(info TokenInfo) {
 	mac, req, mErr := getMacAndRequest(info)
 	if mErr != nil {

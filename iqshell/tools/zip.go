@@ -12,7 +12,7 @@ type ZipInfo struct {
 	UnzipPath   string
 }
 
-// 解压使用mkzip压缩的文件
+// Unzip 解压使用mkzip压缩的文件
 func Unzip(info ZipInfo) {
 	if len(info.ZipFilePath) == 0 {
 		log.Error(alert.CannotEmpty("unzip file path", ""))

@@ -12,6 +12,7 @@ var bucketsCmdBuilder = func() *cobra.Command {
 		Short: "Get all buckets of the account",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
+			loadConfig()
 			operations.List(info)
 		},
 	}
@@ -28,6 +29,7 @@ var domainsCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
+			loadConfig()
 			operations.ListDomains(info)
 		},
 	}
