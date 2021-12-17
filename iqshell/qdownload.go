@@ -225,10 +225,10 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 
 	//daily rotate
 	logCfg := BeeLogConfig{
-		Filename: downConfig.LogFile,
-		Level:    logLevel,
-		Daily:    true,
-		MaxDays:  logRotate,
+		Filename:     downConfig.LogFile,
+		Level:        logLevel,
+		Daily:        true,
+		MaxDays:      logRotate,
 		MinFileCount: downConfig.LogMinFileCount,
 	}
 	logs.SetLogger(QiniuAdapterFile, logCfg.ToJson())

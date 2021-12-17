@@ -1,6 +1,5 @@
 package iqshell
 
-
 import (
 	"bytes"
 	"encoding/json"
@@ -381,7 +380,7 @@ func (w *fileLogWriter) deleteOldLog() {
 	for i := 0; i < len(files)-w.MaxFilesCurFiles; i++ {
 		info := files[i]
 		path := info.Name()
-		func (path string, info os.FileInfo) {
+		func(path string, info os.FileInfo) {
 			defer func() {
 				if r := recover(); r != nil {
 					fmt.Fprintf(os.Stderr, "Unable to delete old log '%s', error: %v\n", path, r)
@@ -477,7 +476,7 @@ func formatTimeHeader(when time.Time) ([]byte, int, int) {
 }
 
 const QiniuAdapterFile = "qiniu_file"
+
 func init() {
 	logs.Register(QiniuAdapterFile, newFileWriter)
 }
-
