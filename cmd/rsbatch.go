@@ -261,7 +261,6 @@ var batchSignCmdBuilder = func() *cobra.Command {
 }
 
 var batchFetchCmdBuilder = func() *cobra.Command {
-	//TODO: uphost 配置
 	var upHost = ""
 	var info = operations.BatchFetchInfo{}
 	var cmd = &cobra.Command{
@@ -288,23 +287,7 @@ var batchFetchCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var (
-	batchFetchCmd = &cobra.Command{
-		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
-		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
-		Args:  cobra.ExactArgs(1),
-		Run:   BatchFetch,
-	}
-)
-
 func init() {
-	batchFetchCmd.Flags().StringVarP(&inputFile, "input-file", "i", "", "urls list file")
-	batchFetchCmd.Flags().IntVarP(&worker, "worker", "c", 1, "worker count")
-	batchFetchCmd.Flags().StringVarP(&bsuccessFname, "success-list", "s", "", "file to save batch fetch success list")
-	batchFetchCmd.Flags().StringVarP(&bfailureFname, "failure-list", "e", "", "file to save batch fetch failure list")
-	batchFetchCmd.Flags().StringVarP(&bfetchUphost, "up-host", "u", "", "fetch uphost")
-	batchFetchCmd.Flags().StringVarP(&sep, "sep", "F", "\t", "Separator used for split line fields")
-
 	cmds := []*cobra.Command{
 		batchStatCmdBuilder(),
 		batchCopyCmdBuilder(),
