@@ -201,10 +201,11 @@ func (w *fileLogWriter) initFd() error {
 	if err != nil {
 		return fmt.Errorf("get stat err: %s", err)
 	}
+	openTime := time.Now()
 	w.maxSizeCurSize = int(fInfo.Size())
-	w.dailyOpenTime = time.Now()
+	w.dailyOpenTime = openTime
 	w.dailyOpenDate = w.dailyOpenTime.Day()
-	w.hourlyOpenTime = time.Now()
+	w.hourlyOpenTime = openTime
 	w.hourlyOpenDate = w.hourlyOpenTime.Hour()
 	w.maxLinesCurLines = 0
 	if w.Hourly {
@@ -364,7 +365,9 @@ func (w *fileLogWriter) deleteOldLog() {
 
 	files := make([]os.FileInfo, 0, w.MinFileCount)
 	for _, f := range allFiles {
-		if !f.IsDir() {
+		p := filepath.Join(dir, f.Name())
+		if !f.IsDir() && strings.HasPrefix(filepath.Base(p), filepath.Base(w.fileNameOnly)) &&
+			strings.HasSuffix(filepath.Base(p), w.suffix) {
 			files = append(files, f)
 		}
 	}
@@ -377,9 +380,10 @@ func (w *fileLogWriter) deleteOldLog() {
 		return files[i].ModTime().Unix() < files[j].ModTime().Unix()
 	})
 
-	for i := 0; i < len(files)-w.MaxFilesCurFiles; i++ {
+	deleteCount := len(files) - w.MinFileCount
+	for i := 0; i < deleteCount; i++ {
 		info := files[i]
-		path := info.Name()
+		p := filepath.Join(dir, info.Name())
 		func(path string, info os.FileInfo) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -392,20 +396,14 @@ func (w *fileLogWriter) deleteOldLog() {
 			}
 			if w.Hourly {
 				if !info.IsDir() && info.ModTime().Add(1*time.Hour*time.Duration(w.MaxHours)).Before(time.Now()) {
-					if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
-						strings.HasSuffix(filepath.Base(path), w.suffix) {
-						os.Remove(path)
-					}
+					os.Remove(path)
 				}
 			} else if w.Daily {
 				if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
-					if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
-						strings.HasSuffix(filepath.Base(path), w.suffix) {
-						os.Remove(path)
-					}
+					os.Remove(path)
 				}
 			}
-		}(path, info)
+		}(p, info)
 	}
 }
 

@@ -37,7 +37,8 @@ func init() {
 // 根据文件列表下载文件功能在文档中还没有公开，遇到有这个需求的客户比较少
 func QiniuDownload(cmd *cobra.Command, params []string) {
 
-	var downloadConfig iqshell.DownloadConfig
+	downloadConfig := &iqshell.DownloadConfig{}
+	downloadConfig.InitData()
 
 	configFile := params[0]
 
@@ -54,7 +55,7 @@ func QiniuDownload(cmd *cobra.Command, params []string) {
 
 	// remove windows utf-8 BOM
 	content = bytes.TrimPrefix(content, []byte("\xef\xbb\xbf"))
-	uErr := json.Unmarshal(content, &downloadConfig)
+	uErr := json.Unmarshal(content, downloadConfig)
 
 	if uErr != nil {
 		fmt.Fprintf(os.Stderr, "decode configFile content: %v\n", uErr)
@@ -83,5 +84,5 @@ func QiniuDownload(cmd *cobra.Command, params []string) {
 			threadCount = iqshell.MAX_DOWNLOAD_THREAD_COUNT
 		}
 	}
-	iqshell.QiniuDownload(int(threadCount), &downloadConfig)
+	iqshell.QiniuDownload(int(threadCount), downloadConfig)
 }

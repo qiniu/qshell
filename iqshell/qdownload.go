@@ -60,7 +60,11 @@ type DownloadConfig struct {
 	batchNum int
 }
 
-func (d *DownloadConfig) init() {
+func (d *DownloadConfig) InitData() {
+	d.LogMinFileCount = 7
+}
+
+func (d *DownloadConfig) check() {
 	if d.batchNum <= 0 {
 		d.batchNum = 1000
 	}
@@ -210,7 +214,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 		logLevel = logs.LevelInfo
 	}
 
-	//init log writer
+	//check log writer
 	if downConfig.LogFile == "" {
 		//set default log file
 		downConfig.LogFile = defaultLogFile
@@ -219,7 +223,7 @@ func QiniuDownload(threadCount int, downConfig *DownloadConfig) {
 	if !downConfig.LogStdout {
 		logs.GetBeeLogger().DelLogger(logs.AdapterConsole)
 	}
-	downConfig.init()
+	downConfig.check()
 	//open log file
 	fmt.Println("Writing download log to file", downConfig.LogFile)
 

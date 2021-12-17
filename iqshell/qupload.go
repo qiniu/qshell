@@ -112,6 +112,10 @@ type UploadConfig struct {
 	Plock           sync.Mutex
 }
 
+func (cfg *UploadConfig) InitData() {
+	cfg.LogMinFileCount = 7
+}
+
 func (cfg *UploadConfig) Check() {
 	// 验证大小
 	if cfg.ResumableAPIV2PartSize <= 0 {

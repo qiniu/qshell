@@ -40,6 +40,8 @@ func init() {
 }
 
 func parseUploadConfigFile(uploadConfigFile string, uploadConfig *iqshell.UploadConfig) (err error) {
+	uploadConfig.InitData()
+
 	//read upload config
 	if uploadConfigFile == "" {
 		err = fmt.Errorf("config filename is empty")

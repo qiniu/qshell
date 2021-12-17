@@ -62,7 +62,8 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 |public|空间为公开空间，下载时不会对下载 URL 进行签名，可以提升CDN域名性能，默认为私有空间|N|
 |log_level|下载日志输出级别，可选值为`debug`,`info`,`warn`,`error`,默认`info`|Y|
 |log_file|下载日志的输出文件，如果不指定会输出到qshell工作目录下默认的文件中，文件名可以在终端输出看到|Y|
-|log_rotate|下载日志文件的切换周期，单位为天，默认为1天即切换到新的下载日志文件|Y|
+|log_rotate|下载日志文件会按天进行保存，每一天的日志会保存为一个日志文件；log_rotate 表示日志最大能保留的时间，超过则会被删除；当新的日志文件创建时检查并删除过期日志文件；单位为天，默认为 1天|Y|
+|log_min_file_count|下载日志文件保存的最小数量；当 log_rotate 到期在删除过期日志，通过设置此值可以保留最近的 log_min_file_count 个日志|
 |log_stdout|下载日志是否同时输出一份到标准终端，默认为false，主要在调试下载功能时可以指定为true|Y|
 
 

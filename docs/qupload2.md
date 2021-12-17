@@ -36,7 +36,8 @@ Flags:
       --key-prefix string           key prefix prepended to dest file key
       --log-file string             log file
       --log-level string            log level (default "info")
-      --log-rotate int              log rotate days (default 1)
+      --log-rotate int              log save max days, delete when new log file created (default 1)
+      --log-min-file-count          min log file count in the log dir (default 7)
       --overwrite                   overwrite the file of same key in bucket
       --overwrite-list string       upload success (overwrite) file list
       --put-threshold int           chunk upload threshold

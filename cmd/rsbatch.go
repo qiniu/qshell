@@ -215,12 +215,10 @@ func (fc *fetchConfig) initFileExporter() {
 
 // GetBucketManagerWithConfig 会使用os.Exit推出，因此该方法需要在main gouroutine中调用
 func (fc *fetchConfig) initBucketManager() {
-
-	cfg := storage.Config{
-		IoHost:  fc.upHost,
-		ApiHost: iqshell.ApiHost(),
+	fc.bm = iqshell.GetBucketManager()
+	if len(fc.upHost) > 0 {
+		fc.bm.Cfg.IoHost = fc.upHost
 	}
-	fc.bm = iqshell.GetBucketManagerWithConfig(&cfg)
 }
 
 // initUpHost需要在主goroutine中调用
