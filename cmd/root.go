@@ -110,9 +110,9 @@ func initConfig() {
 	}
 	logs.SetLogger(logs.AdapterConsole)
 
-	var jsonConfigFile string
+	jsonConfigFile := cfgFile
 
-	if cfgFile != "" {
+	if jsonConfigFile != "" {
 		if !strings.HasSuffix(cfgFile, ".json") {
 			jsonConfigFile = cfgFile + ".json"
 			os.Rename(cfgFile, jsonConfigFile)
@@ -156,5 +156,7 @@ func initConfig() {
 			fmt.Fprintf(os.Stderr, "read config file: %v\n", rErr)
 		}
 	}
+
+	storage.UcHost = iqshell.UcHost()
 	os.Rename(jsonConfigFile, cfgFile)
 }
