@@ -241,7 +241,7 @@ func QiniuUpload(threadCount int, uploadConfig *config.UploadConfig, exporter *e
 	log.InfoF("%20s%10d", "Skipped:", skippedFileCount)
 	log.InfoF("%20s%15s", "Duration:", time.Since(timeStart))
 	log.InfoF("----------------------------------------")
-	fmt.Println("\nSee upload log at path", uploadConfig.LogFile)
+	log.Alert("See upload log at path:", uploadConfig.LogFile)
 
 	if failureFileCount > 0 {
 		os.Exit(data.STATUS_ERROR)
