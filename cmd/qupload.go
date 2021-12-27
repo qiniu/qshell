@@ -7,7 +7,7 @@ import (
 )
 
 var uploadCmdBuilder = func() *cobra.Command {
-	info := operations.UploadInfo{}
+	info := operations.BatchUploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "qupload <quploadConfigFile>",
 		Short: "Batch upload files to the qiniu bucket",
@@ -16,7 +16,7 @@ var uploadCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.ConfigFile = args[0]
 			}
-			operations.Upload(info)
+			operations.BatchUpload(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
@@ -29,7 +29,7 @@ var uploadCmdBuilder = func() *cobra.Command {
 }
 
 var upload2CmdBuilder = func() *cobra.Command {
-	info := operations.UploadInfo{}
+	info := operations.BatchUploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "qupload2",
 		Short: "Batch upload files to the qiniu bucket",
@@ -37,7 +37,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.ConfigFile = args[0]
 			}
-			operations.Upload(info)
+			operations.BatchUpload(info)
 		},
 	}
 	cmd.Flags().Int64Var(&info.UpThreadCount, "thread-count", 0, "multiple thread count")
