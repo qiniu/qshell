@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 )
 
 type UploadConfig struct {
@@ -58,7 +57,6 @@ type UploadConfig struct {
 	CallbackUrls    string `json:"callback_urls,omitempty"`
 	CallbackHost    string `json:"callback_host,omitempty"`
 	PutPolicy       storage.PutPolicy
-	Plock           sync.Mutex
 }
 
 func (cfg *UploadConfig) Check() {
@@ -315,16 +313,14 @@ func (cfg *UploadConfig) PrepareLogger(storePath, jobId string) {
 
 func (cfg *UploadConfig) UploadToken(mac *qbox.Mac, uploadFileKey string) string {
 
-	cfg.Plock.Lock()
-	defer cfg.Plock.Unlock()
-
-	cfg.PutPolicy.Scope = cfg.Bucket
+	policy := cfg.PutPolicy
+	policy.Scope = cfg.Bucket
 	if cfg.Overwrite {
-		cfg.PutPolicy.Scope = fmt.Sprintf("%s:%s", cfg.Bucket, uploadFileKey)
-		cfg.PutPolicy.InsertOnly = 0
+		policy.Scope = fmt.Sprintf("%s:%s", cfg.Bucket, uploadFileKey)
+		policy.InsertOnly = 0
 	}
 
-	cfg.PutPolicy.FileType = cfg.FileType
-	cfg.PutPolicy.Expires = 7 * 24 * 3600
-	return cfg.PutPolicy.UploadToken(mac)
+	policy.FileType = cfg.FileType
+	policy.Expires = 7 * 24 * 3600
+	return policy.UploadToken(mac)
 }
