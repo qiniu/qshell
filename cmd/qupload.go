@@ -1,136 +1,83 @@
 package cmd
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
-
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
-
-	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
 	"github.com/spf13/cobra"
 )
 
-var qUploadCmd = &cobra.Command{
-	Use:   "qupload <quploadConfigFile>",
-	Short: "Batch upload files to the qiniu bucket",
-	Args:  cobra.ExactArgs(1),
-	Run:   QiniuUpload,
+var uploadCmdBuilder = func() *cobra.Command {
+	info := operations.UploadInfo{}
+	cmd := &cobra.Command{
+		Use:   "qupload <quploadConfigFile>",
+		Short: "Batch upload files to the qiniu bucket",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.ConfigFile = args[0]
+			}
+			operations.Upload(info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
+	cmd.Flags().StringVarP(&info.OverrideExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
+	cmd.Flags().Int64VarP(&info.UpThreadCount, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.UploadConfig.CallbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	cmd.Flags().StringVarP(&info.UploadConfig.CallbackHost, "callback-host", "T", "", "upload callback host")
+	return cmd
 }
 
-var (
-	successFname   string
-	failureFname   string
-	overwriteFname string
-	upthreadCount  int64
-	uploadConfig   storage2.UploadConfig
-)
+var upload2CmdBuilder = func() *cobra.Command {
+	info := operations.UploadInfo{}
+	cmd := &cobra.Command{
+		Use:   "qupload2",
+		Short: "Batch upload files to the qiniu bucket",
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				info.ConfigFile = args[0]
+			}
+			operations.Upload(info)
+		},
+	}
+	cmd.Flags().Int64Var(&info.UpThreadCount, "thread-count", 0, "multiple thread count")
+	cmd.Flags().BoolVarP(&info.UploadConfig.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().Int64Var(&info.UploadConfig.ResumableAPIV2PartSize, "resumable-api-v2-part-size", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload")
+	cmd.Flags().StringVar(&info.UploadConfig.SrcDir, "src-dir", "", "src dir to upload")
+	cmd.Flags().StringVar(&info.UploadConfig.FileList, "file-list", "", "file list to upload")
+	cmd.Flags().StringVar(&info.UploadConfig.Bucket, "bucket", "", "bucket")
+	cmd.Flags().Int64Var(&info.UploadConfig.PutThreshold, "put-threshold", 0, "chunk upload threshold")
+	cmd.Flags().StringVar(&info.UploadConfig.KeyPrefix, "key-prefix", "", "key prefix prepended to dest file key")
+	cmd.Flags().BoolVar(&info.UploadConfig.IgnoreDir, "ignore-dir", false, "ignore the dir in the dest file key")
+	cmd.Flags().BoolVar(&info.UploadConfig.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
+	cmd.Flags().BoolVar(&info.UploadConfig.CheckExists, "check-exists", false, "check file key whether in bucket before upload")
+	cmd.Flags().BoolVar(&info.UploadConfig.CheckHash, "check-hash", false, "check hash")
+	cmd.Flags().BoolVar(&info.UploadConfig.CheckSize, "check-size", false, "check file size")
+	cmd.Flags().StringVar(&info.UploadConfig.SkipFilePrefixes, "skip-file-prefixes", "", "skip files with these file prefixes")
+	cmd.Flags().StringVar(&info.UploadConfig.SkipPathPrefixes, "skip-path-prefixes", "", "skip files with these relative path prefixes")
+	cmd.Flags().StringVar(&info.UploadConfig.SkipFixedStrings, "skip-fixed-strings", "", "skip files with the fixed string in the name")
+	cmd.Flags().StringVar(&info.UploadConfig.SkipSuffixes, "skip-suffixes", "", "skip files with these suffixes")
+	cmd.Flags().StringVar(&info.UploadConfig.UpHost, "up-host", "", "upload host")
+	cmd.Flags().StringVar(&info.UploadConfig.BindUpIp, "bind-up-ip", "", "upload host ip to bind")
+	cmd.Flags().StringVar(&info.UploadConfig.BindRsIp, "bind-rs-ip", "", "rs host ip to bind")
+	cmd.Flags().StringVar(&info.UploadConfig.BindNicIp, "bind-nic-ip", "", "local network interface card to bind")
+	cmd.Flags().BoolVar(&info.UploadConfig.RescanLocal, "rescan-local", false, "rescan local dir to upload newly add files")
+	cmd.Flags().StringVar(&info.UploadConfig.LogFile, "log-file", "", "log file")
+	cmd.Flags().StringVar(&info.UploadConfig.LogLevel, "log-level", "info", "log level")
+	cmd.Flags().IntVar(&info.UploadConfig.LogRotate, "log-rotate", 1, "log rotate days")
+	cmd.Flags().IntVar(&info.UploadConfig.FileType, "file-type", 0, "set storage file type")
+	cmd.Flags().StringVar(&info.SuccessExportFilePath, "success-list", "", "upload success file list")
+	cmd.Flags().StringVar(&info.FailExportFilePath, "failure-list", "", "upload failure file list")
+	cmd.Flags().StringVar(&info.OverrideExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
+	cmd.Flags().StringVarP(&info.UploadConfig.CallbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	cmd.Flags().StringVarP(&info.UploadConfig.CallbackHost, "callback-host", "T", "", "upload callback host")
+	return cmd
+}
+
 
 func init() {
-	qUploadCmd.Flags().StringVarP(&successFname, "success-list", "s", "", "upload success (all) file list")
-	qUploadCmd.Flags().StringVarP(&failureFname, "failure-list", "f", "", "upload failure file list")
-	qUploadCmd.Flags().StringVarP(&overwriteFname, "overwrite-list", "w", "", "upload success (overwrite) file list")
-	qUploadCmd.Flags().Int64VarP(&upthreadCount, "worker", "c", 1, "worker count")
-	qUploadCmd.Flags().StringVarP(&callbackUrls, "callback-urls", "l", "", "upload callback urls, separated by comma")
-	qUploadCmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
-	RootCmd.AddCommand(qUploadCmd)
-}
-
-func parseUploadConfigFile(uploadConfigFile string, uploadConfig *storage2.UploadConfig) (err error) {
-	//read upload config
-	if uploadConfigFile == "" {
-		err = fmt.Errorf("config filename is empty")
-		return
-	}
-	fp, oErr := os.Open(uploadConfigFile)
-	if oErr != nil {
-		err = fmt.Errorf("Open upload config file ``%s`: %v\n", uploadConfigFile, oErr)
-		return
-	}
-	defer fp.Close()
-
-	configData, rErr := ioutil.ReadAll(fp)
-	if rErr != nil {
-		err = fmt.Errorf("Read upload config file `%s`: %v\n", uploadConfigFile, rErr)
-		return
-	}
-	//remove UTF-8 BOM
-	configData = bytes.TrimPrefix(configData, []byte("\xef\xbb\xbf"))
-	uErr := json.Unmarshal(configData, uploadConfig)
-	if uErr != nil {
-		err = fmt.Errorf("Parse upload config file `%s`: %v\n", uploadConfigFile, uErr)
-		return
-	}
-	return
-}
-
-// [qupload]命令， 上传本地文件到七牛存储中
-// 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中; 可以设置多线程上传，默认的线程区间在[iqshell.MIN_UPLOAD_THREAD_COUNT, iqshell.MAX_UPLOAD_THREAD_COUNT]
-func QiniuUpload(cmd *cobra.Command, params []string) {
-
-	configFile := params[0]
-
-	pErr := parseUploadConfigFile(configFile, &uploadConfig)
-	if pErr != nil {
-		log.Error(fmt.Sprintf("parse config file: %s: %v\n", configFile, pErr))
-		os.Exit(data.STATUS_HALT)
-	}
-
-	if uploadConfig.FileType != 1 && uploadConfig.FileType != 0 {
-		log.Error("Wrong Filetype, It should be 0 or 1 ")
-		os.Exit(data.STATUS_HALT)
-	}
-
-	srcFileInfo, err := os.Stat(uploadConfig.SrcDir)
-	if err != nil {
-		log.Error("Upload config error for parameter `SrcDir`,", err)
-		os.Exit(data.STATUS_HALT)
-	}
-
-	if !srcFileInfo.IsDir() {
-		log.Error("Upload src dir should be a directory")
-		os.Exit(data.STATUS_HALT)
-	}
-	policy := storage.PutPolicy{}
-
-	if (callbackUrls == "" && callbackHost != "") || (callbackUrls != "" && callbackHost == "") {
-		fmt.Fprintf(os.Stderr, "callbackUrls and callback must exist at the same time\n")
-		os.Exit(1)
-	}
-	if (uploadConfig.CallbackUrls == "" && uploadConfig.CallbackHost != "") || (uploadConfig.CallbackUrls != "" && uploadConfig.CallbackHost == "") {
-		fmt.Fprintf(os.Stderr, "callbackUrls and callback must exist at the same time\n")
-		os.Exit(1)
-	}
-	if (callbackHost != "" && callbackUrls != "") || (uploadConfig.CallbackHost != "" && uploadConfig.CallbackUrls != "") {
-		callbackUrls = strings.Replace(callbackUrls, ",", ";", -1)
-		policy.CallbackHost = callbackHost
-		policy.CallbackURL = callbackUrls
-		policy.CallbackBody = "key=$(key)&hash=$(etag)"
-		policy.CallbackBodyType = "application/x-www-form-urlencoded"
-	}
-	uploadConfig.PutPolicy = policy
-
-	//upload
-	if upthreadCount < storage2.MIN_UPLOAD_THREAD_COUNT || upthreadCount > storage2.MAX_UPLOAD_THREAD_COUNT {
-		log.Info("Tip: you can set <ThreadCount> value between %d and %d to improve speed\n",
-			storage2.MIN_UPLOAD_THREAD_COUNT, storage2.MAX_UPLOAD_THREAD_COUNT)
-
-		if upthreadCount < storage2.MIN_UPLOAD_THREAD_COUNT {
-			upthreadCount = storage2.MIN_UPLOAD_THREAD_COUNT
-		} else if upthreadCount > storage2.MAX_UPLOAD_THREAD_COUNT {
-			upthreadCount = storage2.MAX_UPLOAD_THREAD_COUNT
-		}
-	}
-
-	fileExporter, fErr := storage2.NewFileExporter(successFname, failureFname, overwriteFname)
-	if fErr != nil {
-		log.Error("initialize fileExporter: ", fErr)
-		os.Exit(data.STATUS_HALT)
-	}
-	storage2.QiniuUpload(int(upthreadCount), &uploadConfig, fileExporter)
+	RootCmd.AddCommand(
+		uploadCmdBuilder(),
+		upload2CmdBuilder(),
+		)
 }

@@ -31,7 +31,7 @@ func Upload(info UploadInfo) {
 	if len(info.ConfigFile) > 0 {
 		pErr := parseUploadConfigFile(info.ConfigFile, &(info.UploadConfig))
 		if pErr != nil {
-			log.Error(fmt.Sprintf("parse config file: %s: %v\n", info.ConfigFile, pErr))
+			log.Error(fmt.Sprintf("Upload parse config file: %s: %v\n", info.ConfigFile, pErr))
 			os.Exit(data.STATUS_HALT)
 		}
 	}
@@ -52,17 +52,20 @@ func Upload(info UploadInfo) {
 		log.Error("Upload src dir should be a directory")
 		os.Exit(data.STATUS_HALT)
 	}
+
+	if uploadConfig.Bucket == "" {
+		fmt.Println("Upload config no `bucket` specified")
+		os.Exit(data.STATUS_HALT)
+	}
+
 	policy := storage.PutPolicy{}
 
 	if (uploadConfig.CallbackUrls == "" && uploadConfig.CallbackHost != "") || (uploadConfig.CallbackUrls != "" && uploadConfig.CallbackHost == "") {
 		log.Error("callbackUrls and callback must exist at the same time")
 		os.Exit(1)
 	}
-	if (uploadConfig.CallbackUrls == "" && uploadConfig.CallbackHost != "") || (uploadConfig.CallbackUrls != "" && uploadConfig.CallbackHost == "") {
-		log.Error("callbackUrls and callback must exist at the same time")
-		os.Exit(1)
-	}
-	if (uploadConfig.CallbackHost != "" && uploadConfig.CallbackUrls != "") || (uploadConfig.CallbackHost == "" && uploadConfig.CallbackUrls == "") {
+
+	if uploadConfig.CallbackHost != "" && uploadConfig.CallbackUrls != "" {
 		callbackUrls := strings.Replace(uploadConfig.CallbackUrls, ",", ";", -1)
 		policy.CallbackHost = uploadConfig.CallbackHost
 		policy.CallbackURL = callbackUrls
