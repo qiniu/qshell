@@ -19,13 +19,3 @@ func (s StatusApiInfo) ToOperation() (string, error) {
 	}
 	return storage.URIStat(s.Bucket, s.Key), nil
 }
-
-type StatusApiResult struct {
-	Hash     string `json:"hash"`
-	FSize    int64  `json:"fsize"`
-	PutTime  int64  `json:"putTime"`
-	MimeType string `json:"mimeType"`
-	Type     int    `json:"type"`
-	Code     int    `json:"code"`
-	Error    string `json:"error"`
-}
