@@ -1,4 +1,4 @@
-package storage
+package upload
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"github.com/qiniu/go-sdk/v7/storage"
+	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
 	"time"
 )
 
@@ -14,7 +15,7 @@ type ResumeUploader struct {
 }
 
 func (p *ResumeUploader) UpHost(ak, bucket string) (upHost string, err error) {
-	return GetUpHost(p.Cfg, ak, bucket)
+	return storage2.GetUpHost(p.Cfg, ak, bucket)
 }
 
 // NewResumeUploader 表示构建一个新的分片上传的对象

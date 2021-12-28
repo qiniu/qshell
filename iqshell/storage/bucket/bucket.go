@@ -2,6 +2,7 @@ package bucket
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
@@ -37,4 +38,31 @@ func AllBuckets(shared bool) (buckets []string, err error) {
 		return nil, err
 	}
 	return bucketManager.Buckets(shared)
+}
+
+func CheckExists(bucket, key string) (exists bool, err error) {
+	bucketManager, err := GetBucketManager()
+	if err != nil {
+		return false, err
+	}
+
+	entry, sErr := bucketManager.Stat(bucket, key)
+	if sErr != nil {
+		if v, ok := sErr.(*storage.ErrorInfo); !ok {
+			err = fmt.Errorf("Check file exists error, %s", sErr.Error())
+			return
+		} else {
+			if v.Code != 612 {
+				err = fmt.Errorf("Check file exists error, %s", v.Err)
+				return
+			} else {
+				exists = false
+				return
+			}
+		}
+	}
+	if entry.Hash != "" {
+		exists = true
+	}
+	return
 }
