@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var formUploadCmdBuiler = func() *cobra.Command {
+var formUploadCmdBuilder = func() *cobra.Command {
 	info := operations.FormUploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "fput <Bucket> <Key> <LocalFile>",
@@ -61,7 +61,7 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 
 func init() {
 	RootCmd.AddCommand(
-		forbiddenCmdBuilder(),
+		formUploadCmdBuilder(),
 		resumeUploadCmdBuilder(),
 		)
 }
