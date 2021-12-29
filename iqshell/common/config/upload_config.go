@@ -203,6 +203,7 @@ func (cfg *UploadConfig) CacheFileNameAndCount(storePath, jobId string) (cacheRe
 type UploadInfo struct {
 	TotalFileCount int64 `json:"total_file_count"`
 }
+
 func prepareCacheFileList(cacheResultName, cacheCountName, srcDir string, rescanLocal bool) (totalFileCount int64, cacheErr error) {
 	//cache file
 	cacheTempName := fmt.Sprintf("%s.temp", cacheResultName)

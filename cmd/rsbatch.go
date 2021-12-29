@@ -252,5 +252,5 @@ func init() {
 		batchChangeTypeCmdBuilder(),
 		batchSignCmdBuilder(),
 		batchFetchCmdBuilder(),
-		)
+	)
 }

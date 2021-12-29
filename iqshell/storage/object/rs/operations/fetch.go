@@ -217,6 +217,9 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 					break
 				}
 				fetchResultChan <- fetchResult{
+					bucket:   info.info.Bucket,
+					key:      info.info.Key,
+					url:      info.info.Url,
 					fileSize: info.fileSize,
 					info:     ret,
 				}

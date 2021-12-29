@@ -100,7 +100,7 @@ func getAccount(pt string) (account Account, err error) {
 
 	accountFh, openErr := os.Open(pt)
 	if openErr != nil {
-		err = fmt.Errorf("Open account file error, %s, please use `account` to set AccessKey and SecretKey first", openErr)
+		err = fmt.Errorf("Open account file error, %s, please use `account` to set Id and SecretKey first", openErr)
 		return
 	}
 	defer accountFh.Close()

@@ -146,7 +146,6 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-
 func init() {
 	RootCmd.AddCommand(
 		uploadCmdBuilder(),
@@ -154,5 +153,5 @@ func init() {
 		syncCmdBuilder(),
 		formUploadCmdBuilder(),
 		resumeUploadCmdBuilder(),
-		)
+	)
 }

@@ -18,7 +18,7 @@ type ListBucketInfo struct {
 	Delimiter string
 	MaxKeys   int64
 	Prefix    string
-	AccessKey string // id
+	Id        string // id
 	SecretKey string
 	Region    string
 	Bucket    string
@@ -26,7 +26,7 @@ type ListBucketInfo struct {
 
 func ListBucket(info ListBucketInfo) {
 
-	if info.AccessKey == "" || info.SecretKey == "" {
+	if info.Id == "" || info.SecretKey == "" {
 		log.Error(alert.CannotEmpty("AWS ID and SecretKey", ""))
 		os.Exit(data.STATUS_ERROR)
 	}
@@ -49,7 +49,7 @@ func ListBucket(info ListBucketInfo) {
 		os.Exit(data.STATUS_ERROR)
 	}
 	s3session.Config.WithRegion(info.Region)
-	s3session.Config.WithCredentials(credentials.NewStaticCredentials(info.AccessKey, info.SecretKey, ""))
+	s3session.Config.WithCredentials(credentials.NewStaticCredentials(info.Id, info.SecretKey, ""))
 
 	svc := s3.New(s3session)
 	input := &s3.ListObjectsV2Input{

@@ -46,7 +46,6 @@ func PrivateUrl(info PrivateUrlInfo) {
 	log.Alert(url)
 }
 
-
 type BatchPrivateUrlInfo struct {
 	BatchInfo BatchInfo
 	Deadline  string

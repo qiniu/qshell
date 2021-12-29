@@ -77,7 +77,6 @@ func CheckExists(bucket, key string) (exists bool, err error) {
 	return
 }
 
-
 // 返回公有空间的下载链接，不可以用于私有空间的下载
 func MakePublicDownloadLink(domainOfBucket, fileKey string, useHttps bool) (fileUrl string) {
 	if useHttps {
@@ -169,7 +168,7 @@ func ListBucketToFile(bucket, prefix, marker, listResultFile, delimiter string, 
 
 	bucketManager, err := GetBucketManager()
 	if err != nil {
-		return  err
+		return err
 	}
 
 	var c int

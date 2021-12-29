@@ -10,8 +10,8 @@ var accountCmdBuilder = func() *cobra.Command {
 
 	var accountOver bool
 	var cmd = &cobra.Command{
-		Use:   "account [<AccessKey> <SecretKey> <Name>]",
-		Short: "Get/Set current account's AccessKey and SecretKey",
+		Use:   "account [<Id> <SecretKey> <Name>]",
+		Short: "Get/Set current account's Id and SecretKey",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 0 && len(args) != 3 {
 				return fmt.Errorf("command account receives zero or three args, received %d\n", len(args))

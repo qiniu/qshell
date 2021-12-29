@@ -25,7 +25,7 @@ func List(info ListInfo) {
 			log.AlertF(acc.Name)
 		} else {
 			log.AlertF("Name: %s", acc.Name)
-			log.AlertF("AccessKey: %s", acc.AccessKey)
+			log.AlertF("Id: %s", acc.AccessKey)
 			log.AlertF("SecretKey: %s", acc.SecretKey)
 		}
 	}

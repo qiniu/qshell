@@ -18,10 +18,10 @@ func defaultConfig() *config.Config {
 			//Rs:  []string{"rs.qiniu.com"},
 			//Rsf: []string{"rsf.qiniu.com"},
 			//Api: []string{"api.qiniu.com"},
-			UC:  []string{"uc.qbox.me"},
+			UC: []string{"uc.qbox.me"},
 		},
 		Up: config.Up{
-			PutThreshold:        1024 * 1024 * 4,
+			PutThreshold: 1024 * 1024 * 4,
 			Tasks: config.Tasks{
 				ConcurrentCount:       3,
 				StopWhenOneTaskFailed: data.FalseString,

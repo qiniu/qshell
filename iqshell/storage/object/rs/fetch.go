@@ -48,6 +48,7 @@ func Fetch(info FetchApiInfo) (FetchResult, error) {
 
 type AsyncFetchApiInfo storage.AsyncFetchParam
 type AsyncFetchApiResult storage.AsyncFetchRet
+
 func AsyncFetch(info AsyncFetchApiInfo) (AsyncFetchApiResult, error) {
 	bm, err := bucket.GetBucketManager()
 	if err != nil {
