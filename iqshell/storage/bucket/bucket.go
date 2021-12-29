@@ -41,15 +41,6 @@ func GetBucketManager() (manager *storage.BucketManager, err error) {
 	return
 }
 
-// AllBuckets List list 所有 bucket
-func AllBuckets(shared bool) (buckets []string, err error) {
-	bucketManager, err := GetBucketManager()
-	if err != nil {
-		return nil, err
-	}
-	return bucketManager.Buckets(shared)
-}
-
 func CheckExists(bucket, key string) (exists bool, err error) {
 	bucketManager, err := GetBucketManager()
 	if err != nil {

@@ -17,7 +17,8 @@ type ListBucketInfo struct {
 	SaveToFile string
 }
 
-//【alilistbucket】列举阿里空间中的文件列表
+// ListBucket
+// 列举阿里空间中的文件列表
 func ListBucket(info ListBucketInfo) {
 
 	//open result file

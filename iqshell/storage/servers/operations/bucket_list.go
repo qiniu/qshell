@@ -3,7 +3,7 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"github.com/qiniu/qshell/v2/iqshell/storage/servers"
 	"os"
 )
 
@@ -13,7 +13,7 @@ type ListInfo struct {
 
 // List list 所有 bucket
 func List(info ListInfo) {
-	buckets, err := bucket.AllBuckets(info.Shared)
+	buckets, err := servers.AllBuckets(info.Shared)
 	if err != nil {
 		log.ErrorF("Get buckets error: %v", err)
 		os.Exit(data.STATUS_ERROR)
