@@ -2,10 +2,12 @@ package rs
 
 import (
 	"errors"
+	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 )
 
@@ -42,4 +44,40 @@ func Fetch(info FetchApiInfo) (FetchResult, error) {
 	}
 	fetchResult, err := bucketManager.Fetch(info.FromUrl, info.Bucket, info.Key)
 	return FetchResult(fetchResult), err
+}
+
+type AsyncFetchApiInfo storage.AsyncFetchParam
+type AsyncFetchApiResult storage.AsyncFetchRet
+func AsyncFetch(info AsyncFetchApiInfo) (AsyncFetchApiResult, error) {
+	bm, err := bucket.GetBucketManager()
+	if err != nil {
+		return AsyncFetchApiResult{}, err
+	}
+	ret, err := bm.AsyncFetch(storage.AsyncFetchParam(info))
+	return AsyncFetchApiResult(ret), err
+}
+
+func CheckAsyncFetchStatus(toBucket, id string) (ret AsyncFetchApiResult, err error) {
+	bm, gErr := bucket.GetBucketManager()
+	if gErr != nil {
+		err = gErr
+		return
+	}
+
+	reqUrl, aErr := bm.ApiReqHost(toBucket)
+	if aErr != nil {
+		err = aErr
+		return
+	}
+
+	mac, gErr := workspace.GetMac()
+	if gErr != nil {
+		err = gErr
+		return
+	}
+
+	reqUrl += ("/sisyphus/fetch?id=" + id)
+	ctx := auth.WithCredentialsType(workspace.GetContext(), mac, auth.TokenQiniu)
+	err = bm.Client.Call(ctx, &ret, "GET", reqUrl, nil)
+	return
 }
