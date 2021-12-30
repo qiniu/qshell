@@ -15,7 +15,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -467,10 +467,10 @@ func generateMiddleFile(downloadConfig *config.DownloadConfig, jobListFileName s
 	defer jobListFh.Close()
 
 	scanner := bufio.NewScanner(kFile)
-	entries := make([]rs.BatchOperation, 0, downloadConfig.BatchNum)
+	entries := make([]batch.Operation, 0, downloadConfig.BatchNum)
 
 	writeEntry := func() {
-		bret, _ := rs.Batch(entries)
+		bret, _ := batch.Some(entries)
 		if len(bret) == len(entries) {
 			for j, item := range bret {
 				entry := entries[j].(object.StatusApiInfo)

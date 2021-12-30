@@ -6,7 +6,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 	"time"
 )
 
@@ -34,7 +33,7 @@ func BatchStatus(info BatchStatusInfo) {
 	}
 
 	batch.NewFlow(info.BatchInfo.Info).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in rs.BatchOperation = nil
+		var in batch.Operation = nil
 		line, success := handler.Scanner().ScanLine()
 		if !success {
 			return nil, true

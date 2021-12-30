@@ -5,7 +5,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 	"strconv"
 )
 
@@ -60,7 +59,7 @@ func BatchDelete(info BatchDeleteInfo) {
 	}
 
 	batch.NewFlow(info.BatchInfo.Info).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var i rs.BatchOperation = nil
+		var in batch.Operation = nil
 		line, success := handler.Scanner().ScanLine()
 		if !success {
 			return nil, true
@@ -73,16 +72,16 @@ func BatchDelete(info BatchDeleteInfo) {
 				putTime = items[1]
 			}
 			if key != "" {
-				i = object.DeleteApiInfo{
+				in = object.DeleteApiInfo{
 					Bucket: info.Bucket,
 					Key:    key,
-					Condition: rs.OperationCondition{
+					Condition: batch.OperationCondition{
 						PutTime: putTime,
 					},
 				}
 			}
 		}
-		return i, false
+		return in, false
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		apiInfo, ok := (operation).(object.DeleteApiInfo)
 		if !ok {
@@ -109,7 +108,7 @@ func BatchDeleteAfter(info BatchDeleteInfo) {
 	}
 
 	batch.NewFlow(info.BatchInfo.Info).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in rs.BatchOperation = nil
+		var in batch.Operation= nil
 		line, success := handler.Scanner().ScanLine()
 		if !success {
 			return nil, true

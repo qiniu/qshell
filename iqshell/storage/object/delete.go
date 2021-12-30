@@ -5,14 +5,13 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 )
 
 type DeleteApiInfo struct {
 	Bucket    string
 	Key       string
 	AfterDays int
-	Condition rs.OperationCondition
+	Condition batch.OperationCondition
 }
 
 func (d DeleteApiInfo) ToOperation() (string, error) {
@@ -20,7 +19,7 @@ func (d DeleteApiInfo) ToOperation() (string, error) {
 		return "", errors.New(alert.CannotEmpty("delete operation bucket or key", ""))
 	}
 
-	condition := rs.OperationConditionURI(d.Condition)
+	condition := batch.OperationConditionURI(d.Condition)
 	if d.AfterDays > 0 {
 		return storage.URIDeleteAfterDays(d.Bucket, d.Key, d.AfterDays) + condition, nil
 	} else {
