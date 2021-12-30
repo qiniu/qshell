@@ -2,6 +2,7 @@ package m3u8
 
 import (
 	"errors"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 )
 
@@ -26,7 +27,7 @@ func Delete(info DeleteApiInfo) ([]rs.OperationResult, error) {
 
 	operations := make([]rs.BatchOperation, 0, len(m3u8FileList))
 	for _, file := range m3u8FileList {
-		operations = append(operations, &rs.DeleteApiInfo{
+		operations = append(operations, &object.DeleteApiInfo{
 			Bucket:    file.Bucket,
 			Key:       file.Key,
 			AfterDays: 0,

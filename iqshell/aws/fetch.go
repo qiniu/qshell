@@ -10,8 +10,8 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs/operations"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
+	operations2 "github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"strings"
 	"sync"
 )
@@ -19,7 +19,7 @@ import (
 type FetchInfo struct {
 	QiniuBucket   string
 	Host          string
-	BatchInfo     operations.BatchInfo
+	BatchInfo     operations2.BatchInfo
 	AwsBucketInfo ListBucketInfo
 }
 
@@ -40,8 +40,8 @@ func Fetch(info FetchInfo) {
 		return
 	}
 
-	if info.BatchInfo.Worker <= 0 || info.BatchInfo.Worker >= 1000 {
-		info.BatchInfo.Worker = 20
+	if info.BatchInfo.WorkCount <= 0 || info.BatchInfo.WorkCount >= 1000 {
+		info.BatchInfo.WorkCount = 20
 	}
 
 	resultExport, err := export.NewFileExport(export.FileExporterConfig{
@@ -55,7 +55,7 @@ func Fetch(info FetchInfo) {
 		return
 	}
 
-	fetchInfoChan := make(chan rs.FetchApiInfo, info.BatchInfo.Worker)
+	fetchInfoChan := make(chan object.FetchApiInfo, info.BatchInfo.WorkCount)
 	// 生产者
 	go func() {
 		// AWS related code
@@ -95,7 +95,7 @@ func Fetch(info FetchInfo) {
 				if strings.HasSuffix(*obj.Key, "/") && *obj.Size == 0 { // 跳过目录
 					continue
 				}
-				fetchInfoChan <- rs.FetchApiInfo{
+				fetchInfoChan <- object.FetchApiInfo{
 					Bucket:  info.QiniuBucket,
 					Key:     *obj.Key,
 					FromUrl: awsUrl(info.AwsBucketInfo.Bucket, info.AwsBucketInfo.Region, *obj.Key),
@@ -113,11 +113,11 @@ func Fetch(info FetchInfo) {
 
 	// 消费者
 	waiter := sync.WaitGroup{}
-	waiter.Add(info.BatchInfo.Worker)
-	for i := 0; i < info.BatchInfo.Worker; i++ {
+	waiter.Add(info.BatchInfo.WorkCount)
+	for i := 0; i < info.BatchInfo.WorkCount; i++ {
 		go func() {
 			for info := range fetchInfoChan {
-				_, err := rs.Fetch(info)
+				_, err := object.Fetch(info)
 				if err != nil {
 					log.ErrorF("fetch %s => %s:%s failed", info.FromUrl, info.Bucket, info.Key)
 					resultExport.Fail().ExportF("%s\t%s\t%v", info.FromUrl, info.Key, err)

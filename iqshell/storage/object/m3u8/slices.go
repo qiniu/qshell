@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -32,7 +32,7 @@ func Slices(info SliceListApiInfo) ([]Slice, error) {
 		return nil, err
 	}
 
-	dnLink, err = rs.PrivateUrl(rs.PrivateUrlApiInfo{
+	dnLink, err = object.PrivateUrl(object.PrivateUrlApiInfo{
 		PublicUrl: dnLink,
 		Deadline:  time.Now().Add(time.Second * 3600).Unix(),
 	})

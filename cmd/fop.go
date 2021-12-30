@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	operations2 "github.com/qiniu/qshell/v2/iqshell/storage/object/rs/operations"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
 var preFopStatusCmdBuilder = func() *cobra.Command {
-	var info = operations2.PreFopStatusInfo{}
+	var info = operations.PreFopStatusInfo{}
 	var cmd = &cobra.Command{
 		Use:   "prefop <PersistentId>",
 		Short: "Query the pfop status",
@@ -16,14 +16,14 @@ var preFopStatusCmdBuilder = func() *cobra.Command {
 				info.Id = args[0]
 			}
 			loadConfig()
-			operations2.PreFopStatus(info)
+			operations.PreFopStatus(info)
 		},
 	}
 	return cmd
 }
 
 var preFopCmdBuilder = func() *cobra.Command {
-	var info = operations2.PreFopInfo{}
+	var info = operations.PreFopInfo{}
 	var cmd = &cobra.Command{
 		Use:   "pfop <Bucket> <Key> <fopCommand>",
 		Short: "issue a request to process file in bucket",
@@ -35,7 +35,7 @@ var preFopCmdBuilder = func() *cobra.Command {
 				info.Fops = args[2]
 			}
 			loadConfig()
-			operations2.PreFop(info)
+			operations.PreFop(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.Pipeline, "pipeline", "p", "", "task pipeline")

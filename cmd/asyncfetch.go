@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs/operations"
+	operations2 "github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
 func asyncFetchCmdBuilder() *cobra.Command {
-	info := operations.BatchAsyncFetchInfo{}
+	info := operations2.BatchAsyncFetchInfo{}
 	cmd := &cobra.Command{
 		Use:   "abfetch <Bucket> [-i <urlList>]",
 		Short: "Async Batch fetch network resources to qiniu Bucket",
@@ -15,7 +15,7 @@ func asyncFetchCmdBuilder() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			operations.BatchAsyncFetch(info)
+			operations2.BatchAsyncFetch(info)
 		},
 	}
 
@@ -25,7 +25,7 @@ func asyncFetchCmdBuilder() *cobra.Command {
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "callback HOST")
 	cmd.Flags().IntVarP(&info.FileType, "storage-type", "g", 0, "storage type")
 	cmd.Flags().StringVarP(&info.InputFile, "input-file", "i", "", "input file with urls")
-	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "thread-count", "c", 20, "thread count")
+	cmd.Flags().IntVarP(&info.BatchInfo.WorkCount, "thread-count", "c", 20, "thread count")
 	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "success fetch list")
 	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "error fetch list")
 
@@ -35,7 +35,7 @@ func asyncFetchCmdBuilder() *cobra.Command {
 // NewCmdAsyncCheck 用来查询异步抓取的结果
 func asyncCheckCmdBuilder() *cobra.Command {
 
-	info := operations.CheckAsyncFetchStatusInfo{}
+	info := operations2.CheckAsyncFetchStatusInfo{}
 	cmd := &cobra.Command{
 		Use:   "acheck <Bucket> <ID>",
 		Short: "Check Async fetch status",
@@ -45,7 +45,7 @@ func asyncCheckCmdBuilder() *cobra.Command {
 				info.Bucket = args[0]
 				info.Id = args[1]
 			}
-			operations.CheckAsyncFetchStatus(info)
+			operations2.CheckAsyncFetchStatus(info)
 		},
 	}
 	return cmd

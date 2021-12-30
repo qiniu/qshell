@@ -14,6 +14,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/rs"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -472,7 +473,7 @@ func generateMiddleFile(downloadConfig *config.DownloadConfig, jobListFileName s
 		bret, _ := rs.Batch(entries)
 		if len(bret) == len(entries) {
 			for j, item := range bret {
-				entry := entries[j].(rs.StatusApiInfo)
+				entry := entries[j].(object.StatusApiInfo)
 				if item.Code != 200 || item.Error != "" {
 					fmt.Fprintln(os.Stderr, entry.Key+"\t"+item.Error)
 				} else {
@@ -487,7 +488,7 @@ func generateMiddleFile(downloadConfig *config.DownloadConfig, jobListFileName s
 		line := scanner.Text()
 		line = strings.TrimSpace(line)
 		if len(entries) < downloadConfig.BatchNum {
-			entries = append(entries, rs.StatusApiInfo{
+			entries = append(entries, object.StatusApiInfo{
 				Bucket: downloadConfig.Bucket,
 				Key:    line,
 			})

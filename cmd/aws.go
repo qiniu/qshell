@@ -25,7 +25,7 @@ func awsFetchCmdBuilder() *cobra.Command {
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.Prefix, "prefix", "p", "", "list AWS bucket with this prefix if set")
 	cmd.Flags().Int64VarP(&info.AwsBucketInfo.MaxKeys, "max-keys", "n", 1000, "list AWS bucket with numbers of keys returned each time limited by this number if set")
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.CToken, "continuation-token", "m", "", "AWS list continuation token")
-	cmd.Flags().IntVarP(&info.BatchInfo.Worker, "thead-count", "c", 20, "maximum of fetch thread")
+	cmd.Flags().IntVarP(&info.BatchInfo.WorkCount, "thead-count", "c", 20, "maximum of fetch thread")
 	cmd.Flags().StringVarP(&info.Host, "up-host", "u", "", "Qiniu fetch up host")
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.SecretKey, "aws-secret-key", "S", "", "AWS secret key")
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.Id, "aws-id", "A", "", "AWS ID")
