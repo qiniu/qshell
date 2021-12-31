@@ -118,7 +118,7 @@ type ListToFileApiInfo struct {
 func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err error)) {
 	if errorHandler == nil {
 		errorHandler = func(marker string, err error) {
-			log.ErrorF("marker: %s", info.Marker)
+			log.ErrorF("marker: %s", marker)
 			log.ErrorF("list bucket Error: %v", err)
 		}
 		logs.Warning("list bucket to file: not set error handler")

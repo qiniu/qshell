@@ -198,11 +198,25 @@ func Download(info DownloadInfo) {
 	} else {
 		//list bucket, prepare file list to download
 		log.InfoF("Listing bucket `%s` by prefix `%s`", downConfig.Bucket, downConfig.Prefix)
-		listErr := bucket.ListBucketToFile(downConfig.Bucket, downConfig.Prefix, "", jobListFileName, "", time.Time{}, time.Time{}, nil, 20, false, false)
-		if listErr != nil {
-			log.Error("List bucket error", listErr)
-			os.Exit(data.STATUS_ERROR)
-		}
+		bucket.ListToFile(bucket.ListToFileApiInfo{
+			ListApiInfo: bucket.ListApiInfo{
+				Bucket:            downConfig.Bucket,
+				Prefix:            downConfig.Prefix,
+				Marker:            "",
+				Delimiter:         "",
+				StartTime:         time.Time{},
+				EndTime:           time.Time{},
+				Suffixes:          nil,
+				MaxRetry:          20,
+				StopWhenListError: false,
+			},
+			FilePath:    "",
+			AppendMode:  false,
+			Readable:    false,
+		}, func(marker string, err error) {
+			log.ErrorF("marker: %s", marker)
+			log.ErrorF("list bucket Error: %v", err)
+		})
 	}
 
 	//init wait group
