@@ -52,8 +52,9 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
+	retryCount := 0
 	complete := false
-	for retryCount := 0; !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry); retryCount++ {
+	for ;!complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry); {
 		entries, lErr := bucketManager.ListBucketContext(workspace.GetContext(), info.Bucket, info.Prefix, info.Delimiter, info.Marker)
 		if entries == nil && lErr == nil {
 			// no data
@@ -66,12 +67,9 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 		}
 
 		if lErr != nil {
-			errorHandler(info.Marker, errors.New("listbucket Error:"+lErr.Error()))
-			if info.StopWhenListError {
-				break
-			} else {
-				time.Sleep(1)
-			}
+			errorHandler(info.Marker, lErr)
+			retryCount++
+			time.Sleep(1)
 			continue
 		}
 
@@ -100,7 +98,8 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 				errorHandler(listItem.Marker, hErr)
 			}
 		}
-		complete = true
+
+		retryCount = 0
 	}
 
 	if len(info.Marker) > 0 {
