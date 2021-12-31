@@ -36,33 +36,6 @@ func GetBucketManager() (manager *storage.BucketManager, err error) {
 	return
 }
 
-func CheckExists(bucket, key string) (exists bool, err error) {
-	bucketManager, err := GetBucketManager()
-	if err != nil {
-		return false, err
-	}
-
-	entry, sErr := bucketManager.Stat(bucket, key)
-	if sErr != nil {
-		if v, ok := sErr.(*storage.ErrorInfo); !ok {
-			err = fmt.Errorf("Check file exists error, %s", sErr.Error())
-			return
-		} else {
-			if v.Code != 612 {
-				err = fmt.Errorf("Check file exists error, %s", v.Err)
-				return
-			} else {
-				exists = false
-				return
-			}
-		}
-	}
-	if entry.Hash != "" {
-		exists = true
-	}
-	return
-}
-
 func ListBucketToFile(bucket, prefix, marker, listResultFile, delimiter string, startDate, endDate time.Time, suffixes []string, maxRetry int, appendMode bool, readable bool) (retErr error) {
 	lastMarker := marker
 

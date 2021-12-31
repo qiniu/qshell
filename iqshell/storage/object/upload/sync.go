@@ -10,7 +10,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"io"
 	"net/http"
 	"os"
@@ -191,7 +191,10 @@ type SputRet struct {
 }
 
 func Sync(srcResUrl, toBucket, key, upHost string, isResumableV2 bool) (putRet SputRet, err error) {
-	exists, cErr := bucket.CheckExists(toBucket, key)
+	exists, cErr := object.Exist(object.ExistApiInfo{
+		Bucket: toBucket,
+		Key:    key,
+	})
 	if cErr != nil {
 		err = cErr
 		return

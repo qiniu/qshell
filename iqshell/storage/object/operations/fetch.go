@@ -5,7 +5,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"os"
 	"strconv"
@@ -139,7 +138,10 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 						log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
 					} else if ret.Wait == -1 { // 视频抓取过一次，有可能成功了，有可能失败了
 						counter += 1
-						exist, _ := bucket.CheckExists(result.bucket, result.key)
+						exist, _ := object.Exist(object.ExistApiInfo{
+							Bucket: result.bucket,
+							Key:    result.key,
+						})
 						if exist {
 							handler.Export().Success().ExportF("%s\t%s", result.url, result.key)
 							log.Alert("fetch %s => %s:%s success", result.url, result.bucket, result.key)
