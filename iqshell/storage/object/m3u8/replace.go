@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -30,7 +30,7 @@ func ReplaceDomain(info ReplaceDomainApiInfo) error {
 	})
 
 	//create download link
-	dnLink, err = object.PrivateUrl(object.PrivateUrlApiInfo{
+	dnLink, err = download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
 		PublicUrl: dnLink,
 		Deadline:  time.Now().Add(time.Second * 3600).Unix(),
 	})

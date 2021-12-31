@@ -16,6 +16,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -286,9 +287,17 @@ func Download(info DownloadInfo) {
 
 			var fileUrl string
 			if downConfig.Public {
-				fileUrl = bucket.MakePublicDownloadLink(downloadDomain, fileKey, downConfig.UseHttps)
+				fileUrl = download.PublicUrl(download.PublicUrlApiInfo{
+					BucketDomain: downloadDomain,
+					Key:          fileKey,
+					UseHttps:     downConfig.UseHttps,
+				})
 			} else {
-				fileUrl = bucket.MakePrivateDownloadLink(downloadDomain, fileKey, downConfig.UseHttps)
+				fileUrl = download.PrivateUrl(download.PrivateUrlApiInfo{
+					BucketDomain: downloadDomain,
+					Key:          fileKey,
+					UseHttps:     downConfig.UseHttps,
+				})
 			}
 
 			//progress

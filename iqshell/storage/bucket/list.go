@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"strings"
 	"time"
 )
 
@@ -13,7 +14,10 @@ type ListApiInfo struct {
 	Prefix    string
 	Marker    string
 	Delimiter string
-	MaxRetry  int // -1: 无限重试
+	StartTime time.Time // list item 的 put time 区间的开始时间 【闭区间】
+	EndTime   time.Time // list item 的 put time 区间的终止时间 【闭区间】
+	Suffixes  []string  // list item 必须包含前缀
+	MaxRetry  int       // -1: 无限重试
 }
 
 type ListItem storage.ListItem
@@ -32,6 +36,9 @@ func List(info *ListApiInfo) (<-chan ListItem, error) {
 }
 
 func listBucketToChan(ctx context.Context, manager *storage.BucketManager, info *ListApiInfo, objects chan<- ListItem) {
+
+	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
+	shouldCheckSuffixes := len(info.Suffixes) > 0
 	complete := false
 	for retryCount := 0; !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry); retryCount++ {
 		entries, err := manager.ListBucketContext(ctx, info.Bucket, info.Prefix, info.Delimiter, info.Marker)
@@ -62,10 +69,54 @@ func listBucketToChan(ctx context.Context, manager *storage.BucketManager, info 
 				continue
 			}
 
+			if shouldCheckPutTime {
+				putTime := time.Unix(listItem.Item.PutTime/1e7, 0)
+				if !filterByPutTime(putTime, info.StartTime, info.EndTime) {
+					continue
+				}
+			}
+
+			if shouldCheckSuffixes && !filterBySuffixes(listItem.Item.Key, info.Suffixes) {
+				continue
+			}
+
 			objects <- ListItem(listItem.Item)
 		}
 		complete = true
 	}
 
 	close(objects)
+}
+
+func filterByPutTime(putTime, startDate, endDate time.Time) bool {
+	switch {
+	case startDate.IsZero() && endDate.IsZero():
+		return true
+	case !startDate.IsZero() && endDate.IsZero() && putTime.After(startDate):
+		return true
+	case !endDate.IsZero() && startDate.IsZero() && putTime.Before(endDate):
+		return true
+	case putTime.After(startDate) && putTime.Before(endDate):
+		return true
+	default:
+		return false
+	}
+}
+
+func filterBySuffixes(key string, suffixes []string) bool {
+	hasSuffix := false
+	if len(suffixes) == 0 {
+		hasSuffix = true
+	}
+	for _, s := range suffixes {
+		if strings.HasSuffix(key, s) {
+			hasSuffix = true
+			break
+		}
+	}
+	if hasSuffix {
+		return true
+	} else {
+		return false
+	}
 }

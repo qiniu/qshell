@@ -5,7 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"strconv"
 	"strings"
 	"time"
@@ -39,7 +39,7 @@ func PrivateUrl(info PrivateUrlInfo) {
 		return
 	}
 
-	url, err := object.PrivateUrl(object.PrivateUrlApiInfo{
+	url, err := download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
 		PublicUrl: info.PublicUrl,
 		Deadline:  deadline,
 	})
@@ -87,7 +87,7 @@ func BatchPrivateUrl(info BatchPrivateUrlInfo) {
 		if err != nil {
 			return nil, err
 		}
-		return object.PrivateUrl(object.PrivateUrlApiInfo{
+		return download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
 			PublicUrl: in.PublicUrl,
 			Deadline:  deadline,
 		})

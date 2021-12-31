@@ -2,9 +2,6 @@ package bucket
 
 import (
 	"bufio"
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
@@ -13,9 +10,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"net/url"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -65,60 +60,6 @@ func CheckExists(bucket, key string) (exists bool, err error) {
 	if entry.Hash != "" {
 		exists = true
 	}
-	return
-}
-
-// 返回公有空间的下载链接，不可以用于私有空间的下载
-func MakePublicDownloadLink(domainOfBucket, fileKey string, useHttps bool) (fileUrl string) {
-	if useHttps {
-		fileUrl = fmt.Sprintf("https://%s/%s", domainOfBucket, url.PathEscape(fileKey))
-	} else {
-		fileUrl = fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
-	}
-	return
-}
-
-// 返回私有空间的下载链接， 也可以用于公有空间的下载
-func MakePrivateDownloadLink(domainOfBucket, fileKey string, useHttps bool) (fileUrl string) {
-	var publicUrl string
-	if useHttps {
-		publicUrl = fmt.Sprintf("https://%s/%s", domainOfBucket, url.PathEscape(fileKey))
-	} else {
-		publicUrl = fmt.Sprintf("http://%s/%s", domainOfBucket, url.PathEscape(fileKey))
-	}
-	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
-	privateUrl, _ := PrivateUrl(publicUrl, deadline)
-	fileUrl = privateUrl
-	return
-}
-
-// 返回私有空间的下载链接， 也可以用于公有空间的下载
-func PrivateUrl(publicUrl string, deadline int64) (finalUrl string, err error) {
-	srcUri, pErr := url.Parse(publicUrl)
-	if pErr != nil {
-		err = pErr
-		return
-	}
-
-	acc, gErr := workspace.GetAccount()
-	if gErr != nil {
-		err = gErr
-		return
-	}
-
-	h := hmac.New(sha1.New, []byte(acc.SecretKey))
-
-	urlToSign := srcUri.String()
-	if strings.Contains(publicUrl, "?") {
-		urlToSign = fmt.Sprintf("%s&e=%d", urlToSign, deadline)
-	} else {
-		urlToSign = fmt.Sprintf("%s?e=%d", urlToSign, deadline)
-	}
-	h.Write([]byte(urlToSign))
-
-	sign := base64.URLEncoding.EncodeToString(h.Sum(nil))
-	token := acc.AccessKey + ":" + sign
-	finalUrl = fmt.Sprintf("%s&token=%s", urlToSign, token)
 	return
 }
 
@@ -218,7 +159,7 @@ func ListBucketToFile(bucket, prefix, marker, listResultFile, delimiter string, 
 
 				if !notfilterTime { // filter by putTime
 					putTime := time.Unix(listItem.Item.PutTime/1e7, 0)
-					putTimeValid = filterByPuttime(putTime, startDate, endDate)
+					putTimeValid = filterByPutTime(putTime, startDate, endDate)
 				}
 				if !notfilterSuffix {
 					key := listItem.Item.Key
@@ -258,37 +199,4 @@ func ListBucketToFile(bucket, prefix, marker, listResultFile, delimiter string, 
 func errorWarning(marker string, err error) {
 	log.ErrorF("marker: %s", marker)
 	log.ErrorF("listbucket Error: %v", err)
-}
-
-func filterByPuttime(putTime, startDate, endDate time.Time) bool {
-	switch {
-	case startDate.IsZero() && endDate.IsZero():
-		return true
-	case !startDate.IsZero() && endDate.IsZero() && putTime.After(startDate):
-		return true
-	case !endDate.IsZero() && startDate.IsZero() && putTime.Before(endDate):
-		return true
-	case putTime.After(startDate) && putTime.Before(endDate):
-		return true
-	default:
-		return false
-	}
-}
-
-func filterBySuffixes(key string, suffixes []string) bool {
-	hasSuffix := false
-	if len(suffixes) == 0 {
-		hasSuffix = true
-	}
-	for _, s := range suffixes {
-		if strings.HasSuffix(key, s) {
-			hasSuffix = true
-			break
-		}
-	}
-	if hasSuffix {
-		return true
-	} else {
-		return false
-	}
 }
