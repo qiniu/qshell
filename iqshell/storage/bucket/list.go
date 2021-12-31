@@ -50,20 +50,14 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 		return
 	}
 
+	log.Debug("will list bucket start")
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	retryCount := 0
-	complete := false
-	for ;!complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry); {
+	for ; info.MaxRetry < 0 || retryCount <= info.MaxRetry; {
 		entries, lErr := bucketManager.ListBucketContext(workspace.GetContext(), info.Bucket, info.Prefix, info.Delimiter, info.Marker)
 		if entries == nil && lErr == nil {
-			// no data
-			if info.Marker == "" {
-				complete = true
-				break
-			} else {
-				lErr = errors.New("meet empty body when list not completed")
-			}
+			lErr = errors.New("meet empty body when list not completed")
 		}
 
 		if lErr != nil {
@@ -99,12 +93,18 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 			}
 		}
 
+		if len(info.Marker) == 0 {
+			// 列举结束
+			break
+		}
+
 		retryCount = 0
 	}
 
 	if len(info.Marker) > 0 {
 		log.InfoF("Marker: %s", info.Marker)
 	}
+	log.Debug("list bucket end")
 }
 
 type ListToFileApiInfo struct {
@@ -126,6 +126,7 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 	var listResultFh *os.File
 	if info.FilePath == "" {
 		listResultFh = os.Stdout
+		log.Debug("prepare list bucket to stdout")
 	} else {
 		var openErr error
 		var mode int
@@ -141,6 +142,7 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 			return
 		}
 		defer listResultFh.Close()
+		log.Debug("prepare list bucket to file")
 	}
 
 	bWriter := bufio.NewWriter(listResultFh)
@@ -156,10 +158,14 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 			object.Key, fileSize, object.Hash,
 			object.PutTime, object.MimeType, object.Type, object.EndUser)
 		_, wErr := bWriter.WriteString(lineData)
-		if wErr == nil {
-			return nil
+		if wErr != nil {
+			return errors.New("write error:" + wErr.Error())
 		}
-		return errors.New("flush error:" + wErr.Error())
+		fErr := bWriter.Flush()
+		if fErr != nil {
+			return errors.New("flush error:" + fErr.Error())
+		}
+		return nil
 	}, errorHandler)
 }
 
