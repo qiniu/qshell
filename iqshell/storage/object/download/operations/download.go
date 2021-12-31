@@ -12,7 +12,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -55,7 +54,7 @@ type DownloadInfo struct {
 
 // 【qdownload] 批量下载文件， 可以下载以前缀的文件，也可以下载一个文件列表
 func Download(info DownloadInfo) {
-	var downloadConfig storage.DownloadConfig
+	var downloadConfig config.DownloadConfig
 
 	cfh, oErr := os.Open(info.ConfigFile)
 	if oErr != nil {

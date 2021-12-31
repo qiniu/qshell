@@ -5,8 +5,9 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
-	storage2 "github.com/qiniu/qshell/v2/iqshell/storage"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"time"
 )
 
@@ -14,8 +15,23 @@ type ResumeUploader struct {
 	*storage.ResumeUploader
 }
 
-func (p *ResumeUploader) UpHost(ak, bucket string) (upHost string, err error) {
-	return storage2.GetUpHost(p.Cfg, ak, bucket)
+func (p *ResumeUploader) UpHost(ak, b string) (string, error) {
+	region, err := bucket.Region(p.Cfg, b)
+	if err != nil || region == nil {
+		return "", err
+	}
+
+	upHost := ""
+	if p.Cfg.UseCdnDomains && len(region.CdnUpHosts) > 0 {
+		upHost = region.CdnUpHosts[0]
+	} else if len(region.SrcUpHosts) > 0 {
+		upHost = region.SrcUpHosts[0]
+	}
+
+	if len(upHost) == 0 {
+		return "", errors.New("can't get up host")
+	}
+	return upHost, nil
 }
 
 // NewResumeUploader 表示构建一个新的分片上传的对象

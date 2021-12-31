@@ -250,12 +250,12 @@ func Sync(srcResUrl, toBucket, key, upHost string, isResumableV2 bool) (putRet S
 	)
 	if upHost == "" {
 		ak, bucket, gErr := utils.GetAkBucketFromUploadToken(uptoken)
-		if err != nil {
+		if gErr != nil {
 			err = gErr
 			return
 		}
 		upHost, eErr = resumeUploader.UpHost(ak, bucket)
-		if err != nil {
+		if eErr != nil {
 			err = eErr
 			return
 		}
