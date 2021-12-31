@@ -1,21 +1,19 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/operations"
 	operations2 "github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
 var listBucketCmdBuilder = func() *cobra.Command {
-	var info = operations2.ListInfo{
+	var info = operations.ListInfo{
 		StartDate:  "",
 		EndDate:    "",
 		AppendMode: false,
 		Readable:   false,
-		ApiInfo: bucket.ListApiInfo{
-			Delimiter: "",
-			MaxRetry:  20,
-		},
+		Delimiter:  "",
+		MaxRetry:   20,
 	}
 	var cmd = &cobra.Command{
 		Use:   "listbucket <Bucket>",
@@ -24,20 +22,20 @@ var listBucketCmdBuilder = func() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				info.ApiInfo.Bucket = args[0]
+				info.Bucket = args[0]
 			}
 			loadConfig()
-			operations2.List(info)
+			operations.List(info)
 		},
 	}
-	cmd.Flags().StringVarP(&info.ApiInfo.Marker, "marker", "m", "", "list marker")
-	cmd.Flags().StringVarP(&info.ApiInfo.Prefix, "prefix", "p", "", "list by prefix")
+	cmd.Flags().StringVarP(&info.Marker, "marker", "m", "", "list marker")
+	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
 	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
 	return cmd
 }
 
 var listBucketCmd2Builder = func() *cobra.Command {
-	var info = operations2.ListInfo{}
+	var info = operations.ListInfo{}
 	var cmd = &cobra.Command{
 		Use:   "listbucket2 <Bucket>",
 		Short: "List all the files in the bucket using v2/list interface",
@@ -45,17 +43,17 @@ var listBucketCmd2Builder = func() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				info.ApiInfo.Bucket = args[0]
+				info.Bucket = args[0]
 			}
 			loadConfig()
-			operations2.List(info)
+			operations.List(info)
 		},
 	}
 
-	cmd.Flags().StringVarP(&info.ApiInfo.Marker, "marker", "m", "", "list marker")
-	cmd.Flags().StringVarP(&info.ApiInfo.Prefix, "prefix", "p", "", "list by prefix")
+	cmd.Flags().StringVarP(&info.Marker, "marker", "m", "", "list marker")
+	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
 	cmd.Flags().StringVarP(&info.Suffixes, "suffixes", "q", "", "list by key suffixes, separated by comma")
-	cmd.Flags().IntVarP(&info.ApiInfo.MaxRetry, "max-retry", "x", -1, "max retries when error occurred")
+	cmd.Flags().IntVarP(&info.MaxRetry, "max-retry", "x", -1, "max retries when error occurred")
 	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
 	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")

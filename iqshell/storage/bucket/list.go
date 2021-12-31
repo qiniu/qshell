@@ -1,62 +1,77 @@
 package bucket
 
 import (
-	"context"
+	"bufio"
+	"errors"
+	"fmt"
+	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"os"
 	"strings"
 	"time"
 )
 
 type ListApiInfo struct {
-	Bucket    string
-	Prefix    string
-	Marker    string
-	Delimiter string
-	StartTime time.Time // list item 的 put time 区间的开始时间 【闭区间】
-	EndTime   time.Time // list item 的 put time 区间的终止时间 【闭区间】
-	Suffixes  []string  // list item 必须包含前缀
-	MaxRetry  int       // -1: 无限重试
+	Bucket            string
+	Prefix            string
+	Marker            string
+	Delimiter         string
+	StartTime         time.Time // list item 的 put time 区间的开始时间 【闭区间】
+	EndTime           time.Time // list item 的 put time 区间的终止时间 【闭区间】
+	Suffixes          []string  // list item 必须包含前缀
+	MaxRetry          int       // -1: 无限重试
+	StopWhenListError bool      // 当 list 过程中出现错误是否停止 list
 }
 
-type ListItem storage.ListItem
+type ListObject storage.ListItem
 
 // List list 某个 bucket 所有的文件
-func List(info *ListApiInfo) (<-chan ListItem, error) {
-	objects := make(chan ListItem)
+func List(info ListApiInfo, objectHandler func(marker string, object ListObject) error, errorHandler func(marker string, err error)) {
+	if objectHandler == nil {
+		logs.Error(alert.CannotEmpty("list bucket: object handler", ""))
+		return
+	}
+
+	if errorHandler == nil {
+		errorHandler = func(marker string, err error) {
+			log.ErrorF("marker: %s", info.Marker)
+			log.ErrorF("list bucket Error: %v", err)
+		}
+		logs.Warning("list bucket: not set error handler")
+	}
 
 	bucketManager, err := GetBucketManager()
 	if err != nil {
-		return nil, err
+		errorHandler("", err)
+		return
 	}
-
-	go listBucketToChan(workspace.GetContext(), bucketManager, info, objects)
-	return objects, nil
-}
-
-func listBucketToChan(ctx context.Context, manager *storage.BucketManager, info *ListApiInfo, objects chan<- ListItem) {
 
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	complete := false
 	for retryCount := 0; !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry); retryCount++ {
-		entries, err := manager.ListBucketContext(ctx, info.Bucket, info.Prefix, info.Delimiter, info.Marker)
-		if entries == nil && err == nil {
+		entries, lErr := bucketManager.ListBucketContext(workspace.GetContext(), info.Bucket, info.Prefix, info.Delimiter, info.Marker)
+		if entries == nil && lErr == nil {
 			// no data
 			if info.Marker == "" {
 				complete = true
 				break
 			} else {
-				log.Error("meet empty body when list not completed")
-				continue
+				lErr = errors.New("meet empty body when list not completed")
 			}
 		}
 
-		if err != nil {
-			log.ErrorF("marker: %s", info.Marker)
-			log.ErrorF("listbucket Error: %v", err)
-			time.Sleep(1)
+		if lErr != nil {
+			errorHandler(info.Marker, errors.New("listbucket Error:"+lErr.Error()))
+			if info.StopWhenListError {
+				break
+			} else {
+				time.Sleep(1)
+			}
 			continue
 		}
 
@@ -80,12 +95,73 @@ func listBucketToChan(ctx context.Context, manager *storage.BucketManager, info 
 				continue
 			}
 
-			objects <- ListItem(listItem.Item)
+			hErr := objectHandler(listItem.Marker, ListObject(listItem.Item))
+			if hErr != nil {
+				errorHandler(listItem.Marker, hErr)
+			}
 		}
 		complete = true
 	}
 
-	close(objects)
+	if len(info.Marker) > 0 {
+		log.InfoF("Marker: %s", info.Marker)
+	}
+}
+
+type ListToFileApiInfo struct {
+	ListApiInfo
+	FilePath   string // file 不存在则输出到 stdout
+	AppendMode bool
+	Readable   bool
+}
+
+func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err error)) {
+	if errorHandler == nil {
+		errorHandler = func(marker string, err error) {
+			log.ErrorF("marker: %s", info.Marker)
+			log.ErrorF("list bucket Error: %v", err)
+		}
+		logs.Warning("list bucket to file: not set error handler")
+	}
+
+	var listResultFh *os.File
+	if info.FilePath == "" {
+		listResultFh = os.Stdout
+	} else {
+		var openErr error
+		var mode int
+
+		if info.AppendMode {
+			mode = os.O_APPEND | os.O_RDWR
+		} else {
+			mode = os.O_CREATE | os.O_RDWR | os.O_TRUNC
+		}
+		listResultFh, openErr = os.OpenFile(info.FilePath, mode, 0666)
+		if openErr != nil {
+			errorHandler("", fmt.Errorf("failed to open list result file `%s`, error:%v", info.FilePath, openErr))
+			return
+		}
+		defer listResultFh.Close()
+	}
+
+	bWriter := bufio.NewWriter(listResultFh)
+	List(info.ListApiInfo, func(marker string, object ListObject) error {
+		var fileSize interface{}
+		if info.Readable {
+			fileSize = utils.BytesToReadable(object.Fsize)
+		} else {
+			fileSize = object.Fsize
+		}
+
+		lineData := fmt.Sprintf("%s\t%v\t%s\t%d\t%s\t%d\t%s\r\n",
+			object.Key, fileSize, object.Hash,
+			object.PutTime, object.MimeType, object.Type, object.EndUser)
+		_, wErr := bWriter.WriteString(lineData)
+		if wErr == nil {
+			return nil
+		}
+		return errors.New("flush error:" + wErr.Error())
+	}, errorHandler)
 }
 
 func filterByPutTime(putTime, startDate, endDate time.Time) bool {
