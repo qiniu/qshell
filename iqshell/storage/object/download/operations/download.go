@@ -209,9 +209,9 @@ func Download(info DownloadInfo) {
 				MaxRetry:          20,
 				StopWhenListError: false,
 			},
-			FilePath:    "",
-			AppendMode:  false,
-			Readable:    false,
+			FilePath:   "",
+			AppendMode: false,
+			Readable:   false,
 		}, func(marker string, err error) {
 			log.ErrorF("marker: %s", marker)
 			log.ErrorF("list bucket Error: %v", err)

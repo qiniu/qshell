@@ -13,7 +13,6 @@ import (
 	"time"
 )
 
-
 type PublicUrlApiInfo struct {
 	BucketDomain string
 	Key          string

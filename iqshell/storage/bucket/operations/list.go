@@ -47,9 +47,9 @@ func List(info ListInfo) {
 			MaxRetry:          info.MaxRetry,
 			StopWhenListError: false,
 		},
-		FilePath:    info.SaveToFile,
-		AppendMode:  info.AppendMode,
-		Readable:    info.Readable,
+		FilePath:   info.SaveToFile,
+		AppendMode: info.AppendMode,
+		Readable:   info.Readable,
 	}, func(marker string, err error) {
 		log.ErrorF("marker: %s", marker)
 		log.ErrorF("list bucket Error: %v", err)

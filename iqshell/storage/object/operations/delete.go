@@ -108,7 +108,7 @@ func BatchDeleteAfter(info BatchDeleteInfo) {
 	}
 
 	batch.NewFlow(info.BatchInfo.Info).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in batch.Operation= nil
+		var in batch.Operation = nil
 		line, success := handler.Scanner().ScanLine()
 		if !success {
 			return nil, true

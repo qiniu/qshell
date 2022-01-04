@@ -7,7 +7,7 @@ import (
 )
 
 type FlowHandler interface {
-	ReadWork(func()(work Work, hasMore bool)) FlowHandler
+	ReadWork(func() (work Work, hasMore bool)) FlowHandler
 	DoWork(func(work Work) (Result, error)) FlowHandler
 	OnWorkError(func(work Work, err error)) FlowHandler
 	OnWorkResult(func(work Work, result Result)) FlowHandler
@@ -24,14 +24,14 @@ func NewFlowHandler(info Info) FlowHandler {
 type flowHandler struct {
 	info                *Info
 	worker              Worker
-	workReader          func()(work Work, hasMore bool)
+	workReader          func() (work Work, hasMore bool)
 	workHandler         func(work Work) (Result, error)
 	workErrorHandler    func(action Work, err error)
 	workResultHandler   func(action Work, result Result)
 	workCompleteHandler func()
 }
 
-func (b *flowHandler) ReadWork(reader func()(work Work, hasMore bool)) FlowHandler {
+func (b *flowHandler) ReadWork(reader func() (work Work, hasMore bool)) FlowHandler {
 	b.workReader = reader
 	return b
 }

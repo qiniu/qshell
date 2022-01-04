@@ -54,7 +54,7 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	retryCount := 0
-	for ; info.MaxRetry < 0 || retryCount <= info.MaxRetry; {
+	for info.MaxRetry < 0 || retryCount <= info.MaxRetry {
 		entries, lErr := bucketManager.ListBucketContext(workspace.GetContext(), info.Bucket, info.Prefix, info.Delimiter, info.Marker)
 		if entries == nil && lErr == nil {
 			lErr = errors.New("meet empty body when list not completed")

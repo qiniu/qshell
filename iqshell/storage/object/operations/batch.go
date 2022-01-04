@@ -92,4 +92,3 @@ func (b *batchHandler) Scanner() scanner.Scanner {
 func (b *batchHandler) Export() *export.FileExporter {
 	return b.export
 }
-
