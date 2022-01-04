@@ -63,18 +63,18 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
 }
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-}
-
 func loadConfig() {
 	err := iqshell.Load(cfg)
 
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
 		os.Exit(data.STATUS_ERROR)
+	}
+}
+
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
 	}
 }
