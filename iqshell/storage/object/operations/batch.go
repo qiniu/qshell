@@ -15,9 +15,9 @@ type BatchInfo struct {
 	batch.Info
 
 	ItemSeparate           string
-	InputFile              string
-	Force                  bool // 无需验证即可 batch 操作，类似于二维码验证
-	Overwrite              bool // 强制执行，服务端参数
+	InputFile              string // batch 操作输入文件
+	Force                  bool   // 无需验证即可 batch 操作，类似于二维码验证
+	Overwrite              bool   // 强制执行，服务端参数
 	FailExportFilePath     string
 	SuccessExportFilePath  string
 	OverrideExportFilePath string

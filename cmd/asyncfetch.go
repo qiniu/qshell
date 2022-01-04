@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	operations2 "github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
 func asyncFetchCmdBuilder() *cobra.Command {
-	info := operations2.BatchAsyncFetchInfo{}
+	info := operations.BatchAsyncFetchInfo{}
 	cmd := &cobra.Command{
 		Use:   "abfetch <Bucket> [-i <urlList>]",
 		Short: "Async Batch fetch network resources to qiniu Bucket",
@@ -15,7 +15,7 @@ func asyncFetchCmdBuilder() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			operations2.BatchAsyncFetch(info)
+			operations.BatchAsyncFetch(info)
 		},
 	}
 
@@ -35,7 +35,7 @@ func asyncFetchCmdBuilder() *cobra.Command {
 // NewCmdAsyncCheck 用来查询异步抓取的结果
 func asyncCheckCmdBuilder() *cobra.Command {
 
-	info := operations2.CheckAsyncFetchStatusInfo{}
+	info := operations.CheckAsyncFetchStatusInfo{}
 	cmd := &cobra.Command{
 		Use:   "acheck <Bucket> <ID>",
 		Short: "Check Async fetch status",
@@ -45,7 +45,7 @@ func asyncCheckCmdBuilder() *cobra.Command {
 				info.Bucket = args[0]
 				info.Id = args[1]
 			}
-			operations2.CheckAsyncFetchStatus(info)
+			operations.CheckAsyncFetchStatus(info)
 		},
 	}
 	return cmd

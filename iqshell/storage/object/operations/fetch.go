@@ -124,106 +124,107 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 	}
 	fetchResultChan := make(chan fetchResult)
 
-	// checker
+	// fetch
 	go func() {
-		for result := range fetchResultChan {
-			counter := 0
-			maxDuration := asyncFetchCheckMaxDuration(result.fileSize)
-			deadline := time.Now().Add(maxDuration)
-			for counter < 3 {
-				current := time.Now()
-				if current.Before(deadline) {
-					ret, cErr := object.CheckAsyncFetchStatus(result.bucket, result.info.Id)
-					if cErr != nil {
-						log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
-					} else if ret.Wait == -1 { // 视频抓取过一次，有可能成功了，有可能失败了
-						counter += 1
-						exist, _ := object.Exist(object.ExistApiInfo{
-							Bucket: result.bucket,
-							Key:    result.key,
-						})
-						if exist {
-							handler.Export().Success().ExportF("%s\t%s", result.url, result.key)
-							log.Alert("fetch %s => %s:%s success", result.url, result.bucket, result.key)
-							break
-						} else {
-							log.ErrorF("Stat: %s: %v", result.key, err)
-						}
-					}
+		work.NewFlowHandler(info.BatchInfo.Info.Info).
+			ReadWork(func() (work work.Work, hasMore bool) {
+				line, success := handler.Scanner().ScanLine()
+				if !success {
+					return nil, false
 				}
-				time.Sleep(3 * time.Second)
+
+				items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
+				if len(items) <= 0 {
+					return nil, true
+				}
+
+				var size uint64 = 0
+				fromUrl := items[0]
+				if len(items) >= 2 {
+					s, pErr := strconv.ParseUint(items[1], 10, 64)
+					if pErr != nil {
+						handler.Export().Fail().ExportF("%s: %v", line, pErr)
+						return nil, true
+					}
+					size = s
+				}
+
+				saveKey, pErr := utils.KeyFromUrl(fromUrl)
+				if pErr != nil {
+					handler.Export().Fail().ExportF("%s: %v", line, pErr)
+					return nil, true
+				}
+
+				return fetchItem{
+					fileSize: size,
+					info: object.AsyncFetchApiInfo{
+						Url:              fromUrl,
+						Host:             info.Host,
+						Bucket:           info.Bucket,
+						Key:              saveKey,
+						Md5:              info.Md5,
+						Etag:             info.Etag,
+						CallbackURL:      info.CallbackUrl,
+						CallbackBody:     info.CallbackBody,
+						CallbackBodyType: info.CallbackBodyType,
+						FileType:         info.FileType,
+					},
+				}, true
+			}).DoWork(func(work work.Work) (work.Result, error) {
+			in := work.(fetchItem)
+			return object.AsyncFetch(in.info)
+		}).OnWorkResult(func(work work.Work, result work.Result) {
+			in := work.(fetchItem)
+			res := result.(object.AsyncFetchApiResult)
+			fetchResultChan <- fetchResult{
+				bucket:   in.info.Bucket,
+				key:      in.info.Key,
+				url:      in.info.Url,
+				fileSize: in.fileSize,
+				info:     res,
 			}
-			if counter >= 3 {
-				handler.Export().Fail().ExportF("%s\t%d\t%s", result.url, result.fileSize, result.key)
-				log.ErrorF("fetch %s => %s:%s failed", result.url, result.bucket, result.key)
-			}
-		}
+		}).OnWorkError(func(work work.Work, err error) {
+			in := work.(fetchItem)
+			handler.Export().Fail().ExportF("%s: %v\n", in.info.Url, err)
+			log.ErrorF("Fetch '%s' => %s:%s Failed, Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
+		}).OnWorksComplete(func() {
+			close(fetchResultChan)
+		}).Start()
 	}()
 
-	// fetch
-	work.NewFlowHandler(info.BatchInfo.Info.Info).ReadWork(func() (work work.Work, hasMore bool) {
-		line, success := handler.Scanner().ScanLine()
-		if !success {
-			return nil, false
-		}
-
-		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
-		if len(items) <= 0 {
-			return nil, true
-		}
-
-		var size uint64 = 0
-		fromUrl := items[0]
-		if len(items) >= 2 {
-			s, pErr := strconv.ParseUint(items[1], 10, 64)
-			if pErr != nil {
-				handler.Export().Fail().ExportF("%s: %v", line, pErr)
-				return nil, true
+	// checker
+	for result := range fetchResultChan {
+		counter := 0
+		maxDuration := asyncFetchCheckMaxDuration(result.fileSize)
+		deadline := time.Now().Add(maxDuration)
+		for counter < 3 {
+			current := time.Now()
+			if current.Before(deadline) {
+				ret, cErr := object.CheckAsyncFetchStatus(result.bucket, result.info.Id)
+				if cErr != nil {
+					log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
+				} else if ret.Wait == -1 { // 视频抓取过一次，有可能成功了，有可能失败了
+					counter += 1
+					exist, _ := object.Exist(object.ExistApiInfo{
+						Bucket: result.bucket,
+						Key:    result.key,
+					})
+					if exist {
+						handler.Export().Success().ExportF("%s\t%s", result.url, result.key)
+						log.Alert("fetch %s => %s:%s success", result.url, result.bucket, result.key)
+						break
+					} else {
+						log.ErrorF("Stat: %s: %v", result.key, err)
+					}
+				}
 			}
-			size = s
+			time.Sleep(3 * time.Second)
 		}
-
-		saveKey, pErr := utils.KeyFromUrl(fromUrl)
-		if pErr != nil {
-			handler.Export().Fail().ExportF("%s: %v", line, pErr)
-			return nil, true
+		if counter >= 3 {
+			handler.Export().Fail().ExportF("%s\t%d\t%s", result.url, result.fileSize, result.key)
+			log.ErrorF("fetch %s => %s:%s failed", result.url, result.bucket, result.key)
 		}
-
-		return fetchItem{
-			fileSize: size,
-			info: object.AsyncFetchApiInfo{
-				Url:              fromUrl,
-				Host:             info.Host,
-				Bucket:           info.Bucket,
-				Key:              saveKey,
-				Md5:              info.Md5,
-				Etag:             info.Etag,
-				CallbackURL:      info.CallbackUrl,
-				CallbackBody:     info.CallbackBody,
-				CallbackBodyType: info.CallbackBodyType,
-				FileType:         info.FileType,
-			},
-		}, true
-	}).DoWork(func(work work.Work) (work.Result, error) {
-		in := work.(fetchItem)
-		return object.AsyncFetch(in.info)
-	}).OnWorkResult(func(work work.Work, result work.Result) {
-		in := work.(fetchItem)
-		res := result.(object.AsyncFetchApiResult)
-		fetchResultChan <- fetchResult{
-			bucket:   in.info.Bucket,
-			key:      in.info.Key,
-			url:      in.info.Url,
-			fileSize: in.fileSize,
-			info:     res,
-		}
-	}).OnWorkError(func(work work.Work, err error) {
-		in := work.(fetchItem)
-		handler.Export().Fail().ExportF("%s: %v\n", in.info.Url, err)
-		log.ErrorF("Fetch '%s' => %s:%s Failed, Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
-	}).OnWorksComplete(func() {
-		close(fetchResultChan)
-	}).Start()
+	}
 }
 
 func asyncFetchCheckMaxDuration(size uint64) time.Duration {
