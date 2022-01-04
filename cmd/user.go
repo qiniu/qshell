@@ -169,7 +169,6 @@ var userRmCmdBuilder = func() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
 				info.Name = args[0]
-				return
 			}
 			loadConfig()
 			operations.Remove(info)
