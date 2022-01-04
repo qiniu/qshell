@@ -11,6 +11,7 @@ func versionCmdBuilder() *cobra.Command {
 		Use:   "version",
 		Short: "show version",
 		Run: func(cmd *cobra.Command, params []string) {
+			loadConfig()
 			log.Alert(data.Version)
 		},
 	}
