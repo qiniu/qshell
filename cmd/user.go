@@ -20,15 +20,14 @@ var accountCmdBuilder = func() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
+				loadConfig()
 				operations.Current()
 			} else if len(args) == 3 {
-				accessKey := args[0]
-				secretKey := args[1]
-				name := args[2]
+				loadConfig()
 				operations.Add(operations.AddInfo{
-					Name:      name,
-					AccessKey: accessKey,
-					SecretKey: secretKey,
+					Name:      args[2],
+					AccessKey: args[0],
+					SecretKey: args[1],
 					Over:      accountOver,
 				})
 			}
@@ -56,6 +55,7 @@ var userLsCmdBuilder = func() *cobra.Command {
 		Short:   "List all user registered",
 		Example: `qshell user ls`,
 		Run: func(cmd *cobra.Command, args []string) {
+			loadConfig()
 			operations.List(info)
 		},
 	}
@@ -72,6 +72,7 @@ var userCurrentCmdBuilder = func() *cobra.Command {
 		Short:   "get current user info",
 		Example: `qshell user current`,
 		Run: func(cmd *cobra.Command, args []string) {
+			loadConfig()
 			operations.Current()
 		},
 	}
@@ -89,6 +90,7 @@ var userLookupCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Name = args[0]
 			}
+			loadConfig()
 			operations.LookUp(info)
 		},
 	}
@@ -111,6 +113,7 @@ var userAddCmdBuilder = func() *cobra.Command {
 				cmdInfo.SecretKey = args[1]
 				cmdInfo.Name = args[2]
 			}
+			loadConfig()
 			operations.Add(cmdInfo)
 		},
 	}
@@ -134,6 +137,7 @@ var userChCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
+			loadConfig()
 			operations.Change(info)
 		},
 	}
@@ -148,6 +152,7 @@ var userCleanCmdBuilder = func() *cobra.Command {
 		Long:    "Remove all users from inner dbs.",
 		Example: `qshell user clean`,
 		Run: func(cmd *cobra.Command, args []string) {
+			loadConfig()
 			operations.Clean()
 		},
 	}
@@ -166,7 +171,7 @@ var userRmCmdBuilder = func() *cobra.Command {
 				info.Name = args[0]
 				return
 			}
-
+			loadConfig()
 			operations.Remove(info)
 		},
 	}
