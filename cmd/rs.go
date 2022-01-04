@@ -326,7 +326,7 @@ var fetchCmdBuilder = func() *cobra.Command {
 
 func init() {
 
-	RootCmd.AddCommand(
+	rootCmd.AddCommand(
 		listBucketCmdBuilder(),
 		listBucketCmd2Builder(),
 		statCmdBuilder(),

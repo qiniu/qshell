@@ -52,6 +52,6 @@ func asyncCheckCmdBuilder() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(asyncFetchCmdBuilder())
-	RootCmd.AddCommand(asyncCheckCmdBuilder())
+	rootCmd.AddCommand(asyncFetchCmdBuilder())
+	rootCmd.AddCommand(asyncCheckCmdBuilder())
 }

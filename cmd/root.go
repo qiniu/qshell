@@ -41,37 +41,33 @@ __custom_func() {
 `
 )
 
-// RootCmd cobra root cmd, all other commands is children or subchildren of this root cmd
-var RootCmd = &cobra.Command{
+// rootCmd cobra root cmd, all other commands is children or subchildren of this root cmd
+var rootCmd = &cobra.Command{
 	Use:                    "qshell",
 	Short:                  "Qiniu commandline tool for managing your bucket and CDN",
 	Version:                data.Version,
 	BashCompletionFunction: bash_completion_func,
 }
 
-var initFuncs []func()
-
-func OnInitialize(f ...func()) {
-	initFuncs = append(initFuncs, f...)
-}
-
 func init() {
-	cobra.OnInitialize(func() {
-		for _, f := range initFuncs {
-			f()
-		}
-	})
 	cfg = iqshell.Config{
 		DebugEnable:    false,
 		DDebugEnable:   false,
 		ConfigFilePath: "",
 		Local:          false,
 	}
-	RootCmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
+	rootCmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
 	// ddebug 开启 client debug
-	RootCmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
-	RootCmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "config file (default is $HOME/.qshell.json)")
-	RootCmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
+	rootCmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
+	rootCmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "config file (default is $HOME/.qshell.json)")
+	rootCmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
+}
+
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
 }
 
 func loadConfig() {

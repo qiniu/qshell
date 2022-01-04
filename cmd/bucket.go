@@ -38,7 +38,7 @@ var domainsCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(
+	rootCmd.AddCommand(
 		bucketsCmdBuilder(), // 列举所有 bucket
 		domainsCmdBuilder(), // 列举某个 bucket 的 domain
 	)

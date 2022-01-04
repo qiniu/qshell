@@ -189,7 +189,7 @@ func init() {
 		userCurrentCmdBuilder(), // 查看当前用户信息
 	)
 
-	RootCmd.AddCommand(
+	rootCmd.AddCommand(
 		accountCmdBuilder(),
 		userCmd,
 	)

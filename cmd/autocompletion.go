@@ -24,7 +24,7 @@ To configure your bash shell to load completions for each session add to your ba
 
 		switch shName {
 		case "bash":
-			RootCmd.GenBashCompletion(os.Stdout)
+			rootCmd.GenBashCompletion(os.Stdout)
 		case "zsh":
 			zsh_head := "#compdef qshell\n"
 
@@ -158,7 +158,7 @@ __qshell_convert_bash_to_zsh() {
 			os.Stdout.Write([]byte(zsh_initialization))
 
 			buf := new(bytes.Buffer)
-			RootCmd.GenBashCompletion(buf)
+			rootCmd.GenBashCompletion(buf)
 			os.Stdout.Write(buf.Bytes())
 
 			zsh_tail := `
@@ -173,5 +173,5 @@ _complete qshell 2>/dev/null
 }
 
 func init() {
-	RootCmd.AddCommand(&compCmd)
+	rootCmd.AddCommand(&compCmd)
 }

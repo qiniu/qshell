@@ -61,7 +61,7 @@ func awsListCmdBuilder() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(
+	rootCmd.AddCommand(
 		awsFetchCmdBuilder(),
 		awsListCmdBuilder(),
 	)

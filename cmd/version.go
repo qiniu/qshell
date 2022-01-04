@@ -33,7 +33,7 @@ func testCmdBuilder() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(versionCmdBuilder(), testCmdBuilder())
+	rootCmd.AddCommand(versionCmdBuilder(), testCmdBuilder())
 }
 
 type Status struct {

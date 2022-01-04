@@ -48,5 +48,5 @@ var m3u8DeleteCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(m3u8ReplaceDomainCmdBuilder(), m3u8DeleteCmdBuilder())
+	rootCmd.AddCommand(m3u8ReplaceDomainCmdBuilder(), m3u8DeleteCmdBuilder())
 }

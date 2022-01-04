@@ -147,7 +147,7 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(
+	rootCmd.AddCommand(
 		uploadCmdBuilder(),
 		upload2CmdBuilder(),
 		syncCmdBuilder(),

@@ -241,7 +241,7 @@ var batchFetchCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(
+	rootCmd.AddCommand(
 		batchStatCmdBuilder(),
 		batchCopyCmdBuilder(),
 		batchMoveCmdBuilder(),

@@ -45,5 +45,5 @@ var preFopCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(preFopCmdBuilder(), preFopStatusCmdBuilder())
+	rootCmd.AddCommand(preFopCmdBuilder(), preFopStatusCmdBuilder())
 }

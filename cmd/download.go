@@ -26,5 +26,5 @@ have already in local disk and need to skip download or not.`,
 }
 
 func init() {
-	RootCmd.AddCommand(downloadCmdBuilder())
+	rootCmd.AddCommand(downloadCmdBuilder())
 }

@@ -29,5 +29,5 @@ var aliCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(aliCmdBuilder())
+	rootCmd.AddCommand(aliCmdBuilder())
 }

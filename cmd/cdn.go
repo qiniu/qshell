@@ -47,7 +47,7 @@ var cdnRefreshCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(
+	rootCmd.AddCommand(
 		cdnPrefetchCmdBuilder(),
 		cdnRefreshCmdBuilder(),
 	)

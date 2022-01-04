@@ -353,7 +353,7 @@ var dirCacheCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	RootCmd.AddCommand(
+	rootCmd.AddCommand(
 		rpcEncodeCmdBuilder(),
 		rpcDecodeCmdBuilder(),
 		base64EncodeCmdBuilder(),
