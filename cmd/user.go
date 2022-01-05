@@ -87,7 +87,7 @@ var userLookupCmdBuilder = func() *cobra.Command {
 		Short:   "Lookup user info by user name",
 		Example: `qshell user lookup <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 1 {
+			if len(args) > 0 {
 				info.Name = args[0]
 			}
 			loadConfig()
