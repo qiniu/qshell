@@ -14,11 +14,7 @@ const (
 )
 
 func TestRPCEncode(t *testing.T) {
-	result := ""
-	test.NewTestFlow("rpcencode", rpcEncodeString).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t, "rpcencode", rpcEncodeString)
 	if !strings.Contains(result, rpcDecodeString) {
 		t.Fail()
 	}
@@ -26,11 +22,7 @@ func TestRPCEncode(t *testing.T) {
 }
 
 func TestRPCDecode(t *testing.T) {
-	result := ""
-	test.NewTestFlow("rpcdecode", rpcDecodeString).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"rpcdecode", rpcDecodeString)
 	if !strings.Contains(result, rpcEncodeString) {
 		t.Fail()
 	}
@@ -43,11 +35,7 @@ const (
 )
 
 func TestBase64Encode(t *testing.T) {
-	result := ""
-	test.NewTestFlow("b64encode", base64EncodeString).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"b64encode", base64EncodeString)
 	if !strings.Contains(result, base64DecodeString) {
 		t.Fail()
 	}
@@ -55,11 +43,7 @@ func TestBase64Encode(t *testing.T) {
 }
 
 func TestBase64Decode(t *testing.T) {
-	result := ""
-	test.NewTestFlow("b64decode", base64DecodeString).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"b64decode", base64DecodeString)
 	if !strings.Contains(result, base64EncodeString) {
 		t.Fail()
 	}
@@ -70,11 +54,7 @@ func TestD2ts(t *testing.T) {
 	duration := 0
 	currentTime := time.Now()
 	timeString := currentTime.Format("2006-01-02 15:04:05")
-	result := ""
-	test.NewTestFlow("d2ts", strconv.Itoa(duration)).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"d2ts", strconv.Itoa(duration))
 	if !strings.Contains(result, timeString) {
 		t.Fail()
 	}
@@ -87,11 +67,7 @@ const (
 )
 
 func TestTs2d(t *testing.T) {
-	result := ""
-	test.NewTestFlow("ts2d", strconv.Itoa(timestamp)).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"ts2d", strconv.Itoa(timestamp))
 	if !strings.Contains(result, timestampOfDate) {
 		t.Fail()
 	}
@@ -99,11 +75,7 @@ func TestTs2d(t *testing.T) {
 }
 
 func TestTms2d(t *testing.T) {
-	result := ""
-	test.NewTestFlow("tms2d", strconv.Itoa(timestamp*1000)).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"tms2d", strconv.Itoa(timestamp*1000))
 	if !strings.Contains(result, timestampOfDate) {
 		t.Fail()
 	}
@@ -111,12 +83,8 @@ func TestTms2d(t *testing.T) {
 }
 
 func TestTns2d(t *testing.T) {
-	result := ""
 	tns := timestamp * 1000 * 1000 * 10
-	test.NewTestFlow("tns2d", strconv.Itoa(tns)).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"tns2d", strconv.Itoa(tns))
 	if !strings.Contains(result, timestampOfDate) {
 		t.Fail()
 	}
@@ -129,11 +97,7 @@ const (
 )
 
 func TestUrlEncode(t *testing.T) {
-	result := ""
-	test.NewTestFlow("urlencode", urlEncodeString).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"urlencode", urlEncodeString)
 	if !strings.Contains(result, urlDecodeString) {
 		t.Fail()
 	}
@@ -141,11 +105,7 @@ func TestUrlEncode(t *testing.T) {
 }
 
 func TestUrlDecode(t *testing.T) {
-	result := ""
-	test.NewTestFlow("urldecode", urlDecodeString).ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"urldecode", urlDecodeString)
 	if !strings.Contains(result, urlEncodeString) {
 		t.Fail()
 	}
@@ -153,11 +113,7 @@ func TestUrlDecode(t *testing.T) {
 }
 
 func TestReqid(t *testing.T) {
-	result := ""
-	test.NewTestFlow("reqid", "62kAAIYB06brhtsT").ResultHandler(func(line string) {
-		result += line
-	}).ErrorHandler(test.DefaultTestErrorHandler(t)).Run()
-
+	result := test.RunCmd(t,"reqid", "62kAAIYB06brhtsT")
 	if !strings.Contains(result, "2015-05-06/12-14") {
 		t.Fail()
 	}
