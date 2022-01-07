@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
 type Config struct {
@@ -13,6 +14,7 @@ type Config struct {
 	Hosts       Hosts            `json:"hosts,omitempty"`
 	Up          Up               `json:"up,omitempty"`
 	Download    Download         `json:"download,omitempty"`
+	Log         log.Config       `json:"log"` //TODO: 日志配置兼容
 }
 
 func (c Config) IsUseHttps() bool {

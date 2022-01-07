@@ -5,13 +5,13 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
-func LoadConsole(logLevel Level) (err error) {
-	err = progressStdoutLog.SetLogger(adapterConsole)
+func LoadConsole(cfg Config) (err error) {
+	err = progressStdoutLog.SetLogger(adapterConsole, cfg.ToJson())
 	if err != nil {
 		err = errors.New("load console error when set logger:" + err.Error())
 		return
 	}
-	progressStdoutLog.SetLevel(int(logLevel))
+	progressStdoutLog.SetLevel(cfg.Level)
 	err = progressStdoutLog.DelLogger(logs.AdapterConsole)
 	if err != nil {
 		err = errors.New("load console error when del logger:" + err.Error())

@@ -49,7 +49,13 @@ func Load(cfg Config) error {
 	if cfg.DDebugEnable {
 		client.TurnOnDebug()
 	}
-	_ = log.LoadConsole(logLevel)
+
+	//TODO: 此处逻辑处理
+	if cfg.CmdCfg.Log.Level == 0 {
+		cfg.CmdCfg.Log.Level = int(logLevel)
+	}
+	cfg.CmdCfg.Log.StdOutColorful = false
+	_ = log.LoadConsole(cfg.CmdCfg.Log)
 
 	// 加载工作区
 	if err := workspace.Load(workspace.Workspace(workspacePath),

@@ -17,10 +17,11 @@ const (
 type Level int
 
 type Config struct {
-	Filename string `json:"filename"`
-	Level    int    `json:"level"`
-	Daily    bool   `json:"daily"`
-	MaxDays  int    `json:"maxdays"`
+	Filename       string `json:"filename"`
+	Level          int    `json:"level"`
+	Daily          bool   `json:"daily"`
+	StdOutColorful bool   `json:"color"`
+	MaxDays        int    `json:"maxdays"`
 }
 
 func (c *Config) ToJson() string {

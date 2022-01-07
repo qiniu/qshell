@@ -1,10 +1,13 @@
 package cmd
 
-import "strings"
+import (
+	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"strings"
+)
 
 func addUser(userName, ak, sk string) (success bool, errorMsg string) {
 	result := ""
-	NewTestFlow("user", "add", ak, sk, userName).ResultHandler(func(line string) {
+	test.NewTestFlow("user", "add", ak, sk, userName).ResultHandler(func(line string) {
 		result += line
 	}).ErrorHandler(func(line string) {
 		errorMsg = "add error"
@@ -15,7 +18,7 @@ func addUser(userName, ak, sk string) (success bool, errorMsg string) {
 
 func addUserWithLongOptions(userName, ak, sk string) (success bool, errorMsg string) {
 	result := ""
-	NewTestFlow("user", "add", "--ak", ak, "--sk", sk, "--name", userName).ResultHandler(func(line string) {
+	test.NewTestFlow("user", "add", "--ak", ak, "--sk", sk, "--name", userName).ResultHandler(func(line string) {
 		result += line
 	}).ErrorHandler(func(line string) {
 		errorMsg = "add with long options error"
@@ -26,7 +29,7 @@ func addUserWithLongOptions(userName, ak, sk string) (success bool, errorMsg str
 
 func cleanUser() (success bool, errorMsg string) {
 	result := ""
-	NewTestFlow("user", "clean").ResultHandler(func(line string) {
+	test.NewTestFlow("user", "clean").ResultHandler(func(line string) {
 		result += line
 	}).ErrorHandler(func(line string) {
 		errorMsg = "clean user error"
@@ -37,7 +40,7 @@ func cleanUser() (success bool, errorMsg string) {
 
 func deleteUser(userName string) (success bool, errorMsg string) {
 	result := ""
-	NewTestFlow("user", "remove", userName).ResultHandler(func(line string) {
+	test.NewTestFlow("user", "remove", userName).ResultHandler(func(line string) {
 		result += line
 	}).ErrorHandler(func(line string) {
 		errorMsg = "add user error"
@@ -48,7 +51,7 @@ func deleteUser(userName string) (success bool, errorMsg string) {
 
 func changeCurrentUser(userName string) (success bool, errorMsg string) {
 	result := ""
-	NewTestFlow("user", "cu", userName).ResultHandler(func(line string) {
+	test.NewTestFlow("user", "cu", userName).ResultHandler(func(line string) {
 		result += line
 	}).ErrorHandler(func(line string) {
 		errorMsg = "change current error"
@@ -59,7 +62,7 @@ func changeCurrentUser(userName string) (success bool, errorMsg string) {
 
 func currentUserIs(userName string) (isUser bool, errorMsg string) {
 	result := ""
-	NewTestFlow("user", "current").ResultHandler(func(line string) {
+	test.NewTestFlow("user", "current").ResultHandler(func(line string) {
 		result += line
 	}).ErrorHandler(func(line string) {
 		errorMsg = "get current error"
@@ -71,7 +74,7 @@ func currentUserIs(userName string) (isUser bool, errorMsg string) {
 
 func lookupUser(userName string) (isFound bool, errorMsg string) {
 	result := ""
-	NewTestFlow("user", "lookup", userName).ResultHandler(func(line string) {
+	test.NewTestFlow("user", "lookup", userName).ResultHandler(func(line string) {
 		result += line
 	}).ErrorHandler(func(line string) {
 		errorMsg = "lookup user error"
@@ -82,7 +85,7 @@ func lookupUser(userName string) (isFound bool, errorMsg string) {
 
 func containUser(userName string) (contain bool, errorMsg string) {
 	result := ""
-	NewTestFlow("user", "ls").ResultHandler(func(line string) {
+	test.NewTestFlow("user", "ls").ResultHandler(func(line string) {
 		result += line
 	}).ErrorHandler(func(line string) {
 		errorMsg = "ls error"
@@ -94,7 +97,7 @@ func containUser(userName string) (contain bool, errorMsg string) {
 
 func hasUser() (hasUser bool, errorMsg string) {
 	result := ""
-	NewTestFlow("user", "ls").ResultHandler(func(line string) {
+	test.NewTestFlow("user", "ls").ResultHandler(func(line string) {
 		result += line
 	}).ErrorHandler(func(line string) {
 		errorMsg = "ls error"
