@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"os"
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"testing"
 )
 
-var accessKey = os.Getenv("accessKey")
-var secretKey = os.Getenv("secretKey")
+var accessKey = test.AccessKey
+var secretKey = test.SecretKey
 
 func TestUser(t *testing.T) {
 	TestUserIntegration(t)

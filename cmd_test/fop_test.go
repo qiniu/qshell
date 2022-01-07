@@ -7,7 +7,7 @@ import (
 )
 
 func TestFop(t *testing.T) {
-	result, errs := test.RunCmdWithError("pfop", "qshell-na0", "test_mv.mp4", "avthumb/mp4")
+	result, errs := test.RunCmdWithError("pfop", test.Bucket, "test_mv.mp4", "avthumb/mp4")
 	if len(errs) > 0{
 		t.Fail()
 	}

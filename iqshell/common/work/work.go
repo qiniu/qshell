@@ -1,7 +1,6 @@
 package work
 
 import (
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"sync"
 )
@@ -18,12 +17,13 @@ type FlowHandler interface {
 func NewFlowHandler(info Info) FlowHandler {
 	return &flowHandler{
 		info: &info,
+		worker: &worker{},
 	}
 }
 
 type flowHandler struct {
 	info                *Info
-	worker              Worker
+	worker              *worker
 	workReader          func() (work Work, hasMore bool)
 	workHandler         func(work Work) (Result, error)
 	workErrorHandler    func(action Work, err error)
@@ -32,12 +32,12 @@ type flowHandler struct {
 }
 
 func (b *flowHandler) ReadWork(reader func() (work Work, hasMore bool)) FlowHandler {
-	b.workReader = reader
+	b.worker.reader = reader
 	return b
 }
 
 func (b *flowHandler) DoWork(handler func(work Work) (Result, error)) FlowHandler {
-	b.workHandler = handler
+	b.worker.handler = handler
 	return b
 }
 
@@ -70,12 +70,6 @@ func (b *flowHandler) handlerComplete() {
 }
 
 func (b *flowHandler) Start() {
-
-	if b.worker == nil {
-		logs.Warn("no worker")
-		b.worker = NewWorker(nil, nil)
-	}
-
 	workChan := make(chan Work, b.info.WorkCount)
 
 	// 生产者
@@ -85,11 +79,11 @@ func (b *flowHandler) Start() {
 				break
 			}
 
-			work, completed := b.worker.ReadWork()
+			work, hasMore := b.worker.ReadWork()
 			if work != nil {
 				workChan <- work
 			}
-			if completed {
+			if !hasMore {
 				break
 			}
 		}
@@ -102,7 +96,6 @@ func (b *flowHandler) Start() {
 	for i := 0; i < b.info.WorkCount; i++ {
 		go func() {
 			for work := range workChan {
-
 				result, err := b.worker.DoWork(work)
 				if err != nil {
 					b.handleActionError(work, err)
@@ -116,6 +109,7 @@ func (b *flowHandler) Start() {
 					break
 				}
 			}
+			wait.Done()
 		}()
 	}
 	wait.Wait()

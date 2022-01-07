@@ -27,8 +27,10 @@ func NewScanner(info Info) (Scanner, error) {
 		}
 		s.file = f
 		s.scanner = bufio.NewScanner(f)
+		log.DebugF("read data from file:%s", info.InputFile)
 	} else if info.StdInEnable {
 		s.scanner = bufio.NewScanner(os.Stdin)
+		log.Debug("read data from stdin")
 	} else {
 		return nil, errors.New("no scanner source")
 	}

@@ -2,6 +2,8 @@ package test
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/cmd"
+	"os"
 	"os/exec"
 )
 
@@ -31,15 +33,32 @@ func (t *testFlow) Run() {
 	fmt.Println("")
 	fmt.Println("========== CMD Start:", t.args, "==========")
 
-	cmd := exec.Command("qshell", t.args...)
-	cmd.Stdout = newLineWriter(t.resultHandler)
-	cmd.Stderr = newLineWriter(t.errorHandler)
+	var err error
+	if Debug {
+		err = t.runByCode()
+	} else {
+		err = t.runByCommand()
+	}
 
-	if err := cmd.Run(); err != nil {
+	if err != nil {
 		fmt.Println("========== CMD   End:", t.args, " error:", err.Error(), "==========")
 	} else {
 		fmt.Println("========== CMD   End:", t.args, "==========")
 	}
 
 	fmt.Println("")
+}
+
+func (t *testFlow) runByCommand() error {
+	cmd := exec.Command("qshell", t.args...)
+	cmd.Stdout = newLineWriter(t.resultHandler)
+	cmd.Stderr = newLineWriter(t.errorHandler)
+	return cmd.Run()
+}
+
+func (t *testFlow) runByCode() error {
+	args := []string{"qshell"}
+	os.Args = append(args, t.args...)
+	cmd.Execute()
+	return nil
 }

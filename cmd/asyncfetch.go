@@ -15,6 +15,7 @@ func asyncFetchCmdBuilder() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
+			loadConfig()
 			operations.BatchAsyncFetch(info)
 		},
 	}
@@ -24,7 +25,7 @@ func asyncFetchCmdBuilder() *cobra.Command {
 	cmd.Flags().StringVarP(&info.CallbackBody, "callback-body", "b", "", "callback body")
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "callback HOST")
 	cmd.Flags().IntVarP(&info.FileType, "storage-type", "g", 0, "storage type")
-	cmd.Flags().StringVarP(&info.InputFile, "input-file", "i", "", "input file with urls")
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file with urls")
 	cmd.Flags().IntVarP(&info.BatchInfo.WorkCount, "thread-count", "c", 20, "thread count")
 	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "success fetch list")
 	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "error fetch list")
@@ -45,6 +46,7 @@ func asyncCheckCmdBuilder() *cobra.Command {
 				info.Bucket = args[0]
 				info.Id = args[1]
 			}
+			loadConfig()
 			operations.CheckAsyncFetchStatus(info)
 		},
 	}

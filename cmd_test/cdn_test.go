@@ -8,15 +8,7 @@ import (
 
 func TestCdnPrefetch(t *testing.T) {
 
-	path, err := test.CreateFileWithContent("cdn_prefetch.txt", `
-https://qshell-na0.qiniupkg.com/hello1.json
-https://qshell-na0.qiniupkg.com/hello2.json
-https://qshell-na0.qiniupkg.com/hello3.json
-https://qshell-na0.qiniupkg.com/hello4.json
-https://qshell-na0.qiniupkg.com/hello5.json
-https://qshell-na0.qiniupkg.com/hello6.json
-https://qshell-na0.qiniupkg.com/hello7.json
-`)
+	path, err := test.CreateFileWithContent("cdn_prefetch.txt", test.BucketObjectListString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
@@ -32,15 +24,7 @@ https://qshell-na0.qiniupkg.com/hello7.json
 }
 
 func TestCdnRefreshFile(t *testing.T) {
-	path, err := test.CreateFileWithContent("cdn_refresh.txt", `
-https://qshell-na0.qiniupkg.com/hello1.json
-https://qshell-na0.qiniupkg.com/hello2.json
-https://qshell-na0.qiniupkg.com/hello3.json
-https://qshell-na0.qiniupkg.com/hello4.json
-https://qshell-na0.qiniupkg.com/hello5.json
-https://qshell-na0.qiniupkg.com/hello6.json
-https://qshell-na0.qiniupkg.com/hello7.json
-`)
+	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectListString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
@@ -57,15 +41,7 @@ https://qshell-na0.qiniupkg.com/hello7.json
 
 
 func TestCdnRefreshDirs(t *testing.T) {
-	path, err := test.CreateFileWithContent("cdn_refresh.txt", `
-https://qshell-na0.qiniupkg.com/hello1.json
-https://qshell-na0.qiniupkg.com/hello2.json
-https://qshell-na0.qiniupkg.com/hello3.json
-https://qshell-na0.qiniupkg.com/hello4.json
-https://qshell-na0.qiniupkg.com/hello5.json
-https://qshell-na0.qiniupkg.com/hello6.json
-https://qshell-na0.qiniupkg.com/hello7.json
-`)
+	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectListString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}

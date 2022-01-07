@@ -94,14 +94,11 @@ type BatchAsyncFetchInfo struct {
 	BatchInfo        BatchInfo
 	Bucket           string // fetch 的目的 bucket
 	Host             string // 从指定URL下载时指定的HOST
-	Md5              string // 设置了该值，抓取的过程使用文件md5值进行校验, 校验失败不存在七牛空间
-	Etag             string // 设置了该值， 抓取的过程中使用etag进行校验，失败不保存在存储空间中
 	CallbackUrl      string // 抓取成功的回调地址
 	CallbackBody     string
 	CallbackBodyType string
 	CallbackHost     string // 回调时使用的HOST
 	FileType         int    // 文件存储类型， 0 标准存储， 1 低频存储
-	InputFile        string // 输入访问地址列表
 }
 
 func BatchAsyncFetch(info BatchAsyncFetchInfo) {
@@ -122,7 +119,7 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 		fileSize uint64
 		info     object.AsyncFetchApiResult
 	}
-	fetchResultChan := make(chan fetchResult)
+	fetchResultChan := make(chan fetchResult, 10)
 
 	// fetch
 	go func() {
@@ -162,34 +159,40 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 						Host:             info.Host,
 						Bucket:           info.Bucket,
 						Key:              saveKey,
-						Md5:              info.Md5,
-						Etag:             info.Etag,
+						Md5:              "", // 设置了该值，抓取的过程使用文件md5值进行校验, 校验失败不存在七牛空间
+						Etag:             "", // 设置了该值， 抓取的过程中使用etag进行校验，失败不保存在存储空间中
 						CallbackURL:      info.CallbackUrl,
 						CallbackBody:     info.CallbackBody,
 						CallbackBodyType: info.CallbackBodyType,
 						FileType:         info.FileType,
 					},
 				}, true
-			}).DoWork(func(work work.Work) (work.Result, error) {
-			in := work.(fetchItem)
-			return object.AsyncFetch(in.info)
-		}).OnWorkResult(func(work work.Work, result work.Result) {
-			in := work.(fetchItem)
-			res := result.(object.AsyncFetchApiResult)
-			fetchResultChan <- fetchResult{
-				bucket:   in.info.Bucket,
-				key:      in.info.Key,
-				url:      in.info.Url,
-				fileSize: in.fileSize,
-				info:     res,
-			}
-		}).OnWorkError(func(work work.Work, err error) {
-			in := work.(fetchItem)
-			handler.Export().Fail().ExportF("%s: %v\n", in.info.Url, err)
-			log.ErrorF("Fetch '%s' => %s:%s Failed, Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
-		}).OnWorksComplete(func() {
-			close(fetchResultChan)
-		}).Start()
+			}).
+			DoWork(func(work work.Work) (work.Result, error) {
+				in := work.(fetchItem)
+				return object.AsyncFetch(in.info)
+			}).
+			OnWorkResult(func(work work.Work, result work.Result) {
+				in := work.(fetchItem)
+				res := result.(object.AsyncFetchApiResult)
+				fetchResultChan <- fetchResult{
+					bucket:   in.info.Bucket,
+					key:      in.info.Key,
+					url:      in.info.Url,
+					fileSize: in.fileSize,
+					info:     res,
+				}
+				log.DebugF("Fetch Response '%s' => %s:%s id:%s wait:%d", in.info.Url, in.info.Bucket, in.info.Key, res.Id, res.Wait)
+			}).
+			OnWorkError(func(work work.Work, err error) {
+				in := work.(fetchItem)
+				handler.Export().Fail().ExportF("%s: %v\n", in.info.Url, err)
+				log.ErrorF("Fetch '%s' => %s:%s Failed, Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
+			}).
+			OnWorksComplete(func() {
+				close(fetchResultChan)
+			}).
+			Start()
 	}()
 
 	// checker
@@ -211,7 +214,7 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 					})
 					if exist {
 						handler.Export().Success().ExportF("%s\t%s", result.url, result.key)
-						log.Alert("fetch %s => %s:%s success", result.url, result.bucket, result.key)
+						log.AlertF("fetch %s => %s:%s success", result.url, result.bucket, result.key)
 						break
 					} else {
 						log.ErrorF("Stat: %s: %v", result.key, err)
