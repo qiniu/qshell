@@ -7,8 +7,13 @@ import (
 )
 
 func TestPFop(t *testing.T) {
-	_, errs := test.RunCmdWithError("pfop", "qiniutest", "test.avi", "avthumb/mp4")
-	if !strings.Contains(errs, "400014") {
+	result, errs := test.RunCmdWithError("pfop", "qshell-na0", "test_mv.mp4", "avthumb/mp4")
+	if len(errs) > 0{
+		t.Fail()
+	}
+	result = strings.ReplaceAll(result, "\n", "")
+	result, errs = test.RunCmdWithError("prefop", result)
+	if len(errs) > 0{
 		t.Fail()
 	}
 }
