@@ -37,8 +37,10 @@ func Prefetch(urls []string) (err error) {
 	resp, err := cdnManager.PrefetchUrls(urls)
 	if err != nil {
 		err = errors.New("CDN prefetch error:" + err.Error())
-	} else if len(resp.Error) > 0 {
-		err = errors.New(fmt.Sprintf("CDN prefetch Code: %d, Info: %s", resp.Code, resp.Error))
+	} else if resp.Code != 200 {
+		err = errors.New(fmt.Sprintf("CDN prefetch Code: %d, Error: %s", resp.Code, resp.Error))
+	} else {
+		log.InfoF("CDN prefetch Code: %d, Info: %s", resp.Code, resp.Error)
 	}
 	return
 }
@@ -49,12 +51,14 @@ func Refresh(urls []string, dirs []string) (err error) {
 		return err
 	}
 
-	log.Debug("cdnRefresh, url size: %d, dir size: %d", len(urls), len(dirs))
+	log.DebugF("cdnRefresh, url size: %d, dir size: %d", len(urls), len(dirs))
 	resp, err := cdnManager.RefreshUrlsAndDirs(urls, dirs)
 	if err != nil {
 		err = errors.New("CDN refresh error:" + err.Error())
-	} else if len(resp.Error) > 0 {
-		err = errors.New(fmt.Sprintf("Code: %d, Info: %s", resp.Code, resp.Error))
+	} else if resp.Code != 200 {
+		err = errors.New(fmt.Sprintf("CDN refresh Code: %d, Error: %s", resp.Code, resp.Error))
+	} else {
+		log.InfoF("CDN refresh Code: %d, Info: %s", resp.Code, resp.Error)
 	}
 	return
 }

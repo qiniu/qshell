@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-var accessKey = os.Getenv("QSHELL_AK")
-var secretKey = os.Getenv("QSHELL_SK")
+var accessKey = os.Getenv("accessKey")
+var secretKey = os.Getenv("secretKey")
 
 func TestUser(t *testing.T) {
 	TestUserIntegration(t)

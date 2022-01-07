@@ -9,20 +9,20 @@ import (
 func TestCdnPrefetch(t *testing.T) {
 
 	path, err := test.CreateFileWithContent("cdn_prefetch.txt", `
-http://if-pbl.qiniudn.com/hello1.txt
-http://if-pbl.qiniudn.com/hello2.txt
-http://if-pbl.qiniudn.com/hello3.txt
-http://if-pbl.qiniudn.com/hello4.txt
-http://if-pbl.qiniudn.com/hello5.txt
-http://if-pbl.qiniudn.com/hello6.txt
-http://if-pbl.qiniudn.com/hello7.txt
+https://qshell-na0.qiniupkg.com/hello1.json
+https://qshell-na0.qiniupkg.com/hello2.json
+https://qshell-na0.qiniupkg.com/hello3.json
+https://qshell-na0.qiniupkg.com/hello4.json
+https://qshell-na0.qiniupkg.com/hello5.json
+https://qshell-na0.qiniupkg.com/hello6.json
+https://qshell-na0.qiniupkg.com/hello7.json
 `)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	_, errs := test.RunCmdWithError("cdnprefetch", "-i", path, "--qps", "1", "--size", "1")
-	if !strings.Contains(errs, "400014") {
+	result := test.RunCmd(t, "cdnprefetch", "-i", path, "--qps", "1", "--size", "2")
+	if !strings.Contains(result, "CDN prefetch Code: 200, Info: success") {
 		t.Fail()
 	}
 
@@ -33,20 +33,20 @@ http://if-pbl.qiniudn.com/hello7.txt
 
 func TestCdnRefreshFile(t *testing.T) {
 	path, err := test.CreateFileWithContent("cdn_refresh.txt", `
-http://if-pbl.qiniudn.com/hello1.txt
-http://if-pbl.qiniudn.com/hello2.txt
-http://if-pbl.qiniudn.com/hello3.txt
-http://if-pbl.qiniudn.com/hello4.txt
-http://if-pbl.qiniudn.com/hello5.txt
-http://if-pbl.qiniudn.com/hello6.txt
-http://if-pbl.qiniudn.com/hello7.txt
+https://qshell-na0.qiniupkg.com/hello1.json
+https://qshell-na0.qiniupkg.com/hello2.json
+https://qshell-na0.qiniupkg.com/hello3.json
+https://qshell-na0.qiniupkg.com/hello4.json
+https://qshell-na0.qiniupkg.com/hello5.json
+https://qshell-na0.qiniupkg.com/hello6.json
+https://qshell-na0.qiniupkg.com/hello7.json
 `)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	_, errs := test.RunCmdWithError("cdnrefresh", "-i", path, "--qps", "1", "--size", "1")
-	if !strings.Contains(errs, "400014") {
+	_, errs := test.RunCmdWithError("cdnrefresh", "-i", path, "--qps", "1", "--size", "2")
+	if !strings.Contains(errs, "CDN refresh Code: 200, Info: success") {
 		t.Fail()
 	}
 
@@ -58,20 +58,20 @@ http://if-pbl.qiniudn.com/hello7.txt
 
 func TestCdnRefreshDirs(t *testing.T) {
 	path, err := test.CreateFileWithContent("cdn_refresh.txt", `
-http://if-pbl.qiniudn.com/hello1.txt
-http://if-pbl.qiniudn.com/hello2.txt
-http://if-pbl.qiniudn.com/hello3.txt
-http://if-pbl.qiniudn.com/hello4.txt
-http://if-pbl.qiniudn.com/hello5.txt
-http://if-pbl.qiniudn.com/hello6.txt
-http://if-pbl.qiniudn.com/hello7.txt
+https://qshell-na0.qiniupkg.com/hello1.json
+https://qshell-na0.qiniupkg.com/hello2.json
+https://qshell-na0.qiniupkg.com/hello3.json
+https://qshell-na0.qiniupkg.com/hello4.json
+https://qshell-na0.qiniupkg.com/hello5.json
+https://qshell-na0.qiniupkg.com/hello6.json
+https://qshell-na0.qiniupkg.com/hello7.json
 `)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	_, errs := test.RunCmdWithError("cdnrefresh", "--dirs", path, "--qps", "1", "--size", "1")
-	if !strings.Contains(errs, "400014") {
+	_, errs := test.RunCmdWithError("cdnrefresh", "--dirs", "-i", path, "--qps", "1", "--size", "2")
+	if len(errs) > 0 {
 		t.Fail()
 	}
 
