@@ -1,6 +1,7 @@
 package work
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"sync"
 )
@@ -70,8 +71,9 @@ func (b *flowHandler) handlerComplete() {
 }
 
 func (b *flowHandler) Start() {
-	workChan := make(chan Work, b.info.WorkCount)
+	log.Debug("work flow did start")
 
+	workChan := make(chan Work, b.info.WorkCount)
 	// 生产者
 	go func() {
 		for {
@@ -94,7 +96,8 @@ func (b *flowHandler) Start() {
 	wait := &sync.WaitGroup{}
 	wait.Add(b.info.WorkCount)
 	for i := 0; i < b.info.WorkCount; i++ {
-		go func() {
+		go func(index int) {
+			log.DebugF("worker %d start", index)
 			for work := range workChan {
 				result, err := b.worker.DoWork(work)
 				if err != nil {
@@ -110,9 +113,12 @@ func (b *flowHandler) Start() {
 				}
 			}
 			wait.Done()
-		}()
+			log.DebugF("worker %d   end", index)
+		}(i)
 	}
 	wait.Wait()
+
+	log.Debug("work flow did end")
 
 	b.handlerComplete()
 }

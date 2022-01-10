@@ -199,10 +199,10 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 	for result := range fetchResultChan {
 		counter := 0
 		maxDuration := asyncFetchCheckMaxDuration(result.fileSize)
-		deadline := time.Now().Add(maxDuration)
+		checkTime := time.Now().Add(maxDuration)
 		for counter < 3 {
 			current := time.Now()
-			if current.Before(deadline) {
+			if counter == 0 || current.After(checkTime) {
 				ret, cErr := object.CheckAsyncFetchStatus(result.bucket, result.info.Id)
 				if cErr != nil {
 					log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
