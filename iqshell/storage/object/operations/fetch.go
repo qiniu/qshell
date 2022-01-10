@@ -137,7 +137,7 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 
 				var size uint64 = 0
 				fromUrl := items[0]
-				if len(items) >= 2 {
+				if len(items) > 1 {
 					s, pErr := strconv.ParseUint(items[1], 10, 64)
 					if pErr != nil {
 						handler.Export().Fail().ExportF("%s: %v", line, pErr)
@@ -146,10 +146,16 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 					size = s
 				}
 
-				saveKey, pErr := utils.KeyFromUrl(fromUrl)
-				if pErr != nil {
-					handler.Export().Fail().ExportF("%s: %v", line, pErr)
-					return nil, true
+				saveKey := ""
+				if len(items) > 2 && len(items[2]) > 0 {
+					saveKey = items[2]
+				} else {
+					key, pErr := utils.KeyFromUrl(fromUrl)
+					if pErr != nil {
+						handler.Export().Fail().ExportF("%s: %v", line, pErr)
+						return nil, true
+					}
+					saveKey = key
 				}
 
 				return fetchItem{

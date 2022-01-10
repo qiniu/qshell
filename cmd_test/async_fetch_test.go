@@ -15,7 +15,7 @@ func TestAsyncFetch(t *testing.T) {
 	result, errs := test.RunCmdWithError("abfetch", test.Bucket,
 		"-i", path,
 		"-g", "1",
-		"-c", "2", "-d")
+		"-c", "2")
 	if len(errs) > 0{
 		t.Fail()
 	}
@@ -26,3 +26,4 @@ func TestAsyncFetch(t *testing.T) {
 		t.Fail()
 	}
 }
+

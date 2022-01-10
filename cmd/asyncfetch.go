@@ -12,6 +12,7 @@ func asyncFetchCmdBuilder() *cobra.Command {
 		Short: "Async Batch fetch network resources to qiniu Bucket",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			info.BatchInfo.ItemSeparate = "\t" // 此处用户不可定义
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
