@@ -6,11 +6,11 @@ import (
 
 func GetGlobal() *Config {
 	return &Config{
-		Credentials: auth.Credentials{
+		Credentials: &auth.Credentials{
 			AccessKey: getAccessKey(ConfigTypeGlobal),
 			SecretKey: []byte(getSecretKey(ConfigTypeGlobal)),
 		},
-		Hosts: Hosts{
+		Hosts: &Hosts{
 			UC:  GetUcHosts(ConfigTypeGlobal),
 			Api: GetApiHosts(ConfigTypeGlobal),
 			Rs:  GetRsHosts(ConfigTypeGlobal),

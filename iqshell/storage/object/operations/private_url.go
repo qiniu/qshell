@@ -2,9 +2,11 @@ package operations
 
 import (
 	"errors"
+	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"strconv"
 	"strings"
@@ -48,13 +50,13 @@ func PrivateUrl(info PrivateUrlInfo) {
 }
 
 type BatchPrivateUrlInfo struct {
-	BatchInfo BatchInfo
+	BatchInfo batch.Info
 	Deadline  string
 }
 
 // BatchPrivateUrl 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
 func BatchPrivateUrl(info BatchPrivateUrlInfo) {
-	handler, err := NewBatchHandler(info.BatchInfo)
+	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)
 		return

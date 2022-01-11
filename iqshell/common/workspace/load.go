@@ -86,7 +86,7 @@ func Load(options ...Option) (err error) {
 	}
 
 	if err == nil {
-		cfg.Credentials = auth.Credentials{
+		cfg.Credentials = &auth.Credentials{
 			AccessKey: currentAccount.AccessKey,
 			SecretKey: []byte(currentAccount.SecretKey),
 		}

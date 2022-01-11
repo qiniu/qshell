@@ -2,10 +2,12 @@ package operations
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"os"
 	"strconv"
 	"time"
@@ -20,20 +22,20 @@ func Fetch(info FetchInfo) {
 		os.Exit(data.STATUS_ERROR)
 	} else {
 		log.AlertF("Key:%s", result.Key)
-		log.AlertF("Hash:%s", result.Hash)
+		log.AlertF("FileHash:%s", result.Hash)
 		log.AlertF("Fsize: %d (%s)", result.Fsize, utils.FormatFileSize(result.Fsize))
 		log.AlertF("Mime:%s", result.MimeType)
 	}
 }
 
 type BatchFetchInfo struct {
-	BatchInfo BatchInfo
+	BatchInfo batch.Info
 	Bucket    string
 }
 
 //BatchFetch 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
 func BatchFetch(info BatchFetchInfo) {
-	handler, err := NewBatchHandler(info.BatchInfo)
+	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)
 		return
@@ -91,7 +93,7 @@ func CheckAsyncFetchStatus(info CheckAsyncFetchStatusInfo) {
 }
 
 type BatchAsyncFetchInfo struct {
-	BatchInfo        BatchInfo
+	BatchInfo        batch.Info
 	Bucket           string // fetch 的目的 bucket
 	Host             string // 从指定URL下载时指定的HOST
 	CallbackUrl      string // 抓取成功的回调地址
@@ -102,7 +104,7 @@ type BatchAsyncFetchInfo struct {
 }
 
 func BatchAsyncFetch(info BatchAsyncFetchInfo) {
-	handler, err := NewBatchHandler(info.BatchInfo)
+	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)
 		return

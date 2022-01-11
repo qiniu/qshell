@@ -9,18 +9,18 @@ import (
 
 func defaultConfig() *config.Config {
 	return &config.Config{
-		Credentials: auth.Credentials{
+		Credentials: &auth.Credentials{
 			AccessKey: "",
 			SecretKey: nil,
 		},
 		UseHttps: data.TrueString,
-		Hosts: config.Hosts{
+		Hosts: &config.Hosts{
 			//Rs:  []string{"rs.qiniu.com"},
 			//Rsf: []string{"rsf.qiniu.com"},
 			//Api: []string{"api.qiniu.com"},
 			UC: []string{"uc.qbox.me"},
 		},
-		Up: config.Up{
+		Up: &config.Up{
 			PutThreshold: 1024 * 1024 * 4,
 			Tasks: config.Tasks{
 				ConcurrentCount:       3,
@@ -31,7 +31,7 @@ func defaultConfig() *config.Config {
 				Interval: 1000,
 			},
 		},
-		Download: config.Download{
+		Download: &config.Download{
 			Tasks: config.Tasks{
 				ConcurrentCount:       3,
 				StopWhenOneTaskFailed: data.FalseString,

@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
-	operations2 "github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"strings"
 	"sync"
 )
@@ -19,7 +19,7 @@ import (
 type FetchInfo struct {
 	QiniuBucket   string
 	Host          string
-	BatchInfo     operations2.BatchInfo
+	BatchInfo     group.Info
 	AwsBucketInfo ListBucketInfo
 }
 

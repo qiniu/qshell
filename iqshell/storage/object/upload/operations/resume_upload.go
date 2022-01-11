@@ -118,7 +118,7 @@ func ResumeUpload(info ResumeUploadInfo) {
 		}
 	} else {
 		log.Alert("Put file", info.FilePath, "=>", info.Bucket, ":", putRet.Key, "success!")
-		log.Alert("Hash:", putRet.Hash)
+		log.Alert("FileHash:", putRet.Hash)
 		log.Alert("Fsize:", putRet.Fsize, "(", utils.FormatFileSize(fsize), ")")
 		log.Alert("MimeType:", putRet.MimeType)
 

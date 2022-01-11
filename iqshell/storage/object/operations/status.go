@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -21,18 +22,18 @@ func Status(info StatusInfo) {
 }
 
 type BatchStatusInfo struct {
-	BatchInfo BatchInfo
+	BatchInfo batch.Info
 	Bucket    string
 }
 
 func BatchStatus(info BatchStatusInfo) {
-	handler, err := NewBatchHandler(info.BatchInfo)
+	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo.Info).ReadOperation(func() (operation batch.Operation, complete bool) {
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
 		var in batch.Operation = nil
 		line, success := handler.Scanner().ScanLine()
 		if !success {
@@ -72,7 +73,7 @@ func BatchStatus(info BatchStatusInfo) {
 func getStatusInfo(info StatusInfo, status batch.OperationResult) string {
 	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", info.Bucket)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", info.Key)
-	statInfo += fmt.Sprintf("%-20s%s\r\n", "Hash:", status.Hash)
+	statInfo += fmt.Sprintf("%-20s%s\r\n", "FileHash:", status.Hash)
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Fsize:", status.FSize, utils.FormatFileSize(status.FSize))
 
 	putTime := time.Unix(0, status.PutTime*100)

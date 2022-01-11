@@ -48,7 +48,7 @@ func SyncUpload(info SyncUploadInfo) {
 	}
 
 	fmt.Printf("Sync %s => %s:%s Success, Duration: %s!\n", info.ResourceUrl, info.Bucket, info.Key, time.Since(tStart))
-	fmt.Println("Hash:", syncRet.Hash)
+	fmt.Println("FileHash:", syncRet.Hash)
 	fmt.Printf("Fsize: %d (%s)\n", syncRet.Fsize, utils.FormatFileSize(syncRet.Fsize))
 	fmt.Println("Mime:", syncRet.MimeType)
 }

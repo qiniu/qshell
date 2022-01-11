@@ -29,8 +29,7 @@ func PublicUrl(info PublicUrlApiInfo) (fileUrl string) {
 	return
 }
 
-// 私有下载链接
-
+// PublicUrlToPrivateApiInfo 私有下载链接
 type PublicUrlToPrivateApiInfo struct {
 	PublicUrl string
 	Deadline  int64
@@ -73,8 +72,7 @@ func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (finalUrl string, err er
 	return
 }
 
-// 私有下载 url
-
+// PrivateUrlApiInfo 私有下载 url
 type PrivateUrlApiInfo PublicUrlApiInfo
 
 // PrivateUrl 返回私有空间的下载链接， 也可以用于公有空间的下载

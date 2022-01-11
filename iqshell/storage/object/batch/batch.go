@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -11,7 +12,7 @@ import (
 )
 
 type Info struct {
-	work.Info
+	group.Info
 
 	MaxOperationCountPerRequest int
 }
@@ -68,7 +69,7 @@ func (f *flow) Start() {
 		return
 	}
 
-	work.NewFlowHandler(f.info.Info).ReadWork(func() (work work.Work, hasMore bool) {
+	work.NewFlowHandler(f.info.Info.Info).ReadWork(func() (work work.Work, hasMore bool) {
 		task := &batchOperations{
 			operations:       make([]Operation, 0, 0),
 			operationStrings: make([]string, 0, 0),

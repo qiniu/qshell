@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -23,19 +24,19 @@ func Copy(info CopyInfo) {
 }
 
 type BatchCopyInfo struct {
-	BatchInfo    BatchInfo
+	BatchInfo    batch.Info
 	SourceBucket string
 	DestBucket   string
 }
 
 func BatchCopy(info BatchCopyInfo) {
-	handler, err := NewBatchHandler(info.BatchInfo)
+	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo.Info).ReadOperation(func() (operation batch.Operation, complete bool) {
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
 		var in batch.Operation = nil
 		line, success := handler.Scanner().ScanLine()
 		if !success {

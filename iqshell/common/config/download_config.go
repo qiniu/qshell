@@ -19,6 +19,7 @@ type DownloadConfig struct {
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"`
 	UseHttps  bool   `json:"use_https,omitempty"`
+
 	//log settings
 	RecordRoot string `json:"record_root,omitempty"`
 	LogLevel   string `json:"log_level,omitempty"`

@@ -72,9 +72,9 @@ func (c *Config) Merge(from *Config) {
 		c.UseHttps = from.UseHttps
 	}
 
-	c.Hosts.merge(&from.Hosts)
-	c.Up.merge(&from.Up)
-	c.Download.merge(&from.Download)
+	c.Hosts.merge(from.Hosts)
+	c.Up.merge(from.Up)
+	c.Download.merge(from.Download)
 }
 
 func (c *Hosts) merge(from *Hosts) {

@@ -1,6 +1,7 @@
 package batch
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 )
 
@@ -13,9 +14,11 @@ func Some(operations []Operation) ([]OperationResult, error) {
 	}
 
 	NewFlow(Info{
-		Info: work.Info{
-			WorkCount:         1,
-			StopWhenWorkError: true,
+		Info: group.Info{
+			Info: work.Info{
+				WorkCount:         1,
+				StopWhenWorkError: true,
+			},
 		},
 		MaxOperationCountPerRequest: 1000,
 	}).ReadOperation(func() (operation Operation, complete bool) {

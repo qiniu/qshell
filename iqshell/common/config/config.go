@@ -9,23 +9,23 @@ import (
 )
 
 type Config struct {
-	Credentials auth.Credentials `json:"-"`
+	Credentials *auth.Credentials `json:"-"`
 	UseHttps    string           `json:"use_https,omitempty"`
-	Hosts       Hosts            `json:"hosts,omitempty"`
-	Up          Up               `json:"up,omitempty"`
-	Download    Download         `json:"download,omitempty"`
-	Log         log.Config       `json:"log"` //TODO: 日志配置兼容
+	Hosts       *Hosts            `json:"hosts,omitempty"`
+	Up          *Up               `json:"up,omitempty"`
+	Download    *Download         `json:"download,omitempty"`
+	FileLog     *log.Config       `json:"log"`
 }
 
-func (c Config) IsUseHttps() bool {
+func (c *Config) IsUseHttps() bool {
 	return c.UseHttps == data.FalseString
 }
 
-func (c Config) HasCredentials() bool {
+func (c *Config) HasCredentials() bool {
 	return len(c.Credentials.AccessKey) > 0 && c.Credentials.SecretKey != nil
 }
 
-func (c Config) GetRegion() *storage.Region {
+func (c *Config) GetRegion() *storage.Region {
 	if len(c.Hosts.Api) == 0 && len(c.Hosts.Rs) == 0 && len(c.Hosts.Rsf) == 0 &&
 		len(c.Hosts.Io) == 0 && len(c.Hosts.Up) == 0 {
 		return nil
@@ -41,7 +41,7 @@ func (c Config) GetRegion() *storage.Region {
 	}
 }
 
-func (c Config) String() string {
+func (c *Config) String() string {
 	if desc, err := json.MarshalIndent(c, "", "\t"); err == nil {
 		return string(desc)
 	} else {
@@ -58,27 +58,27 @@ type Hosts struct {
 	Up  []string `json:"up,omitempty"`
 }
 
-func (h Hosts) GetOneUc() string {
+func (h *Hosts) GetOneUc() string {
 	return getOneHostFromStringArray(h.UC)
 }
 
-func (h Hosts) GetOneApi() string {
+func (h *Hosts) GetOneApi() string {
 	return getOneHostFromStringArray(h.Api)
 }
 
-func (h Hosts) GetOneRs() string {
+func (h *Hosts) GetOneRs() string {
 	return getOneHostFromStringArray(h.Rs)
 }
 
-func (h Hosts) GetOneRsf() string {
+func (h *Hosts) GetOneRsf() string {
 	return getOneHostFromStringArray(h.Rsf)
 }
 
-func (h Hosts) GetOneIo() string {
+func (h *Hosts) GetOneIo() string {
 	return getOneHostFromStringArray(h.Io)
 }
 
-func (h Hosts) GetOneUp() string {
+func (h *Hosts) GetOneUp() string {
 	return getOneHostFromStringArray(h.Up)
 }
 
@@ -137,6 +137,31 @@ type Up struct {
 }
 
 type Download struct {
+	ThreadCount  int    `json:"thread_count,omitempty"`
+	FileEncoding string `json:"file_encoding,omitempty"`
+	KeyFile      string `json:"key_file,omitempty"`
+	DestDir      string `json:"dest_dir,omitempty"`
+	Bucket       string `json:"bucket,omitempty"`
+	Prefix       string `json:"prefix,omitempty"`
+	Suffixes     string `json:"suffixes,omitempty"`
+	IoHost       string `json:"io_host,omitempty"`
+	Public       bool   `json:"public,omitempty"`
+	CheckHash    bool   `json:"check_hash,omitempty"`
+
+	//down from cdn
+	Referer   string `json:"referer,omitempty"`
+	CdnDomain string `json:"cdn_domain,omitempty"`
+	UseHttps  bool   `json:"use_https,omitempty"`
+
+	//log settings
+	RecordRoot string `json:"record_root,omitempty"`
+	LogLevel   string `json:"log_level,omitempty"`
+	LogFile    string `json:"log_file,omitempty"`
+	LogRotate  int    `json:"log_rotate,omitempty"`
+	LogStdout  bool   `json:"log_stdout,omitempty"`
+
+	BatchNum int `json:"-"`
+
 	Tasks Tasks `json:"tasks,omitempty"`
 	Retry Retry `json:"retry,omitempty"`
 }

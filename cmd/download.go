@@ -6,7 +6,7 @@ import (
 )
 
 var downloadCmdBuilder = func() *cobra.Command {
-	info := operations.DownloadInfo{}
+	info := operations.BatchDownloadInfo{}
 	cmd := &cobra.Command{
 		Use:   "qdownload [-c <ThreadCount>] <LocalDownloadConfig>",
 		Short: "Batch download files from the qiniu bucket",
@@ -16,12 +16,13 @@ have already in local disk and need to skip download or not.`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
-				info.ConfigFile = args[0]
+				cfg.DownloadConfigFile = args[0]
 			}
-			operations.Download(info)
+			loadConfig()
+			operations.BatchDownload(info)
 		},
 	}
-	cmd.Flags().IntVarP(&info.ThreadCount, "thread", "c", 5, "num of threads to download files")
+	cmd.Flags().IntVarP(&info.BatchInfo.WorkCount, "thread", "c", 5, "num of threads to download files")
 	return cmd
 }
 

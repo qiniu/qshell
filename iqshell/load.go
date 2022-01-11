@@ -17,11 +17,13 @@ type Runnable interface {
 }
 
 type Config struct {
-	DebugEnable    bool   // 开启命令行的调试模式
-	DDebugEnable   bool   // go SDK client 和命令行开启调试模式
-	ConfigFilePath string // 配置文件路径，用户可以指定配置文件
-	Local          bool   // 是否使用当前文件夹作为工作区
-	CmdCfg         config.Config
+	DebugEnable        bool   // 开启命令行的调试模式
+	DDebugEnable       bool   // go SDK client 和命令行开启调试模式
+	ConfigFilePath     string // 配置文件路径，用户可以指定配置文件
+	Local              bool   // 是否使用当前文件夹作为工作区
+	UploadConfigFile   string // 上传配置文件
+	DownloadConfigFile string // 下载配置文件
+	CmdCfg             config.Config
 }
 
 func Load(cfg Config) error {
@@ -50,12 +52,11 @@ func Load(cfg Config) error {
 		client.TurnOnDebug()
 	}
 
-	//TODO: 此处逻辑处理
-	if cfg.CmdCfg.Log.Level == 0 {
-		cfg.CmdCfg.Log.Level = int(logLevel)
-	}
-	cfg.CmdCfg.Log.StdOutColorful = false
-	_ = log.LoadConsole(cfg.CmdCfg.Log)
+	// 加载本地输出
+	_ = log.LoadConsole(log.Config{
+		Level:          int(logLevel),
+		StdOutColorful: false,
+	})
 
 	// 加载工作区
 	if err := workspace.Load(workspace.Workspace(workspacePath),
