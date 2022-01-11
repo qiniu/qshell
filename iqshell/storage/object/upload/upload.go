@@ -254,7 +254,7 @@ func formUploadFile(uploadConfig *config.UploadConfig, ldb *leveldb.DB, ldbWOpt 
 	upToken string, localFilePath, uploadFileKey string, localFileLastModified int64, exporter *export.FileExporter) {
 
 	cfg := workspace.GetConfig()
-	r := (&cfg).GetRegion()
+	r := cfg.GetRegion()
 	storage.UcHost = cfg.Hosts.UC[0]
 	uploader := storage.NewFormUploader(&storage.Config{
 		UseHTTPS:      cfg.IsUseHttps(),
@@ -309,7 +309,7 @@ func resumableUploadFile(uploadConfig *config.UploadConfig, ldb *leveldb.DB, ldb
 	}
 
 	cfg := workspace.GetConfig()
-	r := (&cfg).GetRegion()
+	r := cfg.GetRegion()
 
 	var err error
 	if uploadConfig.ResumableAPIV2 {

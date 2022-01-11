@@ -15,6 +15,7 @@ type ApiInfo struct {
 	Key                 string // 文件被保存的 key，用于验证 hash 【选填】
 	FileHash            string // 文件 hash，有值则会检测 hash 【选填】
 	FileSize            int64  // 文件大小，有值则会检测文件大小 【选填】
+	FileModifyTime      int64  // 文件修改时间 【选填】
 }
 
 // Download 下载一个文件，从 Url 下载保存至 ToFile

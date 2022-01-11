@@ -31,8 +31,8 @@ var (
 )
 
 // 获取之前需要先 Load
-func GetConfig() config.Config {
-	return *cfg
+func GetConfig() *config.Config {
+	return cfg
 }
 
 func GetWorkspace() string {

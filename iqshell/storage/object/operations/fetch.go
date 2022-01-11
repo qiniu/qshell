@@ -93,7 +93,7 @@ func CheckAsyncFetchStatus(info CheckAsyncFetchStatusInfo) {
 }
 
 type BatchAsyncFetchInfo struct {
-	BatchInfo        batch.Info
+	GroupInfo        group.Info
 	Bucket           string // fetch 的目的 bucket
 	Host             string // 从指定URL下载时指定的HOST
 	CallbackUrl      string // 抓取成功的回调地址
@@ -104,7 +104,7 @@ type BatchAsyncFetchInfo struct {
 }
 
 func BatchAsyncFetch(info BatchAsyncFetchInfo) {
-	handler, err := group.NewHandler(info.BatchInfo.Info)
+	handler, err := group.NewHandler(info.GroupInfo)
 	if err != nil {
 		log.Error(err)
 		return
@@ -125,14 +125,14 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 
 	// fetch
 	go func() {
-		work.NewFlowHandler(info.BatchInfo.Info.Info).
+		work.NewFlowHandler(info.GroupInfo.Info).
 			ReadWork(func() (work work.Work, hasMore bool) {
 				line, success := handler.Scanner().ScanLine()
 				if !success {
 					return nil, false
 				}
 
-				items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
+				items := utils.SplitString(line, info.GroupInfo.ItemSeparate)
 				if len(items) <= 0 {
 					return nil, true
 				}

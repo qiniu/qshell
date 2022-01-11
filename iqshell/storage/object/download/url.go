@@ -13,14 +13,14 @@ import (
 	"time"
 )
 
-type PublicUrlApiInfo struct {
+type UrlApiInfo struct {
 	BucketDomain string
 	Key          string
 	UseHttps     bool
 }
 
 // PublicUrl 返回公有空间的下载链接，不可以用于私有空间的下载
-func PublicUrl(info PublicUrlApiInfo) (fileUrl string) {
+func PublicUrl(info UrlApiInfo) (fileUrl string) {
 	if info.UseHttps {
 		fileUrl = fmt.Sprintf("https://%s/%s", info.BucketDomain, url.PathEscape(info.Key))
 	} else {
@@ -72,12 +72,9 @@ func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (finalUrl string, err er
 	return
 }
 
-// PrivateUrlApiInfo 私有下载 url
-type PrivateUrlApiInfo PublicUrlApiInfo
-
 // PrivateUrl 返回私有空间的下载链接， 也可以用于公有空间的下载
-func PrivateUrl(info PrivateUrlApiInfo) (fileUrl string) {
-	publicUrl := PublicUrl(PublicUrlApiInfo(info))
+func PrivateUrl(info UrlApiInfo) (fileUrl string) {
+	publicUrl := PublicUrl(UrlApiInfo(info))
 	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
 	privateUrl, _ := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
 		PublicUrl: publicUrl,
