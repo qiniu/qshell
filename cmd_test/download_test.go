@@ -29,14 +29,16 @@ func TestDownload(t *testing.T) {
 		Referer:      "",
 		CdnDomain:    "",
 		UseHttps:     false,
-		RecordRoot:   "",
-		LogLevel:     "",
-		LogFile:      "",
-		LogRotate:    0,
-		LogStdout:    false,
 		BatchNum:     0,
-		Tasks:        config.Tasks{},
-		Retry:        config.Retry{},
+		LogSetting: config.LogSetting{
+			RecordRoot:   "",
+			LogLevel:     "",
+			LogFile:      "",
+			LogRotate:    0,
+			LogStdout:    false,
+		},
+		Tasks:        &config.Tasks{},
+		Retry:        &config.Retry{},
 	}
 	data, err := json.MarshalIndent(d, "", "\t")
 	if err != nil {

@@ -1,51 +1,37 @@
 package config
 
 import (
+	"errors"
 	"github.com/spf13/viper"
 )
 
-type Option func(i *info)
-
-func UserConfigPath(path string) Option {
-	return func(i *info) {
-		i.userConfigPath = path
-	}
+type LoadInfo struct {
+	UserConfigPath   string
+	GlobalConfigPath string
 }
 
-func GlobalConfigPath(path string) Option {
-	return func(i *info) {
-		i.globalConfigPath = path
-	}
-}
-
-func Load(options ...Option) error {
-	i := new(info)
-	// 设置配置
-	for _, option := range options {
-		option(i)
-	}
-
-	if len(i.globalConfigPath) > 0 {
+func Load(info LoadInfo) error {
+	if len(info.GlobalConfigPath) > 0 {
 		globalConfigViper = viper.New()
-		globalConfigViper.SetConfigFile(i.globalConfigPath)
+		globalConfigViper.SetConfigFile(info.GlobalConfigPath)
 	}
 
-	if len(i.userConfigPath) > 0 {
+	if len(info.UserConfigPath) > 0 {
 		userConfigViper = viper.New()
-		userConfigViper.SetConfigFile(i.userConfigPath)
+		userConfigViper.SetConfigFile(info.UserConfigPath)
 	}
 
-	_ = userConfigViper.ReadInConfig()
-	_ = globalConfigViper.ReadInConfig()
-	//if rErr := globalConfigViper.ReadInConfig(); rErr != nil {
-	//	if _, ok := rErr.(viper.ConfigFileNotFoundError); !ok {
-	//		return errors.New("read config file:" + rErr.Error())
-	//	}
-	//}
-	return nil
-}
+	if err := userConfigViper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			return errors.New("read user config error:" + err.Error())
+		}
+	}
 
-type info struct {
-	userConfigPath   string
-	globalConfigPath string
+	if err := globalConfigViper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			return errors.New("read global config error:" + err.Error())
+		}
+	}
+
+	return nil
 }

@@ -35,3 +35,7 @@ func (db *DB) Put(key, value string) error {
 		Sync: true,
 	})
 }
+
+func (db *DB) Delete(key string) error {
+	return db.db.Delete([]byte(key), nil)
+}

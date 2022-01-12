@@ -38,9 +38,24 @@ func Load(cfg Config) error {
 		workspacePath = dir
 	}
 
+	// 合并上传配置
+	if len(cfg.UploadConfigFile) > 0 {
+		if err := utils.UnMarshalFromFile(cfg.UploadConfigFile, &cfg.CmdCfg.Up); err != nil {
+			return fmt.Errorf("read upload config error:%v config file:%s", err, cfg.UploadConfigFile)
+		}
+	}
+
+	// 合并下载配置
+	if len(cfg.DownloadConfigFile) > 0 {
+		if err := utils.UnMarshalFromFile(cfg.DownloadConfigFile, &cfg.CmdCfg.Download); err != nil {
+			return fmt.Errorf("read download config error:%v config file:%s", err, cfg.UploadConfigFile)
+		}
+	}
+
 	//set cpu count
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	// 配置 user agent
 	storage.UserAgent = utils.UserAgent()
 
 	// 加载 log
@@ -59,9 +74,10 @@ func Load(cfg Config) error {
 	})
 
 	// 加载工作区
-	if err := workspace.Load(workspace.Workspace(workspacePath),
-		workspace.UserConfigPath(cfg.ConfigFilePath),
-		workspace.CmdConfig(&cfg.CmdCfg)); err != nil {
+	if err := workspace.Load(workspace.LoadInfo{
+		WorkspacePath:  workspacePath,
+		UserConfigPath: cfg.ConfigFilePath,
+	}); err != nil {
 		return err
 	}
 

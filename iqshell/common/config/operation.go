@@ -77,33 +77,33 @@ func (c *Config) Merge(from *Config) {
 	c.Download.merge(from.Download)
 }
 
-func (c *Hosts) merge(from *Hosts) {
+func (h *Hosts) merge(from *Hosts) {
 	if from == nil {
 		return
 	}
 
-	if len(c.UC) == 0 {
-		c.UC = from.UC
+	if len(h.UC) == 0 {
+		h.UC = from.UC
 	}
 
-	if len(c.Api) == 0 {
-		c.Api = from.Api
+	if len(h.Api) == 0 {
+		h.Api = from.Api
 	}
 
-	if len(c.Rsf) == 0 {
-		c.Rsf = from.Rsf
+	if len(h.Rsf) == 0 {
+		h.Rsf = from.Rsf
 	}
 
-	if len(c.Rs) == 0 {
-		c.Rs = from.Rs
+	if len(h.Rs) == 0 {
+		h.Rs = from.Rs
 	}
 
-	if len(c.Io) == 0 {
-		c.Io = from.Io
+	if len(h.Io) == 0 {
+		h.Io = from.Io
 	}
 
-	if len(c.Up) == 0 {
-		c.Up = from.Up
+	if len(h.Up) == 0 {
+		h.Up = from.Up
 	}
 }
 
@@ -116,8 +116,8 @@ func (up *Up) merge(from *Up) {
 		up.PutThreshold = from.PutThreshold
 	}
 
-	up.Tasks.merge(&from.Tasks)
-	up.Retry.merge(&from.Retry)
+	up.Tasks.merge(from.Tasks)
+	up.Retry.merge(from.Retry)
 }
 
 func (d *Download) merge(from *Download) {
@@ -125,8 +125,8 @@ func (d *Download) merge(from *Download) {
 		return
 	}
 
-	d.Tasks.merge(&from.Tasks)
-	d.Retry.merge(&from.Retry)
+	d.Tasks.merge(from.Tasks)
+	d.Retry.merge(from.Retry)
 }
 
 func (t *Tasks) merge(from *Tasks) {

@@ -11,22 +11,26 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
-// 加载工作环境
-func Load(options ...Option) (err error) {
-	ws := &workspace{}
-	err = ws.initInfo()
+type LoadInfo struct {
+	UserConfigPath   string
+	CmdConfig        *config.Config
+	WorkspacePath    string
+	globalConfigPath string
+}
 
-	// 设置配置
-	for _, option := range options {
-		option(ws)
+// Load 加载工作环境
+func Load(info LoadInfo) (err error) {
+	err = info.initInfo()
+	if err != nil {
+		return
 	}
 
 	// 检查工作目录
-	if len(ws.workspace) == 0 {
+	if len(info.WorkspacePath) == 0 {
 		err = errors.New("can't get home dir")
 		return
 	}
-	workspacePath = ws.workspace
+	workspacePath = info.WorkspacePath
 	log.Debug("workspace:" + workspacePath)
 
 	err = utils.CreateDirIfNotExist(workspacePath)
@@ -38,10 +42,13 @@ func Load(options ...Option) (err error) {
 	accountDBPath := filepath.Join(workspacePath, usersDBName)
 	accountPath := filepath.Join(workspacePath, currentUserFileName)
 	oldAccountPath := filepath.Join(workspacePath, oldUserFileName)
-	err = account.Load(account.AccountDBPath(accountDBPath),
-		account.AccountPath(accountPath),
-		account.OldAccountPath(oldAccountPath))
+	err = account.Load(account.LoadInfo{
+		AccountPath:    accountPath,
+		OldAccountPath: oldAccountPath,
+		AccountDBPath:  accountDBPath,
+	})
 	if err != nil {
+		log.ErrorF("load account error:%v", err)
 		return
 	}
 
@@ -62,20 +69,27 @@ func Load(options ...Option) (err error) {
 	}
 
 	// 检查用户配置，用户配置可能被指定，如果未指定则使用用户目录下配置
-	if len(ws.userConfigPath) == 0 {
-		ws.userConfigPath = filepath.Join(currentAccountDir, configFileName)
+	if len(info.UserConfigPath) == 0 {
+		info.UserConfigPath = filepath.Join(currentAccountDir, configFileName)
 	}
 
 	// 设置配置文件路径
-	config.Load(config.UserConfigPath(ws.userConfigPath), config.GlobalConfigPath(ws.globalConfigPath))
+	err = config.Load(config.LoadInfo{
+		UserConfigPath:   info.UserConfigPath,
+		GlobalConfigPath: info.globalConfigPath,
+	})
+	if err != nil {
+		log.ErrorF("load config error:%v", err)
+		return
+	}
 
 	// 加载配置
-	cfg.Merge(ws.cmdConfig)
+	cfg.Merge(info.CmdConfig)
 	cfg.Merge(config.GetUser())
 	cfg.Merge(config.GetGlobal())
 	cfg.Merge(defaultConfig())
 
-	log.DebugF("cmd    config:\n%v", ws.cmdConfig)
+	log.DebugF("cmd    config:\n%v", info.CmdConfig)
 	log.DebugF("user   config:\n%v", config.GetUser())
 	log.DebugF("global config:\n%v", config.GetGlobal())
 	log.DebugF("final  config:\n%v", cfg)
@@ -98,44 +112,15 @@ func Load(options ...Option) (err error) {
 	return
 }
 
-type Option func(w *workspace)
-
-func Workspace(path string) Option {
-	return func(w *workspace) {
-		if len(path) > 0 {
-			w.workspace = path
-		}
-	}
-}
-
-func UserConfigPath(path string) Option {
-	return func(w *workspace) {
-		if len(path) > 0 {
-			w.userConfigPath = path
-		}
-	}
-}
-
-func CmdConfig(cfg *config.Config) Option {
-	return func(w *workspace) {
-		w.cmdConfig = cfg
-	}
-}
-
-type workspace struct {
-	cmdConfig        *config.Config
-	workspace        string
-	userConfigPath   string
-	globalConfigPath string
-}
-
-func (w *workspace) initInfo() error {
+func (w *LoadInfo) initInfo() error {
 	home, err := utils.GetHomePath()
-	if err != nil || len(home) == 0 {
-		return err
+	if err != nil {
+		return errors.New("get home path error:" + err.Error())
 	}
-
-	w.workspace = filepath.Join(home, workspaceName)
+	if len(w.WorkspacePath) == 0 {
+		w.WorkspacePath = filepath.Join(home, workspaceName)
+	}
+	// 全局配置文件路径，兼容老版本，位置在用户目录下
 	w.globalConfigPath = filepath.Join(home, configFileName)
 	return nil
 }

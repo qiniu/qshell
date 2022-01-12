@@ -17,14 +17,14 @@ import (
 
 // 保存账户信息到账户文件中
 func SetAccountToLocalJson(acc Account) (err error) {
-	accountFh, openErr := os.OpenFile(info.accountPath, os.O_CREATE|os.O_RDWR, 0600)
+	accountFh, openErr := os.OpenFile(info.AccountPath, os.O_CREATE|os.O_RDWR, 0600)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error: %s", openErr)
 		return
 	}
 	defer accountFh.Close()
 
-	oldAccountFh, openErr := os.OpenFile(info.oldAccountPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	oldAccountFh, openErr := os.OpenFile(info.OldAccountPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error: %s", openErr)
 		return
@@ -60,7 +60,7 @@ func SetAccountToLocalJson(acc Account) (err error) {
 }
 
 func SaveToDB(acc Account, accountOver bool) (err error) {
-	ldb, lErr := leveldb.OpenFile(info.accountDBPath, nil)
+	ldb, lErr := leveldb.OpenFile(info.AccountDBPath, nil)
 	if lErr != nil {
 		err = fmt.Errorf("open db: %v", err)
 		os.Exit(data.STATUS_HALT)
@@ -128,7 +128,7 @@ func getAccount(pt string) (account Account, err error) {
 // qshell 会记录当前的user信息，当切换账户后， 老的账户信息会记录下来
 // qshell user cu就可以切换到老的账户信息， 参考cd -回到先前的目录
 func GetOldAccount() (account Account, err error) {
-	return getAccount(info.oldAccountPath)
+	return getAccount(info.OldAccountPath)
 }
 
 // 返回Account
@@ -140,7 +140,7 @@ func GetAccount() (account Account, err error) {
 			SecretKey: string(credentials.SecretKey),
 		}, nil
 	}
-	return getAccount(info.accountPath)
+	return getAccount(info.AccountPath)
 }
 
 // 获取Mac
@@ -155,7 +155,7 @@ func GetMac() (mac *qbox.Mac, err error) {
 // 切换账户
 func ChUser(userName string) (err error) {
 	if userName != "" {
-		db, oErr := leveldb.OpenFile(info.accountDBPath, nil)
+		db, oErr := leveldb.OpenFile(info.AccountDBPath, nil)
 		if err != nil {
 			err = fmt.Errorf("open db: %v", oErr)
 			return
@@ -175,19 +175,19 @@ func ChUser(userName string) (err error) {
 
 		return SetAccountToLocalJson(user)
 	} else {
-		rErr := os.Rename(info.oldAccountPath, info.accountPath+".tmp")
+		rErr := os.Rename(info.OldAccountPath, info.AccountPath+".tmp")
 		if rErr != nil {
 			err = fmt.Errorf("rename file: %v", rErr)
 			return
 		}
 
-		rErr = os.Rename(info.accountPath, info.oldAccountPath)
+		rErr = os.Rename(info.AccountPath, info.OldAccountPath)
 		if rErr != nil {
 			err = fmt.Errorf("rename file: %v", rErr)
 			return
 		}
 
-		rErr = os.Rename(info.accountPath+".tmp", info.accountPath)
+		rErr = os.Rename(info.AccountPath+".tmp", info.AccountPath)
 		if rErr != nil {
 			err = fmt.Errorf("rename file: %v", rErr)
 			return
@@ -199,7 +199,7 @@ func ChUser(userName string) (err error) {
 // 获取用户列表
 func GetUsers() (ret []*Account, err error) {
 
-	db, gErr := leveldb.OpenFile(info.accountDBPath, nil)
+	db, gErr := leveldb.OpenFile(info.AccountDBPath, nil)
 	if gErr != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return
@@ -228,28 +228,28 @@ func GetUsers() (ret []*Account, err error) {
 
 // 清除本地账户数据库
 func CleanUser() (err error) {
-	err = os.RemoveAll(info.accountDBPath)
+	err = os.RemoveAll(info.AccountDBPath)
 	if err != nil {
 		return
 	}
 
-	err = os.RemoveAll(info.accountPath)
+	err = os.RemoveAll(info.AccountPath)
 	if err != nil {
 		return
 	}
 
-	err = os.RemoveAll(info.oldAccountPath)
+	err = os.RemoveAll(info.OldAccountPath)
 
 	return
 }
 
 // 从本地数据库删除用户
 func RmUser(userName string) (err error) {
-	if len(info.accountDBPath) == 0 {
+	if len(info.AccountDBPath) == 0 {
 		err = fmt.Errorf("empty account db path\n")
 		return
 	}
-	db, err := leveldb.OpenFile(info.accountDBPath, nil)
+	db, err := leveldb.OpenFile(info.AccountDBPath, nil)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return
@@ -262,12 +262,12 @@ func RmUser(userName string) (err error) {
 
 // 查找用户
 func LookUp(userName string) (acc Account, err error) {
-	if len(info.accountDBPath) == 0 {
+	if len(info.AccountDBPath) == 0 {
 		err = fmt.Errorf("empty account db path\n")
 		return
 	}
 
-	db, err := leveldb.OpenFile(info.accountDBPath, nil)
+	db, err := leveldb.OpenFile(info.AccountDBPath, nil)
 	if err != nil {
 		err = fmt.Errorf("open db: %v", err)
 		return

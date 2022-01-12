@@ -22,21 +22,21 @@ func defaultConfig() *config.Config {
 		},
 		Up: &config.Up{
 			PutThreshold: 1024 * 1024 * 4,
-			Tasks: config.Tasks{
+			Tasks: &config.Tasks{
 				ConcurrentCount:       3,
 				StopWhenOneTaskFailed: data.FalseString,
 			},
-			Retry: config.Retry{
+			Retry: &config.Retry{
 				Max:      1,
 				Interval: 1000,
 			},
 		},
 		Download: &config.Download{
-			Tasks: config.Tasks{
+			Tasks: &config.Tasks{
 				ConcurrentCount:       3,
 				StopWhenOneTaskFailed: data.FalseString,
 			},
-			Retry: config.Retry{
+			Retry: &config.Retry{
 				Max:      1,
 				Interval: 1000,
 			},

@@ -5,22 +5,32 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
+	"path/filepath"
 	"strconv"
 )
 
 type BatchDownloadInfo struct {
-	Bucket              string // 下载的 bucket 【必填】
-	Domain              string // 文件下载的 domain 【必填】
-	ToFile              string // 文件保存的路径 【必填】
-	IsPublic            bool   // 是否是公有云 【必填】
-	RemoveFileWhenError bool   // 当遇到错误时是否该移除文件 【必填】
-	Referer             string // 请求 header 中的 Referer 【选填】
-	FileEncoding        string // 文件编码方式 【选填】
-	GroupInfo           group.Info
+	GroupInfo group.Info
 }
 
 func BatchDownload(info BatchDownloadInfo) {
+	downloadCfg := workspace.GetConfig().Download
+	downloadDomain := downloadCfg.DownloadDomain()
+	if len(downloadDomain) == 0 {
+		log.Error("download domain can't be empty, you can set cdn_domain or io_host")
+		return
+	}
+
+	dbDir := ""
+	if len(downloadCfg.RecordRoot) == 0 {
+		dbDir = filepath.Join(workspace.GetWorkspace(), "download")
+	} else {
+		dbDir = filepath.Join(downloadCfg.RecordRoot, "download")
+	}
+	log.InfoF("download db dir:%s", dbDir)
+
 	handler, err := group.NewHandler(info.GroupInfo)
 	if err != nil {
 		log.Error(err)
@@ -61,19 +71,19 @@ func BatchDownload(info BatchDownloadInfo) {
 
 		return DownloadInfo{
 			ApiInfo: download.ApiInfo{
-				Url:                 "",
-				Domain:              info.Domain,
-				ToFile:              info.ToFile,
-				RemoveFileWhenError: true,
-				Referer:             info.Referer,
-				FileEncoding:        info.FileEncoding,
-				Bucket:              info.Bucket,
-				Key:                 fileKey,
-				FileHash:            fileHash,
-				FileSize:            fileSize,
-				FileModifyTime:      fileModifyTime,
+				Url:            "", // downloadFile 时会自动创建
+				Domain:         downloadDomain,
+				ToFile:         filepath.Join(downloadCfg.DestDir, fileKey),
+				StatusDBPath:   dbDir,
+				Referer:        downloadCfg.Referer,
+				FileEncoding:   downloadCfg.FileEncoding,
+				Bucket:         downloadCfg.Bucket,
+				Key:            fileKey,
+				FileHash:       fileHash,
+				FileSize:       fileSize,
+				FileModifyTime: fileModifyTime,
 			},
-			IsPublic: info.IsPublic,
+			IsPublic: downloadCfg.Public,
 		}, true
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		info := work.(DownloadInfo)
