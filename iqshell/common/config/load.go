@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"github.com/spf13/viper"
+	"os"
 )
 
 type LoadInfo struct {
@@ -22,13 +23,13 @@ func Load(info LoadInfo) error {
 	}
 
 	if err := userConfigViper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		if !os.IsNotExist(err) {
 			return errors.New("read user config error:" + err.Error())
 		}
 	}
 
 	if err := globalConfigViper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		if !os.IsNotExist(err) {
 			return errors.New("read global config error:" + err.Error())
 		}
 	}

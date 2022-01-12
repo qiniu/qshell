@@ -20,7 +20,7 @@ func (c *Config) IsUseHttps() bool {
 }
 
 func (c *Config) HasCredentials() bool {
-	return len(c.Credentials.AccessKey) > 0 && c.Credentials.SecretKey != nil
+	return c.Credentials != nil && len(c.Credentials.AccessKey) > 0 && c.Credentials.SecretKey != nil
 }
 
 func (c *Config) GetRegion() *storage.Region {
@@ -52,9 +52,23 @@ func (c *Config) Merge(from *Config) {
 		c.UseHttps = from.UseHttps
 	}
 
-	c.Hosts.merge(from.Hosts)
-	c.Up.merge(from.Up)
-	c.Download.merge(from.Download)
+	if c.Hosts == nil {
+		c.Hosts = from.Hosts
+	} else {
+		c.Hosts.merge(from.Hosts)
+	}
+
+	if c.Up == nil {
+		c.Up = from.Up
+	} else {
+		c.Up.merge(from.Up)
+	}
+
+	if c.Download == nil {
+		c.Download = from.Download
+	} else {
+		c.Download.merge(from.Download)
+	}
 }
 
 func (c *Config) GetLogConfig() *LogSetting {
