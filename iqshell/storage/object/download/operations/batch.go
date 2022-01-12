@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"errors"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
@@ -23,6 +24,8 @@ type BatchDownloadInfo struct {
 
 func BatchDownload(info BatchDownloadInfo) {
 	downloadCfg := workspace.GetConfig().Download
+	info.GroupInfo.InputFile = downloadCfg.KeyFile
+	info.GroupInfo.ItemSeparate = "\t"
 
 	export, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:  info.GroupInfo.SuccessExportFilePath,
@@ -34,7 +37,7 @@ func BatchDownload(info BatchDownloadInfo) {
 		return
 	}
 
-	reader, err := newDownloadWorkReader(info.GroupInfo.InputFile, info.GroupInfo.ItemSeparate, downloadCfg, export)
+	reader, err := newDownloadWorkReader(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg, export)
 	if err != nil {
 		log.Error(err)
 		return
@@ -90,8 +93,7 @@ func newDownloadWorkReader(inputFile string, itemSeparate string, downloadCfg *c
 		r.downloadDomain, _ = bucket.DomainOfBucket(downloadCfg.Bucket)
 	}
 	if len(r.downloadDomain) == 0 {
-		log.Error("download domain can't be empty, you can set cdn_domain or io_host")
-		return
+		return nil, errors.New("download domain can't be empty, you can set cdn_domain or io_host")
 	}
 
 	if len(downloadCfg.RecordRoot) == 0 {
@@ -105,6 +107,10 @@ func newDownloadWorkReader(inputFile string, itemSeparate string, downloadCfg *c
 		StdInEnable: true,
 		InputFile:   inputFile,
 	})
+
+	if err != nil {
+		err = errors.New("new download reader error:" + err.Error())
+	}
 
 	r.createReadOperation()
 
@@ -125,14 +131,19 @@ func (d *downloadWorkReader) createReadOperation() {
 
 			line, success := d.lineScanner.ScanLine()
 			if !success {
+				d.statusAndAddToChan(keys)
+				keys = nil
 				close(d.infoChan)
 				break
 			}
 
 			items := utils.SplitString(line, d.itemSeparate)
-			if len(items) < 4 {
+			if len(items) < 1 || (len(items) > 0 && len(items[0]) == 0) {
 				log.ErrorF("invalid line, line must contain key fileSize fileHash and fileModifyTime:%s", line)
 				d.exporter.Fail().ExportF("%s: error:%s", line, "line must contain key fileSize fileHash and fileModifyTime")
+				continue
+			} else if len(items) < 4 {
+				keys = append(keys, items[0])
 				continue
 			}
 

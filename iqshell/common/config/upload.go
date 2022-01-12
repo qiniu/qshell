@@ -50,6 +50,15 @@ func (up *Up) merge(from *Up) {
 		up.PutThreshold = from.PutThreshold
 	}
 
-	up.Tasks.merge(from.Tasks)
-	up.Retry.merge(from.Retry)
+	if up.Tasks == nil {
+		up.Tasks = from.Tasks
+	} else {
+		up.Tasks.merge(from.Tasks)
+	}
+
+	if up.Retry == nil {
+		up.Retry = from.Retry
+	} else {
+		up.Retry.merge(from.Retry)
+	}
 }

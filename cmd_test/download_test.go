@@ -16,9 +16,14 @@ func TestDownload(t *testing.T) {
 		return
 	}
 
+	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", test.Keys)
+	if err != nil {
+		t.Fatal("create cdn config file error:", err)
+	}
+
 	d := config.Download{
 		ThreadCount: 4,
-		KeyFile:     "",
+		KeyFile:     keysFilePath,
 		DestDir:     filepath.Join(rootPath, "download"),
 		Bucket:      test.Bucket,
 		Prefix:      "",

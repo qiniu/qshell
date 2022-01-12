@@ -76,6 +76,7 @@ func Load(cfg Config) error {
 
 	// 加载工作区
 	if err := workspace.Load(workspace.LoadInfo{
+		CmdConfig:      &cfg.CmdCfg,
 		WorkspacePath:  workspacePath,
 		UserConfigPath: cfg.ConfigFilePath,
 	}); err != nil {

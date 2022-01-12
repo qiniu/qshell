@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/spf13/cobra"
 	"os"
@@ -55,6 +56,13 @@ func init() {
 		DDebugEnable:   false,
 		ConfigFilePath: "",
 		Local:          false,
+		CmdCfg: config.Config{
+			Credentials: nil,
+			UseHttps:    "",
+			Hosts:       &config.Hosts{},
+			Up:          &config.Up{},
+			Download:    &config.Download{},
+		},
 	}
 	rootCmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
 	// ddebug 开启 client debug

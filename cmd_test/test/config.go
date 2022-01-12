@@ -14,6 +14,15 @@ https://qshell-na0.qiniupkg.com/hello5.json
 https://qshell-na0.qiniupkg.com/hello6.json
 https://qshell-na0.qiniupkg.com/hello7.json
 `
+	Keys = `
+hello1.json
+hello2.json
+hello3.json
+hello4.json
+hello5.json
+hello6.json
+hello7.json
+`
 )
 
 var (
