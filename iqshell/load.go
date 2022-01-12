@@ -28,36 +28,6 @@ type Config struct {
 
 func Load(cfg Config) error {
 
-	workspacePath := ""
-	if cfg.Local {
-		dir, gErr := os.Getwd()
-		if gErr != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
-			os.Exit(1)
-		}
-		workspacePath = dir
-	}
-
-	// 合并上传配置
-	if len(cfg.UploadConfigFile) > 0 {
-		if err := utils.UnMarshalFromFile(cfg.UploadConfigFile, &cfg.CmdCfg.Up); err != nil {
-			return fmt.Errorf("read upload config error:%v config file:%s", err, cfg.UploadConfigFile)
-		}
-	}
-
-	// 合并下载配置
-	if len(cfg.DownloadConfigFile) > 0 {
-		if err := utils.UnMarshalFromFile(cfg.DownloadConfigFile, &cfg.CmdCfg.Download); err != nil {
-			return fmt.Errorf("read download config error:%v config file:%s", err, cfg.UploadConfigFile)
-		}
-	}
-
-	//set cpu count
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	// 配置 user agent
-	storage.UserAgent = utils.UserAgent()
-
 	// 加载 log
 	logLevel := log.LevelInfo
 	if cfg.DebugEnable || cfg.DDebugEnable {
@@ -73,6 +43,37 @@ func Load(cfg Config) error {
 		StdOutColorful: false,
 	})
 
+	// 获取工作目录
+	workspacePath := ""
+	if cfg.Local {
+		dir, gErr := os.Getwd()
+		if gErr != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
+			os.Exit(1)
+		}
+		workspacePath = dir
+	}
+
+	//set cpu count
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	// 配置 user agent
+	storage.UserAgent = utils.UserAgent()
+
+	// 合并上传配置
+	if len(cfg.UploadConfigFile) > 0 {
+		if err := utils.UnMarshalFromFile(cfg.UploadConfigFile, &cfg.CmdCfg.Up); err != nil {
+			return fmt.Errorf("read upload config error:%v config file:%s", err, cfg.UploadConfigFile)
+		}
+	}
+
+	// 合并下载配置
+	if len(cfg.DownloadConfigFile) > 0 {
+		if err := utils.UnMarshalFromFile(cfg.DownloadConfigFile, &cfg.CmdCfg.Download); err != nil {
+			return fmt.Errorf("read download config error:%v config file:%s", err, cfg.UploadConfigFile)
+		}
+	}
+
 	// 加载工作区
 	if err := workspace.Load(workspace.LoadInfo{
 		WorkspacePath:  workspacePath,
@@ -80,6 +81,15 @@ func Load(cfg Config) error {
 	}); err != nil {
 		return err
 	}
+
+	logSetting := workspace.GetConfig().GetLogConfig()
+	_ = log.LoadFileLogger(log.Config{
+		Filename:       logSetting.LogFile,
+		Level:          logSetting.GetLogLevel(),
+		Daily:          true,
+		StdOutColorful: logSetting.LogStdout,
+		MaxDays:        logSetting.LogRotate,
+	})
 
 	return nil
 }

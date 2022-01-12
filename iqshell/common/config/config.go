@@ -5,7 +5,6 @@ import (
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
 type Config struct {
@@ -14,7 +13,6 @@ type Config struct {
 	Hosts       *Hosts            `json:"hosts,omitempty"`
 	Up          *Up               `json:"up,omitempty"`
 	Download    *Download         `json:"download,omitempty"`
-	FileLog     *log.Config       `json:"log"`
 }
 
 func (c *Config) IsUseHttps() bool {
@@ -39,6 +37,36 @@ func (c *Config) GetRegion() *storage.Region {
 		ApiHost:    c.Hosts.GetOneApi(),
 		IovipHost:  c.Hosts.GetOneIo(),
 	}
+}
+
+func (c *Config) Merge(from *Config) {
+	if from == nil {
+		return
+	}
+
+	if !c.HasCredentials() {
+		c.Credentials = from.Credentials
+	}
+
+	if len(c.UseHttps) == 0 {
+		c.UseHttps = from.UseHttps
+	}
+
+	c.Hosts.merge(from.Hosts)
+	c.Up.merge(from.Up)
+	c.Download.merge(from.Download)
+}
+
+func (c *Config) GetLogConfig() *LogSetting {
+	if c.Up.LogSetting != nil {
+		return c.Up.LogSetting
+	}
+
+	if c.Download.LogSetting != nil {
+		return c.Up.LogSetting
+	}
+	
+	return nil
 }
 
 func (c *Config) String() string {

@@ -40,3 +40,33 @@ func getOneHostFromStringArray(hosts []string) string {
 		return ""
 	}
 }
+
+func (h *Hosts) merge(from *Hosts) {
+	if from == nil {
+		return
+	}
+
+	if len(h.UC) == 0 {
+		h.UC = from.UC
+	}
+
+	if len(h.Api) == 0 {
+		h.Api = from.Api
+	}
+
+	if len(h.Rsf) == 0 {
+		h.Rsf = from.Rsf
+	}
+
+	if len(h.Rs) == 0 {
+		h.Rs = from.Rs
+	}
+
+	if len(h.Io) == 0 {
+		h.Io = from.Io
+	}
+
+	if len(h.Up) == 0 {
+		h.Up = from.Up
+	}
+}

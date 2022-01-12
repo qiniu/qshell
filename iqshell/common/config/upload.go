@@ -4,7 +4,7 @@ import "github.com/qiniu/go-sdk/v7/storage"
 
 type UpPolicy storage.PutPolicy
 type Up struct {
-	LogSetting
+	*LogSetting
 
 	SrcDir           string `json:"-"`
 	FileList         string `json:"-"`
@@ -37,4 +37,19 @@ type Up struct {
 	Tasks  *Tasks    `json:"tasks,omitempty"`
 	Retry  *Retry    `json:"retry,omitempty"`
 	Policy *UpPolicy `json:"policy"`
+}
+
+func (up *Up) merge(from *Up) {
+	if from == nil {
+		return
+	}
+
+	up.LogSetting.merge(from.LogSetting)
+
+	if up.PutThreshold == 0 {
+		up.PutThreshold = from.PutThreshold
+	}
+
+	up.Tasks.merge(from.Tasks)
+	up.Retry.merge(from.Retry)
 }
