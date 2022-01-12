@@ -3,7 +3,6 @@ package config
 import "github.com/astaxie/beego/logs"
 
 type LogSetting struct {
-	RecordRoot string `json:"record_root,omitempty"`
 	LogLevel   string `json:"log_level,omitempty"`
 	LogFile    string `json:"log_file,omitempty"`
 	LogRotate  int    `json:"log_rotate,omitempty"`
@@ -13,10 +12,6 @@ type LogSetting struct {
 func (l *LogSetting) merge(from *LogSetting) {
 	if from == nil {
 		return
-	}
-
-	if len(l.RecordRoot) == 0 {
-		l.RecordRoot = from.RecordRoot
 	}
 
 	if len(l.LogLevel) == 0 {

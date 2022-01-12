@@ -21,6 +21,9 @@ type Download struct {
 	CdnDomain string `json:"cdn_domain,omitempty"`
 	UseHttps  bool   `json:"use_https,omitempty"`
 
+	// 下载状态保存路径
+	RecordRoot string `json:"record_root,omitempty"`
+
 	BatchNum int `json:"-"`
 
 	Tasks *Tasks `json:"tasks,omitempty"`
