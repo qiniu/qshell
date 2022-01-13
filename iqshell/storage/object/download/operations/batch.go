@@ -63,7 +63,7 @@ func BatchDownload(info BatchDownloadInfo) {
 
 	timeStart := time.Now()
 	var locker sync.Mutex
-	var totalFileCount int64
+	var totalFileCount = ds.getFileLineCount()
 	var currentFileCount int64
 	var existsFileCount int64
 	var updateFileCount int64
@@ -80,10 +80,10 @@ func BatchDownload(info BatchDownloadInfo) {
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(name, prefix) {
-				return true
+				return false
 			}
 		}
-		return false
+		return true
 	}
 	work.NewFlowHandler(info.GroupInfo.Info).ReadWork(func() (work work.Work, hasMore bool) {
 		apiInfo, hasMore := ds.scan()
@@ -162,7 +162,12 @@ func BatchDownload(info BatchDownloadInfo) {
 			err)
 	}).Start()
 
-	totalFileCount = skipBySuffixes + existsFileCount + successFileCount + updateFileCount + failureFileCount
+	if totalFileCount == 0 {
+		totalFileCount = skipBySuffixes + existsFileCount + successFileCount + updateFileCount + failureFileCount
+	} else {
+		skipBySuffixes = totalFileCount - existsFileCount - successFileCount - updateFileCount - failureFileCount
+	}
+
 	log.InfoF("-------Download Result-------")
 	log.InfoF("%10s%10d", "Total:", totalFileCount)
 	log.InfoF("%10s%10d", "Skipped:", skipBySuffixes)

@@ -173,3 +173,10 @@ func (d *downloadScanner) scan() (info *download.ApiInfo, hasMore bool) {
 	}
 	return
 }
+
+func (d *downloadScanner) getFileLineCount() int64 {
+	if len(d.inputFile) == 0 {
+		return 0
+	}
+	return utils.GetFileLineCount(d.inputFile)
+}

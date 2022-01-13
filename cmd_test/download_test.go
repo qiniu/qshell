@@ -27,7 +27,7 @@ func TestDownloadWithKeyFile(t *testing.T) {
 		KeyFile:     keysFilePath,
 		DestDir:     filepath.Join(rootPath, "download"),
 		Bucket:      test.Bucket,
-		Prefix:      "",
+		Prefix:      "hello2,hello3",
 		Suffixes:    "",
 		IoHost:      "",
 		Public:      true,
@@ -67,7 +67,7 @@ func TestDownloadWithKeyFile(t *testing.T) {
 }
 
 
-func TestDownload(t *testing.T) {
+func TestDownloadFromBucket(t *testing.T) {
 	rootPath, err := test.RootPath()
 	if err != nil {
 		t.Fatal("get root path err:", err)
@@ -79,7 +79,7 @@ func TestDownload(t *testing.T) {
 		KeyFile:     "",
 		DestDir:     filepath.Join(rootPath, "download"),
 		Bucket:      test.Bucket,
-		Prefix:      "",
+		Prefix:      "hello3,hello5,hello7",
 		Suffixes:    "",
 		IoHost:      "",
 		Public:      true,
