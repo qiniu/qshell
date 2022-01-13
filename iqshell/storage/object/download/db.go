@@ -36,89 +36,53 @@ func (d *dbHandler) init() (err error) {
 	return
 }
 
-func (d *dbHandler) checkInfoOfDB() (exist bool, err error) {
-	fileStatus, err := os.Stat(d.FilePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// 文件不存在
-			exist = false
-			_ = d.dbHandler.Delete(d.FilePath)
-			return exist, nil
-		} else {
-			// 文件存在，但访问错误
-			exist = true
-			return exist, errors.New("check db: get local file status error, error:" + err.Error())
-		}
-	}
-
-	// 数据库中存在也验证数据库信息，不存在仅验证本地文件信息
+func (d *dbHandler) checkInfoOfDB() error {
+	// 数据库中存在也验证数据库信息，数据库不存在则仅验证本地文件信息
 	value, _ := d.dbHandler.Get(d.FilePath)
 	items := strings.Split(value, infoSegment)
+	if len(items) == 0 || len(items) < 3 {
+		return errors.New("get invalid file info from db:" + value)
+	}
+
 	// db 数据：服务端文件修改时间
-	fileServerUpdateTime := int64(0)
-	if len(items) > 0 && len(items[0]) > 0 {
-		fileServerUpdateTime, err = strconv.ParseInt(items[0], 10, 64)
-		if err != nil {
-			return exist, errors.New("get file modify time error from db, error:" + err.Error())
-		}
+	fileServerUpdateTime, err := strconv.ParseInt(items[0], 10, 64)
+	if err != nil {
+		return errors.New("get file modify time error from db, error:" + err.Error())
 	}
 	// db 数据：文件大小
-	fileSize := int64(0)
-	if len(items) > 1 {
-		fileSize, err = strconv.ParseInt(items[1], 10, 64)
-		if err != nil {
-			return exist, errors.New("get file size error from db, error:" + err.Error())
-		}
+	fileSize, err := strconv.ParseInt(items[1], 10, 64)
+	if err != nil {
+		return errors.New("get file size error from db, error:" + err.Error())
 	}
 	// db 数据：文件 hash
-	fileHash := ""
-	if len(items) > 2 {
-		fileHash = items[2]
-	}
-	// db 数据：文件修改时间
-	fileModifyTime := int64(0)
-	if len(items) > 3 {
-		fileModifyTime, err = strconv.ParseInt(items[3], 10, 64)
-		if err != nil {
-			return exist, errors.New("get file modify time error from db, error:" + err.Error())
-		}
+	fileHash := items[2]
+
+	// 验证文件大小
+	if d.FileSize > 0 && fileSize != d.FileSize {
+		return fmt.Errorf("local file size doesn't match server, fileSize: %d|%d", fileSize, d.FileSize)
 	}
 
-	// 验证本地文件信息是否和 check 数据一致
-	if fileStatus.Size() != d.FileSize {
-		return exist, fmt.Errorf("local file info doesn't match server, fileSize: %d|%d", fileStatus.Size(), d.FileSize)
+	// 验证数据库 hash
+	if len(d.FileHash) > 0 && len(fileHash) > 0 && fileHash != d.FileHash {
+		return fmt.Errorf("local file hash doesn't match server, fileHash: %s|%s", fileHash, d.FileHash)
 	}
 
-	// 验证本地文件是否和数据库存储保存数据一致，数据库中不存在则跳过验证
-	if (fileModifyTime > 0 && fileStatus.ModTime().Unix() != fileModifyTime) ||
-		(fileSize > 0 && fileStatus.Size() != fileSize) {
-		return exist, fmt.Errorf("local file info doesn't match db, modTime: %d|%d  fileSize: %d|%d",
-			fileStatus.ModTime().Unix(), fileModifyTime, fileStatus.Size(), fileSize)
+	// 验证修改时间
+	if fileServerUpdateTime > 0 && fileServerUpdateTime != d.FileServerUpdateTime {
+		return fmt.Errorf("local file update time doesn't match server, updateTime: %d|%s", fileServerUpdateTime, d.FileServerUpdateTime)
 	}
 
-	// 验证数据库保存信息是否和 check 数据一致，除了 hash 数据库中不存在则跳过验证
-	if (len(d.FileHash) > 0 && fileHash != d.FileHash) || /* 文件 hash，严格验证，只要存在就会验证，本地数据库中没有则直接报错 */
-		(fileSize > 0 && fileSize != d.FileSize) || /* 文件大小 */
-		(fileServerUpdateTime > 0 && fileServerUpdateTime != d.FileServerUpdateTime) /* 服务端文件修改时间 */ {
-		return exist, fmt.Errorf("local db info doesn't match server, updateTime: %d|%d  fileSize: %d|%d  fileHash: %s|%s" ,
-			fileServerUpdateTime, d.FileServerUpdateTime, fileSize, d.FileSize, fileHash, d.FileHash)
-	}
-
-	return exist, nil
+	return nil
 }
 
 func (d *dbHandler) saveInfoToDB() (err error) {
-	fileStatus, err := os.Stat(d.FilePath)
-	if err != nil {
-		return errors.New("save db: get local file status error, error:" + err.Error())
-	}
-
-	value := fmt.Sprintf("%d|%d|%s|%d", d.FileServerUpdateTime, d.FileSize, d.FileHash, fileStatus.ModTime().Unix())
+	value := fmt.Sprintf("%d|%d|%s", d.FileServerUpdateTime, d.FileSize, d.FileHash)
 	return d.dbHandler.Put(d.FilePath, value)
 }
 
 var dbMap map[string]*db.DB
 var dbMapLock sync.Mutex
+
 func openDB(filePath string) (*db.DB, error) {
 	dbMapLock.Lock()
 	defer dbMapLock.Unlock()

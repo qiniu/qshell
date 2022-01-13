@@ -45,7 +45,6 @@ func List(info ListInfo) {
 			EndTime:           endTime,
 			Suffixes:          info.getSuffixes(),
 			MaxRetry:          info.MaxRetry,
-			StopWhenListError: false,
 		},
 		FilePath:   info.SaveToFile,
 		AppendMode: info.AppendMode,

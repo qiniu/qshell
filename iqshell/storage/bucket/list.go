@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -24,7 +23,6 @@ type ListApiInfo struct {
 	EndTime           time.Time // list item 的 put time 区间的终止时间 【闭区间】
 	Suffixes          []string  // list item 必须包含前缀
 	MaxRetry          int       // -1: 无限重试
-	StopWhenListError bool      // 当 list 过程中出现错误是否停止 list
 }
 
 type ListObject storage.ListItem
@@ -32,7 +30,7 @@ type ListObject storage.ListItem
 // List list 某个 bucket 所有的文件
 func List(info ListApiInfo, objectHandler func(marker string, object ListObject) error, errorHandler func(marker string, err error)) {
 	if objectHandler == nil {
-		logs.Error(alert.CannotEmpty("list bucket: object handler", ""))
+		log.Error(alert.CannotEmpty("list bucket: object handler", ""))
 		return
 	}
 
@@ -41,7 +39,7 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 			log.ErrorF("marker: %s", info.Marker)
 			log.ErrorF("list bucket Error: %v", err)
 		}
-		logs.Warning("list bucket: not set error handler")
+		log.Warning("list bucket: not set error handler")
 	}
 
 	bucketManager, err := GetBucketManager()
@@ -120,7 +118,7 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 			log.ErrorF("marker: %s", marker)
 			log.ErrorF("list bucket Error: %v", err)
 		}
-		logs.Warning("list bucket to file: not set error handler")
+		log.Warning("list bucket to file: not set error handler")
 	}
 
 	var listResultFh *os.File

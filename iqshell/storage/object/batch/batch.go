@@ -98,7 +98,7 @@ func (f *flow) Start() {
 			task.operations = append(task.operations, operation)
 			task.operationStrings = append(task.operationStrings, operationString)
 		}
-		log.Debug("batch task producer: produce one task: task count:%d", len(task.operations))
+		log.DebugF("batch task producer: produce one task: task count:%d", len(task.operations))
 		return task, complete
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		task := work.(*batchOperations)

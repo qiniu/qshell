@@ -18,7 +18,7 @@ func DownloadFile(info DownloadInfo) {
 	_, _ = downloadFile(info)
 }
 
-func downloadFile(info DownloadInfo) (string, error) {
+func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 	log.InfoF("Download start:%s => %s", info.Url, info.ToFile)
 
 	// 构造下载 url
@@ -37,25 +37,33 @@ func downloadFile(info DownloadInfo) (string, error) {
 	}
 
 	startTime := time.Now().Unix()
-	file, err := download.Download(info.ApiInfo)
+	res, err := download.Download(info.ApiInfo)
 	if err != nil {
 		log.ErrorF("Download  failed:%s => %s error:%v", info.Url, info.ToFile, err)
-		return "", err
+		return res, err
 	}
 
-	fileStatus, err := os.Stat(file)
+	fileStatus, err := os.Stat(res.FileAbsPath)
 	if err != nil {
 		log.ErrorF("Download  failed:%s => %s get file status error:%v", info.Url, info.ToFile, err)
-		return "", err
+		return res, err
 	}
 	if fileStatus == nil {
 		log.ErrorF("Download  failed:%s => %s download speed: can't get file status", info.Url, info.ToFile)
-		return "", err
+		return res, err
 	}
 
 	endTime := time.Now().Unix()
 
-	speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/float64(endTime-startTime)/1024)
-	log.InfoF("Download success:%s => %s speed:%s", info.Url, file, speed)
-	return file, nil
+	if res.IsExist {
+		log.InfoF("Download skip because file exist:%s => %s", info.Url, res.FileAbsPath)
+	} else if res.IsUpdate {
+		speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/float64(endTime-startTime)/1024)
+		log.InfoF("Download update success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+	} else {
+		speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/float64(endTime-startTime)/1024)
+		log.InfoF("Download success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+	}
+
+	return res, nil
 }

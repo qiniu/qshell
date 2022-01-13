@@ -76,3 +76,11 @@ func (d *files) prepare() (err error) {
 
 	return nil
 }
+
+func (d *files) clean() error {
+	err := os.Remove(d.toAbsFile)
+	if e := os.Remove(d.tempFile); err == nil {
+		err = e
+	}
+	return err
+}

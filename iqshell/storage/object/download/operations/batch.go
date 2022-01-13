@@ -1,21 +1,16 @@
 package operations
 
 import (
-	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/scanner"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"path/filepath"
-	"strconv"
 )
 
 type BatchDownloadInfo struct {
@@ -55,14 +50,14 @@ func BatchDownload(info BatchDownloadInfo) {
 		return
 	}
 
-	reader, err := newDownloadWorkReader(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg.Bucket, export)
+	ds, err := newDownloadScanner(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg.Bucket, export)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
 	work.NewFlowHandler(info.GroupInfo.Info).ReadWork(func() (work work.Work, hasMore bool) {
-		return reader.read()
+		return ds.scan()
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		apiInfo := work.(*download.ApiInfo)
 		apiInfo.Url = "" // downloadFile 时会自动创建
@@ -87,8 +82,8 @@ func BatchDownload(info BatchDownloadInfo) {
 		}
 	}).OnWorkResult(func(work work.Work, result work.Result) {
 		apiInfo := work.(*download.ApiInfo)
-		file := result.(string)
-		export.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, file)
+		res := result.(download.ApiResult)
+		export.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, res.FileAbsPath)
 	}).OnWorkError(func(work work.Work, err error) {
 		apiInfo := work.(*download.ApiInfo)
 		export.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* key fileSize fileHash and fileModifyTime */
@@ -98,133 +93,4 @@ func BatchDownload(info BatchDownloadInfo) {
 			apiInfo.FileModifyTime, info.GroupInfo.ItemSeparate,
 			err)
 	}).Start()
-}
-
-type downloadWorkReader struct {
-	exporter     *export.FileExporter
-	lineScanner  scanner.Scanner
-	itemSeparate string
-	inputFile    string
-	infoChan     chan *download.ApiInfo
-	bucket       string
-}
-
-func newDownloadWorkReader(inputFile string, itemSeparate string, bucket string, exporter *export.FileExporter) (r *downloadWorkReader, err error) {
-	r = &downloadWorkReader{
-		exporter:     exporter,
-		itemSeparate: itemSeparate,
-		bucket:       bucket,
-		inputFile:    inputFile,
-		infoChan:     make(chan *download.ApiInfo, 100),
-	}
-
-	r.lineScanner, err = scanner.NewScanner(scanner.Info{
-		StdInEnable: true,
-		InputFile:   inputFile,
-	})
-
-	if err != nil {
-		err = errors.New("new download reader error:" + err.Error())
-	}
-
-	r.createReadOperation()
-
-	return
-}
-
-func (d *downloadWorkReader) createReadOperation() {
-	go func() {
-		var keys []string
-		for {
-			if len(keys) == 100 {
-				d.statusAndAddToChan(keys)
-				keys = nil
-			}
-			if keys == nil {
-				keys = make([]string, 0, 100)
-			}
-
-			line, success := d.lineScanner.ScanLine()
-			if !success {
-				d.statusAndAddToChan(keys)
-				keys = nil
-				break
-			}
-
-			items := utils.SplitString(line, d.itemSeparate)
-			if len(items) < 1 || (len(items) > 0 && len(items[0]) == 0) {
-				log.ErrorF("invalid line, line must contain key fileSize fileHash and fileModifyTime:%s", line)
-				d.exporter.Fail().ExportF("%s: error:%s", line, "line must contain key fileSize fileHash and fileModifyTime")
-				continue
-			} else if len(items) < 4 {
-				keys = append(keys, items[0])
-				continue
-			}
-
-			fileKey := items[0]
-			fileSize, err := strconv.ParseInt(items[1], 10, 64)
-			if err != nil {
-				log.ErrorF("invalid line, get file size error:%s", line)
-				d.exporter.Fail().ExportF("%s: get file size error:%s", line, err)
-				continue
-			}
-
-			fileHash := items[2]
-			fileModifyTime, err := strconv.ParseInt(items[3], 10, 64)
-			if err != nil {
-				log.ErrorF("invalid line, get file modify time error:%s", line)
-				d.exporter.Fail().ExportF("%s: get file modify time error:%s", line, err)
-				continue
-			}
-
-			d.infoChan <- &download.ApiInfo{
-				Key:            fileKey,
-				FileHash:       fileHash,
-				FileSize:       fileSize,
-				FileModifyTime: fileModifyTime,
-			}
-		}
-
-		close(d.infoChan)
-	}()
-}
-
-func (d *downloadWorkReader) statusAndAddToChan(keys []string) {
-	operations := make([]batch.Operation, 0, len(keys))
-	for _, key := range keys {
-		if len(key) > 0 {
-			operations = append(operations, object.StatusApiInfo{
-				Bucket: d.bucket,
-				Key:    key,
-			})
-		}
-	}
-	results, err := batch.Some(operations)
-	if err != nil {
-		log.ErrorF("happen error:%v", err)
-	}
-
-	if len(results) == len(operations) {
-		for i, result := range results {
-			item := operations[i].(object.StatusApiInfo)
-			if result.Code != 200 || result.Error != "" {
-				d.exporter.Fail().ExportF("%s%s error:%v", item.Key, result.Error)
-			} else {
-				d.infoChan <- &download.ApiInfo{
-					Key:            item.Key,
-					FileHash:       result.Hash,
-					FileSize:       result.FSize,
-					FileModifyTime: result.PutTime,
-				}
-			}
-		}
-	}
-}
-
-func (d *downloadWorkReader) read() (info *download.ApiInfo, hasMore bool) {
-	for info = range d.infoChan {
-		hasMore = true
-		break
-	}
-	return
 }
