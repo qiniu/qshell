@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/db"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -41,7 +42,8 @@ func (d *dbHandler) checkInfoOfDB() error {
 	value, _ := d.dbHandler.Get(d.FilePath)
 	items := strings.Split(value, infoSegment)
 	if len(items) == 0 || len(items) < 3 {
-		return errors.New("get invalid file info from db:" + value)
+		log.Warning("get invalid file info from db:" + value)
+		return nil
 	}
 
 	// db 数据：服务端文件修改时间

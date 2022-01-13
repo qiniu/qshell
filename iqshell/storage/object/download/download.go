@@ -59,12 +59,12 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 	if err == nil || os.IsExist(err) || tempErr == nil || os.IsExist(tempErr) {
 		// 检查服务端文件是否变更
 		if cErr := dbChecker.checkInfoOfDB(); cErr != nil {
-			log.WarningF("Local file `%s` exist for key `%s`, but not match:%v", f.toAbsFile, info.Key, err)
+			log.WarningF("Local file `%s` exist for key `%s`, but not match:%v", f.toAbsFile, info.Key, cErr)
 			if e := f.clean(); e != nil {
-				log.WarningF("Local file `%s` exist for key `%s`, clean error:%v", f.toAbsFile, info.Key, err)
+				log.WarningF("Local file `%s` exist for key `%s`, clean error:%v", f.toAbsFile, info.Key, e)
 			}
 			if sErr := dbChecker.saveInfoToDB(); sErr != nil {
-				log.WarningF("Local file `%s` exist for key `%s`, save info to db clean error:%v", f.toAbsFile, info.Key, err)
+				log.WarningF("Local file `%s` exist for key `%s`, save info to db clean error:%v", f.toAbsFile, info.Key, sErr)
 			}
 		}
 		if tempFileStatus != nil && tempFileStatus.Size() > 0 {
@@ -77,7 +77,7 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 		}
 	} else {
 		if sErr := dbChecker.saveInfoToDB(); sErr != nil {
-			log.WarningF("Local file `%s` not exist for key `%s`, save info to db clean error:%v", f.toAbsFile, info.Key, err)
+			log.WarningF("Local file `%s` not exist for key `%s`, save info to db clean error:%v", f.toAbsFile, info.Key, sErr)
 		}
 	}
 
