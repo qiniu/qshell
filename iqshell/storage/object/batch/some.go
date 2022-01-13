@@ -25,7 +25,9 @@ func Some(operations []Operation) ([]OperationResult, error) {
 		if handler.readIndex >= len(handler.operations) {
 			return nil, true
 		}
-		return handler.operations[handler.readIndex], false
+		operation = handler.operations[handler.readIndex]
+		handler.readIndex += 1
+		return
 	}).OnResult(func(operation Operation, result OperationResult) {
 		handler.results = append(handler.results, result)
 	}).OnError(func(err error) {

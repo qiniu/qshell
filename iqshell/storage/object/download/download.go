@@ -36,7 +36,7 @@ func Download(info ApiInfo) (file string, err error) {
 		FilePath:             f.toAbsFile,
 		FileHash:             info.FileHash,
 		FileSize:             info.FileSize,
-		FileServerModifyTime: info.FileModifyTime,
+		FileServerUpdateTime: info.FileModifyTime,
 	}
 	err = dbChecker.init()
 	if err != nil {
@@ -60,6 +60,10 @@ func Download(info ApiInfo) (file string, err error) {
 		Referer: info.Referer,
 	}
 	err = downloader.Download()
+	if err != nil {
+		return file, err
+	}
+	err = dbChecker.saveInfoToDB()
 	if err != nil {
 		return file, err
 	}

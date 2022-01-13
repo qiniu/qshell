@@ -82,11 +82,11 @@ func (b *flowHandler) Start() {
 			}
 
 			work, hasMore := b.worker.ReadWork()
-			if work != nil {
-				workChan <- work
-			}
 			if !hasMore {
 				break
+			}
+			if work != nil {
+				workChan <- work
 			}
 		}
 		close(workChan)

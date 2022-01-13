@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/db"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 //db 金检查是否已下载过，且下载后保存的数据符合预期；
@@ -18,7 +20,7 @@ type dbHandler struct {
 	FilePath             string // 被检测的文件 【必填】
 	FileHash             string // 文件 hash，有值则会检测 hash【必填】
 	FileSize             int64  // 文件大小，有值则会检测文件大小【必填】
-	FileServerModifyTime int64  // 服务端文件修改时间 【必填】
+	FileServerUpdateTime int64  // 服务端文件修改时间 【必填】
 	dbHandler            *db.DB
 }
 
@@ -27,7 +29,10 @@ func (d *dbHandler) init() (err error) {
 		return nil
 	}
 
-	d.dbHandler, err = db.OpenDB(d.DBFilePath)
+	d.dbHandler, err = openDB(d.DBFilePath)
+	if err != nil {
+		return errors.New("download init error:" + err.Error())
+	}
 	return
 }
 
@@ -50,9 +55,9 @@ func (d *dbHandler) checkInfoOfDB() (exist bool, err error) {
 	value, _ := d.dbHandler.Get(d.FilePath)
 	items := strings.Split(value, infoSegment)
 	// db 数据：服务端文件修改时间
-	fileServerModifyTime := int64(0)
+	fileServerUpdateTime := int64(0)
 	if len(items) > 0 && len(items[0]) > 0 {
-		fileServerModifyTime, err = strconv.ParseInt(items[0], 10, 64)
+		fileServerUpdateTime, err = strconv.ParseInt(items[0], 10, 64)
 		if err != nil {
 			return exist, errors.New("get file modify time error from db, error:" + err.Error())
 		}
@@ -94,9 +99,9 @@ func (d *dbHandler) checkInfoOfDB() (exist bool, err error) {
 	// 验证数据库保存信息是否和 check 数据一致，除了 hash 数据库中不存在则跳过验证
 	if (len(d.FileHash) > 0 && fileHash != d.FileHash) || /* 文件 hash，严格验证，只要存在就会验证，本地数据库中没有则直接报错 */
 		(fileSize > 0 && fileSize != d.FileSize) || /* 文件大小 */
-		(fileServerModifyTime > 0 && fileServerModifyTime != d.FileServerModifyTime) /* 服务端文件修改时间 */ {
-		return exist, fmt.Errorf("local file info doesn't match db, modTime: %d|%d  fileSize: %d|%d",
-			fileStatus.ModTime().Unix(), fileModifyTime, fileStatus.Size(), d.FileSize)
+		(fileServerUpdateTime > 0 && fileServerUpdateTime != d.FileServerUpdateTime) /* 服务端文件修改时间 */ {
+		return exist, fmt.Errorf("local db info doesn't match server, updateTime: %d|%d  fileSize: %d|%d  fileHash: %s|%s" ,
+			fileServerUpdateTime, d.FileServerUpdateTime, fileSize, d.FileSize, fileHash, d.FileHash)
 	}
 
 	return exist, nil
@@ -108,6 +113,34 @@ func (d *dbHandler) saveInfoToDB() (err error) {
 		return errors.New("save db: get local file status error, error:" + err.Error())
 	}
 
-	value := fmt.Sprintf("%d|%d|%s|%d", d.FileServerModifyTime, d.FileSize, d.FileHash, fileStatus.ModTime().Unix())
+	value := fmt.Sprintf("%d|%d|%s|%d", d.FileServerUpdateTime, d.FileSize, d.FileHash, fileStatus.ModTime().Unix())
 	return d.dbHandler.Put(d.FilePath, value)
+}
+
+var dbMap map[string]*db.DB
+var dbMapLock sync.Mutex
+func openDB(filePath string) (*db.DB, error) {
+	dbMapLock.Lock()
+	defer dbMapLock.Unlock()
+
+	if dbMap == nil {
+		dbMap = make(map[string]*db.DB)
+	}
+
+	if dbMap[filePath] != nil {
+		return dbMap[filePath], nil
+	} else {
+		dbDir := filepath.Dir(filePath)
+		err := os.MkdirAll(dbDir, 0775)
+		if err != nil {
+			return nil, errors.New("download db make file error:" + err.Error())
+		}
+
+		handler, err := db.OpenDB(filePath)
+		if err != nil {
+			return nil, errors.New("download db open error:" + err.Error())
+		}
+		dbMap[filePath] = handler
+		return handler, nil
+	}
 }

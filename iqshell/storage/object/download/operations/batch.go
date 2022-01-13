@@ -2,7 +2,7 @@ package operations
 
 import (
 	"errors"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -27,6 +27,24 @@ func BatchDownload(info BatchDownloadInfo) {
 	info.GroupInfo.InputFile = downloadCfg.KeyFile
 	info.GroupInfo.ItemSeparate = "\t"
 
+	downloadDomain := downloadCfg.DownloadDomain()
+	if len(downloadDomain) == 0 {
+		downloadDomain, _ = bucket.DomainOfBucket(downloadCfg.Bucket)
+	}
+	if len(downloadDomain) == 0 {
+		log.Error("download domain can't be empty, you can set cdn_domain or io_host")
+		return
+	}
+
+	jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", downloadCfg.DestDir, downloadCfg.Bucket, downloadCfg.KeyFile))
+	dbPath := ""
+	if len(downloadCfg.RecordRoot) == 0 {
+		dbPath = filepath.Join(workspace.GetWorkspace(), "download", jobId, ".list")
+	} else {
+		dbPath = filepath.Join(downloadCfg.RecordRoot, "download", jobId, ".list")
+	}
+	log.InfoF("download db dir:%s", dbPath)
+
 	export, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:  info.GroupInfo.SuccessExportFilePath,
 		FailExportFilePath:     info.GroupInfo.FailExportFilePath,
@@ -37,7 +55,7 @@ func BatchDownload(info BatchDownloadInfo) {
 		return
 	}
 
-	reader, err := newDownloadWorkReader(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg, export)
+	reader, err := newDownloadWorkReader(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg.Bucket, export)
 	if err != nil {
 		log.Error(err)
 		return
@@ -46,19 +64,33 @@ func BatchDownload(info BatchDownloadInfo) {
 	work.NewFlowHandler(info.GroupInfo.Info).ReadWork(func() (work work.Work, hasMore bool) {
 		return reader.read()
 	}).DoWork(func(work work.Work) (work.Result, error) {
-		info := work.(DownloadInfo)
-		file, err := downloadFile(info)
+		apiInfo := work.(*download.ApiInfo)
+		apiInfo.Url = "" // downloadFile 时会自动创建
+		apiInfo.Domain = downloadDomain
+		apiInfo.ToFile = filepath.Join(downloadCfg.DestDir, apiInfo.Key)
+		apiInfo.StatusDBPath = dbPath
+		apiInfo.Referer = downloadCfg.Referer
+		apiInfo.FileEncoding = downloadCfg.FileEncoding
+		apiInfo.Bucket = downloadCfg.Bucket
+		if !downloadCfg.CheckHash {
+			apiInfo.FileHash = ""
+		}
+
+		file, err := downloadFile(DownloadInfo{
+			ApiInfo:  *apiInfo,
+			IsPublic: downloadCfg.Public,
+		})
 		if err != nil {
 			return nil, err
 		} else {
 			return file, nil
 		}
 	}).OnWorkResult(func(work work.Work, result work.Result) {
-		apiInfo := work.(download.ApiInfo)
+		apiInfo := work.(*download.ApiInfo)
 		file := result.(string)
 		export.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, file)
 	}).OnWorkError(func(work work.Work, err error) {
-		apiInfo := work.(download.ApiInfo)
+		apiInfo := work.(*download.ApiInfo)
 		export.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* key fileSize fileHash and fileModifyTime */
 			apiInfo.Key, info.GroupInfo.ItemSeparate,
 			apiInfo.FileSize, info.GroupInfo.ItemSeparate,
@@ -69,39 +101,22 @@ func BatchDownload(info BatchDownloadInfo) {
 }
 
 type downloadWorkReader struct {
-	exporter       *export.FileExporter
-	lineScanner    scanner.Scanner
-	itemSeparate   string
-	inputFile      string
-	infoChan       chan download.ApiInfo
-	downloadCfg    *config.Download
-	downloadDomain string
-	dbDir          string
+	exporter     *export.FileExporter
+	lineScanner  scanner.Scanner
+	itemSeparate string
+	inputFile    string
+	infoChan     chan *download.ApiInfo
+	bucket       string
 }
 
-func newDownloadWorkReader(inputFile string, itemSeparate string, downloadCfg *config.Download, exporter *export.FileExporter) (r *downloadWorkReader, err error) {
+func newDownloadWorkReader(inputFile string, itemSeparate string, bucket string, exporter *export.FileExporter) (r *downloadWorkReader, err error) {
 	r = &downloadWorkReader{
 		exporter:     exporter,
 		itemSeparate: itemSeparate,
-		downloadCfg:  downloadCfg,
+		bucket:       bucket,
 		inputFile:    inputFile,
-		infoChan:     make(chan download.ApiInfo, 100),
+		infoChan:     make(chan *download.ApiInfo, 100),
 	}
-
-	r.downloadDomain = downloadCfg.DownloadDomain()
-	if len(r.downloadDomain) == 0 {
-		r.downloadDomain, _ = bucket.DomainOfBucket(downloadCfg.Bucket)
-	}
-	if len(r.downloadDomain) == 0 {
-		return nil, errors.New("download domain can't be empty, you can set cdn_domain or io_host")
-	}
-
-	if len(downloadCfg.RecordRoot) == 0 {
-		r.dbDir = filepath.Join(workspace.GetWorkspace(), "download")
-	} else {
-		r.dbDir = filepath.Join(downloadCfg.RecordRoot, "download")
-	}
-	log.InfoF("download db dir:%s", r.dbDir)
 
 	r.lineScanner, err = scanner.NewScanner(scanner.Info{
 		StdInEnable: true,
@@ -133,7 +148,6 @@ func (d *downloadWorkReader) createReadOperation() {
 			if !success {
 				d.statusAndAddToChan(keys)
 				keys = nil
-				close(d.infoChan)
 				break
 			}
 
@@ -163,20 +177,15 @@ func (d *downloadWorkReader) createReadOperation() {
 				continue
 			}
 
-			d.infoChan <- download.ApiInfo{
-				Url:            "", // downloadFile 时会自动创建
-				Domain:         d.downloadDomain,
-				ToFile:         filepath.Join(d.downloadCfg.DestDir, fileKey),
-				StatusDBPath:   d.dbDir,
-				Referer:        d.downloadCfg.Referer,
-				FileEncoding:   d.downloadCfg.FileEncoding,
-				Bucket:         d.downloadCfg.Bucket,
+			d.infoChan <- &download.ApiInfo{
 				Key:            fileKey,
 				FileHash:       fileHash,
 				FileSize:       fileSize,
 				FileModifyTime: fileModifyTime,
 			}
 		}
+
+		close(d.infoChan)
 	}()
 }
 
@@ -185,7 +194,7 @@ func (d *downloadWorkReader) statusAndAddToChan(keys []string) {
 	for _, key := range keys {
 		if len(key) > 0 {
 			operations = append(operations, object.StatusApiInfo{
-				Bucket: d.downloadCfg.Bucket,
+				Bucket: d.bucket,
 				Key:    key,
 			})
 		}
@@ -201,14 +210,7 @@ func (d *downloadWorkReader) statusAndAddToChan(keys []string) {
 			if result.Code != 200 || result.Error != "" {
 				d.exporter.Fail().ExportF("%s%s error:%v", item.Key, result.Error)
 			} else {
-				d.infoChan <- download.ApiInfo{
-					Url:            "", // downloadFile 时会自动创建
-					Domain:         d.downloadDomain,
-					ToFile:         filepath.Join(d.downloadCfg.DestDir, item.Key),
-					StatusDBPath:   d.dbDir,
-					Referer:        d.downloadCfg.Referer,
-					FileEncoding:   d.downloadCfg.FileEncoding,
-					Bucket:         d.downloadCfg.Bucket,
+				d.infoChan <- &download.ApiInfo{
 					Key:            item.Key,
 					FileHash:       result.Hash,
 					FileSize:       result.FSize,
@@ -219,9 +221,10 @@ func (d *downloadWorkReader) statusAndAddToChan(keys []string) {
 	}
 }
 
-func (d *downloadWorkReader) read() (info download.ApiInfo, hasMore bool) {
+func (d *downloadWorkReader) read() (info *download.ApiInfo, hasMore bool) {
 	for info = range d.infoChan {
 		hasMore = true
+		break
 	}
 	return
 }
