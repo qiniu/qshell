@@ -36,7 +36,7 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 		})
 	}
 
-	startTime := time.Now().Unix()
+	startTime := time.Now().UnixNano() / 1e6
 	res, err := download.Download(info.ApiInfo)
 	if err != nil {
 		log.ErrorF("Download  failed:%s => %s error:%v", info.Url, info.ToFile, err)
@@ -53,15 +53,14 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 		return res, err
 	}
 
-	endTime := time.Now().Unix()
-
+	endTime := time.Now().UnixNano() / 1e6
+	duration := float64(endTime - startTime) / 1000
+	speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/duration/1024)
 	if res.IsExist {
 		log.InfoF("Download skip because file exist:%s => %s", info.Url, res.FileAbsPath)
 	} else if res.IsUpdate {
-		speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/float64(endTime-startTime)/1024)
 		log.InfoF("Download update success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
 	} else {
-		speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/float64(endTime-startTime)/1024)
 		log.InfoF("Download success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
 	}
 

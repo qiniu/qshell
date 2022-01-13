@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +18,12 @@ have already in local disk and need to skip download or not.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
 				cfg.DownloadConfigFile = args[0]
+			}
+			cfg.CmdCfg.Download.LogSetting = &config.LogSetting{
+				LogLevel:  config.InfoKey,
+				LogFile:   "",
+				LogRotate: 0,
+				LogStdout: true,
 			}
 			loadConfig()
 			operations.BatchDownload(info)

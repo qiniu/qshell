@@ -17,16 +17,6 @@ type LocalFileInfo struct {
 	RemoveFileWhenError bool   // 当遇到错误时是否该移除文件【选填】
 }
 
-func (l *LocalFileInfo) CheckInfoOfDB() (err error) {
-
-	return
-}
-
-func (l *LocalFileInfo) SaveInfoToDB() (err error) {
-
-	return
-}
-
 func (l *LocalFileInfo) CheckDownloadFile() (err error) {
 	defer func() {
 		if err != nil && l.RemoveFileWhenError {
@@ -69,6 +59,7 @@ func (l *LocalFileInfo) CheckFileSizeOfDownloadFile() error {
 
 func (l *LocalFileInfo) CheckFileHashOfDownloadFile() error {
 	if len(l.FileHash) == 0 {
+		log.Debug("download file check hash: needn't to check")
 		return nil
 	}
 
@@ -79,24 +70,24 @@ func (l *LocalFileInfo) CheckFileHashOfDownloadFile() error {
 
 	var hash string
 	if utils.IsSignByEtagV2(l.FileHash) {
-		log.Debug("download file check: get etag by v2 for key:" + l.Key)
+		log.Debug("download file check hash: get etag by v2 for key:" + l.Key)
 		if len(l.Bucket) == 0 || len(l.Key) == 0 {
-			return errors.New("download file check: etag v2 check should provide bucket and key")
+			return errors.New("download file check hash: etag v2 check should provide bucket and key")
 		}
 
 		bucketManager, err := bucket.GetBucketManager()
 		if err != nil {
-			return errors.New("download file check: etag v2 get bucket manager error:" + err.Error())
+			return errors.New("download file check hash: etag v2 get bucket manager error:" + err.Error())
 		}
 
 		stat, err := bucketManager.Stat(l.Bucket, l.Key)
 		if err != nil {
-			return errors.New("download file check: etag v2 get file status error:" + err.Error())
+			return errors.New("download file check hash: etag v2 get file status error:" + err.Error())
 		}
 
 		hash, err = utils.EtagV2(hashFile, stat.Parts)
 	} else {
-		log.Debug("download file check: get etag by v1 for key:" + l.Key)
+		log.Debug("download file check hash: get etag by v1 for key:" + l.Key)
 		hash, err = utils.EtagV1(hashFile)
 	}
 

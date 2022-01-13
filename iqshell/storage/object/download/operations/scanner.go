@@ -146,7 +146,7 @@ func (d *downloadScanner) getDownloadObjectStatusAndAddToChan(keys []string) {
 	}
 	results, err := batch.Some(operations)
 	if err != nil {
-		log.ErrorF("happen error:%v", err)
+		log.ErrorF("download batch status error:%v", err)
 	}
 
 	if len(results) == len(operations) {

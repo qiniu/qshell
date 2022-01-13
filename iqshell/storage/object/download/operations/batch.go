@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -10,7 +11,11 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
+	"os"
 	"path/filepath"
+	"strings"
+	"sync"
+	"time"
 )
 
 type BatchDownloadInfo struct {
@@ -40,7 +45,7 @@ func BatchDownload(info BatchDownloadInfo) {
 	}
 	log.InfoF("download db dir:%s", dbPath)
 
-	export, err := export.NewFileExport(export.FileExporterConfig{
+	exportor, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:  info.GroupInfo.SuccessExportFilePath,
 		FailExportFilePath:     info.GroupInfo.FailExportFilePath,
 		OverrideExportFilePath: info.GroupInfo.OverrideExportFilePath,
@@ -50,14 +55,51 @@ func BatchDownload(info BatchDownloadInfo) {
 		return
 	}
 
-	ds, err := newDownloadScanner(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg.Bucket, export)
+	ds, err := newDownloadScanner(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg.Bucket, exportor)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
+	timeStart := time.Now()
+	var locker sync.Mutex
+	var totalFileCount int64
+	var currentFileCount int64
+	var existsFileCount int64
+	var updateFileCount int64
+	var successFileCount int64
+	var failureFileCount int64
+	var skipBySuffixes int64
+
+	hasPrefixes := len(downloadCfg.Prefix) > 0
+	prefixes := strings.Split(downloadCfg.Prefix, ",")
+	filterPrefix := func(name string) bool {
+		if !hasPrefixes {
+			return false
+		}
+
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(name, prefix) {
+				return true
+			}
+		}
+		return false
+	}
 	work.NewFlowHandler(info.GroupInfo.Info).ReadWork(func() (work work.Work, hasMore bool) {
-		return ds.scan()
+		apiInfo, hasMore := ds.scan()
+		if apiInfo == nil {
+			return
+		}
+
+		if filterPrefix(apiInfo.Key) {
+			log.InfoF("Skip download `%s`, suffix filter not match", apiInfo.Key)
+			locker.Lock()
+			skipBySuffixes += 1
+			locker.Unlock()
+			return nil, true
+		}
+
+		return apiInfo, hasMore
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		apiInfo := work.(*download.ApiInfo)
 		apiInfo.Url = "" // downloadFile 时会自动创建
@@ -75,6 +117,18 @@ func BatchDownload(info BatchDownloadInfo) {
 			ApiInfo:  *apiInfo,
 			IsPublic: downloadCfg.Public,
 		})
+
+		locker.Lock()
+		currentFileCount += 1
+		locker.Unlock()
+
+		if totalFileCount > 0 {
+			log.InfoF("Downloading %s [%d/%d, %.1f%%] ...", apiInfo.Key, currentFileCount, totalFileCount,
+				float32(currentFileCount)*100/float32(totalFileCount))
+		} else {
+			log.InfoF("Downloading %s [%d/-, -] ...", apiInfo.Key, currentFileCount)
+		}
+
 		if err != nil {
 			return nil, err
 		} else {
@@ -83,14 +137,44 @@ func BatchDownload(info BatchDownloadInfo) {
 	}).OnWorkResult(func(work work.Work, result work.Result) {
 		apiInfo := work.(*download.ApiInfo)
 		res := result.(download.ApiResult)
-		export.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, res.FileAbsPath)
+		exportor.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, res.FileAbsPath)
+
+		locker.Lock()
+		if res.IsExist {
+			existsFileCount += 1
+		} else if res.IsUpdate {
+			updateFileCount += 1
+		} else {
+			successFileCount += 1
+		}
+		locker.Unlock()
 	}).OnWorkError(func(work work.Work, err error) {
+		locker.Lock()
+		failureFileCount += 1
+		locker.Unlock()
+
 		apiInfo := work.(*download.ApiInfo)
-		export.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* key fileSize fileHash and fileModifyTime */
+		exportor.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* key fileSize fileHash and fileModifyTime */
 			apiInfo.Key, info.GroupInfo.ItemSeparate,
 			apiInfo.FileSize, info.GroupInfo.ItemSeparate,
 			apiInfo.FileHash, info.GroupInfo.ItemSeparate,
 			apiInfo.FileModifyTime, info.GroupInfo.ItemSeparate,
 			err)
 	}).Start()
+
+	totalFileCount = skipBySuffixes + existsFileCount + successFileCount + updateFileCount + failureFileCount
+	log.InfoF("-------Download Result-------")
+	log.InfoF("%10s%10d", "Total:", totalFileCount)
+	log.InfoF("%10s%10d", "Skipped:", skipBySuffixes)
+	log.InfoF("%10s%10d", "Exists:", existsFileCount)
+	log.InfoF("%10s%10d", "Success:", successFileCount)
+	log.InfoF("%10s%10d", "Update:", updateFileCount)
+	log.InfoF("%10s%10d", "Failure:", failureFileCount)
+	log.InfoF("%10s%15s", "Duration:", time.Since(timeStart))
+	log.InfoF("-----------------------------")
+	log.InfoF("See download log at path:%s", downloadCfg.LogFile)
+
+	if failureFileCount > 0 {
+		os.Exit(data.STATUS_ERROR)
+	}
 }

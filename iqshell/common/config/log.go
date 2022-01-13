@@ -3,10 +3,10 @@ package config
 import "github.com/astaxie/beego/logs"
 
 type LogSetting struct {
-	LogLevel   string `json:"log_level,omitempty"`
-	LogFile    string `json:"log_file,omitempty"`
-	LogRotate  int    `json:"log_rotate,omitempty"`
-	LogStdout  bool   `json:"log_stdout,omitempty"`
+	LogLevel  string `json:"log_level,omitempty"`
+	LogFile   string `json:"log_file,omitempty"`
+	LogRotate int    `json:"log_rotate,omitempty"`
+	LogStdout bool   `json:"log_stdout,omitempty"`
 }
 
 func (l *LogSetting) merge(from *LogSetting) {
@@ -31,15 +31,22 @@ func (l *LogSetting) merge(from *LogSetting) {
 	}
 }
 
-func (l *LogSetting)GetLogLevel() (logLevel int) {
+const (
+	DebugKey = "debug"
+	InfoKey  = "info"
+	WarnKey  = "warn"
+	ErrorKey = "error"
+)
+
+func (l *LogSetting) GetLogLevel() (logLevel int) {
 	switch l.LogLevel {
-	case "debug":
+	case DebugKey:
 		logLevel = logs.LevelDebug
-	case "info":
+	case InfoKey:
 		logLevel = logs.LevelInfo
-	case "warn":
+	case WarnKey:
 		logLevel = logs.LevelWarning
-	case "error":
+	case ErrorKey:
 		logLevel = logs.LevelError
 	default:
 		logLevel = logs.LevelInfo

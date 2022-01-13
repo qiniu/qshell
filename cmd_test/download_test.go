@@ -30,7 +30,7 @@ func TestDownload(t *testing.T) {
 		Suffixes:    "",
 		IoHost:      "",
 		Public:      true,
-		CheckHash:   false,
+		CheckHash:   true,
 		Referer:     "",
 		CdnDomain:   "",
 		UseHttps:    true,

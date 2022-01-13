@@ -83,16 +83,14 @@ func Load(cfg Config) error {
 		return err
 	}
 
-	logSetting := workspace.GetConfig().GetLogConfig()
-	if logSetting != nil {
-		_ = log.LoadFileLogger(log.Config{
-			Filename:       logSetting.LogFile,
-			Level:          logSetting.GetLogLevel(),
-			Daily:          true,
-			StdOutColorful: logSetting.LogStdout,
-			MaxDays:        logSetting.LogRotate,
-		})
-	}
+	ls := workspace.GetConfig().GetLogConfig()
+	_ = log.LoadFileLogger(log.Config{
+		Filename:       ls.LogFile,
+		Level:          ls.GetLogLevel(),
+		Daily:          true,
+		StdOutColorful: ls.LogStdout,
+		MaxDays:        ls.LogRotate,
+	})
 
 	return nil
 }
