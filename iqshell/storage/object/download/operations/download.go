@@ -57,11 +57,11 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 	duration := float64(endTime - startTime) / 1000
 	speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/duration/1024)
 	if res.IsExist {
-		log.InfoF("Download skip because file exist:%s => %s", info.Url, res.FileAbsPath)
+		log.Alert("Download skip because file exist:%s => %s", info.Url, res.FileAbsPath)
 	} else if res.IsUpdate {
-		log.InfoF("Download update success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+		log.Alert("Download update success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
 	} else {
-		log.InfoF("Download success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+		log.Alert("Download success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
 	}
 
 	return res, nil

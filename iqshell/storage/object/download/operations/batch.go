@@ -92,7 +92,7 @@ func BatchDownload(info BatchDownloadInfo) {
 		}
 
 		if filterPrefix(apiInfo.Key) {
-			log.InfoF("Skip download `%s`, suffix filter not match", apiInfo.Key)
+			log.AlertF("Skip download `%s`, suffix filter not match", apiInfo.Key)
 			locker.Lock()
 			skipBySuffixes += 1
 			locker.Unlock()
@@ -123,10 +123,10 @@ func BatchDownload(info BatchDownloadInfo) {
 		locker.Unlock()
 
 		if totalFileCount > 0 {
-			log.InfoF("Downloading %s [%d/%d, %.1f%%] ...", apiInfo.Key, currentFileCount, totalFileCount,
+			log.AlertF("Downloading %s [%d/%d, %.1f%%] ...", apiInfo.Key, currentFileCount, totalFileCount,
 				float32(currentFileCount)*100/float32(totalFileCount))
 		} else {
-			log.InfoF("Downloading %s [%d/-, -] ...", apiInfo.Key, currentFileCount)
+			log.AlertF("Downloading %s [%d/-, -] ...", apiInfo.Key, currentFileCount)
 		}
 
 		if err != nil {
@@ -168,16 +168,16 @@ func BatchDownload(info BatchDownloadInfo) {
 		skipBySuffixes = totalFileCount - existsFileCount - successFileCount - updateFileCount - failureFileCount
 	}
 
-	log.InfoF("-------Download Result-------")
-	log.InfoF("%10s%10d", "Total:", totalFileCount)
-	log.InfoF("%10s%10d", "Skipped:", skipBySuffixes)
-	log.InfoF("%10s%10d", "Exists:", existsFileCount)
-	log.InfoF("%10s%10d", "Success:", successFileCount)
-	log.InfoF("%10s%10d", "Update:", updateFileCount)
-	log.InfoF("%10s%10d", "Failure:", failureFileCount)
-	log.InfoF("%10s%15s", "Duration:", time.Since(timeStart))
-	log.InfoF("-----------------------------")
-	log.InfoF("See download log at path:%s", downloadCfg.LogFile)
+	log.Alert("-------Download Result-------")
+	log.AlertF("%10s%10d", "Total:", totalFileCount)
+	log.AlertF("%10s%10d", "Skipped:", skipBySuffixes)
+	log.AlertF("%10s%10d", "Exists:", existsFileCount)
+	log.AlertF("%10s%10d", "Success:", successFileCount)
+	log.AlertF("%10s%10d", "Update:", updateFileCount)
+	log.AlertF("%10s%10d", "Failure:", failureFileCount)
+	log.AlertF("%10s%15s", "Duration:", time.Since(timeStart))
+	log.AlertF("-----------------------------")
+	log.AlertF("See download log at path:%s", downloadCfg.LogFile)
 
 	if failureFileCount > 0 {
 		os.Exit(data.STATUS_ERROR)
