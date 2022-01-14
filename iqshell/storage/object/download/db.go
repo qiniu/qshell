@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/db"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 //db 金检查是否已下载过，且下载后保存的数据符合预期；
@@ -30,7 +27,7 @@ func (d *dbHandler) init() (err error) {
 		return nil
 	}
 
-	d.dbHandler, err = openDB(d.DBFilePath)
+	d.dbHandler, err = db.OpenDB(d.DBFilePath)
 	if err != nil {
 		return errors.New("download init error:" + err.Error())
 	}
@@ -80,33 +77,4 @@ func (d *dbHandler) checkInfoOfDB() error {
 func (d *dbHandler) saveInfoToDB() (err error) {
 	value := fmt.Sprintf("%d|%d|%s", d.FileServerUpdateTime, d.FileSize, d.FileHash)
 	return d.dbHandler.Put(d.FilePath, value)
-}
-
-var dbMap map[string]*db.DB
-var dbMapLock sync.Mutex
-
-func openDB(filePath string) (*db.DB, error) {
-	dbMapLock.Lock()
-	defer dbMapLock.Unlock()
-
-	if dbMap == nil {
-		dbMap = make(map[string]*db.DB)
-	}
-
-	if dbMap[filePath] != nil {
-		return dbMap[filePath], nil
-	} else {
-		dbDir := filepath.Dir(filePath)
-		err := os.MkdirAll(dbDir, 0775)
-		if err != nil {
-			return nil, errors.New("download db make file error:" + err.Error())
-		}
-
-		handler, err := db.OpenDB(filePath)
-		if err != nil {
-			return nil, errors.New("download db open error:" + err.Error())
-		}
-		dbMap[filePath] = handler
-		return handler, nil
-	}
 }

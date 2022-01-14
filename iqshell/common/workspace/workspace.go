@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 )
@@ -30,9 +31,23 @@ var (
 	cancelFunc func()
 )
 
-// 获取之前需要先 Load
+// GetConfig 获取之前需要先 Load
 func GetConfig() *config.Config {
 	return cfg
+}
+
+func GetStorageConfig() *storage.Config  {
+	r := cfg.GetRegion()
+	if len(cfg.Hosts.GetOneUc()) > 0 {
+		storage.SetUcHost(cfg.Hosts.GetOneUc(), cfg.IsUseHttps())
+	}
+
+	return &storage.Config{
+		UseHTTPS:      cfg.IsUseHttps(),
+		Region:        r,
+		Zone:          r,
+		CentralRsHost: cfg.Hosts.GetOneRs(),
+	}
 }
 
 func GetWorkspace() string {

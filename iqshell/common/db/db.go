@@ -1,8 +1,12 @@
 package db
 
 import (
+	"errors"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
+	"os"
+	"path/filepath"
+	"sync"
 )
 
 type DB struct {
@@ -10,7 +14,36 @@ type DB struct {
 	db       *leveldb.DB
 }
 
+var dbMap map[string]*DB
+var dbMapLock sync.Mutex
+
 func OpenDB(filePath string) (*DB, error) {
+	dbMapLock.Lock()
+	defer dbMapLock.Unlock()
+
+	if dbMap == nil {
+		dbMap = make(map[string]*DB)
+	}
+
+	if dbMap[filePath] != nil {
+		return dbMap[filePath], nil
+	} else {
+		dbDir := filepath.Dir(filePath)
+		err := os.MkdirAll(dbDir, 0775)
+		if err != nil {
+			return nil, errors.New("open db: make file error:" + err.Error())
+		}
+
+		handler, err := OpenDB(filePath)
+		if err != nil {
+			return nil, errors.New("open db: open error:" + err.Error())
+		}
+		dbMap[filePath] = handler
+		return handler, nil
+	}
+}
+
+func openDB(filePath string) (*DB, error) {
 	db, err := leveldb.OpenFile(filePath, nil)
 	if err != nil {
 		return nil, err

@@ -16,16 +16,7 @@ func GetBucketManager() (manager *storage.BucketManager, err error) {
 	}
 
 	mac := qbox.NewMac(acc.AccessKey, acc.SecretKey)
-	cfg := workspace.GetConfig()
-	r := cfg.GetRegion()
-	if len(cfg.Hosts.GetOneUc()) > 0 {
-		storage.SetUcHost(cfg.Hosts.GetOneUc(), cfg.IsUseHttps())
-	}
-	manager = storage.NewBucketManager(mac, &storage.Config{
-		UseHTTPS:      cfg.IsUseHttps(),
-		Region:        r,
-		Zone:          r,
-		CentralRsHost: cfg.Hosts.GetOneRs(),
-	})
+	cfg := workspace.GetStorageConfig()
+	manager = storage.NewBucketManager(mac, cfg)
 	return
 }
