@@ -16,6 +16,7 @@ type ApiInfo struct {
 	CheckExist       bool          // 检查服务端是否已存在
 	CheckHash        bool          // 是否检查 hash, 检查是会对比服务端文件 hash
 	CheckSize        bool          // 是否检查文件大小，检查是会对比服务端文件大小
+	OverWrite        bool          // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
 	FileStatusDBPath string        // 文件上传状态想你想保存的 db 路径
 	ToBucket         string        // 文件保存至 bucket 的名称
 	SaveKey          string        // 文件保存的名称
@@ -49,38 +50,57 @@ func Upload(info ApiInfo) (res UploadResult, err error) {
 		log.WarningF("upload: db init error:%v", err)
 	}
 
-	// 检查服务端是否存在
+	exist := false
+	match := false
 	if info.CheckExist {
-		if info.CheckHash {
-
+		checker := &serverChecker{
+			Bucket:     info.ToBucket,
+			Key:        info.SaveKey,
+			FilePath:   info.FilePath,
+			CheckExist: info.CheckExist,
+			CheckHash:  info.CheckHash,
+			CheckSize:  info.CheckSize,
 		}
-		if info.CheckSize {
 
+		if checker.isNeedCheck() {
+			// 检查服务端的数据
+			exist, match, err = checker.check()
+			if err != nil {
+				err = errors.New("upload server check error:" + err.Error())
+				return
+			}
+		} else {
+			// 检查本地数据
+			exist, match, err = d.checkInfoOfDB()
+			if err != nil {
+				err = errors.New("upload db check error:" + err.Error())
+				return
+			}
 		}
-	} else {
-		// 检查本地是否保存有上传数据，已上传会被保存。
-		err = d.checkInfoOfDB()
-		if err == nil {
-			res.Key = info.SaveKey
-			res.FSize = info.FileSize
+	}
+
+	if exist {
+		if match {
+			log.InfoF("File `%s` exists in bucket:[%s:%s], hash match, ignore this upload",
+				info.FilePath, info.ToBucket, info.SaveKey)
 			res.IsSkip = true
-			log.InfoF("upload: file already upload:%s", d.FilePath)
 			return
 		}
-		log.WarningF("upload check info:%v", err)
+
+		if !info.OverWrite {
+			log.WarningF("Skip upload of file `%s` => [%s:%s] because `overwrite` is false",
+				info.FilePath, info.ToBucket, info.SaveKey)
+			return
+		}
 	}
 
 	log.InfoF("upload: start upload file:%s", d.FilePath)
 	cfg := workspace.GetConfig()
-	if info.isNetworkSource() {
-		res, err = uploadNetworkSource(info, cfg)
-	} else {
-		res, err = uploadLocalSource(info, cfg)
-	}
+	res, err = uploadLocalSource(info, cfg)
 	log.InfoF("upload:   end upload file:%s error:%v", d.FilePath, err)
 
 	if err != nil {
-		err =  errors.New("upload error:" + err.Error())
+		err = errors.New("upload error:" + err.Error())
 		return
 	}
 
@@ -90,12 +110,7 @@ func Upload(info ApiInfo) (res UploadResult, err error) {
 		return
 	}
 
-	return res,nil
-}
-
-func uploadNetworkSource(info ApiInfo, cfg *config.Config) (result UploadResult, err error) {
-
-	return
+	return res, nil
 }
 
 func uploadLocalSource(info ApiInfo, cfg *config.Config) (result UploadResult, err error) {

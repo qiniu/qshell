@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 )
 
@@ -20,8 +21,27 @@ func (s StatusApiInfo) ToOperation() (string, error) {
 	return storage.URIStat(s.Bucket, s.Key), nil
 }
 
-func Status(info StatusApiInfo) (batch.OperationResult, error) {
-	return batch.One(info)
+func Status(info StatusApiInfo) (res batch.OperationResult, err error) {
+	bucketManager, err := bucket.GetBucketManager()
+	if err != nil {
+		err = fmt.Errorf("status object:[%s|%s] error:%v", info.Bucket, info.Key, err.Error())
+		return
+	}
+	status, err := bucketManager.Stat(info.Bucket, info.Key)
+	if err != nil {
+		err = fmt.Errorf("status object:[%s|%s] status error:%v", info.Bucket, info.Key, err.Error())
+		return
+	}
+	return batch.OperationResult{
+		Code:     200,
+		Hash:     status.Hash,
+		FSize:    status.Fsize,
+		PutTime:  status.PutTime,
+		MimeType: status.MimeType,
+		Type:     status.Type,
+		Error:    "",
+		Parts:    status.Parts,
+	}, nil
 }
 
 // ChangeStatusApiInfo 修改 status

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"os"
 )
 
@@ -75,12 +75,10 @@ func (l *LocalFileInfo) CheckFileHashOfDownloadFile() error {
 			return errors.New("download file check hash: etag v2 check should provide bucket and key")
 		}
 
-		bucketManager, err := bucket.GetBucketManager()
-		if err != nil {
-			return errors.New("download file check hash: etag v2 get bucket manager error:" + err.Error())
-		}
-
-		stat, err := bucketManager.Stat(l.Bucket, l.Key)
+		stat, err := object.Status(object.StatusApiInfo{
+			Bucket: l.Bucket,
+			Key:    l.Key,
+		})
 		if err != nil {
 			return errors.New("download file check hash: etag v2 get file status error:" + err.Error())
 		}

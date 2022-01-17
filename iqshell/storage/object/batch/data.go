@@ -36,4 +36,5 @@ type OperationResult struct {
 	MimeType string
 	Type     int
 	Error    string
+	Parts    []int64
 }
