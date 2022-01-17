@@ -16,6 +16,7 @@ type serverChecker struct {
 	CheckExist bool   // 检查服务端是否已存在
 	CheckHash  bool   // 是否检查 hash, 检查是会对比服务端文件 hash
 	CheckSize  bool   // 是否检查文件大小，检查是会对比服务端文件大小
+	FileSize   int64  // 文件大小，核对文件大小时使用
 }
 
 func (c *serverChecker) isNeedCheck() bool {
@@ -75,16 +76,11 @@ func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool,
 }
 
 func (c *serverChecker) checkServerSize(fileServerStatus batch.OperationResult) (bool, bool, error) {
-	localFileStatus, err := os.Stat(c.FilePath)
-	if err != nil {
-		return false, false, fmt.Errorf("get file:%s status error:%v", c.FilePath, err)
-	}
-
-	if localFileStatus.Size() == fileServerStatus.FSize {
+	if c.FileSize == fileServerStatus.FSize {
 		return true, true, nil
 	} else {
 		log.WarningF("File:%s exist at [%s:%s], but size not match[%d|%d]",
-			c.FilePath, c.Bucket, c.Key, localFileStatus.Size(), fileServerStatus.FSize)
+			c.FilePath, c.Bucket, c.Key, c.FileSize, fileServerStatus.FSize)
 		return true, false, nil
 	}
 }

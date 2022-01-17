@@ -2,17 +2,19 @@ package upload
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"os"
+	"path"
 	"strings"
 )
 
 type ApiInfo struct {
 	FilePath         string        // 文件路径，可为网络资源，也可为本地资源
-	FileSize         int64         // 文件大小
-	FileModifyTime   int64         // 本地文件修改时间
 	CheckExist       bool          // 检查服务端是否已存在
 	CheckHash        bool          // 是否检查 hash, 检查是会对比服务端文件 hash
 	CheckSize        bool          // 是否检查文件大小，检查是会对比服务端文件大小
@@ -21,10 +23,39 @@ type ApiInfo struct {
 	ToBucket         string        // 文件保存至 bucket 的名称
 	SaveKey          string        // 文件保存的名称
 	TokenProvider    func() string // token provider
+	TryTimes         int           // 失败时，最多重试次数【可选】
+	FileSize         int64         // 待上传文件的大小 【可选】
+	FileModifyTime   int64         // 本地文件修改时间 【可选】
 }
 
-func (u *ApiInfo) isNetworkSource() bool {
-	return strings.HasPrefix(u.FilePath, "http://") || strings.HasPrefix(u.FilePath, "https://")
+func (a *ApiInfo) init() error {
+	if len(a.FilePath) == 0 {
+		return errors.New(alert.CannotEmpty("upload file path", ""))
+	}
+
+	// 获取文件信息
+	if a.FileSize == 0 || a.FileModifyTime == 0 {
+		localFileStatus, err := os.Stat(a.FilePath)
+		if err != nil {
+			return fmt.Errorf("get file:%s status error:%v", a.FilePath, err)
+		}
+		a.FileSize = localFileStatus.Size()
+		a.FileModifyTime = localFileStatus.ModTime().UnixNano() / 100 // 兼容老版本：Unit is 100ns
+	}
+
+	if a.TryTimes == 0 {
+		a.TryTimes = 3
+	}
+
+	if len(a.SaveKey) == 0 {
+		a.SaveKey = path.Base(a.FilePath)
+	}
+
+	return nil
+}
+
+func (a *ApiInfo) isNetworkSource() bool {
+	return strings.HasPrefix(a.FilePath, "http://") || strings.HasPrefix(a.FilePath, "https://")
 }
 
 type UploadResult struct {
@@ -39,6 +70,10 @@ type Uploader interface {
 }
 
 func Upload(info ApiInfo) (res UploadResult, err error) {
+	err = info.init()
+	if err != nil {
+		log.WarningF("upload: info init error:%v", err)
+	}
 
 	d := &dbHandler{
 		DBFilePath:     info.FileStatusDBPath,
@@ -132,7 +167,7 @@ func uploadLocalSource(info ApiInfo, cfg *config.Config) (result UploadResult, e
 			UpHost:     upCfg.UpHost,
 			MimeType:   "",
 			PartSize:   upCfg.ResumableAPIV2PartSize,
-			TryTimes:   3,
+			TryTimes:   info.TryTimes,
 			Progresses: nil,
 			Notify:     nil,
 			NotifyErr:  nil,
@@ -144,7 +179,7 @@ func uploadLocalSource(info ApiInfo, cfg *config.Config) (result UploadResult, e
 			UpHost:     upCfg.UpHost,
 			MimeType:   "",
 			ChunkSize:  0,
-			TryTimes:   3,
+			TryTimes:   info.TryTimes,
 			Progresses: nil,
 			Notify:     nil,
 			NotifyErr:  nil,

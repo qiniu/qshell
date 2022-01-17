@@ -25,7 +25,9 @@ type BatchUploadInfo struct {
 }
 
 // [qupload]命令， 上传本地文件到七牛存储中
-// 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中; 可以设置多线程上传，默认的线程区间在[iqshell.MIN_UPLOAD_THREAD_COUNT, iqshell.MAX_UPLOAD_THREAD_COUNT]
+
+// BatchUpload 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中;
+// 可以设置多线程上传，默认的线程区间在[iqshell.MIN_UPLOAD_THREAD_COUNT, iqshell.MAX_UPLOAD_THREAD_COUNT]
 func BatchUpload(info BatchUploadInfo) {
 
 	if len(info.ConfigFile) > 0 {
@@ -116,6 +118,7 @@ func parseUploadConfigFile(uploadConfigFile string, uploadConfig *config.UploadC
 		err = fmt.Errorf("Read upload config file `%s`: %v\n", uploadConfigFile, rErr)
 		return
 	}
+
 	//remove UTF-8 BOM
 	configData = bytes.TrimPrefix(configData, []byte("\xef\xbb\xbf"))
 	uErr := json.Unmarshal(configData, uploadConfig)
