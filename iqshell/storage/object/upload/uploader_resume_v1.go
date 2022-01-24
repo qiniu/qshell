@@ -19,7 +19,7 @@ func newResumeV1Uploader(cfg *storage.Config, ext *storage.RputExtra) Uploader {
 	}
 }
 
-func (r *resumeV1Uploader) upload(info ApiInfo) (ret UploadResult, err error) {
+func (r *resumeV1Uploader) upload(info ApiInfo) (ret Result, err error) {
 	file, err := os.Open(info.FilePath)
 	if err != nil {
 		err = errors.New("resume v1 upload: open file error:" + err.Error())

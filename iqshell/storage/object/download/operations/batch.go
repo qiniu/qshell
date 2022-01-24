@@ -45,7 +45,7 @@ func BatchDownload(info BatchDownloadInfo) {
 	}
 	log.InfoF("download db dir:%s", dbPath)
 
-	exportor, err := export.NewFileExport(export.FileExporterConfig{
+	exporter, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:  info.GroupInfo.SuccessExportFilePath,
 		FailExportFilePath:     info.GroupInfo.FailExportFilePath,
 		OverrideExportFilePath: info.GroupInfo.OverrideExportFilePath,
@@ -55,7 +55,7 @@ func BatchDownload(info BatchDownloadInfo) {
 		return
 	}
 
-	ds, err := newDownloadScanner(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg.Bucket, exportor)
+	ds, err := newDownloadScanner(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg.Bucket, exporter)
 	if err != nil {
 		log.Error(err)
 		return
@@ -137,7 +137,7 @@ func BatchDownload(info BatchDownloadInfo) {
 	}).OnWorkResult(func(work work.Work, result work.Result) {
 		apiInfo := work.(*download.ApiInfo)
 		res := result.(download.ApiResult)
-		exportor.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, res.FileAbsPath)
+		exporter.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, res.FileAbsPath)
 
 		locker.Lock()
 		if res.IsExist {
@@ -154,7 +154,7 @@ func BatchDownload(info BatchDownloadInfo) {
 		locker.Unlock()
 
 		apiInfo := work.(*download.ApiInfo)
-		exportor.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* key fileSize fileHash and fileModifyTime */
+		exporter.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* key fileSize fileHash and fileModifyTime */
 			apiInfo.Key, info.GroupInfo.ItemSeparate,
 			apiInfo.FileSize, info.GroupInfo.ItemSeparate,
 			apiInfo.FileHash, info.GroupInfo.ItemSeparate,

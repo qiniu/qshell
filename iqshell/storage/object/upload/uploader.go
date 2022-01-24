@@ -58,7 +58,7 @@ func (a *ApiInfo) isNetworkSource() bool {
 	return strings.HasPrefix(a.FilePath, "http://") || strings.HasPrefix(a.FilePath, "https://")
 }
 
-type UploadResult struct {
+type Result struct {
 	Key    string `json:"key"`
 	FSize  int64  `json:"fsize"`
 	Hash   string `json:"hash"`
@@ -66,10 +66,10 @@ type UploadResult struct {
 }
 
 type Uploader interface {
-	upload(info ApiInfo) (UploadResult, error)
+	upload(info ApiInfo) (Result, error)
 }
 
-func Upload(info ApiInfo) (res UploadResult, err error) {
+func Upload(info ApiInfo) (res Result, err error) {
 	err = info.init()
 	if err != nil {
 		log.WarningF("upload: info init error:%v", err)
@@ -108,8 +108,7 @@ func Upload(info ApiInfo) (res UploadResult, err error) {
 			// 检查本地数据
 			exist, match, err = d.checkInfoOfDB()
 			if err != nil {
-				err = errors.New("upload db check error:" + err.Error())
-				return
+				log.WarningF("upload db check error:%v", err.Error())
 			}
 		}
 	}
@@ -148,7 +147,7 @@ func Upload(info ApiInfo) (res UploadResult, err error) {
 	return res, nil
 }
 
-func uploadLocalSource(info ApiInfo, cfg *config.Config) (result UploadResult, err error) {
+func uploadLocalSource(info ApiInfo, cfg *config.Config) (result Result, err error) {
 	upCfg := cfg.Up
 	storageCfg := workspace.GetStorageConfig()
 	var up Uploader
