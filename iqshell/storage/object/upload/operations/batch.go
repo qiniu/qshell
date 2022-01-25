@@ -2,7 +2,6 @@ package operations
 
 import (
 	"fmt"
-	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
@@ -182,7 +181,7 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 			FileStatusDBPath: dbPath,
 			ToBucket:         uploadConfig.Bucket,
 			SaveKey:          key,
-			TokenProvider:    createTokenProvider(mac, uploadConfig, key),
+			TokenProvider:    createTokenProviderWithConfig(mac, uploadConfig, key),
 			TryTimes:         0,
 			FileSize:         fileSize,
 			FileModifyTime:   modifyTime,
@@ -242,19 +241,5 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 
 	if failureFileCount > 0 {
 		os.Exit(data.STATUS_ERROR)
-	}
-}
-
-func createTokenProvider(mac *qbox.Mac, cfg *config.Up, key string) func() string {
-	policy := *cfg.Policy
-	policy.Scope = cfg.Bucket
-	if cfg.Overwrite {
-		policy.Scope = fmt.Sprintf("%s:%s", cfg.Bucket, key)
-		policy.InsertOnly = 0
-	}
-	policy.FileType = cfg.FileType
-	return func() string {
-		policy.Expires = 7 * 24 * 3600
-		return policy.UploadToken(mac)
 	}
 }

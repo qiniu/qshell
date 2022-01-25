@@ -71,7 +71,6 @@ func (cfg *UploadConfig) Check() {
 }
 
 func (cfg *UploadConfig) JobId() string {
-
 	return utils.Md5Hex(fmt.Sprintf("%s:%s", cfg.SrcDir, cfg.Bucket))
 }
 

@@ -2,7 +2,11 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,6 +42,8 @@ type Up struct {
 	FileType               int    `json:"file_type,omitempty"`
 	DeleteOnSuccess        bool   `json:"delete_on_success,omitempty"`
 	DisableResume          bool   `json:"disable_resume,omitempty"`
+	DisableForm            bool   `json:"disable_form"`
+	WorkerCount            int    `json:"work_count"` // 分片上传并发数
 	RecordRoot             string `json:"record_root"`
 
 	Tasks  *Tasks             `json:"tasks,omitempty"`
@@ -69,7 +75,47 @@ func (up *Up) merge(from *Up) {
 	}
 }
 
+func (up *Up) JobId() string {
+	return utils.Md5Hex(fmt.Sprintf("%s:%s", up.SrcDir, up.Bucket))
+}
+
+func (up *Up) GetLogLevel() int {
+
+	//init log level
+	logLevel := log.LevelInfo
+	switch up.LogLevel {
+	case "debug":
+		logLevel = log.LevelDebug
+	case "info":
+		logLevel = log.LevelInfo
+	case "warn":
+		logLevel = log.LevelWarning
+	case "error":
+		logLevel = log.LevelError
+	default:
+		logLevel = log.LevelInfo
+	}
+	return int(logLevel)
+}
+
+func (up *Up) GetLogRotate() int {
+	logRotate := 1
+	if up.LogRotate > 0 {
+		logRotate = up.LogRotate
+	}
+	return logRotate
+}
+
 func (up *Up) Check() error {
+	// 验证大小
+	if up.ResumableAPIV2PartSize <= 0 {
+		up.ResumableAPIV2PartSize = data.BLOCK_SIZE
+	} else if up.ResumableAPIV2PartSize < int64(utils.MB) {
+		up.ResumableAPIV2PartSize = int64(utils.MB)
+	} else if up.ResumableAPIV2PartSize > int64(utils.GB) {
+		up.ResumableAPIV2PartSize = int64(utils.GB)
+	}
+
 	if up.FileType != 1 && up.FileType != 0 {
 		return errors.New("wrong Filetype, It should be 0 or 1")
 	}
