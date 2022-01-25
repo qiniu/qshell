@@ -19,16 +19,16 @@ var cfg = iqshell.Config{
 		Credentials: nil,
 		UseHttps:    "",
 		Hosts:       &config.Hosts{},
-		Up:          &config.Up{
+		Up: &config.Up{
 			LogSetting: &config.LogSetting{},
-			Tasks: &config.Tasks{},
-			Retry: &config.Retry{},
-			Policy: &storage.PutPolicy{},
+			Tasks:      &config.Tasks{},
+			Retry:      &config.Retry{},
+			Policy:     &storage.PutPolicy{},
 		},
-		Download:    &config.Download{
+		Download: &config.Download{
 			LogSetting: &config.LogSetting{},
-			Tasks: &config.Tasks{},
-			Retry: &config.Retry{},
+			Tasks:      &config.Tasks{},
+			Retry:      &config.Retry{},
 		},
 	},
 }

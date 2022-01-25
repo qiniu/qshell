@@ -16,14 +16,13 @@ func TestAsyncFetch(t *testing.T) {
 		"-i", path,
 		"-g", "1",
 		"-c", "2")
-	if len(errs) > 0{
+	if len(errs) > 0 {
 		t.Fail()
 	}
 
 	result = strings.ReplaceAll(result, "\n", "")
 	result, errs = test.RunCmdWithError("prefop", result)
-	if len(errs) > 0{
+	if len(errs) > 0 {
 		t.Fail()
 	}
 }
-

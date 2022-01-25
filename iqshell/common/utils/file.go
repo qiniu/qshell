@@ -51,7 +51,6 @@ func UnMarshalFromFile(filePath string, v interface{}) error {
 	return nil
 }
 
-
 func FileSize(filePath string) (fileSize int64, err error) {
 	fileStatus, err := os.Stat(filePath)
 	if err != nil {

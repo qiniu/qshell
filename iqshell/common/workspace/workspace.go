@@ -36,7 +36,7 @@ func GetConfig() *config.Config {
 	return cfg
 }
 
-func GetStorageConfig() *storage.Config  {
+func GetStorageConfig() *storage.Config {
 	r := cfg.GetRegion()
 	if len(cfg.Hosts.GetOneUc()) > 0 {
 		storage.SetUcHost(cfg.Hosts.GetOneUc(), cfg.IsUseHttps())

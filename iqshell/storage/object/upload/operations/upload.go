@@ -12,7 +12,7 @@ type UploadInfo struct {
 	IsPublic bool // 是否是公有云
 }
 
-func UploadFile(info UploadInfo)  {
+func UploadFile(info UploadInfo) {
 	_, err := uploadFile(info.ApiInfo)
 	if err != nil {
 		log.Error(err)
@@ -28,7 +28,7 @@ func uploadFile(info upload.ApiInfo) (upload.ApiResult, error) {
 	}
 	endTime := time.Now().UnixNano() / 1e6
 
-	duration := float64(endTime - startTime) / 1000
+	duration := float64(endTime-startTime) / 1000
 	speed := fmt.Sprintf("%.2fKB/s", float64(res.FSize)/duration/1024)
 	if res.IsSkip {
 		log.Alert("Upload skip because file exist:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
@@ -38,5 +38,3 @@ func uploadFile(info upload.ApiInfo) (upload.ApiResult, error) {
 
 	return res, nil
 }
-
-

@@ -37,14 +37,14 @@ func List(info ListInfo) {
 
 	bucket.ListToFile(bucket.ListToFileApiInfo{
 		ListApiInfo: bucket.ListApiInfo{
-			Bucket:            info.Bucket,
-			Prefix:            info.Prefix,
-			Marker:            info.Marker,
-			Delimiter:         info.Delimiter,
-			StartTime:         startTime,
-			EndTime:           endTime,
-			Suffixes:          info.getSuffixes(),
-			MaxRetry:          info.MaxRetry,
+			Bucket:    info.Bucket,
+			Prefix:    info.Prefix,
+			Marker:    info.Marker,
+			Delimiter: info.Delimiter,
+			StartTime: startTime,
+			EndTime:   endTime,
+			Suffixes:  info.getSuffixes(),
+			MaxRetry:  info.MaxRetry,
 		},
 		FilePath:   info.SaveToFile,
 		AppendMode: info.AppendMode,

@@ -79,7 +79,7 @@ func (c *Config) GetLogConfig() *LogSetting {
 	if c.Download.LogSetting != nil {
 		return c.Download.LogSetting
 	}
-	
+
 	return nil
 }
 

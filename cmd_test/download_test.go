@@ -66,7 +66,6 @@ func TestDownloadWithKeyFile(t *testing.T) {
 	return
 }
 
-
 func TestDownloadFromBucket(t *testing.T) {
 	rootPath, err := test.RootPath()
 	if err != nil {

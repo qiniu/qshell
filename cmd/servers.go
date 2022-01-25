@@ -24,4 +24,3 @@ func init() {
 		bucketsCmdBuilder(), // 列举所有 bucket
 	)
 }
-

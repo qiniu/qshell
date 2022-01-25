@@ -22,22 +22,21 @@ func newFromUploader(cfg *storage.Config, ext *storage.PutExtra) Uploader {
 func (f *formUploader) upload(info ApiInfo) (ret ApiResult, err error) {
 	file, err := os.Open(info.FilePath)
 	if err != nil {
-		err =  errors.New("form upload: open file error:" + err.Error())
+		err = errors.New("form upload: open file error:" + err.Error())
 		return
 	}
 
 	fileStatus, err := file.Stat()
 	if err != nil {
-		err =  errors.New("form upload: ger file status error:" + err.Error())
+		err = errors.New("form upload: ger file status error:" + err.Error())
 		return
 	}
 
 	up := storage.NewFormUploader(f.cfg)
 	err = up.Put(workspace.GetContext(), &ret, info.TokenProvider(), info.SaveKey, file, fileStatus.Size(), f.ext)
 	if err != nil {
-		err =  errors.New("form upload: upload error:" + err.Error())
+		err = errors.New("form upload: upload error:" + err.Error())
 	}
 
 	return
 }
-

@@ -39,7 +39,6 @@ func TestCdnRefreshFile(t *testing.T) {
 	return
 }
 
-
 func TestCdnRefreshDirs(t *testing.T) {
 	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectListString)
 	if err != nil {

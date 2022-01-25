@@ -105,5 +105,3 @@ func hasUser() (hasUser bool, errorMsg string) {
 	hasUser = len(result) > 0
 	return
 }
-
-

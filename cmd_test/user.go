@@ -116,7 +116,6 @@ func TestUserIntegration(t *testing.T) {
 		t.Fatal("shouldn't has user after clean end:", err)
 	}
 
-
 	// 添加测试账号
 	userName = "Kodo"
 	success, err = addUser(userName, accessKey, secretKey)

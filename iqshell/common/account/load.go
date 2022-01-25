@@ -13,6 +13,7 @@ type LoadInfo struct {
 }
 
 var info LoadInfo
+
 // Load 保证 AccountPath、OldAccountPath、AccountDBPath 均不为空
 func Load(i LoadInfo) error {
 	if i.AccountDBPath == "" {

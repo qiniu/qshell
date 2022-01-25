@@ -15,14 +15,14 @@ import (
 )
 
 type ListApiInfo struct {
-	Bucket            string
-	Prefix            string
-	Marker            string
-	Delimiter         string
-	StartTime         time.Time // list item 的 put time 区间的开始时间 【闭区间】
-	EndTime           time.Time // list item 的 put time 区间的终止时间 【闭区间】
-	Suffixes          []string  // list item 必须包含前缀
-	MaxRetry          int       // -1: 无限重试
+	Bucket    string
+	Prefix    string
+	Marker    string
+	Delimiter string
+	StartTime time.Time // list item 的 put time 区间的开始时间 【闭区间】
+	EndTime   time.Time // list item 的 put time 区间的终止时间 【闭区间】
+	Suffixes  []string  // list item 必须包含前缀
+	MaxRetry  int       // -1: 无限重试
 }
 
 type ListObject storage.ListItem

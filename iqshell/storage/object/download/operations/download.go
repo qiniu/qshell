@@ -54,7 +54,7 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 	}
 
 	endTime := time.Now().UnixNano() / 1e6
-	duration := float64(endTime - startTime) / 1000
+	duration := float64(endTime-startTime) / 1000
 	speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/duration/1024)
 	if res.IsExist {
 		log.Alert("Download skip because file exist:%s => %s", info.Url, res.FileAbsPath)
