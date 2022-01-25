@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
 )
 
@@ -13,6 +14,7 @@ type Info struct {
 }
 
 type Scanner interface {
+	LineCount() int64
 	ScanLine() (line string, success bool)
 	Close() error
 }
@@ -25,6 +27,7 @@ func NewScanner(info Info) (Scanner, error) {
 		if err != nil {
 			return nil, errors.New("open src dest key map file error")
 		}
+		s.lineCount, _ = utils.FileLineCounts(info.InputFile)
 		s.file = f
 		s.scanner = bufio.NewScanner(f)
 		log.InfoF("read data from file:%s", info.InputFile)
@@ -38,8 +41,13 @@ func NewScanner(info Info) (Scanner, error) {
 }
 
 type lineScanner struct {
-	file    *os.File
-	scanner *bufio.Scanner
+	lineCount int64
+	file      *os.File
+	scanner   *bufio.Scanner
+}
+
+func (b *lineScanner) LineCount() int64 {
+	return b.lineCount
 }
 
 func (b *lineScanner) ScanLine() (line string, success bool) {

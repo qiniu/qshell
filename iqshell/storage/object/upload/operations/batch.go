@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
@@ -9,10 +10,10 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -24,10 +25,9 @@ const (
 )
 
 type BatchUploadInfo struct {
+	// 输入文件通过 upload config 输入
 	GroupInfo group.Info
 }
-
-// [qupload]命令， 上传本地文件到七牛存储中
 
 // BatchUpload 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中;
 // 可以设置多线程上传，默认的线程区间在[iqshell.MIN_UPLOAD_THREAD_COUNT, iqshell.MAX_UPLOAD_THREAD_COUNT]
@@ -51,48 +51,56 @@ func BatchUpload(info BatchUploadInfo) {
 			MIN_UPLOAD_THREAD_COUNT, MAX_UPLOAD_THREAD_COUNT, info.GroupInfo.Info.WorkCount)
 	}
 
+	cachePath := uploadConfig.RecordRoot
+	if len(cachePath) == 0 {
+		cachePath = workspace.GetWorkspace()
+	}
 	jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket, uploadConfig.FileList))
-	dbPath := ""
-	//if len(uploadConfig.RecordRoot) == 0 {
-	dbPath = filepath.Join(workspace.GetWorkspace(), "upload", jobId, ".list")
-	//} else {
-	//	dbPath = filepath.Join(downloadCfg.RecordRoot, "download", jobId, ".list")
-	//}
-	log.InfoF("download db dir:%s", dbPath)
+	cachePath = filepath.Join(cachePath, jobId, "qupload")
 
+	dbPath := filepath.Join(cachePath, jobId, ".ldb")
+	log.InfoF("upload status db file path:%s", dbPath)
+
+	needRescanLocal := uploadConfig.RescanLocal
+	_, localFileStatErr := os.Stat(uploadConfig.FileList)
+	if uploadConfig.FileList != "" && localFileStatErr == nil {
+		info.GroupInfo.InputFile = uploadConfig.FileList
+	} else {
+		info.GroupInfo.InputFile = filepath.Join(cachePath, jobId, ".cache")
+		needRescanLocal = true
+	}
+	if needRescanLocal {
+		_, err := utils.DirCache(uploadConfig.SrcDir, info.GroupInfo.InputFile)
+		if err != nil {
+			log.ErrorF("create dir files cache error:%v", err)
+			return
+		}
+	}
+
+	batchUpload(info, uploadConfig, dbPath)
 }
 
-func batchUpload(info BatchUploadInfo, uploadConfig *config.Up) {
+func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 	handler, err := group.NewHandler(info.GroupInfo)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
+	mac, err := workspace.GetMac()
+	if err != nil {
+		log.Error("get mac error:" + err.Error())
+		return
+	}
+
 	timeStart := time.Now()
 	var locker sync.Mutex
-	var totalFileCount int64 = 0 // ds.getFileLineCount()
+	var totalFileCount = handler.Scanner().LineCount()
 	var currentFileCount int64
-	var existsFileCount int64
-	var updateFileCount int64
 	var successFileCount int64
 	var failureFileCount int64
+	var notOverwriteCount int64
 	var skippedFileCount int64
-
-	//hasPrefixes := len(uploadConfig.SkipPathPrefixes) > 0
-	//prefixes := strings.Split(downloadCfg.Prefix, ",")
-	//filterPrefix := func(name string) bool {
-	//	if !hasPrefixes {
-	//		return false
-	//	}
-	//
-	//	for _, prefix := range prefixes {
-	//		if strings.HasPrefix(name, prefix) {
-	//			return false
-	//		}
-	//	}
-	//	return true
-	//}
 	work.NewFlowHandler(info.GroupInfo.Info).ReadWork(func() (work work.Work, hasMore bool) {
 		line, hasMore := handler.Scanner().ScanLine()
 		if len(line) == 0 {
@@ -101,6 +109,10 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up) {
 
 		items := strings.Split(line, info.GroupInfo.ItemSeparate)
 		if len(items) < 3 {
+			locker.Lock()
+			skippedFileCount += 1
+			locker.Unlock()
+			log.InfoF("Skip by invalid line, items should more than 2:%s", line)
 			return nil, true
 		}
 		fileRelativePath := items[0]
@@ -139,19 +151,41 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up) {
 			return nil, true
 		}
 
+		//pack the upload file key
+		fileSize, _ := strconv.ParseInt(items[1], 10, 64)
+		modifyTime, _ := strconv.ParseInt(items[2], 10, 64)
+		key := fileRelativePath
+		//check ignore dir
+		if uploadConfig.IgnoreDir {
+			key = filepath.Base(key)
+		}
+		//check prefix
+		if uploadConfig.KeyPrefix != "" {
+			key = strings.Join([]string{uploadConfig.KeyPrefix, key}, "")
+		}
+		//convert \ to / under windows
+		if utils.IsWindowsOS() {
+			key = strings.Replace(key, "\\", "/", -1)
+		}
+		//check file encoding
+		if utils.IsGBKEncoding(uploadConfig.FileEncoding) {
+			key, _ = utils.Gbk2Utf8(key)
+		}
+
+		localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
 		apiInfo := &upload.ApiInfo{
-			FilePath:         fileRelativePath,
-			CheckExist:       false,
-			CheckHash:        false,
-			CheckSize:        false,
-			OverWrite:        false,
-			FileStatusDBPath: "",
-			ToBucket:         "",
-			SaveKey:          "",
-			TokenProvider:    nil,
+			FilePath:         localFilePath,
+			CheckExist:       uploadConfig.CheckExists,
+			CheckHash:        uploadConfig.CheckHash,
+			CheckSize:        uploadConfig.CheckSize,
+			Overwrite:        uploadConfig.Overwrite,
+			FileStatusDBPath: dbPath,
+			ToBucket:         uploadConfig.Bucket,
+			SaveKey:          key,
+			TokenProvider:    createTokenProvider(mac, uploadConfig, key),
 			TryTimes:         0,
-			FileSize:         0,
-			FileModifyTime:   0,
+			FileSize:         fileSize,
+			FileModifyTime:   modifyTime,
 		}
 		return apiInfo, hasMore
 	}).DoWork(func(work work.Work) (work.Result, error) {
@@ -161,30 +195,24 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up) {
 
 		apiInfo := work.(*upload.ApiInfo)
 		res, err := uploadFile(*apiInfo)
+
 		log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
 			float32(currentFileCount)*100/float32(totalFileCount))
 
-		if res.IsSkip {
-			locker.Lock()
-			skippedFileCount += 1
-			locker.Unlock()
-		}
-
 		if err != nil {
 			return nil, err
-		} else {
-			return res, nil
 		}
+		return res, nil
 	}).OnWorkResult(func(work work.Work, result work.Result) {
-		apiInfo := work.(*download.ApiInfo)
-		res := result.(download.ApiResult)
-		handler.Export().Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, res.FileAbsPath)
+		apiInfo := work.(*upload.ApiInfo)
+		res := result.(upload.ApiResult)
+		handler.Export().Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
 
 		locker.Lock()
-		if res.IsExist {
-			existsFileCount += 1
-		} else if res.IsUpdate {
-			updateFileCount += 1
+		if res.IsNotOverWrite {
+			notOverwriteCount += 1
+		} else if res.IsSkip {
+			skippedFileCount += 1
 		} else {
 			successFileCount += 1
 		}
@@ -202,20 +230,31 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up) {
 			err)
 	}).Start()
 
-	//skippedFileCount = totalFileCount - existsFileCount - successFileCount - updateFileCount - failureFileCount
-
-	log.Alert("-------Upload Result-------")
-	log.AlertF("%10s%10d", "Total:", totalFileCount)
-	log.AlertF("%10s%10d", "Skipped:", skippedFileCount)
-	log.AlertF("%10s%10d", "Exists:", existsFileCount)
-	log.AlertF("%10s%10d", "Success:", successFileCount)
-	log.AlertF("%10s%10d", "Update:", updateFileCount)
-	log.AlertF("%10s%10d", "Failure:", failureFileCount)
-	log.AlertF("%10s%15s", "Duration:", time.Since(timeStart))
+	log.Alert("-------Upload ApiResult-------")
+	log.AlertF("%20s%10d", "Total:", totalFileCount)
+	log.AlertF("%20s%10d", "Success:", successFileCount)
+	log.AlertF("%20s%10d", "Failure:", failureFileCount)
+	log.AlertF("%20s%10d", "NotOverwrite:", notOverwriteCount)
+	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
+	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("-----------------------------")
 	log.AlertF("See upload log at path:%s", uploadConfig.LogFile)
 
 	if failureFileCount > 0 {
 		os.Exit(data.STATUS_ERROR)
+	}
+}
+
+func createTokenProvider(mac *qbox.Mac, cfg *config.Up, key string) func() string {
+	policy := *cfg.Policy
+	policy.Scope = cfg.Bucket
+	if cfg.Overwrite {
+		policy.Scope = fmt.Sprintf("%s:%s", cfg.Bucket, key)
+		policy.InsertOnly = 0
+	}
+	policy.FileType = cfg.FileType
+	return func() string {
+		policy.Expires = 7 * 24 * 3600
+		return policy.UploadToken(mac)
 	}
 }

@@ -19,7 +19,7 @@ func UploadFile(info UploadInfo)  {
 	}
 }
 
-func uploadFile(info upload.ApiInfo) (upload.Result, error) {
+func uploadFile(info upload.ApiInfo) (upload.ApiResult, error) {
 	startTime := time.Now().UnixNano() / 1e6
 	res, err := upload.Upload(info)
 	if err != nil {

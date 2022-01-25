@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-type UpPolicy storage.PutPolicy
 type Up struct {
 	*LogSetting
 
@@ -39,10 +38,11 @@ type Up struct {
 	FileType               int    `json:"file_type,omitempty"`
 	DeleteOnSuccess        bool   `json:"delete_on_success,omitempty"`
 	DisableResume          bool   `json:"disable_resume,omitempty"`
+	RecordRoot             string `json:"record_root"`
 
-	Tasks  *Tasks    `json:"tasks,omitempty"`
-	Retry  *Retry    `json:"retry,omitempty"`
-	Policy *UpPolicy `json:"policy"`
+	Tasks  *Tasks             `json:"tasks,omitempty"`
+	Retry  *Retry             `json:"retry,omitempty"`
+	Policy *storage.PutPolicy `json:"policy"`
 }
 
 func (up *Up) merge(from *Up) {
@@ -88,7 +88,7 @@ func (up *Up) Check() error {
 	}
 
 	if up.Policy != nil {
-		if (up.Policy.CallbackURL== "" && up.Policy.CallbackHost != "") ||
+		if (up.Policy.CallbackURL == "" && up.Policy.CallbackHost != "") ||
 			(up.Policy.CallbackURL != "" && up.Policy.CallbackHost == "") {
 			return errors.New("callbackUrls and callback must exist at the same time")
 		}
@@ -107,7 +107,6 @@ func (up *Up) Check() error {
 
 	return nil
 }
-
 
 func (up *Up) HitByPathPrefixes(localFileRelativePath string) (hit bool, pathPrefix string) {
 

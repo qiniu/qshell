@@ -18,14 +18,14 @@ type ApiInfo struct {
 	CheckExist       bool          // 检查服务端是否已存在
 	CheckHash        bool          // 是否检查 hash, 检查是会对比服务端文件 hash
 	CheckSize        bool          // 是否检查文件大小，检查是会对比服务端文件大小
-	OverWrite        bool          // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
-	FileStatusDBPath string        // 文件上传状态想你想保存的 db 路径
+	Overwrite        bool          // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
+	FileStatusDBPath string        // 文件上传状态信息保存的 db 路径
 	ToBucket         string        // 文件保存至 bucket 的名称
 	SaveKey          string        // 文件保存的名称
 	TokenProvider    func() string // token provider
 	TryTimes         int           // 失败时，最多重试次数【可选】
-	FileSize         int64         // 待上传文件的大小 【可选】
-	FileModifyTime   int64         // 本地文件修改时间 【可选】
+	FileSize         int64         // 待上传文件的大小, 如果不配置会动态读取 【可选】
+	FileModifyTime   int64         // 本地文件修改时间, 如果不配置会动态读取 【可选】
 }
 
 func (a *ApiInfo) init() error {
@@ -58,18 +58,19 @@ func (a *ApiInfo) isNetworkSource() bool {
 	return strings.HasPrefix(a.FilePath, "http://") || strings.HasPrefix(a.FilePath, "https://")
 }
 
-type Result struct {
-	Key    string `json:"key"`
-	FSize  int64  `json:"fsize"`
-	Hash   string `json:"hash"`
-	IsSkip bool   `json:"is_skip"` // 是否被 skip
+type ApiResult struct {
+	Key            string `json:"key"`
+	FSize          int64  `json:"fsize"`
+	Hash           string `json:"hash"`
+	IsSkip         bool   `json:"is_skip"`       // 是否被 skip
+	IsNotOverWrite bool   `json:"is_over_write"` // 是否因未开启 overwrite 而未被覆盖之前的上传
 }
 
 type Uploader interface {
-	upload(info ApiInfo) (Result, error)
+	upload(info ApiInfo) (ApiResult, error)
 }
 
-func Upload(info ApiInfo) (res Result, err error) {
+func Upload(info ApiInfo) (res ApiResult, err error) {
 	err = info.init()
 	if err != nil {
 		log.WarningF("upload: info init error:%v", err)
@@ -121,9 +122,10 @@ func Upload(info ApiInfo) (res Result, err error) {
 			return
 		}
 
-		if !info.OverWrite {
+		if !info.Overwrite {
 			log.WarningF("Skip upload of file `%s` => [%s:%s] because `overwrite` is false",
 				info.FilePath, info.ToBucket, info.SaveKey)
+			res.IsNotOverWrite = true
 			return
 		}
 	}
@@ -147,7 +149,7 @@ func Upload(info ApiInfo) (res Result, err error) {
 	return res, nil
 }
 
-func uploadLocalSource(info ApiInfo, cfg *config.Config) (result Result, err error) {
+func uploadLocalSource(info ApiInfo, cfg *config.Config) (result ApiResult, err error) {
 	upCfg := cfg.Up
 	storageCfg := workspace.GetStorageConfig()
 	var up Uploader

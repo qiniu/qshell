@@ -19,7 +19,7 @@ func newFromUploader(cfg *storage.Config, ext *storage.PutExtra) Uploader {
 	}
 }
 
-func (f *formUploader) upload(info ApiInfo) (ret Result, err error) {
+func (f *formUploader) upload(info ApiInfo) (ret ApiResult, err error) {
 	file, err := os.Open(info.FilePath)
 	if err != nil {
 		err =  errors.New("form upload: open file error:" + err.Error())

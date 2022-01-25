@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -59,5 +60,19 @@ func FileSize(filePath string) (fileSize int64, err error) {
 	}
 
 	fileSize = fileStatus.Size()
+	return
+}
+
+func FileLineCounts(filePath string) (count int64, err error) {
+	fp, openErr := os.Open(filePath)
+	if openErr != nil {
+		return 0, openErr
+	}
+	defer fp.Close()
+
+	bScanner := bufio.NewScanner(fp)
+	for bScanner.Scan() {
+		count += 1
+	}
 	return
 }
