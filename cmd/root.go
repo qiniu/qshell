@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -9,7 +10,28 @@ import (
 	"os"
 )
 
-var cfg iqshell.Config
+var cfg = iqshell.Config{
+	DebugEnable:    false,
+	DDebugEnable:   false,
+	ConfigFilePath: "",
+	Local:          false,
+	CmdCfg: config.Config{
+		Credentials: nil,
+		UseHttps:    "",
+		Hosts:       &config.Hosts{},
+		Up:          &config.Up{
+			LogSetting: &config.LogSetting{},
+			Tasks: &config.Tasks{},
+			Retry: &config.Retry{},
+			Policy: &storage.PutPolicy{},
+		},
+		Download:    &config.Download{
+			LogSetting: &config.LogSetting{},
+			Tasks: &config.Tasks{},
+			Retry: &config.Retry{},
+		},
+	},
+}
 
 const (
 	bash_completion_func = `__qshell_parse_get()
@@ -51,19 +73,6 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	cfg = iqshell.Config{
-		DebugEnable:    false,
-		DDebugEnable:   false,
-		ConfigFilePath: "",
-		Local:          false,
-		CmdCfg: config.Config{
-			Credentials: nil,
-			UseHttps:    "",
-			Hosts:       &config.Hosts{},
-			Up:          &config.Up{},
-			Download:    &config.Download{},
-		},
-	}
 	rootCmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
 	// ddebug 开启 client debug
 	rootCmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
