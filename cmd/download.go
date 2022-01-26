@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +24,7 @@ have already in local disk and need to skip download or not.`,
 				LogLevel:  config.InfoKey,
 				LogFile:   "",
 				LogRotate: 0,
-				LogStdout: true,
+				LogStdout: data.TrueString,
 			}
 			loadConfig()
 			operations.BatchDownload(info)

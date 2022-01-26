@@ -1,12 +1,20 @@
 package config
 
-import "github.com/astaxie/beego/logs"
+import (
+	"github.com/astaxie/beego/logs"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+)
 
 type LogSetting struct {
 	LogLevel  string `json:"log_level,omitempty"`
 	LogFile   string `json:"log_file,omitempty"`
 	LogRotate int    `json:"log_rotate,omitempty"`
-	LogStdout bool   `json:"log_stdout,omitempty"`
+	LogStdout string   `json:"log_stdout,omitempty"`
+}
+
+func (l *LogSetting)IsLogStdout() bool {
+	return l.LogStdout == data.TrueString
 }
 
 func (l *LogSetting) merge(from *LogSetting) {
@@ -14,21 +22,10 @@ func (l *LogSetting) merge(from *LogSetting) {
 		return
 	}
 
-	if len(l.LogLevel) == 0 {
-		l.LogLevel = from.LogLevel
-	}
-
-	if len(l.LogFile) == 0 {
-		l.LogFile = from.LogFile
-	}
-
-	if l.LogRotate == 0 {
-		l.LogRotate = from.LogRotate
-	}
-
-	if !l.LogStdout {
-		l.LogStdout = from.LogStdout
-	}
+	l.LogLevel = utils.GetNotEmptyStringIfExist(l.LogLevel, from.LogLevel)
+	l.LogFile = utils.GetNotEmptyStringIfExist(l.LogFile, from.LogFile)
+	l.LogRotate = utils.GetNotZeroIntIfExist(l.LogRotate, from.LogRotate)
+	l.LogLevel = utils.GetNotEmptyStringIfExist(l.LogLevel, from.LogLevel)
 }
 
 const (

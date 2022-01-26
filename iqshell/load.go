@@ -88,7 +88,7 @@ func Load(cfg Config) error {
 		Filename:       ls.LogFile,
 		Level:          ls.GetLogLevel(),
 		Daily:          true,
-		StdOutColorful: ls.LogStdout,
+		StdOutColorful: ls.IsLogStdout(),
 		MaxDays:        ls.LogRotate,
 	})
 
