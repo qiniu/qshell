@@ -54,7 +54,25 @@ func (d *Download) merge(from *Download) {
 	if from == nil {
 		return
 	}
-	d.LogSetting.merge(from.LogSetting)
-	d.Tasks.merge(from.Tasks)
-	d.Retry.merge(from.Retry)
+
+	if from.Tasks != nil {
+		if d.LogSetting == nil {
+			d.LogSetting = &LogSetting{}
+		}
+		d.LogSetting.merge(from.LogSetting)
+	}
+
+	if from.Tasks != nil {
+		if d.Tasks == nil {
+			d.Tasks = &Tasks{}
+		}
+		d.Tasks.merge(from.Tasks)
+	}
+
+	if from.Retry != nil {
+		if d.Retry == nil {
+			d.Retry = &Retry{}
+		}
+		d.Retry.merge(from.Retry)
+	}
 }

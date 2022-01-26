@@ -60,7 +60,7 @@ func BatchUpload(info BatchUploadInfo) {
 	dbPath := filepath.Join(cachePath, jobId, ".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
 
-	needRescanLocal := uploadConfig.RescanLocal
+	needRescanLocal := uploadConfig.IsRescanLocal()
 	_, localFileStatErr := os.Stat(uploadConfig.FileList)
 	if uploadConfig.FileList != "" && localFileStatErr == nil {
 		info.GroupInfo.InputFile = uploadConfig.FileList
@@ -155,7 +155,7 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 		modifyTime, _ := strconv.ParseInt(items[2], 10, 64)
 		key := fileRelativePath
 		//check ignore dir
-		if uploadConfig.IgnoreDir {
+		if uploadConfig.IsIgnoreDir() {
 			key = filepath.Base(key)
 		}
 		//check prefix
@@ -174,10 +174,10 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 		localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
 		apiInfo := &upload.ApiInfo{
 			FilePath:         localFilePath,
-			CheckExist:       uploadConfig.CheckExists,
-			CheckHash:        uploadConfig.CheckHash,
-			CheckSize:        uploadConfig.CheckSize,
-			Overwrite:        uploadConfig.Overwrite,
+			CheckExist:       uploadConfig.IsCheckExists(),
+			CheckHash:        uploadConfig.IsCheckHash(),
+			CheckSize:        uploadConfig.IsCheckSize(),
+			Overwrite:        uploadConfig.IsOverwrite(),
 			FileStatusDBPath: dbPath,
 			ToBucket:         uploadConfig.Bucket,
 			SaveKey:          key,

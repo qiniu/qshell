@@ -17,7 +17,7 @@ type Up struct {
 
 	SrcDir           string `json:"-"`
 	FileList         string `json:"-"`
-	IgnoreDir        bool   `json:"-"`
+	IgnoreDir        string `json:"-"`
 	SkipFilePrefixes string `json:"-"`
 	SkipPathPrefixes string `json:"-"`
 	SkipFixedStrings string `json:"-"`
@@ -30,19 +30,19 @@ type Up struct {
 
 	FileEncoding           string `json:"file_encoding"`
 	Bucket                 string `json:"bucket"`
-	ResumableAPIV2         bool   `json:"resumable_api_v2,omitempty"`
+	ResumableAPIV2         string   `json:"resumable_api_v2,omitempty"`
 	ResumableAPIV2PartSize int64  `json:"resumable_api_v2_part_size,omitempty"`
 	PutThreshold           int64  `json:"put_threshold,omitempty"`
 	KeyPrefix              string `json:"key_prefix,omitempty"`
-	Overwrite              bool   `json:"overwrite,omitempty"`
-	CheckExists            bool   `json:"check_exists,omitempty"`
-	CheckHash              bool   `json:"check_hash,omitempty"`
-	CheckSize              bool   `json:"check_size,omitempty"`
-	RescanLocal            bool   `json:"rescan_local,omitempty"`
+	Overwrite              string   `json:"overwrite,omitempty"`
+	CheckExists            string   `json:"check_exists,omitempty"`
+	CheckHash              string   `json:"check_hash,omitempty"`
+	CheckSize              string   `json:"check_size,omitempty"`
+	RescanLocal            string   `json:"rescan_local,omitempty"`
 	FileType               int    `json:"file_type,omitempty"`
-	DeleteOnSuccess        bool   `json:"delete_on_success,omitempty"`
-	DisableResume          bool   `json:"disable_resume,omitempty"`
-	DisableForm            bool   `json:"disable_form"`
+	DeleteOnSuccess        string   `json:"delete_on_success,omitempty"`
+	DisableResume          string   `json:"disable_resume,omitempty"`
+	DisableForm            string   `json:"disable_form"`
 	WorkerCount            int    `json:"work_count"` // 分片上传并发数
 	RecordRoot             string `json:"record_root"`
 
@@ -51,26 +51,95 @@ type Up struct {
 	Policy *storage.PutPolicy `json:"policy"`
 }
 
+func (up *Up)IsIgnoreDir() bool {
+	return up.IgnoreDir == data.TrueString
+}
+
+func (up *Up)IsResumableAPIV2() bool {
+	return up.ResumableAPIV2 == data.TrueString
+}
+
+func (up *Up)IsOverwrite() bool {
+	return up.Overwrite == data.TrueString
+}
+
+func (up *Up)IsCheckExists() bool {
+	return up.CheckExists == data.TrueString
+}
+
+func (up *Up)IsCheckHash() bool {
+	return up.CheckHash == data.TrueString
+}
+
+func (up *Up)IsCheckSize() bool {
+	return up.CheckSize == data.TrueString
+}
+
+func (up *Up)IsRescanLocal() bool {
+	return up.RescanLocal == data.TrueString
+}
+
+func (up *Up)IsDeleteOnSuccess() bool {
+	return up.DeleteOnSuccess == data.TrueString
+}
+
+func (up *Up)IsDisableResume() bool {
+	return up.DisableResume == data.TrueString
+}
+
+func (up *Up)IsDisableForm() bool {
+	return up.DisableForm == data.TrueString
+}
+
 func (up *Up) merge(from *Up) {
 	if from == nil {
 		return
 	}
 
-	up.LogSetting.merge(from.LogSetting)
+	up.SrcDir = utils.GetNotEmptyStringIfExist(up.SrcDir, from.SrcDir)
+	up.FileList = utils.GetNotEmptyStringIfExist(up.FileList, from.FileList)
+	up.IgnoreDir = utils.GetNotEmptyStringIfExist(up.IgnoreDir, from.IgnoreDir)
+	up.SkipFilePrefixes = utils.GetNotEmptyStringIfExist(up.SkipFilePrefixes, from.SkipFilePrefixes)
+	up.SkipPathPrefixes = utils.GetNotEmptyStringIfExist(up.SkipPathPrefixes, from.SkipPathPrefixes)
+	up.SkipFixedStrings = utils.GetNotEmptyStringIfExist(up.SkipFixedStrings, from.SkipFixedStrings)
+	up.SkipSuffixes = utils.GetNotEmptyStringIfExist(up.SkipSuffixes, from.SkipSuffixes)
+
+	up.UpHost = utils.GetNotEmptyStringIfExist(up.UpHost, from.UpHost)
+	up.BindUpIp = utils.GetNotEmptyStringIfExist(up.BindUpIp, from.BindUpIp)
+	up.BindRsIp = utils.GetNotEmptyStringIfExist(up.BindRsIp, from.BindRsIp)
+	up.BindNicIp = utils.GetNotEmptyStringIfExist(up.BindNicIp, from.BindNicIp)
+
+	up.PutThreshold = utils.GetNotZeroInt64IfExist(up.PutThreshold, from.PutThreshold)
+
+	if from.Tasks != nil {
+		if up.LogSetting == nil {
+			up.LogSetting = &LogSetting{}
+		}
+		up.LogSetting.merge(from.LogSetting)
+	}
 
 	if up.PutThreshold == 0 {
 		up.PutThreshold = from.PutThreshold
 	}
 
-	if up.Tasks == nil {
-		up.Tasks = from.Tasks
-	} else {
+	if from.Policy != nil {
+		if up.Policy == nil {
+			up.Policy = &storage.PutPolicy{}
+		}
+		mergeUploadPolicy(from.Policy, up.Policy)
+	}
+
+	if from.Tasks != nil {
+		if up.Tasks == nil {
+			up.Tasks = &Tasks{}
+		}
 		up.Tasks.merge(from.Tasks)
 	}
 
-	if up.Retry == nil {
-		up.Retry = from.Retry
-	} else {
+	if from.Retry != nil {
+		if up.Retry == nil {
+			up.Retry = &Retry{}
+		}
 		up.Retry.merge(from.Retry)
 	}
 }

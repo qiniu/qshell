@@ -12,7 +12,7 @@ func TestFormUpload(t *testing.T) {
 		t.Fatal("create form upload file error:", err)
 	}
 
-	result, errs := test.RunCmdWithError("fput", test.Bucket, "qshell_fput_1M", path)
+	result, errs := test.RunCmdWithError("fput", test.Bucket, "qshell_fput_1M", path, "-d")
 	if len(errs) > 0 {
 		t.Fail()
 	}

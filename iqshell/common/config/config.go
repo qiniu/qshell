@@ -52,21 +52,24 @@ func (c *Config) Merge(from *Config) {
 		c.UseHttps = from.UseHttps
 	}
 
-	if c.Hosts == nil {
-		c.Hosts = from.Hosts
-	} else {
+	if from.Hosts != nil {
+		if c.Hosts == nil {
+			c.Hosts = &Hosts{}
+		}
 		c.Hosts.merge(from.Hosts)
 	}
 
-	if c.Up == nil {
-		c.Up = from.Up
-	} else {
+	if from.Up != nil {
+		if c.Up == nil {
+			c.Up = &Up{}
+		}
 		c.Up.merge(from.Up)
 	}
 
-	if c.Download == nil {
-		c.Download = from.Download
-	} else {
+	if from.Download != nil {
+		if c.Download == nil {
+			c.Download = &Download{}
+		}
 		c.Download.merge(from.Download)
 	}
 }

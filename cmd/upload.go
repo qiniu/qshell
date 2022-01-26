@@ -30,6 +30,15 @@ var uploadCmdBuilder = func() *cobra.Command {
 }
 
 var upload2CmdBuilder = func() *cobra.Command {
+	var (
+		resumableAPIV2 = false
+		ignoreDir      = false
+		overwrite      = false
+		checkExists    = false
+		checkHash      = false
+		checkSize      = false
+		rescanLocal    = false
+	)
 	info := operations.BatchUploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "qupload2",
@@ -38,6 +47,13 @@ var upload2CmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				cfg.UploadConfigFile = args[0]
 			}
+			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumableAPIV2)
+			cfg.CmdCfg.Up.IgnoreDir = data.GetBoolString(ignoreDir)
+			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
+			cfg.CmdCfg.Up.CheckExists = data.GetBoolString(checkExists)
+			cfg.CmdCfg.Up.CheckHash = data.GetBoolString(checkHash)
+			cfg.CmdCfg.Up.CheckSize = data.GetBoolString(checkSize)
+			cfg.CmdCfg.Up.RescanLocal = data.GetBoolString(rescanLocal)
 			loadConfig()
 			operations.BatchUpload(info)
 		},
@@ -46,18 +62,21 @@ var upload2CmdBuilder = func() *cobra.Command {
 	cmd.Flags().StringVar(&info.GroupInfo.FailExportFilePath, "failure-list", "", "upload failure file list")
 	cmd.Flags().StringVar(&info.GroupInfo.OverrideExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
 	cmd.Flags().IntVar(&info.GroupInfo.WorkCount, "thread-count", 0, "multiple thread count")
-	cmd.Flags().BoolVarP(&cfg.CmdCfg.Up.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+
+	cmd.Flags().BoolVarP(&resumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().BoolVar(&ignoreDir, "ignore-dir", false, "ignore the dir in the dest file key")
+	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
+	cmd.Flags().BoolVar(&checkExists, "check-exists", false, "check file key whether in bucket before upload")
+	cmd.Flags().BoolVar(&checkHash, "check-hash", false, "check hash")
+	cmd.Flags().BoolVar(&checkSize, "check-size", false, "check file size")
+	cmd.Flags().BoolVar(&rescanLocal, "rescan-local", false, "rescan local dir to upload newly add files")
+
 	cmd.Flags().Int64Var(&cfg.CmdCfg.Up.ResumableAPIV2PartSize, "resumable-api-v2-part-size", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.SrcDir, "src-dir", "", "src dir to upload")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.FileList, "file-list", "", "file list to upload")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.Bucket, "bucket", "", "bucket")
 	cmd.Flags().Int64Var(&cfg.CmdCfg.Up.PutThreshold, "put-threshold", 0, "chunk upload threshold")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.KeyPrefix, "key-prefix", "", "key prefix prepended to dest file key")
-	cmd.Flags().BoolVar(&cfg.CmdCfg.Up.IgnoreDir, "ignore-dir", false, "ignore the dir in the dest file key")
-	cmd.Flags().BoolVar(&cfg.CmdCfg.Up.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
-	cmd.Flags().BoolVar(&cfg.CmdCfg.Up.CheckExists, "check-exists", false, "check file key whether in bucket before upload")
-	cmd.Flags().BoolVar(&cfg.CmdCfg.Up.CheckHash, "check-hash", false, "check hash")
-	cmd.Flags().BoolVar(&cfg.CmdCfg.Up.CheckSize, "check-size", false, "check file size")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.SkipFilePrefixes, "skip-file-prefixes", "", "skip files with these file prefixes")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.SkipPathPrefixes, "skip-path-prefixes", "", "skip files with these relative path prefixes")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.SkipFixedStrings, "skip-fixed-strings", "", "skip files with the fixed string in the name")
@@ -66,7 +85,6 @@ var upload2CmdBuilder = func() *cobra.Command {
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindUpIp, "bind-up-ip", "", "upload host ip to bind")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindRsIp, "bind-rs-ip", "", "rs host ip to bind")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindNicIp, "bind-nic-ip", "", "local network interface card to bind")
-	cmd.Flags().BoolVar(&cfg.CmdCfg.Up.RescanLocal, "rescan-local", false, "rescan local dir to upload newly add files")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.LogFile, "log-file", "", "log file")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.LogLevel, "log-level", "info", "log level")
 	cmd.Flags().IntVar(&cfg.CmdCfg.Up.LogRotate, "log-rotate", 1, "log rotate days")
@@ -96,13 +114,15 @@ var syncCmdBuilder = func() *cobra.Command {
 }
 
 var formUploadCmdBuilder = func() *cobra.Command {
+	overwrite := false
 	info := operations.UploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "fput <Bucket> <Key> <LocalFile>",
 		Short: "Form upload a local file",
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg.CmdCfg.Up.DisableResume = true
+			cfg.CmdCfg.Up.DisableResume = data.TrueString
+			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
 			if len(args) > 2 {
 				info.Bucket = args[0]
 				info.Key = args[1]
@@ -113,8 +133,8 @@ var formUploadCmdBuilder = func() *cobra.Command {
 		},
 	}
 	//cmd.Flags().IntVarP(&info.w, "worker", "c", 16, "worker count")
+	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
-	cmd.Flags().BoolVarP(&cfg.CmdCfg.Up.Overwrite, "overwrite", "w", false, "overwrite mode")
 	cmd.Flags().IntVarP(&cfg.CmdCfg.Up.FileType, "storage", "s", 0, "storage type")
 	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.UpHost, "up-host", "u", "", "uphost")
 	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
@@ -124,13 +144,19 @@ var formUploadCmdBuilder = func() *cobra.Command {
 }
 
 var resumeUploadCmdBuilder = func() *cobra.Command {
+	var (
+		resumableAPIV2 = false
+		overwrite      = false
+	)
 	info := operations.UploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "rput <Bucket> <Key> <LocalFile>",
 		Short: "Resumable upload a local file",
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg.CmdCfg.Up.DisableForm = true
+			cfg.CmdCfg.Up.DisableForm = data.TrueString
+			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumableAPIV2)
+			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
 			if len(args) > 2 {
 				info.Bucket = args[0]
 				info.Key = args[1]
@@ -140,10 +166,13 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 			operations.UploadFile(info)
 		},
 	}
+
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
-	cmd.Flags().BoolVarP(&cfg.CmdCfg.Up.ResumableAPIV2, "v2", "", false, "use resumable upload v2 APIs to upload")
+
+	cmd.Flags().BoolVarP(&resumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
+
 	cmd.Flags().Int64VarP(&cfg.CmdCfg.Up.ResumableAPIV2PartSize, "v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
-	cmd.Flags().BoolVarP(&cfg.CmdCfg.Up.Overwrite, "overwrite", "w", false, "overwrite mode")
 	cmd.Flags().IntVarP(&cfg.CmdCfg.Up.FileType, "storage", "s", 0, "storage type")
 	cmd.Flags().IntVarP(&cfg.CmdCfg.Up.WorkerCount, "worker", "c", 16, "worker count")
 	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.UpHost, "up-host", "u", "", "uphost")

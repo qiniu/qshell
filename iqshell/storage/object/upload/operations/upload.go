@@ -66,11 +66,11 @@ func uploadFile(info upload.ApiInfo) (res upload.ApiResult, err error) {
 	cfg := workspace.GetConfig()
 	uploadConfig := cfg.Up
 	info.PutThreshold = uploadConfig.PutThreshold
-	info.UseResumeV2 = uploadConfig.ResumableAPIV2
+	info.UseResumeV2 = uploadConfig.IsResumableAPIV2()
 	info.ChunkSize = uploadConfig.ResumableAPIV2PartSize
 	info.UpHost = uploadConfig.UpHost
-	info.DisableResume = uploadConfig.DisableResume
-	info.DisableForm = uploadConfig.DisableForm
+	info.DisableResume = uploadConfig.IsDisableResume()
+	info.DisableForm = uploadConfig.IsDisableForm()
 	if info.TokenProvider == nil {
 		info.TokenProvider, err = createTokenProvider(info)
 	}

@@ -11,6 +11,14 @@ const (
 	BLOCK_SIZE = 1 << BLOCK_BITS // BLOCK SIZE
 )
 
+func GetBoolString(value bool) string {
+	if value {
+		return TrueString
+	} else {
+		return FalseString
+	}
+}
+
 const (
 	STATUS_OK    = iota // process success
 	STATUS_ERROR        //process error

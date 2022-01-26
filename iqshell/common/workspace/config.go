@@ -3,6 +3,7 @@ package workspace
 import (
 	"errors"
 	"github.com/qiniu/go-sdk/v7/auth"
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
@@ -22,6 +23,31 @@ func defaultConfig() *config.Config {
 		},
 		Up: &config.Up{
 			PutThreshold: 1024 * 1024 * 4,
+			Policy: &storage.PutPolicy{
+				Scope:               "",
+				Expires:             0,
+				IsPrefixalScope:     0,
+				InsertOnly:          0,
+				DetectMime:          0,
+				FsizeMin:            0,
+				FsizeLimit:          0,
+				MimeLimit:           "",
+				ForceSaveKey:        false,
+				SaveKey:             "",
+				CallbackFetchKey:    0,
+				CallbackURL:         "",
+				CallbackHost:        "",
+				CallbackBody:        "",
+				CallbackBodyType:    "",
+				ReturnURL:           "",
+				ReturnBody:          "",
+				PersistentOps:       "",
+				PersistentNotifyURL: "",
+				PersistentPipeline:  "",
+				EndUser:             "",
+				DeleteAfterDays:     0,
+				FileType:            0,
+			},
 			Tasks: &config.Tasks{
 				ConcurrentCount:       3,
 				StopWhenOneTaskFailed: data.FalseString,
