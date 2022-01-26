@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"os"
@@ -34,7 +35,7 @@ func OpenDB(filePath string) (*DB, error) {
 			return nil, errors.New("open db: make file error:" + err.Error())
 		}
 
-		handler, err := OpenDB(filePath)
+		handler, err := openDB(filePath)
 		if err != nil {
 			return nil, errors.New("open db: open error:" + err.Error())
 		}
@@ -56,6 +57,9 @@ func openDB(filePath string) (*DB, error) {
 }
 
 func (db *DB) Get(key string) (string, error) {
+	if db.db == nil {
+		return "", fmt.Errorf("db get key:%s error:no db exist", key)
+	}
 	ret, err := db.db.Get([]byte(key), nil)
 	if err != nil {
 		return "", err
@@ -64,11 +68,17 @@ func (db *DB) Get(key string) (string, error) {
 }
 
 func (db *DB) Put(key, value string) error {
+	if db.db == nil {
+		return fmt.Errorf("db put key:%s for value:%s error:no db exist", key, value)
+	}
 	return db.db.Put([]byte(key), []byte(value), &opt.WriteOptions{
 		Sync: true,
 	})
 }
 
 func (db *DB) Delete(key string) error {
+	if db.db == nil {
+		return fmt.Errorf("db delete key:%s error:no db exist", key)
+	}
 	return db.db.Delete([]byte(key), nil)
 }

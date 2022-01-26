@@ -42,9 +42,14 @@ func CreateTempFile(size int) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	rootPath = filepath.Join(rootPath, "temp")
+	err = os.MkdirAll(rootPath, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
 
-	fileName := fmt.Sprintf("%vK", size)
-	fileName = filepath.Join(rootPath, "temp", fileName)
+	fileName := fmt.Sprintf("%vK.tmp", size)
+	fileName = filepath.Join(rootPath, fileName)
 	fi, err := os.Stat(fileName)
 
 	if err == nil {

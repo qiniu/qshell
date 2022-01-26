@@ -17,6 +17,7 @@ type ApiInfo struct {
 	ToBucket         string        // 文件保存至 bucket 的名称
 	SaveKey          string        // 文件保存的名称
 	MimeType         string        // 文件类型
+	FileType         int           // 存储状态
 	CheckExist       bool          // 检查服务端是否已存在
 	CheckHash        bool          // 是否检查 hash, 检查是会对比服务端文件 hash
 	CheckSize        bool          // 是否检查文件大小，检查是会对比服务端文件大小
@@ -66,11 +67,15 @@ func (a *ApiInfo) isNetworkSource() bool {
 
 type ApiResult struct {
 	Key            string `json:"key"`
-	MimeType       string `json:"mime_type"`
-	FSize          int64  `json:"fsize"`
-	Hash           string `json:"hash"`
-	IsSkip         bool   `json:"is_skip"`       // 是否被 skip
-	IsNotOverWrite bool   `json:"is_over_write"` // 是否因未开启 overwrite 而未被覆盖之前的上传
+	MimeType       string `json:"mime_type"` // 文件类型
+	FSize          int64  `json:"file_size"` // 文件大小
+	Hash           string `json:"hash"`      // 文件 etag
+	IsSkip         bool   `json:"-"`         // 是否被 skip
+	IsNotOverWrite bool   `json:"-"`         // 是否因未开启 overwrite 而未被覆盖之前的上传
+}
+
+func ApiResultFormat() string {
+	return `{"key":"$(key)","hash":"$(etag)","file_size":$(fsize),"mime_type":"$(mimeType)"}`
 }
 
 type Uploader interface {
@@ -137,9 +142,9 @@ func Upload(info ApiInfo) (res ApiResult, err error) {
 		}
 	}
 
-	log.InfoF("upload: start upload file:%s", d.FilePath)
+	log.DebugF("upload: start upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 	res, err = uploadLocalSource(info)
-	log.InfoF("upload:   end upload file:%s error:%v", d.FilePath, err)
+	log.DebugF("upload:   end upload:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
 
 	if err != nil {
 		err = errors.New("upload error:" + err.Error())
@@ -148,8 +153,7 @@ func Upload(info ApiInfo) (res ApiResult, err error) {
 
 	err = d.saveInfoToDB()
 	if err != nil {
-		err = errors.New("upload: save upload info to db error:" + err.Error())
-		return
+		log.WarningF("upload: save upload info to db error:%v", err)
 	}
 
 	return res, nil
@@ -190,10 +194,6 @@ func uploadLocalSource(info ApiInfo) (result ApiResult, err error) {
 			NotifyErr:  nil,
 		})
 	}
-
-	log.DebugF("upload: start upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 	result, err = up.upload(info)
-	log.DebugF("upload:   end upload:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
-
 	return
 }

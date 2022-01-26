@@ -59,6 +59,11 @@ func (d *dbHandler) checkInfoOfDB() (bool, bool, error) {
 }
 
 func (d *dbHandler) saveInfoToDB() (err error) {
+	if d.dbHandler == nil {
+		log.Debug("upload save status to db error:no db handler")
+		return
+	}
+
 	value := fmt.Sprintf("%d", d.FileUpdateTime)
 	return d.dbHandler.Put(d.FilePath, value)
 }

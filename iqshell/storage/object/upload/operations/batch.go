@@ -181,11 +181,12 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 			FileStatusDBPath: dbPath,
 			ToBucket:         uploadConfig.Bucket,
 			SaveKey:          key,
-			TokenProvider:    createTokenProviderWithConfig(mac, uploadConfig, key),
+			TokenProvider:    nil,
 			TryTimes:         0,
 			FileSize:         fileSize,
 			FileModifyTime:   modifyTime,
 		}
+		apiInfo.TokenProvider = createTokenProviderWithMac(mac, *uploadConfig.Policy, *apiInfo)
 		return apiInfo, hasMore
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		locker.Lock()

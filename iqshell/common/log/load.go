@@ -23,9 +23,11 @@ func LoadConsole(cfg Config) (err error) {
 func LoadFileLogger(cfg Config) (err error) {
 	if len(cfg.Filename) > 0 {
 		err = progressFileLog.SetLogger(logs.AdapterFile, cfg.ToJson())
+		if err != nil {
+			return fmt.Errorf("progressFileLog set logger error:%v", err)
+		}
 	}
-	if dErr := progressStdoutLog.DelLogger(logs.AdapterConsole); dErr != nil {
-		fmt.Println("delete default fail log error:", dErr)
-	}
+
+	_ = progressStdoutLog.DelLogger(logs.AdapterConsole)
 	return
 }

@@ -16,6 +16,7 @@ var uploadCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				cfg.UploadConfigFile = args[0]
 			}
+			loadConfig()
 			operations.BatchUpload(info)
 		},
 	}
@@ -37,6 +38,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				cfg.UploadConfigFile = args[0]
 			}
+			loadConfig()
 			operations.BatchUpload(info)
 		},
 	}
@@ -106,6 +108,7 @@ var formUploadCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 				info.FilePath = args[2]
 			}
+			loadConfig()
 			operations.UploadFile(info)
 		},
 	}
@@ -133,6 +136,7 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 				info.FilePath = args[2]
 			}
+			loadConfig()
 			operations.UploadFile(info)
 		},
 	}

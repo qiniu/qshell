@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -47,7 +46,6 @@ func UploadFile(info UploadInfo) {
 	})
 	doneSignal <- true
 
-	log.Alert("")
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {
 			log.ErrorF("Upload file error %d: %s, Reqid: %s", v.Code, v.Err, v.Reqid)
@@ -71,8 +69,10 @@ func uploadFile(info upload.ApiInfo) (res upload.ApiResult, err error) {
 	info.UseResumeV2 = uploadConfig.ResumableAPIV2
 	info.ChunkSize = uploadConfig.ResumableAPIV2PartSize
 	info.UpHost = uploadConfig.UpHost
+	info.DisableResume = uploadConfig.DisableResume
+	info.DisableForm = uploadConfig.DisableForm
 	if info.TokenProvider == nil {
-		info.TokenProvider, err = createTokenProvider(info.SaveKey)
+		info.TokenProvider, err = createTokenProvider(info)
 	}
 	if err != nil {
 		log.ErrorF("Upload  failed because get token provider error:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
@@ -89,33 +89,32 @@ func uploadFile(info upload.ApiInfo) (res upload.ApiResult, err error) {
 	duration := float64(endTime-startTime) / 1000
 	speed := fmt.Sprintf("%.2fKB/s", float64(res.FSize)/duration/1024)
 	if res.IsSkip {
-		log.Alert("Upload skip because file exist:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
+		log.AlertF("Upload skip because file exist:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 	} else {
-		log.Alert("Upload File success %s => [%s:%s] duration:%ds speed:%s", info.FilePath, info.ToBucket, duration, speed)
+		log.AlertF("Upload File success %s => [%s:%s] duration:%.2fs speed:%s", info.FilePath, info.ToBucket, info.SaveKey, duration, speed)
 	}
 
 	return res, nil
 }
 
-func createTokenProvider(key string) (provider func() string, err error) {
+func createTokenProvider(info upload.ApiInfo) (provider func() string, err error) {
 	mac, gErr := workspace.GetMac()
 	if gErr != nil {
 		return nil, errors.New("get mac error:" + gErr.Error())
 	}
 
-	provider = createTokenProviderWithConfig(mac, workspace.GetConfig().Up, key)
+	provider = createTokenProviderWithMac(mac, *workspace.GetConfig().Up.Policy, info)
 	return
 }
 
-func createTokenProviderWithConfig(mac *qbox.Mac, cfg *config.Up, key string) func() string {
-	policy := *cfg.Policy
-	policy.Scope = cfg.Bucket
-	if cfg.Overwrite {
-		policy.Scope = fmt.Sprintf("%s:%s", cfg.Bucket, key)
+func createTokenProviderWithMac(mac *qbox.Mac, policy storage.PutPolicy, info upload.ApiInfo) func() string {
+	policy.Scope = info.ToBucket
+	if info.Overwrite {
+		policy.Scope = fmt.Sprintf("%s:%s", info.ToBucket, info.SaveKey)
 		policy.InsertOnly = 0
 	}
-	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
-	policy.FileType = cfg.FileType
+	policy.ReturnBody = upload.ApiResultFormat()
+	policy.FileType = info.FileType
 	return func() string {
 		policy.Expires = 7 * 24 * 3600
 		return policy.UploadToken(mac)
