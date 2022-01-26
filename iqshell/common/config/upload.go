@@ -109,7 +109,23 @@ func (up *Up) merge(from *Up) {
 	up.BindRsIp = utils.GetNotEmptyStringIfExist(up.BindRsIp, from.BindRsIp)
 	up.BindNicIp = utils.GetNotEmptyStringIfExist(up.BindNicIp, from.BindNicIp)
 
+	up.FileEncoding = utils.GetNotEmptyStringIfExist(up.FileEncoding, from.FileEncoding)
+	up.Bucket = utils.GetNotEmptyStringIfExist(up.Bucket, from.Bucket)
+	up.ResumableAPIV2 = utils.GetNotEmptyStringIfExist(up.ResumableAPIV2, from.ResumableAPIV2)
+	up.ResumableAPIV2PartSize = utils.GetNotZeroInt64IfExist(up.ResumableAPIV2PartSize, from.ResumableAPIV2PartSize)
 	up.PutThreshold = utils.GetNotZeroInt64IfExist(up.PutThreshold, from.PutThreshold)
+	up.KeyPrefix = utils.GetNotEmptyStringIfExist(up.KeyPrefix, from.KeyPrefix)
+	up.Overwrite = utils.GetNotEmptyStringIfExist(up.Overwrite, from.Overwrite)
+	up.CheckExists = utils.GetNotEmptyStringIfExist(up.CheckExists, from.CheckExists)
+	up.CheckHash = utils.GetNotEmptyStringIfExist(up.CheckHash, from.CheckHash)
+	up.CheckSize = utils.GetNotEmptyStringIfExist(up.CheckSize, from.CheckSize)
+	up.RescanLocal = utils.GetNotEmptyStringIfExist(up.RescanLocal, from.RescanLocal)
+	up.FileType = utils.GetNotZeroIntIfExist(up.FileType, from.FileType)
+	up.DeleteOnSuccess = utils.GetNotEmptyStringIfExist(up.DeleteOnSuccess, from.DeleteOnSuccess)
+	up.DisableResume = utils.GetNotEmptyStringIfExist(up.DisableResume, from.DisableResume)
+	up.DisableForm = utils.GetNotEmptyStringIfExist(up.DisableForm, from.DisableForm)
+	up.WorkerCount = utils.GetNotZeroIntIfExist(up.WorkerCount, from.WorkerCount)
+	up.RecordRoot = utils.GetNotEmptyStringIfExist(up.RecordRoot, from.RecordRoot)
 
 	if from.Tasks != nil {
 		if up.LogSetting == nil {
