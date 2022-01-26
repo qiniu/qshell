@@ -15,6 +15,14 @@ func RootPath() (string, error) {
 	}
 }
 
+func TempPath() (string, error) {
+	rootPath, err := RootPath()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(rootPath, "temp"), nil
+}
+
 func CreateFileWithContent(fileName, content string) (string, error) {
 	rootPath, err := RootPath()
 	if err != nil {
@@ -38,18 +46,17 @@ func CreateFileWithContent(fileName, content string) (string, error) {
 }
 
 func CreateTempFile(size int) (string, error) {
-	rootPath, err := RootPath()
+	tempPath, err := TempPath()
 	if err != nil {
 		return "", err
 	}
-	rootPath = filepath.Join(rootPath, "temp")
-	err = os.MkdirAll(rootPath, os.ModePerm)
+	err = os.MkdirAll(tempPath, os.ModePerm)
 	if err != nil {
 		return "", err
 	}
 
 	fileName := fmt.Sprintf("%vK.tmp", size)
-	fileName = filepath.Join(rootPath, fileName)
+	fileName = filepath.Join(tempPath, fileName)
 	fi, err := os.Stat(fileName)
 
 	if err == nil {

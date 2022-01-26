@@ -42,6 +42,9 @@ var upload2CmdBuilder = func() *cobra.Command {
 			operations.BatchUpload(info)
 		},
 	}
+	cmd.Flags().StringVar(&info.GroupInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
+	cmd.Flags().StringVar(&info.GroupInfo.FailExportFilePath, "failure-list", "", "upload failure file list")
+	cmd.Flags().StringVar(&info.GroupInfo.OverrideExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
 	cmd.Flags().IntVar(&info.GroupInfo.WorkCount, "thread-count", 0, "multiple thread count")
 	cmd.Flags().BoolVarP(&cfg.CmdCfg.Up.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().Int64Var(&cfg.CmdCfg.Up.ResumableAPIV2PartSize, "resumable-api-v2-part-size", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload")
@@ -68,9 +71,6 @@ var upload2CmdBuilder = func() *cobra.Command {
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.LogLevel, "log-level", "info", "log level")
 	cmd.Flags().IntVar(&cfg.CmdCfg.Up.LogRotate, "log-rotate", 1, "log rotate days")
 	cmd.Flags().IntVar(&cfg.CmdCfg.Up.FileType, "file-type", 0, "set storage file type")
-	cmd.Flags().StringVar(&info.GroupInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
-	cmd.Flags().StringVar(&info.GroupInfo.FailExportFilePath, "failure-list", "", "upload failure file list")
-	cmd.Flags().StringVar(&info.GroupInfo.OverrideExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
 	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
 	return cmd
