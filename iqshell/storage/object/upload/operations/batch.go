@@ -56,7 +56,7 @@ func BatchUpload(info BatchUploadInfo) {
 		cachePath = workspace.GetWorkspace()
 	}
 	jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket, uploadConfig.FileList))
-	cachePath = filepath.Join(cachePath, jobId, "qupload")
+	cachePath = filepath.Join(cachePath, "qupload")
 
 	dbPath := filepath.Join(cachePath, jobId, ".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
@@ -164,27 +164,23 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 		}
 
 		localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
-		apiInfo := &upload.ApiInfo{
+		apiInfo := &UploadInfo{
 			FilePath:         localFilePath,
-			CheckExist:       uploadConfig.IsCheckExists(),
-			CheckHash:        uploadConfig.IsCheckHash(),
-			CheckSize:        uploadConfig.IsCheckSize(),
-			Overwrite:        uploadConfig.IsOverwrite(),
+			Bucket:           uploadConfig.Bucket,
+			Key:              key,
+			MimeType:         "",
 			FileStatusDBPath: dbPath,
-			ToBucket:         uploadConfig.Bucket,
-			SaveKey:          key,
-			TokenProvider:    nil,
-			TryTimes:         0,
 			FileSize:         fileSize,
 			FileModifyTime:   modifyTime,
+			TokenProvider:    nil,
 		}
-		apiInfo.TokenProvider = createTokenProviderWithMac(mac, *uploadConfig.Policy, *apiInfo)
+		apiInfo.TokenProvider = createTokenProviderWithMac(mac, uploadConfig, apiInfo)
 		return apiInfo, hasMore
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		syncLocker.Do(func() {
 			currentFileCount += 1
 		})
-		apiInfo := work.(*upload.ApiInfo)
+		apiInfo := work.(*UploadInfo)
 
 		log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
 			float32(currentFileCount)*100/float32(totalFileCount))

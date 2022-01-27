@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -15,10 +16,14 @@ import (
 )
 
 type UploadInfo struct {
-	FilePath string
-	Bucket   string
-	Key      string
-	MimeType string
+	FilePath         string
+	Bucket           string
+	Key              string
+	MimeType         string
+	FileStatusDBPath string        // 保存上传状态的 db 文件路径
+	FileSize         int64         // 待上传文件的大小, 如果不配置会动态读取 【可选】
+	FileModifyTime   int64         // 本地文件修改时间, 如果不配置会动态读取 【可选】
+	TokenProvider    func() string // token provider  【可选】
 }
 
 func UploadFile(info UploadInfo) {
@@ -38,12 +43,7 @@ func UploadFile(info UploadInfo) {
 			}
 		}
 	}(doneSignal)
-	ret, err := uploadFile(upload.ApiInfo{
-		FilePath: info.FilePath,
-		ToBucket: info.Bucket,
-		SaveKey:  info.Key,
-		MimeType: info.MimeType,
-	})
+	ret, err := uploadFile(info)
 	doneSignal <- true
 
 	if err != nil {
@@ -61,27 +61,43 @@ func UploadFile(info UploadInfo) {
 	}
 }
 
-func uploadFile(info upload.ApiInfo) (res upload.ApiResult, err error) {
+func uploadFile(info UploadInfo) (res upload.ApiResult, err error) {
 	startTime := time.Now().UnixNano() / 1e6
 	cfg := workspace.GetConfig()
 	uploadConfig := cfg.Up
-	info.PutThreshold = uploadConfig.PutThreshold
-	info.UseResumeV2 = uploadConfig.IsResumableAPIV2()
-	info.ChunkSize = uploadConfig.ResumableAPIV2PartSize
-	info.UpHost = uploadConfig.UpHost
-	info.DisableResume = uploadConfig.IsDisableResume()
-	info.DisableForm = uploadConfig.IsDisableForm()
-	if info.TokenProvider == nil {
-		info.TokenProvider, err = createTokenProvider(info)
+	apiInfo := upload.ApiInfo{
+		FilePath:         info.FilePath,
+		ToBucket:         info.Bucket,
+		SaveKey:          info.Key,
+		MimeType:         info.MimeType,
+		FileType:         uploadConfig.FileType,
+		CheckExist:       uploadConfig.IsCheckExists(),
+		CheckHash:        uploadConfig.IsCheckHash(),
+		CheckSize:        uploadConfig.IsCheckSize(),
+		Overwrite:        uploadConfig.IsOverwrite(),
+		UpHost:           uploadConfig.UpHost,
+		FileStatusDBPath: info.FileStatusDBPath,
+		TokenProvider:    info.TokenProvider,
+		TryTimes:         0,
+		FileSize:         info.FileSize,
+		FileModifyTime:   info.FileModifyTime,
+		DisableForm:      uploadConfig.IsDisableForm(),
+		DisableResume:    uploadConfig.IsDisableResume(),
+		UseResumeV2:      uploadConfig.IsResumableAPIV2(),
+		ChunkSize:        uploadConfig.ResumableAPIV2PartSize,
+		PutThreshold:     uploadConfig.PutThreshold,
+	}
+	if apiInfo.TokenProvider == nil {
+		apiInfo.TokenProvider, err = createTokenProvider(&info)
 	}
 	if err != nil {
-		log.ErrorF("Upload  failed because get token provider error:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
+		log.ErrorF("Upload  failed because get token provider error:%s => [%s:%s] error:%v", info.FilePath, info.Bucket, info.Key, err)
 		return
 	}
 
-	res, err = upload.Upload(info)
+	res, err = upload.Upload(apiInfo)
 	if err != nil {
-		log.ErrorF("Upload  failed:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
+		log.ErrorF("Upload  failed:%s => [%s:%s] error:%v", info.FilePath, info.Bucket, info.Key, err)
 		return
 	}
 	endTime := time.Now().UnixNano() / 1e6
@@ -89,32 +105,43 @@ func uploadFile(info upload.ApiInfo) (res upload.ApiResult, err error) {
 	duration := float64(endTime-startTime) / 1000
 	speed := fmt.Sprintf("%.2fKB/s", float64(res.FSize)/duration/1024)
 	if res.IsSkip {
-		log.AlertF("Upload skip because file exist:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
+		log.AlertF("Upload skip because file exist:%s => [%s:%s]", info.FilePath, info.Bucket, info.Key)
 	} else {
-		log.AlertF("Upload File success %s => [%s:%s] duration:%.2fs speed:%s", info.FilePath, info.ToBucket, info.SaveKey, duration, speed)
+		log.AlertF("Upload File success %s => [%s:%s] duration:%.2fs speed:%s", info.FilePath, info.Bucket, info.Key, duration, speed)
+
+		//delete on success
+		if uploadConfig.IsDeleteOnSuccess() {
+			deleteErr := os.Remove(info.FilePath)
+			if deleteErr != nil {
+				log.ErrorF("Delete `%s` on upload success error due to `%s`", info.FilePath, deleteErr)
+			} else {
+				log.InfoF("Delete `%s` on upload success done", info.FilePath)
+			}
+		}
 	}
 
 	return res, nil
 }
 
-func createTokenProvider(info upload.ApiInfo) (provider func() string, err error) {
+func createTokenProvider(info *UploadInfo) (provider func() string, err error) {
 	mac, gErr := workspace.GetMac()
 	if gErr != nil {
 		return nil, errors.New("get mac error:" + gErr.Error())
 	}
 
-	provider = createTokenProviderWithMac(mac, *workspace.GetConfig().Up.Policy, info)
+	provider = createTokenProviderWithMac(mac, workspace.GetConfig().Up, info)
 	return
 }
 
-func createTokenProviderWithMac(mac *qbox.Mac, policy storage.PutPolicy, info upload.ApiInfo) func() string {
-	policy.Scope = info.ToBucket
-	if info.Overwrite {
-		policy.Scope = fmt.Sprintf("%s:%s", info.ToBucket, info.SaveKey)
+func createTokenProviderWithMac(mac *qbox.Mac, upConfig *config.Up, info *UploadInfo) func() string {
+	policy := *upConfig.Policy
+	policy.Scope = info.Bucket
+	if upConfig.IsOverwrite() {
+		policy.Scope = fmt.Sprintf("%s:%s", info.Bucket, info.Key)
 		policy.InsertOnly = 0
 	}
 	policy.ReturnBody = upload.ApiResultFormat()
-	policy.FileType = info.FileType
+	policy.FileType = upConfig.FileType
 	return func() string {
 		policy.Expires = 7 * 24 * 3600
 		return policy.UploadToken(mac)

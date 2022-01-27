@@ -15,19 +15,18 @@ import (
 type Up struct {
 	*LogSetting
 
-	SrcDir           string `json:"-"`
-	FileList         string `json:"-"`
-	IgnoreDir        string `json:"-"`
-	SkipFilePrefixes string `json:"-"`
-	SkipPathPrefixes string `json:"-"`
-	SkipFixedStrings string `json:"-"`
-	SkipSuffixes     string `json:"-"`
-
 	UpHost    string `json:"up_host,omitempty"`
 	BindUpIp  string `json:"bind_up_ip,omitempty"`
 	BindRsIp  string `json:"bind_rs_ip,omitempty"`
 	BindNicIp string `json:"bind_nic_ip,omitempty"` //local network interface card config
 
+	SrcDir                 string `json:"src_dir"`
+	FileList               string `json:"file_list"`
+	IgnoreDir              string `json:"ignore_dir"`
+	SkipFilePrefixes       string `json:"skip_file_prefixes"`
+	SkipPathPrefixes       string `json:"skip_path_prefixes"`
+	SkipFixedStrings       string `json:"skip_fixed_strings"`
+	SkipSuffixes           string `json:"skip_suffixes"`
 	FileEncoding           string `json:"file_encoding"`
 	Bucket                 string `json:"bucket"`
 	ResumableAPIV2         string `json:"resumable_api_v2,omitempty"`
