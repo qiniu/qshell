@@ -40,7 +40,7 @@ func (d *dbHandler) checkInfoOfDB() (bool, bool, error) {
 	value, _ := d.dbHandler.Get(d.FilePath)
 	items := strings.Split(value, infoSegment)
 	if len(items) == 0 || len(items[0]) == 0 {
-		return false, false, errors.New("upload db: get invalid file info from db:" + value)
+		return false, false, nil
 	}
 
 	// db 数据：服务端文件修改时间

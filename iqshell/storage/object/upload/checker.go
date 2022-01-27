@@ -19,10 +19,6 @@ type serverChecker struct {
 	FileSize   int64  // 文件大小，核对文件大小时使用
 }
 
-func (c *serverChecker) isNeedCheck() bool {
-	return c.CheckHash || c.CheckSize
-}
-
 func (c *serverChecker) check() (exist, match bool, err error) {
 	fileServerStatus, err := object.Status(object.StatusApiInfo{
 		Bucket: c.Bucket,
@@ -37,9 +33,9 @@ func (c *serverChecker) check() (exist, match bool, err error) {
 		return c.checkHash(fileServerStatus)
 	} else if c.CheckSize {
 		return c.checkServerSize(fileServerStatus)
+	} else {
+		return true, true, nil
 	}
-
-	return false, false, nil
 }
 
 func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool, bool, error) {

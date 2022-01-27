@@ -61,7 +61,7 @@ func CreateTempFile(size int) (string, error) {
 
 	if err == nil {
 		if !fi.IsDir() {
-			if fi.Size() == int64(size) {
+			if fi.Size() == int64(size*1024) {
 				return fileName, nil
 			} else {
 				if err = RemoveFile(fileName); err != nil {

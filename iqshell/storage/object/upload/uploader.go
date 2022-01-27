@@ -18,7 +18,7 @@ type ApiInfo struct {
 	SaveKey          string        // 文件保存的名称
 	MimeType         string        // 文件类型
 	FileType         int           // 存储状态
-	CheckExist       bool          // 检查服务端是否已存在
+	CheckExist       bool          // 检查服务端是否已存在此文件
 	CheckHash        bool          // 是否检查 hash, 检查是会对比服务端文件 hash
 	CheckSize        bool          // 是否检查文件大小，检查是会对比服务端文件大小
 	Overwrite        bool          // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
@@ -110,25 +110,23 @@ func Upload(info ApiInfo) (res ApiResult, err error) {
 			CheckSize:  info.CheckSize,
 		}
 
-		if checker.isNeedCheck() {
-			// 检查服务端的数据
-			exist, match, err = checker.check()
-			if err != nil {
-				err = errors.New("upload server check error:" + err.Error())
-				return
-			}
-		} else {
-			// 检查本地数据
-			exist, match, err = d.checkInfoOfDB()
-			if err != nil {
-				log.WarningF("upload db check error:%v", err.Error())
-			}
+		// 检查服务端的数据
+		exist, match, err = checker.check()
+		if err != nil {
+			err = errors.New("upload server check error:" + err.Error())
+			return
+		}
+	} else {
+		// 检查本地数据
+		exist, match, err = d.checkInfoOfDB()
+		if err != nil {
+			log.WarningF("upload db check error:%v", err.Error())
 		}
 	}
 
 	if exist {
 		if match {
-			log.InfoF("File `%s` exists in bucket:[%s:%s], hash match, ignore this upload",
+			log.InfoF("File `%s` exists in bucket:[%s:%s], and match, ignore this upload",
 				info.FilePath, info.ToBucket, info.SaveKey)
 			res.IsSkip = true
 			return

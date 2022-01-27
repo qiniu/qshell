@@ -55,6 +55,7 @@ func TestQUpload(t *testing.T) {
 	cfgContent := fmt.Sprintf(`{
 	"bucket": "%s",
 	"src_dir": "%s",
+	"overwrite": "true",
 	"work_count": 4
 }`, test.Bucket, fileDir)
 	cfgFile, err  := test.CreateFileWithContent("upload_cfg.json", cfgContent)

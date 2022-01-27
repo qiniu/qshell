@@ -192,9 +192,9 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 		}
 		return res, nil
 	}).OnWorkResult(func(work work.Work, result work.Result) {
-		apiInfo := work.(*upload.ApiInfo)
+		apiInfo := work.(*UploadInfo)
 		res := result.(upload.ApiResult)
-		handler.Export().Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
+		handler.Export().Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.Bucket, apiInfo.Key)
 
 		syncLocker.Do(func() {
 			if res.IsNotOverWrite {
@@ -210,7 +210,7 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 			failureFileCount += 1
 		})
 
-		apiInfo := work.(*upload.ApiInfo)
+		apiInfo := work.(*UploadInfo)
 		handler.Export().Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* path fileSize fileModifyTime */
 			apiInfo.FilePath, info.GroupInfo.ItemSeparate,
 			apiInfo.FileSize, info.GroupInfo.ItemSeparate,
