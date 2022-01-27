@@ -30,19 +30,19 @@ type Up struct {
 
 	FileEncoding           string `json:"file_encoding"`
 	Bucket                 string `json:"bucket"`
-	ResumableAPIV2         string   `json:"resumable_api_v2,omitempty"`
+	ResumableAPIV2         string `json:"resumable_api_v2,omitempty"`
 	ResumableAPIV2PartSize int64  `json:"resumable_api_v2_part_size,omitempty"`
 	PutThreshold           int64  `json:"put_threshold,omitempty"`
 	KeyPrefix              string `json:"key_prefix,omitempty"`
-	Overwrite              string   `json:"overwrite,omitempty"`
-	CheckExists            string   `json:"check_exists,omitempty"`
-	CheckHash              string   `json:"check_hash,omitempty"`
-	CheckSize              string   `json:"check_size,omitempty"`
-	RescanLocal            string   `json:"rescan_local,omitempty"`
+	Overwrite              string `json:"overwrite,omitempty"`
+	CheckExists            string `json:"check_exists,omitempty"`
+	CheckHash              string `json:"check_hash,omitempty"`
+	CheckSize              string `json:"check_size,omitempty"`
+	RescanLocal            string `json:"rescan_local,omitempty"`
 	FileType               int    `json:"file_type,omitempty"`
-	DeleteOnSuccess        string   `json:"delete_on_success,omitempty"`
-	DisableResume          string   `json:"disable_resume,omitempty"`
-	DisableForm            string   `json:"disable_form"`
+	DeleteOnSuccess        string `json:"delete_on_success,omitempty"`
+	DisableResume          string `json:"disable_resume,omitempty"`
+	DisableForm            string `json:"disable_form"`
 	WorkerCount            int    `json:"work_count"` // 分片上传并发数
 	RecordRoot             string `json:"record_root"`
 
@@ -51,43 +51,43 @@ type Up struct {
 	Policy *storage.PutPolicy `json:"policy"`
 }
 
-func (up *Up)IsIgnoreDir() bool {
+func (up *Up) IsIgnoreDir() bool {
 	return up.IgnoreDir == data.TrueString
 }
 
-func (up *Up)IsResumableAPIV2() bool {
+func (up *Up) IsResumableAPIV2() bool {
 	return up.ResumableAPIV2 == data.TrueString
 }
 
-func (up *Up)IsOverwrite() bool {
+func (up *Up) IsOverwrite() bool {
 	return up.Overwrite == data.TrueString
 }
 
-func (up *Up)IsCheckExists() bool {
+func (up *Up) IsCheckExists() bool {
 	return up.CheckExists == data.TrueString
 }
 
-func (up *Up)IsCheckHash() bool {
+func (up *Up) IsCheckHash() bool {
 	return up.CheckHash == data.TrueString
 }
 
-func (up *Up)IsCheckSize() bool {
+func (up *Up) IsCheckSize() bool {
 	return up.CheckSize == data.TrueString
 }
 
-func (up *Up)IsRescanLocal() bool {
+func (up *Up) IsRescanLocal() bool {
 	return up.RescanLocal == data.TrueString
 }
 
-func (up *Up)IsDeleteOnSuccess() bool {
+func (up *Up) IsDeleteOnSuccess() bool {
 	return up.DeleteOnSuccess == data.TrueString
 }
 
-func (up *Up)IsDisableResume() bool {
+func (up *Up) IsDisableResume() bool {
 	return up.DisableResume == data.TrueString
 }
 
-func (up *Up)IsDisableForm() bool {
+func (up *Up) IsDisableForm() bool {
 	return up.DisableForm == data.TrueString
 }
 

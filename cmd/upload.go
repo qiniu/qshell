@@ -61,7 +61,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 	cmd.Flags().StringVar(&info.GroupInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
 	cmd.Flags().StringVar(&info.GroupInfo.FailExportFilePath, "failure-list", "", "upload failure file list")
 	cmd.Flags().StringVar(&info.GroupInfo.OverrideExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
-	cmd.Flags().IntVar(&info.GroupInfo.WorkCount, "thread-count", 0, "multiple thread count")
+	cmd.Flags().IntVar(&info.GroupInfo.WorkCount, "thread-count", 1, "multiple thread count")
 
 	cmd.Flags().BoolVarP(&resumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&ignoreDir, "ignore-dir", false, "ignore the dir in the dest file key")

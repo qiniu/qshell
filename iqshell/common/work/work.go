@@ -76,6 +76,7 @@ func (b *flowHandler) Start() {
 	workChan := make(chan Work, b.info.WorkCount)
 	// 生产者
 	go func() {
+		log.DebugF("work producer start")
 		for {
 			if workspace.IsCmdInterrupt() {
 				break
@@ -90,6 +91,7 @@ func (b *flowHandler) Start() {
 			}
 		}
 		close(workChan)
+		log.DebugF("work producer   end")
 	}()
 
 	// 消费者
@@ -97,7 +99,7 @@ func (b *flowHandler) Start() {
 	wait.Add(b.info.WorkCount)
 	for i := 0; i < b.info.WorkCount; i++ {
 		go func(index int) {
-			log.DebugF("worker %d start", index)
+			log.DebugF("work consumer %d start", index)
 			for work := range workChan {
 				result, err := b.worker.DoWork(work)
 				if err != nil {
@@ -113,7 +115,7 @@ func (b *flowHandler) Start() {
 				}
 			}
 			wait.Done()
-			log.DebugF("worker %d   end", index)
+			log.DebugF("work consumer %d   end", index)
 		}(i)
 	}
 	wait.Wait()

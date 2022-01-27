@@ -31,3 +31,5 @@ type FetchItem struct {
 	Bucket    string
 	Key       string
 }
+
+const DefaultLineSeparate = "\t"

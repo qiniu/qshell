@@ -51,7 +51,10 @@ func TestQUpload2(t *testing.T) {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	result, errs := test.RunCmdWithError("rput", test.Bucket, "qshell_rput_5M", fileDir)
+	result, errs := test.RunCmdWithError("qupload2",
+		"--bucket", test.Bucket,
+		"--src-dir", fileDir,
+		"-d")
 	if len(errs) > 0 {
 		t.Fail()
 	}

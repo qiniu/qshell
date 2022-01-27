@@ -3,6 +3,7 @@ package group
 import (
 	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/scanner"
@@ -21,6 +22,12 @@ type Info struct {
 	FailExportFilePath     string // 错误输出
 	SuccessExportFilePath  string // 成功输出
 	OverrideExportFilePath string // 覆盖输出
+}
+
+func (info *Info) CheckData() {
+	if len(info.ItemSeparate) == 0 {
+		info.ItemSeparate = data.DefaultLineSeparate
+	}
 }
 
 type Handler interface {

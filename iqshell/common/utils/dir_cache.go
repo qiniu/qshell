@@ -37,6 +37,14 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 	if cacheResultFile == "stdout" {
 		cacheResultFh = os.Stdout
 	} else {
+		catchDir := filepath.Dir(cacheResultFile)
+		mkErr := os.MkdirAll(catchDir, os.ModePerm)
+		if mkErr != nil {
+			retErr = mkErr
+			log.ErrorF("Failed to create cache dir `%s`, %s", catchDir, mkErr)
+			return
+		}
+
 		//create result file
 		cResultFh, createErr := os.Create(cacheResultFile)
 		if createErr != nil {

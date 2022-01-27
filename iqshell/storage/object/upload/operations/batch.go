@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/synchronized"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -14,13 +15,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
 const (
-	MIN_UPLOAD_THREAD_COUNT = 20
-	MAX_UPLOAD_THREAD_COUNT = 2000
+	min_upload_thread_count = 1
+	max_upload_thread_count = 2000
 )
 
 type BatchUploadInfo struct {
@@ -29,8 +29,9 @@ type BatchUploadInfo struct {
 }
 
 // BatchUpload 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中;
-// 可以设置多线程上传，默认的线程区间在[iqshell.MIN_UPLOAD_THREAD_COUNT, iqshell.MAX_UPLOAD_THREAD_COUNT]
+// 可以设置多线程上传，默认的线程区间在[iqshell.min_upload_thread_count, iqshell.max_upload_thread_count]
 func BatchUpload(info BatchUploadInfo) {
+	info.GroupInfo.CheckData()
 	uploadConfig := workspace.GetConfig().Up
 	if err := uploadConfig.Check(); err != nil {
 		log.ErrorF("batch upload:%v", err)
@@ -38,16 +39,16 @@ func BatchUpload(info BatchUploadInfo) {
 	}
 
 	//upload
-	if info.GroupInfo.Info.WorkCount < MIN_UPLOAD_THREAD_COUNT {
-		info.GroupInfo.Info.WorkCount = MIN_UPLOAD_THREAD_COUNT
-		log.WarningF("Tip: you can set <ThreadCount> value between %d and %d to improve speed, and ThreadCount change to:%d",
-			MIN_UPLOAD_THREAD_COUNT, MAX_UPLOAD_THREAD_COUNT, info.GroupInfo.Info.WorkCount)
+	if info.GroupInfo.Info.WorkCount < min_upload_thread_count {
+		info.GroupInfo.Info.WorkCount = min_upload_thread_count
+		log.WarningF("Tip: you can set <ThreadCount> value between %d and %d to improve speed, and now ThreadCount change to:%d",
+			min_upload_thread_count, max_upload_thread_count, info.GroupInfo.Info.WorkCount)
 	}
 
-	if info.GroupInfo.Info.WorkCount > MAX_UPLOAD_THREAD_COUNT {
-		info.GroupInfo.Info.WorkCount = MAX_UPLOAD_THREAD_COUNT
-		log.WarningF("Tip: you can set <ThreadCount> value between %d and %d to improve speed, and ThreadCount change to:%d",
-			MIN_UPLOAD_THREAD_COUNT, MAX_UPLOAD_THREAD_COUNT, info.GroupInfo.Info.WorkCount)
+	if info.GroupInfo.Info.WorkCount > max_upload_thread_count {
+		info.GroupInfo.Info.WorkCount = max_upload_thread_count
+		log.WarningF("Tip: you can set <ThreadCount> value between %d and %d to improve speed, and now ThreadCount change to:%d",
+			min_upload_thread_count, max_upload_thread_count, info.GroupInfo.Info.WorkCount)
 	}
 
 	cachePath := uploadConfig.RecordRoot
@@ -93,7 +94,7 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 	}
 
 	timeStart := time.Now()
-	var locker sync.Mutex
+	syncLocker := synchronized.NewSynchronized(nil)
 	var totalFileCount = handler.Scanner().LineCount()
 	var currentFileCount int64
 	var successFileCount int64
@@ -108,45 +109,36 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 
 		items := strings.Split(line, info.GroupInfo.ItemSeparate)
 		if len(items) < 3 {
-			locker.Lock()
-			skippedFileCount += 1
-			locker.Unlock()
+			syncLocker.Do(func() {
+				skippedFileCount += 1
+			})
 			log.InfoF("Skip by invalid line, items should more than 2:%s", line)
 			return nil, true
 		}
 		fileRelativePath := items[0]
-		currentFileCount += 1
 
 		//check skip local file or folder
 		if skip, prefix := uploadConfig.HitByPathPrefixes(fileRelativePath); skip {
 			log.InfoF("Skip by path prefix `%s` for local file path `%s`", prefix, fileRelativePath)
-			locker.Lock()
-			skippedFileCount += 1
-			locker.Unlock()
+			syncLocker.Do(func() { skippedFileCount += 1 })
 			return nil, true
 		}
 
 		if skip, prefix := uploadConfig.HitByFilePrefixes(fileRelativePath); skip {
 			log.InfoF("Skip by file prefix `%s` for local file path `%s`", prefix, fileRelativePath)
-			locker.Lock()
-			skippedFileCount += 1
-			locker.Unlock()
+			syncLocker.Do(func() { skippedFileCount += 1 })
 			return nil, true
 		}
 
 		if skip, fixedStr := uploadConfig.HitByFixesString(fileRelativePath); skip {
 			log.InfoF("Skip by fixed string `%s` for local file path `%s`", fixedStr, fileRelativePath)
-			locker.Lock()
-			skippedFileCount += 1
-			locker.Unlock()
+			syncLocker.Do(func() { skippedFileCount += 1 })
 			return nil, true
 		}
 
 		if skip, suffix := uploadConfig.HitBySuffixes(fileRelativePath); skip {
 			log.InfoF("Skip by suffix `%s` for local file `%s`", suffix, fileRelativePath)
-			locker.Lock()
-			skippedFileCount += 1
-			locker.Unlock()
+			syncLocker.Do(func() { skippedFileCount += 1 })
 			return nil, true
 		}
 
@@ -189,15 +181,15 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 		apiInfo.TokenProvider = createTokenProviderWithMac(mac, *uploadConfig.Policy, *apiInfo)
 		return apiInfo, hasMore
 	}).DoWork(func(work work.Work) (work.Result, error) {
-		locker.Lock()
-		currentFileCount += 1
-		locker.Unlock()
-
+		syncLocker.Do(func() {
+			currentFileCount += 1
+		})
 		apiInfo := work.(*upload.ApiInfo)
-		res, err := uploadFile(*apiInfo)
 
 		log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
 			float32(currentFileCount)*100/float32(totalFileCount))
+
+		res, err := uploadFile(*apiInfo)
 
 		if err != nil {
 			return nil, err
@@ -208,19 +200,19 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 		res := result.(upload.ApiResult)
 		handler.Export().Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
 
-		locker.Lock()
-		if res.IsNotOverWrite {
-			notOverwriteCount += 1
-		} else if res.IsSkip {
-			skippedFileCount += 1
-		} else {
-			successFileCount += 1
-		}
-		locker.Unlock()
+		syncLocker.Do(func() {
+			if res.IsNotOverWrite {
+				notOverwriteCount += 1
+			} else if res.IsSkip {
+				skippedFileCount += 1
+			} else {
+				successFileCount += 1
+			}
+		})
 	}).OnWorkError(func(work work.Work, err error) {
-		locker.Lock()
-		failureFileCount += 1
-		locker.Unlock()
+		syncLocker.Do(func() {
+			failureFileCount += 1
+		})
 
 		apiInfo := work.(*upload.ApiInfo)
 		handler.Export().Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* path fileSize fileModifyTime */
