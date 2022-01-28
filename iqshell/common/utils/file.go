@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -51,7 +54,19 @@ func UnMarshalFromFile(filePath string, v interface{}) error {
 	return nil
 }
 
+func IsNetworkSource(filePath string) bool {
+	return strings.HasPrefix(filePath, "http://") || strings.HasPrefix(filePath, "https://")
+}
+
 func FileSize(filePath string) (fileSize int64, err error) {
+	if IsNetworkSource(filePath) {
+		return NetworkFileLength(filePath)
+	} else {
+		return LocalFileSize(filePath)
+	}
+}
+
+func LocalFileSize(filePath string) (fileSize int64, err error) {
 	fileStatus, err := os.Stat(filePath)
 	if err != nil {
 		err = errors.New("get file size: get status error:" + err.Error())
@@ -59,6 +74,25 @@ func FileSize(filePath string) (fileSize int64, err error) {
 	}
 
 	fileSize = fileStatus.Size()
+	return
+}
+
+func NetworkFileLength(srcResUrl string) (fileSize int64, err error) {
+	resp, respErr := http.Head(srcResUrl)
+	if respErr != nil {
+		err = fmt.Errorf("New head request failed, %s", respErr.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	contentLength := resp.Header.Get("Content-Length")
+	if contentLength == "" {
+		err = errors.New("Head request with no Content-Length found error")
+		return
+	}
+
+	fileSize, _ = strconv.ParseInt(contentLength, 10, 64)
+
 	return
 }
 

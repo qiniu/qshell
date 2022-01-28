@@ -9,17 +9,16 @@ import (
 
 type resumeV2Uploader struct {
 	cfg *storage.Config
-	ext *storage.RputV2Extra
 }
 
-func newResumeV2Uploader(cfg *storage.Config, ext *storage.RputV2Extra) Uploader {
+func newResumeV2Uploader(cfg *storage.Config) Uploader {
 	return &resumeV2Uploader{
 		cfg: cfg,
-		ext: ext,
 	}
 }
 
 func (r *resumeV2Uploader) upload(info ApiInfo) (ret ApiResult, err error) {
+
 	file, err := os.Open(info.FilePath)
 	if err != nil {
 		err = errors.New("resume v2 upload: open file error:" + err.Error())
@@ -33,7 +32,18 @@ func (r *resumeV2Uploader) upload(info ApiInfo) (ret ApiResult, err error) {
 	}
 
 	up := storage.NewResumeUploaderV2(r.cfg)
-	err = up.Put(workspace.GetContext(), &ret, info.TokenProvider(), info.SaveKey, file, fileStatus.Size(), r.ext)
+	err = up.Put(workspace.GetContext(), &ret, info.TokenProvider(), info.SaveKey, file, fileStatus.Size(), &storage.RputV2Extra{
+		Recorder:   nil,
+		Metadata:   nil,
+		CustomVars: nil,
+		UpHost:     info.UpHost,
+		MimeType:   info.MimeType,
+		PartSize:   info.ChunkSize,
+		TryTimes:   info.TryTimes,
+		Progresses: nil,
+		Notify:     nil,
+		NotifyErr:  nil,
+	})
 	if err != nil {
 		err = errors.New("resume v2 upload: upload error:" + err.Error())
 	}

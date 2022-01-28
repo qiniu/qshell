@@ -2,7 +2,6 @@ package upload
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
@@ -10,7 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/api"
 	"io"
 	"net/http"
 	"os"
@@ -27,6 +26,125 @@ const (
 	HTTP_TIMEOUT               = time.Second * 10
 )
 
+type conveyor struct {
+	cfg *storage.Config
+}
+
+func newConveyorUploader(cfg *storage.Config) Uploader {
+	return &conveyor{
+		cfg: cfg,
+	}
+}
+
+func (c *conveyor) upload(info ApiInfo) (ret ApiResult, err error) {
+
+	// 检查 Host
+	if len(info.UpHost) == 0 {
+		acc, gErr := workspace.GetAccount()
+		if gErr != nil {
+			err = fmt.Errorf("sync get account error:%v", gErr)
+			return
+		}
+		info.UpHost, err = getUpHost(c.cfg, acc.AccessKey, info.ToBucket)
+		if err != nil {
+			err = fmt.Errorf("sync get up host error:%v", err)
+			return
+		}
+	}
+
+	ctx := workspace.GetContext()
+	progressFile, fErr := ProgressFileFromUrl(info.FilePath, info.ToBucket, info.SaveKey)
+	if fErr != nil {
+		err = fErr
+		return
+	}
+	recorder := api.NewProgressRecorder(progressFile)
+	if rErr := recorder.Recover(); rErr != nil {
+		log.WarningF("sync progress recover error:", rErr)
+	}
+	recorder.CheckValid(info.FileSize, 0, info.UseResumeV2)
+	recorder.TotalSize = info.FileSize
+
+	uploader := api.NewResume(api.ResumeInfo{
+		UpHost:   info.UpHost,
+		Bucket:   info.ToBucket,
+		UpToken:  info.TokenProvider(),
+		Key:      info.SaveKey,
+		Recorder: recorder,
+		Cfg:      nil,
+	}, info.UseResumeV2)
+	uploader = api.NewRetryResume(uploader, info.TryTimes, info.TryInterval)
+
+	// 1. 初始化服务
+	err = uploader.InitServer(ctx)
+	if err != nil {
+		return
+	}
+
+	// 2. 上传文件分片
+	var blockSize = int64(data.BLOCK_SIZE)
+	if info.UseResumeV2 {
+		// 检查块大小是否满足实际需求
+		maxParts := int64(ResumableAPIV2MaxPartCount)
+		if blockSize*maxParts < info.FileSize {
+			blockSize = (info.FileSize + maxParts - 1) / maxParts
+		}
+	}
+
+	totalBlkCnt := storage.BlockCount(info.FileSize) //range get and mkblk upload
+	rangeStartOffset := recorder.Offset              //init the range offset
+	fromBlkIndex := int(rangeStartOffset / data.BLOCK_SIZE)
+	var bf *bytes.Buffer
+	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
+
+		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
+		log.DebugF(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
+
+		// 2.1 获取上传数据
+		var retryTimes int
+		for {
+			bf, err = getRange(info.FilePath, info.FileSize, rangeStartOffset, blockSize)
+			if err != nil && retryTimes >= info.TryTimes {
+				err = errors.New(strings.Join([]string{"sync Get range block data failed: ", err.Error()}, ""))
+				return
+			}
+			if err == nil {
+				break
+			}
+			time.Sleep(info.TryInterval)
+			log.DebugF("sync Retrying %d time get range for block [%d] for error:%v", retryTimes, blkIndex, err)
+			retryTimes++
+		}
+		dataBytes := bf.Bytes()
+
+		// 2.2 上传数据到云存储
+		err = uploader.UploadBlock(ctx, 0, dataBytes)
+		if err != nil {
+			return
+		}
+
+		//advance range offset
+		rangeStartOffset += data.BLOCK_SIZE
+		if sErr := recorder.RecordProgress(); sErr != nil {
+			log.WarningF("sync save record progress error:%v", sErr)
+		}
+	}
+
+	// 3. 合并文件
+	err = uploader.Complete(ctx, &ret)
+	if err != nil {
+		err = fmt.Errorf("sync complete error:%v", err)
+		return
+	}
+
+	//delete progress file
+	if rErr := os.Remove(progressFile); rErr != nil {
+		log.WarningF("sync remove record progress error:%v", rErr)
+	}
+
+	return
+}
+
 func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, err error) {
 
 	//create sync id
@@ -40,8 +158,7 @@ func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, er
 	}
 	storePath := filepath.Join(QShellRootPath, ".qshell", "sync")
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		log.ErrorF("Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
-		err = mkdirErr
+		err = fmt.Errorf("sync Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		return
 	}
 
@@ -49,345 +166,7 @@ func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, er
 	return
 }
 
-func (p *ProgressRecorder) Recover() (err error) {
-	if statInfo, statErr := os.Stat(p.FilePath); statErr == nil {
-		//check file last modified time, if older than one week, ignore
-		if statInfo.ModTime().Add(time.Hour * 24 * 5).After(time.Now()) {
-			//try read old progress
-			progressFh, openErr := os.Open(p.FilePath)
-			if openErr != nil {
-				err = openErr
-				return
-			}
-			decoder := json.NewDecoder(progressFh)
-			decoder.Decode(p)
-			progressFh.Close()
-		}
-	}
-	return
-}
-
-func (p *ProgressRecorder) RecoverFromUrl(srcResUrl, bucket, key string) (err error) {
-
-	progressFile, pErr := ProgressFileFromUrl(srcResUrl, bucket, key)
-	if err != nil {
-		err = pErr
-		return
-	}
-	p.FilePath = progressFile
-	return p.Recover()
-}
-
-func (p *ProgressRecorder) Reset() {
-	p.Offset = 0
-	p.TotalSize = 0
-	p.BlkCtxs = make([]storage.BlkputRet, 0)
-	p.Parts = make([]storage.UploadPartInfo, 0)
-}
-
-func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResumableV2 bool) {
-
-	//check offset valid or not
-	if p.Offset%data.BLOCK_SIZE != 0 {
-		log.Info("Invalid offset from progress file,", p.Offset)
-		p.Reset()
-		return
-	}
-
-	// 分片 V1
-	if !isResumableV2 {
-		//check offset and blk ctxs
-		if p.Offset != 0 && p.BlkCtxs != nil && int(p.Offset/data.BLOCK_SIZE) != len(p.BlkCtxs) {
-
-			log.Info("Invalid offset and block info")
-			p.Reset()
-			return
-		}
-
-		//check blk ctxs, when no progress found
-		if p.Offset == 0 || p.BlkCtxs == nil {
-			p.Reset()
-			return
-		}
-
-		if fileSize != p.TotalSize {
-			if p.TotalSize != 0 {
-				log.Warning("Remote file length changed, progress file out of date")
-			}
-			p.Offset = 0
-			p.TotalSize = fileSize
-			p.BlkCtxs = make([]storage.BlkputRet, 0)
-			return
-		}
-
-		if len(p.BlkCtxs) > 0 {
-			if lastModified != 0 && p.LastModified != lastModified {
-				p.Reset()
-			}
-		}
-
-		return
-	}
-
-	// 分片 V2
-	//check offset and blk ctxs
-	if p.Offset != 0 && p.Parts != nil && int(p.Offset/data.BLOCK_SIZE) != len(p.Parts) {
-
-		log.Info("Invalid offset and block info")
-		p.Reset()
-		return
-	}
-
-	//check blk ctxs, when no progress found
-	if p.Offset == 0 || p.Parts == nil {
-		p.Reset()
-		return
-	}
-
-	if fileSize != p.TotalSize {
-		if p.TotalSize != 0 {
-			log.Warning("Remote file length changed, progress file out of date")
-		}
-		p.Offset = 0
-		p.TotalSize = fileSize
-		p.Parts = make([]storage.UploadPartInfo, 0)
-		return
-	}
-
-	if len(p.Parts) > 0 {
-		if lastModified != 0 && p.LastModified != lastModified {
-			p.Reset()
-		}
-	}
-}
-
-func (p *ProgressRecorder) RecordProgress() (err error) {
-	fh, openErr := os.Create(p.FilePath)
-	if openErr != nil {
-		err = fmt.Errorf("Open progress file %s error, %s", p.FilePath, openErr.Error())
-		return
-	}
-	defer fh.Close()
-
-	jsonBytes, mErr := json.Marshal(p)
-	if mErr != nil {
-		err = fmt.Errorf("Marshal sync progress error, %s", mErr.Error())
-		return
-	}
-
-	_, wErr := fh.Write(jsonBytes)
-	if wErr != nil {
-		err = fmt.Errorf("Write sync progress error, %s", wErr.Error())
-	}
-
-	return
-}
-
-type SputRet struct {
-	Key      string `json:"key"`
-	Hash     string `json:"hash"`
-	MimeType string `json:"mimeType"`
-	Fsize    int64  `json:"fsize"`
-}
-
-func Sync(srcResUrl, toBucket, key, upHost string, isResumableV2 bool) (putRet SputRet, err error) {
-	exists, cErr := object.Exist(object.ExistApiInfo{
-		Bucket: toBucket,
-		Key:    key,
-	})
-	if cErr != nil {
-		err = cErr
-		return
-	}
-
-	if exists {
-		err = errors.New("File with same key` already exists in bucket")
-		return
-	}
-	//get total size
-	totalSize, hErr := getRemoteFileLength(srcResUrl)
-	if hErr != nil {
-		err = hErr
-		return
-	}
-	progressFile, fErr := ProgressFileFromUrl(srcResUrl, toBucket, key)
-	if err != nil {
-		err = fErr
-		return
-	}
-	syncProgress := NewProgressRecorder(progressFile)
-	syncProgress.RecoverFromUrl(srcResUrl, toBucket, key)
-	syncProgress.CheckValid(totalSize, 0, isResumableV2)
-	syncProgress.TotalSize = totalSize
-
-	//get total block count
-	fmt.Println("totalSize: ", totalSize)
-	totalBlkCnt := storage.BlockCount(totalSize)
-
-	//init the range offset
-	rangeStartOffset := syncProgress.Offset
-	fromBlkIndex := int(rangeStartOffset / data.BLOCK_SIZE)
-
-	lastBlock := false
-
-	//create upload token
-	policy := storage.PutPolicy{Scope: toBucket}
-	//token is valid for one year
-	policy.Expires = 3600 * 24 * 365
-	policy.ReturnBody = `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"mimeType":"$(mimeType)"}`
-
-	mac, err := workspace.GetMac()
-	if err != nil {
-		return
-	}
-
-	uptoken := policy.UploadToken(mac)
-	ctx := workspace.GetContext()
-
-	resumeUploader := NewResumeUploader(nil)
-	var (
-		eErr error
-	)
-	if upHost == "" {
-		ak, bucket, gErr := utils.GetAkBucketFromUploadToken(uptoken)
-		if gErr != nil {
-			err = gErr
-			return
-		}
-		upHost, eErr = resumeUploader.UpHost(ak, bucket)
-		if eErr != nil {
-			err = eErr
-			return
-		}
-	}
-
-	var uploader IResumeUploader
-	if isResumableV2 {
-		uploader = &resumeUploaderV2{
-			uploader: storage.NewResumeUploaderV2(nil),
-			recorder: syncProgress,
-			upHost:   upHost,
-			bucket:   toBucket,
-			uptoken:  uptoken,
-			key:      key,
-		}
-	} else {
-		uploader = &resumeUploaderV1{
-			uploader: storage.NewResumeUploader(nil),
-			recorder: syncProgress,
-			key:      key,
-			upHost:   upHost,
-			uptoken:  uptoken,
-		}
-	}
-
-	// 1. 初始化服务
-	retryTimes := 0
-	for {
-		pErr := uploader.initServer(ctx)
-		if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
-			err = pErr
-			return
-		}
-		if pErr == nil {
-			break
-		}
-		log.Error(pErr.Error())
-		time.Sleep(RETRY_INTERVAL)
-
-		log.InfoF("Retrying %d time for init server", retryTimes)
-		retryTimes++
-	}
-
-	//range get and mkblk upload
-	var bf *bytes.Buffer
-	var blockSize = int64(data.BLOCK_SIZE)
-	if isResumableV2 {
-		// 检查块大小是否满足实际需求
-		maxParts := int64(ResumableAPIV2MaxPartCount)
-		if blockSize*maxParts < totalSize {
-			blockSize = (totalSize + maxParts - 1) / maxParts
-		}
-	}
-	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
-		if blkIndex == totalBlkCnt-1 {
-			lastBlock = true
-		}
-
-		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
-		log.Info(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
-
-		// 2.1 获取上传数据
-		var retryTimes int
-		var rErr error
-		for {
-			bf, rErr = getRange(srcResUrl, totalSize, rangeStartOffset, blockSize, lastBlock)
-			if rErr != nil && retryTimes >= RETRY_MAX_TIMES {
-				err = errors.New(strings.Join([]string{"Get range block data failed: ", rErr.Error()}, ""))
-				return
-			}
-			if rErr == nil {
-				break
-			}
-			log.Error(rErr.Error())
-			time.Sleep(RETRY_INTERVAL)
-			log.InfoF("Retrying %d time get range for block [%d]", retryTimes, blkIndex)
-			retryTimes++
-		}
-		dataBytes := bf.Bytes()
-
-		// 2.2 上传数据到云存储
-		retryTimes = 0
-		for {
-			pErr := uploader.uploadBlock(ctx, dataBytes)
-			if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
-				err = pErr
-				return
-			}
-			if pErr == nil {
-				break
-			}
-			log.Error(pErr.Error())
-			time.Sleep(RETRY_INTERVAL)
-
-			log.InfoF("Retrying %d time for upload block index:[%d]", retryTimes, blkIndex)
-			retryTimes++
-		}
-		//advance range offset
-		rangeStartOffset += data.BLOCK_SIZE
-
-		sErr := syncProgress.RecordProgress()
-		if sErr != nil {
-			log.Info(rErr.Error())
-		}
-	}
-
-	//make file
-	retryTimes = 0
-	for {
-		ret, pErr := uploader.complete(ctx)
-		if pErr != nil && retryTimes >= RETRY_MAX_TIMES {
-			err = fmt.Errorf("Mkfile error, %s", err.Error())
-			return
-		}
-		if pErr == nil {
-			putRet = ret
-			break
-		}
-		log.Error(pErr.Error())
-		time.Sleep(RETRY_INTERVAL)
-
-		log.InfoF("Retrying %d time for server to create file", retryTimes)
-		retryTimes++
-	}
-
-	//delete progress file
-	os.Remove(progressFile)
-
-	return
-}
-
-func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int64, lastBlock bool) (data *bytes.Buffer, err error) {
+func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int64) (data *bytes.Buffer, err error) {
 	//range get
 	dReq, dReqErr := http.NewRequest("GET", srcResUrl, nil)
 	if dReqErr != nil {
@@ -395,11 +174,9 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 		return
 	}
 
-	//proxyURL, _ := url.Parse("http://localhost:8888")
-
 	//set range header
 	rangeEndOffset := rangeStartOffset + rangeBlockSize - 1
-	if lastBlock {
+	if rangeEndOffset >= totalSize {
 		rangeEndOffset = totalSize - 1
 	}
 
@@ -433,7 +210,7 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 
 	//if not support range, go back and err
 	if dResp.Header.Get("Content-Range") == "" {
-		err = errors.New("Remote server not support range")
+		err = errors.New("sync Remote server not support range")
 		return
 	}
 
@@ -442,8 +219,8 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 	rangeSize, _ := parseContentRange(contentRange)
 
 	//check ranged block size
-	if !lastBlock && rangeSize != rangeBlockSize {
-		err = errors.New("Block read error, only the last range block can has bytes less than <RangeBlockSize>")
+	if rangeSize != (rangeEndOffset - rangeStartOffset + 1) {
+		err = errors.New("sync Block read error, only the last range block can has bytes less than <RangeBlockSize>")
 		return
 	}
 
@@ -451,30 +228,11 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 	buffer := bytes.NewBuffer(nil)
 	cpCnt, cpErr := io.Copy(buffer, dResp.Body)
 	if cpErr != nil || cpCnt != rangeSize {
-		err = errors.New("Read range block response error, not fully read")
+		err = errors.New("sync Read range block response error, not fully read")
 		return
 	}
 
 	return buffer, nil
-}
-
-func getRemoteFileLength(srcResUrl string) (totalSize int64, err error) {
-	resp, respErr := http.Head(srcResUrl)
-	if respErr != nil {
-		err = fmt.Errorf("New head request failed, %s", respErr.Error())
-		return
-	}
-	defer resp.Body.Close()
-
-	contentLength := resp.Header.Get("Content-Length")
-	if contentLength == "" {
-		err = errors.New("Head request with no Content-Length found error")
-		return
-	}
-
-	totalSize, _ = strconv.ParseInt(contentLength, 10, 64)
-
-	return
 }
 
 //Content-Range: bytes 25538640-25538647/25538648
@@ -490,5 +248,33 @@ func parseContentRange(contentRange string) (rangeSize, totalSize int64) {
 
 	rangeSize = toOffset - fromOffset + 1
 
+	return
+}
+
+func getUpHost(cfg *storage.Config, ak, bucket string) (upHost string, err error) {
+
+	var zone *storage.Zone
+	if cfg.Zone != nil {
+		zone = cfg.Zone
+	} else {
+		if v, zoneErr := storage.GetZone(ak, bucket); zoneErr != nil {
+			err = zoneErr
+			return
+		} else {
+			zone = v
+		}
+	}
+
+	scheme := "http://"
+	if cfg.UseHTTPS {
+		scheme = "https://"
+	}
+
+	host := zone.SrcUpHosts[0]
+	if cfg.UseCdnDomains {
+		host = zone.CdnUpHosts[0]
+	}
+
+	upHost = fmt.Sprintf("%s%s", scheme, host)
 	return
 }

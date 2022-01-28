@@ -95,21 +95,25 @@ var upload2CmdBuilder = func() *cobra.Command {
 }
 
 var syncCmdBuilder = func() *cobra.Command {
-	info := operations.SyncUploadInfo{}
+	resumeAPIV2 := false
+	info := operations.UploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "sync <SrcResUrl> <Buckets> [-k <Key>]",
 		Short: "Sync big file to qiniu bucket",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumeAPIV2)
 			if len(args) > 0 {
-				info.ResourceUrl = args[0]
+				info.FilePath = args[0]
 				info.Bucket = args[1]
 			}
+			loadConfig()
+			operations.UploadFile(info)
 		},
 	}
-	cmd.Flags().BoolVarP(&info.IsResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
-	cmd.Flags().StringVarP(&info.UpHostIp, "uphost", "u", "", "upload host")
 	cmd.Flags().StringVarP(&info.Key, "key", "k", "", "save as <key> in bucket")
+	cmd.Flags().BoolVarP(&resumeAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.UpHost, "uphost", "u", "", "upload host")
 	return cmd
 }
 
@@ -145,7 +149,7 @@ var formUploadCmdBuilder = func() *cobra.Command {
 
 var resumeUploadCmdBuilder = func() *cobra.Command {
 	var (
-		resumableAPIV2 = false
+		resumeAPIV2 = false
 		overwrite      = false
 	)
 	info := operations.UploadInfo{}
@@ -155,7 +159,7 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.Up.DisableForm = data.TrueString
-			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumableAPIV2)
+			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumeAPIV2)
 			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
 			if len(args) > 2 {
 				info.Bucket = args[0]
@@ -168,8 +172,7 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
-
-	cmd.Flags().BoolVarP(&resumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().BoolVarP(&resumeAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 
 	cmd.Flags().Int64VarP(&cfg.CmdCfg.Up.ResumableAPIV2PartSize, "v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")

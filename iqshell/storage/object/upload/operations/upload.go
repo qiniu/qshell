@@ -27,24 +27,24 @@ type UploadInfo struct {
 }
 
 func UploadFile(info UploadInfo) {
-	doneSignal := make(chan bool)
-	go func(ch chan bool) {
-		progressSigns := []string{"|", "/", "-", "\\", "|"}
-		for {
-			for _, p := range progressSigns {
-				log.Info("\rProgress: ", p)
-				os.Stdout.Sync()
-				select {
-				case <-ch:
-					return
-				case <-time.After(time.Millisecond * 50):
-					continue
-				}
-			}
-		}
-	}(doneSignal)
+	//doneSignal := make(chan bool)
+	//go func(ch chan bool) {
+	//	progressSigns := []string{"|", "/", "-", "\\", "|"}
+	//	for {
+	//		for _, p := range progressSigns {
+	//			log.Info("\rProgress: ", p)
+	//			os.Stdout.Sync()
+	//			select {
+	//			case <-ch:
+	//				return
+	//			case <-time.After(time.Millisecond * 50):
+	//				continue
+	//			}
+	//		}
+	//	}
+	//}(doneSignal)
 	ret, err := uploadFile(info)
-	doneSignal <- true
+	//doneSignal <- true
 
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {

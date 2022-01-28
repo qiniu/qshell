@@ -99,3 +99,17 @@ func TestQUpload2(t *testing.T) {
 		t.Fatal(result)
 	}
 }
+
+func TestSync(t *testing.T) {
+
+	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
+	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "-d")
+	if len(errs) > 0 {
+		t.Fail()
+	}
+
+	result = strings.ReplaceAll(result, "\n", "")
+	if !strings.Contains(result, "Upload File success") {
+		t.Fatal(result)
+	}
+}

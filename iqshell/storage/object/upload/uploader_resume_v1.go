@@ -9,13 +9,11 @@ import (
 
 type resumeV1Uploader struct {
 	cfg *storage.Config
-	ext *storage.RputExtra
 }
 
-func newResumeV1Uploader(cfg *storage.Config, ext *storage.RputExtra) Uploader {
+func newResumeV1Uploader(cfg *storage.Config) Uploader {
 	return &resumeV1Uploader{
 		cfg: cfg,
-		ext: ext,
 	}
 }
 
@@ -33,7 +31,16 @@ func (r *resumeV1Uploader) upload(info ApiInfo) (ret ApiResult, err error) {
 	}
 
 	up := storage.NewResumeUploader(r.cfg)
-	err = up.Put(workspace.GetContext(), &ret, info.TokenProvider(), info.SaveKey, file, fileStatus.Size(), r.ext)
+	err = up.Put(workspace.GetContext(), &ret, info.TokenProvider(), info.SaveKey, file, fileStatus.Size(), &storage.RputExtra{
+		Recorder:   nil,
+		Params:     nil,
+		UpHost:     info.UpHost,
+		MimeType:   info.MimeType,
+		TryTimes:   info.TryTimes,
+		Progresses: nil,
+		Notify:     nil,
+		NotifyErr:  nil,
+	})
 	if err != nil {
 		err = errors.New("resume v1 upload: upload error:" + err.Error())
 	}

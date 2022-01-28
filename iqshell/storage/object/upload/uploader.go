@@ -6,10 +6,11 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
 	"path"
-	"strings"
+	"time"
 )
 
 type ApiInfo struct {
@@ -26,6 +27,7 @@ type ApiInfo struct {
 	FileStatusDBPath string        // 文件上传状态信息保存的 db 路径
 	TokenProvider    func() string // token provider
 	TryTimes         int           // 失败时，最多重试次数【可选】
+	TryInterval      time.Duration // 重试间隔时间 【可选】
 	FileSize         int64         // 待上传文件的大小, 如果不配置会动态读取 【可选】
 	FileModifyTime   int64         // 本地文件修改时间, 如果不配置会动态读取 【可选】
 	DisableForm      bool          // 不使用 form 上传 【可选】
@@ -35,23 +37,34 @@ type ApiInfo struct {
 	PutThreshold     int64         // 分片上传时上传阈值
 }
 
-func (a *ApiInfo) init() error {
+func (a *ApiInfo) init() (err error) {
 	if len(a.FilePath) == 0 {
 		return errors.New(alert.CannotEmpty("upload file path", ""))
 	}
 
 	// 获取文件信息
 	if a.FileSize == 0 || a.FileModifyTime == 0 {
-		localFileStatus, err := os.Stat(a.FilePath)
-		if err != nil {
-			return fmt.Errorf("get file:%s status error:%v", a.FilePath, err)
+		if utils.IsNetworkSource(a.FilePath) {
+			a.FileSize, err = utils.NetworkFileLength(a.FilePath)
+			if err != nil {
+				return fmt.Errorf("get network file:%s size error:%v", a.FilePath, err)
+			}
+		} else {
+			localFileStatus, err := os.Stat(a.FilePath)
+			if err != nil {
+				return fmt.Errorf("get local file:%s status error:%v", a.FilePath, err)
+			}
+			a.FileSize = localFileStatus.Size()
+			a.FileModifyTime = localFileStatus.ModTime().UnixNano() / 100 // 兼容老版本：Unit is 100ns
 		}
-		a.FileSize = localFileStatus.Size()
-		a.FileModifyTime = localFileStatus.ModTime().UnixNano() / 100 // 兼容老版本：Unit is 100ns
 	}
 
 	if a.TryTimes == 0 {
 		a.TryTimes = 3
+	}
+
+	if a.TryInterval == 0 {
+		a.TryInterval = time.Second
 	}
 
 	if len(a.SaveKey) == 0 {
@@ -59,10 +72,6 @@ func (a *ApiInfo) init() error {
 	}
 
 	return nil
-}
-
-func (a *ApiInfo) isNetworkSource() bool {
-	return strings.HasPrefix(a.FilePath, "http://") || strings.HasPrefix(a.FilePath, "https://")
 }
 
 type ApiResult struct {
@@ -141,7 +150,7 @@ func Upload(info ApiInfo) (res ApiResult, err error) {
 	}
 
 	log.DebugF("upload: start upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
-	res, err = uploadLocalSource(info)
+	res, err = uploadSource(info)
 	log.DebugF("upload:   end upload:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
 
 	if err != nil {
@@ -157,9 +166,18 @@ func Upload(info ApiInfo) (res ApiResult, err error) {
 	return res, nil
 }
 
-func uploadLocalSource(info ApiInfo) (result ApiResult, err error) {
+func uploadSource(info ApiInfo) (ApiResult, error) {
 	storageCfg := workspace.GetStorageConfig()
 	var up Uploader
+	if utils.IsNetworkSource(info.FilePath) {
+		up = networkSourceUploader(info, storageCfg)
+	} else {
+		up = localSourceUploader(info, storageCfg)
+	}
+	return up.upload(info)
+}
+
+func localSourceUploader(info ApiInfo, storageCfg *storage.Config) (up Uploader) {
 	if info.DisableResume || (!info.DisableForm && info.FileSize < info.PutThreshold) {
 		up = newFromUploader(storageCfg, &storage.PutExtra{
 			Params:     nil,
@@ -168,30 +186,13 @@ func uploadLocalSource(info ApiInfo) (result ApiResult, err error) {
 			OnProgress: nil,
 		})
 	} else if info.UseResumeV2 {
-		up = newResumeV2Uploader(storageCfg, &storage.RputV2Extra{
-			Recorder:   nil,
-			Metadata:   nil,
-			CustomVars: nil,
-			UpHost:     info.UpHost,
-			MimeType:   info.MimeType,
-			PartSize:   info.ChunkSize,
-			TryTimes:   info.TryTimes,
-			Progresses: nil,
-			Notify:     nil,
-			NotifyErr:  nil,
-		})
+		up = newResumeV2Uploader(storageCfg)
 	} else {
-		up = newResumeV1Uploader(storageCfg, &storage.RputExtra{
-			Recorder:   nil,
-			Params:     nil,
-			UpHost:     info.UpHost,
-			MimeType:   info.MimeType,
-			TryTimes:   info.TryTimes,
-			Progresses: nil,
-			Notify:     nil,
-			NotifyErr:  nil,
-		})
+		up = newResumeV1Uploader(storageCfg)
 	}
-	result, err = up.upload(info)
 	return
+}
+
+func networkSourceUploader(info ApiInfo, storageCfg *storage.Config) (up Uploader) {
+	return newConveyorUploader(storageCfg)
 }
