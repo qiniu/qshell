@@ -20,10 +20,8 @@ import (
 )
 
 const (
-	ResumableAPIV2MaxPartCount = 10000
-	RETRY_MAX_TIMES            = 5
-	RETRY_INTERVAL             = time.Second * 1
-	HTTP_TIMEOUT               = time.Second * 10
+	resumeV2MaxPart = 10000
+	httpTimeout     = time.Second * 10
 )
 
 type conveyor struct {
@@ -85,7 +83,7 @@ func (c *conveyor) upload(info ApiInfo) (ret ApiResult, err error) {
 	var blockSize = int64(data.BLOCK_SIZE)
 	if info.UseResumeV2 {
 		// 检查块大小是否满足实际需求
-		maxParts := int64(ResumableAPIV2MaxPartCount)
+		maxParts := int64(resumeV2MaxPart)
 		if blockSize*maxParts < info.FileSize {
 			blockSize = (info.FileSize + maxParts - 1) / maxParts
 		}
@@ -184,7 +182,7 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 
 	//set client properties
 	client := http.DefaultClient
-	client.Timeout = time.Duration(HTTP_TIMEOUT)
+	client.Timeout = time.Duration(httpTimeout)
 	//client.Transport = &http.Transport{
 	//	Proxy: http.ProxyURL(proxyURL),
 	//}
