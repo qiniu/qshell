@@ -29,7 +29,13 @@ func (c *serverChecker) check() (exist, match bool, err error) {
 		return
 	}
 
-	if c.CheckHash {
+	checkHash := c.CheckHash
+	if checkHash && utils.IsNetworkSource(c.FilePath) {
+		checkHash = false
+		log.WarningF("network resource doesn't support check hash: %s", c.FilePath)
+	}
+
+	if checkHash {
 		return c.checkHash(fileServerStatus)
 	} else if c.CheckSize {
 		return c.checkServerSize(fileServerStatus)
