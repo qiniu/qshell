@@ -28,7 +28,7 @@ type synchronized struct {
 	locker Locker
 }
 
-func (s *synchronized) Do(fn func()){
+func (s *synchronized) Do(fn func()) {
 	if fn == nil {
 		return
 	}

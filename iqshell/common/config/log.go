@@ -10,10 +10,10 @@ type LogSetting struct {
 	LogLevel  string `json:"log_level,omitempty"`
 	LogFile   string `json:"log_file,omitempty"`
 	LogRotate int    `json:"log_rotate,omitempty"`
-	LogStdout string   `json:"log_stdout,omitempty"`
+	LogStdout string `json:"log_stdout,omitempty"`
 }
 
-func (l *LogSetting)IsLogStdout() bool {
+func (l *LogSetting) IsLogStdout() bool {
 	return l.LogStdout == data.TrueString
 }
 

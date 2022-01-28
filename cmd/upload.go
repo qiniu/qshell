@@ -150,7 +150,7 @@ var formUploadCmdBuilder = func() *cobra.Command {
 var resumeUploadCmdBuilder = func() *cobra.Command {
 	var (
 		resumeAPIV2 = false
-		overwrite      = false
+		overwrite   = false
 	)
 	info := operations.UploadInfo{}
 	cmd := &cobra.Command{

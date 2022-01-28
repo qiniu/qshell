@@ -58,7 +58,7 @@ func TestQUpload(t *testing.T) {
 	"overwrite": "true",
 	"work_count": 4
 }`, test.Bucket, fileDir)
-	cfgFile, err  := test.CreateFileWithContent("upload_cfg.json", cfgContent)
+	cfgFile, err := test.CreateFileWithContent("upload_cfg.json", cfgContent)
 	defer test.RemoveFile(cfgFile)
 
 	if err != nil {
@@ -100,10 +100,24 @@ func TestQUpload2(t *testing.T) {
 	}
 }
 
-func TestSync(t *testing.T) {
+func TestSyncV1(t *testing.T) {
 
 	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
 	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "-d")
+	if len(errs) > 0 {
+		t.Fail()
+	}
+
+	result = strings.ReplaceAll(result, "\n", "")
+	if !strings.Contains(result, "Upload File success") {
+		t.Fatal(result)
+	}
+}
+
+func TestSyncV2(t *testing.T) {
+
+	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
+	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "--resumable-api-v2", "-d")
 	if len(errs) > 0 {
 		t.Fail()
 	}

@@ -1,6 +1,6 @@
 package utils
 
-func GetNotEmptyStringIfExist(values ... string) string {
+func GetNotEmptyStringIfExist(values ...string) string {
 	for _, value := range values {
 		if len(value) > 0 {
 			return value
@@ -9,7 +9,7 @@ func GetNotEmptyStringIfExist(values ... string) string {
 	return ""
 }
 
-func GetTrueBoolValueIfExist(values ... bool) bool {
+func GetTrueBoolValueIfExist(values ...bool) bool {
 	for _, value := range values {
 		if value {
 			return value
@@ -18,7 +18,7 @@ func GetTrueBoolValueIfExist(values ... bool) bool {
 	return false
 }
 
-func GetNotZeroIntIfExist(values ... int) int {
+func GetNotZeroIntIfExist(values ...int) int {
 	for _, value := range values {
 		if value > 0 {
 			return value
@@ -27,7 +27,7 @@ func GetNotZeroIntIfExist(values ... int) int {
 	return 0
 }
 
-func GetNotZeroUIntIfExist(values ... uint) uint {
+func GetNotZeroUIntIfExist(values ...uint) uint {
 	for _, value := range values {
 		if value > 0 {
 			return value
@@ -36,7 +36,7 @@ func GetNotZeroUIntIfExist(values ... uint) uint {
 	return 0
 }
 
-func GetNotZeroInt64IfExist(values ... int64) int64 {
+func GetNotZeroInt64IfExist(values ...int64) int64 {
 	for _, value := range values {
 		if value > 0 {
 			return value
@@ -45,7 +45,7 @@ func GetNotZeroInt64IfExist(values ... int64) int64 {
 	return 0
 }
 
-func GetNotZeroUInt64IfExist(values ... uint64) uint64 {
+func GetNotZeroUInt64IfExist(values ...uint64) uint64 {
 	for _, value := range values {
 		if value > 0 {
 			return value
@@ -54,7 +54,7 @@ func GetNotZeroUInt64IfExist(values ... uint64) uint64 {
 	return 0
 }
 
-func GetNotZeroInt16IfExist(values ... int16) int16 {
+func GetNotZeroInt16IfExist(values ...int16) int16 {
 	for _, value := range values {
 		if value > 0 {
 			return value
@@ -63,7 +63,7 @@ func GetNotZeroInt16IfExist(values ... int16) int16 {
 	return 0
 }
 
-func GetNotZeroUInt16IfExist(values ... uint16) uint16 {
+func GetNotZeroUInt16IfExist(values ...uint16) uint16 {
 	for _, value := range values {
 		if value > 0 {
 			return value
@@ -72,8 +72,7 @@ func GetNotZeroUInt16IfExist(values ... uint16) uint16 {
 	return 0
 }
 
-
-func GetNotZeroInt8IfExist(values ... int8) int8 {
+func GetNotZeroInt8IfExist(values ...int8) int8 {
 	for _, value := range values {
 		if value > 0 {
 			return value
@@ -82,7 +81,7 @@ func GetNotZeroInt8IfExist(values ... int8) int8 {
 	return 0
 }
 
-func GetNotZeroUInt8IfExist(values ... uint8) uint8 {
+func GetNotZeroUInt8IfExist(values ...uint8) uint8 {
 	for _, value := range values {
 		if value > 0 {
 			return value
