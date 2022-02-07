@@ -32,7 +32,7 @@ func NewFlow(info Info) Flow {
 
 type flow struct {
 	info          *Info
-	readOperation func() (operation Operation, complete bool)
+	readOperation func() (operation Operation, hasMore bool)
 	onError       func(err error)
 	onResult      func(operation Operation, result OperationResult)
 }
@@ -74,15 +74,14 @@ func (f *flow) Start() {
 			operations:       make([]Operation, 0, 0),
 			operationStrings: make([]string, 0, 0),
 		}
-		complete := false
+
 		for {
 			if workspace.IsCmdInterrupt() {
 				break
 			}
-			operation, c := f.readOperation()
-			if c {
+			operation, hasMore := f.readOperation()
+			if !hasMore {
 				log.Debug("batch task producer: read operation complete")
-				complete = true
 				break
 			}
 			if operation == nil {
@@ -99,7 +98,11 @@ func (f *flow) Start() {
 			task.operationStrings = append(task.operationStrings, operationString)
 		}
 		log.DebugF("batch task producer: produce one task: task count:%d", len(task.operations))
-		return task, complete
+		if len(task.operations) == 0 {
+			return nil, hasMore
+		}
+
+		return task, hasMore
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		task := work.(*batchOperations)
 		return bucketManager.Batch(task.operationStrings)

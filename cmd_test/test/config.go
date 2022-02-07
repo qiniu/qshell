@@ -14,6 +14,7 @@ https://qshell-na0.qiniupkg.com/hello5.json
 https://qshell-na0.qiniupkg.com/hello6.json
 https://qshell-na0.qiniupkg.com/hello7.json
 `
+	Key = "hello1.json"
 	Keys = `
 hello1.json
 hello2.json

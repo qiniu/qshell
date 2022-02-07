@@ -23,7 +23,7 @@ func Some(operations []Operation) ([]OperationResult, error) {
 		MaxOperationCountPerRequest: 1000,
 	}).ReadOperation(func() (operation Operation, complete bool) {
 		if handler.readIndex >= len(handler.operations) {
-			return nil, true
+			return nil, false
 		}
 		operation = handler.operations[handler.readIndex]
 		handler.readIndex += 1
