@@ -24,7 +24,7 @@ func (r *resumeV2) InitServer(ctx context.Context) error {
 
 	hasKey := len(r.Key) != 0
 	ret := &storage.InitPartsRet{}
-	err := r.uploader.InitParts(ctx, r.UpToken, r.UpHost, r.Bucket,
+	err := r.uploader.InitParts(ctx, r.TokenProvider(), r.UpHost, r.Bucket,
 		r.Key, hasKey, ret)
 	if err == nil {
 		r.Recorder.UploadId = ret.UploadID
@@ -42,7 +42,7 @@ func (r *resumeV2) UploadBlock(ctx context.Context, index int, data []byte) erro
 	partMd5 := md5.Sum(data)
 	partMd5String := hex.EncodeToString(partMd5[:])
 	ret := &storage.UploadPartsRet{}
-	err := r.uploader.UploadParts(ctx, r.UpToken, r.UpHost, r.Bucket,
+	err := r.uploader.UploadParts(ctx, r.TokenProvider(), r.UpHost, r.Bucket,
 		r.Key, hasKey, r.Recorder.UploadId, partNumber, partMd5String, ret, bytes.NewReader(data), size)
 	if err == nil {
 		r.Recorder.Parts = append(r.Recorder.Parts, storage.UploadPartInfo{
@@ -61,7 +61,7 @@ func (r *resumeV2) Complete(ctx context.Context, putRet interface{}) (err error)
 	putExtra := &storage.RputV2Extra{
 		Progresses: r.Recorder.Parts,
 	}
-	err = r.uploader.CompleteParts(ctx, r.UpToken, r.UpHost, &putRet, r.Bucket,
+	err = r.uploader.CompleteParts(ctx, r.TokenProvider(), r.UpHost, &putRet, r.Bucket,
 		r.Key, hasKey, r.Recorder.UploadId, putExtra)
 	if err != nil {
 		err = errors.New("resume v2 complete error:" + err.Error())

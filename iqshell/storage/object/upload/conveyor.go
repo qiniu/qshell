@@ -64,12 +64,12 @@ func (c *conveyor) upload(info ApiInfo) (ret ApiResult, err error) {
 	recorder.TotalSize = info.FileSize
 
 	uploader := api.NewResume(api.ResumeInfo{
-		UpHost:   info.UpHost,
-		Bucket:   info.ToBucket,
-		UpToken:  info.TokenProvider(),
-		Key:      info.SaveKey,
-		Recorder: recorder,
-		Cfg:      nil,
+		UpHost:        info.UpHost,
+		Bucket:        info.ToBucket,
+		TokenProvider: info.TokenProvider,
+		Key:           info.SaveKey,
+		Recorder:      recorder,
+		Cfg:           nil,
 	}, info.UseResumeV2)
 	uploader = api.NewRetryResume(uploader, info.TryTimes, info.TryInterval)
 

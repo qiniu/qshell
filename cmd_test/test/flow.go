@@ -35,7 +35,7 @@ func (t *testFlow) Run() {
 
 	var err error
 	if Debug {
-		err = t.runByCode()
+		err = t.runByDebug()
 	} else {
 		err = t.runByCommand()
 	}
@@ -56,7 +56,7 @@ func (t *testFlow) runByCommand() error {
 	return cmd.Run()
 }
 
-func (t *testFlow) runByCode() error {
+func (t *testFlow) runByDebug() error {
 	args := []string{"qshell"}
 	os.Args = append(args, t.args...)
 	cmd.Execute()

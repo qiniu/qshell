@@ -15,12 +15,12 @@ type Resume interface {
 }
 
 type ResumeInfo struct {
-	UpHost   string
-	Bucket   string
-	UpToken  string
-	Key      string
-	Cfg      *storage.Config
-	Recorder *ProgressRecorder
+	UpHost        string
+	Bucket        string
+	TokenProvider func() string // token provider
+	Key           string
+	Cfg           *storage.Config
+	Recorder      *ProgressRecorder
 }
 
 func NewResume(info ResumeInfo, isResumeV2 bool) Resume {
