@@ -69,11 +69,10 @@ func BatchChangeType(info BatchChangeTypeInfo) {
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in batch.Operation = nil
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
-			return nil, true
+			return nil, false
 		}
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
 		if len(items) > 1 {
@@ -82,14 +81,14 @@ func BatchChangeType(info BatchChangeTypeInfo) {
 			if err != nil {
 				log.ErrorF("parse type error:%v", err)
 			} else if key != "" && t != "" {
-				in = object.ChangeTypeApiInfo{
+				return object.ChangeTypeApiInfo{
 					Bucket: info.Bucket,
 					Key:    key,
 					Type:   tInt,
-				}
+				}, true
 			}
 		}
-		return in, false
+		return nil, true
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		in, ok := (operation).(object.ChangeTypeApiInfo)
 		if !ok {

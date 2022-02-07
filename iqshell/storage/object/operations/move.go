@@ -36,12 +36,12 @@ func BatchMove(info BatchMoveInfo) {
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in batch.Operation = nil
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
-			return nil, true
+			return nil, false
 		}
+
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
 		if len(items) > 0 {
 			srcKey, destKey := items[0], items[0]
@@ -49,16 +49,16 @@ func BatchMove(info BatchMoveInfo) {
 				destKey = items[1]
 			}
 			if srcKey != "" && destKey != "" {
-				in = &object.MoveApiInfo{
+				return &object.MoveApiInfo{
 					SourceBucket: info.SourceBucket,
 					SourceKey:    srcKey,
 					DestBucket:   info.DestBucket,
 					DestKey:      destKey,
 					Force:        info.BatchInfo.Force,
-				}
+				}, true
 			}
 		}
-		return in, false
+		return nil, true
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		apiInfo, ok := (operation).(object.MoveApiInfo)
 		if !ok {

@@ -37,26 +37,25 @@ func BatchRename(info BatchRenameInfo) {
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in batch.Operation = nil
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
-			return nil, true
+			return nil, false
 		}
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
 		if len(items) > 1 {
 			sourceKey, destKey := items[0], items[1]
 			if sourceKey != "" && destKey != "" {
-				in = object.MoveApiInfo{
+				return object.MoveApiInfo{
 					SourceBucket: info.Bucket,
 					SourceKey:    sourceKey,
 					DestBucket:   info.Bucket,
 					DestKey:      destKey,
 					Force:        info.BatchInfo.Force,
-				}
+				}, true
 			}
 		}
-		return in, false
+		return nil, true
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		apiInfo, ok := (operation).(object.MoveApiInfo)
 		if !ok {

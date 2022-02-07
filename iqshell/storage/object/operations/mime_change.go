@@ -34,24 +34,24 @@ func BatchChangeMime(info BatchChangeMimeInfo) {
 		log.Error(err)
 		return
 	}
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in batch.Operation = nil
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
-			return nil, true
+			return nil, false
 		}
+
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
 		if len(items) > 1 {
 			key, mime := items[0], items[1]
 			if key != "" && mime != "" {
-				in = object.ChangeMimeApiInfo{
+				return object.ChangeMimeApiInfo{
 					Bucket: info.Bucket,
 					Key:    key,
 					Mime:   mime,
-				}
+				}, true
 			}
 		}
-		return in, false
+		return nil, true
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		apiInfo, ok := (operation).(object.ChangeMimeApiInfo)
 		if !ok {

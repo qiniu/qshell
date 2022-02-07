@@ -54,11 +54,10 @@ func BatchChangeStatus(info BatchChangeStatusInfo) {
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in batch.Operation = nil
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
-			return nil, true
+			return nil, false
 		}
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
 		if len(items) > 1 {
@@ -67,14 +66,14 @@ func BatchChangeStatus(info BatchChangeStatusInfo) {
 			if err != nil {
 				log.ErrorF("parse status error:", err)
 			} else if key != "" && status != "" {
-				in = object.ChangeStatusApiInfo{
+				return object.ChangeStatusApiInfo{
 					Bucket: info.Bucket,
 					Key:    key,
 					Status: statusInt,
-				}
+				}, true
 			}
 		}
-		return in, false
+		return nil, true
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		in, ok := (operation).(object.ChangeStatusApiInfo)
 		if !ok {

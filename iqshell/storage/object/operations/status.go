@@ -33,23 +33,22 @@ func BatchStatus(info BatchStatusInfo) {
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in batch.Operation = nil
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
-			return nil, true
+			return nil, false
 		}
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
 		if len(items) > 0 {
 			key := items[0]
 			if key != "" {
-				in = object.StatusApiInfo{
+				return object.StatusApiInfo{
 					Bucket: info.Bucket,
 					Key:    key,
-				}
+				}, true
 			}
 		}
-		return in, false
+		return nil, true
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		apiInfo, ok := (operation).(object.StatusApiInfo)
 		if !ok {

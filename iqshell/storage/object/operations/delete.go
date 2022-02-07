@@ -59,12 +59,12 @@ func BatchDelete(info BatchDeleteInfo) {
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in batch.Operation = nil
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
-			return nil, true
+			return nil, false
 		}
+
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
 		if len(items) > 0 {
 			key := items[0]
@@ -73,16 +73,16 @@ func BatchDelete(info BatchDeleteInfo) {
 				putTime = items[1]
 			}
 			if key != "" {
-				in = object.DeleteApiInfo{
+				return object.DeleteApiInfo{
 					Bucket: info.Bucket,
 					Key:    key,
 					Condition: batch.OperationCondition{
 						PutTime: putTime,
 					},
-				}
+				}, true
 			}
 		}
-		return in, false
+		return nil, true
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		apiInfo, ok := (operation).(object.DeleteApiInfo)
 		if !ok {
@@ -108,11 +108,10 @@ func BatchDeleteAfter(info BatchDeleteInfo) {
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, complete bool) {
-		var in batch.Operation = nil
+	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
-			return nil, true
+			return nil, false
 		}
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
 		if len(items) > 0 {
@@ -125,14 +124,14 @@ func BatchDeleteAfter(info BatchDeleteInfo) {
 			if err != nil {
 				log.ErrorF("parse after days error:%v from:%s", err, after)
 			} else if key != "" {
-				in = object.DeleteApiInfo{
+				return object.DeleteApiInfo{
 					Bucket:    info.Bucket,
 					Key:       key,
 					AfterDays: afterDays,
-				}
+				}, true
 			}
 		}
-		return in, false
+		return nil, true
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		apiInfo, ok := (operation).(object.DeleteApiInfo)
 		if !ok {
