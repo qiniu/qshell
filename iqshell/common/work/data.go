@@ -1,7 +1,5 @@
 package work
 
-import "errors"
-
 type Info struct {
 	WorkCount         int  // work 数量
 	StopWhenWorkError bool // 当某个 action 遇到执行错误是否结束 batch 任务
@@ -17,33 +15,3 @@ func (i *Info) initData() {
 
 type Work interface{}
 type Result interface{}
-type Worker interface {
-	ReadWork() (work Work, hasMore bool)
-	DoWork(work Work) (Result, error)
-}
-
-func NewWorker(reader func() (Work, bool), handler func(Work) (Result, error)) Worker {
-	return &worker{
-		reader:  reader,
-		handler: handler,
-	}
-}
-
-type worker struct {
-	reader  func() (Work, bool)
-	handler func(Work) (Result, error)
-}
-
-func (w *worker) ReadWork() (Work, bool) {
-	if w.reader != nil {
-		return w.reader()
-	}
-	return nil, true
-}
-
-func (w *worker) DoWork(action Work) (Result, error) {
-	if w.handler != nil {
-		return w.handler(action)
-	}
-	return nil, errors.New("no worker")
-}

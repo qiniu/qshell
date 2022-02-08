@@ -1,6 +1,7 @@
 package work
 
 import (
+	"errors"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"sync"
@@ -18,13 +19,11 @@ type FlowHandler interface {
 func NewFlowHandler(info Info) FlowHandler {
 	return &flowHandler{
 		info:   &info,
-		worker: &worker{},
 	}
 }
 
 type flowHandler struct {
 	info                *Info
-	worker              *worker
 	workReader          func() (work Work, hasMore bool)
 	workHandler         func(work Work) (Result, error)
 	workErrorHandler    func(action Work, err error)
@@ -33,12 +32,12 @@ type flowHandler struct {
 }
 
 func (b *flowHandler) ReadWork(reader func() (work Work, hasMore bool)) FlowHandler {
-	b.worker.reader = reader
+	b.workReader = reader
 	return b
 }
 
 func (b *flowHandler) DoWork(handler func(work Work) (Result, error)) FlowHandler {
-	b.worker.handler = handler
+	b.workHandler = handler
 	return b
 }
 
@@ -46,24 +45,43 @@ func (b *flowHandler) OnWorkError(handler func(worker Work, err error)) FlowHand
 	b.workErrorHandler = handler
 	return b
 }
-func (b *flowHandler) handleActionError(worker Work, err error) {
-	if b.workErrorHandler != nil {
-		b.workErrorHandler(worker, err)
-	}
-}
+
 func (b *flowHandler) OnWorkResult(handler func(worker Work, result Result)) FlowHandler {
 	b.workResultHandler = handler
 	return b
 }
+
+func (b *flowHandler) OnWorksComplete(handler func()) FlowHandler {
+	b.workCompleteHandler = handler
+	return b
+}
+
+func (b *flowHandler) readWork() (Work, bool) {
+	if b.workReader != nil {
+		return b.workReader()
+	}
+	return nil, true
+}
+
+func (b *flowHandler) doWork(action Work) (Result, error) {
+	if b.workHandler != nil {
+		return b.workHandler(action)
+	}
+	return nil, errors.New("no worker")
+}
+
 func (b *flowHandler) handlerActionResult(worker Work, result Result) {
 	if b.workResultHandler != nil {
 		b.workResultHandler(worker, result)
 	}
 }
-func (b *flowHandler) OnWorksComplete(handler func()) FlowHandler {
-	b.workCompleteHandler = handler
-	return b
+
+func (b *flowHandler) handleActionError(worker Work, err error) {
+	if b.workErrorHandler != nil {
+		b.workErrorHandler(worker, err)
+	}
 }
+
 func (b *flowHandler) handlerComplete() {
 	if b.workCompleteHandler != nil {
 		b.workCompleteHandler()
@@ -82,7 +100,7 @@ func (b *flowHandler) Start() {
 				break
 			}
 
-			work, hasMore := b.worker.ReadWork()
+			work, hasMore := b.readWork()
 			if !hasMore {
 				break
 			}
@@ -101,7 +119,7 @@ func (b *flowHandler) Start() {
 		go func(index int) {
 			log.DebugF("work consumer %d start", index)
 			for work := range workChan {
-				result, err := b.worker.DoWork(work)
+				result, err := b.doWork(work)
 				if err != nil {
 					b.handleActionError(work, err)
 					b.info.workErrorHappened = true
