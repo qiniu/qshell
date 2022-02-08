@@ -43,6 +43,7 @@ func BatchCopy(info BatchCopyInfo) {
 		}
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
 		if len(items) > 0 {
+			// 如果只有一个参数，源 key 即为目标 key
 			srcKey, destKey := items[0], items[0]
 			if len(items) > 1 {
 				destKey = items[1]
@@ -53,7 +54,7 @@ func BatchCopy(info BatchCopyInfo) {
 					SourceKey:    srcKey,
 					DestBucket:   info.DestBucket,
 					DestKey:      destKey,
-					Force:        info.BatchInfo.Force,
+					Force:        info.BatchInfo.Overwrite,
 				}, true
 			} else {
 				return nil, true
