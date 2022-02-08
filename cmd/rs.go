@@ -167,6 +167,11 @@ var copyCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Make a copy of a file and save in bucket",
+		Example: `copy A.png(bucket: bucketA key:A.png) to B.png(bucket: bucketB key:B.png):
+	qshell copy bucketA A.png bucketB -k B.png
+you can check B.png has existed by:
+	qshell stat bucketB B.png
+`,
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 2 {
@@ -191,10 +196,10 @@ var changeMimeCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "chgm <Bucket> <Key> <NewMimeType>",
 		Short: "Change the mime type of a file",
-		Example: `change mimetype of file(bucket:test_bucket key:key.png) to image/jpeg
-	qshell chgm test_bucket key.png image/jpeg
+		Example: `change mimetype of a.png(bucket:bucketA key:key.png) to image/jpeg
+	qshell chgm bucketA a.png image/jpeg
 and you can check result by command:
-	qshell stat test_bucket key.png`,
+	qshell stat bucketA a.png`,
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 2 {
