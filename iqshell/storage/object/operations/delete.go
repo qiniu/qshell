@@ -139,10 +139,10 @@ func BatchDeleteAfter(info BatchDeleteInfo) {
 		}
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s\n", apiInfo.Key, apiInfo.AfterDays, result.Code, result.Error)
-			log.ErrorF("Expire '%s' => '%d' Failed, Code: %d, Error: %s\n", apiInfo.Key, apiInfo.AfterDays, result.Code, result.Error)
+			log.ErrorF("Expire '%s' => '%d' Failed, Code: %d, Error: %s", apiInfo.Key, apiInfo.AfterDays, result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%s\n", apiInfo.Key, apiInfo.AfterDays)
-			log.AlertF("Expire '%s' => '%d' success\n", apiInfo.Key, apiInfo.AfterDays)
+			log.InfoF("Expire '%s' => '%d' success", apiInfo.Key, apiInfo.AfterDays)
 		}
 	}).OnError(func(err error) {
 		log.ErrorF("batch delete after error:%v:", err)
