@@ -64,7 +64,7 @@ func BatchChangeMime(info BatchChangeMimeInfo) {
 				in.Key, in.Mime, result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%s\n", in.Key, in.Mime)
-			log.ErrorF("Chgm '%s' => '%s' success\n", in.Key, in.Mime)
+			log.InfoF("Chgm '%s' => '%s' success", in.Key, in.Mime)
 		}
 	}).OnError(func(err error) {
 		log.ErrorF("batch chgm error:%v:", err)
