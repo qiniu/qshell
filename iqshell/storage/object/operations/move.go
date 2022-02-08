@@ -21,6 +21,10 @@ func Move(info MoveInfo) {
 		log.ErrorF("Move error:%v", result.Error)
 		return
 	}
+
+	log.InfoF("Move '%s:%s' => '%s:%s' success",
+		info.SourceBucket, info.SourceKey,
+		info.DestBucket, info.DestKey)
 }
 
 type BatchMoveInfo struct {
@@ -49,7 +53,7 @@ func BatchMove(info BatchMoveInfo) {
 				destKey = items[1]
 			}
 			if srcKey != "" && destKey != "" {
-				return &object.MoveApiInfo{
+				return object.MoveApiInfo{
 					SourceBucket: info.SourceBucket,
 					SourceKey:    srcKey,
 					DestBucket:   info.DestBucket,
@@ -65,18 +69,17 @@ func BatchMove(info BatchMoveInfo) {
 			return
 		}
 
-		in := MoveInfo(apiInfo)
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s\n", in.SourceKey, in.DestKey, result.Code, result.Error)
+			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s\n", apiInfo.SourceKey, apiInfo.DestKey, result.Code, result.Error)
 			log.ErrorF("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
-				in.SourceBucket, in.SourceKey,
-				in.DestBucket, in.DestKey,
+				apiInfo.SourceBucket, apiInfo.SourceKey,
+				apiInfo.DestBucket, apiInfo.DestKey,
 				result.Code, result.Error)
 		} else {
-			handler.Export().Success().ExportF("%s\t%s\n", in.SourceKey, in.DestKey)
-			log.ErrorF("Move '%s:%s' => '%s:%s' success\n",
-				in.SourceBucket, in.SourceKey,
-				in.DestBucket, in.DestKey)
+			handler.Export().Success().ExportF("%s\t%s\n", apiInfo.SourceKey, apiInfo.DestKey)
+			log.InfoF("Move '%s:%s' => '%s:%s' success",
+				apiInfo.SourceBucket, apiInfo.SourceKey,
+				apiInfo.DestBucket, apiInfo.DestKey)
 		}
 	}).OnError(func(err error) {
 		log.ErrorF("batch move error:%v:", err)
