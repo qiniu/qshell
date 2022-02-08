@@ -80,13 +80,14 @@ func (f *flow) Start() {
 				break
 			}
 			operation, hasMore := f.readOperation()
-			if !hasMore {
-				log.Debug("batch task producer: read operation complete")
-				break
-			}
 			if operation == nil {
-				log.Debug("batch task producer: operation invalid")
-				continue
+				if hasMore {
+					log.Debug("batch task producer: operation invalid")
+					continue
+				} else {
+					log.Debug("batch task producer: read operation complete")
+					break
+				}
 			}
 			operationString, err := operation.ToOperation()
 			if err != nil {

@@ -101,12 +101,15 @@ func (b *flowHandler) Start() {
 			}
 
 			work, hasMore := b.readWork()
-			if !hasMore {
-				break
+			if work == nil {
+				if !hasMore {
+					break
+				} else {
+					continue
+				}
 			}
-			if work != nil {
-				workChan <- work
-			}
+
+			workChan <- work
 		}
 		close(workChan)
 		log.DebugF("work producer   end")
