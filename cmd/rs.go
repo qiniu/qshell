@@ -167,12 +167,12 @@ var copyCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Make a copy of a file and save in bucket",
-		Example: `copy A.png(bucket: bucketA key:A.png) to B.png(bucket: bucketB key:B.png):
+		Example: `copy A.png(bucket:bucketA key:A.png) to B.png(bucket:bucketB key:B.png):
 	qshell copy bucketA A.png bucketB -k B.png
 you can check B.png has existed by:
 	qshell stat bucketB B.png
 `,
-		Args:  cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 2 {
 				info.SourceBucket = args[0]
@@ -187,7 +187,7 @@ you can check B.png has existed by:
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
-	cmd.Flags().StringVarP(&info.DestKey, "key", "k", "", "filename saved in bucket")
+	cmd.Flags().StringVarP(&info.DestKey, "key", "k", "", "filename saved in bucket, use <SrcKey> while omitted")
 	return cmd
 }
 
@@ -200,7 +200,7 @@ var changeMimeCmdBuilder = func() *cobra.Command {
 	qshell chgm bucketA a.png image/jpeg
 and you can check result by command:
 	qshell stat bucketA a.png`,
-		Args:  cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 2 {
 				info.Bucket = args[0]

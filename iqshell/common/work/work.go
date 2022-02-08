@@ -18,7 +18,7 @@ type FlowHandler interface {
 
 func NewFlowHandler(info Info) FlowHandler {
 	return &flowHandler{
-		info:   &info,
+		info: &info,
 	}
 }
 
