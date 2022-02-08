@@ -2,6 +2,7 @@ package object
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
@@ -27,7 +28,7 @@ func Fetch(info FetchApiInfo) (FetchResult, error) {
 	if len(info.Key) == 0 {
 		key, err := utils.KeyFromUrl(info.FromUrl)
 		if err != nil || len(key) == 0 {
-			return FetchResult{}, errors.New("get key from url failed:" + err.Error())
+			return FetchResult{}, fmt.Errorf("get key from url failed:%s error:%v", info.FromUrl, err)
 		}
 		info.Key = key
 	}
