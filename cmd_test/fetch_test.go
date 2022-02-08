@@ -24,7 +24,6 @@ func TestFetch(t *testing.T) {
 	}
 }
 
-
 func TestBatchFetch(t *testing.T) {
 	batchConfig := ""
 	for _, domain := range test.BucketObjectDomains {
