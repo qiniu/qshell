@@ -99,10 +99,6 @@ func (b *flowHandler) Start() {
 	go func() {
 		log.DebugF("work producer start")
 		for {
-			if workspace.IsCmdInterrupt() {
-				break
-			}
-
 			work, hasMore := b.readWork()
 			if work == nil {
 				if !hasMore {

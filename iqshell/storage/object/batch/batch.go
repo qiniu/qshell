@@ -7,7 +7,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
-	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 )
 
@@ -76,9 +75,6 @@ func (f *flow) Start() {
 		}
 
 		for {
-			if workspace.IsCmdInterrupt() {
-				break
-			}
 			operation, hasMore := f.readOperation()
 			if operation == nil {
 				if hasMore {
