@@ -24,7 +24,7 @@ type PrivateUrlInfo struct {
 
 func (p PrivateUrlInfo) getDeadlineOfInt() (int64, error) {
 	if len(p.Deadline) == 0 {
-		return time.Now().Add(time.Second * 3600).Unix(), nil
+		return time.Now().Add(time.Second * DefaultDeadline).Unix(), nil
 	}
 
 	if val, err := strconv.ParseInt(p.Deadline, 10, 64); err != nil {
