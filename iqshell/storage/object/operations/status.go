@@ -27,6 +27,8 @@ type BatchStatusInfo struct {
 }
 
 func BatchStatus(info BatchStatusInfo) {
+	info.BatchInfo.Force = true
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)
