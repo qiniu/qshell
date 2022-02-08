@@ -23,6 +23,10 @@ func Rename(info RenameInfo) {
 		log.ErrorF("Rename error:%v", result.Error)
 		return
 	}
+
+	log.InfoF("Rename '%s:%s' => '%s:%s' success",
+		info.SourceBucket, info.SourceKey,
+		info.DestBucket, info.DestKey)
 }
 
 type BatchRenameInfo struct {
@@ -70,7 +74,7 @@ func BatchRename(info BatchRenameInfo) {
 				result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%s\n", in.SourceKey, in.DestKey)
-			log.ErrorF("Rename '%s:%s' => '%s:%s' success\n",
+			log.InfoF("Rename '%s:%s' => '%s:%s' success",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey)
 		}
