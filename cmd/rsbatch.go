@@ -176,9 +176,8 @@ var batchCopyCmdBuilder = func() *cobra.Command {
 		Use:   "batchcopy <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
 		Short: "Batch copy files from bucket to bucket",
 		Long: `Batch copy files from bucket to bucket, read from stdin if SrcDestKeyMapFile not specified.
-SrcDestKeyMapFile content: line was an copy item
-line style:<fromBucketKey><Separator><ToBucketKey>
-<ToBucketKey> use <fromBucketKey> while omitted
+SrcDestKeyMapFile content:one copy entry per line
+line style(<ToBucketKey> use <fromBucketKey> while omitted):<fromBucketKey><Separator><ToBucketKey>
 `,
 		Args: cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {

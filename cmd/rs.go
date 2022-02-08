@@ -169,7 +169,7 @@ var copyCmdBuilder = func() *cobra.Command {
 		Short: "Make a copy of a file and save in bucket",
 		Example: `copy A.png(bucket:bucketA key:A.png) to B.png(bucket:bucketB key:B.png):
 	qshell copy bucketA A.png bucketB -k B.png
-you can check B.png has existed by:
+you can check if B.png has exists by:
 	qshell stat bucketB B.png
 `,
 		Args: cobra.ExactArgs(3),
