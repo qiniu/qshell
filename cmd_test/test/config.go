@@ -2,7 +2,7 @@ package test
 
 import "os"
 
-const (
+var (
 	Bucket                 = "qshell-na0"
 	BucketDomain           = "qshell-na0.qiniupkg.com"
 	BucketObjectListString = `
@@ -14,8 +14,9 @@ https://qshell-na0.qiniupkg.com/hello5.json
 https://qshell-na0.qiniupkg.com/hello6.json
 https://qshell-na0.qiniupkg.com/hello7.json
 `
-	Key = "hello1.json"
-	Keys = `
+	Key        = "hello1.json"
+	Keys       = []string{"hello1.json", "hello2.json", "hello3.json", "hello4.json", "hello5.json", "hello6.json", "hello7.json"}
+	KeysString = `
 hello1.json
 hello2.json
 hello3.json

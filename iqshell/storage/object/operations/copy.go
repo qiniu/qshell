@@ -75,7 +75,7 @@ func BatchCopy(info BatchCopyInfo) {
 				result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%s\n", in.SourceKey, in.DestKey)
-			log.ErrorF("Copy '%s:%s' => '%s:%s' success\n",
+			log.InfoF("Copy '%s:%s' => '%s:%s' success",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey)
 		}

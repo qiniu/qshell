@@ -67,7 +67,7 @@ func prepareToBatch(info Info) error {
 	log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, bsuccessFname: %q, bfailureFname: %q, sep: %q",
 		info.Force, info.Overwrite, info.WorkCount, info.InputFile, info.SuccessExportFilePath, info.FailExportFilePath, info.ItemSeparate)
 
-	if !info.Force {
+	if info.Force {
 		return nil
 	}
 

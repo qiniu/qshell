@@ -16,7 +16,7 @@ func TestDownloadWithKeyFile(t *testing.T) {
 		return
 	}
 
-	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", test.Keys)
+	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", test.KeysString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
