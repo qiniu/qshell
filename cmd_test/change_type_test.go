@@ -6,7 +6,7 @@ import (
 )
 
 func TestChangeType(t *testing.T) {
-	_, errs := test.RunCmdWithError("chtype", test.Bucket, test.Key, "2")
+	_, errs := test.RunCmdWithError("chtype", test.Bucket, test.Key, "0")
 	if len(errs) > 0 {
 		t.Fail()
 	}
@@ -20,7 +20,7 @@ func TestChangeType(t *testing.T) {
 func TestBatchChangeType(t *testing.T) {
 	batchConfig := ""
 	for _, key := range test.Keys {
-		batchConfig += key + "\t" + "2" + "\n"
+		batchConfig += key + "\t" + "0" + "\n"
 	}
 
 	path, err := test.CreateFileWithContent("batch_chtype.txt", batchConfig)
@@ -29,6 +29,22 @@ func TestBatchChangeType(t *testing.T) {
 	}
 
 	_, errs := test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
+	if len(errs) > 0 {
+		t.Fail()
+	}
+
+	//back
+	batchConfig = ""
+	for _, key := range test.Keys {
+		batchConfig += key + "\t" + "1" + "\n"
+	}
+
+	path, err = test.CreateFileWithContent("batch_chtype.txt", batchConfig)
+	if err != nil {
+		t.Fatal("create cdn config file error:", err)
+	}
+
+	_, errs = test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
 	if len(errs) > 0 {
 		t.Fail()
 	}
