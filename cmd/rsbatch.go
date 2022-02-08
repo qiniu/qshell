@@ -208,6 +208,9 @@ var batchSignCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "batchsign [-i <ItemListFile>] [-e <Deadline>]",
 		Short: "Batch create the private url from the public url list file",
+		Long: `Batch create the private url from the public url list file
+ItemListFile content:one copy entry per line
+line style:<private url>`,
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			loadConfig()

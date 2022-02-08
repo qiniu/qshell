@@ -56,6 +56,8 @@ type BatchPrivateUrlInfo struct {
 
 // BatchPrivateUrl 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
 func BatchPrivateUrl(info BatchPrivateUrlInfo) {
+	info.BatchInfo.Force = true
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)
@@ -94,7 +96,7 @@ func BatchPrivateUrl(info BatchPrivateUrlInfo) {
 			Deadline:  deadline,
 		})
 	}).OnWorkResult(func(work work.Work, result work.Result) {
-		url := work.(string)
+		url := result.(string)
 		log.Alert(url)
 	}).OnWorkError(func(work work.Work, err error) {
 		log.Error(err)
