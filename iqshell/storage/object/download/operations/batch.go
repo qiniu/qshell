@@ -180,6 +180,6 @@ func BatchDownload(info BatchDownloadInfo) {
 	log.AlertF("See download log at path:%s", downloadCfg.LogFile)
 
 	if failureFileCount > 0 {
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }

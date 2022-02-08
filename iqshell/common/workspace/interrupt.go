@@ -1,8 +1,10 @@
 package workspace
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
@@ -21,8 +23,11 @@ func observerCmdInterrupt() {
 	signal.Notify(s, os.Interrupt, os.Kill)
 	go func() {
 		si := <-s
-		log.ErrorF("Got signal:", si)
+		log.Alert("")
+		log.ErrorF("Got signal:%s", si)
 		isCmdInterrupt = true
 		Cancel()
+		time.Sleep(time.Millisecond * 500)
+		os.Exit(data.StatusUserCancel)
 	}()
 }

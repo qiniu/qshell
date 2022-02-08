@@ -23,17 +23,17 @@ type AddInfo struct {
 func Add(info AddInfo) {
 	if len(info.Name) == 0 {
 		log.Error(alert.CannotEmpty("user name", addCmdEg))
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 		return
 	}
 	if len(info.AccessKey) == 0 {
 		log.Error(alert.CannotEmpty("user ak", addCmdEg))
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 		return
 	}
 	if len(info.SecretKey) == 0 {
 		log.Error(alert.CannotEmpty("user sk", addCmdEg))
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 		return
 	}
 
@@ -45,13 +45,13 @@ func Add(info AddInfo) {
 
 	if err := account.SetAccountToLocalJson(acc); err != nil {
 		log.ErrorF("user add: set current error:%v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 		return
 	}
 
 	if err := account.SaveToDB(acc, info.Over); err != nil {
 		log.ErrorF("user add: save user to db error:%v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 		return
 	}
 }

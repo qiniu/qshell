@@ -25,6 +25,6 @@ func DirCache(info DirCacheInfo) {
 
 	_, retErr := utils.DirCache(info.Dir, info.SaveToFile)
 	if retErr != nil {
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }

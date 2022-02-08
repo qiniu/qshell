@@ -16,7 +16,7 @@ func List(info ListInfo) {
 	accounts, err := account.GetUsers()
 	if err != nil {
 		log.ErrorF("user list error:", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 		return
 	}
 
@@ -36,7 +36,7 @@ func Current() {
 	acc, err := account.GetAccount()
 	if err != nil {
 		log.ErrorF("user current error: %v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 	log.AlertF(acc.String())
 }
@@ -55,7 +55,7 @@ func LookUp(info LookUpInfo) {
 	acc, err := account.LookUp(info.Name)
 	if err != nil {
 		log.ErrorF("user lookup error: %v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 	log.AlertF(acc.String())
 	return

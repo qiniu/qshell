@@ -29,7 +29,7 @@ func Refresh(info RefreshInfo) {
 		urlReader, err = os.Open(info.ItemListFile)
 		if err != nil {
 			log.ErrorF("Open url list file error:%v", err)
-			os.Exit(data.STATUS_HALT)
+			os.Exit(data.StatusHalt)
 		}
 	}
 	defer urlReader.Close()

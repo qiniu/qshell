@@ -16,7 +16,7 @@ func List(info ListInfo) {
 	buckets, err := servers.AllBuckets(info.Shared)
 	if err != nil {
 		log.ErrorF("Get buckets error: %v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	} else if len(buckets) == 0 {
 		log.Warning("No buckets found")
 		return

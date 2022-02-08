@@ -19,7 +19,7 @@ func Fetch(info FetchInfo) {
 	result, err := object.Fetch(object.FetchApiInfo(info))
 	if err != nil {
 		log.ErrorF("Fetch error: %v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	} else {
 		log.AlertF("Key:%s", result.Key)
 		log.AlertF("FileHash:%s", result.Hash)

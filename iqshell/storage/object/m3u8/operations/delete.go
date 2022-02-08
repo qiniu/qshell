@@ -19,6 +19,6 @@ func Delete(info DeleteInfo) {
 
 	if err != nil {
 		log.ErrorF("m3u8 delete error: %v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }

@@ -12,7 +12,7 @@ func Clean() {
 	err := account.CleanUser()
 	if err != nil {
 		log.Error(err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }
 
@@ -29,6 +29,6 @@ func Remove(info RemoveInfo) {
 	err := account.RmUser(info.Name)
 	if err != nil {
 		log.Error(err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }

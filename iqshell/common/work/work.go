@@ -125,6 +125,10 @@ func (b *flowHandler) Start() {
 		go func(index int) {
 			log.DebugF("work consumer %d start", index)
 			for work := range workChan {
+				if workspace.IsCmdInterrupt() {
+					break
+				}
+
 				result, err := b.doWork(work)
 				if err != nil {
 					b.handleActionError(work, err)

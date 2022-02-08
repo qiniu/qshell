@@ -27,7 +27,7 @@ func Prefetch(info PrefetchInfo) {
 		urlReader, err = os.Open(info.UrlListFile)
 		if err != nil {
 			log.ErrorF("Open url list file error:%v", err)
-			os.Exit(data.STATUS_HALT)
+			os.Exit(data.StatusHalt)
 		}
 		defer urlReader.Close()
 	}

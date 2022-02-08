@@ -20,9 +20,10 @@ func GetBoolString(value bool) string {
 }
 
 const (
-	STATUS_OK    = iota // process success
-	STATUS_ERROR        //process error
-	STATUS_HALT         //local error
+	StatusOK         = iota // process success
+	StatusError             // process error
+	StatusHalt              // local error
+	StatusUserCancel        // 用户取消
 )
 
 // fetch 接口返回的结构

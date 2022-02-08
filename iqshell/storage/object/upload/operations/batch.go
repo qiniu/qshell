@@ -229,6 +229,6 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 	log.AlertF("See upload log at path:%s", uploadConfig.LogFile)
 
 	if failureFileCount > 0 {
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }

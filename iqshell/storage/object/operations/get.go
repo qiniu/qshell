@@ -13,6 +13,6 @@ func GetObject(info GetInfo) {
 	err := object.GetObject(object.GetApiInfo(info))
 	if err != nil {
 		log.ErrorF("Get error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }

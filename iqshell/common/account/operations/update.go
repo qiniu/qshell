@@ -16,7 +16,7 @@ func Change(info ChangeInfo) {
 	err := account.ChUser(info.Name)
 	if err != nil {
 		log.ErrorF("user change error:", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 		return
 	}
 }

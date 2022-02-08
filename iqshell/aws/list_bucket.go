@@ -28,7 +28,7 @@ func ListBucket(info ListBucketInfo) {
 
 	if info.Id == "" || info.SecretKey == "" {
 		log.Error(alert.CannotEmpty("AWS ID and SecretKey", ""))
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 
 	if info.MaxKeys <= 0 || info.MaxKeys > 1000 {
@@ -39,14 +39,14 @@ func ListBucket(info ListBucketInfo) {
 	// check AWS region
 	if info.Region == "" {
 		log.Error(alert.CannotEmpty("AWS region", ""))
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 
 	// AWS related code
 	s3session, err := session.NewSession()
 	if err != nil {
 		log.ErrorF("create AWS session error:%v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 	s3session.Config.WithRegion(info.Region)
 	s3session.Config.WithCredentials(credentials.NewStaticCredentials(info.Id, info.SecretKey, ""))
@@ -79,7 +79,7 @@ func ListBucket(info ListBucketInfo) {
 				log.ErrorF("list error:%v", aerr.Error())
 			}
 			log.ErrorF("ContinuationToken: %v", input.ContinuationToken)
-			os.Exit(data.STATUS_ERROR)
+			os.Exit(data.StatusError)
 		}
 
 		for _, obj := range result.Contents {

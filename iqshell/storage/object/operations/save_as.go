@@ -13,7 +13,7 @@ func SaveAs(info SaveAsInfo) {
 	url, err := object.SaveAs(object.SaveAsApiInfo(info))
 	if err != nil {
 		log.ErrorF("save as error: %v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	} else {
 		log.Alert(url)
 	}

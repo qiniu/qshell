@@ -31,12 +31,12 @@ func CreateQBoxToken(info TokenInfo) {
 	mac, req, mErr := getMacAndRequest(info)
 	if mErr != nil {
 		log.ErrorF("create mac and request: %v\n", mErr)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 	token, signErr := mac.SignRequest(req)
 	if signErr != nil {
 		log.ErrorF("create qbox token for url: %s: %v\n", info.Url, signErr)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 	log.Alert("QBox " + token)
 }
@@ -46,12 +46,12 @@ func CreateQiniuToken(info TokenInfo) {
 	mac, req, mErr := getMacAndRequest(info)
 	if mErr != nil {
 		log.ErrorF("create mac and reqeust: %v\n", mErr)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 	token, signErr := mac.SignRequestV2(req)
 	if signErr != nil {
 		log.ErrorF("create qiniu token for url: %s: %v\n", info.Url, signErr)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 	log.Alert("Qiniu " + token)
 }
@@ -63,14 +63,14 @@ func CreateUploadToken(info TokenInfo) {
 	fileInfo, oErr := os.Open(fileName)
 	if oErr != nil {
 		log.ErrorF("open file %s: %v\n", fileName, oErr)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 	defer fileInfo.Close()
 
 	configData, rErr := ioutil.ReadAll(fileInfo)
 	if rErr != nil {
 		log.ErrorF("read putPolicy config file `%s`: %v\n", fileName, rErr)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 
 	//remove UTF-8 BOM
@@ -80,7 +80,7 @@ func CreateUploadToken(info TokenInfo) {
 	uErr := json.Unmarshal(configData, putPolicy)
 	if uErr != nil {
 		log.ErrorF("parse upload config file `%s`: %v\n", fileName, uErr)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 
 	var mac *qbox.Mac

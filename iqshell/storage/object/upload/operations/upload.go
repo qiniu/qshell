@@ -57,7 +57,7 @@ func UploadFile(info UploadInfo) {
 	}
 
 	if err != nil {
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }
 

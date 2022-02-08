@@ -85,7 +85,7 @@ func loadConfig() {
 
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }
 

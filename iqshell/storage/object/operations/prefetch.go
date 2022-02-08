@@ -13,6 +13,6 @@ func MirrorUpdate(info MirrorUpdateInfo) {
 	err := storage.Prefetch(storage.PrefetchApiInfo(info))
 	if err != nil {
 		log.ErrorF("mirror update error: %v", err)
-		os.Exit(data.STATUS_ERROR)
+		os.Exit(data.StatusError)
 	}
 }
