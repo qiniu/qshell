@@ -18,3 +18,16 @@ func TestBucketDomain(t *testing.T) {
 
 	return
 }
+
+func TestBucketList(t *testing.T) {
+	result, errs := test.RunCmdWithError("listbucket", test.Bucket)
+	if len(errs) > 0 {
+		t.Fatal("error:", errs)
+	}
+
+	if !strings.Contains(result, test.Key) {
+		t.Fatal("no expected key:% but not exist", test.BucketDomain)
+	}
+
+	return
+}

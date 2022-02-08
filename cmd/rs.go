@@ -219,7 +219,7 @@ var changeTypeCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "chtype <Bucket> <Key> <FileType>",
 		Short: "Change the file type of a file",
-		Long:  `Change the file type of a file, file type must be in 0/1 or 2. 
+		Long: `Change the file type of a file, file type must be in 0/1 or 2. 
 And 0 means standard storage, 
 while 1 means low frequency visit storage,
 while 2 means low archive storage.`,
@@ -227,7 +227,7 @@ while 2 means low archive storage.`,
 	qshell chtype bucketA A.png 2
 and you can check result by command:
 	qshell stat bucketA A.png`,
-		Args:  cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 2 {
 				info.Bucket = args[0]

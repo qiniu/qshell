@@ -54,10 +54,10 @@ var batchChangeMimeCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "batchchgm <Bucket> [-i <KeyMimeMapFile>]",
 		Short: "Batch change the mime type of files in bucket",
-		Long:  `Batch change the mime type of files in bucket, read from stdin if KeyMimeMapFile not specified
+		Long: `Batch change the mime type of files in bucket, read from stdin if KeyMimeMapFile not specified
 KeyMimeMapFile content:one copy entry per line
 line style:<Key><Separator><MimeType>`,
-		Args:  cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
 				info.Bucket = args[0]
@@ -80,10 +80,10 @@ var batchChangeTypeCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "batchchtype <Bucket> [-i <KeyFileTypeMapFile>]",
 		Short: "Batch change the file type of files in bucket",
-		Long:  `Batch change the file (storage) type of files in bucket, read from stdin if KeyFileTypeMapFile not specified
+		Long: `Batch change the file (storage) type of files in bucket, read from stdin if KeyFileTypeMapFile not specified
 KeyFileTypeMapFile content:one copy entry per line
 line style:<Key><Separator><type>`,
-		Args:  cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
 				info.Bucket = args[0]

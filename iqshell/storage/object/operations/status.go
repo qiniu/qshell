@@ -70,6 +70,7 @@ func BatchStatus(info BatchStatusInfo) {
 }
 
 var objectTypes = []string{"标准存储", "低频存储", "归档存储"}
+
 func getStatusInfo(info StatusInfo, status batch.OperationResult) string {
 	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", info.Bucket)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", info.Key)
