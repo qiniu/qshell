@@ -8,7 +8,7 @@ import (
 
 func TestCdnPrefetch(t *testing.T) {
 
-	path, err := test.CreateFileWithContent("cdn_prefetch.txt", test.BucketObjectListString)
+	path, err := test.CreateFileWithContent("cdn_prefetch.txt", test.BucketObjectDomainsString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
@@ -24,7 +24,7 @@ func TestCdnPrefetch(t *testing.T) {
 }
 
 func TestCdnRefreshFile(t *testing.T) {
-	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectListString)
+	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectDomainsString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
@@ -40,7 +40,7 @@ func TestCdnRefreshFile(t *testing.T) {
 }
 
 func TestCdnRefreshDirs(t *testing.T) {
-	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectListString)
+	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectDomainsString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}

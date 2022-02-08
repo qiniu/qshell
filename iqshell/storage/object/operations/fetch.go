@@ -70,7 +70,7 @@ func BatchFetch(info BatchFetchInfo) {
 	}).OnWorkResult(func(work work.Work, result work.Result) {
 		in := work.(object.FetchApiInfo)
 		handler.Export().Success().ExportF("%s\t%s", in.FromUrl, in.Bucket)
-		log.AlertF("Fetch '%s' => %s:%s Success", in.FromUrl, info.Bucket, in.Key)
+		log.InfoF("Fetch '%s' => %s:%s Success", in.FromUrl, info.Bucket, in.Key)
 	}).OnWorkError(func(work work.Work, err error) {
 		in := work.(object.FetchApiInfo)
 		handler.Export().Fail().ExportF("%s\t%s\t%v", in.FromUrl, in.Key, err)

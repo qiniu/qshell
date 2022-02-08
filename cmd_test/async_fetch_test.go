@@ -7,7 +7,7 @@ import (
 )
 
 func TestAsyncFetch(t *testing.T) {
-	path, err := test.CreateFileWithContent("async_fetch.txt", test.BucketObjectListString)
+	path, err := test.CreateFileWithContent("async_fetch.txt", test.BucketObjectDomainsString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}

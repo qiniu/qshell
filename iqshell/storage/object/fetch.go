@@ -36,13 +36,13 @@ func Fetch(info FetchApiInfo) (FetchResult, error) {
 		return FetchResult{}, errors.New(alert.CannotEmpty("from url", ""))
 	}
 
-	log.InfoF("fetch info: bucket:%s key:%s fromUrl:%s", info.Bucket, info.Key, info.FromUrl)
-
+	log.DebugF("fetch start: %s => [%s|%s]", info.FromUrl, info.Bucket, info.Key)
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {
 		return FetchResult{}, err
 	}
 	fetchResult, err := bucketManager.Fetch(info.FromUrl, info.Bucket, info.Key)
+	log.DebugF("fetch   end: %s => [%s|%s]", info.FromUrl, info.Bucket, info.Key)
 	return FetchResult(fetchResult), err
 }
 
