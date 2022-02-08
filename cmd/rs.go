@@ -191,6 +191,10 @@ var changeMimeCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "chgm <Bucket> <Key> <NewMimeType>",
 		Short: "Change the mime type of a file",
+		Example: `change mimetype of file(bucket:test_bucket key:key.png) to image/jpeg
+	qshell chgm test_bucket key.png image/jpeg
+and you can check result by command:
+	qshell stat test_bucket key.png`,
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 2 {
