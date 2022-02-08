@@ -69,6 +69,7 @@ func BatchStatus(info BatchStatusInfo) {
 	}).Start()
 }
 
+var objectTypes = []string{"标准存储", "低频存储", "归档存储"}
 func getStatusInfo(info StatusInfo, status batch.OperationResult) string {
 	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", info.Bucket)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", info.Key)
@@ -78,10 +79,12 @@ func getStatusInfo(info StatusInfo, status batch.OperationResult) string {
 	putTime := time.Unix(0, status.PutTime*100)
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "PutTime:", status.PutTime, putTime.String())
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "MimeType:", status.MimeType)
-	if status.Type == 0 {
-		statInfo += fmt.Sprintf("%-20s%d -> 标准存储\r\n", "FileType:", status.Type)
-	} else {
-		statInfo += fmt.Sprintf("%-20s%d -> 低频存储\r\n", "FileType:", status.Type)
+
+	typeString := "未知类型"
+	if status.Type >= 0 && status.Type < 3 {
+		typeString = objectTypes[status.Type]
 	}
+	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "FileType:", status.Type, typeString)
+
 	return statInfo
 }

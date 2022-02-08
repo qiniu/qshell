@@ -18,12 +18,12 @@ func TestMimeType(t *testing.T) {
 }
 
 func TestBatchChangeMimeType(t *testing.T) {
-	batchCopyConfig := ""
+	batchConfig := ""
 	for _, key := range test.Keys {
-		batchCopyConfig += key + "\t" + "image/jpeg" + "\n"
+		batchConfig += key + "\t" + "image/jpeg" + "\n"
 	}
 
-	path, err := test.CreateFileWithContent("batch_chgm.txt", batchCopyConfig)
+	path, err := test.CreateFileWithContent("batch_chgm.txt", batchConfig)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}

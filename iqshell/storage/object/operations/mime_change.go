@@ -60,7 +60,7 @@ func BatchChangeMime(info BatchChangeMimeInfo) {
 		in := ChangeMimeInfo(apiInfo)
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s\n", in.Key, in.Mime, result.Code, result.Error)
-			log.ErrorF("Chgm '%s' => '%s' Failed, Code: %d, Error: %s\n",
+			log.ErrorF("Chgm '%s' => '%s' Failed, Code: %d, Error: %s",
 				in.Key, in.Mime, result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%s\n", in.Key, in.Mime)

@@ -81,7 +81,7 @@ func BatchChangeStatus(info BatchChangeStatusInfo) {
 		}
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%d\t%d\t%s\n", in.Key, in.Status, result.Code, result.Error)
-			log.ErrorF("Change status '%s' => '%s' Failed, Code: %d, Error: %s\n",
+			log.ErrorF("Change status '%s' => '%s' Failed, Code: %d, Error: %s",
 				in.Key, in.Status, result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%d\n", in.Key, in.Status)

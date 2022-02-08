@@ -27,8 +27,8 @@ func (c ChangeTypeInfo) getTypeOfInt() (int, error) {
 		return -1, errors.New("parse type error:" + err.Error())
 	}
 
-	if ret < 0 || ret > 1 {
-		return -1, errors.New("type must be 0 or 1")
+	if ret < 0 || ret > 2 {
+		return -1, errors.New("type must be 0 / 1 or 2")
 	}
 	return ret, nil
 }
@@ -80,7 +80,7 @@ func BatchChangeType(info BatchChangeTypeInfo) {
 			tInt, err := strconv.Atoi(t)
 			if err != nil {
 				log.ErrorF("parse type error:%v", err)
-			} else if key != "" && t != "" {
+			} else if len(key) > 0 && len(t) > 0 {
 				return object.ChangeTypeApiInfo{
 					Bucket: info.Bucket,
 					Key:    key,
@@ -96,11 +96,11 @@ func BatchChangeType(info BatchChangeTypeInfo) {
 		}
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%d\t%d\t%s\n", in.Key, in.Type, result.Code, result.Error)
-			log.ErrorF("Change Type '%s' => '%s' Failed, Code: %d, Error: %s\n",
+			log.ErrorF("Change Type '%s' => '%d' Failed, Code: %d, Error: %s",
 				in.Key, in.Type, result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%d\n", in.Key, in.Type)
-			log.ErrorF("Change Type '%s' => '%d' success\n", in.Key, in.Type)
+			log.InfoF("Change Type '%s' => '%d' success", in.Key, in.Type)
 		}
 	}).OnError(func(err error) {
 		log.ErrorF("batch change Type error:%v:", err)

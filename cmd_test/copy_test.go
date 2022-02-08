@@ -13,12 +13,12 @@ func TestCopy(t *testing.T) {
 }
 
 func TestBatchCopy(t *testing.T) {
-	batchCopyConfig := ""
+	batchConfig := ""
 	for _, key := range test.Keys {
-		batchCopyConfig += key + "\t" + "copy_" + key + "\t" + "\n"
+		batchConfig += key + "\t" + "copy_" + key + "\t" + "\n"
 	}
 
-	path, err := test.CreateFileWithContent("batch_copy.txt", batchCopyConfig)
+	path, err := test.CreateFileWithContent("batch_copy.txt", batchConfig)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}

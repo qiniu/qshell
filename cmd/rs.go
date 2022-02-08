@@ -196,10 +196,10 @@ var changeMimeCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "chgm <Bucket> <Key> <NewMimeType>",
 		Short: "Change the mime type of a file",
-		Example: `change mimetype of a.png(bucket:bucketA key:key.png) to image/jpeg
-	qshell chgm bucketA a.png image/jpeg
+		Example: `change mimetype of A.png(bucket:bucketA key:A.png) to image/jpeg
+	qshell chgm bucketA A.png image/jpeg
 and you can check result by command:
-	qshell stat bucketA a.png`,
+	qshell stat bucketA A.png`,
 		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 2 {
@@ -219,7 +219,14 @@ var changeTypeCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "chtype <Bucket> <Key> <FileType>",
 		Short: "Change the file type of a file",
-		Long:  "Change the file type of a file, file type must be in 0 or 1. And 0 means standard storage, while 1 means low frequency visit storage.",
+		Long:  `Change the file type of a file, file type must be in 0/1 or 2. 
+And 0 means standard storage, 
+while 1 means low frequency visit storage,
+while 2 means low archive storage.`,
+		Example: `change storage type of A.png(bucket:bucketA key:A.png) to archive storage
+	qshell chtype bucketA A.png 2
+and you can check result by command:
+	qshell stat bucketA A.png`,
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 2 {
