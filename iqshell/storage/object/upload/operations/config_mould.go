@@ -1,7 +1,7 @@
 package operations
 
 const uploadConfigMouldJsonString = `{
-	"log_level": "info",
+	"log_level": "debug",
 	"log_file": "",
 	"log_rotate": 10,
 	"log_stdout": "true",

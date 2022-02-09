@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
@@ -38,15 +38,15 @@ const (
 func (l *LogSetting) GetLogLevel() (logLevel int) {
 	switch l.LogLevel {
 	case DebugKey:
-		logLevel = logs.LevelDebug
+		logLevel = log.LevelDebug
 	case InfoKey:
-		logLevel = logs.LevelInfo
+		logLevel = log.LevelInfo
 	case WarnKey:
-		logLevel = logs.LevelWarning
+		logLevel = log.LevelWarning
 	case ErrorKey:
-		logLevel = logs.LevelError
+		logLevel = log.LevelError
 	default:
-		logLevel = logs.LevelInfo
+		logLevel = log.LevelDebug
 	}
 	return
 }

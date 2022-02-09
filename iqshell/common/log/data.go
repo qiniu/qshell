@@ -14,7 +14,7 @@ const (
 	LevelDebug   Level = logs.LevelDebug
 )
 
-type Level int
+type Level = int
 
 type Config struct {
 	Filename       string `json:"filename"`
