@@ -35,6 +35,7 @@ func newConveyorUploader(cfg *storage.Config) Uploader {
 }
 
 func (c *conveyor) upload(info ApiInfo) (ret ApiResult, err error) {
+	log.DebugF("conveyor upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 
 	// 检查 Host
 	if len(info.UpHost) == 0 {

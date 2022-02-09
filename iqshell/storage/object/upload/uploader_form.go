@@ -3,6 +3,7 @@ package upload
 import (
 	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
 )
@@ -20,6 +21,8 @@ func newFromUploader(cfg *storage.Config, ext *storage.PutExtra) Uploader {
 }
 
 func (f *formUploader) upload(info ApiInfo) (ret ApiResult, err error) {
+	log.DebugF("form upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
+
 	file, err := os.Open(info.FilePath)
 	if err != nil {
 		err = errors.New("form upload: open file error:" + err.Error())

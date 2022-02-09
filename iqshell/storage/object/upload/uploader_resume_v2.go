@@ -19,6 +19,7 @@ func newResumeV2Uploader(cfg *storage.Config) Uploader {
 }
 
 func (r *resumeV2Uploader) upload(info ApiInfo) (ret ApiResult, err error) {
+	log.DebugF("resume v2 upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 
 	file, err := os.Open(info.FilePath)
 	if err != nil {

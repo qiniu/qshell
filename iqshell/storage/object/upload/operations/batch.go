@@ -214,7 +214,7 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 			err)
 	}).Start()
 
-	log.Alert("-------------- Upload ApiResult --------------")
+	log.Alert("--------------- Upload Result ---------------")
 	log.AlertF("%20s%10d", "Total:", totalFileCount)
 	log.AlertF("%20s%10d", "Success:", successFileCount)
 	log.AlertF("%20s%10d", "Failure:", failureFileCount)
