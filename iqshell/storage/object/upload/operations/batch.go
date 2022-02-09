@@ -57,15 +57,21 @@ func BatchUpload(info BatchUploadInfo) {
 	dbPath := filepath.Join(cachePath, jobId+".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
 
-	needRescanLocal := uploadConfig.IsRescanLocal()
+	// 扫描本地文件
+	needScanLocal := false
 	_, localFileStatErr := os.Stat(uploadConfig.FileList)
 	if uploadConfig.FileList != "" && localFileStatErr == nil {
 		info.GroupInfo.InputFile = uploadConfig.FileList
 	} else {
 		info.GroupInfo.InputFile = filepath.Join(cachePath, jobId+".cache")
-		needRescanLocal = true
+		if _, statErr := os.Stat(info.GroupInfo.InputFile); statErr == nil {
+			//file exists
+			needScanLocal = uploadConfig.IsRescanLocal()
+		} else {
+			needScanLocal = true
+		}
 	}
-	if needRescanLocal {
+	if needScanLocal {
 		_, err := utils.DirCache(uploadConfig.SrcDir, info.GroupInfo.InputFile)
 		if err != nil {
 			log.ErrorF("create dir files cache error:%v", err)
