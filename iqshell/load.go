@@ -12,8 +12,10 @@ import (
 	"runtime"
 )
 
-type Runnable interface {
-	Run()
+var stdColorful = true
+
+func SetStdoutColorful(colorful bool) {
+	stdColorful = colorful
 }
 
 type Config struct {
@@ -83,12 +85,13 @@ func Load(cfg Config) error {
 		return err
 	}
 
-	ls := workspace.GetConfig().GetLogConfig()
+	ls := workspace.GetLogConfig()
 	_ = log.LoadFileLogger(log.Config{
 		Filename:       ls.LogFile,
 		Level:          ls.GetLogLevel(),
 		Daily:          true,
-		StdOutColorful: ls.IsLogStdout(),
+		StdOutColorful: stdColorful,
+		EnableStdout:   ls.IsLogStdout(),
 		MaxDays:        ls.LogRotate,
 	})
 

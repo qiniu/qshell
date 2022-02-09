@@ -74,18 +74,6 @@ func (c *Config) Merge(from *Config) {
 	}
 }
 
-func (c *Config) GetLogConfig() *LogSetting {
-	if c.Up.LogSetting != nil {
-		return c.Up.LogSetting
-	}
-
-	if c.Download.LogSetting != nil {
-		return c.Download.LogSetting
-	}
-
-	return nil
-}
-
 func (c *Config) String() string {
 	if desc, err := json.MarshalIndent(c, "", "\t"); err == nil {
 		return string(desc)

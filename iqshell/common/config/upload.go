@@ -160,7 +160,7 @@ func (up *Up) merge(from *Up) {
 }
 
 func (up *Up) JobId() string {
-	return utils.Md5Hex(fmt.Sprintf("%s:%s", up.SrcDir, up.Bucket))
+	return utils.Md5Hex(fmt.Sprintf("%s:%s:%s", up.SrcDir, up.Bucket, up.FileList))
 }
 
 func (up *Up) GetLogLevel() int {

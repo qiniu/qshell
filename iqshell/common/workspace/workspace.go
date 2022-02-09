@@ -7,6 +7,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"path/filepath"
 )
 
 const (
@@ -34,6 +35,30 @@ var (
 // GetConfig 获取之前需要先 Load
 func GetConfig() *config.Config {
 	return cfg
+}
+
+func GetLogConfig() *config.LogSetting {
+	if cfg != nil && cfg.Up != nil && cfg.Up.LogSetting != nil {
+		if len(cfg.Up.LogSetting.LogFile) == 0 {
+			cachePath := UploadCachePath()
+			if len(cachePath) > 0 {
+				cfg.Up.LogSetting.LogFile = filepath.Join(cachePath, cfg.Up.JobId())
+			}
+		}
+		return cfg.Up.LogSetting
+	}
+
+	if cfg != nil && cfg.Download != nil && cfg.Download.LogSetting != nil {
+		if len(cfg.Download.LogSetting.LogFile) == 0 {
+			cachePath := DownloadCachePath()
+			if len(cachePath) > 0 {
+				cfg.Up.LogSetting.LogFile = filepath.Join(cachePath, cfg.Up.JobId())
+			}
+		}
+		return cfg.Download.LogSetting
+	}
+
+	return nil
 }
 
 func GetStorageConfig() *storage.Config {

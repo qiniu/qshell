@@ -1,7 +1,6 @@
 package operations
 
 import (
-	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
@@ -53,11 +52,8 @@ func BatchUpload(info BatchUploadInfo) {
 			min_upload_thread_count, max_upload_thread_count, info.GroupInfo.Info.WorkCount)
 	}
 
-	cachePath := uploadConfig.RecordRoot
-	if len(cachePath) == 0 {
-		cachePath = workspace.GetWorkspace()
-	}
-	jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket, uploadConfig.FileList))
+	jobId := uploadConfig.JobId()
+	cachePath := workspace.UploadCachePath()
 	cachePath = filepath.Join(cachePath, "qupload", jobId)
 	if cErr := os.MkdirAll(cachePath, os.ModePerm); cErr != nil {
 		log.ErrorF("upload create cache dir error:%v", cErr)
@@ -66,23 +62,6 @@ func BatchUpload(info BatchUploadInfo) {
 
 	dbPath := filepath.Join(cachePath, jobId+".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
-
-	logFile := uploadConfig.LogFile
-	if len(logFile) == 0 {
-		logFile = filepath.Join(cachePath, jobId)
-	}
-	logErr := log.LoadFileLogger(log.Config{
-		Filename:       logFile,
-		Level:          uploadConfig.GetLogLevel(),
-		Daily:          true,
-		EnableStdout:   data.Bool(uploadConfig.LogStdout),
-		StdOutColorful: false,
-		MaxDays:        uploadConfig.LogRotate,
-	})
-	if logErr != nil {
-		log.ErrorF("upload set log file error:%v", logErr)
-		return
-	}
 
 	needRescanLocal := uploadConfig.IsRescanLocal()
 	_, localFileStatErr := os.Stat(uploadConfig.FileList)
@@ -241,14 +220,14 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 			err)
 	}).Start()
 
-	log.Alert("-------Upload ApiResult-------")
+	log.Alert("-------------- Upload ApiResult --------------")
 	log.AlertF("%20s%10d", "Total:", totalFileCount)
 	log.AlertF("%20s%10d", "Success:", successFileCount)
 	log.AlertF("%20s%10d", "Failure:", failureFileCount)
 	log.AlertF("%20s%10d", "NotOverwrite:", notOverwriteCount)
 	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
 	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
-	log.AlertF("-----------------------------")
+	log.AlertF("---------------------------------------------")
 	log.AlertF("See upload log at path:%s", uploadConfig.LogFile)
 
 	if failureFileCount > 0 {

@@ -14,7 +14,7 @@ type LogSetting struct {
 }
 
 func (l *LogSetting) IsLogStdout() bool {
-	return l.LogStdout == data.TrueString
+	return l.LogStdout != data.FalseString
 }
 
 func (l *LogSetting) merge(from *LogSetting) {
