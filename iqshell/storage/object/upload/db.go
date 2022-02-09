@@ -30,7 +30,7 @@ func (d *dbHandler) init() (err error) {
 	return
 }
 
-// 当数据库中不再相应文件信息 或 文件信息不匹配 则返回 error, (exist, match, error)
+// 当数据库中不存在相应文件信息 或 文件信息不匹配 则返回 error, (exist, match, error)
 func (d *dbHandler) checkInfoOfDB() (bool, bool, error) {
 	if d.dbHandler == nil {
 		return false, false, errors.New("upload db: no set upload db path")
@@ -46,12 +46,12 @@ func (d *dbHandler) checkInfoOfDB() (bool, bool, error) {
 	// db 数据：服务端文件修改时间
 	fileUpdateTime, err := strconv.ParseInt(items[0], 10, 64)
 	if err != nil {
-		return true, false, errors.New("upload db: get file modify time error from db, error:" + err.Error())
+		return true, false, errors.New("db check: get file modify time error from db, error:" + err.Error())
 	}
 
-	// 验证修改时间
+	// 验证修改时间，修改时间一致则说明文件为同一个文件
 	if fileUpdateTime != d.FileUpdateTime {
-		log.WarningF("upload db: local file has update, updateTime: %d|%d", d.FileUpdateTime, fileUpdateTime)
+		log.WarningF("db check: local file has update, updateTime: %d|%d", d.FileUpdateTime, fileUpdateTime)
 		return true, false, nil
 	} else {
 		return true, true, nil

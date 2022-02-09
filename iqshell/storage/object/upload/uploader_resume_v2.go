@@ -3,6 +3,7 @@ package upload
 import (
 	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
 )
@@ -31,8 +32,10 @@ func (r *resumeV2Uploader) upload(info ApiInfo) (ret ApiResult, err error) {
 		return
 	}
 
+	token := info.TokenProvider()
+	log.DebugF("upload token:%s", token)
 	up := storage.NewResumeUploaderV2(r.cfg)
-	err = up.Put(workspace.GetContext(), &ret, info.TokenProvider(), info.SaveKey, file, fileStatus.Size(), &storage.RputV2Extra{
+	err = up.Put(workspace.GetContext(), &ret, token, info.SaveKey, file, fileStatus.Size(), &storage.RputV2Extra{
 		Recorder:   nil,
 		Metadata:   nil,
 		CustomVars: nil,

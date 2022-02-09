@@ -30,7 +30,7 @@ func OpenDB(filePath string) (*DB, error) {
 		return dbMap[filePath], nil
 	} else {
 		dbDir := filepath.Dir(filePath)
-		err := os.MkdirAll(dbDir, 0775)
+		err := os.MkdirAll(dbDir, os.ModePerm)
 		if err != nil {
 			return nil, errors.New("open db: make file error:" + err.Error())
 		}

@@ -29,6 +29,20 @@ var uploadCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
+var uploadConfigMouldCmdBuilder = func() *cobra.Command {
+	info := operations.BatchUploadConfigMouldInfo{}
+	cmd := &cobra.Command{
+		Use:   "qupload-config-mould",
+		Short: "Get config mould of batch upload ",
+		Args:  cobra.ExactArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			loadConfig()
+			operations.BatchUploadConfigMould(info)
+		},
+	}
+	return cmd
+}
+
 var upload2CmdBuilder = func() *cobra.Command {
 	var (
 		resumableAPIV2 = false
@@ -187,6 +201,7 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 func init() {
 	rootCmd.AddCommand(
 		uploadCmdBuilder(),
+		uploadConfigMouldCmdBuilder(),
 		upload2CmdBuilder(),
 		syncCmdBuilder(),
 		formUploadCmdBuilder(),

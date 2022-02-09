@@ -43,6 +43,7 @@ func TestResumeUpload(t *testing.T) {
 
 func TestQUpload(t *testing.T) {
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
+	fileSizeList = []int{1, 2}
 	for _, size := range fileSizeList {
 		test.CreateTempFile(size)
 	}
@@ -56,6 +57,8 @@ func TestQUpload(t *testing.T) {
 	"bucket": "%s",
 	"src_dir": "%s",
 	"overwrite": "true",
+	"check_exists": "true",
+	"check_size": "true",
 	"work_count": 4
 }`, test.Bucket, fileDir)
 	cfgFile, err := test.CreateFileWithContent("upload_cfg.json", cfgContent)

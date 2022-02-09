@@ -31,6 +31,8 @@ type BatchUploadInfo struct {
 // BatchUpload 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中;
 // 可以设置多线程上传，默认的线程区间在[iqshell.min_upload_thread_count, iqshell.max_upload_thread_count]
 func BatchUpload(info BatchUploadInfo) {
+	info.GroupInfo.Force = true
+
 	info.GroupInfo.CheckData()
 	uploadConfig := workspace.GetConfig().Up
 	if err := uploadConfig.Check(); err != nil {
@@ -56,17 +58,37 @@ func BatchUpload(info BatchUploadInfo) {
 		cachePath = workspace.GetWorkspace()
 	}
 	jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", uploadConfig.SrcDir, uploadConfig.Bucket, uploadConfig.FileList))
-	cachePath = filepath.Join(cachePath, "qupload")
+	cachePath = filepath.Join(cachePath, "qupload", jobId)
+	if cErr := os.MkdirAll(cachePath, os.ModePerm); cErr != nil {
+		log.ErrorF("upload create cache dir error:%v", cErr)
+		return
+	}
 
-	dbPath := filepath.Join(cachePath, jobId, ".ldb")
+	dbPath := filepath.Join(cachePath, jobId+".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
+
+	logFile := uploadConfig.LogFile
+	if len(logFile) == 0 {
+		logFile = filepath.Join(cachePath, jobId)
+	}
+	logErr := log.LoadFileLogger(log.Config{
+		Filename:       logFile,
+		Level:          uploadConfig.GetLogLevel(),
+		Daily:          true,
+		StdOutColorful: false,
+		MaxDays:        uploadConfig.LogRotate,
+	})
+	if logErr != nil {
+		log.ErrorF("upload set log file error:%v", logErr)
+		return
+	}
 
 	needRescanLocal := uploadConfig.IsRescanLocal()
 	_, localFileStatErr := os.Stat(uploadConfig.FileList)
 	if uploadConfig.FileList != "" && localFileStatErr == nil {
 		info.GroupInfo.InputFile = uploadConfig.FileList
 	} else {
-		info.GroupInfo.InputFile = filepath.Join(cachePath, jobId, ".cache")
+		info.GroupInfo.InputFile = filepath.Join(cachePath, jobId+".cache")
 		needRescanLocal = true
 	}
 	if needRescanLocal {
@@ -231,4 +253,11 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 	if failureFileCount > 0 {
 		os.Exit(data.StatusError)
 	}
+}
+
+type BatchUploadConfigMouldInfo struct {
+}
+
+func BatchUploadConfigMould(info BatchUploadConfigMouldInfo) {
+	log.Alert(uploadConfigMouldJsonString)
 }

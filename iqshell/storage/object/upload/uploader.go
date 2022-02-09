@@ -114,6 +114,7 @@ func Upload(info ApiInfo) (res ApiResult, err error) {
 			Bucket:     info.ToBucket,
 			Key:        info.SaveKey,
 			FilePath:   info.FilePath,
+			FileSize:   info.FileSize,
 			CheckExist: info.CheckExist,
 			CheckHash:  info.CheckHash,
 			CheckSize:  info.CheckSize,
@@ -122,8 +123,7 @@ func Upload(info ApiInfo) (res ApiResult, err error) {
 		// 检查服务端的数据
 		exist, match, err = checker.check()
 		if err != nil {
-			err = errors.New("upload server check error:" + err.Error())
-			return
+			log.WarningF("upload server check error:%v", err.Error())
 		}
 	} else {
 		// 检查本地数据

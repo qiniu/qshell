@@ -25,8 +25,8 @@ func (c *serverChecker) check() (exist, match bool, err error) {
 		Key:    c.Key,
 	})
 	if err != nil {
-		err = fmt.Errorf("upoad check hash: get file [%s:%s] stat error, %s", c.Bucket, c.Key, err)
-		return
+		err = fmt.Errorf("get file status, %s", err)
+		return false, false, err
 	}
 
 	checkHash := c.CheckHash
@@ -40,18 +40,19 @@ func (c *serverChecker) check() (exist, match bool, err error) {
 	} else if c.CheckSize {
 		return c.checkServerSize(fileServerStatus)
 	} else {
-		return true, true, nil
+		//return true, true, nil
+		return c.checkServerSize(fileServerStatus)
 	}
 }
 
 func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool, bool, error) {
 	file, err := os.Open(c.FilePath)
 	if err != nil {
-		return false, false, fmt.Errorf("upoad check hash: open local file:%s error, %s", c.FilePath, err)
+		return true, false, fmt.Errorf("check hash: open local file:%s error, %s", c.FilePath, err)
 	}
 	defer func() {
 		if e := file.Close(); e != nil {
-			log.ErrorF("upoad check hash: close file:%s error:%v", c.FilePath, e)
+			log.ErrorF("check hash: close file:%s error:%v", c.FilePath, e)
 		}
 	}()
 
@@ -59,12 +60,12 @@ func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool,
 	if utils.IsSignByEtagV2(fileServerStatus.Hash) {
 		localHash, err = utils.EtagV2(file, fileServerStatus.Parts)
 		if err != nil {
-			return false, false, fmt.Errorf("upoad check hash: get etag v2:%s error, %s", c.FilePath, err)
+			return true, false, fmt.Errorf("check hash: get etag v2:%s error, %s", c.FilePath, err)
 		}
 	} else {
 		localHash, err = utils.EtagV1(file)
 		if err != nil {
-			return false, false, fmt.Errorf("upoad check hash: get etag v1:%s error, %s", c.FilePath, err)
+			return true, false, fmt.Errorf("check hash: get etag v1:%s error, %s", c.FilePath, err)
 		}
 	}
 
