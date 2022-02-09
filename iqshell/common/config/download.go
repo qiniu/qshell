@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"strings"
 )
 
@@ -75,4 +77,8 @@ func (d *Download) merge(from *Download) {
 		}
 		d.Retry.merge(from.Retry)
 	}
+}
+
+func (d *Download) JobId() string {
+	return utils.Md5Hex(fmt.Sprintf("%s:%s:%s", d.DestDir, d.Bucket, d.KeyFile))
 }

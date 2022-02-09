@@ -54,12 +54,6 @@ func BatchUpload(info BatchUploadInfo) {
 
 	jobId := uploadConfig.JobId()
 	cachePath := workspace.UploadCachePath()
-	cachePath = filepath.Join(cachePath, "qupload", jobId)
-	if cErr := os.MkdirAll(cachePath, os.ModePerm); cErr != nil {
-		log.ErrorF("upload create cache dir error:%v", cErr)
-		return
-	}
-
 	dbPath := filepath.Join(cachePath, jobId+".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
 
@@ -228,7 +222,7 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
 	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("---------------------------------------------")
-	log.AlertF("See upload log at path:%s", uploadConfig.LogFile)
+	log.AlertF("See upload log at path:%s \n\n", uploadConfig.LogFile)
 
 	if failureFileCount > 0 {
 		os.Exit(data.StatusError)

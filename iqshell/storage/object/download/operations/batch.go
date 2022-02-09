@@ -1,12 +1,10 @@
 package operations
 
 import (
-	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
@@ -36,13 +34,9 @@ func BatchDownload(info BatchDownloadInfo) {
 		return
 	}
 
-	jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", downloadCfg.DestDir, downloadCfg.Bucket, downloadCfg.KeyFile))
-	dbPath := ""
-	if len(downloadCfg.RecordRoot) == 0 {
-		dbPath = filepath.Join(workspace.GetWorkspace(), "download", jobId, ".list")
-	} else {
-		dbPath = filepath.Join(downloadCfg.RecordRoot, "download", jobId, ".list")
-	}
+	jobId := downloadCfg.JobId()
+	cachePath := workspace.DownloadCachePath()
+	dbPath := filepath.Join(cachePath, jobId, ".list")
 	log.InfoF("download db dir:%s", dbPath)
 
 	exporter, err := export.NewFileExport(export.FileExporterConfig{
