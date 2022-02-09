@@ -8,7 +8,6 @@ import (
 var (
 	progressStdoutLog = new(logs.BeeLogger)
 	progressFileLog   = new(logs.BeeLogger)
-	resultLog         = new(logs.BeeLogger)
 )
 
 func Debug(a ...interface{}) {

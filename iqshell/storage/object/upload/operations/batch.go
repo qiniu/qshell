@@ -75,6 +75,7 @@ func BatchUpload(info BatchUploadInfo) {
 		Filename:       logFile,
 		Level:          uploadConfig.GetLogLevel(),
 		Daily:          true,
+		EnableStdout:   data.Bool(uploadConfig.LogStdout),
 		StdOutColorful: false,
 		MaxDays:        uploadConfig.LogRotate,
 	})

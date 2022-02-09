@@ -20,8 +20,9 @@ type Config struct {
 	Filename       string `json:"filename"`
 	Level          int    `json:"level"`
 	Daily          bool   `json:"daily"`
-	StdOutColorful bool   `json:"color"`
 	MaxDays        int    `json:"maxdays"`
+	StdOutColorful bool   `json:"color"`
+	EnableStdout   bool   `json:"-"`
 }
 
 func (c *Config) ToJson() string {

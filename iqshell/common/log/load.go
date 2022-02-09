@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/prometheus/common/log"
 )
 
 func LoadConsole(cfg Config) (err error) {
@@ -22,12 +23,16 @@ func LoadConsole(cfg Config) (err error) {
 
 func LoadFileLogger(cfg Config) (err error) {
 	if len(cfg.Filename) > 0 {
-		err = progressFileLog.SetLogger(logs.AdapterFile, cfg.ToJson())
+		err = progressStdoutLog.SetLogger(logs.AdapterFile, cfg.ToJson())
 		if err != nil {
-			return fmt.Errorf("progressFileLog set logger error:%v", err)
+			err = fmt.Errorf("set file logger error:%v", err)
 		}
 	}
 
-	_ = progressStdoutLog.DelLogger(logs.AdapterConsole)
+	if !cfg.EnableStdout {
+		if dErr := progressStdoutLog.DelLogger(adapterConsole); dErr != nil {
+			log.Warnf("disable stdout error:%v", dErr)
+		}
+	}
 	return
 }

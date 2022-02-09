@@ -19,6 +19,10 @@ func GetBoolString(value bool) string {
 	}
 }
 
+func Bool(value string) bool {
+	return value == TrueString
+}
+
 const (
 	StatusOK         = iota // process success
 	StatusError             // process error
