@@ -45,13 +45,13 @@ var uploadConfigMouldCmdBuilder = func() *cobra.Command {
 
 var upload2CmdBuilder = func() *cobra.Command {
 	var (
-		resumableAPIV2 = false
-		ignoreDir      = false
-		overwrite      = false
-		checkExists    = false
-		checkHash      = false
-		checkSize      = false
-		rescanLocal    = false
+		resumeAPIV2 = false
+		ignoreDir   = false
+		overwrite   = false
+		checkExists = false
+		checkHash   = false
+		checkSize   = false
+		rescanLocal = false
 	)
 	info := operations.BatchUploadInfo{}
 	cmd := &cobra.Command{
@@ -61,7 +61,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				cfg.UploadConfigFile = args[0]
 			}
-			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumableAPIV2)
+			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumeAPIV2)
 			cfg.CmdCfg.Up.IgnoreDir = data.GetBoolString(ignoreDir)
 			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
 			cfg.CmdCfg.Up.CheckExists = data.GetBoolString(checkExists)
@@ -77,7 +77,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 	cmd.Flags().StringVar(&info.GroupInfo.OverrideExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
 	cmd.Flags().IntVar(&info.GroupInfo.WorkCount, "thread-count", 1, "multiple thread count")
 
-	cmd.Flags().BoolVarP(&resumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().BoolVarP(&resumeAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&ignoreDir, "ignore-dir", false, "ignore the dir in the dest file key")
 	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().BoolVar(&checkExists, "check-exists", false, "check file key whether in bucket before upload")
