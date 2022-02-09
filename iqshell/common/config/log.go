@@ -25,7 +25,7 @@ func (l *LogSetting) merge(from *LogSetting) {
 	l.LogLevel = utils.GetNotEmptyStringIfExist(l.LogLevel, from.LogLevel)
 	l.LogFile = utils.GetNotEmptyStringIfExist(l.LogFile, from.LogFile)
 	l.LogRotate = utils.GetNotZeroIntIfExist(l.LogRotate, from.LogRotate)
-	l.LogLevel = utils.GetNotEmptyStringIfExist(l.LogLevel, from.LogLevel)
+	l.LogStdout = utils.GetNotEmptyStringIfExist(l.LogStdout, from.LogStdout)
 }
 
 const (
