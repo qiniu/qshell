@@ -17,6 +17,7 @@ type Config struct {
 	DDebugEnable       bool   // go SDK client 和命令行开启调试模式
 	ConfigFilePath     string // 配置文件路径，用户可以指定配置文件
 	Local              bool   // 是否使用当前文件夹作为工作区
+	StdoutColorful     bool   // 控制台输出是否多彩
 	UploadConfigFile   string // 上传配置文件
 	DownloadConfigFile string // 下载配置文件
 	CmdCfg             config.Config
@@ -36,7 +37,7 @@ func Load(cfg Config) error {
 	// 加载本地输出
 	_ = log.LoadConsole(log.Config{
 		Level:          logLevel,
-		StdOutColorful: stdColorful,
+		StdOutColorful: cfg.StdoutColorful,
 	})
 
 	// 获取工作目录
@@ -84,7 +85,7 @@ func Load(cfg Config) error {
 		Filename:       ls.LogFile,
 		Level:          ls.GetLogLevel(),
 		Daily:          true,
-		StdOutColorful: stdColorful,
+		StdOutColorful: false,
 		EnableStdout:   ls.IsLogStdout(),
 		MaxDays:        ls.LogRotate,
 	})

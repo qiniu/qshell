@@ -3,7 +3,6 @@ package test
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/cmd"
-	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
 	"os/exec"
@@ -61,7 +60,6 @@ func (t *testFlow) runByCommand() error {
 func (t *testFlow) runByDebug() error {
 	log.SetStdout(newLineWriter(t.resultHandler))
 	log.SetStderr(newLineWriter(t.errorHandler))
-	iqshell.SetStdoutColorful(false)
 	args := []string{"qshell"}
 	os.Args = append(args, t.args...)
 	cmd.Execute()
