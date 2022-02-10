@@ -1,11 +1,9 @@
 # 简介
-
 `abfetch` 使用异步抓取接口抓取网络资源到七牛存储空间。
 
 参考文档：[异步抓取 (async fetch)](https://developer.qiniu.com/kodo/api/4097/asynch-fetch)
 
 # 格式
-
 ```
 qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <CallbackUrl>][-e <FailureList>][-t <DownloadHostHeader>][-g <StorageType>][-s <SuccessList>][-c <ThreadCount>] <Bucket>
 ```
@@ -30,7 +28,6 @@ qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <Callback
 
 
 # 例子
-
 假如我有3个资源要抓取，地址分别为：
 http://test.com/test1.txt
 http://test.com/test2.txt
@@ -38,8 +35,7 @@ http://test.com/test3.txt
 
 需要抓取这三个资源保存在七牛存储空间"test"中
 
-第一步：
-
+#### 第一步：
 在当前目录下创建名为"urls.txt"的文件， 文件内容为
 
 ```
@@ -49,20 +45,16 @@ http://test.com/test3.txt
 ```
 每行一个地址 。
 
-
-第二步:
-
+#### 第二步:
 使用如下的命令就可以抓取资源到存储"test"中
 ```
 $ qshell abfetch -i urls.txt test
 ```
 
-
 但是这样我们不知道哪些成功了，哪些抓取失败了，可以使用选项-e 导出失败列表到文件"failure.txt"中:
 ```
 $ qshell abfetch -i urls.txt -e failure.txt test
 ```
-
 
 如果要提高请求的并发量， 可以使用选项-c 指定提交的线程数, 下面的命令指定线程数为100:
 ```
@@ -71,7 +63,6 @@ $ qshell abfetch -i urls.txt -e failure.txt -c 100 test
 线程数只能决定请求接口后台服务器的快慢， 提交的请求会到服务器处理队列中， 如果队列中有很多要抓取的资源，抓取速度不一定会提高，所以适当设置线程数
 
 # 文件大小
-
 异步接口暂时没办法判断是否抓取成功， 当异步接口返回的数据wait是-1时，表示抓取过这个文件，这时程序会用stat接口去存储获取文件的信息，如果可以获取到，说明抓取成功了；如果wait为-1， 重试三次stat都失败，那么认为抓取失败。
 
 获取异步接口的返回结果是通过轮训进行的， 每次轮训的时间间隔取决于文件的大小， 大的文件时间间隔长点，小的文件时间间隔短点。
