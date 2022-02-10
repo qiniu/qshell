@@ -15,7 +15,7 @@ var domainsCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.ListDomains(info)
 		},
 	}

@@ -15,7 +15,7 @@ var preFopStatusCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Id = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.PreFopStatus(info)
 		},
 	}
@@ -34,7 +34,7 @@ var preFopCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 				info.Fops = args[2]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.PreFop(info)
 		},
 	}

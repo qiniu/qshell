@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
@@ -8,15 +9,14 @@ import (
 func asyncFetchCmdBuilder() *cobra.Command {
 	info := operations.BatchAsyncFetchInfo{}
 	cmd := &cobra.Command{
-		Use:   "abfetch <Bucket> [-i <urlList>]",
+		Use:   docs.ABFetch + " <Bucket> [-i <urlList>]",
 		Short: "Async Batch fetch network resources to qiniu Bucket",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			info.GroupInfo.ItemSeparate = "\t" // 此处用户不可定义
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, &info)
 			operations.BatchAsyncFetch(info)
 		},
 	}
@@ -47,7 +47,7 @@ func asyncCheckCmdBuilder() *cobra.Command {
 				info.Bucket = args[0]
 				info.Id = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.CheckAsyncFetchStatus(info)
 		},
 	}

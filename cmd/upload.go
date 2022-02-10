@@ -16,7 +16,7 @@ var uploadCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				cfg.UploadConfigFile = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.BatchUpload(info)
 		},
 	}
@@ -36,7 +36,7 @@ var uploadConfigMouldCmdBuilder = func() *cobra.Command {
 		Short: "Get config mould of batch upload ",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			loadConfig()
+			prepare(cmd, nil)
 			operations.BatchUploadConfigMould(info)
 		},
 	}
@@ -68,7 +68,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 			cfg.CmdCfg.Up.CheckHash = data.GetBoolString(checkHash)
 			cfg.CmdCfg.Up.CheckSize = data.GetBoolString(checkSize)
 			cfg.CmdCfg.Up.RescanLocal = data.GetBoolString(rescanLocal)
-			loadConfig()
+			prepare(cmd, nil)
 			operations.BatchUpload(info)
 		},
 	}
@@ -121,7 +121,7 @@ var syncCmdBuilder = func() *cobra.Command {
 				info.FilePath = args[0]
 				info.Bucket = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.UploadFile(info)
 		},
 	}
@@ -146,7 +146,7 @@ var formUploadCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 				info.FilePath = args[2]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.UploadFile(info)
 		},
 	}
@@ -180,7 +180,7 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 				info.FilePath = args[2]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.UploadFile(info)
 		},
 	}

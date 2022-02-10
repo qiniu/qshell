@@ -26,7 +26,7 @@ have already in local disk and need to skip download or not.`,
 				LogRotate: 0,
 				LogStdout: data.TrueString,
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.BatchDownload(info)
 		},
 	}
@@ -45,7 +45,7 @@ var getCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.DownloadFile(info)
 		},
 	}

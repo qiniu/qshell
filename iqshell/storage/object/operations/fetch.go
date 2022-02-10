@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -101,6 +102,13 @@ type BatchAsyncFetchInfo struct {
 	CallbackBodyType string
 	CallbackHost     string // 回调时使用的HOST
 	FileType         int    // 文件存储类型， 0 标准存储， 1 低频存储
+}
+
+func (info *BatchAsyncFetchInfo)Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	return nil
 }
 
 func BatchAsyncFetch(info BatchAsyncFetchInfo) {

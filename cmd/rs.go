@@ -24,7 +24,7 @@ var listBucketCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.List(info)
 		},
 	}
@@ -45,7 +45,7 @@ var listBucketCmd2Builder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.List(info)
 		},
 	}
@@ -74,7 +74,7 @@ var statCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.Status(info)
 		},
 	}
@@ -93,7 +93,7 @@ var forbiddenCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.ForbiddenObject(info)
 		},
 	}
@@ -112,7 +112,7 @@ var deleteCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.Delete(info)
 		},
 	}
@@ -131,7 +131,7 @@ var deleteAfterCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 				info.AfterDays = args[2]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.Delete(info)
 		},
 	}
@@ -153,7 +153,7 @@ var moveCmdBuilder = func() *cobra.Command {
 			if len(info.DestKey) == 0 {
 				info.DestKey = info.SourceKey
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.Move(info)
 		},
 	}
@@ -182,7 +182,7 @@ you can check if B.png has exists by:
 			if len(info.DestKey) == 0 {
 				info.DestKey = info.SourceKey
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.Copy(info)
 		},
 	}
@@ -207,7 +207,7 @@ and you can check result by command:
 				info.Key = args[1]
 				info.Mime = args[2]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.ChangeMime(info)
 		},
 	}
@@ -234,7 +234,7 @@ and you can check result by command:
 				info.Key = args[1]
 				info.Type = args[2]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.ChangeType(info)
 		},
 	}
@@ -254,7 +254,7 @@ var privateUrlCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Deadline = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.PrivateUrl(info)
 		},
 	}
@@ -273,7 +273,7 @@ var saveAsCmdBuilder = func() *cobra.Command {
 				info.SaveBucket = args[1]
 				info.SaveKey = args[2]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.SaveAs(info)
 		},
 	}
@@ -291,7 +291,7 @@ var mirrorUpdateCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.MirrorUpdate(info)
 		},
 	}
@@ -309,7 +309,7 @@ var fetchCmdBuilder = func() *cobra.Command {
 				info.FromUrl = args[0]
 				info.Bucket = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.Fetch(info)
 		},
 	}

@@ -15,7 +15,7 @@ var rpcEncodeCmdBuilder = func() *cobra.Command {
 		SuggestFor: []string{"rpc"},
 		Run: func(cmd *cobra.Command, args []string) {
 			info.Params = args
-			loadConfig()
+			prepare(cmd, nil)
 			operations.RpcEncode(info)
 		},
 	}
@@ -30,7 +30,7 @@ var rpcDecodeCmdBuilder = func() *cobra.Command {
 		SuggestFor: []string{"rpc"},
 		Run: func(cmd *cobra.Command, args []string) {
 			info.Params = args
-			loadConfig()
+			prepare(cmd, nil)
 			operations.RpcDecode(info)
 		},
 	}
@@ -49,7 +49,7 @@ var base64EncodeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Data = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Base64Encode(info)
 		},
 	}
@@ -69,7 +69,7 @@ var base64DecodeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Data = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Base64Decode(info)
 		},
 	}
@@ -87,7 +87,7 @@ var ts2dCmdCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Timestamp2Date(info)
 		},
 	}
@@ -104,7 +104,7 @@ var tms2dCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.TimestampMilli2Date(info)
 		},
 	}
@@ -121,7 +121,7 @@ var tns2dCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.TimestampNano2Date(info)
 		},
 	}
@@ -138,7 +138,7 @@ var d2tsCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Date2Timestamp(info)
 		},
 	}
@@ -155,7 +155,7 @@ var urlEncodeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.UrlEncode(info)
 		},
 	}
@@ -172,7 +172,7 @@ var urlDecodeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.UrlDecode(info)
 		},
 	}
@@ -189,7 +189,7 @@ var etagCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.FilePath = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.CreateEtag(info)
 		},
 	}
@@ -210,7 +210,7 @@ var unzipCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.UnzipPath = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Unzip(info)
 		},
 	}
@@ -228,7 +228,7 @@ var reqIdCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.ReqId = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.DecodeReqId(info)
 		},
 	}
@@ -243,7 +243,7 @@ var IpCmdBuilder = func() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			info.Ips = args
-			loadConfig()
+			prepare(cmd, nil)
 			operations.IpQuery(info)
 		},
 	}
@@ -275,7 +275,7 @@ var QboxTokenCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.CreateQBoxToken(info)
 		},
 	}
@@ -298,7 +298,7 @@ var QiniuTokenCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.CreateQiniuToken(info)
 		},
 	}
@@ -322,7 +322,7 @@ var UploadTokenCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.CreateUploadToken(info)
 		},
 	}
@@ -344,7 +344,7 @@ var dirCacheCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Dir = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.DirCache(info)
 		},
 	}

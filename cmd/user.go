@@ -20,10 +20,10 @@ var accountCmdBuilder = func() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				loadConfig()
+				prepare(cmd, nil)
 				operations.Current()
 			} else if len(args) == 3 {
-				loadConfig()
+				prepare(cmd, nil)
 				operations.Add(operations.AddInfo{
 					Name:      args[2],
 					AccessKey: args[0],
@@ -43,6 +43,9 @@ var userCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "user",
 		Short: "Manage users",
+		Run: func(cmd *cobra.Command, args []string) {
+			prepare(cmd, nil)
+		},
 	}
 	return cmd
 }
@@ -55,7 +58,7 @@ var userLsCmdBuilder = func() *cobra.Command {
 		Short:   "List all user registered",
 		Example: `qshell user ls`,
 		Run: func(cmd *cobra.Command, args []string) {
-			loadConfig()
+			prepare(cmd, nil)
 			operations.List(info)
 		},
 	}
@@ -72,7 +75,7 @@ var userCurrentCmdBuilder = func() *cobra.Command {
 		Short:   "get current user info",
 		Example: `qshell user current`,
 		Run: func(cmd *cobra.Command, args []string) {
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Current()
 		},
 	}
@@ -90,7 +93,7 @@ var userLookupCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.LookUp(info)
 		},
 	}
@@ -113,7 +116,7 @@ var userAddCmdBuilder = func() *cobra.Command {
 				cmdInfo.SecretKey = args[1]
 				cmdInfo.Name = args[2]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Add(cmdInfo)
 		},
 	}
@@ -137,7 +140,7 @@ var userChCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Change(info)
 		},
 	}
@@ -152,7 +155,7 @@ var userCleanCmdBuilder = func() *cobra.Command {
 		Long:    "Remove all users from inner dbs.",
 		Example: `qshell user clean`,
 		Run: func(cmd *cobra.Command, args []string) {
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Clean()
 		},
 	}
@@ -170,7 +173,7 @@ var userRmCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Remove(info)
 		},
 	}

@@ -16,7 +16,7 @@ var batchStatCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchStatus(info)
 		},
 	}
@@ -36,7 +36,7 @@ var batchDeleteCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchDelete(info)
 		},
 	}
@@ -62,7 +62,7 @@ line style:<Key><Separator><MimeType>`,
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchChangeMime(info)
 		},
 	}
@@ -88,7 +88,7 @@ line style:<Key><Separator><type>`,
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchChangeType(info)
 		},
 	}
@@ -112,7 +112,7 @@ var batchDeleteAfterCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchDeleteAfter(info)
 		},
 	}
@@ -135,7 +135,7 @@ var batchMoveCmdBuilder = func() *cobra.Command {
 				info.SourceBucket = args[0]
 				info.DestBucket = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchMove(info)
 		},
 	}
@@ -160,7 +160,7 @@ var batchRenameCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchRename(info)
 		},
 	}
@@ -189,7 +189,7 @@ line style(<ToBucketKey> use <fromBucketKey> while omitted):<fromBucketKey><Sepa
 				info.SourceBucket = args[0]
 				info.DestBucket = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchCopy(info)
 		},
 	}
@@ -213,7 +213,7 @@ ItemListFile content:one copy entry per line
 line style:<private url>`,
 		Args: cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchPrivateUrl(info)
 		},
 	}
@@ -237,7 +237,7 @@ var batchFetchCmdBuilder = func() *cobra.Command {
 			if len(upHost) > 0 {
 				cfg.CmdCfg.Hosts.Up = []string{upHost}
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.BatchFetch(info)
 		},
 	}

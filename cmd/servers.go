@@ -12,7 +12,7 @@ var bucketsCmdBuilder = func() *cobra.Command {
 		Short: "Get all buckets of the account",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			loadConfig()
+			prepare(cmd, nil)
 			operations2.List(info)
 		},
 	}

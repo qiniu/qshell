@@ -19,7 +19,7 @@ var m3u8ReplaceDomainCmdBuilder = func() *cobra.Command {
 			if len(args) == 3 {
 				info.NewDomain = args[2]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.ReplaceDomain(info)
 		},
 	}
@@ -40,7 +40,7 @@ var m3u8DeleteCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Delete(info)
 		},
 	}

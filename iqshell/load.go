@@ -13,6 +13,7 @@ import (
 )
 
 type Config struct {
+	Cmd                string // 命令名称
 	DebugEnable        bool   // 开启命令行的调试模式
 	DDebugEnable       bool   // go SDK client 和命令行开启调试模式
 	ConfigFilePath     string // 配置文件路径，用户可以指定配置文件

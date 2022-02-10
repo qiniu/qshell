@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -11,6 +12,7 @@ import (
 )
 
 var cfg = iqshell.Config{
+	Cmd:            "",
 	DebugEnable:    false,
 	DDebugEnable:   false,
 	ConfigFilePath: "",
@@ -72,6 +74,8 @@ var rootCmd = &cobra.Command{
 	BashCompletionFunction: bash_completion_func,
 }
 
+var helpDoc bool = false
+
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")
 	rootCmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
@@ -79,14 +83,27 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
 	rootCmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "config file (default is $HOME/.qshell.json)")
 	rootCmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
+	rootCmd.PersistentFlags().BoolVarP(&helpDoc, "doc", "", false, "doc of command")
 }
 
-func loadConfig() {
-	err := iqshell.Load(cfg)
+func prepare(cmd *cobra.Command, check data.Check) {
+	if helpDoc {
+		docs.ShowCmdDocument(cmd.Name())
+		os.Exit(data.StatusOK)
+	}
 
+	err := iqshell.Load(cfg)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
 		os.Exit(data.StatusError)
+	}
+
+	if check != nil {
+		err = check.Check()
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "check error: %v\n", err)
+			os.Exit(data.StatusError)
+		}
 	}
 }
 

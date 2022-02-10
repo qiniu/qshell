@@ -13,7 +13,7 @@ var cdnPrefetchCmdBuilder = func() *cobra.Command {
 		Long:  "Batch prefetch the urls in the url list file or from stdin if ItemListFile not specified",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Prefetch(info)
 		},
 	}
@@ -33,7 +33,7 @@ var cdnRefreshCmdBuilder = func() *cobra.Command {
 		Long:  "Batch refresh the cdn cache by the url list file or from stdin if ItemListFile not specified",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			loadConfig()
+			prepare(cmd, nil)
 			operations.Refresh(info)
 		},
 	}
