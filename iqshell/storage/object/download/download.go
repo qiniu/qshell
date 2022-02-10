@@ -10,9 +10,9 @@ type ApiInfo struct {
 	Url            string // 文件下载的 url 【必填】
 	Domain         string // 文件下载的 domain 【必填】
 	ToFile         string // 文件保存的路径 【必填】
-	FileSize       int64  // 文件大小，有值则会检测文件大小 【必填】
-	FileModifyTime int64  // 文件修改时间 【必填】
-	StatusDBPath   string // 下载状态缓存的 db 路径 【必填】
+	FileSize       int64  // 文件大小，有值则会检测文件大小 【选填】
+	FileModifyTime int64  // 文件修改时间 【选填】
+	StatusDBPath   string // 下载状态缓存的 db 路径 【选填】
 	Referer        string // 请求 header 中的 Referer 【选填】
 	FileEncoding   string // 文件编码方式 【选填】
 	Bucket         string // 文件所在 bucket，用于验证 hash 【选填】

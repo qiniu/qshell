@@ -35,6 +35,11 @@ func (d *dbHandler) init() (err error) {
 }
 
 func (d *dbHandler) checkInfoOfDB() error {
+	if d.dbHandler == nil {
+		log.Debug("check db: no db handler set")
+		return nil
+	}
+
 	// 数据库中存在也验证数据库信息，数据库不存在则仅验证本地文件信息
 	value, _ := d.dbHandler.Get(d.FilePath)
 	items := strings.Split(value, infoSegment)
@@ -75,6 +80,10 @@ func (d *dbHandler) checkInfoOfDB() error {
 }
 
 func (d *dbHandler) saveInfoToDB() (err error) {
+	if d.dbHandler == nil {
+		return nil
+	}
+
 	value := fmt.Sprintf("%d|%d|%s", d.FileServerUpdateTime, d.FileSize, d.FileHash)
 	return d.dbHandler.Put(d.FilePath, value)
 }

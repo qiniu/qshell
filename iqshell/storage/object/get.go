@@ -20,10 +20,11 @@ import (
 type GetApiInfo struct {
 	Bucket     string
 	Key        string
+	Domain     string
 	SaveToFile string
 }
 
-func GetObject(info GetApiInfo) error {
+func GetObject(info GetApiInfo) (err error) {
 
 	if len(info.Bucket) == 0 {
 		return errors.New(alert.CannotEmpty("bucket", ""))

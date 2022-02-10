@@ -69,7 +69,7 @@ func TestQUpload(t *testing.T) {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	result, errs := test.RunCmdWithError("qupload", cfgFile,)
+	result, errs := test.RunCmdWithError("qupload", cfgFile)
 	if len(errs) > 0 {
 		t.Fail()
 	}

@@ -35,10 +35,10 @@ func (c *Config) ToJson() string {
 var sdtout io.Writer = os.Stdout
 var sdterr io.Writer = os.Stderr
 
-func SetStdout(o io.Writer)  {
+func SetStdout(o io.Writer) {
 	sdtout = o
 }
 
-func SetStderr(e io.Writer)  {
+func SetStderr(e io.Writer) {
 	sdterr = e
 }

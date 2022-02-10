@@ -298,27 +298,6 @@ var mirrorUpdateCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var getCmdBuilder = func() *cobra.Command {
-	var info operations2.GetInfo
-	var cmd = &cobra.Command{
-		Use:   "get <Bucket> <Key>",
-		Short: "Download a single file from bucket",
-		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 1 {
-				info.Bucket = args[0]
-				info.Key = args[1]
-			}
-			loadConfig()
-			operations2.GetObject(info)
-		},
-	}
-
-	cmd.Flags().StringVarP(&info.SaveToFile, "outfile", "o", "", "save file as specified by this option")
-
-	return cmd
-}
-
 var fetchCmdBuilder = func() *cobra.Command {
 	var info operations2.FetchInfo
 	var cmd = &cobra.Command{
@@ -356,7 +335,6 @@ func init() {
 		privateUrlCmdBuilder(),
 		saveAsCmdBuilder(),
 		mirrorUpdateCmdBuilder(),
-		getCmdBuilder(),
 		fetchCmdBuilder(),
 	)
 }

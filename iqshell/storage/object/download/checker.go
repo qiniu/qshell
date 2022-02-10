@@ -38,6 +38,7 @@ func (l *LocalFileInfo) CheckDownloadFile() (err error) {
 
 func (l *LocalFileInfo) CheckFileSizeOfDownloadFile() error {
 	if l.FileSize <= 0 {
+		log.Debug("download file check size: needn't to check")
 		return nil
 	}
 

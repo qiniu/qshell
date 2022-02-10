@@ -34,6 +34,29 @@ have already in local disk and need to skip download or not.`,
 	return cmd
 }
 
+var getCmdBuilder = func() *cobra.Command {
+	info := operations.DownloadInfo{}
+	var cmd = &cobra.Command{
+		Use:   "get <Bucket> <Key>",
+		Short: "Download a single file from bucket",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 1 {
+				info.Bucket = args[0]
+				info.Key = args[1]
+			}
+			loadConfig()
+			operations.DownloadFile(info)
+		},
+	}
+
+	cmd.Flags().StringVarP(&info.ToFile, "outfile", "o", "", "save file as specified by this option")
+	cmd.Flags().StringVarP(&info.Domain, "domain", "", "", "domain of server")
+
+	return cmd
+}
+
 func init() {
+	rootCmd.AddCommand(getCmdBuilder())
 	rootCmd.AddCommand(downloadCmdBuilder())
 }

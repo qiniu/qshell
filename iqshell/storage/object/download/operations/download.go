@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"os"
 	"time"
@@ -15,12 +16,25 @@ type DownloadInfo struct {
 }
 
 func DownloadFile(info DownloadInfo) {
+	// 如果 ToFile 不存在则保存在当前文件录下，文件名为：key
+	if len(info.ToFile) == 0 {
+		info.ToFile = info.Key
+	}
+
+	if len(info.Domain) == 0 {
+		log.DebugF("get domain of bucket:%s", info.Bucket)
+		if d, err := bucket.DomainOfBucket(info.Bucket); err != nil {
+			log.ErrorF("get bucket domain error:%v, domain can't be empty", err)
+			return
+		} else {
+			info.Domain = d
+			log.DebugF("bucket:%s domain:%s", info.Bucket, info.Domain)
+		}
+	}
 	_, _ = downloadFile(info)
 }
 
 func downloadFile(info DownloadInfo) (download.ApiResult, error) {
-	log.InfoF("Download start:%s => %s", info.Url, info.ToFile)
-
 	// 构造下载 url
 	if info.IsPublic {
 		info.Url = download.PublicUrl(download.UrlApiInfo{
@@ -35,6 +49,8 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 			UseHttps:     workspace.GetConfig().IsUseHttps(),
 		})
 	}
+
+	log.InfoF("Download start:%s => %s", info.Url, info.ToFile)
 
 	startTime := time.Now().UnixNano() / 1e6
 	res, err := download.Download(info.ApiInfo)
@@ -57,11 +73,11 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 	duration := float64(endTime-startTime) / 1000
 	speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/duration/1024)
 	if res.IsExist {
-		log.Alert("Download skip because file exist:%s => %s", info.Url, res.FileAbsPath)
+		log.AlertF("Download skip because file exist:%s => %s", info.Url, res.FileAbsPath)
 	} else if res.IsUpdate {
-		log.Alert("Download update success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+		log.AlertF("Download update success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
 	} else {
-		log.Alert("Download success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+		log.AlertF("Download success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
 	}
 
 	return res, nil
