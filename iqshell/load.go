@@ -12,12 +12,6 @@ import (
 	"runtime"
 )
 
-var stdColorful = true
-
-func SetStdoutColorful(colorful bool) {
-	stdColorful = colorful
-}
-
 type Config struct {
 	DebugEnable        bool   // 开启命令行的调试模式
 	DDebugEnable       bool   // go SDK client 和命令行开启调试模式
@@ -41,8 +35,8 @@ func Load(cfg Config) error {
 
 	// 加载本地输出
 	_ = log.LoadConsole(log.Config{
-		Level:          int(logLevel),
-		StdOutColorful: false,
+		Level:          logLevel,
+		StdOutColorful: stdColorful,
 	})
 
 	// 获取工作目录

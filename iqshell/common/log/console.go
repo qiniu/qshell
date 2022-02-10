@@ -3,7 +3,6 @@ package log
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -70,9 +69,9 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) (err err
 		msg = colors[level](msg)
 	}
 	if level == logs.LevelError {
-		_, err = fmt.Fprintln(os.Stderr, msg)
+		_, err = fmt.Fprintln(sdterr, msg)
 	} else {
-		_, err = fmt.Println(msg)
+		_, err = fmt.Fprintln(sdtout, msg)
 	}
 	return
 }

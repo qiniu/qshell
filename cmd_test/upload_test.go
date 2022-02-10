@@ -56,7 +56,7 @@ func TestQUpload(t *testing.T) {
 	cfgContent := fmt.Sprintf(`{
 	"bucket": "%s",
 	"src_dir": "%s",
-	"log_stdout": "false",
+	"log_stdout": "true",
 	"overwrite": "true",
 	"check_exists": "true",
 	"check_size": "true",
@@ -69,7 +69,7 @@ func TestQUpload(t *testing.T) {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	result, errs := test.RunCmdWithError("qupload", cfgFile, "-d")
+	result, errs := test.RunCmdWithError("qupload", cfgFile,)
 	if len(errs) > 0 {
 		t.Fail()
 	}

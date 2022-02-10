@@ -2,6 +2,8 @@ package log
 
 import (
 	"encoding/json"
+	"io"
+	"os"
 
 	"github.com/astaxie/beego/logs"
 )
@@ -28,4 +30,15 @@ type Config struct {
 func (c *Config) ToJson() string {
 	cfgBytes, _ := json.Marshal(c)
 	return string(cfgBytes)
+}
+
+var sdtout io.Writer = os.Stdout
+var sdterr io.Writer = os.Stderr
+
+func SetStdout(o io.Writer)  {
+	sdtout = o
+}
+
+func SetStderr(e io.Writer)  {
+	sdterr = e
 }
