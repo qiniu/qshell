@@ -50,7 +50,7 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 		})
 	}
 
-	log.InfoF("Download start:%s => %s", info.Url, info.ToFile)
+	log.InfoF("Download:%s => %s", info.Url, info.ToFile)
 
 	startTime := time.Now().UnixNano() / 1e6
 	res, err := download.Download(info.ApiInfo)

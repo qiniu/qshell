@@ -46,7 +46,9 @@ func (d *Downloader) Download() (err error) {
 
 func (d *Downloader) downloadFile() error {
 	//new request
+	log.DebugF("download start:%s", d.Url)
 	req, err := http.NewRequest("GET", d.Url, nil)
+	log.DebugF("download   end:%s error:%v", d.Url, err)
 	if err != nil {
 		return errors.New("New request failed by url:" + d.Url + " error:" + err.Error())
 	}
