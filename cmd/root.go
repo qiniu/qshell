@@ -12,7 +12,6 @@ import (
 )
 
 var cfg = iqshell.Config{
-	Cmd:            "",
 	DebugEnable:    false,
 	DDebugEnable:   false,
 	ConfigFilePath: "",
@@ -74,7 +73,8 @@ var rootCmd = &cobra.Command{
 	BashCompletionFunction: bash_completion_func,
 }
 
-var helpDoc bool = false
+var document = false
+var cmdId string
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")
@@ -83,12 +83,12 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
 	rootCmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "config file (default is $HOME/.qshell.json)")
 	rootCmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
-	rootCmd.PersistentFlags().BoolVarP(&helpDoc, "doc", "", false, "doc of command")
+	rootCmd.PersistentFlags().BoolVarP(&document, "doc", "", false, "document of command")
 }
 
 func prepare(cmd *cobra.Command, check data.Check) {
-	if helpDoc {
-		docs.ShowCmdDocument(cmd.Name())
+	if document {
+		docs.ShowCmdDocument(cmdId)
 		os.Exit(data.StatusOK)
 	}
 

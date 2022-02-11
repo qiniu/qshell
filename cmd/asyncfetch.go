@@ -9,9 +9,10 @@ import (
 func asyncFetchCmdBuilder() *cobra.Command {
 	info := operations.BatchAsyncFetchInfo{}
 	cmd := &cobra.Command{
-		Use:   docs.ABFetch + " <Bucket> [-i <urlList>]",
+		Use:   "abfetch <Bucket> [-i <urlList>]",
 		Short: "Async Batch fetch network resources to qiniu Bucket",
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.ABFetch
 			info.GroupInfo.ItemSeparate = "\t" // 此处用户不可定义
 			if len(args) > 0 {
 				info.Bucket = args[0]
