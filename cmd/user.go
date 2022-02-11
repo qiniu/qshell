@@ -47,6 +47,7 @@ var userCmdBuilder = func() *cobra.Command {
 		Use:   "user",
 		Short: "Manage users",
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.User
 			prepare(cmd, nil)
 		},
 	}
@@ -61,6 +62,7 @@ var userLsCmdBuilder = func() *cobra.Command {
 		Short:   "List all user registered",
 		Example: `qshell user ls`,
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.User
 			prepare(cmd, nil)
 			operations.List(info)
 		},
@@ -78,6 +80,7 @@ var userCurrentCmdBuilder = func() *cobra.Command {
 		Short:   "get current user info",
 		Example: `qshell user current`,
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.User
 			prepare(cmd, nil)
 			operations.Current()
 		},
@@ -93,6 +96,7 @@ var userLookupCmdBuilder = func() *cobra.Command {
 		Short:   "Lookup user info by user name",
 		Example: `qshell user lookup <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.User
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
@@ -106,7 +110,7 @@ var userLookupCmdBuilder = func() *cobra.Command {
 // 添加用户
 var userAddCmdBuilder = func() *cobra.Command {
 
-	var cmdInfo = operations.AddInfo{}
+	var info = operations.AddInfo{}
 	var cmd = &cobra.Command{
 		Use:   "add",
 		Short: "add user info to local",
@@ -114,20 +118,21 @@ var userAddCmdBuilder = func() *cobra.Command {
  or
  qshell user add --ak <AK> --sk <SK> --name <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.User
 			if len(args) == 3 {
-				cmdInfo.AccessKey = args[0]
-				cmdInfo.SecretKey = args[1]
-				cmdInfo.Name = args[2]
+				info.AccessKey = args[0]
+				info.SecretKey = args[1]
+				info.Name = args[2]
 			}
-			prepare(cmd, nil)
-			operations.Add(cmdInfo)
+			prepare(cmd, &info)
+			operations.Add(info)
 		},
 	}
 
-	cmd.Flags().StringVarP(&cmdInfo.AccessKey, "ak", "", "", "user's access key of Qiniu")
-	cmd.Flags().StringVarP(&cmdInfo.SecretKey, "sk", "", "", "user's secret key of Qiniu")
-	cmd.Flags().StringVarP(&cmdInfo.Name, "name", "", "", "user id of local")
-	cmd.Flags().BoolVarP(&cmdInfo.Over, "overwrite", "w", false, "overwrite user or not when account exists in local db, by default not overwrite")
+	cmd.Flags().StringVarP(&info.AccessKey, "ak", "", "", "user's access key of Qiniu")
+	cmd.Flags().StringVarP(&info.SecretKey, "sk", "", "", "user's secret key of Qiniu")
+	cmd.Flags().StringVarP(&info.Name, "name", "", "", "user id of local")
+	cmd.Flags().BoolVarP(&info.Over, "overwrite", "w", false, "overwrite user or not when account exists in local db, by default not overwrite")
 
 	return cmd
 }
@@ -140,6 +145,7 @@ var userChCmdBuilder = func() *cobra.Command {
 		Short:   "Change user to UserName",
 		Example: `qshell user cu <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.User
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
@@ -158,6 +164,7 @@ var userCleanCmdBuilder = func() *cobra.Command {
 		Long:    "Remove all users from inner dbs.",
 		Example: `qshell user clean`,
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.User
 			prepare(cmd, nil)
 			operations.Clean()
 		},
@@ -173,6 +180,7 @@ var userRmCmdBuilder = func() *cobra.Command {
 		Short:   "Remove user info from inner db",
 		Example: `qshell user remove <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.User
 			if len(args) > 0 {
 				info.Name = args[0]
 			}

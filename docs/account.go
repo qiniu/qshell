@@ -4,7 +4,7 @@ import _ "embed"
 
 //go:embed account.md
 var AccountDetailHelpString string
-var Account = "abfetch"
+var Account = "account"
 
 func init() {
 	addCmdDocumentInfo(Account, AccountDetailHelpString)
