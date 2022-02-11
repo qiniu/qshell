@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/account/operations"
 	"github.com/spf13/cobra"
 )
@@ -10,27 +10,30 @@ var accountCmdBuilder = func() *cobra.Command {
 
 	var accountOver bool
 	var cmd = &cobra.Command{
-		Use:   "account [<Id> <SecretKey> <Name>]",
+		Use:   "account [<AccessKey> <SecretKey> <Name>]",
 		Short: "Get/Set current account's Id and SecretKey",
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 0 && len(args) != 3 {
-				return fmt.Errorf("command account receives zero or three args, received %d\n", len(args))
-			}
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.Account
 			if len(args) == 0 {
 				prepare(cmd, nil)
 				operations.Current()
-			} else if len(args) == 3 {
-				prepare(cmd, nil)
-				operations.Add(operations.AddInfo{
-					Name:      args[2],
-					AccessKey: args[0],
-					SecretKey: args[1],
-					Over:      accountOver,
-				})
+				return
 			}
+
+			info := operations.AddInfo{
+				Over: accountOver,
+			}
+			if len(args) > 0 {
+				info.AccessKey = args[0]
+			}
+			if len(args) > 1 {
+				info.SecretKey = args[1]
+			}
+			if len(args) > 2 {
+				info.Name = args[2]
+			}
+			prepare(cmd, &info)
+			operations.Add(info)
 		},
 	}
 

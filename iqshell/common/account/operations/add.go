@@ -8,10 +8,6 @@ import (
 	"os"
 )
 
-var addCmdEg = ` qshell user add <AK> <SK> <UserName>
- or
- qshell user add --ak <AK> --sk <SK> --name <UserName>`
-
 type AddInfo struct {
 	Name      string
 	AccessKey string
@@ -19,24 +15,21 @@ type AddInfo struct {
 	Over      bool
 }
 
-// 保存账户信息到账户文件中， 并保存在本地数据库
-func Add(info AddInfo) {
+func (info *AddInfo) Check() error {
 	if len(info.Name) == 0 {
-		log.Error(alert.CannotEmpty("user name", addCmdEg))
-		os.Exit(data.StatusError)
-		return
+		return alert.CannotEmptyError("Name", "")
 	}
 	if len(info.AccessKey) == 0 {
-		log.Error(alert.CannotEmpty("user ak", addCmdEg))
-		os.Exit(data.StatusError)
-		return
+		return alert.CannotEmptyError("AccessKey", "")
 	}
 	if len(info.SecretKey) == 0 {
-		log.Error(alert.CannotEmpty("user sk", addCmdEg))
-		os.Exit(data.StatusError)
-		return
+		return alert.CannotEmptyError("SecretKey", "")
 	}
+	return nil
+}
 
+// 保存账户信息到账户文件中， 并保存在本地数据库
+func Add(info AddInfo) {
 	acc := account.Account{
 		Name:      info.Name,
 		AccessKey: info.AccessKey,
