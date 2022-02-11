@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 var documentInfo = make(map[string]string)
@@ -35,22 +36,22 @@ func ShowCmdDocument(name string) {
 		lessCmd.Stdin = reader
 		lessCmd.Stderr = os.Stderr
 		if err := echoCmd.Start(); err != nil {
-			errorAlerter(fmt.Errorf("echo start error%v", err))
+			errorAlerter(fmt.Errorf("echo start:%v", err))
 			return
 		}
 		if err := lessCmd.Start(); err != nil {
-			errorAlerter(fmt.Errorf("less start error%v", err))
+			errorAlerter(fmt.Errorf("less start:%v", err))
 			return
 		}
 		if err := echoCmd.Wait(); err != nil {
-			errorAlerter(fmt.Errorf("echo wait error%v", err))
+			errorAlerter(fmt.Errorf("echo wait:%v", err))
 			return
 		}
 		if err := reader.Close(); err != nil {
-			errorAlerter(fmt.Errorf("less reader close error%v", err))
+			errorAlerter(fmt.Errorf("less reader close:%v", err))
 			return
 		}
-		if err := lessCmd.Wait(); err != nil {
+		if err := lessCmd.Wait(); err != nil && !strings.Contains(err.Error(),"read/write on closed pipe") {
 			errorAlerter(fmt.Errorf("less wait error%v", err))
 			return
 		}
