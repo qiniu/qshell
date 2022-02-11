@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
 )
@@ -15,6 +16,25 @@ type ListBucketInfo struct {
 	SecretKey  string
 	Prefix     string
 	SaveToFile string
+}
+
+func (info *ListBucketInfo) Check() error {
+	if len(info.DataCenter) == 0 {
+		return alert.CannotEmptyError("DataCenter", "")
+	}
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.AccessKey) == 0 {
+		return alert.CannotEmptyError("AccessKeyId", "")
+	}
+	if len(info.SecretKey) == 0 {
+		return alert.CannotEmptyError("AccessKeySecret", "")
+	}
+	if len(info.SaveToFile) == 0 {
+		return alert.CannotEmptyError("ListBucketResultFile", "")
+	}
+	return nil
 }
 
 // ListBucket
