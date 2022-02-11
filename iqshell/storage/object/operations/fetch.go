@@ -112,6 +112,7 @@ func (info *BatchAsyncFetchInfo)Check() error {
 }
 
 func BatchAsyncFetch(info BatchAsyncFetchInfo) {
+	info.GroupInfo.Force = true
 	handler, err := group.NewHandler(info.GroupInfo)
 	if err != nil {
 		log.Error(err)
