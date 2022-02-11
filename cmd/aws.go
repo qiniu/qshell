@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/aws"
 	"github.com/spf13/cobra"
 )
@@ -11,13 +12,18 @@ func awsFetchCmdBuilder() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "awsfetch [-p <Prefix>] [-n <maxKeys>] [-m <ContinuationToken>] [-c <threadCount>][-u <Qiniu UpHost>] -S <AwsSecretKey> -A <AwsID> <awsBucket> <awsRegion> <qiniuBucket>",
 		Short: "Copy data from AWS bucket to qiniu bucket",
-		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.AwsFetch
+			if len(args) > 0 {
+				info.AwsBucketInfo.Bucket = args[0]
+			}
+			if len(args) > 1 {
+				info.AwsBucketInfo.Region = args[1]
+			}
 			if len(args) > 2 {
-				info.AwsBucketInfo.Bucket = args[1]
-				info.AwsBucketInfo.Region = args[2]
 				info.QiniuBucket = args[2]
 			}
+			prepare(cmd, &info)
 			aws.Fetch(info)
 		},
 	}

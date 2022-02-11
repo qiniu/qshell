@@ -23,10 +23,13 @@ type FetchInfo struct {
 	AwsBucketInfo ListBucketInfo
 }
 
-func Fetch(info FetchInfo) {
+func (info *FetchInfo) Check() error {
 	if info.AwsBucketInfo.Id == "" || info.AwsBucketInfo.SecretKey == "" {
-		log.Error(alert.CannotEmpty("AWS ID and SecretKey", ""))
-		return
+		return alert.CannotEmptyError("AWS ID and SecretKey", "")
+	}
+
+	if info.AwsBucketInfo.Region == "" {
+		return alert.CannotEmptyError("AWS region", "")
 	}
 
 	if info.AwsBucketInfo.MaxKeys <= 0 || info.AwsBucketInfo.MaxKeys > 1000 {
@@ -34,16 +37,14 @@ func Fetch(info FetchInfo) {
 		info.AwsBucketInfo.MaxKeys = 1000
 	}
 
-	// check AWS region
-	if info.AwsBucketInfo.Region == "" {
-		log.Error(alert.CannotEmpty("AWS region", ""))
-		return
-	}
-
 	if info.BatchInfo.WorkCount <= 0 || info.BatchInfo.WorkCount >= 1000 {
 		info.BatchInfo.WorkCount = 20
 	}
 
+	return nil
+}
+
+func Fetch(info FetchInfo) {
 	resultExport, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:  info.BatchInfo.SuccessExportFilePath,
 		FailExportFilePath:     info.BatchInfo.FailExportFilePath,
