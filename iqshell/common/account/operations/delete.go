@@ -20,12 +20,14 @@ type RemoveInfo struct {
 	Name string
 }
 
-func Remove(info RemoveInfo) {
+func (info *RemoveInfo)Check() error {
 	if len(info.Name) == 0 {
-		log.Error(alert.CannotEmpty("user name", ""))
-		return
+		return alert.CannotEmptyError("user name", "")
 	}
+	return nil
+}
 
+func Remove(info RemoveInfo) {
 	err := account.RmUser(info.Name)
 	if err != nil {
 		log.Error(err)

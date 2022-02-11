@@ -7,9 +7,13 @@ import (
 	"os"
 )
 
-// 切换账户
+// ChangeInfo 切换账户
 type ChangeInfo struct {
 	Name string
+}
+
+func (info *ChangeInfo)Check() error {
+	return nil
 }
 
 func Change(info ChangeInfo) {

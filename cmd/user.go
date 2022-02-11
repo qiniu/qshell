@@ -63,7 +63,7 @@ var userLsCmdBuilder = func() *cobra.Command {
 		Example: `qshell user ls`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.User
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.List(info)
 		},
 	}
@@ -100,7 +100,7 @@ var userLookupCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.LookUp(info)
 		},
 	}
@@ -109,7 +109,6 @@ var userLookupCmdBuilder = func() *cobra.Command {
 
 // 添加用户
 var userAddCmdBuilder = func() *cobra.Command {
-
 	var info = operations.AddInfo{}
 	var cmd = &cobra.Command{
 		Use:   "add",
@@ -149,7 +148,7 @@ var userChCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Change(info)
 		},
 	}
@@ -184,7 +183,7 @@ var userRmCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Remove(info)
 		},
 	}

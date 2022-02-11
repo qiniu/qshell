@@ -12,6 +12,10 @@ type ListInfo struct {
 	OnlyListName bool
 }
 
+func (info *ListInfo) Check() error {
+	return nil
+}
+
 func List(info ListInfo) {
 	accounts, err := account.GetUsers()
 	if err != nil {
@@ -46,12 +50,14 @@ type LookUpInfo struct {
 	Name string
 }
 
-func LookUp(info LookUpInfo) {
+func (info *LookUpInfo)Check() error {
 	if len(info.Name) == 0 {
-		log.Error(alert.CannotEmpty("user name", ""))
-		return
+		return alert.CannotEmptyError("user name", "")
 	}
+	return nil
+}
 
+func LookUp(info LookUpInfo) {
 	acc, err := account.LookUp(info.Name)
 	if err != nil {
 		log.ErrorF("user lookup error: %v", err)
