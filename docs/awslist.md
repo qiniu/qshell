@@ -1,28 +1,25 @@
 # 简介
-
-`awslist` 使用亚马逊的List Objects V2接口[文档](https://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html)， 获取空间中的文件， 打印到标准输出。
+`awslist` 使用亚马逊的 List Objects V2 接口[文档](https://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html)， 获取空间中的文件， 打印到标准输出。
 
 该命令的数据格式为：
 <文件名>\t<文件大小>\t<Etag>\t<最后修改时间>
 
-当程序列举的过程中遇到错误，比如网络断开等， 会把当前的ContinuationToken打印到标准错误输出上, 可以使用shell重定向把标准输出到一个文件， 准出错误输出到另一个文件，这样可以方便地找到continuationToken继续列举。
+当程序列举的过程中遇到错误，比如网络断开等， 会把当前的 ContinuationToken 打印到标准错误输出上, 可以使用 shell 重定向把标准输出到一个文件， 这样可以方便地找到 continuationToken 继续列举。
 
 # 格式
-
 ```
 qshell awslist [-p <Prefix>][-n <maxKeys>][-m <ContinuationToken>] -S <AwsSecretKey> -A <AwsID> <AwsBucket> <AwsRegion>
 ```
 
 # 帮助文档
-
 可以在命令行输入如下命令获取帮助文档：
 ```
 $ qshell awslist -h
 ```
 
 # 选项
-
 | 选项 | 说明                                          | 可选 |
+|------|-----------------------------------------------|------|
 | -A   | 亚马逊账户的Access Key ID                     | N    |
 | -S   | 亚马逊账户的Secret Key                        | N    |
 | -p   | 亚马逊存储空间要抓取资源的前缀                | Y    |
@@ -31,12 +28,11 @@ $ qshell awslist -h
 
 
 # 参数
-<AwsBucket> 亚马逊存储空间名称
-<AwsRegion> 亚马逊存储空间所在的地区
+- AwsBucket: 亚马逊存储空间名称
+- AwsRegion: 亚马逊存储空间所在的地区
 
 
 # 列举
-
 使用场景：
 列举亚马逊存储空间中所有的文件
 

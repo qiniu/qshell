@@ -24,11 +24,14 @@ type ListBucketInfo struct {
 	Bucket    string
 }
 
-func ListBucket(info ListBucketInfo) {
-
+func (info *ListBucketInfo) Check() error {
 	if info.Id == "" || info.SecretKey == "" {
-		log.Error(alert.CannotEmpty("AWS ID and SecretKey", ""))
-		os.Exit(data.StatusError)
+		return alert.CannotEmptyError("AWS ID and SecretKey", "")
+	}
+
+	// check AWS region
+	if info.Region == "" {
+		return alert.CannotEmptyError("AWS region", "")
 	}
 
 	if info.MaxKeys <= 0 || info.MaxKeys > 1000 {
@@ -36,12 +39,10 @@ func ListBucket(info ListBucketInfo) {
 		info.MaxKeys = 1000
 	}
 
-	// check AWS region
-	if info.Region == "" {
-		log.Error(alert.CannotEmpty("AWS region", ""))
-		os.Exit(data.StatusError)
-	}
+	return nil
+}
 
+func ListBucket(info ListBucketInfo) {
 	// AWS related code
 	s3session, err := session.NewSession()
 	if err != nil {

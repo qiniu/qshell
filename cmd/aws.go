@@ -49,12 +49,15 @@ func awsListCmdBuilder() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "awslist [-p <Prefix>] [-n <maxKeys>] [-m <ContinuationToken>] -S <AwsSecretKey> -A <AwsID> <awsBucket> <awsRegion>",
 		Short: "List Objects in AWS bucket",
-		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 1 {
+			cmdId = docs.AwsList
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Region = args[1]
 			}
+			prepare(cmd, &info)
 			aws.ListBucket(info)
 		},
 	}
