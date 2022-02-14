@@ -2,12 +2,20 @@ package operations
 
 import (
 	"encoding/base64"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
 type Base64Info struct {
 	Data    string
 	UrlSafe bool
+}
+
+func (info *Base64Info) Check() error {
+	if len(info.Data) == 0 {
+		return alert.CannotEmptyError("Data", "")
+	}
+	return nil
 }
 
 // Base64Encode base64编码数据

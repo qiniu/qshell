@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/qiniu/go-sdk/v7/conf"
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils/operations"
 	"github.com/spf13/cobra"
 )
@@ -43,13 +44,13 @@ var base64EncodeCmdBuilder = func() *cobra.Command {
 		Use:        "b64encode <DataToEncode>",
 		Short:      "Base64 Encode, default not url safe",
 		Long:       "Base64 encode of data, url safe base64 is not turn on by default. Use -safe flag to turn it on",
-		Args:       cobra.MinimumNArgs(1),
 		SuggestFor: []string{"b64"},
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.B64Encode
 			if len(args) > 0 {
 				info.Data = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Base64Encode(info)
 		},
 	}
@@ -63,13 +64,13 @@ var base64DecodeCmdBuilder = func() *cobra.Command {
 		Use:        "b64decode <DataToDecode>",
 		Short:      "Base64 Decode, default nor url safe",
 		Long:       "Base64 Decode of data, urlsafe base64 is not turn on by default. Use -safe flag to turn it on",
-		Args:       cobra.MinimumNArgs(1),
 		SuggestFor: []string{"b64"},
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.B64Decode
 			if len(args) > 0 {
 				info.Data = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Base64Decode(info)
 		},
 	}
