@@ -12,7 +12,7 @@ type ChangeInfo struct {
 	Name string
 }
 
-func (info *ChangeInfo)Check() error {
+func (info *ChangeInfo) Check() error {
 	return nil
 }
 

@@ -51,7 +51,7 @@ func ShowCmdDocument(name string) {
 			errorAlerter(fmt.Errorf("less reader close:%v", err))
 			return
 		}
-		if err := lessCmd.Wait(); err != nil && !strings.Contains(err.Error(),"read/write on closed pipe") {
+		if err := lessCmd.Wait(); err != nil && !strings.Contains(err.Error(), "read/write on closed pipe") {
 			errorAlerter(fmt.Errorf("less wait error%v", err))
 			return
 		}

@@ -104,7 +104,7 @@ type BatchAsyncFetchInfo struct {
 	FileType         int    // 文件存储类型， 0 标准存储， 1 低频存储
 }
 
-func (info *BatchAsyncFetchInfo)Check() error {
+func (info *BatchAsyncFetchInfo) Check() error {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("bucket", "")
 	}

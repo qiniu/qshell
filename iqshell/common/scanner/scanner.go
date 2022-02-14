@@ -33,7 +33,7 @@ func NewScanner(info Info) (Scanner, error) {
 		log.InfoF("read data from file:%s", info.InputFile)
 	} else if info.StdInEnable {
 		s.scanner = bufio.NewScanner(os.Stdin)
-		log.Info("read data from stdin")
+		log.Info("read data from stdin, you can end input with ctrl + D and cancel by ctrl + C")
 	} else {
 		return nil, errors.New("no scanner source")
 	}

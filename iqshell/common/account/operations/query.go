@@ -50,7 +50,7 @@ type LookUpInfo struct {
 	Name string
 }
 
-func (info *LookUpInfo)Check() error {
+func (info *LookUpInfo) Check() error {
 	if len(info.Name) == 0 {
 		return alert.CannotEmptyError("user name", "")
 	}

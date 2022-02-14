@@ -9,4 +9,3 @@ var BatchChangeMimeType = "batchchgm"
 func init() {
 	addCmdDocumentInfo(BatchChangeMimeType, BatchChangeMimeTypeDetailHelpString)
 }
-

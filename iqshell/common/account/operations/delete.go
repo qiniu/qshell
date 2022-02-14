@@ -20,7 +20,7 @@ type RemoveInfo struct {
 	Name string
 }
 
-func (info *RemoveInfo)Check() error {
+func (info *RemoveInfo) Check() error {
 	if len(info.Name) == 0 {
 		return alert.CannotEmptyError("user name", "")
 	}
