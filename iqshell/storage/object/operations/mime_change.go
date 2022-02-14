@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -26,6 +27,13 @@ func ChangeMime(info ChangeMimeInfo) {
 type BatchChangeMimeInfo struct {
 	BatchInfo batch.Info
 	Bucket    string
+}
+
+func (info *BatchChangeMimeInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	return nil
 }
 
 func BatchChangeMime(info BatchChangeMimeInfo) {
