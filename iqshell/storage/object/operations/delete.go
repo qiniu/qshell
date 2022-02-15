@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -49,6 +50,17 @@ func Delete(info DeleteInfo) {
 type BatchDeleteInfo struct {
 	BatchInfo batch.Info
 	Bucket    string
+}
+
+func (info *BatchDeleteInfo) Check() error {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
+
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	return nil
 }
 
 // BatchDelete 批量删除，由于和批量删除的输入读取逻辑不同，所以分开

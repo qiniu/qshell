@@ -54,10 +54,12 @@ type BatchPrivateUrlInfo struct {
 	Deadline  string
 }
 
+func (info *BatchPrivateUrlInfo) Check() error {
+	return nil
+}
+
 // BatchPrivateUrl 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
 func BatchPrivateUrl(info BatchPrivateUrlInfo) {
-	info.BatchInfo.Force = true
-
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

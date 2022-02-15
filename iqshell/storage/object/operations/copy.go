@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -27,6 +28,22 @@ type BatchCopyInfo struct {
 	BatchInfo    batch.Info
 	SourceBucket string
 	DestBucket   string
+}
+
+func (info *BatchCopyInfo) Check() error {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
+
+	if len(info.SourceBucket) == 0 {
+		return alert.CannotEmptyError("SrcBucket", "")
+	}
+
+	if len(info.DestBucket) == 0 {
+		return alert.CannotEmptyError("DestBucket", "")
+	}
+
+	return nil
 }
 
 func BatchCopy(info BatchCopyInfo) {

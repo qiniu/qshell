@@ -34,6 +34,17 @@ type BatchFetchInfo struct {
 	Bucket    string
 }
 
+func (info *BatchFetchInfo) Check() error {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
+
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	return nil
+}
+
 //BatchFetch 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
 func BatchFetch(info BatchFetchInfo) {
 	handler, err := group.NewHandler(info.BatchInfo.Info)

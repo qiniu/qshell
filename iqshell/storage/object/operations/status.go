@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -26,9 +27,18 @@ type BatchStatusInfo struct {
 	Bucket    string
 }
 
-func BatchStatus(info BatchStatusInfo) {
-	info.BatchInfo.Force = true
+func (info *BatchStatusInfo) Check() error {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
 
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	return nil
+}
+
+func BatchStatus(info BatchStatusInfo) {
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

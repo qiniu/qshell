@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -32,6 +33,17 @@ func Rename(info RenameInfo) {
 type BatchRenameInfo struct {
 	BatchInfo batch.Info
 	Bucket    string
+}
+
+func (info *BatchRenameInfo) Check() error {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
+
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	return nil
 }
 
 func BatchRename(info BatchRenameInfo) {
