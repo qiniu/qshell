@@ -3,9 +3,10 @@ package docs
 import _ "embed"
 
 //go:embed abfetch.md
-var ABFetchDetailHelpString string
-var ABFetch = "abfetch"
+var abFetchDocument string
+
+const ABFetch = "abfetch"
 
 func init() {
-	addCmdDocumentInfo(ABFetch, ABFetchDetailHelpString)
+	addCmdDocumentInfo(ABFetch, abFetchDocument)
 }

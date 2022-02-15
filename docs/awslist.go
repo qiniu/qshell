@@ -3,9 +3,10 @@ package docs
 import _ "embed"
 
 //go:embed awslist.md
-var AwsListDetailHelpString string
-var AwsList = "awslist"
+var awsListDocument string
+
+const AwsList = "awslist"
 
 func init() {
-	addCmdDocumentInfo(AwsList, AwsListDetailHelpString)
+	addCmdDocumentInfo(AwsList, awsListDocument)
 }

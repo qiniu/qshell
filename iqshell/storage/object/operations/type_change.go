@@ -62,6 +62,17 @@ type BatchChangeTypeInfo struct {
 	Bucket    string
 }
 
+func (info *BatchChangeTypeInfo) Check() error {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
+
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	return nil
+}
+
 func BatchChangeType(info BatchChangeTypeInfo) {
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {

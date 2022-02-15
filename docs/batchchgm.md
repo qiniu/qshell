@@ -28,7 +28,7 @@ qshell batchchgm -h
 
 ##### i 选项
 该选项指定输入文件, 文件内容是文件名称和新的 MimeType 对的列表；
-每一行是 `Key\tNewMimeType` 格式，注意格式中间的 \t (Tab 键) 为分隔符； 
+每一行是 `Key\tNewMimeType` 格式，注意格式中间的 \t (tab 制表符) 为分隔符； 
 如果没有通过 -i 指定该参数，从标准输入读取内容。
 
 # 示例
@@ -45,8 +45,6 @@ data/2015/02/01/pig.jpg	image/jpeg
 ```
 $ qshell batchchgm if-pbl -i tochange.txt
 ```
-
-如果执行过程中遇到任何错误，会输出到终端，如果没有的话，则没有任何输出。
 
 # 注意
 如果没有指定输入文件的话, 默认会从标准输入读取同样格式的内容
