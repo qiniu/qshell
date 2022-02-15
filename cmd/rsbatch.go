@@ -184,6 +184,7 @@ var batchFetchCmdBuilder = func() *cobra.Command {
 		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
 		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.BatchFetchType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
