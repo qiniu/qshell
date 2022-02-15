@@ -88,6 +88,7 @@ var batchDeleteAfterCmdBuilder = func() *cobra.Command {
 		Use:   "batchexpire <Bucket> [-i <KeyDeleteAfterDaysMapFile>]",
 		Short: "Batch set the deleteAfterDays of the files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.BatchExpireType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
