@@ -30,6 +30,10 @@ type BatchChangeMimeInfo struct {
 }
 
 func (info *BatchChangeMimeInfo) Check() error {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
+
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("bucket", "")
 	}

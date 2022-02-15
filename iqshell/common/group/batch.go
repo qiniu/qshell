@@ -24,10 +24,15 @@ type Info struct {
 	OverrideExportFilePath string // 覆盖输出
 }
 
-func (info *Info) CheckData() {
+func (info *Info) Check() error {
+	if err := info.Info.Check(); err != nil {
+		return err
+	}
+
 	if len(info.ItemSeparate) == 0 {
 		info.ItemSeparate = data.DefaultLineSeparate
 	}
+	return nil
 }
 
 type Handler interface {

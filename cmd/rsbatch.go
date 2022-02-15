@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/docs"
-	operations2 "github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
 var batchStatCmdBuilder = func() *cobra.Command {
-	var info = operations2.BatchStatusInfo{}
+	var info = operations.BatchStatusInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchstat <Bucket> [-i <KeyListFile>]",
 		Short: "Batch stat files in bucket",
@@ -18,7 +18,7 @@ var batchStatCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 			}
 			prepare(cmd, nil)
-			operations2.BatchStatus(info)
+			operations.BatchStatus(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
@@ -27,7 +27,7 @@ var batchStatCmdBuilder = func() *cobra.Command {
 }
 
 var batchDeleteCmdBuilder = func() *cobra.Command {
-	var info = operations2.BatchDeleteInfo{}
+	var info = operations.BatchDeleteInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchdelete <Bucket> [-i <KeyListFile>]",
 		Short: "Batch delete files in bucket",
@@ -38,7 +38,7 @@ var batchDeleteCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 			}
 			prepare(cmd, nil)
-			operations2.BatchDelete(info)
+			operations.BatchDelete(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
@@ -51,7 +51,7 @@ var batchDeleteCmdBuilder = func() *cobra.Command {
 }
 
 var batchChangeMimeCmdBuilder = func() *cobra.Command {
-	var info = operations2.BatchChangeMimeInfo{}
+	var info = operations.BatchChangeMimeInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchchgm <Bucket> [-i <KeyMimeMapFile>]",
 		Short: "Batch change the mime type of files in bucket",
@@ -64,7 +64,7 @@ line style:<Key><Separator><MimeType>`,
 				info.Bucket = args[0]
 			}
 			prepare(cmd, &info)
-			operations2.BatchChangeMime(info)
+			operations.BatchChangeMime(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
@@ -77,7 +77,7 @@ line style:<Key><Separator><MimeType>`,
 }
 
 var batchChangeTypeCmdBuilder = func() *cobra.Command {
-	var info = operations2.BatchChangeTypeInfo{}
+	var info = operations.BatchChangeTypeInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchchtype <Bucket> [-i <KeyFileTypeMapFile>]",
 		Short: "Batch change the file type of files in bucket",
@@ -89,7 +89,7 @@ line style:<Key><Separator><type>`,
 				info.Bucket = args[0]
 			}
 			prepare(cmd, nil)
-			operations2.BatchChangeType(info)
+			operations.BatchChangeType(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
@@ -102,7 +102,7 @@ line style:<Key><Separator><type>`,
 }
 
 var batchDeleteAfterCmdBuilder = func() *cobra.Command {
-	var info = operations2.BatchDeleteInfo{}
+	var info = operations.BatchDeleteInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchexpire <Bucket> [-i <KeyDeleteAfterDaysMapFile>]",
 		Short: "Batch set the deleteAfterDays of the files in bucket",
@@ -113,7 +113,7 @@ var batchDeleteAfterCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 			}
 			prepare(cmd, nil)
-			operations2.BatchDeleteAfter(info)
+			operations.BatchDeleteAfter(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
@@ -124,7 +124,7 @@ var batchDeleteAfterCmdBuilder = func() *cobra.Command {
 }
 
 var batchMoveCmdBuilder = func() *cobra.Command {
-	var info = operations2.BatchMoveInfo{}
+	var info = operations.BatchMoveInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchmove <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
 		Short: "Batch move files from bucket to bucket",
@@ -136,7 +136,7 @@ var batchMoveCmdBuilder = func() *cobra.Command {
 				info.DestBucket = args[1]
 			}
 			prepare(cmd, nil)
-			operations2.BatchMove(info)
+			operations.BatchMove(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
@@ -150,7 +150,7 @@ var batchMoveCmdBuilder = func() *cobra.Command {
 }
 
 var batchRenameCmdBuilder = func() *cobra.Command {
-	var info = operations2.BatchRenameInfo{}
+	var info = operations.BatchRenameInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchrename <Bucket> [-i <OldNewKeyMapFile>]",
 		Short: "Batch rename files in the bucket",
@@ -161,7 +161,7 @@ var batchRenameCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 			}
 			prepare(cmd, nil)
-			operations2.BatchRename(info)
+			operations.BatchRename(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
@@ -175,7 +175,7 @@ var batchRenameCmdBuilder = func() *cobra.Command {
 }
 
 var batchCopyCmdBuilder = func() *cobra.Command {
-	var info = operations2.BatchCopyInfo{}
+	var info = operations.BatchCopyInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchcopy <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
 		Short: "Batch copy files from bucket to bucket",
@@ -190,7 +190,7 @@ line style(<ToBucketKey> use <fromBucketKey> while omitted):<fromBucketKey><Sepa
 				info.DestBucket = args[1]
 			}
 			prepare(cmd, nil)
-			operations2.BatchCopy(info)
+			operations.BatchCopy(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
@@ -204,7 +204,7 @@ line style(<ToBucketKey> use <fromBucketKey> while omitted):<fromBucketKey><Sepa
 }
 
 var batchSignCmdBuilder = func() *cobra.Command {
-	var info = operations2.BatchPrivateUrlInfo{}
+	var info = operations.BatchPrivateUrlInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchsign [-i <ItemListFile>] [-e <Deadline>]",
 		Short: "Batch create the private url from the public url list file",
@@ -214,7 +214,7 @@ line style:<private url>`,
 		Args: cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			prepare(cmd, nil)
-			operations2.BatchPrivateUrl(info)
+			operations.BatchPrivateUrl(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")
@@ -225,7 +225,7 @@ line style:<private url>`,
 
 var batchFetchCmdBuilder = func() *cobra.Command {
 	var upHost = ""
-	var info = operations2.BatchFetchInfo{}
+	var info = operations.BatchFetchInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
 		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
@@ -238,7 +238,7 @@ var batchFetchCmdBuilder = func() *cobra.Command {
 				cfg.CmdCfg.Hosts.Up = []string{upHost}
 			}
 			prepare(cmd, nil)
-			operations2.BatchFetch(info)
+			operations.BatchFetch(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file")

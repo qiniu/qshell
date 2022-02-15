@@ -6,11 +6,11 @@ type Info struct {
 	workErrorHappened bool // 执行中是否出现错误
 }
 
-func (i *Info) initData() {
+func (i *Info) Check() error {
 	if i.WorkCount <= 0 {
 		i.WorkCount = 1
 	}
-	i.workErrorHappened = false
+	return nil
 }
 
 type Work interface{}

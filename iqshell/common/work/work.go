@@ -90,9 +90,6 @@ func (b *flowHandler) handlerComplete() {
 
 func (b *flowHandler) Start() {
 	log.Debug("work flow did start")
-	if b.info.WorkCount < 1 {
-		b.info.WorkCount = 1
-	}
 
 	workChan := make(chan Work, b.info.WorkCount)
 	// 生产者

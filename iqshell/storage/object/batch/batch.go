@@ -16,6 +16,19 @@ type Info struct {
 	MaxOperationCountPerRequest int
 }
 
+func (info *Info) Check() error {
+	if err := info.Info.Check(); err != nil {
+		return err
+	}
+
+	if info.MaxOperationCountPerRequest <= 0 ||
+		info.MaxOperationCountPerRequest > defaultOperationCountPerRequest {
+		info.MaxOperationCountPerRequest = defaultOperationCountPerRequest
+	}
+
+	return nil
+}
+
 type Flow interface {
 	ReadOperation(func() (operation Operation, complete bool)) Flow
 	OnResult(func(operation Operation, result OperationResult)) Flow
@@ -57,11 +70,6 @@ func (f *flow) Start() {
 		return
 	}
 
-	if f.info.MaxOperationCountPerRequest <= 0 ||
-		f.info.MaxOperationCountPerRequest > defaultOperationCountPerRequest {
-		f.info.MaxOperationCountPerRequest = defaultOperationCountPerRequest
-	}
-
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {
 		f.onError(err)
@@ -78,7 +86,7 @@ func (f *flow) Start() {
 			operation, hasMore := f.readOperation()
 			if operation == nil {
 				if hasMore {
-					log.Debug("batch task producer: operation invalid")
+					log.Debug("batch task producer: operation invalid: value is nil")
 					continue
 				} else {
 					log.Debug("batch task producer: read operation complete")

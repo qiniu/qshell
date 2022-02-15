@@ -32,7 +32,7 @@ type BatchUploadInfo struct {
 func BatchUpload(info BatchUploadInfo) {
 	info.GroupInfo.Force = true
 
-	info.GroupInfo.CheckData()
+	info.GroupInfo.Check()
 	uploadConfig := workspace.GetConfig().Up
 	if err := uploadConfig.Check(); err != nil {
 		log.ErrorF("batch upload:%v", err)
