@@ -128,6 +128,7 @@ var batchRenameCmdBuilder = func() *cobra.Command {
 		Use:   "batchrename <Bucket> [-i <OldNewKeyMapFile>]",
 		Short: "Batch rename files in the bucket",
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.BatchRenameType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
