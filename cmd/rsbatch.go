@@ -13,6 +13,7 @@ var batchStatCmdBuilder = func() *cobra.Command {
 		Use:   "batchstat <Bucket> [-i <KeyListFile>]",
 		Short: "Batch stat files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.BatchStatType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}

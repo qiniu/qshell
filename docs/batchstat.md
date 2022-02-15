@@ -1,5 +1,5 @@
 # 简介
-`batchstat`命令用来批量查询七牛空间中文件的基本信息。
+`batchstat` 命令用来批量查询七牛空间中文件的基本信息。
 
 # 格式
 ```
@@ -7,7 +7,7 @@ qshell batchstat [--force] [--sucess-list <SuccessFileName>] [--failure-list <Fa
 ```
 
 # 鉴权
-需要在使用了`account`设置了`AccessKey`, `SecretKey` 和 `Name` 的情况下使用。
+需要在使用了 `account` 设置了 `AccessKey`, `SecretKey` 和 `Name` 的情况下使用。
 
 # 参数
 |   参数名 |               描述             |
