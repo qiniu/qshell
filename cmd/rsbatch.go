@@ -34,6 +34,7 @@ var batchDeleteCmdBuilder = func() *cobra.Command {
 		Use:   "batchdelete <Bucket> [-i <KeyListFile>]",
 		Short: "Batch delete files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.BatchDeleteType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
