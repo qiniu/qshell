@@ -106,6 +106,7 @@ var batchMoveCmdBuilder = func() *cobra.Command {
 		Use:   "batchmove <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
 		Short: "Batch move files from bucket to bucket",
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.BatchMoveType
 			if len(args) > 0 {
 				info.SourceBucket = args[0]
 			}

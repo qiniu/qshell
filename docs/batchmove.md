@@ -88,7 +88,7 @@ $ qshell batchmove --force if-pbl if-pri -i tomove.txt
 $ qshell batchmove --force --overwrite if-pbl if-pri -i tomove.txt
 ```
 
-5. 假如文件名为 `tomove.txt`, 文件包含了空格，所以必须使用其他的分隔符， 我们使用","
+5 假如文件名为 `tomove.txt`, 文件包含了空格，所以必须使用其他的分隔符， 我们使用","
 ```
 data/2015/02/01/bg.png,backg round.png
 data/2015/02/01/pi g.jpg
