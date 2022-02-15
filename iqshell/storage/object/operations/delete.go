@@ -78,23 +78,26 @@ func BatchDelete(info BatchDeleteInfo) {
 		}
 
 		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
+		key := ""
+		putTime := ""
+
 		if len(items) > 0 {
-			key := items[0]
-			putTime := ""
-			if len(items) > 1 {
-				putTime = items[1]
-			}
-			if key != "" {
-				return object.DeleteApiInfo{
-					Bucket: info.Bucket,
-					Key:    key,
-					Condition: batch.OperationCondition{
-						PutTime: putTime,
-					},
-				}, true
-			}
+			key = items[0]
 		}
-		return nil, true
+		if len(key) == 0 {
+			return nil, true
+		}
+
+		if len(items) > 1 {
+			putTime = items[1]
+		}
+		return object.DeleteApiInfo{
+			Bucket: info.Bucket,
+			Key:    key,
+			Condition: batch.OperationCondition{
+				PutTime: putTime,
+			},
+		}, true
 	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
 		apiInfo, ok := (operation).(object.DeleteApiInfo)
 		if !ok {

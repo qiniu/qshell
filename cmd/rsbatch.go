@@ -20,7 +20,11 @@ var batchStatCmdBuilder = func() *cobra.Command {
 			operations.BatchStatus(info)
 		},
 	}
-	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
+	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdWorkCountFlags(cmd, &info.BatchInfo)
+	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdForceFlags(cmd, &info.BatchInfo)
 	return cmd
 }
 
