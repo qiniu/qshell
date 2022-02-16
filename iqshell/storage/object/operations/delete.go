@@ -16,6 +16,16 @@ type DeleteInfo struct {
 	AfterDays string
 }
 
+func (info *DeleteInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	if len(info.Key) == 0 {
+		return alert.CannotEmptyError("key", "")
+	}
+	return nil
+}
+
 func getAfterDaysOfInt(after string) (int, error) {
 	if len(after) == 0 {
 		return -1, nil

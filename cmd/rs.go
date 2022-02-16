@@ -49,13 +49,15 @@ var deleteCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "delete <Bucket> <Key>",
 		Short: "Delete a remote file in the bucket",
-		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 1 {
+			cmdId = docs.DeleteType
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Delete(info)
 		},
 	}
