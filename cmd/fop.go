@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
@@ -12,10 +13,11 @@ var preFopStatusCmdBuilder = func() *cobra.Command {
 		Short: "Query the pfop status",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.PreFopType
 			if len(args) > 0 {
 				info.Id = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.PreFopStatus(info)
 		},
 	}
@@ -27,14 +29,18 @@ var preFopCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "pfop <Bucket> <Key> <fopCommand>",
 		Short: "issue a request to process file in bucket",
-		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 2 {
+			cmdId = docs.PFopType
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
+			}
+			if len(args) > 2 {
 				info.Fops = args[2]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.PreFop(info)
 		},
 	}
