@@ -115,17 +115,21 @@ var copyCmdBuilder = func() *cobra.Command {
 you can check if B.png has exists by:
 	qshell stat bucketB B.png
 `,
-		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 2 {
+			cmdId = docs.CopyType
+			if len(args) > 0 {
 				info.SourceBucket = args[0]
+			}
+			if len(args) > 1 {
 				info.SourceKey = args[1]
+			}
+			if len(args) > 2 {
 				info.DestBucket = args[2]
 			}
 			if len(info.DestKey) == 0 {
 				info.DestKey = info.SourceKey
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Copy(info)
 		},
 	}

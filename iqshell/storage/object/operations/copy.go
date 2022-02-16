@@ -11,6 +11,22 @@ import (
 
 type CopyInfo object.CopyApiInfo
 
+func (info *CopyInfo) Check() error {
+	if len(info.SourceBucket) == 0 {
+		return alert.CannotEmptyError("SourceBucket", "")
+	}
+	if len(info.SourceKey) == 0 {
+		return alert.CannotEmptyError("SourceKey", "")
+	}
+	if len(info.DestBucket) == 0 {
+		return alert.CannotEmptyError("DestBucket", "")
+	}
+	if len(info.DestKey) == 0 {
+		return alert.CannotEmptyError("DestKey", "")
+	}
+	return nil
+}
+
 func Copy(info CopyInfo) {
 	result, err := object.Copy(object.CopyApiInfo(info))
 	if err != nil {
