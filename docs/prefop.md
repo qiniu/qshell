@@ -12,7 +12,7 @@ qshell prefop <PersistentId>
 无
 
 # 参数
-- PersistentId：持久化处理的Id【必选】
+- PersistentId：持久化处理的 Id【必选】
 
 # 示例
 查询 `z0.58632a1945a2650cfd5fc8b1` 对应的持久化处理结果：

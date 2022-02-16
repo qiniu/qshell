@@ -11,7 +11,6 @@ var preFopStatusCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "prefop <PersistentId>",
 		Short: "Query the pfop status",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.PreFopType
 			if len(args) > 0 {
