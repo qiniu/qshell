@@ -7,10 +7,8 @@ qshell dircache <DirCacheRootPath> [-o <DirCacheResultFile>]
 ```
 
 # 参数
-|   参数名  |  描述 |
-|----------|------|
-| DirCacheRootPath |本地需要对其做快照的路径，最好是绝对路径，比如`/Users/jemy/Demo1`这样的路径|
-| DirCacheResultFile |快照结果的保存文件，可以是绝对路径或者相对路径, 如果没有指定，默认输出到标准输出终端 |
+- DirCacheRootPath：本地需要对其做快照的路径，最好是绝对路径，比如`/Users/jemy/Demo1`这样的路径【必选】
+- DirCacheResultFile：快照结果的保存文件，可以是绝对路径或者相对路径, 如果没有指定，默认输出到标准输出终端。 【可选】
 
 # 示例
 比如，要获取 `/Users/jemy/Temp4` 目录下面的文件列表，则使用

@@ -340,12 +340,12 @@ var dirCacheCmdBuilder = func() *cobra.Command {
 		Use:   "dircache <DirCacheRootPath>",
 		Short: "Cache the directory structure of a file path",
 		Long:  "Cache the directory structure of a file path to a file, \nif <DirCacheResultFile> not specified, cache to stdout",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.DirCacheType
 			if len(args) > 0 {
 				info.Dir = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.DirCache(info)
 		},
 	}

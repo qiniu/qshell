@@ -3,7 +3,6 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
 )
@@ -13,12 +12,14 @@ type DirCacheInfo struct {
 	SaveToFile string
 }
 
-func DirCache(info DirCacheInfo) {
+func (info *DirCacheInfo) Check() error {
 	if len(info.Dir) == 0 {
-		log.Error(alert.CannotEmpty("directory path", ""))
-		return
+		return alert.CannotEmptyError("directory path", "")
 	}
+	return nil
+}
 
+func DirCache(info DirCacheInfo) {
 	if info.SaveToFile == "" {
 		info.SaveToFile = "stdout"
 	}
