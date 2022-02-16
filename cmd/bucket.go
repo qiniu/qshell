@@ -38,7 +38,7 @@ var listBucketCmdBuilder = func() *cobra.Command {
 		Short: "List all the files in the bucket",
 		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.ListbucketType
+			cmdId = docs.ListBucketType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -57,8 +57,8 @@ var listBucketCmd2Builder = func() *cobra.Command {
 		Use:   "listbucket2 <Bucket>",
 		Short: "List all the files in the bucket using v2/list interface",
 		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.ListBucket2Type
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}

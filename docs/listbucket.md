@@ -46,12 +46,12 @@ qshell listbucket [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
 - --out：获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用 【可选】
 
 # 示例
-1 获取空间`if-pbl`里面的所有文件列表：
+1 获取空间 `if-pbl` 里面的所有文件列表：
 ```
 qshell listbucket if-pbl -o if-pbl.list.txt
 ```
 
-2 获取空间`if-pbl`里面的以`2014/10/07/`为前缀的文件列表：
+2 获取空间 `if-pbl` 里面的以 `2014/10/07/` 为前缀的文件列表：
 ```
 qshell listbucket if-pbl --prefix '2014/10/07/' -o if-pbl.prefix.list.txt
 ```
