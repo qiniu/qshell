@@ -25,6 +25,7 @@ var domainsCmdBuilder = func() *cobra.Command {
 
 var listBucketCmdBuilder = func() *cobra.Command {
 	var info = operations.ListInfo{
+		Marker: "",
 		StartDate:  "",
 		EndDate:    "",
 		AppendMode: false,
@@ -36,16 +37,15 @@ var listBucketCmdBuilder = func() *cobra.Command {
 		Use:   "listbucket <Bucket>",
 		Short: "List all the files in the bucket",
 		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.ListbucketType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.List(info)
 		},
 	}
-	cmd.Flags().StringVarP(&info.Marker, "marker", "m", "", "list marker")
 	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
 	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
 	return cmd

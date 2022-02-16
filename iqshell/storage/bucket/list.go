@@ -144,8 +144,10 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 	}
 
 	bWriter := bufio.NewWriter(listResultFh)
-	_, _ = bWriter.WriteString("Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser\t\n")
-	_ = bWriter.Flush()
+	if len(info.FilePath) == 0 {
+		_, _ = bWriter.WriteString("Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser\t\n")
+		_ = bWriter.Flush()
+	}
 	List(info.ListApiInfo, func(marker string, object ListObject) error {
 		var fileSize interface{}
 		if info.Readable {

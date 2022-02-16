@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"strconv"
@@ -21,6 +22,13 @@ type ListInfo struct {
 	SaveToFile string
 	AppendMode bool
 	Readable   bool
+}
+
+func (info *ListInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	return nil
 }
 
 func List(info ListInfo) {
