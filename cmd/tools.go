@@ -134,12 +134,12 @@ var d2tsCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "d2ts <SecondsToNow>",
 		Short: "Create a timestamp in seconds using seconds to now",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.DateToTimestamp
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Date2Timestamp(info)
 		},
 	}

@@ -7,9 +7,7 @@ qshell d2ts <SecondsToNow>
 ```
 
 # 参数
-|    参数名    |   描述  |
-|--------------|---------------|
-| SecondsToNow |指定的秒数|
+- SecondsToNow: 指定的秒数
 
 # 示例
 ```

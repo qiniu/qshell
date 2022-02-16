@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"strconv"
 	"time"
@@ -8,6 +9,13 @@ import (
 
 type TimestampInfo struct {
 	Value string
+}
+
+func (info *TimestampInfo) Check() error {
+	if len(info.Value) == 0 {
+		return alert.CannotEmptyError("args", "")
+	}
+	return nil
 }
 
 // Timestamp2Date 转化unix时间戳为可读的字符串
