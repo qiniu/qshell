@@ -18,19 +18,28 @@ type DeleteInfo struct {
 
 func (info *DeleteInfo) Check() error {
 	if len(info.Bucket) == 0 {
-		return alert.CannotEmptyError("bucket", "")
+		return alert.CannotEmptyError("Bucket", "")
 	}
 	if len(info.Key) == 0 {
-		return alert.CannotEmptyError("key", "")
+		return alert.CannotEmptyError("Key", "")
 	}
 	return nil
 }
 
 func getAfterDaysOfInt(after string) (int, error) {
 	if len(after) == 0 {
-		return -1, nil
+		return 0, nil
 	}
 	return strconv.Atoi(after)
+}
+
+func DeleteAfter(info DeleteInfo) {
+	if len(info.AfterDays) == 0 {
+		log.Error(alert.CannotEmpty("DeleteAfterDays", ""))
+		return
+	}
+
+	Delete(info)
 }
 
 func Delete(info DeleteInfo) {

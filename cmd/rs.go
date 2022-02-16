@@ -69,15 +69,19 @@ var deleteAfterCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "expire <Bucket> <Key> <DeleteAfterDays>",
 		Short: "Set the deleteAfterDays of a file",
-		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 2 {
+			cmdId = docs.ExpireType
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
+			}
+			if len(args) > 2 {
 				info.AfterDays = args[2]
 			}
-			prepare(cmd, nil)
-			operations.Delete(info)
+			prepare(cmd, &info)
+			operations.DeleteAfter(info)
 		},
 	}
 	return cmd
