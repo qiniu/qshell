@@ -11,6 +11,19 @@ import (
 
 type ChangeMimeInfo object.ChangeMimeApiInfo
 
+func (info *ChangeMimeInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	if len(info.Key) == 0 {
+		return alert.CannotEmptyError("key", "")
+	}
+	if len(info.Mime) == 0 {
+		return alert.CannotEmptyError("MimeType", "")
+	}
+	return nil
+}
+
 func ChangeMime(info ChangeMimeInfo) {
 	result, err := object.ChangeMimeType(object.ChangeMimeApiInfo(info))
 	if err != nil {
@@ -19,7 +32,7 @@ func ChangeMime(info ChangeMimeInfo) {
 	}
 
 	if len(result.Error) != 0 {
-		log.ErrorF("Change Mime:%v", result.Error)
+		log.ErrorF("Change Mime result error:%v", result.Error)
 		return
 	}
 }

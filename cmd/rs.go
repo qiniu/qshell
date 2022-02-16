@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/operations"
 	operations2 "github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
@@ -200,14 +201,18 @@ var changeMimeCmdBuilder = func() *cobra.Command {
 	qshell chgm bucketA A.png image/jpeg
 and you can check result by command:
 	qshell stat bucketA A.png`,
-		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 2 {
+			cmdId = docs.ChangeMimeType
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
+			}
+			if len(args) > 2 {
 				info.Mime = args[2]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations2.ChangeMime(info)
 		},
 	}
