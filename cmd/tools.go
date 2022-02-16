@@ -241,10 +241,10 @@ var IpCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "ip <Ip1> [<Ip2> [<Ip3> ...]]]",
 		Short: "Query the ip information",
-		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.IPType
 			info.Ips = args
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.IpQuery(info)
 		},
 	}

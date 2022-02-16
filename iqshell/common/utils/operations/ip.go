@@ -19,6 +19,13 @@ type IpQueryInfo struct {
 	Ips []string
 }
 
+func (info *IpQueryInfo) Check() error {
+	if len(info.Ips) == 0 {
+		return alert.CannotEmptyError("Ip", "")
+	}
+	return nil
+}
+
 func IpQuery(info IpQueryInfo) {
 	if len(info.Ips) == 0 {
 		log.Error(errors.New(alert.CannotEmpty("ip", "")))
