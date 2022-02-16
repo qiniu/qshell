@@ -2,12 +2,10 @@ package object
 
 import (
 	"errors"
-	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 )
@@ -18,33 +16,30 @@ type FetchApiInfo struct {
 	FromUrl string
 }
 
-type FetchResult storage.FetchRet
+type FetchResult = storage.FetchRet
 
-func Fetch(info FetchApiInfo) (FetchResult, error) {
+func Fetch(info FetchApiInfo) (result FetchResult, err error) {
 	if len(info.Bucket) == 0 {
-		return FetchResult{}, errors.New(alert.CannotEmpty("bucket", ""))
-	}
-
-	if len(info.Key) == 0 {
-		key, err := utils.KeyFromUrl(info.FromUrl)
-		if err != nil || len(key) == 0 {
-			return FetchResult{}, fmt.Errorf("get key from url failed:%s error:%v", info.FromUrl, err)
-		}
-		info.Key = key
+		return result, errors.New(alert.CannotEmpty("bucket", ""))
 	}
 
 	if len(info.FromUrl) == 0 {
-		return FetchResult{}, errors.New(alert.CannotEmpty("from url", ""))
+		return result, errors.New(alert.CannotEmpty("from url", ""))
 	}
 
 	log.DebugF("fetch start: %s => [%s|%s]", info.FromUrl, info.Bucket, info.Key)
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {
-		return FetchResult{}, err
+		return result, err
 	}
-	fetchResult, err := bucketManager.Fetch(info.FromUrl, info.Bucket, info.Key)
+
+	if len(info.Key) == 0 {
+		result, err = bucketManager.FetchWithoutKey(info.FromUrl, info.Bucket)
+	} else {
+		result, err = bucketManager.Fetch(info.FromUrl, info.Bucket, info.Key)
+	}
 	log.DebugF("fetch   end: %s => [%s|%s]", info.FromUrl, info.Bucket, info.Key)
-	return FetchResult(fetchResult), err
+	return result, err
 }
 
 type AsyncFetchApiInfo storage.AsyncFetchParam

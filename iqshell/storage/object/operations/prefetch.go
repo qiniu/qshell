@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage"
@@ -8,6 +9,16 @@ import (
 )
 
 type MirrorUpdateInfo storage.PrefetchApiInfo
+
+func (info *MirrorUpdateInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.Key) == 0 {
+		return alert.CannotEmptyError("Key", "")
+	}
+	return nil
+}
 
 func MirrorUpdate(info MirrorUpdateInfo) {
 	err := storage.Prefetch(storage.PrefetchApiInfo(info))

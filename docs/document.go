@@ -9,16 +9,9 @@ import (
 	"strings"
 )
 
-const (
-	SheetSep1 = "\n|------|------|"
-	SheetSep2 = "\n|------|------|------|"
-)
-
 var documentInfo = make(map[string]string)
 
 func addCmdDocumentInfo(cmdName string, document string) {
-	document = strings.ReplaceAll(document, SheetSep1, "")
-	document = strings.ReplaceAll(document, SheetSep2, "")
 	documentInfo[cmdName] = document
 }
 

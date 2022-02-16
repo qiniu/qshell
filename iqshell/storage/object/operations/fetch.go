@@ -16,6 +16,16 @@ import (
 
 type FetchInfo object.FetchApiInfo
 
+func (info *FetchInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.FromUrl) == 0 {
+		return alert.CannotEmptyError("RemoteResourceUrl", "")
+	}
+	return nil
+}
+
 func Fetch(info FetchInfo) {
 	result, err := object.Fetch(object.FetchApiInfo(info))
 	if err != nil {

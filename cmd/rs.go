@@ -246,13 +246,35 @@ var mirrorUpdateCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "mirrorupdate <Bucket> <Key>",
 		Short: "Fetch and update the file in bucket using mirror storage",
-		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 1 {
+			cmdId = docs.MirrorUpdateType
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
+			operations.MirrorUpdate(info)
+		},
+	}
+	return cmd
+}
+
+var prefetchCmdBuilder = func() *cobra.Command {
+	var info = operations.MirrorUpdateInfo{}
+	var cmd = &cobra.Command{
+		Use:   "prefetch <Bucket> <Key>",
+		Short: "Fetch and update the file in bucket using mirror storage",
+		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.PrefetchType
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
+				info.Key = args[1]
+			}
+			prepare(cmd, &info)
 			operations.MirrorUpdate(info)
 		},
 	}
@@ -264,13 +286,15 @@ var fetchCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "fetch <RemoteResourceUrl> <Bucket> [-k <Key>]",
 		Short: "Fetch a remote resource by url and save in bucket",
-		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 1 {
+			cmdId = docs.FetchType
+			if len(args) > 0 {
 				info.FromUrl = args[0]
+			}
+			if len(args) > 1 {
 				info.Bucket = args[1]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Fetch(info)
 		},
 	}
@@ -297,5 +321,6 @@ func init() {
 		saveAsCmdBuilder(),
 		mirrorUpdateCmdBuilder(),
 		fetchCmdBuilder(),
+		prefetchCmdBuilder(),
 	)
 }
