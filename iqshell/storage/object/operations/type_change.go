@@ -17,12 +17,25 @@ type ChangeTypeInfo struct {
 	Type   string
 }
 
-func (c ChangeTypeInfo) getTypeOfInt() (int, error) {
-	if len(c.Type) == 0 {
+func (info *ChangeTypeInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.Key) == 0 {
+		return alert.CannotEmptyError("Key", "")
+	}
+	if len(info.Type) == 0 {
+		return alert.CannotEmptyError("Type", "")
+	}
+	return nil
+}
+
+func (info *ChangeTypeInfo) getTypeOfInt() (int, error) {
+	if len(info.Type) == 0 {
 		return -1, errors.New(alert.CannotEmpty("type", ""))
 	}
 
-	ret, err := strconv.Atoi(c.Type)
+	ret, err := strconv.Atoi(info.Type)
 	if err != nil {
 		return -1, errors.New("parse type error:" + err.Error())
 	}

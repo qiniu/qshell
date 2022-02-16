@@ -2,70 +2,12 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/docs"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/operations"
-	operations2 "github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
-var listBucketCmdBuilder = func() *cobra.Command {
-	var info = operations.ListInfo{
-		StartDate:  "",
-		EndDate:    "",
-		AppendMode: false,
-		Readable:   false,
-		Delimiter:  "",
-		MaxRetry:   20,
-	}
-	var cmd = &cobra.Command{
-		Use:   "listbucket <Bucket>",
-		Short: "List all the files in the bucket",
-		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 0 {
-				info.Bucket = args[0]
-			}
-			prepare(cmd, nil)
-			operations.List(info)
-		},
-	}
-	cmd.Flags().StringVarP(&info.Marker, "marker", "m", "", "list marker")
-	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
-	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
-	return cmd
-}
-
-var listBucketCmd2Builder = func() *cobra.Command {
-	var info = operations.ListInfo{}
-	var cmd = &cobra.Command{
-		Use:   "listbucket2 <Bucket>",
-		Short: "List all the files in the bucket using v2/list interface",
-		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 0 {
-				info.Bucket = args[0]
-			}
-			prepare(cmd, nil)
-			operations.List(info)
-		},
-	}
-
-	cmd.Flags().StringVarP(&info.Marker, "marker", "m", "", "list marker")
-	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
-	cmd.Flags().StringVarP(&info.Suffixes, "suffixes", "q", "", "list by key suffixes, separated by comma")
-	cmd.Flags().IntVarP(&info.MaxRetry, "max-retry", "x", -1, "max retries when error occurred")
-	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
-	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
-	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
-	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "append to file")
-	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
-
-	return cmd
-}
-
 var statCmdBuilder = func() *cobra.Command {
-	var info = operations2.StatusInfo{}
+	var info = operations.StatusInfo{}
 	var cmd = &cobra.Command{
 		Use:   "stat <Bucket> <Key>",
 		Short: "Get the basic info of a remote file",
@@ -76,14 +18,14 @@ var statCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 			}
 			prepare(cmd, nil)
-			operations2.Status(info)
+			operations.Status(info)
 		},
 	}
 	return cmd
 }
 
 var forbiddenCmdBuilder = func() *cobra.Command {
-	var info = operations2.ForbiddenInfo{}
+	var info = operations.ForbiddenInfo{}
 	var cmd = &cobra.Command{
 		Use:   "forbidden <Bucket> <Key>",
 		Short: "forbidden file in qiniu bucket",
@@ -95,7 +37,7 @@ var forbiddenCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 			}
 			prepare(cmd, nil)
-			operations2.ForbiddenObject(info)
+			operations.ForbiddenObject(info)
 		},
 	}
 	cmd.Flags().BoolVarP(&info.UnForbidden, "reverse", "r", false, "unforbidden object in qiniu bucket")
@@ -103,7 +45,7 @@ var forbiddenCmdBuilder = func() *cobra.Command {
 }
 
 var deleteCmdBuilder = func() *cobra.Command {
-	var info = operations2.DeleteInfo{}
+	var info = operations.DeleteInfo{}
 	var cmd = &cobra.Command{
 		Use:   "delete <Bucket> <Key>",
 		Short: "Delete a remote file in the bucket",
@@ -114,14 +56,14 @@ var deleteCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 			}
 			prepare(cmd, nil)
-			operations2.Delete(info)
+			operations.Delete(info)
 		},
 	}
 	return cmd
 }
 
 var deleteAfterCmdBuilder = func() *cobra.Command {
-	var info = operations2.DeleteInfo{}
+	var info = operations.DeleteInfo{}
 	var cmd = &cobra.Command{
 		Use:   "expire <Bucket> <Key> <DeleteAfterDays>",
 		Short: "Set the deleteAfterDays of a file",
@@ -133,14 +75,14 @@ var deleteAfterCmdBuilder = func() *cobra.Command {
 				info.AfterDays = args[2]
 			}
 			prepare(cmd, nil)
-			operations2.Delete(info)
+			operations.Delete(info)
 		},
 	}
 	return cmd
 }
 
 var moveCmdBuilder = func() *cobra.Command {
-	var info = operations2.MoveInfo{}
+	var info = operations.MoveInfo{}
 	var cmd = &cobra.Command{
 		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Move/Rename a file and save in bucket",
@@ -155,7 +97,7 @@ var moveCmdBuilder = func() *cobra.Command {
 				info.DestKey = info.SourceKey
 			}
 			prepare(cmd, nil)
-			operations2.Move(info)
+			operations.Move(info)
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
@@ -164,7 +106,7 @@ var moveCmdBuilder = func() *cobra.Command {
 }
 
 var copyCmdBuilder = func() *cobra.Command {
-	var info = operations2.CopyInfo{}
+	var info = operations.CopyInfo{}
 	var cmd = &cobra.Command{
 		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Make a copy of a file and save in bucket",
@@ -184,7 +126,7 @@ you can check if B.png has exists by:
 				info.DestKey = info.SourceKey
 			}
 			prepare(cmd, nil)
-			operations2.Copy(info)
+			operations.Copy(info)
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
@@ -193,7 +135,7 @@ you can check if B.png has exists by:
 }
 
 var changeMimeCmdBuilder = func() *cobra.Command {
-	var info = operations2.ChangeMimeInfo{}
+	var info = operations.ChangeMimeInfo{}
 	var cmd = &cobra.Command{
 		Use:   "chgm <Bucket> <Key> <NewMimeType>",
 		Short: "Change the mime type of a file",
@@ -213,14 +155,14 @@ and you can check result by command:
 				info.Mime = args[2]
 			}
 			prepare(cmd, &info)
-			operations2.ChangeMime(info)
+			operations.ChangeMime(info)
 		},
 	}
 	return cmd
 }
 
 var changeTypeCmdBuilder = func() *cobra.Command {
-	var info = operations2.ChangeTypeInfo{}
+	var info = operations.ChangeTypeInfo{}
 	var cmd = &cobra.Command{
 		Use:   "chtype <Bucket> <Key> <FileType>",
 		Short: "Change the file type of a file",
@@ -232,22 +174,26 @@ while 2 means low archive storage.`,
 	qshell chtype bucketA A.png 2
 and you can check result by command:
 	qshell stat bucketA A.png`,
-		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 2 {
+			cmdId = docs.ChangeType
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
+			}
+			if len(args) > 2 {
 				info.Type = args[2]
 			}
-			prepare(cmd, nil)
-			operations2.ChangeType(info)
+			prepare(cmd, &info)
+			operations.ChangeType(info)
 		},
 	}
 	return cmd
 }
 
 var privateUrlCmdBuilder = func() *cobra.Command {
-	var info = operations2.PrivateUrlInfo{}
+	var info = operations.PrivateUrlInfo{}
 	var cmd = &cobra.Command{
 		Use:   "privateurl <PublicUrl> [<Deadline>]",
 		Short: "Create private resource access url",
@@ -260,14 +206,14 @@ var privateUrlCmdBuilder = func() *cobra.Command {
 				info.Deadline = args[1]
 			}
 			prepare(cmd, nil)
-			operations2.PrivateUrl(info)
+			operations.PrivateUrl(info)
 		},
 	}
 	return cmd
 }
 
 var saveAsCmdBuilder = func() *cobra.Command {
-	var info = operations2.SaveAsInfo{}
+	var info = operations.SaveAsInfo{}
 	var cmd = &cobra.Command{
 		Use:   "saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>",
 		Short: "Create a resource access url with fop and saveas",
@@ -279,14 +225,14 @@ var saveAsCmdBuilder = func() *cobra.Command {
 				info.SaveKey = args[2]
 			}
 			prepare(cmd, nil)
-			operations2.SaveAs(info)
+			operations.SaveAs(info)
 		},
 	}
 	return cmd
 }
 
 var mirrorUpdateCmdBuilder = func() *cobra.Command {
-	var info = operations2.MirrorUpdateInfo{}
+	var info = operations.MirrorUpdateInfo{}
 	var cmd = &cobra.Command{
 		Use:   "mirrorupdate <Bucket> <Key>",
 		Short: "Fetch and update the file in bucket using mirror storage",
@@ -297,14 +243,14 @@ var mirrorUpdateCmdBuilder = func() *cobra.Command {
 				info.Key = args[1]
 			}
 			prepare(cmd, nil)
-			operations2.MirrorUpdate(info)
+			operations.MirrorUpdate(info)
 		},
 	}
 	return cmd
 }
 
 var fetchCmdBuilder = func() *cobra.Command {
-	var info operations2.FetchInfo
+	var info operations.FetchInfo
 	var cmd = &cobra.Command{
 		Use:   "fetch <RemoteResourceUrl> <Bucket> [-k <Key>]",
 		Short: "Fetch a remote resource by url and save in bucket",
@@ -315,7 +261,7 @@ var fetchCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[1]
 			}
 			prepare(cmd, nil)
-			operations2.Fetch(info)
+			operations.Fetch(info)
 		},
 	}
 
