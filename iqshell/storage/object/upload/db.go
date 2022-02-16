@@ -33,7 +33,8 @@ func (d *dbHandler) init() (err error) {
 // 当数据库中不存在相应文件信息 或 文件信息不匹配 则返回 error, (exist, match, error)
 func (d *dbHandler) checkInfoOfDB() (bool, bool, error) {
 	if d.dbHandler == nil {
-		return false, false, errors.New("upload db: no set upload db path")
+		log.Debug("upload db check error:no db handler")
+		return false, false, nil
 	}
 
 	// 数据库中存在也验证数据库信息，数据库不存在则仅验证本地文件信息

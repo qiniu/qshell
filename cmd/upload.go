@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
 	"github.com/spf13/cobra"
@@ -137,20 +138,23 @@ var formUploadCmdBuilder = func() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fput <Bucket> <Key> <LocalFile>",
 		Short: "Form upload a local file",
-		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.FormPutType
 			cfg.CmdCfg.Up.DisableResume = data.TrueString
 			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
-			if len(args) > 2 {
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
+			}
+			if len(args) > 2 {
 				info.FilePath = args[2]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.UploadFile(info)
 		},
 	}
-	//cmd.Flags().IntVarP(&info.w, "worker", "c", 16, "worker count")
 	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
 	cmd.Flags().IntVarP(&cfg.CmdCfg.Up.FileType, "storage", "s", 0, "storage type")

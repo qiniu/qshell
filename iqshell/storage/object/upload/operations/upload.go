@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -24,6 +25,19 @@ type UploadInfo struct {
 	FileSize         int64         // 待上传文件的大小, 如果不配置会动态读取 【可选】
 	FileModifyTime   int64         // 本地文件修改时间, 如果不配置会动态读取 【可选】
 	TokenProvider    func() string // token provider  【可选】
+}
+
+func (info *UploadInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.Key) == 0 {
+		return alert.CannotEmptyError("Key", "")
+	}
+	if len(info.FilePath) == 0 {
+		return alert.CannotEmptyError("LocalFile", "")
+	}
+	return nil
 }
 
 func UploadFile(info UploadInfo) {
@@ -51,9 +65,12 @@ func UploadFile(info UploadInfo) {
 			log.ErrorF("Upload file error %d: %s, Reqid: %s", v.Code, v.Err, v.Reqid)
 		}
 	} else {
-		log.Alert("FileHash:", ret.Hash)
-		log.Alert("Fsize:", ret.FSize, "(", utils.FormatFileSize(ret.FSize), ")")
-		log.Alert("MimeType:", ret.MimeType)
+		log.Alert("")
+		log.Alert("-------------- File Info --------------")
+		log.AlertF("%10s%s", "Key: ", ret.Key)
+		log.AlertF("%10s%s", "Hash: ", ret.Hash)
+		log.AlertF("%10s%d%s", "Fsize: ", ret.FSize, "("+utils.FormatFileSize(ret.FSize)+")")
+		log.AlertF("%10s%s", "MimeType: ", ret.MimeType)
 	}
 
 	if err != nil {
@@ -108,7 +125,7 @@ func uploadFile(info UploadInfo) (res upload.ApiResult, err error) {
 	if res.IsSkip {
 		log.AlertF("Upload skip because file exist:%s => [%s:%s]", info.FilePath, info.Bucket, info.Key)
 	} else {
-		log.AlertF("Upload File success %s => [%s:%s] duration:%.2fs speed:%s", info.FilePath, info.Bucket, info.Key, duration, speed)
+		log.AlertF("Upload File success %s => [%s:%s] duration:%.2fs Speed:%s", info.FilePath, info.Bucket, info.Key, duration, speed)
 
 		//delete on success
 		if uploadConfig.IsDeleteOnSuccess() {
