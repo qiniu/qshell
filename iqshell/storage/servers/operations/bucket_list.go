@@ -11,6 +11,10 @@ type ListInfo struct {
 	Shared bool
 }
 
+func (info *ListInfo) Check() error {
+	return nil
+}
+
 // List list 所有 bucket
 func List(info ListInfo) {
 	buckets, err := servers.AllBuckets(info.Shared)
