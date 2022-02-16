@@ -36,7 +36,7 @@ qshell cdnrefresh --dirs -i <DirListFile>
 如果没有通过该选项指定该文件参数， 从标准输入读取内容。
 
 # 示例
-比如我们有如下内容的文件，需要刷新里面的外链
+比如我们有如下内容的文件（`torefresh.txt`），需要刷新里面的外链
 ```
 http://if-pbl.qiniudn.com/hello1.txt
 http://if-pbl.qiniudn.com/hello2.txt
@@ -47,8 +47,9 @@ http://if-pbl.qiniudn.com/hello6.txt
 http://if-pbl.qiniudn.com/hello7.txt
 ```
 
+通过执行命令：
 ```
 $ qshell cdnrefresh -i torefresh.txt
 ```
 
-就可以刷新文件`torefresh.txt`中的访问外链了。
+就可以刷新文件 `torefresh.txt` 中的访问外链了。

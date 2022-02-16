@@ -16,6 +16,10 @@ type PrefetchInfo struct {
 	QpsLimit    int    // qps 限制
 }
 
+func (info *PrefetchInfo) Check() error {
+	return nil
+}
+
 func Prefetch(info PrefetchInfo) {
 	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
 

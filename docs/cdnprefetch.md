@@ -10,7 +10,7 @@ qshell cdnprefetch [-i <UrlListFile>]
 需要在使用了 `account` 设置了 `AccessKey`, `SecretKey` 和 `Name` 的情况下使用。
 
 # 参数
-##### i选项
+##### i 选项
 接受一个文件参数，文件内容每行包含一个文件访问外链。
 文件每行具体格式如下：
 ```
@@ -19,7 +19,7 @@ qshell cdnprefetch [-i <UrlListFile>]
 如果没有通过该选项指定该文件参数， 从标准输入读取内容。
 
 # 示例
-比如我们有如下内容的文件，需要预取里面的外链
+比如我们有如下内容的文件（`toprefetch.txt`），需要预取里面的外链
 ```
 http://if-pbl.qiniudn.com/hello1.txt
 http://if-pbl.qiniudn.com/hello2.txt
@@ -30,6 +30,7 @@ http://if-pbl.qiniudn.com/hello6.txt
 http://if-pbl.qiniudn.com/hello7.txt
 ```
 
+通过执行命令：
 ```
 $ qshell cdnprefetch -i toprefetch.txt
 ```

@@ -17,6 +17,10 @@ type RefreshInfo struct {
 	QpsLimit     int
 }
 
+func (info *RefreshInfo) Check() error {
+	return nil
+}
+
 // Refresh 【cdnrefresh】刷新所有CDN节点
 func Refresh(info RefreshInfo) {
 	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)

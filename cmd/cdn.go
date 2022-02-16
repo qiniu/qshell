@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/cdn/operations"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +14,8 @@ var cdnPrefetchCmdBuilder = func() *cobra.Command {
 		Long:  "Batch prefetch the urls in the url list file or from stdin if ItemListFile not specified",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			prepare(cmd, nil)
+			cmdId = docs.CdnPrefetchType
+			prepare(cmd, &info)
 			operations.Prefetch(info)
 		},
 	}
@@ -33,7 +35,8 @@ var cdnRefreshCmdBuilder = func() *cobra.Command {
 		Long:  "Batch refresh the cdn cache by the url list file or from stdin if ItemListFile not specified",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			prepare(cmd, nil)
+			cmdId = docs.CdnRefreshType
+			prepare(cmd, &info)
 			operations.Refresh(info)
 		},
 	}
