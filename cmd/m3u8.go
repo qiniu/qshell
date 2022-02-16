@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/m3u8/operations"
 	"github.com/spf13/cobra"
 )
@@ -10,16 +11,18 @@ var m3u8ReplaceDomainCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "m3u8replace <Bucket> <M3u8Key> [<NewDomain>]",
 		Short: "Replace m3u8 domain in the playlist",
-		Args:  cobra.RangeArgs(2, 3),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 1 {
+			cmdId = docs.M3u8ReplaceType
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			if len(args) == 3 {
+			if len(args) > 2 {
 				info.NewDomain = args[2]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.ReplaceDomain(info)
 		},
 	}
@@ -34,13 +37,15 @@ var m3u8DeleteCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "m3u8delete <Bucket> <M3u8Key>",
 		Short: "Delete m3u8 playlist and the slices it references",
-		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 1 {
+			cmdId = docs.M3u8DeleteType
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Delete(info)
 		},
 	}

@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/m3u8"
@@ -8,6 +9,16 @@ import (
 )
 
 type ReplaceDomainInfo m3u8.ReplaceDomainApiInfo
+
+func (info *ReplaceDomainInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.Key) == 0 {
+		return alert.CannotEmptyError("Key", "")
+	}
+	return nil
+}
 
 func ReplaceDomain(info ReplaceDomainInfo) {
 	err := m3u8.ReplaceDomain(m3u8.ReplaceDomainApiInfo(info))
