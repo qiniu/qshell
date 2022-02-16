@@ -1,15 +1,12 @@
 # 简介
-
 `qupload2` 功能和 `qupload` 一致，不过 `qupload2` 通过命令行的方式来指定各个需要的参数，例如：
-
 ```
 qshell qupload2 --src-dir=/home/jemy/temp --bucket=test
 ```
 
 其所支持的命令参数列表，可以通过 `-h` 选项获得，参数含义参考：[qupload](qupload.md)
-
 ```
-jemy•~» qshell qupload2 -h                                                                                                                                                                                                                                      
+jemy•~» qshell qupload2 -h                                         
 ```
 
 ```

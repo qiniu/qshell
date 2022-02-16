@@ -1,10 +1,9 @@
 # 简介
-
-`rput`命令使用七牛支持的分片上传的方式来上传一个文件，一般文件大小较大的情况下，可以使用分片上传来有效地保证文件上传的成功。
+`rput` 命令使用七牛支持的分片上传的方式来上传一个文件，一般文件大小较大的情况下，可以使用分片上传来有效地保证文件上传的成功。
 
 参考文档：
-[分片上传 V1](https://developer.qiniu.com/kodo/7443/shard-to-upload)
-[分片上传 V2](https://developer.qiniu.com/kodo/6364/multipartupload-interface)
+- [分片上传 V1](https://developer.qiniu.com/kodo/7443/shard-to-upload)
+- [分片上传 V2](https://developer.qiniu.com/kodo/6364/multipartupload-interface)
 
 # 格式
 
