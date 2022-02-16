@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/operations"
 	"github.com/spf13/cobra"
 )
@@ -10,12 +11,12 @@ var domainsCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "domains <Bucket>",
 		Short: "Get all domains of the bucket",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.DomainsType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.ListDomains(info)
 		},
 	}

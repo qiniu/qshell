@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
@@ -9,6 +10,13 @@ import (
 
 type ListDomainInfo struct {
 	Bucket string
+}
+
+func (info *ListDomainInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+	return nil
 }
 
 func ListDomains(info ListDomainInfo) {

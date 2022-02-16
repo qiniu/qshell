@@ -10,13 +10,10 @@ qshell domains <Bucket>
 需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
 
 # 参数
-|参数名|描述|
-|-----|-----|
-|Bucket|空间名称，可以为公开空间或者私有空间|
+- Bucket：空间名称，可以为公开空间或者私有空间【必选】
 
 # 示例
-获取空间`if-pbl`对应的所有的域名：
-
+获取空间 `if-pbl` 对应的所有的域名：
 ```
 $ qshell domains if-pbl
 ```
