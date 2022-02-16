@@ -12,12 +12,13 @@ qshell copy [--overwrite] <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]
 需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
 
 # 参数
-|   参数名   |   描述   |  可选参数  |
-|------------|----------|------------|
-| SrcBucket  |源空间名称 | N |
-|   SrcKey   |源文件名称 | N |
-| DestBucket |目标空间名称，可以和源空间名称相同| N |
-|   DestKey  |目标文件名称，如果是DestBucket和SrcBucket不同的情况下，这个参数可以不填，默认和SrcKey相同| Y |
+- SrcBucket: 源空间名称 【必选】
+- SrcKey: 源文件名称 【必选】
+- DestBucket: 目标空间名称，可以和源空间名称相同【必选】
+  
+# 选项
+- -k: 目标文件名称(DestKey)，如果是 `DestBucket` 和 `SrcBucket` 不同的情况下，这个参数可以不填，默认和 `SrcKey` 相同。
+- --overwrite: 当保存的文件已存在时，强制用新文件覆盖原文件，如果无此选项操作会失败。
 
 ##### 备注：
 1 如果复制的副本和原文件在同一个空间，那么必须提供不同于原文件的副本文件名，或者加上覆盖选项 `-overwrite`
