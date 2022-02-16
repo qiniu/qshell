@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
@@ -39,13 +40,15 @@ var getCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "get <Bucket> <Key>",
 		Short: "Download a single file from bucket",
-		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 1 {
+			cmdId = docs.GetType
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.DownloadFile(info)
 		},
 	}

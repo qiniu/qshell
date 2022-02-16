@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
@@ -13,6 +14,16 @@ import (
 type DownloadInfo struct {
 	download.ApiInfo
 	IsPublic bool // 是否是公有云
+}
+
+func (info *DownloadInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.Key) == 0 {
+		return alert.CannotEmptyError("Key", "")
+	}
+	return nil
 }
 
 func DownloadFile(info DownloadInfo) {
@@ -50,22 +61,22 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 		})
 	}
 
-	log.InfoF("Download:%s => %s", info.Url, info.ToFile)
+	log.InfoF("Download: %s => %s", info.Url, info.ToFile)
 
 	startTime := time.Now().UnixNano() / 1e6
 	res, err := download.Download(info.ApiInfo)
 	if err != nil {
-		log.ErrorF("Download  failed:%s => %s error:%v", info.Url, info.ToFile, err)
+		log.ErrorF("Download  failed: %s => %s error:%v", info.Url, info.ToFile, err)
 		return res, err
 	}
 
 	fileStatus, err := os.Stat(res.FileAbsPath)
 	if err != nil {
-		log.ErrorF("Download  failed:%s => %s get file status error:%v", info.Url, info.ToFile, err)
+		log.ErrorF("Download  failed: %s => %s get file status error:%v", info.Url, info.ToFile, err)
 		return res, err
 	}
 	if fileStatus == nil {
-		log.ErrorF("Download  failed:%s => %s download speed: can't get file status", info.Url, info.ToFile)
+		log.ErrorF("Download  failed: %s => %s download speed: can't get file status", info.Url, info.ToFile)
 		return res, err
 	}
 
@@ -73,11 +84,11 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 	duration := float64(endTime-startTime) / 1000
 	speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/duration/1024)
 	if res.IsExist {
-		log.AlertF("Download skip because file exist:%s => %s", info.Url, res.FileAbsPath)
+		log.AlertF("Download skip because file exist: %s => %s", info.Url, res.FileAbsPath)
 	} else if res.IsUpdate {
-		log.AlertF("Download update success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+		log.AlertF("Download update success: %s => %s speed:%s", info.Url, res.FileAbsPath, speed)
 	} else {
-		log.AlertF("Download success:%s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+		log.AlertF("Download success: %s => %s speed:%s", info.Url, res.FileAbsPath, speed)
 	}
 
 	return res, nil
