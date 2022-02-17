@@ -37,7 +37,7 @@ type ApiInfo struct {
 	PutThreshold     int64         // 分片上传时上传阈值
 }
 
-func (a *ApiInfo) init() (err error) {
+func (a *ApiInfo) Check() (err error) {
 	if len(a.FilePath) == 0 {
 		return errors.New(alert.CannotEmpty("upload file path", ""))
 	}
@@ -92,7 +92,7 @@ type Uploader interface {
 }
 
 func Upload(info ApiInfo) (res ApiResult, err error) {
-	err = info.init()
+	err = info.Check()
 	if err != nil {
 		log.WarningF("upload: info init error:%v", err)
 	}

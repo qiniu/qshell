@@ -14,13 +14,13 @@ qshell sync <SrcResUrl> <Bucket> <Key> [<UpHostIp>]
 需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
 
 # 参数
-|参数名|描述|可选参数|
-|-----|-----|------|
-|SrcResUrl|互联网上资源的链接，必须是可访问的链接|N|
-|Bucket|空间名称，可以为公开空间或者私有空间|N|
-|Key|该资源保存在空间中的名字|N|
-|UpHostIp|上传入口的IP地址，一般在大文件的情况下，可以指定上传入口的 IP 来减少 DNS 环节，提升同步速度|Y|
-|resumable-api-v2|使用分片 v2 进行上传，默认使用 v1|Y|
+- SrcResUrl：互联网上资源的链接，必须是可访问的链接。 【必选】
+- Bucket：空间名称，可以为公开空间或者私有空间。 【必选】
+
+# 选项
+- --key：该资源保存在空间中的名字。 【可选】
+- --uphost：上传入口的IP地址，一般在大文件的情况下，可以指定上传入口的 IP 来减少 DNS 环节，提升同步速度。 【可选】
+- --resumable-api-v2：使用分片 v2 进行上传，默认使用 v1。 【可选】
 
 
 ##### 备注：
@@ -38,6 +38,9 @@ $ dig up-z2.qiniu.com
 
 北美机房
 $ dig up-na0.qiniu.com
+
+东南亚机房
+$ dig up-as0.qiniu.com
 ```
 
 # 示例

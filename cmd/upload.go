@@ -121,14 +121,16 @@ var syncCmdBuilder = func() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sync <SrcResUrl> <Buckets> [-k <Key>]",
 		Short: "Sync big file to qiniu bucket",
-		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.SyncType
 			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumeAPIV2)
 			if len(args) > 0 {
 				info.FilePath = args[0]
+			}
+			if len(args) > 1 {
 				info.Bucket = args[1]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.UploadFile(info)
 		},
 	}
