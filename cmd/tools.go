@@ -256,6 +256,10 @@ var TokenCmdBuilder = func() *cobra.Command {
 		Use:   "token",
 		Short: "Token related command",
 		Long:  "Create QBox token, Qiniu token, Upload token and Download token",
+		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.TokenType
+			prepare(cmd, nil)
+		},
 	}
 
 	cmd.AddCommand(
@@ -267,16 +271,16 @@ var TokenCmdBuilder = func() *cobra.Command {
 }
 
 var QboxTokenCmdBuilder = func() *cobra.Command {
-	var info = operations.TokenInfo{}
+	var info = operations.QBoxTokenInfo{}
 	var cmd = &cobra.Command{
 		Use:   "qbox <Url>",
 		Short: "Create QBox token",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.TokenType
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.CreateQBoxToken(info)
 		},
 	}
@@ -290,16 +294,16 @@ var QboxTokenCmdBuilder = func() *cobra.Command {
 }
 
 var QiniuTokenCmdBuilder = func() *cobra.Command {
-	var info = operations.TokenInfo{}
+	var info = operations.QiniuTokenInfo{}
 	var cmd = &cobra.Command{
 		Use:   "qiniu <Url>",
 		Short: "Create Qiniu Token",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.TokenType
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.CreateQiniuToken(info)
 		},
 	}
@@ -314,16 +318,16 @@ var QiniuTokenCmdBuilder = func() *cobra.Command {
 }
 
 var UploadTokenCmdBuilder = func() *cobra.Command {
-	var info = operations.TokenInfo{}
+	var info = operations.UploadTokenInfo{}
 	var cmd = &cobra.Command{
 		Use:   "upload <PutPolicyJsonFile>",
 		Short: "Create upload token using put policy",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.TokenType
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.CreateUploadToken(info)
 		},
 	}

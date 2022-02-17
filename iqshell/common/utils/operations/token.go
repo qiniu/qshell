@@ -7,6 +7,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"io"
@@ -17,18 +18,28 @@ import (
 )
 
 type TokenInfo struct {
-	AccessKey         string
-	SecretKey         string
-	Url               string
-	Method            string
-	ContentType       string
-	Body              string
-	PutPolicyFilePath string
+	AccessKey   string
+	SecretKey   string
+	Url         string
+	Method      string
+	Body        string
+	ContentType string
+}
+
+type QBoxTokenInfo struct {
+	TokenInfo
+}
+
+func (info *QBoxTokenInfo) Check() error {
+	if len(info.Url) == 0 {
+		return alert.CannotEmptyError("Url", "")
+	}
+	return nil
 }
 
 // CreateQBoxToken QBox Token, 一般bucket相关的接口需要这个token
-func CreateQBoxToken(info TokenInfo) {
-	mac, req, mErr := getMacAndRequest(info)
+func CreateQBoxToken(info QBoxTokenInfo) {
+	mac, req, mErr := getMacAndRequest(info.TokenInfo)
 	if mErr != nil {
 		log.ErrorF("create mac and request: %v\n", mErr)
 		os.Exit(data.StatusError)
@@ -41,9 +52,20 @@ func CreateQBoxToken(info TokenInfo) {
 	log.Alert("QBox " + token)
 }
 
+type QiniuTokenInfo struct {
+	TokenInfo
+}
+
+func (info *QiniuTokenInfo) Check() error {
+	if len(info.Url) == 0 {
+		return alert.CannotEmptyError("Url", "")
+	}
+	return nil
+}
+
 // 签名七牛token, 一般三鉴接口需要http头文件 Authorization, 这个头的值就是qiniuToken
-func CreateQiniuToken(info TokenInfo) {
-	mac, req, mErr := getMacAndRequest(info)
+func CreateQiniuToken(info QiniuTokenInfo) {
+	mac, req, mErr := getMacAndRequest(info.TokenInfo)
 	if mErr != nil {
 		log.ErrorF("create mac and reqeust: %v\n", mErr)
 		os.Exit(data.StatusError)
@@ -56,8 +78,20 @@ func CreateQiniuToken(info TokenInfo) {
 	log.Alert("Qiniu " + token)
 }
 
+type UploadTokenInfo struct {
+	TokenInfo
+	PutPolicyFilePath string
+}
+
+func (info *UploadTokenInfo) Check() error {
+	if len(info.PutPolicyFilePath) == 0 {
+		return alert.CannotEmptyError("PutPolicyConfigFile", "")
+	}
+	return nil
+}
+
 // 给定上传策略，打印出上传token
-func CreateUploadToken(info TokenInfo) {
+func CreateUploadToken(info UploadTokenInfo) {
 	fileName := info.PutPolicyFilePath
 
 	fileInfo, oErr := os.Open(fileName)
