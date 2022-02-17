@@ -227,14 +227,18 @@ var saveAsCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>",
 		Short: "Create a resource access url with fop and saveas",
-		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 2 {
+			cmdId = docs.SaveAsType
+			if len(args) > 0 {
 				info.PublicUrl = args[0]
+			}
+			if len(args) > 1 {
 				info.SaveBucket = args[1]
+			}
+			if len(args) > 2 {
 				info.SaveKey = args[2]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.SaveAs(info)
 		},
 	}

@@ -10,11 +10,9 @@ qshell saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>
 需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
 
 # 参数
-|参数名|描述|
-|-----|-----|
-|PublicUrlWithFop|带实时处理指令的资源公开外链|
-|SaveBucket|处理结果保存的空间|
-|SaveKey|处理结果保存的文件名字|
+- PublicUrlWithFop：带实时处理指令的资源公开外链。 【必须】
+- SaveBucket：处理结果保存的空间。 【必须】
+- SaveKey：处理结果保存的文件名字。 【必须】
 
 # 示例
 1 我们需要对空间 `if-pbl` 里面的文件 `qiniu.png` 进行实时处理并且把结果保存在空间 `if-pbl `中，保存的文件名字为 `qiniu_1.jpg`。
