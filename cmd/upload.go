@@ -66,9 +66,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 		Use:   "qupload2",
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 0 {
-				cfg.UploadConfigFile = args[0]
-			}
+			cmdId = docs.QUpload2Type
 			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumeAPIV2)
 			cfg.CmdCfg.Up.IgnoreDir = data.GetBoolString(ignoreDir)
 			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
@@ -77,7 +75,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 			cfg.CmdCfg.Up.CheckSize = data.GetBoolString(checkSize)
 			cfg.CmdCfg.Up.RescanLocal = data.GetBoolString(rescanLocal)
 			info.GroupInfo.Force = true
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.BatchUpload(info)
 		},
 	}
@@ -105,15 +103,15 @@ var upload2CmdBuilder = func() *cobra.Command {
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.SkipFixedStrings, "skip-fixed-strings", "", "skip files with the fixed string in the name")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.SkipSuffixes, "skip-suffixes", "", "skip files with these suffixes")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.UpHost, "up-host", "", "upload host")
-	cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindUpIp, "bind-up-ip", "", "upload host ip to bind")
-	cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindRsIp, "bind-rs-ip", "", "rs host ip to bind")
-	cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindNicIp, "bind-nic-ip", "", "local network interface card to bind")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.LogFile, "log-file", "", "log file")
 	cmd.Flags().StringVar(&cfg.CmdCfg.Up.LogLevel, "log-level", "debug", "log level")
-	cmd.Flags().IntVar(&cfg.CmdCfg.Up.LogRotate, "log-rotate", 1, "log rotate days")
+	cmd.Flags().IntVar(&cfg.CmdCfg.Up.LogRotate, "log-rotate", 7, "log rotate days")
 	cmd.Flags().IntVar(&cfg.CmdCfg.Up.FileType, "file-type", 0, "set storage file type")
 	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
+	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindUpIp, "bind-up-ip", "", "upload host ip to bind")
+	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindRsIp, "bind-rs-ip", "", "rs host ip to bind")
+	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindNicIp, "bind-nic-ip", "", "local network interface card to bind")
 	return cmd
 }
 
