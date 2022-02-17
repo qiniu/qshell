@@ -1,23 +1,30 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var uploadCmdBuilder = func() *cobra.Command {
 	info := operations.BatchUploadInfo{}
 	cmd := &cobra.Command{
-		Use:   "qupload <quploadConfigFile>",
+		Use:   "qupload <LocalDownloadConfig>",
 		Short: "Batch upload files to the qiniu bucket",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.QUploadType
 			if len(args) > 0 {
 				cfg.UploadConfigFile = args[0]
 			}
-			prepare(cmd, nil)
+			info.GroupInfo.Force = true
+			prepare(cmd, &info)
+			if len(args) == 0 {
+				fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
+				return
+			}
 			operations.BatchUpload(info)
 		},
 	}
@@ -69,6 +76,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 			cfg.CmdCfg.Up.CheckHash = data.GetBoolString(checkHash)
 			cfg.CmdCfg.Up.CheckSize = data.GetBoolString(checkSize)
 			cfg.CmdCfg.Up.RescanLocal = data.GetBoolString(rescanLocal)
+			info.GroupInfo.Force = true
 			prepare(cmd, nil)
 			operations.BatchUpload(info)
 		},

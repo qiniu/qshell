@@ -17,40 +17,33 @@ import (
 	"time"
 )
 
-const (
-	min_upload_thread_count = 1
-	max_upload_thread_count = 2000
-)
-
 type BatchUploadInfo struct {
 	// 输入文件通过 upload config 输入
 	GroupInfo group.Info
 }
 
+func (info *BatchUploadInfo) Check() error {
+	if info.GroupInfo.WorkCount < 1 || info.GroupInfo.WorkCount > 2000 {
+		info.GroupInfo.WorkCount = 5
+		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
+			info.GroupInfo.Info.WorkCount)
+	}
+	if err := info.GroupInfo.Check(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // BatchUpload 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中;
 // 可以设置多线程上传，默认的线程区间在[iqshell.min_upload_thread_count, iqshell.max_upload_thread_count]
 func BatchUpload(info BatchUploadInfo) {
-	info.GroupInfo.Force = true
-
-	info.GroupInfo.Check()
 	uploadConfig := workspace.GetConfig().Up
 	if err := uploadConfig.Check(); err != nil {
 		log.ErrorF("batch upload:%v", err)
 		return
 	}
 
-	//upload
-	if info.GroupInfo.Info.WorkCount < min_upload_thread_count {
-		info.GroupInfo.Info.WorkCount = min_upload_thread_count
-		log.WarningF("Tip: you can set <ThreadCount> value between %d and %d to improve speed, and now ThreadCount change to:%d",
-			min_upload_thread_count, max_upload_thread_count, info.GroupInfo.Info.WorkCount)
-	}
-
-	if info.GroupInfo.Info.WorkCount > max_upload_thread_count {
-		info.GroupInfo.Info.WorkCount = max_upload_thread_count
-		log.WarningF("Tip: you can set <ThreadCount> value between %d and %d to improve speed, and now ThreadCount change to:%d",
-			min_upload_thread_count, max_upload_thread_count, info.GroupInfo.Info.WorkCount)
-	}
+	log.AlertF("Writing upload log to file:%s \n\n", uploadConfig.LogFile)
 
 	jobId := uploadConfig.JobId()
 	cachePath := workspace.UploadCachePath()
