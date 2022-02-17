@@ -1,5 +1,5 @@
 # 简介
-因为七牛的 [stat接口](http://developer.qiniu.com/docs/v6/api/reference/rs/stat.html) 返回的 `putTime` 字段的单位是 `100纳秒`，有时候我们需要把它转出来看看。这个命令就是这个作用。可以把 `putTime` 的值直接作为参数，得到日期结果。
+因为七牛的 [stat接口](http://developer.qiniu.com/docs/v6/api/reference/rs/stat.html) 返回的 `putTime` 字段的单位是 `100纳秒`，有时候我们需要把它转出来看看。`tns2d` 这个命令就是这个作用。可以把 `putTime` 的值直接作为参数，得到日期结果。
 
 # 格式
 ```
@@ -7,9 +7,7 @@ qshell tns2d <TimestampIn100NanoSeconds>
 ```
 
 # 参数
-|参数名|描述|
-|----------|-------------|
-|TimestampIn100NanoSeconds|以100纳秒为单位的Unix时间戳|
+- TimestampIn100NanoSeconds：以 100 纳秒为单位的 Unix 时间戳。 【必选】
 
 # 示例
 ```
