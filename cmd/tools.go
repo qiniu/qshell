@@ -83,12 +83,12 @@ var ts2dCmdCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "ts2d <TimestampInSeconds>",
 		Short: "Convert timestamp in seconds to a date (TZ: Local)",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.TS2dType
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Timestamp2Date(info)
 		},
 	}
