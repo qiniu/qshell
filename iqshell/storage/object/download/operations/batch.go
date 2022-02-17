@@ -20,6 +20,16 @@ type BatchDownloadInfo struct {
 	GroupInfo group.Info
 }
 
+func (info *BatchDownloadInfo) Check() error {
+	if info.GroupInfo.WorkCount < 1 || info.GroupInfo.WorkCount > 2000 {
+		info.GroupInfo.WorkCount = 5
+	}
+	if err := info.GroupInfo.Check(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func BatchDownload(info BatchDownloadInfo) {
 	downloadCfg := workspace.GetConfig().Download
 	info.GroupInfo.InputFile = downloadCfg.KeyFile
@@ -30,7 +40,7 @@ func BatchDownload(info BatchDownloadInfo) {
 		downloadDomain, _ = bucket.DomainOfBucket(downloadCfg.Bucket)
 	}
 	if len(downloadDomain) == 0 {
-		log.Error("download domain can't be empty, you can set cdn_domain or io_host")
+		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", downloadCfg.Bucket)
 		return
 	}
 

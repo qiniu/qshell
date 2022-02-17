@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var downloadCmdBuilder = func() *cobra.Command {
@@ -16,18 +18,21 @@ var downloadCmdBuilder = func() *cobra.Command {
 		Long: `By default qdownload use 5 goroutines to download, it can be customized use -c <count> flag.
 And qdownload will use batch stat api or list api to get files info so that it have knowledge to tell whether files
 have already in local disk and need to skip download or not.`,
-		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 0 {
-				cfg.DownloadConfigFile = args[0]
+			cmdId = docs.QDownloadType
+			if len(args) == 0 {
+				fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
+				return
 			}
+
+			cfg.DownloadConfigFile = args[0]
 			cfg.CmdCfg.Download.LogSetting = &config.LogSetting{
 				LogLevel:  config.InfoKey,
 				LogFile:   "",
 				LogRotate: 0,
 				LogStdout: data.TrueString,
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.BatchDownload(info)
 		},
 	}
