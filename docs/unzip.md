@@ -7,10 +7,10 @@ qshell unzip <QiniuZipFilePath> [<UnzipToDir>]
 ```
  
 # 参数
-|参数名|描述|可选参数|
-|------|-----|-------|
-|QiniuZipFilePath|zip文件路径|N|
-|UnzipToDir|解压到指定目录，默认为命令运行的当前目录|Y|
+- QiniuZipFilePath：zip 文件路径。 【必须】
+  
+# 可选
+- --dir：解压到指定目录，默认为命令运行的当前目录。 【可选】
 
 # 示例
 ```

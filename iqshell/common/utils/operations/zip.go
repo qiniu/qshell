@@ -12,13 +12,15 @@ type ZipInfo struct {
 	UnzipPath   string
 }
 
+func (info *ZipInfo) Check() error {
+	if len(info.ZipFilePath) == 0 {
+		return alert.CannotEmptyError("QiniuZipFilePath", "")
+	}
+	return nil
+}
+
 // Unzip 解压使用mkzip压缩的文件
 func Unzip(info ZipInfo) {
-	if len(info.ZipFilePath) == 0 {
-		log.Error(alert.CannotEmpty("unzip file path", ""))
-		return
-	}
-
 	var err error
 	if len(info.UnzipPath) == 0 {
 		info.UnzipPath, err = os.Getwd()

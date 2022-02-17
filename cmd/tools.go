@@ -205,13 +205,14 @@ var unzipCmdBuilder = func() *cobra.Command {
 		Long:  "Unzip to current workding directory by default, use -dir to specify a directory",
 		Args:  cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.UnzipType
 			if len(args) > 0 {
 				info.ZipFilePath = args[0]
 			}
 			if len(args) > 1 {
 				info.UnzipPath = args[1]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.Unzip(info)
 		},
 	}
