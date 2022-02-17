@@ -180,17 +180,21 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rput <Bucket> <Key> <LocalFile>",
 		Short: "Resumable upload a local file",
-		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.RPutType
 			cfg.CmdCfg.Up.DisableForm = data.TrueString
 			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumeAPIV2)
 			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
-			if len(args) > 2 {
+			if len(args) > 0 {
 				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
 				info.Key = args[1]
+			}
+			if len(args) > 2 {
 				info.FilePath = args[2]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.UploadFile(info)
 		},
 	}
