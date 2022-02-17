@@ -11,6 +11,22 @@ import (
 
 type MoveInfo object.MoveApiInfo
 
+func (info *MoveInfo) Check() error {
+	if len(info.SourceBucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.SourceKey) == 0 {
+		return alert.CannotEmptyError("Key", "")
+	}
+	if len(info.DestBucket) == 0 {
+		return alert.CannotEmptyError("DestBucket", "")
+	}
+	if len(info.DestKey) == 0 {
+		return alert.CannotEmptyError("DestKey", "")
+	}
+	return nil
+}
+
 func Move(info MoveInfo) {
 	result, err := object.Move(object.MoveApiInfo(info))
 	if err != nil {

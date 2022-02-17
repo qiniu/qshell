@@ -14,8 +14,9 @@ var bucketsCmdBuilder = func() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.BucketsType
-			prepare(cmd, &info)
-			operations.List(info)
+			if prepare(cmd, &info) {
+				operations.List(info)
+			}
 		},
 	}
 	return cmd

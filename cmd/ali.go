@@ -34,8 +34,9 @@ var aliCmdBuilder = func() *cobra.Command {
 				}
 			}
 
-			prepare(cmd, &info)
-			ali.ListBucket(info)
+			if prepare(cmd, &info) {
+				ali.ListBucket(info)
+			}
 		},
 	}
 	return cmd

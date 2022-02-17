@@ -20,12 +20,13 @@ var uploadCmdBuilder = func() *cobra.Command {
 				cfg.UploadConfigFile = args[0]
 			}
 			info.GroupInfo.Force = true
-			prepare(cmd, &info)
-			if len(args) == 0 {
-				fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
-				return
+			if prepare(cmd, &info) {
+				if len(args) == 0 {
+					fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
+					return
+				}
+				operations.BatchUpload(info)
 			}
-			operations.BatchUpload(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.GroupInfo.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
@@ -75,8 +76,9 @@ var upload2CmdBuilder = func() *cobra.Command {
 			cfg.CmdCfg.Up.CheckSize = data.GetBoolString(checkSize)
 			cfg.CmdCfg.Up.RescanLocal = data.GetBoolString(rescanLocal)
 			info.GroupInfo.Force = true
-			prepare(cmd, &info)
-			operations.BatchUpload(info)
+			if prepare(cmd, &info) {
+				operations.BatchUpload(info)
+			}
 		},
 	}
 	cmd.Flags().StringVar(&info.GroupInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
@@ -130,8 +132,9 @@ var syncCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Bucket = args[1]
 			}
-			prepare(cmd, &info)
-			operations.UploadFile(info)
+			if prepare(cmd, &info) {
+				operations.UploadFile(info)
+			}
 		},
 	}
 	cmd.Flags().StringVarP(&info.Key, "key", "k", "", "save as <key> in bucket")
@@ -159,8 +162,9 @@ var formUploadCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.FilePath = args[2]
 			}
-			prepare(cmd, &info)
-			operations.UploadFile(info)
+			if prepare(cmd, &info) {
+				operations.UploadFile(info)
+			}
 		},
 	}
 	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
@@ -196,8 +200,9 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.FilePath = args[2]
 			}
-			prepare(cmd, &info)
-			operations.UploadFile(info)
+			if prepare(cmd, &info) {
+				operations.UploadFile(info)
+			}
 		},
 	}
 

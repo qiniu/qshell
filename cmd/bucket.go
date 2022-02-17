@@ -16,8 +16,9 @@ var domainsCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, &info)
-			operations.ListDomains(info)
+			if prepare(cmd, &info) {
+				operations.ListDomains(info)
+			}
 		},
 	}
 	return cmd
@@ -25,7 +26,7 @@ var domainsCmdBuilder = func() *cobra.Command {
 
 var listBucketCmdBuilder = func() *cobra.Command {
 	var info = operations.ListInfo{
-		Marker: "",
+		Marker:     "",
 		StartDate:  "",
 		EndDate:    "",
 		AppendMode: false,
@@ -42,8 +43,9 @@ var listBucketCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, &info)
-			operations.List(info)
+			if prepare(cmd, &info) {
+				operations.List(info)
+			}
 		},
 	}
 	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
@@ -62,8 +64,9 @@ var listBucketCmd2Builder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, nil)
-			operations.List(info)
+			if prepare(cmd, &info) {
+				operations.List(info)
+			}
 		},
 	}
 
@@ -82,6 +85,8 @@ var listBucketCmd2Builder = func() *cobra.Command {
 
 func init() {
 	rootCmd.AddCommand(
+		listBucketCmdBuilder(),
+		listBucketCmd2Builder(),
 		domainsCmdBuilder(), // 列举某个 bucket 的 domain
 	)
 }

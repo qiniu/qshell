@@ -12,17 +12,18 @@ func TestAsyncFetch(t *testing.T) {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	result, errs := test.RunCmdWithError("abfetch", test.Bucket,
+	_, errs := test.RunCmdWithError("abfetch", test.Bucket,
 		"-i", path,
 		"-g", "1",
 		"-c", "2")
 	if len(errs) > 0 {
 		t.Fail()
 	}
+}
 
-	result = strings.ReplaceAll(result, "\n", "")
-	result, errs = test.RunCmdWithError("prefop", result)
-	if len(errs) > 0 {
+func TestAsyncFetchDocument(t *testing.T) {
+	result, _ := test.RunCmdWithError("abfetch", test.Bucket, test.DocumentOption)
+	if strings.HasPrefix(result, "# 简介\n`abfetch`") {
 		t.Fail()
 	}
 }

@@ -17,8 +17,9 @@ var batchStatCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, &info)
-			operations.BatchStatus(info)
+			if prepare(cmd, &info) {
+				operations.BatchStatus(info)
+			}
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
@@ -39,8 +40,9 @@ var batchDeleteCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, &info)
-			operations.BatchDelete(info)
+			if prepare(cmd, &info) {
+				operations.BatchDelete(info)
+			}
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -57,8 +59,9 @@ var batchChangeMimeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, &info)
-			operations.BatchChangeMime(info)
+			if prepare(cmd, &info) {
+				operations.BatchChangeMime(info)
+			}
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -75,8 +78,9 @@ var batchChangeTypeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, &info)
-			operations.BatchChangeType(info)
+			if prepare(cmd, &info) {
+				operations.BatchChangeType(info)
+			}
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -93,8 +97,9 @@ var batchDeleteAfterCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, &info)
-			operations.BatchDeleteAfter(info)
+			if prepare(cmd, &info) {
+				operations.BatchDeleteAfter(info)
+			}
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -114,8 +119,9 @@ var batchMoveCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.DestBucket = args[1]
 			}
-			prepare(cmd, &info)
-			operations.BatchMove(info)
+			if prepare(cmd, &info) {
+				operations.BatchMove(info)
+			}
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -133,8 +139,9 @@ var batchRenameCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, &info)
-			operations.BatchRename(info)
+			if prepare(cmd, &info) {
+				operations.BatchRename(info)
+			}
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -155,8 +162,9 @@ var batchCopyCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.DestBucket = args[1]
 			}
-			prepare(cmd, &info)
-			operations.BatchCopy(info)
+			if prepare(cmd, &info) {
+				operations.BatchCopy(info)
+			}
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -172,8 +180,9 @@ var batchSignCmdBuilder = func() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.BatchSignType
 			info.BatchInfo.Force = true
-			prepare(cmd, &info)
-			operations.BatchPrivateUrl(info)
+			if prepare(cmd, &info) {
+				operations.BatchPrivateUrl(info)
+			}
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
@@ -195,8 +204,9 @@ var batchFetchCmdBuilder = func() *cobra.Command {
 			if len(upHost) > 0 {
 				cfg.CmdCfg.Hosts.Up = []string{upHost}
 			}
-			prepare(cmd, &info)
-			operations.BatchFetch(info)
+			if prepare(cmd, &info) {
+				operations.BatchFetch(info)
+			}
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)

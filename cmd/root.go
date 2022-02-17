@@ -86,10 +86,11 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&document, "doc", "", false, "document of command")
 }
 
-func prepare(cmd *cobra.Command, check data.Check) {
+func prepare(cmd *cobra.Command, check data.Check) (shouldContinue bool) {
+	shouldContinue = false
 	if document {
 		docs.ShowCmdDocument(cmdId)
-		os.Exit(data.StatusOK)
+		return
 	}
 
 	err := iqshell.Load(cfg)
@@ -105,6 +106,8 @@ func prepare(cmd *cobra.Command, check data.Check) {
 			os.Exit(data.StatusError)
 		}
 	}
+
+	return true
 }
 
 func Execute() {

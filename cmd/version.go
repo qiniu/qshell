@@ -11,8 +11,9 @@ func versionCmdBuilder() *cobra.Command {
 		Use:   "version",
 		Short: "show version",
 		Run: func(cmd *cobra.Command, params []string) {
-			prepare(cmd, nil)
-			log.Alert(data.Version)
+			if prepare(cmd, nil) {
+				log.Alert(data.Version)
+			}
 		},
 	}
 	return cmd
@@ -20,8 +21,4 @@ func versionCmdBuilder() *cobra.Command {
 
 func init() {
 	rootCmd.AddCommand(versionCmdBuilder())
-}
-
-type Status struct {
-	isCancel bool
 }

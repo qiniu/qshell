@@ -42,4 +42,6 @@ var (
 
 	AccessKey = os.Getenv("accessKey")
 	SecretKey = os.Getenv("secretKey")
+
+	DocumentOption = "--doc"
 )

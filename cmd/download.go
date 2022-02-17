@@ -29,12 +29,13 @@ have already in local disk and need to skip download or not.`,
 				LogRotate: 0,
 				LogStdout: data.TrueString,
 			}
-			prepare(cmd, &info)
-			if len(args) == 0 {
-				fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
-				return
+			if prepare(cmd, &info) {
+				if len(args) == 0 {
+					fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
+					return
+				}
+				operations.BatchDownload(info)
 			}
-			operations.BatchDownload(info)
 		},
 	}
 	cmd.Flags().IntVarP(&info.GroupInfo.WorkCount, "thread", "c", 5, "num of threads to download files")
@@ -54,8 +55,9 @@ var getCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			prepare(cmd, &info)
-			operations.DownloadFile(info)
+			if prepare(cmd, &info) {
+				operations.DownloadFile(info)
+			}
 		},
 	}
 

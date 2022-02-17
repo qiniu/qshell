@@ -105,6 +105,16 @@ type CheckAsyncFetchStatusInfo struct {
 	Id     string
 }
 
+func (info *CheckAsyncFetchStatusInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.Id) == 0 {
+		return alert.CannotEmptyError("Id", "")
+	}
+	return nil
+}
+
 func CheckAsyncFetchStatus(info CheckAsyncFetchStatusInfo) {
 	ret, err := object.CheckAsyncFetchStatus(info.Bucket, info.Id)
 	if err != nil {

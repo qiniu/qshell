@@ -13,6 +13,10 @@ type RpcInfo struct {
 	Params []string
 }
 
+func (info *RpcInfo) Check() error {
+	return nil
+}
+
 func RpcDecode(info RpcInfo) {
 	if len(info.Params) > 0 {
 		for _, param := range info.Params {

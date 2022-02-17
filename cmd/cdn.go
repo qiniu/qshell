@@ -15,8 +15,9 @@ var cdnPrefetchCmdBuilder = func() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.CdnPrefetchType
-			prepare(cmd, &info)
-			operations.Prefetch(info)
+			if prepare(cmd, &info) {
+				operations.Prefetch(info)
+			}
 		},
 	}
 
@@ -36,8 +37,9 @@ var cdnRefreshCmdBuilder = func() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.CdnRefreshType
-			prepare(cmd, &info)
-			operations.Refresh(info)
+			if prepare(cmd, &info) {
+				operations.Refresh(info)
+			}
 		},
 	}
 

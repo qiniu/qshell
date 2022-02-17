@@ -32,8 +32,9 @@ var accountCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.Name = args[2]
 			}
-			prepare(cmd, &info)
-			operations.Add(info)
+			if prepare(cmd, &info) {
+				operations.Add(info)
+			}
 		},
 	}
 
@@ -63,8 +64,9 @@ var userLsCmdBuilder = func() *cobra.Command {
 		Example: `qshell user ls`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.User
-			prepare(cmd, &info)
-			operations.List(info)
+			if prepare(cmd, &info) {
+				operations.List(info)
+			}
 		},
 	}
 
@@ -81,8 +83,9 @@ var userCurrentCmdBuilder = func() *cobra.Command {
 		Example: `qshell user current`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.User
-			prepare(cmd, nil)
-			operations.Current()
+			if prepare(cmd, nil) {
+				operations.Current()
+			}
 		},
 	}
 	return cmd
@@ -100,8 +103,9 @@ var userLookupCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
-			prepare(cmd, &info)
-			operations.LookUp(info)
+			if prepare(cmd, &info) {
+				operations.LookUp(info)
+			}
 		},
 	}
 	return cmd
@@ -123,8 +127,9 @@ var userAddCmdBuilder = func() *cobra.Command {
 				info.SecretKey = args[1]
 				info.Name = args[2]
 			}
-			prepare(cmd, &info)
-			operations.Add(info)
+			if prepare(cmd, &info) {
+				operations.Add(info)
+			}
 		},
 	}
 
@@ -148,8 +153,9 @@ var userChCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
-			prepare(cmd, &info)
-			operations.Change(info)
+			if prepare(cmd, &info) {
+				operations.Change(info)
+			}
 		},
 	}
 	return cmd
@@ -164,8 +170,9 @@ var userCleanCmdBuilder = func() *cobra.Command {
 		Example: `qshell user clean`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.User
-			prepare(cmd, nil)
-			operations.Clean()
+			if prepare(cmd, nil) {
+				operations.Clean()
+			}
 		},
 	}
 	return cmd
@@ -183,8 +190,9 @@ var userRmCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Name = args[0]
 			}
-			prepare(cmd, &info)
-			operations.Remove(info)
+			if prepare(cmd, &info) {
+				operations.Remove(info)
+			}
 		},
 	}
 	return cmd

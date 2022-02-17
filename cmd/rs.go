@@ -19,8 +19,9 @@ var statCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			prepare(cmd, &info)
-			operations.Status(info)
+			if prepare(cmd, &info) {
+				operations.Status(info)
+			}
 		},
 	}
 	return cmd
@@ -38,8 +39,9 @@ var forbiddenCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
-			prepare(cmd, nil)
-			operations.ForbiddenObject(info)
+			if prepare(cmd, &info) {
+				operations.ForbiddenObject(info)
+			}
 		},
 	}
 	cmd.Flags().BoolVarP(&info.UnForbidden, "reverse", "r", false, "unforbidden object in qiniu bucket")
@@ -59,8 +61,9 @@ var deleteCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			prepare(cmd, &info)
-			operations.Delete(info)
+			if prepare(cmd, &info) {
+				operations.Delete(info)
+			}
 		},
 	}
 	return cmd
@@ -82,8 +85,9 @@ var deleteAfterCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.AfterDays = args[2]
 			}
-			prepare(cmd, &info)
-			operations.DeleteAfter(info)
+			if prepare(cmd, &info) {
+				operations.DeleteAfter(info)
+			}
 		},
 	}
 	return cmd
@@ -94,18 +98,22 @@ var moveCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Move/Rename a file and save in bucket",
-		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 2 {
+			if len(args) > 0 {
 				info.SourceBucket = args[0]
+			}
+			if len(args) > 1 {
 				info.SourceKey = args[1]
+			}
+			if len(args) > 2 {
 				info.DestBucket = args[2]
 			}
 			if len(info.DestKey) == 0 {
 				info.DestKey = info.SourceKey
 			}
-			prepare(cmd, nil)
-			operations.Move(info)
+			if prepare(cmd, &info) {
+				operations.Move(info)
+			}
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
@@ -137,8 +145,9 @@ you can check if B.png has exists by:
 			if len(info.DestKey) == 0 {
 				info.DestKey = info.SourceKey
 			}
-			prepare(cmd, &info)
-			operations.Copy(info)
+			if prepare(cmd, &info) {
+				operations.Copy(info)
+			}
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
@@ -166,8 +175,9 @@ and you can check result by command:
 			if len(args) > 2 {
 				info.Mime = args[2]
 			}
-			prepare(cmd, &info)
-			operations.ChangeMime(info)
+			if prepare(cmd, &info) {
+				operations.ChangeMime(info)
+			}
 		},
 	}
 	return cmd
@@ -197,8 +207,9 @@ and you can check result by command:
 			if len(args) > 2 {
 				info.Type = args[2]
 			}
-			prepare(cmd, &info)
-			operations.ChangeType(info)
+			if prepare(cmd, &info) {
+				operations.ChangeType(info)
+			}
 		},
 	}
 	return cmd
@@ -217,8 +228,9 @@ var privateUrlCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Deadline = args[1]
 			}
-			prepare(cmd, &info)
-			operations.PrivateUrl(info)
+			if prepare(cmd, &info) {
+				operations.PrivateUrl(info)
+			}
 		},
 	}
 	return cmd
@@ -240,8 +252,9 @@ var saveAsCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.SaveKey = args[2]
 			}
-			prepare(cmd, &info)
-			operations.SaveAs(info)
+			if prepare(cmd, &info) {
+				operations.SaveAs(info)
+			}
 		},
 	}
 	return cmd
@@ -260,8 +273,9 @@ var mirrorUpdateCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			prepare(cmd, &info)
-			operations.MirrorUpdate(info)
+			if prepare(cmd, &info) {
+				operations.MirrorUpdate(info)
+			}
 		},
 	}
 	return cmd
@@ -280,8 +294,9 @@ var prefetchCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			prepare(cmd, &info)
-			operations.MirrorUpdate(info)
+			if prepare(cmd, &info) {
+				operations.MirrorUpdate(info)
+			}
 		},
 	}
 	return cmd
@@ -300,8 +315,9 @@ var fetchCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Bucket = args[1]
 			}
-			prepare(cmd, &info)
-			operations.Fetch(info)
+			if prepare(cmd, &info) {
+				operations.Fetch(info)
+			}
 		},
 	}
 
@@ -313,8 +329,6 @@ var fetchCmdBuilder = func() *cobra.Command {
 func init() {
 
 	rootCmd.AddCommand(
-		listBucketCmdBuilder(),
-		listBucketCmd2Builder(),
 		statCmdBuilder(),
 		forbiddenCmdBuilder(),
 		deleteCmdBuilder(),

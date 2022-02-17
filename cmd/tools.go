@@ -16,8 +16,9 @@ var rpcEncodeCmdBuilder = func() *cobra.Command {
 		SuggestFor: []string{"rpc"},
 		Run: func(cmd *cobra.Command, args []string) {
 			info.Params = args
-			prepare(cmd, nil)
-			operations.RpcEncode(info)
+			if prepare(cmd, &info) {
+				operations.RpcEncode(info)
+			}
 		},
 	}
 	return cmd
@@ -31,8 +32,9 @@ var rpcDecodeCmdBuilder = func() *cobra.Command {
 		SuggestFor: []string{"rpc"},
 		Run: func(cmd *cobra.Command, args []string) {
 			info.Params = args
-			prepare(cmd, nil)
-			operations.RpcDecode(info)
+			if prepare(cmd, &info) {
+				operations.RpcDecode(info)
+			}
 		},
 	}
 	return cmd
@@ -50,8 +52,9 @@ var base64EncodeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Data = args[0]
 			}
-			prepare(cmd, &info)
-			operations.Base64Encode(info)
+			if prepare(cmd, &info) {
+				operations.Base64Encode(info)
+			}
 		},
 	}
 	cmd.Flags().BoolVarP(&info.UrlSafe, "safe", "s", false, "use urlsafe base64 encode")
@@ -70,8 +73,9 @@ var base64DecodeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Data = args[0]
 			}
-			prepare(cmd, &info)
-			operations.Base64Decode(info)
+			if prepare(cmd, &info) {
+				operations.Base64Decode(info)
+			}
 		},
 	}
 	cmd.Flags().BoolVarP(&info.UrlSafe, "safe", "s", false, "use urlsafe base64 decode")
@@ -88,8 +92,9 @@ var ts2dCmdCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			prepare(cmd, &info)
-			operations.Timestamp2Date(info)
+			if prepare(cmd, &info) {
+				operations.Timestamp2Date(info)
+			}
 		},
 	}
 	return cmd
@@ -105,8 +110,9 @@ var tms2dCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			prepare(cmd, &info)
-			operations.TimestampMilli2Date(info)
+			if prepare(cmd, &info) {
+				operations.TimestampMilli2Date(info)
+			}
 		},
 	}
 	return cmd
@@ -122,8 +128,9 @@ var tns2dCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			prepare(cmd, &info)
-			operations.TimestampNano2Date(info)
+			if prepare(cmd, &info) {
+				operations.TimestampNano2Date(info)
+			}
 		},
 	}
 	return cmd
@@ -139,8 +146,9 @@ var d2tsCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			prepare(cmd, &info)
-			operations.Date2Timestamp(info)
+			if prepare(cmd, &info) {
+				operations.Date2Timestamp(info)
+			}
 		},
 	}
 	return cmd
@@ -156,8 +164,9 @@ var urlEncodeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, &info)
-			operations.UrlEncode(info)
+			if prepare(cmd, &info) {
+				operations.UrlEncode(info)
+			}
 		},
 	}
 	return cmd
@@ -173,8 +182,9 @@ var urlDecodeCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, &info)
-			operations.UrlDecode(info)
+			if prepare(cmd, &info) {
+				operations.UrlDecode(info)
+			}
 		},
 	}
 	return cmd
@@ -190,8 +200,9 @@ var etagCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.FilePath = args[0]
 			}
-			prepare(cmd, &info)
-			operations.CreateEtag(info)
+			if prepare(cmd, &info) {
+				operations.CreateEtag(info)
+			}
 		},
 	}
 	return cmd
@@ -212,8 +223,9 @@ var unzipCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.UnzipPath = args[1]
 			}
-			prepare(cmd, &info)
-			operations.Unzip(info)
+			if prepare(cmd, &info) {
+				operations.Unzip(info)
+			}
 		},
 	}
 	cmd.Flags().StringVar(&info.UnzipPath, "dir", "", "unzip directory")
@@ -230,8 +242,9 @@ var reqIdCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.ReqId = args[0]
 			}
-			prepare(cmd, &info)
-			operations.DecodeReqId(info)
+			if prepare(cmd, &info) {
+				operations.DecodeReqId(info)
+			}
 		},
 	}
 	return cmd
@@ -245,8 +258,9 @@ var IpCmdBuilder = func() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdId = docs.IPType
 			info.Ips = args
-			prepare(cmd, &info)
-			operations.IpQuery(info)
+			if prepare(cmd, &info) {
+				operations.IpQuery(info)
+			}
 		},
 	}
 	return cmd
@@ -281,8 +295,9 @@ var QboxTokenCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, &info)
-			operations.CreateQBoxToken(info)
+			if prepare(cmd, &info) {
+				operations.CreateQBoxToken(info)
+			}
 		},
 	}
 
@@ -304,8 +319,9 @@ var QiniuTokenCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, &info)
-			operations.CreateQiniuToken(info)
+			if prepare(cmd, &info) {
+				operations.CreateQiniuToken(info)
+			}
 		},
 	}
 
@@ -328,8 +344,9 @@ var UploadTokenCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, &info)
-			operations.CreateUploadToken(info)
+			if prepare(cmd, &info) {
+				operations.CreateUploadToken(info)
+			}
 		},
 	}
 
@@ -350,8 +367,9 @@ var dirCacheCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Dir = args[0]
 			}
-			prepare(cmd, &info)
-			operations.DirCache(info)
+			if prepare(cmd, &info) {
+				operations.DirCache(info)
+			}
 		},
 	}
 	cmd.Flags().StringVarP(&info.SaveToFile, "outfile", "o", "", "output filepath")

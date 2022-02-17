@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -15,9 +16,19 @@ type ForbiddenInfo struct {
 	UnForbidden bool
 }
 
-func (c ForbiddenInfo) getStatus() int {
+func (info *ForbiddenInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.Key) == 0 {
+		return alert.CannotEmptyError("Key", "")
+	}
+	return nil
+}
+
+func (info *ForbiddenInfo) getStatus() int {
 	// 0:启用  1:禁用
-	if c.UnForbidden {
+	if info.UnForbidden {
 		return 0
 	} else {
 		return 1

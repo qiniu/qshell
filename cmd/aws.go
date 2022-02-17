@@ -23,8 +23,9 @@ func awsFetchCmdBuilder() *cobra.Command {
 			if len(args) > 2 {
 				info.QiniuBucket = args[2]
 			}
-			prepare(cmd, &info)
-			aws.Fetch(info)
+			if prepare(cmd, &info) {
+				aws.Fetch(info)
+			}
 		},
 	}
 
@@ -57,8 +58,9 @@ func awsListCmdBuilder() *cobra.Command {
 			if len(args) > 1 {
 				info.Region = args[1]
 			}
-			prepare(cmd, &info)
-			aws.ListBucket(info)
+			if prepare(cmd, &info) {
+				aws.ListBucket(info)
+			}
 		},
 	}
 	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list AWS bucket with this prefix if set")

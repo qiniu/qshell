@@ -17,8 +17,9 @@ func asyncFetchCmdBuilder() *cobra.Command {
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			prepare(cmd, &info)
-			operations.BatchAsyncFetch(info)
+			if prepare(cmd, &info) {
+				operations.BatchAsyncFetch(info)
+			}
 		},
 	}
 
@@ -37,7 +38,6 @@ func asyncFetchCmdBuilder() *cobra.Command {
 
 // NewCmdAsyncCheck 用来查询异步抓取的结果
 func asyncCheckCmdBuilder() *cobra.Command {
-
 	info := operations.CheckAsyncFetchStatusInfo{}
 	cmd := &cobra.Command{
 		Use:   "acheck <Bucket> <ID>",
@@ -48,8 +48,9 @@ func asyncCheckCmdBuilder() *cobra.Command {
 				info.Bucket = args[0]
 				info.Id = args[1]
 			}
-			prepare(cmd, nil)
-			operations.CheckAsyncFetchStatus(info)
+			if prepare(cmd, &info) {
+				operations.CheckAsyncFetchStatus(info)
+			}
 		},
 	}
 	return cmd

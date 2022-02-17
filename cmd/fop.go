@@ -16,8 +16,9 @@ var preFopStatusCmdBuilder = func() *cobra.Command {
 			if len(args) > 0 {
 				info.Id = args[0]
 			}
-			prepare(cmd, &info)
-			operations.PreFopStatus(info)
+			if prepare(cmd, &info) {
+				operations.PreFopStatus(info)
+			}
 		},
 	}
 	return cmd
@@ -39,8 +40,9 @@ var preFopCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.Fops = args[2]
 			}
-			prepare(cmd, &info)
-			operations.PreFop(info)
+			if prepare(cmd, &info) {
+				operations.PreFop(info)
+			}
 		},
 	}
 	cmd.Flags().StringVarP(&info.Pipeline, "pipeline", "p", "", "task pipeline")
