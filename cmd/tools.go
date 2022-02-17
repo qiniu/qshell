@@ -100,12 +100,12 @@ var tms2dCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "tms2d <TimestampInMilliSeconds>",
 		Short: "Convert timestamp in milliseconds to a date (TZ: Local)",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.TMs2dType
 			if len(args) > 0 {
 				info.Value = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.TimestampMilli2Date(info)
 		},
 	}

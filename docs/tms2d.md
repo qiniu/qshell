@@ -7,9 +7,7 @@ qshell tms2d <TimestampInMilliSeconds>
 ```
 
 # 参数
-|参数名|描述|
-|-----------|-------------|
-|TimestampInMilliSeconds|以毫秒(ms)为单位的Unix时间戳|
+- TimestampInMilliSeconds：以毫秒（ms）为单位的 Unix 时间戳。【必选】
 
 # 示例
 ```
