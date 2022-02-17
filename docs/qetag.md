@@ -7,9 +7,7 @@ qshell qetag <LocalFilePath>
 ```
 
 # 参数
-|参数名|描述|
-|-------|----------|
-|LocalFilePath|本地文件路径|
+- LocalFilePath：本地文件路径
 
 # 示例
 ```

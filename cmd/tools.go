@@ -185,12 +185,12 @@ var etagCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "qetag <LocalFilePath>",
 		Short: "Calculate the hash of local file using the algorithm of qiniu qetag",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.QTagType
 			if len(args) > 0 {
 				info.FilePath = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.CreateEtag(info)
 		},
 	}
