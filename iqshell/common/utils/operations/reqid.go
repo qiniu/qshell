@@ -3,6 +3,7 @@ package operations
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"strconv"
 	"time"
@@ -10,6 +11,13 @@ import (
 
 type ReqIdInfo struct {
 	ReqId string
+}
+
+func (info *ReqIdInfo) Check() error {
+	if len(info.ReqId) == 0 {
+		return alert.CannotEmptyError("ReqId", "")
+	}
+	return nil
 }
 
 // DecodeReqId 解析reqid， 打印人工可读的字符串

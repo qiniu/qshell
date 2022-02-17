@@ -224,12 +224,12 @@ var reqIdCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "reqid <ReqIdToDecode>",
 		Short: "Decode qiniu reqid",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.ReqIdType
 			if len(args) > 0 {
 				info.ReqId = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.DecodeReqId(info)
 		},
 	}
