@@ -13,6 +13,16 @@ import (
 
 type StatusInfo object.StatusApiInfo
 
+func (info *StatusInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	if len(info.Key) == 0 {
+		return alert.CannotEmptyError("Key", "")
+	}
+	return nil
+}
+
 func Status(info StatusInfo) {
 	result, err := object.Status(object.StatusApiInfo(info))
 	if err != nil {

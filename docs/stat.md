@@ -12,10 +12,8 @@ qshell stat <Bucket> <Key>
 需要在使用了 `account` 设置了`AccessKey` 和 `SecretKey` 的情况下使用。
 
 # 参数
-|参数名|描述|
-|-----|-----|
-|Bucket|空间名称，可以为公开空间或者私有空间|
-|Key|空间中的文件名|
+- Bucket：空间名称，可以为公开空间或者私有空间。【必须】
+- Key：空间中的文件名。【必须】
 
 # 示例
 获取空间 `if-pbl` 中文件 `qiniu.png` 的基本信息
