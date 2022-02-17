@@ -119,3 +119,11 @@ func ExistDir(path string) (bool, error) {
 		return false, err
 	}
 }
+
+func IsFileHasContent(path string) bool {
+	if fs, err := os.Stat(path); err == nil && fs.Size() > 0 {
+		return true
+	} else {
+		return false
+	}
+}
