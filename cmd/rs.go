@@ -207,15 +207,15 @@ var privateUrlCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "privateurl <PublicUrl> [<Deadline>]",
 		Short: "Create private resource access url",
-		Args:  cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.PrivateUrlType
 			if len(args) > 0 {
 				info.PublicUrl = args[0]
 			}
 			if len(args) > 1 {
 				info.Deadline = args[1]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.PrivateUrl(info)
 		},
 	}

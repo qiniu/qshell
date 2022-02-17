@@ -2,6 +2,7 @@ package operations
 
 import (
 	"errors"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -20,6 +21,13 @@ const (
 type PrivateUrlInfo struct {
 	PublicUrl string
 	Deadline  string
+}
+
+func (info *PrivateUrlInfo) Check() error {
+	if len(info.PublicUrl) == 0 {
+		return alert.CannotEmptyError("PublicUrl", "")
+	}
+	return nil
 }
 
 func (p PrivateUrlInfo) getDeadlineOfInt() (int64, error) {

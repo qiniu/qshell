@@ -10,14 +10,12 @@ qshell privateurl <PublicUrl> [<Deadline>]
 需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
 
 # 参数
-|参数名|描述|可选参数|
-|----------|-----------|----------|
-|PublicUrl|资源的公开外链|N|
-|Deadline|授权截至时间戳，单位秒|Y|
+- PublicUrl：资源的公开外链 【必选】
+- Deadline：授权截至时间戳，单位秒 【可选】
 
 备注：
-1. `Deadline`参数可以不指定，默认生成只有一个小时有效期的私有资源访问外链。
-2. `Deadline`参数是一个单位为秒的Unix时间戳，可以使用`d2ts`命令生成。
+1. `Deadline` 参数可以不指定，默认生成只有一个小时有效期的私有资源访问外链。
+2. `Deadline` 参数是一个单位为秒的 Unix 时间戳，可以使用 `d2ts` 命令生成。
 
 # 示例
 1 普通私有资源外链
@@ -32,7 +30,6 @@ http://if-pri.qiniudn.com/beiyi.jpg?e=1427613277&token=HCALkwxJcWd_8UlXCb6QWdA-p
 2 带 `fop` 私有资源外链
 ```
 $ qshell privateurl 'http://if-pri.qiniudn.com/beiyi.jpg?imageView2/0/w/600'
-
 ```
 结果：
 ```
