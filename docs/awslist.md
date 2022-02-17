@@ -17,28 +17,24 @@ qshell awslist [-p <Prefix>][-n <maxKeys>][-m <ContinuationToken>] -S <AwsSecret
 $ qshell awslist -h
 ```
 
-# 选项
-| 选项 | 说明                                          | 可选 |
-|------|-----------------------------------------------|------|
-| -A   | 亚马逊账户的Access Key ID                     | N    |
-| -S   | 亚马逊账户的Secret Key                        | N    |
-| -p   | 亚马逊存储空间要抓取资源的前缀                | Y    |
-| -n   | 亚马逊接口每次返回的数据条目数量              | Y    |
-| -m   | 亚马逊接口数据每次会返回的token, 用于下次列举 | Y    |
-
-
 # 参数
 - AwsBucket: 亚马逊存储空间名称
 - AwsRegion: 亚马逊存储空间所在的地区
 
+# 选项
+- -A：亚马逊账户的Access Key ID 。【必选】
+- -S：亚马逊账户的Secret Key 。【必选】
+- -p：亚马逊存储空间要抓取资源的前缀。【可选】
+- -n：亚马逊接口每次返回的数据条目数量。【可选】
+- -m：亚马逊接口数据每次会返回的token, 用于下次列举。【可选】
 
 # 列举
 使用场景：
 列举亚马逊存储空间中所有的文件
 
 假如要迁移的亚马逊账户的Access Key ID, SecretKey为：
-AWS_ACCESS_KEY_ID = "12345"
-AWS_SECRET_KEY = "6789"
+- AWS_ACCESS_KEY_ID = "12345"
+- AWS_SECRET_KEY = "6789"
 
 亚马逊存储空间名为：
 AWS_BUCKET = "aws-bucket"

@@ -18,31 +18,29 @@ qshell awsfetch [-p <Prefix>][-n <maxKeys>][-m <ContinuationToken>][-c <threadCo
 $ qshell awsfetch -h
 ```
 
-# 选项
-| 选项 |                     说明                      | 可选 |
-|------|-----------------------------------------------|------|
-| -A   | 亚马逊账户的Access Key ID                     | N    |
-| -S   | 亚马逊账户的Secret Key                        | N    |
-| -p   | 亚马逊存储空间要抓取资源的前缀                | Y    |
-| -n   | 亚马逊接口每次返回的数据条目数量              | Y    |
-| -m   | 亚马逊接口数据每次会返回的token, 用于下次列举 | Y    |
-| -c   | 抓取的线程数, 默认为20                        | Y    |
-| -u   | 抓取的资源上传到七牛存储时的上传HOST          | Y    |
-| -s   | 抓取成功的文件导出列表                        | Y    |
-| -e   | 抓取失败的文件导出列表                        | Y    |
-
 # 参数
-AwsBucket: 亚马逊存储空间名称
-AwsRegion: 亚马逊存储空间所在的地区
-QiniuBucket: 七牛存储空间名称
+- AwsBucket: 亚马逊存储空间名称。【必选】
+- AwsRegion: 亚马逊存储空间所在的地区。【必选】
+- QiniuBucket: 七牛存储空间名称。【必选】
+
+# 选项
+- -A：亚马逊账户的 Access Key ID 。【必选】
+- -S：亚马逊账户的 Secret Key 。【必选】
+- -p：亚马逊存储空间要抓取资源的前缀。 【可选
+- -n：亚马逊接口每次返回的数据条目数量。 【可选】
+- -m：亚马逊接口数据每次会返回的token, 用于下次列举。 【可选】
+- -c：抓取的线程数, 默认为 20。 【可选】
+- -u：抓取的资源上传到七牛存储时的上传 HOST 。 【可选】
+- -s：抓取成功的文件导出列表。 【可选】
+- -e：抓取失败的文件导出列表。 【可选】
 
 # 亚马逊存储数据迁移到七牛存储
 使用场景：
 迁移亚马逊存储空间到七牛存储空间。
 
 假如要迁移的亚马逊账户的Access Key ID, SecretKey为：
-AWS_ACCESS_KEY_ID = "12345"
-AWS_SECRET_KEY = "6789"
+- AWS_ACCESS_KEY_ID = "12345"
+- AWS_SECRET_KEY = "6789"
 
 亚马逊存储空间名为：
 AWS_BUCKET = "aws-bucket"
@@ -53,7 +51,7 @@ AWS_REGION = "us-west-2"
 七牛存储空间名为：
 QINIU_BUCKET = "qiniu-bucket"
 
-导出失败的文件列表到"failure.txt"
+导出失败的文件列表到 "failure.txt"
 
 可以使用如下命令进行迁移：
 ```

@@ -12,11 +12,9 @@ qshell chgm <Bucket> <Key> <NewMimeType>
 需要在使用了 `account` 设置了 `AccessKey`, `SecretKey` 和 `Name` 的情况下使用。
 
 # 参数
-|    参数名   | 描述 |
-|------|------|
-|    Bucket   |空间名，可以为公开空间或私有空间   |
-|     Key     |空间中的文件名                  |
-| NewMimeType |给文件指定的新的 MimeType       |
+- Bucket：空间名，可以为公开空间或私有空间。【必须】
+- Key：空间中的文件名。【必须】
+- NewMimeType：给文件指定的新的 MimeType 。【必须】
 
 # 示例
 修改 `if-pbl` 空间中 `qiniu.png` 图片的MimeType为 `image/jpeg`

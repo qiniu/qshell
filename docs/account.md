@@ -17,23 +17,21 @@ qshell account [--overwrite | -w]<Your AccessKey> <Your SecretKey> <Your Account
 
 设置当前用户的`AccessKey`, `SecretKey`和`Name`, Name是用户可以任意取的名字，表示当前在本地记录的账户的名称，和在七牛注册的邮箱信息没有关系。如果 `AccessKey`, `SecretKey`, `Name` 首字母是 "-" , 需要使用` $ qshell account -- ak sk name`的方式添加账号, 这样避免把该项识别成命令行选项。
 
+# 参数
+- AccessKey：七牛账号对应的 AccessKey [获取](https://portal.qiniu.com/user/key) 。【必选】
+- SecretKey：七牛账号对应的 SecretKey [获取](https://portal.qiniu.com/user/key) 。【必选】
+- Name：账户的名字, 可以任意取，和在七牛注册的邮箱信息没有关系， 只是 qshell 本地用来标示 <ak, sk> 对。【必选】
+
 # 选项
 -w --overwrite 强制覆盖已经存在的账户
 
-# 参数
-|   参数名  |  描述  |
-|-----------|--------|
-| AccessKey |七牛账号对应的AccessKey [获取](https://portal.qiniu.com/user/key)|
-| SecretKey |七牛账号对应的SecretKey [获取](https://portal.qiniu.com/user/key)|
-|    Name   |账户的名字, 可以任意取，和在七牛注册的邮箱信息没有关系， 只是 qshell 本地用来标示<ak, sk>对|
-
 # 示例
-1.设置当前用户的 AccessKey, SecretKey, Name
+1 设置当前用户的 AccessKey, SecretKey, Name
 ```
 qshell account ELUs327kxVPJrGCXqWae9yioc0xYZyrIpbM6Wh6x LVzZY2SqOQ_I_kM1n00ygACVBArDvOWtiLkDtKiw name_test
 ```
 
-2.输出当前用户设置的 AccessKey 和 SecretKey
+2 输出当前用户设置的 AccessKey 和 SecretKey
 ```
 qshell account
 ```
