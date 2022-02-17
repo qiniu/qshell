@@ -7,6 +7,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -87,23 +88,22 @@ func init() {
 }
 
 func prepare(cmd *cobra.Command, check data.Check) (shouldContinue bool) {
-	shouldContinue = false
 	if document {
 		docs.ShowCmdDocument(cmdId)
-		return
+		return false
 	}
 
 	err := iqshell.Load(cfg)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
-		os.Exit(data.StatusError)
+		return false
 	}
 
 	if check != nil {
 		err = check.Check()
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "check error: %v\n", err)
-			os.Exit(data.StatusError)
+			log.ErrorF("check error: %v\n", err)
+			return false
 		}
 	}
 

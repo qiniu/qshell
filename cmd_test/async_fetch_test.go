@@ -21,6 +21,13 @@ func TestAsyncFetch(t *testing.T) {
 	}
 }
 
+func TestAsyncFetchNoBucket(t *testing.T) {
+	_, err := test.RunCmdWithError("abfetch")
+	if !strings.Contains(err, "bucket can't empty") {
+		t.Fail()
+	}
+}
+
 func TestAsyncFetchDocument(t *testing.T) {
 	result, _ := test.RunCmdWithError("abfetch", test.Bucket, test.DocumentOption)
 	if strings.HasPrefix(result, "# 简介\n`abfetch`") {
