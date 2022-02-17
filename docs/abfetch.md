@@ -8,27 +8,26 @@
 qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <CallbackUrl>][-e <FailureList>][-t <DownloadHostHeader>][-g <StorageType>][-s <SuccessList>][-c <ThreadCount>] <Bucket>
 ```
 
+# 参数
+- Bucket：空间名，可以为公开空间或私有空间。 【必选】
+
 # 选项
-| 选项 |                         说明                                     
-|------|------------------------------------------------------------------------------|
-| -i   | 要抓取的资源列表， 一行一个资源，每一行多个元素时使用\t分割，每一行样式:[FileUrl] 或 [FileUrl]\t[FileSize] 或 [FileUrl]\t[FileSize]\t[Key], eg:https://qiniu.com/a.png\t1024\ta.png|                                       
-| -b   | 回调的 http Body|                                                   
-| -T   | 回调时的 HOST 头|                                                    
-| -a   | 回调的请求地址|                                                     
-| -t   | 下载资源时使用的 HOST 头|                                              
-| -g   | 抓取的资源存储在七牛存储空间的类型，0:低频存储 1:标准存储 2:归档存储, 默认为:0|     
-| -c   | 抓取指定的线程数目|
-| -s   | 抓取成功后导出到的文件|                                               
-| -e   | 抓取失败导出的文件列表|
+- -i：要抓取的资源列表， 一行一个资源，每一行多个元素时使用\t分割；每一行样式如下：（【必选】）
+  - [FileUrl]
+  - [FileUrl]\t[FileSize] 
+  - [FileUrl]\t[FileSize]\t[Key], eg:https://qiniu.com/a.png\t1024\ta.png                                       
+- -b：回调的 http Body。 【可选】          
+- -T：回调时的 HOST 头。 【可选】
+- -a：回调的请求地址。 【可选】
+- -t：下载资源时使用的 HOST 头。 【可选】
+- -g：抓取的资源存储在七牛存储空间的类型，0:低频存储 1:标准存储 2:归档存储, 默认为: 0 。 【可选】
+- -c：抓取指定的线程数目。 【可选】
+- -s：抓取成功后导出到的文件。 【可选】
+- -e：抓取失败导出的文件列表。 【可选】
 
 详细的选项介绍，请参考：[异步抓取 (async fetch)](https://developer.qiniu.com/kodo/api/4097/asynch-fetch)
 
-
-# 参数
-Bucket 为七牛存储空间名
-
-
-# 例子
+# 示例
 假如我有3个资源要抓取，地址分别为：
 http://test.com/test1.txt
 http://test.com/test2.txt
@@ -36,7 +35,7 @@ http://test.com/test3.txt
 
 需要抓取这三个资源保存在七牛存储空间"test"中
 
-#### 第一步：
+### 第一步：
 在当前目录下创建名为"urls.txt"的文件， 文件内容为
 ```
 http://test.com/test1.txt
@@ -45,7 +44,7 @@ http://test.com/test3.txt
 ```
 每行一个地址 。
 
-#### 第二步:
+### 第二步:
 使用如下的命令就可以抓取资源到存储"test"中
 ```
 $ qshell abfetch -i urls.txt test
