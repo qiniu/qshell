@@ -151,12 +151,12 @@ var urlEncodeCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "urlencode <DataToEncode>",
 		Short: "Url Encode",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.UrlEncodeType
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.UrlEncode(info)
 		},
 	}
@@ -168,12 +168,12 @@ var urlDecodeCmdBuilder = func() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "urldecode <DataToDecode>",
 		Short: "Url Decode",
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.UrlDecodeType
 			if len(args) > 0 {
 				info.Url = args[0]
 			}
-			prepare(cmd, nil)
+			prepare(cmd, &info)
 			operations.UrlDecode(info)
 		},
 	}

@@ -1,5 +1,5 @@
 # 简介
-该命令用来对URL编码的数据进行解码。
+`urldecode` 该命令用来对URL编码的数据进行解码。
 
 # 格式
 ```
@@ -7,9 +7,7 @@ qshell urldecode <DataToDecode>
 ```
 
 # 参数
-|参数名|描述|
-|---------|----------|
-|DataToDecode|待解码字符串|
+- DataToDecode：待解码字符串。 【必须】
 
 # 示例
 ```

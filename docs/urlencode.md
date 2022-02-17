@@ -1,5 +1,5 @@
 # 简介
-该命令用来对一个字符串进行URL编码。
+`urlencode` 该命令用来对一个字符串进行URL编码。
 
 # 格式
 ```
@@ -7,9 +7,7 @@ qshell urlencode <DataToEncode>
 ```
 
 # 参数
-|参数名|描述|
-|---------|-------------|
-|DataToEncode|待编码的字符串|
+- DataToEncode：待编码的字符串。 【必须】
 
 # 示例
 ```

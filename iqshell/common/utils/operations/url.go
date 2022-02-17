@@ -1,12 +1,20 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"net/url"
 )
 
 type UrlInfo struct {
 	Url string
+}
+
+func (info *UrlInfo) Check() error {
+	if len(info.Url) == 0 {
+		return alert.CannotEmptyError("Data", "")
+	}
+	return nil
 }
 
 func UrlEncode(info UrlInfo) {
