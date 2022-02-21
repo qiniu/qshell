@@ -118,7 +118,7 @@ func (info *CheckAsyncFetchStatusInfo) Check() error {
 func CheckAsyncFetchStatus(info CheckAsyncFetchStatusInfo) {
 	ret, err := object.CheckAsyncFetchStatus(info.Bucket, info.Id)
 	if err != nil {
-		log.ErrorF("CheckAsyncFetchStatus: %v", err)
+		log.ErrorF("CheckAsyncFetchStatus error: %v", err)
 	} else {
 		log.Alert(ret)
 	}
@@ -265,7 +265,7 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 						log.AlertF("fetch %s => %s:%s success", result.url, result.bucket, result.key)
 						break
 					} else {
-						log.ErrorF("Stat: %s: %v", result.key, err)
+						log.ErrorF("Stat:%s error:%v ID:%s", result.key, err, result.info.Id)
 					}
 				}
 			}
@@ -273,7 +273,7 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 		}
 		if counter >= 3 {
 			handler.Export().Fail().ExportF("%s\t%d\t%s", result.url, result.fileSize, result.key)
-			log.ErrorF("fetch %s => %s:%s failed", result.url, result.bucket, result.key)
+			log.ErrorF("fetch %s => %s:%s, ID:%s failed", result.url, result.bucket, result.key, result.info.Id)
 		}
 	}
 }

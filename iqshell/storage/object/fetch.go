@@ -2,6 +2,7 @@ package object
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
@@ -44,6 +45,10 @@ func Fetch(info FetchApiInfo) (result FetchResult, err error) {
 
 type AsyncFetchApiInfo storage.AsyncFetchParam
 type AsyncFetchApiResult storage.AsyncFetchRet
+
+func (result AsyncFetchApiResult)String() string {
+	return fmt.Sprintf(`{"id":"%s", "wait":%d}`, result.Id, result.Wait)
+}
 
 func AsyncFetch(info AsyncFetchApiInfo) (AsyncFetchApiResult, error) {
 	bm, err := bucket.GetBucketManager()

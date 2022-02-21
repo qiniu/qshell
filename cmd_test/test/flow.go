@@ -60,6 +60,7 @@ func (t *testFlow) runByCommand() error {
 }
 
 func (t *testFlow) runByDebug() error {
+	docs.SetStdout(newLineWriter(t.resultHandler))
 	docs.SetShowMethod(docs.ShowMethodStdOut)
 	log.SetStdout(newLineWriter(t.resultHandler))
 	log.SetStderr(newLineWriter(t.errorHandler))

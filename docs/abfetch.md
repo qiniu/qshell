@@ -45,7 +45,7 @@ http://test.com/test3.txt
 每行一个地址 。
 
 ### 第二步:
-使用如下的命令就可以抓取资源到存储"test"中
+使用如下的命令就可以抓取资源到存储 "test" 中
 ```
 $ qshell abfetch -i urls.txt test
 ```

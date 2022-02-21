@@ -16,7 +16,12 @@ const (
 	ShowMethodStdOut ShowMethod = 2
 )
 
+var sdtout io.Writer = os.Stdout
 var showMethod = ShowMethodLess
+
+func SetStdout(o io.Writer) {
+	sdtout = o
+}
 
 func SetShowMethod(method ShowMethod) {
 	showMethod = method
@@ -36,7 +41,7 @@ func ShowCmdDocument(name string) {
 	}
 
 	if showMethod == ShowMethodStdOut {
-		fmt.Println(document)
+		fmt.Fprintln(sdtout, document)
 	} else {
 		showDocumentByLessCmd(name, document)
 	}
