@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"strings"
 	"testing"
 )
 
@@ -15,6 +16,45 @@ func TestMimeType(t *testing.T) {
 	if len(errs) > 0 {
 		t.Fail()
 	}
+}
+
+func TestMimeTypeNoExistBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("chgm", test.BucketNotExist, test.Key, "image/jpeg")
+	if !strings.Contains(errs, "no such bucket") {
+		t.Fail()
+	}
+}
+
+func TestMimeTypeNoExistKey(t *testing.T) {
+	_, errs := test.RunCmdWithError("chgm", test.Bucket, test.KeyNotExist, "image/jpeg")
+	if !strings.Contains(errs, "no such file or directory") {
+		t.Fail()
+	}
+}
+
+func TestMimeTypeNoBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("chgm")
+	if !strings.Contains(errs, "Bucket can't empty") {
+		t.Fail()
+	}
+}
+
+func TestMimeTypeNoKey(t *testing.T) {
+	_, errs := test.RunCmdWithError("chgm", test.Bucket)
+	if !strings.Contains(errs, "Key can't empty") {
+		t.Fail()
+	}
+}
+
+func TestMimeTypeNoMimeType(t *testing.T) {
+	_, errs := test.RunCmdWithError("chgm", test.Bucket, test.Key)
+	if !strings.Contains(errs, "MimeType can't empty") {
+		t.Fail()
+	}
+}
+
+func TestMimeTypeDocument(t *testing.T) {
+	test.TestDocument("chgm", t)
 }
 
 func TestBatchChangeMimeType(t *testing.T) {
@@ -32,4 +72,8 @@ func TestBatchChangeMimeType(t *testing.T) {
 	if len(errs) > 0 {
 		t.Fail()
 	}
+}
+
+func TestBatchMimeTypeDocument(t *testing.T) {
+	test.TestDocument("batchchgm", t)
 }

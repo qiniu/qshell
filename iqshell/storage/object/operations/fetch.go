@@ -50,7 +50,7 @@ func (info *BatchFetchInfo) Check() error {
 	}
 
 	if len(info.Bucket) == 0 {
-		return alert.CannotEmptyError("bucket", "")
+		return alert.CannotEmptyError("Bucket", "")
 	}
 	return nil
 }
@@ -137,7 +137,7 @@ type BatchAsyncFetchInfo struct {
 
 func (info *BatchAsyncFetchInfo) Check() error {
 	if len(info.Bucket) == 0 {
-		return alert.CannotEmptyError("bucket", "")
+		return alert.CannotEmptyError("Bucket", "")
 	}
 	return nil
 }

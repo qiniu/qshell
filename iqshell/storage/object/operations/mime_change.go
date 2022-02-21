@@ -13,10 +13,10 @@ type ChangeMimeInfo object.ChangeMimeApiInfo
 
 func (info *ChangeMimeInfo) Check() error {
 	if len(info.Bucket) == 0 {
-		return alert.CannotEmptyError("bucket", "")
+		return alert.CannotEmptyError("Bucket", "")
 	}
 	if len(info.Key) == 0 {
-		return alert.CannotEmptyError("key", "")
+		return alert.CannotEmptyError("Key", "")
 	}
 	if len(info.Mime) == 0 {
 		return alert.CannotEmptyError("MimeType", "")
@@ -48,7 +48,7 @@ func (info *BatchChangeMimeInfo) Check() error {
 	}
 
 	if len(info.Bucket) == 0 {
-		return alert.CannotEmptyError("bucket", "")
+		return alert.CannotEmptyError("Bucket", "")
 	}
 	return nil
 }
