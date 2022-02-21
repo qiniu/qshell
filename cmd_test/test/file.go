@@ -23,6 +23,16 @@ func TempPath() (string, error) {
 	return filepath.Join(rootPath, "temp"), nil
 }
 
+func ResultPath() (string, error) {
+	rootPath, err := RootPath()
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(rootPath, "result")
+	err = os.MkdirAll(path, os.ModePerm)
+	return path, err
+}
+
 func CreateFileWithContent(fileName, content string) (string, error) {
 	rootPath, err := RootPath()
 	if err != nil {

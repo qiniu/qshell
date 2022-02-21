@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/cmd"
 	"github.com/qiniu/qshell/v2/docs"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"os"
 	"os/exec"
 )
@@ -62,8 +62,8 @@ func (t *testFlow) runByCommand() error {
 func (t *testFlow) runByDebug() error {
 	docs.SetStdout(newLineWriter(t.resultHandler))
 	docs.SetShowMethod(docs.ShowMethodStdOut)
-	log.SetStdout(newLineWriter(t.resultHandler))
-	log.SetStderr(newLineWriter(t.errorHandler))
+	data.SetStdout(newLineWriter(t.resultHandler))
+	data.SetStderr(newLineWriter(t.errorHandler))
 	args := []string{"qshell"}
 	os.Args = append(args, t.args...)
 	cmd.Execute()

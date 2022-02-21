@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -121,9 +123,9 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 		log.Warning("list bucket to file: not set error handler")
 	}
 
-	var listResultFh *os.File
+	var listResultFh io.WriteCloser
 	if info.FilePath == "" {
-		listResultFh = os.Stdout
+		listResultFh = data.Stdout()
 		log.Debug("prepare list bucket to stdout")
 	} else {
 		var openErr error

@@ -3,6 +3,7 @@ package log
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"strings"
 	"time"
 
@@ -69,9 +70,9 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) (err err
 		msg = colors[level](msg)
 	}
 	if level == logs.LevelError {
-		_, err = fmt.Fprintln(sdterr, msg)
+		_, err = fmt.Fprintln(data.Stderr(), msg)
 	} else {
-		_, err = fmt.Fprintln(sdtout, msg)
+		_, err = fmt.Fprintln(data.Stdout(), msg)
 	}
 	return
 }

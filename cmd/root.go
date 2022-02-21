@@ -102,7 +102,7 @@ func prepare(cmd *cobra.Command, check data.Check) (shouldContinue bool) {
 	if check != nil {
 		err = check.Check()
 		if err != nil {
-			log.ErrorF("check error: %v\n", err)
+			log.ErrorF("check error: %v", err)
 			return false
 		}
 	}

@@ -37,3 +37,7 @@ func (w *lineWriter) Write(p []byte) (n int, err error) {
 
 	return len(p), nil
 }
+
+func (w *lineWriter) Close() error {
+	return nil
+}
