@@ -38,6 +38,10 @@ func Copy(info CopyInfo) {
 		log.ErrorF("Copy error:%v", result.Error)
 		return
 	}
+
+	log.InfoF("copy success [%s:%s] => [%s:%s]",
+		info.SourceBucket, info.SourceKey,
+		info.DestBucket, info.DestKey)
 }
 
 type BatchCopyInfo struct {

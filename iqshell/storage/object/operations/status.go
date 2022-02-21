@@ -29,7 +29,7 @@ func Status(info StatusInfo) {
 		log.ErrorF("Stat error:%v", err)
 		return
 	}
-	log.Alert(getStatusInfo(info, result))
+	log.Alert(getResultInfo(info.Bucket, info.Key, result))
 }
 
 type BatchStatusInfo struct {
@@ -91,11 +91,11 @@ func BatchStatus(info BatchStatusInfo) {
 	}).Start()
 }
 
-var objectTypes = []string{"标准存储", "低频存储", "归档存储"}
+var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储"}
 
-func getStatusInfo(info StatusInfo, status batch.OperationResult) string {
-	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", info.Bucket)
-	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", info.Key)
+func getResultInfo(bucket, key string, status batch.OperationResult) string {
+	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", bucket)
+	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", key)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "FileHash:", status.Hash)
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Fsize:", status.FSize, utils.FormatFileSize(status.FSize))
 
@@ -104,7 +104,7 @@ func getStatusInfo(info StatusInfo, status batch.OperationResult) string {
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "MimeType:", status.MimeType)
 
 	typeString := "未知类型"
-	if status.Type >= 0 && status.Type < 3 {
+	if status.Type >= 0 && status.Type < len(objectTypes) {
 		typeString = objectTypes[status.Type]
 	}
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "FileType:", status.Type, typeString)
