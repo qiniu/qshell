@@ -7,8 +7,12 @@ import (
 )
 
 func TestAsyncFetch(t *testing.T) {
-	content := test.BucketObjectDomainsString
-	content += "https://qshell-na0.qiniupkg.com/hello10.json"
+	fetchKeys := test.Keys
+	fetchKeys = append(fetchKeys, "hello10.json")
+	content := ""
+	for _, key := range fetchKeys {
+		content += test.BucketDomain + "/" + key + "\t" + "0" + "\t" + "fetch_" + key + "\n"
+	}
 	path, err := test.CreateFileWithContent("async_fetch.txt", content)
 	if err != nil {
 		t.Fatal("create path error:", err)

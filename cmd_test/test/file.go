@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	"github.com/mitchellh/go-homedir"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -136,4 +137,17 @@ func IsFileHasContent(path string) bool {
 	} else {
 		return false
 	}
+}
+
+func FileContent(path string) string {
+	file, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return ""
+	}
+	return string(content)
 }
