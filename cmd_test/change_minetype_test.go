@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -57,20 +58,45 @@ func TestMimeTypeDocument(t *testing.T) {
 	test.TestDocument("chgm", t)
 }
 
+// 批量操作
 func TestBatchChangeMimeType(t *testing.T) {
 	batchConfig := ""
-	for _, key := range test.Keys {
+	keys := test.Keys
+	keys = append(keys, "hello10.json")
+	for _, key := range keys {
 		batchConfig += key + "\t" + "image/jpeg" + "\n"
 	}
+
+	resultDir, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result dir error:", err)
+	}
+
+	successLogPath := filepath.Join(resultDir, "batch_chgm_success.txt")
+	failLogPath :=  filepath.Join(resultDir, "batch_chgm_fail.txt")
 
 	path, err := test.CreateFileWithContent("batch_chgm.txt", batchConfig)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	_, errs := test.RunCmdWithError("batchchgm", test.Bucket, "-i", path, "-y")
-	if len(errs) > 0 {
-		t.Fail()
+	test.RunCmdWithError("batchchgm", test.Bucket,
+		"-i", path,
+		"--success-list", successLogPath,
+		"--failure-list", failLogPath,
+		"--worker", "4",
+		"-y")
+	defer func() {
+		test.RemoveFile(successLogPath)
+		test.RemoveFile(failLogPath)
+	}()
+
+	if !test.IsFileHasContent(successLogPath) {
+		t.Fatal("batch result: success log to file error: file empty")
+	}
+
+	if !test.IsFileHasContent(failLogPath) {
+		t.Fatal("batch result: fail log  to file error: file empty")
 	}
 }
 

@@ -226,7 +226,7 @@ func setBatchCmdInputFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.InputFile, "input-file", "i", "", "input file, read from stdin if not set")
 }
 func setBatchCmdWorkCountFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().IntVarP(&info.WorkCount, "worker", "c", 1, "worker count, default 1")
+	cmd.Flags().IntVarP(&info.WorkCount, "worker", "c", 1, "worker count")
 }
 func setBatchCmdSuccessExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "rename success list")
@@ -235,7 +235,7 @@ func setBatchCmdFailExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "e", "", "rename failure list")
 }
 func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default \t (tab)")
+	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default is \\t (tab)")
 }
 func setBatchCmdForceFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force mode, default false")
