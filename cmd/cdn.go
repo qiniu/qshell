@@ -45,8 +45,8 @@ var cdnRefreshCmdBuilder = func() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&info.IsDir, "dirs", "r", false, "refresh directory")
 	cmd.Flags().StringVarP(&info.ItemListFile, "input-file", "i", "", "input file")
-	cmd.Flags().IntVar(&info.QpsLimit, "qps", 0, "qps limit for http call")
-	cmd.Flags().IntVarP(&info.SizeLimit, "size", "s", 0, "max item-size pre commit")
+	cmd.Flags().IntVar(&info.QpsLimit, "qps", 0, "qps limit for http call, default no limit")
+	cmd.Flags().IntVarP(&info.SizeLimit, "size", "s", 50, "max item-size pre commit, max is 50, default 50")
 
 	return cmd
 }

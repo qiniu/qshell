@@ -44,33 +44,34 @@ func Refresh(info RefreshInfo) {
 	itemsToRefresh := make([]string, 0, 50)
 	for scanner.Scan() {
 		item := strings.TrimSpace(scanner.Text())
+		log.DebugF("read line:%s", item)
 		if item == "" {
 			continue
 		}
 		itemsToRefresh = append(itemsToRefresh, item)
-		if refreshWithQps(info, itemsToRefresh) {
+		if refreshWithQps(info, itemsToRefresh, false) {
 			itemsToRefresh = make([]string, 0, 50)
 		}
 	}
 
 	//check final items
 	if len(itemsToRefresh) > 0 {
-		refreshWithQps(info, itemsToRefresh)
+		refreshWithQps(info, itemsToRefresh, true)
 	}
 }
 
-func refreshWithQps(info RefreshInfo, items []string) (isRefresh bool) {
+func refreshWithQps(info RefreshInfo, items []string, force bool) (isRefresh bool) {
 	var err error
 
 	if info.IsDir {
-		if len(items) == cdn.BatchRefreshDirsAllowMax ||
+		if force || len(items) == cdn.BatchRefreshDirsAllowMax ||
 			(info.SizeLimit > 0 && len(items) >= info.SizeLimit) {
 			waiterIfNeeded()
 			err = cdn.Refresh(nil, items)
 			isRefresh = true
 		}
 	} else {
-		if len(items) == cdn.BatchRefreshUrlsAllowMax ||
+		if force || len(items) == cdn.BatchRefreshUrlsAllowMax ||
 			(info.SizeLimit > 0 && len(items) >= info.SizeLimit) {
 			waiterIfNeeded()
 			err = cdn.Refresh(items, nil)
