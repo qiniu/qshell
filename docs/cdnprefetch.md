@@ -17,6 +17,8 @@ qshell cdnprefetch [-i <UrlListFile>]
 ```
 <Url> // <Url>：文件访问外链
 ```
+- --qps：配置每秒预取的最大次数，默认不限制。
+- --size：每批预取的最大 Url 数，最大 50；默认 50。
 
 # 示例
 比如我们有如下内容的文件（`toprefetch.txt`），需要预取里面的外链

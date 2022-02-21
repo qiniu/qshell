@@ -6,23 +6,6 @@ import (
 	"testing"
 )
 
-func TestCdnPrefetch(t *testing.T) {
-
-	path, err := test.CreateFileWithContent("cdn_prefetch.txt", test.BucketObjectDomainsString)
-	if err != nil {
-		t.Fatal("create cdn config file error:", err)
-	}
-
-	result := test.RunCmd(t, "cdnprefetch", "-i", path, "--qps", "1", "--size", "2")
-	if !strings.Contains(result, "CDN prefetch Code: 200, Info: success") {
-		t.Fail()
-	}
-
-	test.RemoveFile(path)
-
-	return
-}
-
 func TestCdnRefreshFile(t *testing.T) {
 	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectDomainsString)
 	if err != nil {
@@ -53,4 +36,8 @@ func TestCdnRefreshDirs(t *testing.T) {
 	test.RemoveFile(path)
 
 	return
+}
+
+func TestCdnRefreshDocument(t *testing.T) {
+	test.TestDocument("cdnrefresh", t)
 }
