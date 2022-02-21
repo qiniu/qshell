@@ -57,8 +57,9 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 	fileStatus, err := os.Stat(f.toAbsFile)
 	tempFileStatus, tempErr := os.Stat(f.tempFile)
 	if err == nil || os.IsExist(err) || tempErr == nil || os.IsExist(tempErr) {
-		// 检查服务端文件是否变更
+		// 中间文件 和 最终文件 中任意一个存在
 		if cErr := dbChecker.checkInfoOfDB(); cErr != nil {
+			// 检查服务端文件是否变更，如果变更则清除
 			log.WarningF("Local file `%s` exist for key `%s`, but not match:%v", f.toAbsFile, info.Key, cErr)
 			if e := f.clean(); e != nil {
 				log.WarningF("Local file `%s` exist for key `%s`, clean error:%v", f.toAbsFile, info.Key, e)
@@ -68,10 +69,11 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 			}
 		}
 		if tempFileStatus != nil && tempFileStatus.Size() > 0 {
+			// 文件是否已下载了一部分，需要继续下载
 			res.IsUpdate = true
 		}
-		// 文件是否已下载完成，如果完成跳过下载阶段，直接验证
 		if fileStatus != nil && fileStatus.Size() == info.FileSize {
+			// 文件是否已下载完成，如果完成跳过下载阶段，直接验证
 			res.IsExist = true
 			shouldDownload = false
 		}

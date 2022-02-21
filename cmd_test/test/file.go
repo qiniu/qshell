@@ -108,7 +108,7 @@ func CreateTempFile(size int) (string, error) {
 }
 
 func RemoveFile(filePath string) error {
-	return os.Remove(filePath)
+	return os.RemoveAll(filePath)
 }
 
 func ExistFile(path string) (bool, error) {

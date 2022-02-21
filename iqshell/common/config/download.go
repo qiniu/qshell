@@ -71,6 +71,27 @@ func (d *Download) merge(from *Download) {
 		d.Tasks.merge(from.Tasks)
 	}
 
+	d.ThreadCount = utils.GetNotZeroIntIfExist(d.ThreadCount, from.ThreadCount)
+	d.FileEncoding = utils.GetNotEmptyStringIfExist(d.FileEncoding, from.FileEncoding)
+	d.KeyFile = utils.GetNotEmptyStringIfExist(d.KeyFile, from.KeyFile)
+	d.DestDir = utils.GetNotEmptyStringIfExist(d.DestDir, from.DestDir)
+	d.Bucket = utils.GetNotEmptyStringIfExist(d.Bucket, from.Bucket)
+	d.Prefix = utils.GetNotEmptyStringIfExist(d.Prefix, from.Prefix)
+	d.Suffixes = utils.GetNotEmptyStringIfExist(d.Suffixes, from.Suffixes)
+	d.IoHost = utils.GetNotEmptyStringIfExist(d.IoHost, from.IoHost)
+	d.Public = utils.GetTrueBoolValueIfExist(d.Public, from.Public)
+	d.CheckHash = utils.GetTrueBoolValueIfExist(d.CheckHash, from.CheckHash)
+
+	//down from cdn
+	d.Referer = utils.GetNotEmptyStringIfExist(d.Referer, from.Referer)
+	d.CdnDomain = utils.GetNotEmptyStringIfExist(d.CdnDomain, from.CdnDomain)
+	d.UseHttps = utils.GetTrueBoolValueIfExist(d.UseHttps, from.UseHttps)
+
+	// 下载状态保存路径
+	d.RecordRoot = utils.GetNotEmptyStringIfExist(d.RecordRoot, from.RecordRoot)
+
+	d.BatchNum = utils.GetNotZeroIntIfExist(d.BatchNum, from.BatchNum)
+
 	if from.Retry != nil {
 		if d.Retry == nil {
 			d.Retry = &Retry{}

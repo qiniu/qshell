@@ -117,11 +117,6 @@ func BatchDownload(info BatchDownloadInfo) {
 			apiInfo.FileHash = ""
 		}
 
-		file, err := downloadFile(DownloadInfo{
-			ApiInfo:  *apiInfo,
-			IsPublic: downloadCfg.Public,
-		})
-
 		locker.Lock()
 		currentFileCount += 1
 		locker.Unlock()
@@ -132,6 +127,11 @@ func BatchDownload(info BatchDownloadInfo) {
 		} else {
 			log.AlertF("Downloading %s [%d/-, -] ...", apiInfo.Key, currentFileCount)
 		}
+
+		file, err := downloadFile(DownloadInfo{
+			ApiInfo:  *apiInfo,
+			IsPublic: downloadCfg.Public,
+		})
 
 		if err != nil {
 			return nil, err

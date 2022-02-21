@@ -22,13 +22,14 @@ func TestDownloadWithKeyFile(t *testing.T) {
 	}
 	defer test.RemoveFile(keysFilePath)
 
+	cacheDir := filepath.Join(rootPath, "download")
 	d := config.Download{
 		ThreadCount: 4,
 		KeyFile:     keysFilePath,
-		DestDir:     filepath.Join(rootPath, "download"),
+		DestDir:     cacheDir,
 		Bucket:      test.Bucket,
-		Prefix:      "hello2,hello3",
-		Suffixes:    "",
+		Prefix:      "hell",
+		Suffixes:    ".json",
 		IoHost:      "",
 		Public:      true,
 		CheckHash:   true,
@@ -58,11 +59,15 @@ func TestDownloadWithKeyFile(t *testing.T) {
 	}
 	defer test.RemoveFile(path)
 
-	_, errs := test.RunCmdWithError("qdownload", "-c", "4", path, "-d")
-	if !strings.Contains(errs, "CDN refresh Code: 200, Info: success") {
+	result, _ := test.RunCmdWithError("qdownload", "-c", "4", path)
+	if !strings.Contains(result, "Download success") {
 		t.Fail()
 	}
 
+	err = test.RemoveFile(cacheDir)
+	if err != nil {
+		t.Log("remove file error:", err)
+	}
 	return
 }
 
@@ -80,7 +85,7 @@ func TestDownloadFromBucket(t *testing.T) {
 		Bucket:      test.Bucket,
 		Prefix:      "hello3,hello5,hello7",
 		Suffixes:    "",
-		IoHost:      "",
+		IoHost:      test.BucketDomain,
 		Public:      true,
 		CheckHash:   true,
 		Referer:     "",
@@ -109,10 +114,14 @@ func TestDownloadFromBucket(t *testing.T) {
 	}
 	defer test.RemoveFile(path)
 
-	_, errs := test.RunCmdWithError("qdownload", "-c", "4", path, "-d")
-	if !strings.Contains(errs, "CDN refresh Code: 200, Info: success") {
+	result, _ := test.RunCmdWithError("qdownload", "-c", "4", path, "-d")
+	if !strings.Contains(result, "Download success:") {
 		t.Fail()
 	}
 
 	return
+}
+
+func TestDocumentDocument(t *testing.T) {
+	test.TestDocument("qdownload", t)
 }
