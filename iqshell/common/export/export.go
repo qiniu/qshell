@@ -61,7 +61,7 @@ func (e *exporter) ExportF(format string, a ...interface{}) {
 func (e *exporter) export(text string) {
 	if e != nil && e.writer != nil {
 		e.lock.Lock()
-		e.writer.WriteString(text)
+		e.writer.WriteString(text + "\n")
 		e.writer.Flush()
 		e.lock.Unlock()
 	}

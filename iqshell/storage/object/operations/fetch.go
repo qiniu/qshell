@@ -234,7 +234,7 @@ func BatchAsyncFetch(info BatchAsyncFetchInfo) {
 			}).
 			OnWorkError(func(work work.Work, err error) {
 				in := work.(fetchItem)
-				handler.Export().Fail().ExportF("%s: %v\n", in.info.Url, err)
+				handler.Export().Fail().ExportF("%s: %v", in.info.Url, err)
 				log.ErrorF("Fetch '%s' => %s:%s Failed, Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
 			}).
 			OnWorksComplete(func() {

@@ -103,13 +103,13 @@ func BatchMove(info BatchMoveInfo) {
 		}
 
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s\n", apiInfo.SourceKey, apiInfo.DestKey, result.Code, result.Error)
+			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s", apiInfo.SourceKey, apiInfo.DestKey, result.Code, result.Error)
 			log.ErrorF("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
 				apiInfo.SourceBucket, apiInfo.SourceKey,
 				apiInfo.DestBucket, apiInfo.DestKey,
 				result.Code, result.Error)
 		} else {
-			handler.Export().Success().ExportF("%s\t%s\n", apiInfo.SourceKey, apiInfo.DestKey)
+			handler.Export().Success().ExportF("%s\t%s", apiInfo.SourceKey, apiInfo.DestKey)
 			log.InfoF("Move '%s:%s' => '%s:%s' success",
 				apiInfo.SourceBucket, apiInfo.SourceKey,
 				apiInfo.DestBucket, apiInfo.DestKey)

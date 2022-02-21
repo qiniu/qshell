@@ -123,10 +123,10 @@ func BatchDelete(info BatchDeleteInfo) {
 			return
 		}
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s\n", apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
+			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s", apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
 			log.ErrorF("Delete '%s' when put time:'%s' Failed, Code: %d, Error: %s", apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
 		} else {
-			handler.Export().Success().ExportF("%s\t%s\n", apiInfo.Key, apiInfo.Condition.PutTime)
+			handler.Export().Success().ExportF("%s\t%s", apiInfo.Key, apiInfo.Condition.PutTime)
 			log.InfoF("Delete '%s' when put time:'%s' success", apiInfo.Key, apiInfo.Condition.PutTime)
 		}
 	}).OnError(func(err error) {
@@ -172,10 +172,10 @@ func BatchDeleteAfter(info BatchDeleteInfo) {
 			return
 		}
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s\n", apiInfo.Key, apiInfo.AfterDays, result.Code, result.Error)
+			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s", apiInfo.Key, apiInfo.AfterDays, result.Code, result.Error)
 			log.ErrorF("Expire '%s' => '%d' Failed, Code: %d, Error: %s", apiInfo.Key, apiInfo.AfterDays, result.Code, result.Error)
 		} else {
-			handler.Export().Success().ExportF("%s\t%s\n", apiInfo.Key, apiInfo.AfterDays)
+			handler.Export().Success().ExportF("%s\t%s", apiInfo.Key, apiInfo.AfterDays)
 			log.InfoF("Expire '%s' => '%d' success", apiInfo.Key, apiInfo.AfterDays)
 		}
 	}).OnError(func(err error) {

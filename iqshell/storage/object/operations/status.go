@@ -78,7 +78,7 @@ func BatchStatus(info BatchStatusInfo) {
 		}
 		in := StatusInfo(apiInfo)
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%d\t%s\n", in.Key, result.Code, result.Error)
+			handler.Export().Fail().ExportF("%s\t%d\t%s", in.Key, result.Code, result.Error)
 			log.ErrorF("Status '%s' Failed, Code: %d, Error: %s", in.Key, result.Code, result.Error)
 		} else {
 			status := fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d",
