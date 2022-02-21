@@ -14,7 +14,7 @@ type ListDomainInfo struct {
 
 func (info *ListDomainInfo) Check() error {
 	if len(info.Bucket) == 0 {
-		return alert.CannotEmptyError("bucket", "")
+		return alert.CannotEmptyError("Bucket", "")
 	}
 	return nil
 }

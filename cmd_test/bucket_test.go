@@ -7,32 +7,6 @@ import (
 	"testing"
 )
 
-func TestBucketDomain(t *testing.T) {
-	result, errs := test.RunCmdWithError("domains", test.Bucket)
-	if len(errs) > 0 {
-		t.Fatal("error:", errs)
-	}
-
-	if !strings.Contains(result, test.BucketDomain) {
-		t.Fatal("no expected domain:%", test.BucketDomain)
-	}
-
-	return
-}
-
-func TestBucketDomainDocument(t *testing.T) {
-	result, errs := test.RunCmdWithError("domains", test.Bucket)
-	if len(errs) > 0 {
-		t.Fatal("error:", errs)
-	}
-
-	if !strings.Contains(result, test.BucketDomain) {
-		t.Fatal("no expected domain:%", test.BucketDomain)
-	}
-
-	return
-}
-
 func TestBucketList(t *testing.T) {
 	result, errs := test.RunCmdWithError("listbucket", test.Bucket, "--prefix", "hello")
 	if len(errs) > 0 {
@@ -97,17 +71,23 @@ func TestBucketList2(t *testing.T) {
 }
 
 func TestBucketList2ToFile(t *testing.T) {
-	rootPath, err := test.ResultPath()
+	defaultContent := "AAAAAAA\n"
+	file, err := test.CreateFileWithContent(test.Bucket + "-listbucket2.txt", defaultContent)
 	if err != nil {
 		t.Fatal("get root path error:", err)
 		return
 	}
-	file := filepath.Join(rootPath, test.Bucket + "-listbucket2.txt")
-	_, errs := test.RunCmdWithError("listbucket2", test.Bucket, "--prefix", "hello", "-o", file)
 	defer test.RemoveFile(file)
+
+	_, errs := test.RunCmdWithError("listbucket2", test.Bucket, "--prefix", "hello", "-o", file)
 
 	if len(errs) > 0 {
 		t.Fatal("error:", errs)
+	}
+
+	content := test.FileContent(file)
+	if strings.HasPrefix(content, defaultContent){
+		t.Fatal("list bucket to file error: should't append")
 	}
 
 	if !test.IsFileHasContent(file) {
@@ -137,7 +117,7 @@ func TestBucketList2ToFileByAppend(t *testing.T) {
 
 	content := test.FileContent(file)
 	if !strings.HasPrefix(content, defaultContent){
-		t.Fatal("list bucket to file append error: file empty")
+		t.Fatal("list bucket to file append error")
 	}
 
 	if !test.IsFileHasContent(file) {
