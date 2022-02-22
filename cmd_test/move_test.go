@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -67,35 +68,46 @@ func TestMoveDocument(t *testing.T) {
 }
 
 func TestBatchMove(t *testing.T) {
+	TestBatchCopy(t)
+
 	batchConfig := ""
-	for _, key := range test.Keys {
+	keys := test.Keys
+	keys = append(keys, "hello10.json")
+	for _, key := range keys {
 		batchConfig += key + "\t" + "move_" + key + "\t" + "\n"
 	}
+
+	resultDir, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result dir error:", err)
+	}
+
+	successLogPath := filepath.Join(resultDir, "batch_success.txt")
+	failLogPath :=  filepath.Join(resultDir, "batch_fail.txt")
 
 	path, err := test.CreateFileWithContent("batch_move.txt", batchConfig)
 	if err != nil {
 		t.Fatal("create batch move config file error:", err)
 	}
 
-	_, errs := test.RunCmdWithError("batchmove", test.Bucket, test.Bucket, "-i", path, "-w", "-y")
-	if len(errs) > 0 {
-		t.Fail()
+	test.RunCmdWithError("batchmove", test.Bucket, test.Bucket,
+		"-i", path,
+		"--success-list", successLogPath,
+		"--failure-list", failLogPath,
+		"--worker", "4",
+		"-y",
+		"-w")
+	defer func() {
+		test.RemoveFile(successLogPath)
+		test.RemoveFile(failLogPath)
+	}()
+
+	if !test.IsFileHasContent(successLogPath) {
+		t.Fatal("batch result: success log to file error: file empty")
 	}
 
-	//back
-	batchConfig = ""
-	for _, key := range test.Keys {
-		batchConfig += "move_" + key + "\t" + key + "\t" + "\n"
-	}
-
-	path, err = test.CreateFileWithContent("batch_move_back.txt", batchConfig)
-	if err != nil {
-		t.Fatal("create batch move config file after batch move error:", err)
-	}
-
-	_, errs = test.RunCmdWithError("batchmove", test.Bucket, test.Bucket, "-i", path, "-w", "-y")
-	if len(errs) > 0 {
-		t.Fail()
+	if !test.IsFileHasContent(failLogPath) {
+		t.Fatal("batch result: fail log  to file error: file empty")
 	}
 }
 

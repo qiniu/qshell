@@ -51,26 +51,43 @@ func TestFetchDocument(t *testing.T) {
 
 func TestBatchFetch(t *testing.T) {
 	batchConfig := ""
-	for _, domain := range test.BucketObjectDomains {
+	domains := test.BucketObjectDomains
+	domains = append(domains, "https://qshell-na0.qiniupkg.com/hello10.json")
+	for _, domain := range domains {
 		name := "batch_fetch_" + filepath.Base(domain)
 		batchConfig += domain + "\t" + name + "\n"
 	}
+
+	resultDir, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result dir error:", err)
+	}
+
+	successLogPath := filepath.Join(resultDir, "batch_copy_success.txt")
+	failLogPath :=  filepath.Join(resultDir, "batch_copy_fail.txt")
+
 	path, err := test.CreateFileWithContent("batch_fetch.txt", batchConfig)
 	if err != nil {
 		t.Fatal("create batch fetch config file error:", err)
 	}
 
-	result, errs := test.RunCmdWithError("batchfetch", test.Bucket,
+	test.RunCmdWithError("batchfetch", test.Bucket,
 		"-i", path,
-		"-c", "2")
-	if len(errs) > 0 {
-		t.Fail()
+		"--success-list", successLogPath,
+		"--failure-list", failLogPath,
+		"--worker", "4",
+		"-y")
+	defer func() {
+		test.RemoveFile(successLogPath)
+		test.RemoveFile(failLogPath)
+	}()
+
+	if !test.IsFileHasContent(successLogPath) {
+		t.Fatal("batch result: success log to file error: file empty")
 	}
 
-	result = strings.ReplaceAll(result, "\n", "")
-	result, errs = test.RunCmdWithError("prefop", result)
-	if len(errs) > 0 {
-		t.Fail()
+	if !test.IsFileHasContent(failLogPath) {
+		t.Fatal("batch result: fail log  to file error: file empty")
 	}
 }
 

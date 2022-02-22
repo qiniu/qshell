@@ -59,6 +59,8 @@ func TestChangeTypeDocument(t *testing.T) {
 }
 
 func TestBatchChangeType(t *testing.T) {
+	TestBatchCopy(t)
+
 	batchConfig := ""
 	keys := test.Keys
 	keys = append(keys, "hello10.json")

@@ -60,6 +60,8 @@ func TestMimeTypeDocument(t *testing.T) {
 
 // 批量操作
 func TestBatchChangeMimeType(t *testing.T) {
+	TestBatchCopy(t)
+
 	batchConfig := ""
 	keys := test.Keys
 	keys = append(keys, "hello10.json")

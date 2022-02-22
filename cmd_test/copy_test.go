@@ -62,11 +62,11 @@ func TestCopyDocument(t *testing.T) {
 
 func TestBatchCopy(t *testing.T) {
 	batchConfig := ""
-	keys := test.Keys
-	keys = append(keys, "hello10.json")
-	for _, key := range keys {
-		batchConfig += key + "\t" + "copy_" + key + "\t" + "\n"
+	keys := test.OriginKeys
+	for i, key := range keys {
+		batchConfig += key + "\t" + test.Keys[i] + "\t" + "\n"
 	}
+	batchConfig += "hello10.json" + "\t" + "hello10_test.json" + "\t" + "\n"
 
 	resultDir, err := test.ResultPath()
 	if err != nil {

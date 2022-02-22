@@ -59,7 +59,7 @@ func TestBatchDelete(t *testing.T) {
 	keys := test.Keys
 	keys = append(keys, "hello10.json")
 	for _, key := range keys {
-		batchConfig += "copy_" + key + "\n"
+		batchConfig += key + "\n"
 	}
 
 	resultDir, err := test.ResultPath()
