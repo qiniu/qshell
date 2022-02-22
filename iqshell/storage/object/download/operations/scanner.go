@@ -32,16 +32,16 @@ func newDownloadScanner(inputFile string, itemSeparate string, bucket string, ex
 		infoChan:     make(chan *download.ApiInfo, 100),
 	}
 
-	r.lineScanner, err = scanner.NewScanner(scanner.Info{
-		StdInEnable: true,
-		InputFile:   inputFile,
-	})
-
-	if err != nil {
-		err = errors.New("new download reader error:" + err.Error())
-	}
-
 	if len(inputFile) > 0 {
+		r.lineScanner, err = scanner.NewScanner(scanner.Info{
+			StdInEnable: true,
+			InputFile:   inputFile,
+		})
+
+		if err != nil {
+			err = errors.New("new download reader error:" + err.Error())
+		}
+
 		// 配置输入文件则从输入文件中读取
 		r.createFileScanOperation()
 	} else {

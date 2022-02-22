@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"strings"
 )
@@ -32,12 +33,6 @@ type Download struct {
 
 	Tasks *Tasks `json:"tasks,omitempty"`
 	Retry *Retry `json:"retry,omitempty"`
-}
-
-func (d *Download) Init() {
-	if d.BatchNum <= 0 {
-		d.BatchNum = 1000
-	}
 }
 
 // DownloadDomain 获取一个存储空间的下载域名， 默认使用用户配置的域名，如果没有就使用接口随机选择一个下载域名
@@ -102,4 +97,19 @@ func (d *Download) merge(from *Download) {
 
 func (d *Download) JobId() string {
 	return utils.Md5Hex(fmt.Sprintf("%s:%s:%s", d.DestDir, d.Bucket, d.KeyFile))
+}
+
+func (d *Download) Check() error {
+	if len(d.Bucket) == 0 && len(d.KeyFile) == 0 {
+		return alert.CannotEmptyError("bucket", "")
+	}
+
+	if len(d.Bucket) == 0 && len(d.DownloadDomain()) == 0 {
+		return alert.Error("bucket / io_host / cdn_domain one them should has value)", "")
+	}
+
+	if d.BatchNum <= 0 {
+		d.BatchNum = 1000
+	}
+	return nil
 }

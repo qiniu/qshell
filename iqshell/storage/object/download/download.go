@@ -2,6 +2,7 @@ package download
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
 )
@@ -10,13 +11,13 @@ type ApiInfo struct {
 	Url            string // 文件下载的 url 【必填】
 	Domain         string // 文件下载的 domain 【必填】
 	ToFile         string // 文件保存的路径 【必填】
-	FileSize       int64  // 文件大小，有值则会检测文件大小 【选填】
-	FileModifyTime int64  // 文件修改时间 【选填】
 	StatusDBPath   string // 下载状态缓存的 db 路径 【选填】
 	Referer        string // 请求 header 中的 Referer 【选填】
 	FileEncoding   string // 文件编码方式 【选填】
 	Bucket         string // 文件所在 bucket，用于验证 hash 【选填】
 	Key            string // 文件被保存的 key，用于验证 hash 【选填】
+	FileModifyTime int64  // 文件修改时间 【选填】
+	FileSize       int64  // 文件大小，有值则会检测文件大小 【选填】
 	FileHash       string // 文件 hash，有值则会检测 hash 【选填】
 }
 
@@ -65,7 +66,7 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 				log.WarningF("Local file `%s` exist for key `%s`, clean error:%v", f.toAbsFile, info.Key, e)
 			}
 			if sErr := dbChecker.saveInfoToDB(); sErr != nil {
-				log.WarningF("Local file `%s` exist for key `%s`, save info to db clean error:%v", f.toAbsFile, info.Key, sErr)
+				log.WarningF("Local file `%s` exist for key `%s`, save info to db error:%v", f.toAbsFile, info.Key, sErr)
 			}
 		}
 		if tempFileStatus != nil && tempFileStatus.Size() > 0 {
@@ -76,10 +77,6 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 			// 文件是否已下载完成，如果完成跳过下载阶段，直接验证
 			res.IsExist = true
 			shouldDownload = false
-		}
-	} else {
-		if sErr := dbChecker.saveInfoToDB(); sErr != nil {
-			log.WarningF("Local file `%s` not exist for key `%s`, save info to db clean error:%v", f.toAbsFile, info.Key, sErr)
 		}
 	}
 
@@ -99,6 +96,7 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 		}
 		err = dbChecker.saveInfoToDB()
 		if err != nil {
+			err = fmt.Errorf("download info save to db error:%v key:%s localFile:%s", err, f.toAbsFile, info.Key)
 			return
 		}
 	}

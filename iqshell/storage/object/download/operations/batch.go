@@ -35,6 +35,11 @@ func BatchDownload(info BatchDownloadInfo) {
 	info.GroupInfo.InputFile = downloadCfg.KeyFile
 	info.GroupInfo.ItemSeparate = "\t"
 
+	if err := downloadCfg.Check(); err != nil {
+		log.ErrorF("download config check error:%v", err)
+		return
+	}
+
 	downloadDomain := downloadCfg.DownloadDomain()
 	if len(downloadDomain) == 0 {
 		downloadDomain, _ = bucket.DomainOfBucket(downloadCfg.Bucket)
