@@ -8,6 +8,7 @@ import (
 
 const fopObjectKey = "test_mv.mp4"
 const fopObjectValue = "avthumb/mp4"
+
 func TestFop(t *testing.T) {
 	result, errs := test.RunCmdWithError("pfop", test.Bucket, fopObjectKey, fopObjectValue,
 		"--notify-url", "",
@@ -62,7 +63,6 @@ func TestFopNoFopValue(t *testing.T) {
 func TestFopDocument(t *testing.T) {
 	test.TestDocument("pfop", t)
 }
-
 
 func TestPreFopNoID(t *testing.T) {
 	_, errs := test.RunCmdWithError("prefop")

@@ -47,7 +47,7 @@ func TestAsyncFetch(t *testing.T) {
 
 func TestAsyncFetchNoBucket(t *testing.T) {
 	_, err := test.RunCmdWithError("abfetch")
-	if !strings.Contains(err, "bucket can't empty") {
+	if !strings.Contains(err, "Bucket can't empty") {
 		t.Fail()
 	}
 }

@@ -33,7 +33,6 @@ var forbiddenCmdBuilder = func() *cobra.Command {
 		Use:   "forbidden <Bucket> <Key>",
 		Short: "forbidden file in qiniu bucket",
 		Long:  "forbidden object in qiniu bucket, when used with -r option, unforbidden the object",
-		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 1 {
 				info.Bucket = args[0]
@@ -99,6 +98,7 @@ var moveCmdBuilder = func() *cobra.Command {
 		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Move/Rename a file and save in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
+			cmdId = docs.MoveType
 			if len(args) > 0 {
 				info.SourceBucket = args[0]
 			}

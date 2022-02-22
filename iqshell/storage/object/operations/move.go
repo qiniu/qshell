@@ -13,10 +13,10 @@ type MoveInfo object.MoveApiInfo
 
 func (info *MoveInfo) Check() error {
 	if len(info.SourceBucket) == 0 {
-		return alert.CannotEmptyError("Bucket", "")
+		return alert.CannotEmptyError("SourceBucket", "")
 	}
 	if len(info.SourceKey) == 0 {
-		return alert.CannotEmptyError("Key", "")
+		return alert.CannotEmptyError("SourceKey", "")
 	}
 	if len(info.DestBucket) == 0 {
 		return alert.CannotEmptyError("DestBucket", "")
