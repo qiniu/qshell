@@ -58,3 +58,19 @@ func TestFopNoFopValue(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestFopDocument(t *testing.T) {
+	test.TestDocument("pfop", t)
+}
+
+
+func TestPreFopNoID(t *testing.T) {
+	_, errs := test.RunCmdWithError("prefop")
+	if !strings.Contains(errs, "PersistentID can't empty") {
+		t.Fail()
+	}
+}
+
+func TestPreFopDocument(t *testing.T) {
+	test.TestDocument("prefop", t)
+}
