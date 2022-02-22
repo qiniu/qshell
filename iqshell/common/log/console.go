@@ -79,12 +79,10 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) (err err
 
 // Destroy implementing method. empty.
 func (c *consoleWriter) Destroy() {
-
 }
 
 // Flush implementing method. empty.
 func (c *consoleWriter) Flush() {
-
 }
 
 func init() {

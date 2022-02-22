@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -128,6 +129,19 @@ func ExistDir(path string) (bool, error) {
 		return false, nil
 	} else {
 		return false, err
+	}
+}
+
+func FileCountInDir(path string) int {
+	exist, err := ExistDir(path)
+	if err != nil || !exist {
+		return 0
+	}
+
+	if files, err := ioutil.ReadDir(path); err != nil {
+		return 0
+	} else {
+		return len(files)
 	}
 }
 

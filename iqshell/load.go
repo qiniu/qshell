@@ -1,6 +1,7 @@
 package iqshell
 
 import (
+	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/client"
 	"github.com/qiniu/go-sdk/v7/storage"
@@ -13,7 +14,6 @@ import (
 )
 
 type Config struct {
-	Cmd                string // 命令名称
 	DebugEnable        bool   // 开启命令行的调试模式
 	DDebugEnable       bool   // go SDK client 和命令行开启调试模式
 	ConfigFilePath     string // 配置文件路径，用户可以指定配置文件
@@ -81,15 +81,20 @@ func Load(cfg Config) error {
 		return err
 	}
 
-	ls := workspace.GetLogConfig()
-	_ = log.LoadFileLogger(log.Config{
-		Filename:       ls.LogFile,
-		Level:          ls.GetLogLevel(),
-		Daily:          true,
-		StdOutColorful: false,
-		EnableStdout:   ls.IsLogStdout(),
-		MaxDays:        ls.LogRotate,
-	})
+	if ls := workspace.GetLogConfig(); ls != nil {
+		err := utils.CreateFileDirIfNotExist(ls.LogFile)
+		if err != nil {
+			return errors.New("create log file error:" + err.Error())
+		}
+		_ = log.LoadFileLogger(log.Config{
+			Filename:       ls.LogFile,
+			Level:          ls.GetLogLevel(),
+			Daily:          true,
+			StdOutColorful: false,
+			EnableStdout:   ls.IsLogStdout(),
+			MaxDays:        ls.LogRotate,
+		})
+	}
 
 	return nil
 }

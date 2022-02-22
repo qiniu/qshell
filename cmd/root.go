@@ -93,6 +93,7 @@ func prepare(cmd *cobra.Command, check data.Check) (shouldContinue bool) {
 		return false
 	}
 
+	cfg.CmdCfg.CmdId = cmdId
 	err := iqshell.Load(cfg)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)

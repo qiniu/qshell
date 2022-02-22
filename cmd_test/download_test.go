@@ -31,14 +31,6 @@ func TestDownloadWithKeyFile(t *testing.T) {
 		UseHttps:    true,
 		BatchNum:    0,
 		RecordRoot:  "",
-		//LogSetting: &config.LogSetting{
-		//	LogLevel:  "",
-		//	LogFile:   "",
-		//	LogRotate: 0,
-		//	LogStdout: false,
-		//},
-		Tasks: &config.Tasks{},
-		Retry: &config.Retry{},
 	}
 	path, err := createDownloadConfigFile(cfg)
 	if err != nil {
@@ -46,9 +38,13 @@ func TestDownloadWithKeyFile(t *testing.T) {
 	}
 	defer test.RemoveFile(path)
 
-	result, _ := test.RunCmdWithError("qdownload", "-c", "4", path)
-	if !strings.Contains(result, "Download success") {
+	test.RunCmdWithError("qdownload", "-c", "4", path)
+	if test.FileCountInDir(cfg.DestDir) < 2 {
 		t.Fail()
+	}
+
+	if !test.IsFileHasContent(cfg.LogFile) {
+		t.Fatal("log file should has content")
 	}
 
 	err = test.RemoveFile(cfg.DestDir)
@@ -73,14 +69,6 @@ func TestDownloadFromBucket(t *testing.T) {
 		UseHttps:    true,
 		BatchNum:    0,
 		RecordRoot:  "",
-		//LogSetting: &config.LogSetting{
-		//	LogLevel:  "",
-		//	LogFile:   "",
-		//	LogRotate: 0,
-		//	LogStdout: false,
-		//},
-		Tasks: &config.Tasks{},
-		Retry: &config.Retry{},
 	}
 	path, err := createDownloadConfigFile(cfg)
 	if err != nil {
@@ -88,9 +76,13 @@ func TestDownloadFromBucket(t *testing.T) {
 	}
 	defer test.RemoveFile(path)
 
-	result, _ := test.RunCmdWithError("qdownload", "-c", "4", path)
-	if !strings.Contains(result, "Download success:") {
+	test.RunCmdWithError("qdownload", "-c", "4", path)
+	if test.FileCountInDir(cfg.DestDir) < 2 {
 		t.Fail()
+	}
+
+	if !test.IsFileHasContent(cfg.LogFile) {
+		t.Fatal("log file should has content")
 	}
 
 	err = test.RemoveFile(cfg.DestDir)
@@ -170,6 +162,12 @@ func createDownloadConfigFile(cfg *config.Download) (cfgPath string, err error) 
 		cfg.DestDir = filepath.Join(rootPath, "download")
 	} else if cfg.DestDir == "empty" {
 		cfg.DestDir = ""
+	}
+	cfg.LogSetting = &config.LogSetting{
+		LogLevel:  config.DebugKey,
+		LogFile:   filepath.Join(cfg.DestDir, "log.txt"),
+		LogRotate: 7,
+		LogStdout: "true",
 	}
 
 	data, err := json.MarshalIndent(cfg, "", "\t")

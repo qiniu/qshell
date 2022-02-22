@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"path/filepath"
@@ -38,7 +39,14 @@ func GetConfig() *config.Config {
 }
 
 func GetLogConfig() *config.LogSetting {
-	if cfg != nil && cfg.Up != nil && cfg.Up.LogSetting != nil {
+	if cfg == nil {
+		return nil
+	}
+
+	if cfg.CmdId == docs.QUploadType {
+		if cfg.Up == nil || cfg.Up.LogSetting == nil {
+			return nil
+		}
 		if len(cfg.Up.LogSetting.LogFile) == 0 {
 			cachePath := UploadCachePath()
 			if len(cachePath) > 0 {
@@ -48,11 +56,14 @@ func GetLogConfig() *config.LogSetting {
 		return cfg.Up.LogSetting
 	}
 
-	if cfg != nil && cfg.Download != nil && cfg.Download.LogSetting != nil {
+	if cfg.CmdId == docs.QDownloadType {
+		if cfg.Download == nil || cfg.Download.LogSetting == nil {
+			return nil
+		}
 		if len(cfg.Download.LogSetting.LogFile) == 0 {
 			cachePath := DownloadCachePath()
 			if len(cachePath) > 0 {
-				cfg.Up.LogSetting.LogFile = filepath.Join(cachePath, cfg.Up.JobId())
+				cfg.Download.LogSetting.LogFile = filepath.Join(cachePath, cfg.Download.JobId())
 			}
 		}
 		return cfg.Download.LogSetting

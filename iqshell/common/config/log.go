@@ -13,6 +13,13 @@ type LogSetting struct {
 	LogStdout string `json:"log_stdout,omitempty"`
 }
 
+func (l *LogSetting) Check() error {
+	if l.LogRotate == 0 {
+		l.LogRotate = 7
+	}
+	return nil
+}
+
 func (l *LogSetting) IsLogStdout() bool {
 	return l.LogStdout != data.FalseString
 }

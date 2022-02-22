@@ -33,7 +33,6 @@ func (info *BatchDownloadInfo) Check() error {
 func BatchDownload(info BatchDownloadInfo) {
 	downloadCfg := workspace.GetConfig().Download
 	info.GroupInfo.InputFile = downloadCfg.KeyFile
-	info.GroupInfo.ItemSeparate = "\t"
 
 	if err := downloadCfg.Check(); err != nil {
 		log.ErrorF("download config check error:%v", err)

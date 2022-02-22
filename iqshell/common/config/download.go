@@ -111,5 +111,5 @@ func (d *Download) Check() error {
 	if d.BatchNum <= 0 {
 		d.BatchNum = 1000
 	}
-	return nil
+	return d.LogSetting.Check()
 }

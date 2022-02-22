@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -108,4 +109,50 @@ func FileLineCounts(filePath string) (count int64, err error) {
 		count += 1
 	}
 	return
+}
+
+func CreateFileIfNotExist(path string) error {
+	if exist, err := ExistFile(path); err == nil && exist {
+		return nil
+	}
+	return CreateFileDirIfNotExist(path)
+}
+
+func CreateFileDirIfNotExist(path string) error {
+	dir := filepath.Dir(path)
+	if err := CreateDirIfNotExist(dir); err != nil {
+		return err
+	}
+
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	defer f.Close()
+	return err
+}
+
+
+func ExistFile(path string) (bool, error) {
+	if s, err := os.Stat(path); err == nil {
+		return !s.IsDir(), nil
+	} else if os.IsNotExist(err) {
+		return false, nil
+	} else {
+		return false, err
+	}
+}
+
+func CreateDirIfNotExist(path string) error {
+	if exist, err := ExistDir(path); err == nil && exist {
+		return nil
+	}
+	return os.MkdirAll(path, os.ModePerm)
+}
+
+func ExistDir(path string) (bool, error) {
+	if s, err := os.Stat(path); err == nil {
+		return s.IsDir(), nil
+	} else if os.IsNotExist(err) {
+		return false, nil
+	} else {
+		return false, err
+	}
 }

@@ -5,9 +5,11 @@ import (
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 type Config struct {
+	CmdId       string            `json:"-"` // 命令 Id
 	Credentials *auth.Credentials `json:"-"`
 	UseHttps    string            `json:"use_https,omitempty"`
 	Hosts       *Hosts            `json:"hosts,omitempty"`
@@ -43,6 +45,8 @@ func (c *Config) Merge(from *Config) {
 	if from == nil {
 		return
 	}
+
+	c.CmdId = utils.GetNotEmptyStringIfExist(c.CmdId, from.CmdId)
 
 	if !c.HasCredentials() {
 		c.Credentials = from.Credentials
