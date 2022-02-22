@@ -14,7 +14,7 @@ func TestFetch(t *testing.T) {
 		t.Fail()
 	}
 
-	if len(result) > 0 {
+	if !strings.Contains(result, key) {
 		t.Fail()
 	}
 
@@ -22,6 +22,31 @@ func TestFetch(t *testing.T) {
 	if len(errs) > 0 {
 		t.Fail()
 	}
+}
+
+func TestFetchNoExistBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("fetch", test.BucketObjectDomain, test.BucketNotExist, "-k", test.Key)
+	if !strings.Contains(errs, "no such bucket") {
+		t.Fail()
+	}
+}
+
+func TestFetchNoBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("fetch", test.BucketObjectDomain)
+	if !strings.Contains(errs, "Bucket can't empty") {
+		t.Fail()
+	}
+}
+
+func TestFetchNoKey(t *testing.T) {
+	result, _ := test.RunCmdWithError("fetch", test.BucketObjectDomain, test.Bucket)
+	if !strings.Contains(result, "Key:FvySxBAiQRAd1iSF4XrC4SrDrhff") {
+		t.Fail()
+	}
+}
+
+func TestFetchDocument(t *testing.T) {
+	test.TestDocument("fetch", t)
 }
 
 func TestBatchFetch(t *testing.T) {
@@ -47,4 +72,8 @@ func TestBatchFetch(t *testing.T) {
 	if len(errs) > 0 {
 		t.Fail()
 	}
+}
+
+func TestBatchFetchDocument(t *testing.T) {
+	test.TestDocument("batchfetch", t)
 }
