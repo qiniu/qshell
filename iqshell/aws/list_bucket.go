@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -42,7 +43,13 @@ func (info *ListBucketInfo) Check() error {
 	return nil
 }
 
-func ListBucket(info ListBucketInfo) {
+func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	// AWS related code
 	s3session, err := session.NewSession()
 	if err != nil {

@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -33,16 +34,28 @@ func getAfterDaysOfInt(after string) (int, error) {
 	return strconv.Atoi(after)
 }
 
-func DeleteAfter(info DeleteInfo) {
+func DeleteAfter(cfg *iqshell.Config, info DeleteInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	if len(info.AfterDays) == 0 {
 		log.Error(alert.CannotEmpty("DeleteAfterDays", ""))
 		return
 	}
 
-	Delete(info)
+	Delete(cfg, info)
 }
 
-func Delete(info DeleteInfo) {
+func Delete(cfg *iqshell.Config, info DeleteInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	afterDays, err := getAfterDaysOfInt(info.AfterDays)
 	if err != nil {
 		log.ErrorF("delete after days invalid:%v", err)
@@ -83,7 +96,13 @@ func (info *BatchDeleteInfo) Check() error {
 }
 
 // BatchDelete 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
-func BatchDelete(info BatchDeleteInfo) {
+func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)
@@ -135,7 +154,13 @@ func BatchDelete(info BatchDeleteInfo) {
 }
 
 // BatchDeleteAfter 延迟批量删除，由于和批量删除的输入读取逻辑不同，所以分开
-func BatchDeleteAfter(info BatchDeleteInfo) {
+func BatchDeleteAfter(cfg *iqshell.Config, info BatchDeleteInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

@@ -2,6 +2,7 @@ package operations
 
 import (
 	"errors"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -42,7 +43,13 @@ func (p PrivateUrlInfo) getDeadlineOfInt() (int64, error) {
 	}
 }
 
-func PrivateUrl(info PrivateUrlInfo) {
+func PrivateUrl(cfg *iqshell.Config, info PrivateUrlInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	deadline, err := info.getDeadlineOfInt()
 	if err != nil {
 		log.Error(err)
@@ -67,7 +74,13 @@ func (info *BatchPrivateUrlInfo) Check() error {
 }
 
 // BatchPrivateUrl 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
-func BatchPrivateUrl(info BatchPrivateUrlInfo) {
+func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

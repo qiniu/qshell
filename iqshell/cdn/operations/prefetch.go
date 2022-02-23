@@ -2,6 +2,7 @@ package operations
 
 import (
 	"bufio"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/cdn"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -20,8 +21,14 @@ func (info *PrefetchInfo) Check() error {
 	return nil
 }
 
-func Prefetch(info PrefetchInfo) {
+func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
 	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
+
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
 
 	var err error
 	var urlReader io.ReadCloser

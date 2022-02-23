@@ -2,24 +2,23 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/docs"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
-var batchStatCmdBuilder = func() *cobra.Command {
+var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchStatusInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchstat <Bucket> [-i <KeyListFile>]",
 		Short: "Batch stat files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchStatType
+			cfg.CmdCfg.CmdId = docs.BatchStatType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.BatchStatus(info)
-			}
+			operations.BatchStatus(cfg, info)
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
@@ -30,98 +29,88 @@ var batchStatCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var batchDeleteCmdBuilder = func() *cobra.Command {
+var batchDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchDeleteInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchdelete <Bucket> [-i <KeyListFile>]",
 		Short: "Batch delete files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchDeleteType
+			cfg.CmdCfg.CmdId = docs.BatchDeleteType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.BatchDelete(info)
-			}
+			operations.BatchDelete(cfg, info)
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
 	return cmd
 }
 
-var batchChangeMimeCmdBuilder = func() *cobra.Command {
+var batchChangeMimeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchChangeMimeInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchchgm <Bucket> [-i <KeyMimeMapFile>]",
 		Short: "Batch change the mime type of files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchChangeMimeType
+			cfg.CmdCfg.CmdId = docs.BatchChangeMimeType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.BatchChangeMime(info)
-			}
+			operations.BatchChangeMime(cfg, info)
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
 	return cmd
 }
 
-var batchChangeTypeCmdBuilder = func() *cobra.Command {
+var batchChangeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchChangeTypeInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchchtype <Bucket> [-i <KeyFileTypeMapFile>]",
 		Short: "Batch change the file type of files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchChangeType
+			cfg.CmdCfg.CmdId = docs.BatchChangeType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.BatchChangeType(info)
-			}
+			operations.BatchChangeType(cfg, info)
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
 	return cmd
 }
 
-var batchDeleteAfterCmdBuilder = func() *cobra.Command {
+var batchDeleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchDeleteInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchexpire <Bucket> [-i <KeyDeleteAfterDaysMapFile>]",
 		Short: "Batch set the deleteAfterDays of the files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchExpireType
+			cfg.CmdCfg.CmdId = docs.BatchExpireType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.BatchDeleteAfter(info)
-			}
+			operations.BatchDeleteAfter(cfg, info)
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
 	return cmd
 }
 
-var batchMoveCmdBuilder = func() *cobra.Command {
+var batchMoveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchMoveInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchmove <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
 		Short: "Batch move files from bucket to bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchMoveType
+			cfg.CmdCfg.CmdId = docs.BatchMoveType
 			if len(args) > 0 {
 				info.SourceBucket = args[0]
 			}
 			if len(args) > 1 {
 				info.DestBucket = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.BatchMove(info)
-			}
+			operations.BatchMove(cfg, info)
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -129,19 +118,17 @@ var batchMoveCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var batchRenameCmdBuilder = func() *cobra.Command {
+var batchRenameCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchRenameInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchrename <Bucket> [-i <OldNewKeyMapFile>]",
 		Short: "Batch rename files in the bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchRenameType
+			cfg.CmdCfg.CmdId = docs.BatchRenameType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.BatchRename(info)
-			}
+			operations.BatchRename(cfg, info)
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -149,22 +136,20 @@ var batchRenameCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var batchCopyCmdBuilder = func() *cobra.Command {
+var batchCopyCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchCopyInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchcopy <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
 		Short: "Batch copy files from bucket to bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchCopyType
+			cfg.CmdCfg.CmdId = docs.BatchCopyType
 			if len(args) > 0 {
 				info.SourceBucket = args[0]
 			}
 			if len(args) > 1 {
 				info.DestBucket = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.BatchCopy(info)
-			}
+			operations.BatchCopy(cfg, info)
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -172,17 +157,15 @@ var batchCopyCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var batchSignCmdBuilder = func() *cobra.Command {
+var batchSignCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchPrivateUrlInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchsign [-i <ItemListFile>] [-e <Deadline>]",
 		Short: "Batch create the private url from the public url list file",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchSignType
+			cfg.CmdCfg.CmdId = docs.BatchSignType
 			info.BatchInfo.Force = true
-			if prepare(cmd, &info) {
-				operations.BatchPrivateUrl(info)
-			}
+			operations.BatchPrivateUrl(cfg, info)
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
@@ -190,23 +173,21 @@ var batchSignCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var batchFetchCmdBuilder = func() *cobra.Command {
+var batchFetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var upHost = ""
 	var info = operations.BatchFetchInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
 		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.BatchFetchType
+			cfg.CmdCfg.CmdId = docs.BatchFetchType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
 			if len(upHost) > 0 {
 				cfg.CmdCfg.Hosts.Up = []string{upHost}
 			}
-			if prepare(cmd, &info) {
-				operations.BatchFetch(info)
-			}
+			operations.BatchFetch(cfg, info)
 		},
 	}
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
@@ -245,16 +226,20 @@ func setBatchCmdOverwriteFlags(cmd *cobra.Command, info *batch.Info) {
 }
 
 func init() {
-	rootCmd.AddCommand(
-		batchStatCmdBuilder(),
-		batchCopyCmdBuilder(),
-		batchMoveCmdBuilder(),
-		batchRenameCmdBuilder(),
-		batchDeleteCmdBuilder(),
-		batchDeleteAfterCmdBuilder(),
-		batchChangeMimeCmdBuilder(),
-		batchChangeTypeCmdBuilder(),
-		batchSignCmdBuilder(),
-		batchFetchCmdBuilder(),
+	registerLoader(rsBatchCmdLoader)
+}
+
+func rsBatchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+	superCmd.AddCommand(
+		batchStatCmdBuilder(cfg),
+		batchCopyCmdBuilder(cfg),
+		batchMoveCmdBuilder(cfg),
+		batchRenameCmdBuilder(cfg),
+		batchDeleteCmdBuilder(cfg),
+		batchDeleteAfterCmdBuilder(cfg),
+		batchChangeMimeCmdBuilder(cfg),
+		batchChangeTypeCmdBuilder(cfg),
+		batchSignCmdBuilder(cfg),
+		batchFetchCmdBuilder(cfg),
 	)
 }

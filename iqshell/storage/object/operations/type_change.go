@@ -2,6 +2,7 @@ package operations
 
 import (
 	"errors"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -46,7 +47,13 @@ func (info *ChangeTypeInfo) getTypeOfInt() (int, error) {
 	return ret, nil
 }
 
-func ChangeType(info ChangeTypeInfo) {
+func ChangeType(cfg *iqshell.Config, info ChangeTypeInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	t, err := info.getTypeOfInt()
 	if err != nil {
 		log.ErrorF("Change Type error:%v", err)
@@ -86,7 +93,13 @@ func (info *BatchChangeTypeInfo) Check() error {
 	return nil
 }
 
-func BatchChangeType(info BatchChangeTypeInfo) {
+func BatchChangeType(cfg *iqshell.Config, info BatchChangeTypeInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

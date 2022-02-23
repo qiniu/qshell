@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -40,7 +41,13 @@ func (info *UploadInfo) Check() error {
 	return nil
 }
 
-func UploadFile(info UploadInfo) {
+func UploadFile(cfg *iqshell.Config, info UploadInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	//doneSignal := make(chan bool)
 	//go func(ch chan bool) {
 	//	progressSigns := []string{"|", "/", "-", "\\", "|"}

@@ -3,6 +3,7 @@ package operations
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"strconv"
@@ -21,7 +22,13 @@ func (info *ReqIdInfo) Check() error {
 }
 
 // DecodeReqId 解析reqid， 打印人工可读的字符串
-func DecodeReqId(info ReqIdInfo) {
+func DecodeReqId(cfg *iqshell.Config, info ReqIdInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	decodedBytes, err := base64.URLEncoding.DecodeString(info.ReqId)
 	if err != nil || len(decodedBytes) < 4 {
 		log.Error("Invalid reqid", info.ReqId, err)

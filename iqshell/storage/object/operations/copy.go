@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -27,7 +28,13 @@ func (info *CopyInfo) Check() error {
 	return nil
 }
 
-func Copy(info CopyInfo) {
+func Copy(cfg *iqshell.Config, info CopyInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	result, err := object.Copy(object.CopyApiInfo(info))
 	if err != nil {
 		log.ErrorF("Copy error:%v", err)
@@ -66,7 +73,13 @@ func (info *BatchCopyInfo) Check() error {
 	return nil
 }
 
-func BatchCopy(info BatchCopyInfo) {
+func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

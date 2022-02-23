@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -37,8 +38,20 @@ func (info *QBoxTokenInfo) Check() error {
 	return nil
 }
 
+// Token QBox Token, 一般bucket相关的接口需要这个token
+func Token(cfg *iqshell.Config) {
+	iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+	})
+}
+
 // CreateQBoxToken QBox Token, 一般bucket相关的接口需要这个token
-func CreateQBoxToken(info QBoxTokenInfo) {
+func CreateQBoxToken(cfg *iqshell.Config, info QBoxTokenInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	mac, req, mErr := getMacAndRequest(info.TokenInfo)
 	if mErr != nil {
 		log.ErrorF("create mac and request: %v\n", mErr)
@@ -63,8 +76,14 @@ func (info *QiniuTokenInfo) Check() error {
 	return nil
 }
 
-// 签名七牛token, 一般三鉴接口需要http头文件 Authorization, 这个头的值就是qiniuToken
-func CreateQiniuToken(info QiniuTokenInfo) {
+// CreateQiniuToken 签名七牛token, 一般三鉴接口需要http头文件 Authorization, 这个头的值就是qiniuToken
+func CreateQiniuToken(cfg *iqshell.Config, info QiniuTokenInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	mac, req, mErr := getMacAndRequest(info.TokenInfo)
 	if mErr != nil {
 		log.ErrorF("create mac and reqeust: %v\n", mErr)
@@ -91,7 +110,13 @@ func (info *UploadTokenInfo) Check() error {
 }
 
 // 给定上传策略，打印出上传token
-func CreateUploadToken(info UploadTokenInfo) {
+func CreateUploadToken(cfg *iqshell.Config, info UploadTokenInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	fileName := info.PutPolicyFilePath
 
 	fileInfo, oErr := os.Open(fileName)

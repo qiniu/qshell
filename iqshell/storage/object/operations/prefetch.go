@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -20,7 +21,13 @@ func (info *MirrorUpdateInfo) Check() error {
 	return nil
 }
 
-func MirrorUpdate(info MirrorUpdateInfo) {
+func MirrorUpdate(cfg *iqshell.Config, info MirrorUpdateInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	err := storage.Prefetch(storage.PrefetchApiInfo(info))
 	if err != nil {
 		log.ErrorF("mirror update error: %v", err)

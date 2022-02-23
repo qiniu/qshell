@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -35,7 +36,13 @@ func (info *ForbiddenInfo) getStatus() int {
 	}
 }
 
-func ForbiddenObject(info ForbiddenInfo) {
+func ForbiddenObject(cfg *iqshell.Config, info ForbiddenInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	result, err := object.ChangeStatus(object.ChangeStatusApiInfo{
 		Bucket: info.Bucket,
 		Key:    info.Key,
@@ -58,7 +65,20 @@ type BatchChangeStatusInfo struct {
 	Bucket    string
 }
 
-func BatchChangeStatus(info BatchChangeStatusInfo) {
+func (info *BatchChangeStatusInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
+	return nil
+}
+
+func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

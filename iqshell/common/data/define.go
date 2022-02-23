@@ -39,6 +39,6 @@ type FetchItem struct {
 
 const DefaultLineSeparate = "\t"
 
-type Check interface {
+type Checker interface {
 	Check() error
 }

@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -17,7 +18,13 @@ func (info *PreFopStatusInfo) Check() error {
 	return nil
 }
 
-func PreFopStatus(info PreFopStatusInfo) {
+func PreFopStatus(cfg *iqshell.Config, info PreFopStatusInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	ret, err := object.PreFopStatus(info.Id)
 	if err != nil {
 		log.ErrorF("pre fog status error:%v", err)
@@ -44,7 +51,13 @@ func (info *PreFopInfo) Check() error {
 	return nil
 }
 
-func PreFop(info PreFopInfo) {
+func PreFop(cfg *iqshell.Config, info PreFopInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	persistentId, err := object.PreFop(object.PreFopApiInfo(info))
 	if err != nil {
 		log.ErrorF("pre fog error:%v", err)

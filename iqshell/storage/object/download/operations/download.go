@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -26,7 +27,13 @@ func (info *DownloadInfo) Check() error {
 	return nil
 }
 
-func DownloadFile(info DownloadInfo) {
+func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	// 如果 ToFile 不存在则保存在当前文件录下，文件名为：key
 	if len(info.ToFile) == 0 {
 		info.ToFile = info.Key

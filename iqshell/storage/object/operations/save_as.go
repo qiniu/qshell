@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -23,7 +24,13 @@ func (info *SaveAsInfo) Check() error {
 	return nil
 }
 
-func SaveAs(info SaveAsInfo) {
+func SaveAs(cfg *iqshell.Config, info SaveAsInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	url, err := object.SaveAs(object.SaveAsApiInfo(info))
 	if err != nil {
 		log.ErrorF("save as error: %v", err)

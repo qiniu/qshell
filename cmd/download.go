@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/docs"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
@@ -10,7 +11,7 @@ import (
 	"os"
 )
 
-var downloadCmdBuilder = func() *cobra.Command {
+var downloadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.BatchDownloadInfo{}
 	cmd := &cobra.Command{
 		Use:   "qdownload [-c <ThreadCount>] <LocalDownloadConfig>",
@@ -19,7 +20,7 @@ var downloadCmdBuilder = func() *cobra.Command {
 And qdownload will use batch stat api or list api to get files info so that it have knowledge to tell whether files
 have already in local disk and need to skip download or not.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.QDownloadType
+			cfg.CmdCfg.CmdId = docs.QDownloadType
 			if len(args) > 0 {
 				cfg.DownloadConfigFile = args[0]
 			}
@@ -29,35 +30,31 @@ have already in local disk and need to skip download or not.`,
 				LogRotate: 0,
 				LogStdout: data.TrueString,
 			}
-			if prepare(cmd, &info) {
-				if len(args) == 0 {
+			if len(args) == 0 {
 					fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
 					return
 				}
-				operations.BatchDownload(info)
-			}
+				operations.BatchDownload(cfg, info)
 		},
 	}
 	cmd.Flags().IntVarP(&info.GroupInfo.WorkCount, "thread", "c", 5, "num of threads to download files")
 	return cmd
 }
 
-var getCmdBuilder = func() *cobra.Command {
+var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.DownloadInfo{}
 	var cmd = &cobra.Command{
 		Use:   "get <Bucket> <Key>",
 		Short: "Download a single file from bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.GetType
+			cfg.CmdCfg.CmdId = docs.GetType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.DownloadFile(info)
-			}
+			operations.DownloadFile(cfg, info)
 		},
 	}
 
@@ -68,6 +65,12 @@ var getCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	rootCmd.AddCommand(getCmdBuilder())
-	rootCmd.AddCommand(downloadCmdBuilder())
+	registerLoader(downloadCmdLoader)
+}
+
+func downloadCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+	superCmd.AddCommand(
+		getCmdBuilder(cfg),
+		downloadCmdBuilder(cfg),
+	)
 }

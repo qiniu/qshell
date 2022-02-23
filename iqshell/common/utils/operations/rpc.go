@@ -2,6 +2,7 @@ package operations
 
 import (
 	"bufio"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"os"
 
@@ -17,7 +18,13 @@ func (info *RpcInfo) Check() error {
 	return nil
 }
 
-func RpcDecode(info RpcInfo) {
+func RpcDecode(cfg *iqshell.Config, info RpcInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	if len(info.Params) > 0 {
 		for _, param := range info.Params {
 			decodedStr, _ := utils.Decode(param)
@@ -33,7 +40,13 @@ func RpcDecode(info RpcInfo) {
 	}
 }
 
-func RpcEncode(info RpcInfo) {
+func RpcEncode(cfg *iqshell.Config, info RpcInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	if len(info.Params) == 0 {
 		log.Error(alert.CannotEmpty("rpc encode Value", ""))
 		return

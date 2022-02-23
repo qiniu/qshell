@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
@@ -44,7 +45,13 @@ func (info *FetchInfo) Check() error {
 	return nil
 }
 
-func Fetch(info FetchInfo) {
+func Fetch(cfg *iqshell.Config, info FetchInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	resultExport, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:  info.BatchInfo.SuccessExportFilePath,
 		FailExportFilePath:     info.BatchInfo.FailExportFilePath,

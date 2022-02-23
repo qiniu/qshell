@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
@@ -36,7 +37,13 @@ func (info *BatchUploadInfo) Check() error {
 
 // BatchUpload 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中;
 // 可以设置多线程上传，默认的线程区间在[iqshell.min_upload_thread_count, iqshell.max_upload_thread_count]
-func BatchUpload(info BatchUploadInfo) {
+func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	uploadConfig := workspace.GetConfig().Up
 	if err := uploadConfig.Check(); err != nil {
 		log.ErrorF("batch upload:%v", err)
@@ -231,6 +238,6 @@ func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 type BatchUploadConfigMouldInfo struct {
 }
 
-func BatchUploadConfigMould(info BatchUploadConfigMouldInfo) {
+func BatchUploadConfigMould(cfg *iqshell.Config, info BatchUploadConfigMouldInfo) {
 	log.Alert(uploadConfigMouldJsonString)
 }

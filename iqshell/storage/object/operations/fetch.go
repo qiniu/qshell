@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
@@ -26,7 +27,13 @@ func (info *FetchInfo) Check() error {
 	return nil
 }
 
-func Fetch(info FetchInfo) {
+func Fetch(cfg *iqshell.Config, info FetchInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	result, err := object.Fetch(object.FetchApiInfo(info))
 	if err != nil {
 		log.ErrorF("Fetch error: %v", err)
@@ -56,7 +63,13 @@ func (info *BatchFetchInfo) Check() error {
 }
 
 //BatchFetch 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
-func BatchFetch(info BatchFetchInfo) {
+func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)
@@ -115,7 +128,13 @@ func (info *CheckAsyncFetchStatusInfo) Check() error {
 	return nil
 }
 
-func CheckAsyncFetchStatus(info CheckAsyncFetchStatusInfo) {
+func CheckAsyncFetchStatus(cfg *iqshell.Config, info CheckAsyncFetchStatusInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	ret, err := object.CheckAsyncFetchStatus(info.Bucket, info.Id)
 	if err != nil {
 		log.ErrorF("CheckAsyncFetchStatus error: %v", err)
@@ -142,7 +161,13 @@ func (info *BatchAsyncFetchInfo) Check() error {
 	return nil
 }
 
-func BatchAsyncFetch(info BatchAsyncFetchInfo) {
+func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	info.GroupInfo.Force = true
 	handler, err := group.NewHandler(info.GroupInfo)
 	if err != nil {

@@ -3,37 +3,12 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/spf13/cobra"
 	"os"
 )
-
-var cfg = iqshell.Config{
-	DebugEnable:    false,
-	DDebugEnable:   false,
-	ConfigFilePath: "",
-	Local:          false,
-	CmdCfg: config.Config{
-		Credentials: nil,
-		UseHttps:    "",
-		Hosts:       &config.Hosts{},
-		Up: &config.Up{
-			LogSetting: &config.LogSetting{},
-			Tasks:      &config.Tasks{},
-			Retry:      &config.Retry{},
-			Policy:     &storage.PutPolicy{},
-		},
-		Download: &config.Download{
-			LogSetting: &config.LogSetting{},
-			Tasks:      &config.Tasks{},
-			Retry:      &config.Retry{},
-		},
-	},
-}
 
 const (
 	bash_completion_func = `__qshell_parse_get()
@@ -66,54 +41,67 @@ __custom_func() {
 `
 )
 
-// rootCmd cobra root cmd, all other commands is children or subchildren of this root cmd
-var rootCmd = &cobra.Command{
-	Use:                    "qshell",
-	Short:                  "Qiniu commandline tool for managing your bucket and CDN",
-	Version:                data.Version,
-	BashCompletionFunction: bash_completion_func,
-}
-
-var document = false
-var cmdId string
-
-func init() {
-	rootCmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")
-	rootCmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
-	// ddebug 开启 client debug
-	rootCmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
-	rootCmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "config file (default is $HOME/.qshell.json)")
-	rootCmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
-	rootCmd.PersistentFlags().BoolVarP(&document, "doc", "", false, "document of command")
-}
-
-func prepare(cmd *cobra.Command, check data.Check) (shouldContinue bool) {
-	if document {
-		docs.ShowCmdDocument(cmdId)
-		return false
-	}
-
-	cfg.CmdCfg.CmdId = cmdId
-	err := iqshell.Load(cfg)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
-		return false
-	}
-
-	if check != nil {
-		err = check.Check()
-		if err != nil {
-			log.ErrorF("check error: %v", err)
-			return false
-		}
-	}
-
-	return true
-}
-
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	var cfg = &iqshell.Config{
+		Document:       false,
+		DebugEnable:    false,
+		DDebugEnable:   false,
+		ConfigFilePath: "",
+		Local:          false,
+		CmdCfg: config.Config{
+			Credentials: nil,
+			UseHttps:    "",
+			Hosts:       &config.Hosts{},
+			Up: &config.Up{
+				LogSetting: &config.LogSetting{},
+				Tasks:      &config.Tasks{},
+				Retry:      &config.Retry{},
+				Policy:     &storage.PutPolicy{},
+			},
+			Download: &config.Download{
+				LogSetting: &config.LogSetting{},
+				Tasks:      &config.Tasks{},
+				Retry:      &config.Retry{},
+			},
+		},
+	}
+
+	cmd := &cobra.Command{
+		Use:                    "qshell",
+		Short:                  "Qiniu commandline tool for managing your bucket and CDN",
+		Version:                data.Version,
+		BashCompletionFunction: bash_completion_func,
+	}
+	cmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")
+	cmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
+	// ddebug 开启 client debug
+	cmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
+	cmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "config file (default is $HOME/.qshell.json)")
+	cmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
+	cmd.PersistentFlags().BoolVarP(&cfg.Document, "doc", "", false, "document of command")
+
+	load(cmd, cfg)
+
+	if err := cmd.Execute(); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
+	}
+}
+
+type Loader func(superCmd *cobra.Command, cfg *iqshell.Config)
+
+var loaders = make([]Loader, 0, 20)
+
+func registerLoader(l Loader) {
+	if l != nil {
+		loaders = append(loaders, l)
+	}
+}
+
+func load(superCmd *cobra.Command, cfg *iqshell.Config) {
+	for _, l := range loaders {
+		if l != nil {
+			l(superCmd, cfg)
+		}
 	}
 }

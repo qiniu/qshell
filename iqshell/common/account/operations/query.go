@@ -1,12 +1,26 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
 )
+
+type UserInfo struct {
+}
+
+func (info *UserInfo) Check() error {
+	return nil
+}
+
+func User(cfg *iqshell.Config, info UserInfo) {
+	iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	})
+}
 
 type ListInfo struct {
 	OnlyListName bool
@@ -16,7 +30,13 @@ func (info *ListInfo) Check() error {
 	return nil
 }
 
-func List(info ListInfo) {
+func List(cfg *iqshell.Config, info ListInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	accounts, err := account.GetUsers()
 	if err != nil {
 		log.ErrorF("user list error:", err)
@@ -57,7 +77,7 @@ func (info *LookUpInfo) Check() error {
 	return nil
 }
 
-func LookUp(info LookUpInfo) {
+func LookUp(cfg *iqshell.Config, info LookUpInfo) {
 	acc, err := account.LookUp(info.Name)
 	if err != nil {
 		log.ErrorF("user lookup error: %v", err)

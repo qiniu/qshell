@@ -2,6 +2,7 @@ package operations
 
 import (
 	"encoding/base64"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
@@ -19,7 +20,13 @@ func (info *Base64Info) Check() error {
 }
 
 // Base64Encode base64编码数据
-func Base64Encode(info Base64Info) {
+func Base64Encode(cfg *iqshell.Config, info Base64Info) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	dataEncoded := ""
 	if info.UrlSafe {
 		dataEncoded = base64.URLEncoding.EncodeToString([]byte(info.Data))
@@ -30,7 +37,13 @@ func Base64Encode(info Base64Info) {
 }
 
 // Base64Decode 解码base64编码的数据
-func Base64Decode(info Base64Info) {
+func Base64Decode(cfg *iqshell.Config, info Base64Info) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	if info.UrlSafe {
 		dataDecoded, err := base64.URLEncoding.DecodeString(info.Data)
 		if err != nil {

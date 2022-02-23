@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/client"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -14,6 +16,7 @@ import (
 )
 
 type Config struct {
+	Document           bool   // 是否展示 document
 	DebugEnable        bool   // 开启命令行的调试模式
 	DDebugEnable       bool   // go SDK client 和命令行开启调试模式
 	ConfigFilePath     string // 配置文件路径，用户可以指定配置文件
@@ -24,8 +27,33 @@ type Config struct {
 	CmdCfg             config.Config
 }
 
-func Load(cfg Config) error {
+type CheckAndLoadInfo struct {
+	Checker data.Checker
+}
 
+func CheckAndLoad(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
+	if cfg.Document {
+		docs.ShowCmdDocument(cfg.CmdCfg.CmdId)
+		return false
+	}
+
+	err := load(cfg)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
+		return false
+	}
+
+	if info.Checker != nil {
+		err = info.Checker.Check()
+		if err != nil {
+			log.ErrorF("check error: %v", err)
+			return false
+		}
+	}
+	return true
+}
+
+func load(cfg *Config) error {
 	// 加载 log
 	logLevel := log.LevelInfo
 	if cfg.DebugEnable || cfg.DDebugEnable {

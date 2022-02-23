@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"strconv"
@@ -19,7 +20,13 @@ func (info *TimestampInfo) Check() error {
 }
 
 // Timestamp2Date 转化unix时间戳为可读的字符串
-func Timestamp2Date(info TimestampInfo) {
+func Timestamp2Date(cfg *iqshell.Config, info TimestampInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	ts, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {
 		log.ErrorF("Invalid timestamp Value:%s error:%s", info.Value, err)
@@ -31,7 +38,13 @@ func Timestamp2Date(info TimestampInfo) {
 }
 
 // TimestampMilli2Date 转化毫秒时间戳到人工可读的字符串
-func TimestampMilli2Date(info TimestampInfo) {
+func TimestampMilli2Date(cfg *iqshell.Config, info TimestampInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	tms, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {
 		log.ErrorF("Invalid mill timestamp Value:%s error:%s", info.Value, err)
@@ -42,7 +55,13 @@ func TimestampMilli2Date(info TimestampInfo) {
 }
 
 // 转化纳秒时间戳到人工可读的字符串, 百纳秒为单位，主要是对接七牛服务时间戳
-func TimestampNano2Date(info TimestampInfo) {
+func TimestampNano2Date(cfg *iqshell.Config, info TimestampInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	tns, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {
 		log.ErrorF("Invalid nano timestamp Value:%s error:%s", info.Value, err)
@@ -53,7 +72,13 @@ func TimestampNano2Date(info TimestampInfo) {
 }
 
 // 转化时间字符串到unix时间戳
-func Date2Timestamp(info TimestampInfo) {
+func Date2Timestamp(cfg *iqshell.Config, info TimestampInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	duration, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {
 		log.ErrorF("Invalid duration Value:%s error:%s", info.Value, err)

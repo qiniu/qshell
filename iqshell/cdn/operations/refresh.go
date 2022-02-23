@@ -2,6 +2,7 @@ package operations
 
 import (
 	"bufio"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/cdn"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -22,8 +23,14 @@ func (info *RefreshInfo) Check() error {
 }
 
 // Refresh 【cdnrefresh】刷新所有CDN节点
-func Refresh(info RefreshInfo) {
+func Refresh(cfg *iqshell.Config, info RefreshInfo) {
 	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
+
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
 
 	var err error
 	var urlReader io.ReadCloser

@@ -3,30 +3,29 @@ package cmd
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/docs"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
 	"github.com/spf13/cobra"
 	"os"
 )
 
-var uploadCmdBuilder = func() *cobra.Command {
+var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.BatchUploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "qupload <LocalDownloadConfig>",
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.QUploadType
+			cfg.CmdCfg.CmdId = docs.QUploadType
 			if len(args) > 0 {
 				cfg.UploadConfigFile = args[0]
 			}
 			info.GroupInfo.Force = true
-			if prepare(cmd, &info) {
-				if len(args) == 0 {
+			if len(args) == 0 {
 					fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
 					return
 				}
-				operations.BatchUpload(info)
-			}
+				operations.BatchUpload(cfg, info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.GroupInfo.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
@@ -38,21 +37,20 @@ var uploadCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var uploadConfigMouldCmdBuilder = func() *cobra.Command {
+var uploadConfigMouldCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.BatchUploadConfigMouldInfo{}
 	cmd := &cobra.Command{
 		Use:   "qupload-config-mould",
 		Short: "Get config mould of batch upload ",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			prepare(cmd, nil)
-			operations.BatchUploadConfigMould(info)
+			operations.BatchUploadConfigMould(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var upload2CmdBuilder = func() *cobra.Command {
+var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var (
 		resumeAPIV2 = false
 		ignoreDir   = false
@@ -67,7 +65,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 		Use:   "qupload2",
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.QUpload2Type
+			cfg.CmdCfg.CmdId = docs.QUpload2Type
 			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumeAPIV2)
 			cfg.CmdCfg.Up.IgnoreDir = data.GetBoolString(ignoreDir)
 			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
@@ -76,9 +74,7 @@ var upload2CmdBuilder = func() *cobra.Command {
 			cfg.CmdCfg.Up.CheckSize = data.GetBoolString(checkSize)
 			cfg.CmdCfg.Up.RescanLocal = data.GetBoolString(rescanLocal)
 			info.GroupInfo.Force = true
-			if prepare(cmd, &info) {
-				operations.BatchUpload(info)
-			}
+			operations.BatchUpload(cfg, info)
 		},
 	}
 	cmd.Flags().StringVar(&info.GroupInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
@@ -117,14 +113,14 @@ var upload2CmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var syncCmdBuilder = func() *cobra.Command {
+var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	resumeAPIV2 := false
 	info := operations.UploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "sync <SrcResUrl> <Buckets> [-k <Key>]",
 		Short: "Sync big file to qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.SyncType
+			cfg.CmdCfg.CmdId = docs.SyncType
 			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumeAPIV2)
 			if len(args) > 0 {
 				info.FilePath = args[0]
@@ -132,9 +128,7 @@ var syncCmdBuilder = func() *cobra.Command {
 			if len(args) > 1 {
 				info.Bucket = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.UploadFile(info)
-			}
+			operations.UploadFile(cfg, info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.Key, "key", "k", "", "save as <key> in bucket")
@@ -143,14 +137,14 @@ var syncCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var formUploadCmdBuilder = func() *cobra.Command {
+var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	overwrite := false
 	info := operations.UploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "fput <Bucket> <Key> <LocalFile>",
 		Short: "Form upload a local file",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.FormPutType
+			cfg.CmdCfg.CmdId = docs.FormPutType
 			cfg.CmdCfg.Up.DisableResume = data.TrueString
 			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
 			if len(args) > 0 {
@@ -162,9 +156,7 @@ var formUploadCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.FilePath = args[2]
 			}
-			if prepare(cmd, &info) {
-				operations.UploadFile(info)
-			}
+			operations.UploadFile(cfg, info)
 		},
 	}
 	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
@@ -177,7 +169,7 @@ var formUploadCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var resumeUploadCmdBuilder = func() *cobra.Command {
+var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var (
 		resumeAPIV2 = false
 		overwrite   = false
@@ -187,7 +179,7 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 		Use:   "rput <Bucket> <Key> <LocalFile>",
 		Short: "Resumable upload a local file",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.RPutType
+			cfg.CmdCfg.CmdId = docs.RPutType
 			cfg.CmdCfg.Up.DisableForm = data.TrueString
 			cfg.CmdCfg.Up.ResumableAPIV2 = data.GetBoolString(resumeAPIV2)
 			cfg.CmdCfg.Up.Overwrite = data.GetBoolString(overwrite)
@@ -200,9 +192,7 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.FilePath = args[2]
 			}
-			if prepare(cmd, &info) {
-				operations.UploadFile(info)
-			}
+			operations.UploadFile(cfg, info)
 		},
 	}
 
@@ -220,12 +210,16 @@ var resumeUploadCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
-	rootCmd.AddCommand(
-		upload2CmdBuilder(),
-		uploadCmdBuilder(),
-		uploadConfigMouldCmdBuilder(),
-		syncCmdBuilder(),
-		formUploadCmdBuilder(),
-		resumeUploadCmdBuilder(),
+	registerLoader(uploadCmdLoader)
+}
+
+func uploadCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+	superCmd.AddCommand(
+		upload2CmdBuilder(cfg),
+		uploadCmdBuilder(cfg),
+		uploadConfigMouldCmdBuilder(cfg),
+		syncCmdBuilder(cfg),
+		formUploadCmdBuilder(cfg),
+		resumeUploadCmdBuilder(cfg),
 	)
 }

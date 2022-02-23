@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -20,7 +21,13 @@ func (info *DeleteInfo) Check() error {
 	return nil
 }
 
-func Delete(info DeleteInfo) {
+func Delete(cfg *iqshell.Config, info DeleteInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	results, err := m3u8.Delete(m3u8.DeleteApiInfo(info))
 	for _, result := range results {
 		if result.Code != 200 || len(result.Error) > 0 {

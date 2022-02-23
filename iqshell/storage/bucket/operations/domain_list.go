@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -19,7 +20,13 @@ func (info *ListDomainInfo) Check() error {
 	return nil
 }
 
-func ListDomains(info ListDomainInfo) {
+func ListDomains(cfg *iqshell.Config, info ListDomainInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	domains, err := bucket.AllDomainsOfBucket(info.Bucket)
 	if err != nil {
 		log.Error("Get domains error: ", err)

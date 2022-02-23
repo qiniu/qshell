@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"net/http"
@@ -26,7 +27,13 @@ func (info *IpQueryInfo) Check() error {
 	return nil
 }
 
-func IpQuery(info IpQueryInfo) {
+func IpQuery(cfg *iqshell.Config, info IpQueryInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	if len(info.Ips) == 0 {
 		log.Error(errors.New(alert.CannotEmpty("ip", "")))
 		return

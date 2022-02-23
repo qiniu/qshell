@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
@@ -30,7 +31,13 @@ func (info *BatchDownloadInfo) Check() error {
 	return nil
 }
 
-func BatchDownload(info BatchDownloadInfo) {
+func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	downloadCfg := workspace.GetConfig().Download
 	info.GroupInfo.InputFile = downloadCfg.KeyFile
 

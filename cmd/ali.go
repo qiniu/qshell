@@ -2,17 +2,18 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/docs"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/ali"
 	"github.com/spf13/cobra"
 )
 
-var aliCmdBuilder = func() *cobra.Command {
+var aliCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = ali.ListBucketInfo{}
 	var cmd = &cobra.Command{
 		Use:   "alilistbucket <DataCenter> <Bucket> <AccessKeyId> <AccessKeySecret> [Prefix] <ListBucketResultFile>",
 		Short: "List all the file in the bucket of aliyun oss by prefix",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.AliListBucket
+			cfg.CmdCfg.CmdId = docs.AliListBucket
 			if len(args) > 0 {
 				info.DataCenter = args[0]
 			}
@@ -33,15 +34,16 @@ var aliCmdBuilder = func() *cobra.Command {
 					info.SaveToFile = args[4]
 				}
 			}
-
-			if prepare(cmd, &info) {
-				ali.ListBucket(info)
-			}
+			ali.ListBucket(cfg, info)
 		},
 	}
 	return cmd
 }
 
 func init() {
-	rootCmd.AddCommand(aliCmdBuilder())
+	registerLoader(aliCmdLoader)
+}
+
+func aliCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+	superCmd.AddCommand(aliCmdBuilder(cfg))
 }

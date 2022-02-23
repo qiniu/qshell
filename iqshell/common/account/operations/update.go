@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -16,7 +17,13 @@ func (info *ChangeInfo) Check() error {
 	return nil
 }
 
-func Change(info ChangeInfo) {
+func Change(cfg *iqshell.Config, info ChangeInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	err := account.ChUser(info.Name)
 	if err != nil {
 		log.ErrorF("user change error:", err)

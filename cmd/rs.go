@@ -2,32 +2,30 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/docs"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
-var statCmdBuilder = func() *cobra.Command {
+var statCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.StatusInfo{}
 	var cmd = &cobra.Command{
 		Use:   "stat <Bucket> <Key>",
 		Short: "Get the basic info of a remote file",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.StatType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.Status(info)
-			}
+			operations.Status(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var forbiddenCmdBuilder = func() *cobra.Command {
+var forbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ForbiddenInfo{}
 	var cmd = &cobra.Command{
 		Use:   "forbidden <Bucket> <Key>",
@@ -38,43 +36,39 @@ var forbiddenCmdBuilder = func() *cobra.Command {
 				info.Bucket = args[0]
 				info.Key = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.ForbiddenObject(info)
-			}
+			operations.ForbiddenObject(cfg, info)
 		},
 	}
 	cmd.Flags().BoolVarP(&info.UnForbidden, "reverse", "r", false, "unforbidden object in qiniu bucket")
 	return cmd
 }
 
-var deleteCmdBuilder = func() *cobra.Command {
+var deleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.DeleteInfo{}
 	var cmd = &cobra.Command{
 		Use:   "delete <Bucket> <Key>",
 		Short: "Delete a remote file in the bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.DeleteType
+			cfg.CmdCfg.CmdId = docs.DeleteType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.Delete(info)
-			}
+			operations.Delete(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var deleteAfterCmdBuilder = func() *cobra.Command {
+var deleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.DeleteInfo{}
 	var cmd = &cobra.Command{
 		Use:   "expire <Bucket> <Key> <DeleteAfterDays>",
 		Short: "Set the deleteAfterDays of a file",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.ExpireType
+			cfg.CmdCfg.CmdId = docs.ExpireType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -84,21 +78,19 @@ var deleteAfterCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.AfterDays = args[2]
 			}
-			if prepare(cmd, &info) {
-				operations.DeleteAfter(info)
-			}
+			operations.DeleteAfter(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var moveCmdBuilder = func() *cobra.Command {
+var moveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.MoveInfo{}
 	var cmd = &cobra.Command{
 		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Move/Rename a file and save in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.MoveType
+			cfg.CmdCfg.CmdId = docs.MoveType
 			if len(args) > 0 {
 				info.SourceBucket = args[0]
 			}
@@ -111,9 +103,7 @@ var moveCmdBuilder = func() *cobra.Command {
 			if len(info.DestKey) == 0 {
 				info.DestKey = info.SourceKey
 			}
-			if prepare(cmd, &info) {
-				operations.Move(info)
-			}
+			operations.Move(cfg, info)
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
@@ -121,7 +111,7 @@ var moveCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var copyCmdBuilder = func() *cobra.Command {
+var copyCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.CopyInfo{}
 	var cmd = &cobra.Command{
 		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
@@ -132,7 +122,7 @@ you can check if B.png has exists by:
 	qshell stat bucketB B.png
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.CopyType
+			cfg.CmdCfg.CmdId = docs.CopyType
 			if len(args) > 0 {
 				info.SourceBucket = args[0]
 			}
@@ -145,9 +135,7 @@ you can check if B.png has exists by:
 			if len(info.DestKey) == 0 {
 				info.DestKey = info.SourceKey
 			}
-			if prepare(cmd, &info) {
-				operations.Copy(info)
-			}
+			operations.Copy(cfg, info)
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
@@ -155,7 +143,7 @@ you can check if B.png has exists by:
 	return cmd
 }
 
-var changeMimeCmdBuilder = func() *cobra.Command {
+var changeMimeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ChangeMimeInfo{}
 	var cmd = &cobra.Command{
 		Use:   "chgm <Bucket> <Key> <NewMimeType>",
@@ -165,7 +153,7 @@ var changeMimeCmdBuilder = func() *cobra.Command {
 and you can check result by command:
 	qshell stat bucketA A.png`,
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.ChangeMimeType
+			cfg.CmdCfg.CmdId = docs.ChangeMimeType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -175,15 +163,13 @@ and you can check result by command:
 			if len(args) > 2 {
 				info.Mime = args[2]
 			}
-			if prepare(cmd, &info) {
-				operations.ChangeMime(info)
-			}
+			operations.ChangeMime(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var changeTypeCmdBuilder = func() *cobra.Command {
+var changeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ChangeTypeInfo{}
 	var cmd = &cobra.Command{
 		Use:   "chtype <Bucket> <Key> <FileType>",
@@ -197,7 +183,7 @@ while 2 means low archive storage.`,
 and you can check result by command:
 	qshell stat bucketA A.png`,
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.ChangeType
+			cfg.CmdCfg.CmdId = docs.ChangeType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -207,42 +193,38 @@ and you can check result by command:
 			if len(args) > 2 {
 				info.Type = args[2]
 			}
-			if prepare(cmd, &info) {
-				operations.ChangeType(info)
-			}
+			operations.ChangeType(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var privateUrlCmdBuilder = func() *cobra.Command {
+var privateUrlCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.PrivateUrlInfo{}
 	var cmd = &cobra.Command{
 		Use:   "privateurl <PublicUrl> [<Deadline>]",
 		Short: "Create private resource access url",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.PrivateUrlType
+			cfg.CmdCfg.CmdId = docs.PrivateUrlType
 			if len(args) > 0 {
 				info.PublicUrl = args[0]
 			}
 			if len(args) > 1 {
 				info.Deadline = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.PrivateUrl(info)
-			}
+			operations.PrivateUrl(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var saveAsCmdBuilder = func() *cobra.Command {
+var saveAsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.SaveAsInfo{}
 	var cmd = &cobra.Command{
 		Use:   "saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>",
 		Short: "Create a resource access url with fop and saveas",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.SaveAsType
+			cfg.CmdCfg.CmdId = docs.SaveAsType
 			if len(args) > 0 {
 				info.PublicUrl = args[0]
 			}
@@ -252,72 +234,64 @@ var saveAsCmdBuilder = func() *cobra.Command {
 			if len(args) > 2 {
 				info.SaveKey = args[2]
 			}
-			if prepare(cmd, &info) {
-				operations.SaveAs(info)
-			}
+			operations.SaveAs(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var mirrorUpdateCmdBuilder = func() *cobra.Command {
+var mirrorUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.MirrorUpdateInfo{}
 	var cmd = &cobra.Command{
 		Use:   "mirrorupdate <Bucket> <Key>",
 		Short: "Fetch and update the file in bucket using mirror storage",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.MirrorUpdateType
+			cfg.CmdCfg.CmdId = docs.MirrorUpdateType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.MirrorUpdate(info)
-			}
+			operations.MirrorUpdate(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var prefetchCmdBuilder = func() *cobra.Command {
+var prefetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.MirrorUpdateInfo{}
 	var cmd = &cobra.Command{
 		Use:   "prefetch <Bucket> <Key>",
 		Short: "Fetch and update the file in bucket using mirror storage",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.PrefetchType
+			cfg.CmdCfg.CmdId = docs.PrefetchType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
 			if len(args) > 1 {
 				info.Key = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.MirrorUpdate(info)
-			}
+			operations.MirrorUpdate(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var fetchCmdBuilder = func() *cobra.Command {
+var fetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info operations.FetchInfo
 	var cmd = &cobra.Command{
 		Use:   "fetch <RemoteResourceUrl> <Bucket> [-k <Key>]",
 		Short: "Fetch a remote resource by url and save in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.FetchType
+			cfg.CmdCfg.CmdId = docs.FetchType
 			if len(args) > 0 {
 				info.FromUrl = args[0]
 			}
 			if len(args) > 1 {
 				info.Bucket = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.Fetch(info)
-			}
+			operations.Fetch(cfg, info)
 		},
 	}
 
@@ -327,20 +301,23 @@ var fetchCmdBuilder = func() *cobra.Command {
 }
 
 func init() {
+	registerLoader(rsCmdLoader)
+}
 
-	rootCmd.AddCommand(
-		statCmdBuilder(),
-		forbiddenCmdBuilder(),
-		deleteCmdBuilder(),
-		deleteAfterCmdBuilder(),
-		moveCmdBuilder(),
-		copyCmdBuilder(),
-		changeMimeCmdBuilder(),
-		changeTypeCmdBuilder(),
-		privateUrlCmdBuilder(),
-		saveAsCmdBuilder(),
-		mirrorUpdateCmdBuilder(),
-		fetchCmdBuilder(),
-		prefetchCmdBuilder(),
+func rsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+	superCmd.AddCommand(
+		statCmdBuilder(cfg),
+		forbiddenCmdBuilder(cfg),
+		deleteCmdBuilder(cfg),
+		deleteAfterCmdBuilder(cfg),
+		moveCmdBuilder(cfg),
+		copyCmdBuilder(cfg),
+		changeMimeCmdBuilder(cfg),
+		changeTypeCmdBuilder(cfg),
+		privateUrlCmdBuilder(cfg),
+		saveAsCmdBuilder(cfg),
+		mirrorUpdateCmdBuilder(cfg),
+		fetchCmdBuilder(cfg),
+		prefetchCmdBuilder(cfg),
 	)
 }

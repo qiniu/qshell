@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
@@ -39,7 +40,12 @@ func (info *ListBucketInfo) Check() error {
 
 // ListBucket
 // 列举阿里空间中的文件列表
-func ListBucket(info ListBucketInfo) {
+func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
 
 	//open result file
 	fp, err := os.Create(info.SaveToFile)

@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -13,7 +14,29 @@ import (
 
 type RenameInfo object.MoveApiInfo
 
-func Rename(info RenameInfo) {
+func (info *RenameInfo) Check() error {
+	if len(info.SourceBucket) == 0 {
+		return alert.CannotEmptyError("SourceBucket", "")
+	}
+	if len(info.SourceKey) == 0 {
+		return alert.CannotEmptyError("SourceKey", "")
+	}
+	if len(info.DestBucket) == 0 {
+		return alert.CannotEmptyError("DestBucket", "")
+	}
+	if len(info.DestKey) == 0 {
+		return alert.CannotEmptyError("DestKey", "")
+	}
+	return nil
+}
+
+func Rename(cfg *iqshell.Config, info RenameInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	result, err := object.Move(object.MoveApiInfo(info))
 	if err != nil {
 		log.ErrorF("Rename error:%v", err)
@@ -46,7 +69,13 @@ func (info *BatchRenameInfo) Check() error {
 	return nil
 }
 
-func BatchRename(info BatchRenameInfo) {
+func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

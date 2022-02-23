@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -27,7 +28,13 @@ func (info *RemoveInfo) Check() error {
 	return nil
 }
 
-func Remove(info RemoveInfo) {
+func Remove(cfg *iqshell.Config, info RemoveInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	err := account.RmUser(info.Name)
 	if err != nil {
 		log.Error(err)

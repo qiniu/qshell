@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
@@ -31,7 +32,13 @@ func (info *ListInfo) Check() error {
 	return nil
 }
 
-func List(info ListInfo) {
+func List(cfg *iqshell.Config, info ListInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	startTime, err := info.getStartDate()
 	if err != nil {
 		log.Error(err)

@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -23,7 +24,13 @@ func (info *StatusInfo) Check() error {
 	return nil
 }
 
-func Status(info StatusInfo) {
+func Status(cfg *iqshell.Config, info StatusInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	result, err := object.Status(object.StatusApiInfo(info))
 	if err != nil {
 		log.ErrorF("Stat error:%v", err)
@@ -48,7 +55,13 @@ func (info *BatchStatusInfo) Check() error {
 	return nil
 }
 
-func BatchStatus(info BatchStatusInfo) {
+func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

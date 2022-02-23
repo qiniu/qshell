@@ -2,24 +2,23 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/docs"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
-func asyncFetchCmdBuilder() *cobra.Command {
+func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	info := operations.BatchAsyncFetchInfo{}
 	cmd := &cobra.Command{
 		Use:   "abfetch <Bucket> [-i <urlList>]",
 		Short: "Async Batch fetch network resources to qiniu Bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.ABFetch
+			cfg.CmdCfg.CmdId = docs.ABFetch
 			info.GroupInfo.ItemSeparate = "\t" // 此处用户不可定义
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.BatchAsyncFetch(info)
-			}
+			operations.BatchAsyncFetch(cfg, info)
 		},
 	}
 
@@ -37,28 +36,32 @@ func asyncFetchCmdBuilder() *cobra.Command {
 }
 
 // NewCmdAsyncCheck 用来查询异步抓取的结果
-func asyncCheckCmdBuilder() *cobra.Command {
+func asyncCheckCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	info := operations.CheckAsyncFetchStatusInfo{}
 	cmd := &cobra.Command{
 		Use:   "acheck <Bucket> <ID>",
 		Short: "Check Async fetch status",
 		Run: func(cmd *cobra.Command, args []string) {
-			 cmdId = docs.ACheckType
+			 cfg.CmdCfg.CmdId = docs.ACheckType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
 			if len(args) > 1 {
 				info.Id = args[1]
 			}
-			if prepare(cmd, &info) {
-				operations.CheckAsyncFetchStatus(info)
-			}
+				operations.CheckAsyncFetchStatus(cfg, info)
 		},
 	}
 	return cmd
 }
 
 func init() {
-	rootCmd.AddCommand(asyncFetchCmdBuilder())
-	rootCmd.AddCommand(asyncCheckCmdBuilder())
+	registerLoader(asyncFetchCmdLoader)
+}
+
+func asyncFetchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+	superCmd.AddCommand(
+		asyncFetchCmdBuilder(cfg),
+		asyncCheckCmdBuilder(cfg),
+		)
 }

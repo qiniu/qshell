@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/servers"
@@ -16,7 +17,13 @@ func (info *ListInfo) Check() error {
 }
 
 // List list 所有 bucket
-func List(info ListInfo) {
+func List(cfg *iqshell.Config, info ListInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	buckets, err := servers.AllBuckets(info.Shared)
 	if err != nil {
 		log.ErrorF("Get buckets error: %v", err)

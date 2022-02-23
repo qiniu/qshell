@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -19,7 +20,13 @@ func (info *DirCacheInfo) Check() error {
 	return nil
 }
 
-func DirCache(info DirCacheInfo) {
+func DirCache(cfg *iqshell.Config, info DirCacheInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	if info.SaveToFile == "" {
 		info.SaveToFile = "stdout"
 	}

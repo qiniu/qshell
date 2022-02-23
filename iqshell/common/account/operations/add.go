@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -29,7 +30,13 @@ func (info *AddInfo) Check() error {
 }
 
 // 保存账户信息到账户文件中， 并保存在本地数据库
-func Add(info AddInfo) {
+func Add(cfg *iqshell.Config, info AddInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	acc := account.Account{
 		Name:      info.Name,
 		AccessKey: info.AccessKey,

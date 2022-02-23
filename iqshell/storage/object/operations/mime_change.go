@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -24,7 +25,13 @@ func (info *ChangeMimeInfo) Check() error {
 	return nil
 }
 
-func ChangeMime(info ChangeMimeInfo) {
+func ChangeMime(cfg *iqshell.Config, info ChangeMimeInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	result, err := object.ChangeMimeType(object.ChangeMimeApiInfo(info))
 	if err != nil {
 		log.ErrorF("Change Mime error:%v", err)
@@ -53,7 +60,13 @@ func (info *BatchChangeMimeInfo) Check() error {
 	return nil
 }
 
-func BatchChangeMime(info BatchChangeMimeInfo) {
+func BatchChangeMime(cfg *iqshell.Config, info BatchChangeMimeInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	handler, err := group.NewHandler(info.BatchInfo.Info)
 	if err != nil {
 		log.Error(err)

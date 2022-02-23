@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -20,7 +21,13 @@ func (info *ZipInfo) Check() error {
 }
 
 // Unzip 解压使用mkzip压缩的文件
-func Unzip(info ZipInfo) {
+func Unzip(cfg *iqshell.Config, info ZipInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	var err error
 	if len(info.UnzipPath) == 0 {
 		info.UnzipPath, err = os.Getwd()

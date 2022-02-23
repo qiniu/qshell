@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -18,7 +19,13 @@ func (info *EtagInfo) Check() error {
 }
 
 // CreateEtag 计算文件的hash值，使用七牛的etag算法
-func CreateEtag(info EtagInfo) {
+func CreateEtag(cfg *iqshell.Config, info EtagInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	if len(info.FilePath) == 0 {
 		log.Error(alert.CannotEmpty("file path", ""))
 		return

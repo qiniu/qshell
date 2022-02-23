@@ -2,29 +2,28 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/docs"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/operations"
 	"github.com/spf13/cobra"
 )
 
-var domainsCmdBuilder = func() *cobra.Command {
+var domainsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ListDomainInfo{}
 	var cmd = &cobra.Command{
 		Use:   "domains <Bucket>",
 		Short: "Get all domains of the bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.DomainsType
+			cfg.CmdCfg.CmdId = docs.DomainsType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.ListDomains(info)
-			}
+			operations.ListDomains(cfg, info)
 		},
 	}
 	return cmd
 }
 
-var listBucketCmdBuilder = func() *cobra.Command {
+var listBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ListInfo{
 		Marker:     "",
 		StartDate:  "",
@@ -39,13 +38,11 @@ var listBucketCmdBuilder = func() *cobra.Command {
 		Short: "List all the files in the bucket",
 		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.ListBucketType
+			cfg.CmdCfg.CmdId = docs.ListBucketType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.List(info)
-			}
+			operations.List(cfg, info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
@@ -53,20 +50,18 @@ var listBucketCmdBuilder = func() *cobra.Command {
 	return cmd
 }
 
-var listBucketCmd2Builder = func() *cobra.Command {
+var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ListInfo{}
 	var cmd = &cobra.Command{
 		Use:   "listbucket2 <Bucket>",
 		Short: "List all the files in the bucket using v2/list interface",
 		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.ListBucket2Type
+			cfg.CmdCfg.CmdId = docs.ListBucket2Type
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
-			if prepare(cmd, &info) {
-				operations.List(info)
-			}
+			operations.List(cfg, info)
 		},
 	}
 
@@ -84,9 +79,13 @@ var listBucketCmd2Builder = func() *cobra.Command {
 }
 
 func init() {
-	rootCmd.AddCommand(
-		listBucketCmdBuilder(),
-		listBucketCmd2Builder(),
-		domainsCmdBuilder(), // 列举某个 bucket 的 domain
+	registerLoader(bucketCmdLoader)
+}
+
+func bucketCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+	superCmd.AddCommand(
+		listBucketCmdBuilder(cfg),
+		listBucketCmd2Builder(cfg),
+		domainsCmdBuilder(cfg),
 	)
 }

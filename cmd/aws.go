@@ -2,18 +2,19 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/docs"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/aws"
 	"github.com/spf13/cobra"
 )
 
 // NewCmdAwsFetch 返回一个cobra.Command指针
-func awsFetchCmdBuilder() *cobra.Command {
+func awsFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	info := aws.FetchInfo{}
 	cmd := &cobra.Command{
 		Use:   "awsfetch [-p <Prefix>] [-n <maxKeys>] [-m <ContinuationToken>] [-c <threadCount>][-u <Qiniu UpHost>] -S <AwsSecretKey> -A <AwsID> <awsBucket> <awsRegion> <qiniuBucket>",
 		Short: "Copy data from AWS bucket to qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.AwsFetch
+			cfg.CmdCfg.CmdId = docs.AwsFetch
 			if len(args) > 0 {
 				info.AwsBucketInfo.Bucket = args[0]
 			}
@@ -23,9 +24,7 @@ func awsFetchCmdBuilder() *cobra.Command {
 			if len(args) > 2 {
 				info.QiniuBucket = args[2]
 			}
-			if prepare(cmd, &info) {
-				aws.Fetch(info)
-			}
+			aws.Fetch(cfg, info)
 		},
 	}
 
@@ -45,22 +44,20 @@ func awsFetchCmdBuilder() *cobra.Command {
 // NewCmdAwsList 返回一个cobra.Command指针
 // 该命令列举亚马逊存储空间中的文件, 会忽略目录
 
-func awsListCmdBuilder() *cobra.Command {
+func awsListCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	info := aws.ListBucketInfo{}
 	cmd := &cobra.Command{
 		Use:   "awslist [-p <Prefix>] [-n <maxKeys>] [-m <ContinuationToken>] -S <AwsSecretKey> -A <AwsID> <awsBucket> <awsRegion>",
 		Short: "List Objects in AWS bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdId = docs.AwsList
+			cfg.CmdCfg.CmdId = docs.AwsList
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
 			if len(args) > 1 {
 				info.Region = args[1]
 			}
-			if prepare(cmd, &info) {
-				aws.ListBucket(info)
-			}
+			aws.ListBucket(cfg, info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list AWS bucket with this prefix if set")
@@ -72,8 +69,12 @@ func awsListCmdBuilder() *cobra.Command {
 }
 
 func init() {
-	rootCmd.AddCommand(
-		awsFetchCmdBuilder(),
-		awsListCmdBuilder(),
+	registerLoader(awsCmdLoader)
+}
+
+func awsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+	superCmd.AddCommand(
+		awsFetchCmdBuilder(cfg),
+		awsListCmdBuilder(cfg),
 	)
 }
