@@ -41,6 +41,23 @@ __custom_func() {
 `
 )
 
+var rootCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:                    "qshell",
+		Short:                  "Qiniu commandline tool for managing your bucket and CDN",
+		Version:                data.Version,
+		BashCompletionFunction: bash_completion_func,
+	}
+	cmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")
+	cmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
+	// ddebug 开启 client debug
+	cmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
+	cmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "config file (default is $HOME/.qshell.json)")
+	cmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
+	cmd.PersistentFlags().BoolVarP(&cfg.Document, "doc", "", false, "document of command")
+	return cmd
+}
+
 func Execute() {
 	var cfg = &iqshell.Config{
 		Document:       false,
@@ -66,23 +83,10 @@ func Execute() {
 		},
 	}
 
-	cmd := &cobra.Command{
-		Use:                    "qshell",
-		Short:                  "Qiniu commandline tool for managing your bucket and CDN",
-		Version:                data.Version,
-		BashCompletionFunction: bash_completion_func,
-	}
-	cmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")
-	cmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
-	// ddebug 开启 client debug
-	cmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
-	cmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "config file (default is $HOME/.qshell.json)")
-	cmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
-	cmd.PersistentFlags().BoolVarP(&cfg.Document, "doc", "", false, "document of command")
+	rootCmd := rootCmdBuilder(cfg)
+	load(rootCmd, cfg)
 
-	load(cmd, cfg)
-
-	if err := cmd.Execute(); err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
