@@ -40,6 +40,7 @@ func newDownloadScanner(inputFile string, itemSeparate string, bucket string, ex
 
 		if err != nil {
 			err = errors.New("new download reader error:" + err.Error())
+			return nil, err
 		}
 
 		// 配置输入文件则从输入文件中读取

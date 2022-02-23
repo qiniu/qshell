@@ -9,7 +9,20 @@ import (
 	"os"
 )
 
-func Clean() {
+type CleanInfo struct {
+}
+
+func (info *CleanInfo) Check() error {
+	return nil
+}
+
+func Clean(cfg *iqshell.Config, info CleanInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	err := account.CleanUser()
 	if err != nil {
 		log.Error(err)

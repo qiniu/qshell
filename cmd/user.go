@@ -158,7 +158,7 @@ var userCleanCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Example: `qshell user clean`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User
-			operations.Clean()
+			operations.Clean(cfg, operations.CleanInfo{})
 		},
 	}
 	return cmd
