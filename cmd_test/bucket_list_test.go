@@ -8,6 +8,8 @@ import (
 )
 
 func TestBucketList(t *testing.T) {
+	TestBatchCopy(t)
+
 	result, errs := test.RunCmdWithError("listbucket", test.Bucket, "--prefix", "hello")
 	if len(errs) > 0 {
 		t.Fatal("error:", errs)
@@ -63,7 +65,7 @@ func TestBucketList2(t *testing.T) {
 		t.Fatal("error:", errs)
 	}
 
-	if !strings.Contains(result, test.Key) {
+	if !strings.Contains(result, "hello") {
 		t.Fatal("no expected key:% but not exist", test.BucketDomain)
 	}
 

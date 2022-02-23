@@ -84,10 +84,12 @@ func Load(info LoadInfo) (err error) {
 	}
 
 	// 加载配置
-	cfg.Merge(info.CmdConfig)
-	cfg.Merge(config.GetUser())
-	cfg.Merge(config.GetGlobal())
-	cfg.Merge(defaultConfig())
+	resultCfg := &config.Config{}
+	resultCfg.Merge(info.CmdConfig)
+	resultCfg.Merge(config.GetUser())
+	resultCfg.Merge(config.GetGlobal())
+	resultCfg.Merge(defaultConfig())
+	cfg = resultCfg
 
 	log.DebugF("cmd    config:\n%v", info.CmdConfig)
 	log.DebugF("user   config:\n%v", config.GetUser())

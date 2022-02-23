@@ -3,6 +3,7 @@ package scanner
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
@@ -25,7 +26,7 @@ func NewScanner(info Info) (Scanner, error) {
 	if len(info.InputFile) > 0 {
 		f, err := os.Open(info.InputFile)
 		if err != nil {
-			return nil, errors.New("open src dest key map file error")
+			return nil, fmt.Errorf("open inout file error:%v", err)
 		}
 		s.lineCount, _ = utils.FileLineCounts(info.InputFile)
 		s.file = f

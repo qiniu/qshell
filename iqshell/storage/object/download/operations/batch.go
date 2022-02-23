@@ -38,6 +38,11 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
+	if len(cfg.DownloadConfigFile) == 0 {
+		log.Error("LocalDownloadConfig can't empty")
+		return
+	}
+
 	downloadCfg := workspace.GetConfig().Download
 	info.GroupInfo.InputFile = downloadCfg.KeyFile
 

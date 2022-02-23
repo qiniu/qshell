@@ -100,6 +100,8 @@ func TestBatchDeleteDocument(t *testing.T) {
 }
 
 func TestDeleteAfter(t *testing.T) {
+	TestBatchCopy(t)
+
 	deleteKey := "qshell_delete_after.json"
 	_, errs := test.RunCmdWithError("copy", test.Bucket, test.Key, test.Bucket, "-k", deleteKey, "-w")
 	if len(errs) > 0 {
@@ -113,6 +115,8 @@ func TestDeleteAfter(t *testing.T) {
 }
 
 func TestBatchDeleteAfter(t *testing.T) {
+	TestBatchCopy(t)
+
 	// copy
 	batchConfig := ""
 	for _, key := range test.Keys {

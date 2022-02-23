@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestDownloadWithKeyFile(t *testing.T) {
@@ -74,7 +75,10 @@ func TestDownloadFromBucket(t *testing.T) {
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
-	defer test.RemoveFile(path)
+	defer func(){
+		test.RemoveFile(path)
+		test.RemoveFile(cfg.LogFile)
+	}()
 
 	test.RunCmdWithError("qdownload", "-c", "4", path)
 	if test.FileCountInDir(cfg.DestDir) < 2 {
@@ -112,7 +116,10 @@ func TestDownloadNoBucket(t *testing.T) {
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
-	defer test.RemoveFile(path)
+	defer func(){
+		test.RemoveFile(path)
+		test.RemoveFile(cfg.LogFile)
+	}()
 
 	_, errs := test.RunCmdWithError("qdownload", "-c", "4", path)
 	if !strings.Contains(errs, "bucket can't empty") {
@@ -140,7 +147,10 @@ func TestDownloadNoDomain(t *testing.T) {
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
-	defer test.RemoveFile(path)
+	defer func(){
+		test.RemoveFile(path)
+		test.RemoveFile(cfg.LogFile)
+	}()
 
 	_, errs := test.RunCmdWithError("qdownload", "-c", "4", path)
 	if !strings.Contains(errs, "bucket / io_host / cdn_domain one them should has value") {
@@ -165,7 +175,7 @@ func createDownloadConfigFile(cfg *config.Download) (cfgPath string, err error) 
 	}
 	cfg.LogSetting = &config.LogSetting{
 		LogLevel:  config.DebugKey,
-		LogFile:   filepath.Join(cfg.DestDir, "log.txt"),
+		LogFile:   filepath.Join(cfg.DestDir, time.Now().String() + "_log.txt"),
 		LogRotate: 7,
 		LogStdout: "true",
 	}

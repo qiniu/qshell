@@ -12,8 +12,8 @@ func TestCdnRefreshFile(t *testing.T) {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	_, errs := test.RunCmdWithError("cdnrefresh", "-i", path, "--qps", "1", "--size", "2")
-	if !strings.Contains(errs, "CDN refresh Code: 200, Info: success") {
+	result, _ := test.RunCmdWithError("cdnrefresh", "-i", path, "--qps", "1", "--size", "2")
+	if !strings.Contains(result, "CDN refresh Code: 200, Info: success") {
 		t.Fail()
 	}
 

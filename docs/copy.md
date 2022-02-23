@@ -1,4 +1,4 @@
-# 简介 
+# 简介
 `copy` 命令用来为存储在七牛空间中的文件创建副本。注意如果目标文件已存在空间中的时候，默认情况下，`copy` 会失败，报错 `614 file exists`，如果一定要强制覆盖目标文件，可以使用选项 `--overwrite` 。
 
 参考文档：[资源复制 (copy)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/copy.html)

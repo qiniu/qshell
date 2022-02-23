@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var downloadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
@@ -30,11 +28,7 @@ have already in local disk and need to skip download or not.`,
 				LogRotate: 0,
 				LogStdout: data.TrueString,
 			}
-			if len(args) == 0 {
-					fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
-					return
-				}
-				operations.BatchDownload(cfg, info)
+			operations.BatchDownload(cfg, info)
 		},
 	}
 	cmd.Flags().IntVarP(&info.GroupInfo.WorkCount, "thread", "c", 5, "num of threads to download files")
@@ -68,7 +62,7 @@ func init() {
 	registerLoader(downloadCmdLoader)
 }
 
-func downloadCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func downloadCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		getCmdBuilder(cfg),
 		downloadCmdBuilder(cfg),
