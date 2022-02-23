@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestDownloadWithKeyFile(t *testing.T) {
@@ -175,7 +174,7 @@ func createDownloadConfigFile(cfg *config.Download) (cfgPath string, err error) 
 	}
 	cfg.LogSetting = &config.LogSetting{
 		LogLevel:  config.DebugKey,
-		LogFile:   filepath.Join(cfg.DestDir, time.Now().String() + "_log.txt"),
+		LogFile:   filepath.Join(cfg.DestDir, "log.txt"),
 		LogRotate: 7,
 		LogStdout: "true",
 	}

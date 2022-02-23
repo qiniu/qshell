@@ -6,6 +6,11 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
+func Prepare() error {
+	progressLog = new(logs.BeeLogger)
+	return nil
+}
+
 func LoadConsole(cfg Config) (err error) {
 	err = progressLog.SetLogger(adapterConsole, cfg.ToJson())
 	if err != nil {

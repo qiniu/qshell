@@ -64,6 +64,7 @@ func load(cfg *Config) error {
 	}
 
 	// 加载本地输出
+	_ = log.Prepare()
 	_ = log.LoadConsole(log.Config{
 		Level:          logLevel,
 		StdOutColorful: cfg.StdoutColorful,

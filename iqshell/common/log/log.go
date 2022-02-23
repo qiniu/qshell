@@ -5,9 +5,7 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
-var (
-	progressLog = new(logs.BeeLogger)
-)
+var progressLog *logs.BeeLogger
 
 func Debug(a ...interface{}) {
 	progressLog.Debug(fmt.Sprint(a...))
