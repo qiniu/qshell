@@ -1,3 +1,3 @@
-package data
+package version
 
 var Version = "UNSTABLE"

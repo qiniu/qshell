@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/version/operations"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +12,8 @@ func versionCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 		Use:   "version",
 		Short: "show version",
 		Run: func(cmd *cobra.Command, params []string) {
-			log.Alert(data.Version)
+			cfg.CmdCfg.CmdId = docs.VersionType
+			operations.Version(cfg, operations.VersionInfo{})
 		},
 	}
 	return cmd

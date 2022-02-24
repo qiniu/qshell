@@ -5,7 +5,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/version"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -45,7 +45,7 @@ var rootCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                    "qshell",
 		Short:                  "Qiniu commandline tool for managing your bucket and CDN",
-		Version:                data.Version,
+		Version:                version.Version,
 		BashCompletionFunction: bash_completion_func,
 	}
 	cmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")

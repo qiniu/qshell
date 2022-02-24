@@ -7,7 +7,7 @@ import (
 )
 
 func TestVersion(t *testing.T) {
-	result := test.RunCmd(t, "version", "--help-detail")
+	result := test.RunCmd(t, "version")
 	if !strings.Contains(result, "UNSTABLE") {
 		t.Fatal("version")
 	}

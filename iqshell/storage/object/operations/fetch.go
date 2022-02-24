@@ -3,14 +3,12 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"os"
 	"strconv"
 	"time"
 )
@@ -37,7 +35,6 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 	result, err := object.Fetch(object.FetchApiInfo(info))
 	if err != nil {
 		log.ErrorF("Fetch error: %v", err)
-		os.Exit(data.StatusError)
 	} else {
 		log.AlertF("Key:%s", result.Key)
 		log.AlertF("FileHash:%s", result.Hash)
