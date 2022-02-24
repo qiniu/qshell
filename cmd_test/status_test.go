@@ -20,6 +20,38 @@ func TestStatus(t *testing.T) {
 	}
 }
 
+func TestStatusNoExistBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("stat", test.BucketNotExist, test.Key)
+	if !strings.Contains(errs, "no such bucket") {
+		t.Fail()
+	}
+}
+
+func TestStatusNoExistKey(t *testing.T) {
+	_, errs := test.RunCmdWithError("stat", test.Bucket, test.KeyNotExist)
+	if !strings.Contains(errs, "no such file or directory") {
+		t.Fail()
+	}
+}
+
+func TestStatusNoBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("stat")
+	if !strings.Contains(errs, "Bucket can't empty") {
+		t.Fail()
+	}
+}
+
+func TestStatusNoKey(t *testing.T) {
+	_, errs := test.RunCmdWithError("stat", test.Bucket)
+	if !strings.Contains(errs, "Key can't empty") {
+		t.Fail()
+	}
+}
+
+func TestStatusDocument(t *testing.T) {
+	test.TestDocument("stat", t)
+}
+
 func TestBatchStatus(t *testing.T) {
 	TestBatchCopy(t)
 
@@ -63,6 +95,6 @@ func TestBatchStatus(t *testing.T) {
 	}
 }
 
-func TestBatchStatucDocument(t *testing.T) {
+func TestBatchStatusDocument(t *testing.T) {
 	test.TestDocument("batchstat", t)
 }

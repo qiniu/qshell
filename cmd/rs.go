@@ -13,6 +13,7 @@ var statCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:   "stat <Bucket> <Key>",
 		Short: "Get the basic info of a remote file",
 		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.StatType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
