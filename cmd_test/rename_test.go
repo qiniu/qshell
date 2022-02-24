@@ -3,8 +3,63 @@ package cmd
 import (
 	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"path/filepath"
+	"strings"
 	"testing"
 )
+
+func TestRename(t *testing.T) {
+	TestUserIntegration(t)
+	key := "qshell_rename.json"
+	_, errs := test.RunCmdWithError("rename", test.Bucket, test.Key, key, "-w")
+	if len(errs) > 0 {
+		t.Fail()
+	}
+
+	// back
+	_, errs = test.RunCmdWithError("rename", test.Bucket, key, test.Key, "-w")
+	if len(errs) > 0 {
+		t.Fail()
+	}
+}
+
+func TestRenameNoExistSrcBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("rename", test.BucketNotExist, test.Key, "qshell_rename.json", "-w")
+	if !strings.Contains(errs, "no such bucket") {
+		t.Fail()
+	}
+}
+
+func TestRenameNoExistSrcKey(t *testing.T) {
+	_, errs := test.RunCmdWithError("rename", test.Bucket, test.KeyNotExist, "qshell_rename.json", "-w")
+	if !strings.Contains(errs, "no such file or directory") {
+		t.Fail()
+	}
+}
+
+func TestRenameNoSrcBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("rename")
+	if !strings.Contains(errs, "SourceBucket can't empty") {
+		t.Fail()
+	}
+}
+
+func TestRenameNoSrcKey(t *testing.T) {
+	_, errs := test.RunCmdWithError("rename", test.Bucket)
+	if !strings.Contains(errs, "SourceKey can't empty") {
+		t.Fail()
+	}
+}
+
+func TestRenameNoDestKey(t *testing.T) {
+	_, errs := test.RunCmdWithError("rename", test.Bucket, test.Key)
+	if !strings.Contains(errs, "DestBucket can't empty") {
+		t.Fail()
+	}
+}
+
+func TestRenameDocument(t *testing.T) {
+	test.TestDocument("rename", t)
+}
 
 func TestBatchRename(t *testing.T) {
 	TestBatchCopy(t)
@@ -47,4 +102,8 @@ func TestBatchRename(t *testing.T) {
 	if !test.IsFileHasContent(failLogPath) {
 		t.Fatal("batch result: fail log  to file error: file empty")
 	}
+}
+
+func TestBatchRenameDocument(t *testing.T) {
+	test.TestDocument("batchrename", t)
 }

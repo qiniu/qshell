@@ -111,6 +111,35 @@ var moveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var renameCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.RenameInfo{}
+	var cmd = &cobra.Command{
+		Use:   "rename <SrcBucket> <SrcKey> <DestKey>",
+		Short: "Make a rename of a file and save in the bucket",
+		Example: `rename A.png(bucket:bucketA key:A.png) to B.png(bucket:bucketA key:B.png):
+	qshell rename bucketA A.png B.png
+you can check if B.png has exists by:
+	qshell stat bucketB B.png
+`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.RenameType
+			if len(args) > 0 {
+				info.SourceBucket = args[0]
+				info.DestBucket = args[0]
+			}
+			if len(args) > 1 {
+				info.SourceKey = args[1]
+			}
+			if len(args) > 2 {
+				info.DestKey = args[2]
+			}
+			operations.Rename(cfg, info)
+		},
+	}
+	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
+	return cmd
+}
+
 var copyCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.CopyInfo{}
 	var cmd = &cobra.Command{
@@ -311,6 +340,7 @@ func rsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
 		deleteCmdBuilder(cfg),
 		deleteAfterCmdBuilder(cfg),
 		moveCmdBuilder(cfg),
+		renameCmdBuilder(cfg),
 		copyCmdBuilder(cfg),
 		changeMimeCmdBuilder(cfg),
 		changeTypeCmdBuilder(cfg),
