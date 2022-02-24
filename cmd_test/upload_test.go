@@ -7,23 +7,6 @@ import (
 	"testing"
 )
 
-func TestFormUpload(t *testing.T) {
-	path, err := test.CreateTempFile(1 * 1024)
-	if err != nil {
-		t.Fatal("create form upload file error:", err)
-	}
-
-	result, errs := test.RunCmdWithError("fput", test.Bucket, "qshell_fput_1M", path, "-d")
-	if len(errs) > 0 {
-		t.Fail()
-	}
-
-	result = strings.ReplaceAll(result, "\n", "")
-	if !strings.Contains(result, "Upload File success") {
-		t.Fatal(result)
-	}
-}
-
 func TestResumeUpload(t *testing.T) {
 	path, err := test.CreateTempFile(5 * 1024)
 	if err != nil {

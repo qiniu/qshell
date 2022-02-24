@@ -8,7 +8,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -78,10 +77,6 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 		log.AlertF("%10s%s", "Hash: ", ret.Hash)
 		log.AlertF("%10s%d%s", "Fsize: ", ret.FSize, "("+utils.FormatFileSize(ret.FSize)+")")
 		log.AlertF("%10s%s", "MimeType: ", ret.MimeType)
-	}
-
-	if err != nil {
-		os.Exit(data.StatusError)
 	}
 }
 
