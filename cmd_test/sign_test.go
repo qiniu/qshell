@@ -20,3 +20,7 @@ func TestBatchSign(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestBatchSignDocument(t *testing.T) {
+	test.TestDocument("batchsign", t)
+}

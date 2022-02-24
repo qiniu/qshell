@@ -85,7 +85,8 @@ func TestBatchRename(t *testing.T) {
 	}
 
 	test.RunCmdWithError("batchrename", test.Bucket,
-		"-i", path, "--success-list", successLogPath,
+		"-i", path,
+		"--success-list", successLogPath,
 		"--failure-list", failLogPath,
 		"--worker", "4",
 		"-y",

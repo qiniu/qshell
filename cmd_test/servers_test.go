@@ -17,3 +17,7 @@ func TestBuckets(t *testing.T) {
 	}
 	return
 }
+
+func TestBucketsDocument(t *testing.T) {
+	test.TestDocument("buckets", t)
+}
