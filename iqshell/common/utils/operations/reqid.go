@@ -49,6 +49,6 @@ func DecodeReqId(cfg *iqshell.Config, info ReqIdInfo) {
 	}
 
 	dstDate := time.Unix(0, unixNano)
-	fmt.Println(fmt.Sprintf("%04d-%02d-%02d/%02d-%02d", dstDate.Year(), dstDate.Month(), dstDate.Day(),
-		dstDate.Hour(), dstDate.Minute()))
+	log.AlertF("%04d-%02d-%02d/%02d-%02d", dstDate.Year(), dstDate.Month(), dstDate.Day(),
+		dstDate.Hour(), dstDate.Minute())
 }

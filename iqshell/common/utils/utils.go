@@ -132,7 +132,7 @@ func decode(s string) (v string, err error) {
 	return string(t), nil
 }
 
-// 获取reader中行数
+// GetLineCount 获取reader中行数
 func GetLineCount(reader io.Reader) (totalCount int64) {
 	bScanner := bufio.NewScanner(reader)
 	for bScanner.Scan() {
@@ -141,7 +141,7 @@ func GetLineCount(reader io.Reader) (totalCount int64) {
 	return
 }
 
-// 获取文件行数
+// GetFileLineCount 获取文件行数
 func GetFileLineCount(filePath string) (totalCount int64) {
 	fp, openErr := os.Open(filePath)
 	if openErr != nil {
@@ -152,7 +152,7 @@ func GetFileLineCount(filePath string) (totalCount int64) {
 	return GetLineCount(fp)
 }
 
-// URL:
+// Encode URL:
 //	 http://host/url
 //	 https://host/url
 // Path:
@@ -175,7 +175,6 @@ func Encode(uri string) string {
 	return "!" + encodedURI
 }
 
-// Decode
 func Decode(encodedURI string) (uri string, err error) {
 
 	size := len(encodedURI)
@@ -224,7 +223,7 @@ func GetAkBucketFromUploadToken(token string) (ak, bucket string, err error) {
 	return
 }
 
-// 从URL中获取文件名字
+// KeyFromUrl 从URL中获取文件名字
 func KeyFromUrl(uri string) (key string, err error) {
 	u, pErr := url.Parse(uri)
 	if pErr != nil {
@@ -263,7 +262,7 @@ func KeyFromUrl(uri string) (key string, err error) {
 //	return strconv.FormatFloat(size, 'f', 2, 64) + "TB"
 //}
 
-// 将字节转化为人工可读的字符串
+// BytesToReadable 将字节转化为人工可读的字符串
 // b - 表示文件大小，单位字节, readable - 可读字符串
 // 比如1304 ==》1304/1024 ==> 1.27KB
 func BytesToReadable(size int64) (readable string) {

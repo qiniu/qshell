@@ -1,5 +1,5 @@
 # 简介
-因为七牛的 [stat接口](http://developer.qiniu.com/docs/v6/api/reference/rs/stat.html) 返回的 `putTime` 字段的单位是 `100纳秒`，有时候我们需要把它转出来看看。`tns2d` 这个命令就是这个作用。可以把 `putTime` 的值直接作为参数，得到日期结果。
+`tns2d` 因为七牛的 [stat接口](http://developer.qiniu.com/docs/v6/api/reference/rs/stat.html) 返回的 `putTime` 字段的单位是 `100纳秒`，有时候我们需要把它转出来看看。`tns2d` 这个命令就是这个作用。可以把 `putTime` 的值直接作为参数，得到日期结果。
 
 # 格式
 ```

@@ -21,12 +21,28 @@ func TestRPCEncode(t *testing.T) {
 	return
 }
 
+func TestRPCEncodeNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("rpcencode")
+	if !strings.Contains(err, "Data can't empty") {
+		t.Fail()
+	}
+	return
+}
+
+func TestRPCEncodeDocument(t *testing.T) {
+	test.TestDocument("rpcencode", t)
+}
+
 func TestRPCDecode(t *testing.T) {
 	result := test.RunCmd(t, "rpcdecode", rpcDecodeString)
 	if !strings.Contains(result, rpcEncodeString) {
 		t.Fail()
 	}
 	return
+}
+
+func TestRPCDecodeDocument(t *testing.T) {
+	test.TestDocument("rpcdecode", t)
 }
 
 const (
@@ -42,12 +58,20 @@ func TestBase64Encode(t *testing.T) {
 	return
 }
 
+func TestB64EncodeDocument(t *testing.T) {
+	test.TestDocument("b64encode", t)
+}
+
 func TestBase64Decode(t *testing.T) {
 	result := test.RunCmd(t, "b64decode", base64DecodeString)
 	if !strings.Contains(result, base64EncodeString) {
 		t.Fail()
 	}
 	return
+}
+
+func TestB64DecodeDocument(t *testing.T) {
+	test.TestDocument("b64decode", t)
 }
 
 func TestD2ts(t *testing.T) {
@@ -61,17 +85,25 @@ func TestD2ts(t *testing.T) {
 	return
 }
 
+func TestD2TsDocument(t *testing.T) {
+	test.TestDocument("d2ts", t)
+}
+
 const (
 	timestamp       = 1641527120
 	timestampOfDate = "2022-01-07 11:45:20"
 )
 
-func TestTs2d(t *testing.T) {
+func TestTs2D(t *testing.T) {
 	result := test.RunCmd(t, "ts2d", strconv.Itoa(timestamp))
 	if !strings.Contains(result, timestampOfDate) {
 		t.Fail()
 	}
 	return
+}
+
+func TestTS2dDocument(t *testing.T) {
+	test.TestDocument("ts2d", t)
 }
 
 func TestTms2d(t *testing.T) {
@@ -82,6 +114,10 @@ func TestTms2d(t *testing.T) {
 	return
 }
 
+func TestTMs2dDocument(t *testing.T) {
+	test.TestDocument("tms2d", t)
+}
+
 func TestTns2d(t *testing.T) {
 	tns := timestamp * 1000 * 1000 * 10
 	result := test.RunCmd(t, "tns2d", strconv.Itoa(tns))
@@ -89,6 +125,10 @@ func TestTns2d(t *testing.T) {
 		t.Fail()
 	}
 	return
+}
+
+func TestTNs2dDocument(t *testing.T) {
+	test.TestDocument("tns2d", t)
 }
 
 const (
@@ -104,6 +144,10 @@ func TestUrlEncode(t *testing.T) {
 	return
 }
 
+func TestUrlEncodeDocument(t *testing.T) {
+	test.TestDocument("urlencode", t)
+}
+
 func TestUrlDecode(t *testing.T) {
 	result := test.RunCmd(t, "urldecode", urlDecodeString)
 	if !strings.Contains(result, urlEncodeString) {
@@ -112,10 +156,18 @@ func TestUrlDecode(t *testing.T) {
 	return
 }
 
+func TestUrlDecodeDocument(t *testing.T) {
+	test.TestDocument("urldecode", t)
+}
+
 func TestReqid(t *testing.T) {
 	result := test.RunCmd(t, "reqid", "62kAAIYB06brhtsT")
 	if !strings.Contains(result, "2015-05-06/12-14") {
 		t.Fail()
 	}
 	return
+}
+
+func TestReqIdDocument(t *testing.T) {
+	test.TestDocument("reqid", t)
 }

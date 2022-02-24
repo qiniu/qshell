@@ -34,7 +34,7 @@ func RpcDecode(cfg *iqshell.Config, info RpcInfo) {
 		bScanner := bufio.NewScanner(os.Stdin)
 		for bScanner.Scan() {
 			toDecode := bScanner.Text()
-			decodedStr, _ := utils.Decode(string(toDecode))
+			decodedStr, _ := utils.Decode(toDecode)
 			log.Alert(decodedStr)
 		}
 	}
@@ -48,9 +48,10 @@ func RpcEncode(cfg *iqshell.Config, info RpcInfo) {
 	}
 
 	if len(info.Params) == 0 {
-		log.Error(alert.CannotEmpty("rpc encode Value", ""))
+		log.Alert(alert.CannotEmpty("Data", ""))
 		return
 	}
+
 	for _, param := range info.Params {
 		encodedStr := utils.Encode(param)
 		log.Alert(encodedStr)
