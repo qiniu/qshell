@@ -115,7 +115,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	resumeAPIV2 := false
-	info := operations.UploadInfo{}
+	info := operations.SyncInfo{}
 	cmd := &cobra.Command{
 		Use:   "sync <SrcResUrl> <Buckets> [-k <Key>]",
 		Short: "Sync big file to qiniu bucket",
@@ -128,7 +128,7 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if len(args) > 1 {
 				info.Bucket = args[1]
 			}
-			operations.UploadFile(cfg, info)
+			operations.SyncFile(cfg, info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.Key, "key", "k", "", "save as <key> in bucket")

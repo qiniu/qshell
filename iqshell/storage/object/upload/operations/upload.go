@@ -31,7 +31,7 @@ func (info *UploadInfo) Check() error {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
-	if len(info.Key) == 0 {
+	if len(info.Key) == 0 && len(info.FilePath) == 0 {
 		return alert.CannotEmptyError("Key", "")
 	}
 	if len(info.FilePath) == 0 {

@@ -7,23 +7,6 @@ import (
 	"testing"
 )
 
-func TestResumeUpload(t *testing.T) {
-	path, err := test.CreateTempFile(5 * 1024)
-	if err != nil {
-		t.Fatal("create resume upload file error:", err)
-	}
-
-	result, errs := test.RunCmdWithError("rput", test.Bucket, "qshell_rput_5M", path)
-	if len(errs) > 0 {
-		t.Fail()
-	}
-
-	result = strings.ReplaceAll(result, "\n", "")
-	if !strings.Contains(result, "Upload File success") {
-		t.Fatal(result)
-	}
-}
-
 func TestQUpload(t *testing.T) {
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
 	fileSizeList = []int{1, 2}
@@ -77,34 +60,6 @@ func TestQUpload2(t *testing.T) {
 	result, errs := test.RunCmdWithError("qupload2",
 		"--bucket", test.Bucket,
 		"--src-dir", fileDir)
-	if len(errs) > 0 {
-		t.Fail()
-	}
-
-	result = strings.ReplaceAll(result, "\n", "")
-	if !strings.Contains(result, "Upload File success") {
-		t.Fatal(result)
-	}
-}
-
-func TestSyncV1(t *testing.T) {
-
-	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
-	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "-d")
-	if len(errs) > 0 {
-		t.Fail()
-	}
-
-	result = strings.ReplaceAll(result, "\n", "")
-	if !strings.Contains(result, "Upload File success") {
-		t.Fatal(result)
-	}
-}
-
-func TestSyncV2(t *testing.T) {
-
-	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
-	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "--resumable-api-v2", "-d")
 	if len(errs) > 0 {
 		t.Fail()
 	}

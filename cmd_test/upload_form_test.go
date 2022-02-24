@@ -100,7 +100,7 @@ func TestFormUploadWithWrongUploadHost(t *testing.T) {
 		"--storage", "0",
 		"--up-host", "up-mock.qiniup.com",
 		"--overwrite")
-	if !strings.Contains(errs, "Post \"https://up-mock.qiniup.com\": dial tcp: lookup up-mock.qiniup.com: no such host") {
+	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") {
 		t.Fail()
 	}
 }
