@@ -48,7 +48,7 @@ func RpcEncode(cfg *iqshell.Config, info RpcInfo) {
 	}
 
 	if len(info.Params) == 0 {
-		log.Alert(alert.CannotEmpty("Data", ""))
+		log.Error(alert.CannotEmpty("Data", ""))
 		return
 	}
 

@@ -21,6 +21,14 @@ func TestRPCEncode(t *testing.T) {
 	return
 }
 
+func TestRPCEncodeMoreData(t *testing.T) {
+	result := test.RunCmd(t, "rpcencode", rpcEncodeString, rpcEncodeString)
+	if !strings.Contains(result, rpcDecodeString) {
+		t.Fail()
+	}
+	return
+}
+
 func TestRPCEncodeNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("rpcencode")
 	if !strings.Contains(err, "Data can't empty") {
@@ -35,6 +43,14 @@ func TestRPCEncodeDocument(t *testing.T) {
 
 func TestRPCDecode(t *testing.T) {
 	result := test.RunCmd(t, "rpcdecode", rpcDecodeString)
+	if !strings.Contains(result, rpcEncodeString) {
+		t.Fail()
+	}
+	return
+}
+
+func TestRPCDecodeMoreData(t *testing.T) {
+	result, _ := test.RunCmdWithError("rpcdecode", rpcDecodeString, rpcDecodeString)
 	if !strings.Contains(result, rpcEncodeString) {
 		t.Fail()
 	}
@@ -58,6 +74,14 @@ func TestBase64Encode(t *testing.T) {
 	return
 }
 
+func TestBase64EncodeNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("b64encode")
+	if !strings.Contains(err, "Data can't empty") {
+		t.Fail()
+	}
+	return
+}
+
 func TestB64EncodeDocument(t *testing.T) {
 	test.TestDocument("b64encode", t)
 }
@@ -65,6 +89,14 @@ func TestB64EncodeDocument(t *testing.T) {
 func TestBase64Decode(t *testing.T) {
 	result := test.RunCmd(t, "b64decode", base64DecodeString)
 	if !strings.Contains(result, base64EncodeString) {
+		t.Fail()
+	}
+	return
+}
+
+func TestBase64DecodeNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("b64decode")
+	if !strings.Contains(err, "Data can't empty") {
 		t.Fail()
 	}
 	return
@@ -80,6 +112,14 @@ func TestD2ts(t *testing.T) {
 	timeString := currentTime.Format("2006-01-02 15:04:05")
 	result := test.RunCmd(t, "d2ts", strconv.Itoa(duration))
 	if !strings.Contains(result, timeString) {
+		t.Fail()
+	}
+	return
+}
+
+func TestD2tsNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("d2ts")
+	if !strings.Contains(err, "args can't empty") {
 		t.Fail()
 	}
 	return
@@ -102,6 +142,14 @@ func TestTs2D(t *testing.T) {
 	return
 }
 
+func TestTs2DNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("ts2d")
+	if !strings.Contains(err, "args can't empty") {
+		t.Fail()
+	}
+	return
+}
+
 func TestTS2dDocument(t *testing.T) {
 	test.TestDocument("ts2d", t)
 }
@@ -109,6 +157,14 @@ func TestTS2dDocument(t *testing.T) {
 func TestTms2d(t *testing.T) {
 	result := test.RunCmd(t, "tms2d", strconv.Itoa(timestamp*1000))
 	if !strings.Contains(result, timestampOfDate) {
+		t.Fail()
+	}
+	return
+}
+
+func TestTms2dNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("tms2d")
+	if !strings.Contains(err, "args can't empty") {
 		t.Fail()
 	}
 	return
@@ -122,6 +178,14 @@ func TestTns2d(t *testing.T) {
 	tns := timestamp * 1000 * 1000 * 10
 	result := test.RunCmd(t, "tns2d", strconv.Itoa(tns))
 	if !strings.Contains(result, timestampOfDate) {
+		t.Fail()
+	}
+	return
+}
+
+func TestTns2dNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("tns2d")
+	if !strings.Contains(err, "args can't empty") {
 		t.Fail()
 	}
 	return
@@ -144,6 +208,14 @@ func TestUrlEncode(t *testing.T) {
 	return
 }
 
+func TestUrlEncodeNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("urlencode")
+	if !strings.Contains(err, "Data can't empty") {
+		t.Fail()
+	}
+	return
+}
+
 func TestUrlEncodeDocument(t *testing.T) {
 	test.TestDocument("urlencode", t)
 }
@@ -156,6 +228,14 @@ func TestUrlDecode(t *testing.T) {
 	return
 }
 
+func TestUrlDecodeNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("urldecode")
+	if !strings.Contains(err, "Data can't empty") {
+		t.Fail()
+	}
+	return
+}
+
 func TestUrlDecodeDocument(t *testing.T) {
 	test.TestDocument("urldecode", t)
 }
@@ -163,6 +243,14 @@ func TestUrlDecodeDocument(t *testing.T) {
 func TestReqid(t *testing.T) {
 	result := test.RunCmd(t, "reqid", "62kAAIYB06brhtsT")
 	if !strings.Contains(result, "2015-05-06/12-14") {
+		t.Fail()
+	}
+	return
+}
+
+func TestReqidNoData(t *testing.T) {
+	_, err := test.RunCmdWithError("reqid")
+	if !strings.Contains(err, "ReqId can't empty") {
 		t.Fail()
 	}
 	return
