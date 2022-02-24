@@ -109,3 +109,7 @@ func TestSyncNoBucket(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestSyncDocument(t *testing.T) {
+	test.TestDocument("sync", t)
+}

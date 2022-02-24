@@ -44,6 +44,26 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 		return
 	}
 
+	if len(cfg.UploadConfigFile) == 0 {
+		log.Error("LocalDownloadConfig can't empty")
+		return
+	}
+
+	batchUpload(cfg, info)
+}
+
+func BatchUpload2(cfg *iqshell.Config, info BatchUploadInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
+	batchUpload(cfg, info)
+}
+
+func batchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
+
 	uploadConfig := workspace.GetConfig().Up
 	if err := uploadConfig.Check(); err != nil {
 		log.ErrorF("batch upload:%v", err)
@@ -79,10 +99,10 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 		}
 	}
 
-	batchUpload(info, uploadConfig, dbPath)
+	batchUploadFlow(info, uploadConfig, dbPath)
 }
 
-func batchUpload(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
+func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
 	handler, err := group.NewHandler(info.GroupInfo)
 	if err != nil {
 		log.Error(err)

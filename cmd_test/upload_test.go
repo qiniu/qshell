@@ -46,6 +46,10 @@ func TestQUpload(t *testing.T) {
 	}
 }
 
+func TestQUploadDocument(t *testing.T) {
+	test.TestDocument("qupload", t)
+}
+
 func TestQUpload2(t *testing.T) {
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
 	for _, size := range fileSizeList {
@@ -59,7 +63,8 @@ func TestQUpload2(t *testing.T) {
 
 	result, errs := test.RunCmdWithError("qupload2",
 		"--bucket", test.Bucket,
-		"--src-dir", fileDir)
+		"--src-dir", fileDir,
+		"--rescan-local")
 	if len(errs) > 0 {
 		t.Fail()
 	}
@@ -68,4 +73,8 @@ func TestQUpload2(t *testing.T) {
 	if !strings.Contains(result, "Upload File success") {
 		t.Fatal(result)
 	}
+}
+
+func TestQUpload2Document(t *testing.T) {
+	test.TestDocument("qupload2", t)
 }

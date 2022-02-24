@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
@@ -21,11 +19,7 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 				cfg.UploadConfigFile = args[0]
 			}
 			info.GroupInfo.Force = true
-			if len(args) == 0 {
-					fmt.Fprintln(os.Stdout, "LocalDownloadConfig can't empty")
-					return
-				}
-				operations.BatchUpload(cfg, info)
+			operations.BatchUpload(cfg, info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.GroupInfo.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
@@ -74,7 +68,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			cfg.CmdCfg.Up.CheckSize = data.GetBoolString(checkSize)
 			cfg.CmdCfg.Up.RescanLocal = data.GetBoolString(rescanLocal)
 			info.GroupInfo.Force = true
-			operations.BatchUpload(cfg, info)
+			operations.BatchUpload2(cfg, info)
 		},
 	}
 	cmd.Flags().StringVar(&info.GroupInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
@@ -213,7 +207,7 @@ func init() {
 	registerLoader(uploadCmdLoader)
 }
 
-func uploadCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func uploadCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		upload2CmdBuilder(cfg),
 		uploadCmdBuilder(cfg),

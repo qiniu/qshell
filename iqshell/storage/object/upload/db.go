@@ -52,7 +52,7 @@ func (d *dbHandler) checkInfoOfDB() (bool, bool, error) {
 
 	// 验证修改时间，修改时间一致则说明文件为同一个文件
 	if fileUpdateTime != d.FileUpdateTime {
-		log.WarningF("db check: local file has update, updateTime: %d|%d", d.FileUpdateTime, fileUpdateTime)
+		log.WarningF("db check: local file has update(%s), updateTime: %d|%d",d.FilePath, d.FileUpdateTime, fileUpdateTime)
 		return true, false, nil
 	} else {
 		return true, true, nil
