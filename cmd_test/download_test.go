@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	data2 "github.com/qiniu/qshell/v2/iqshell/common/data"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -43,7 +44,7 @@ func TestDownloadWithKeyFile(t *testing.T) {
 		t.Fail()
 	}
 
-	if !test.IsFileHasContent(cfg.LogFile) {
+	if !test.IsFileHasContent(cfg.LogFile.Value()) {
 		t.Fatal("log file should has content")
 	}
 
@@ -76,7 +77,7 @@ func TestDownloadFromBucket(t *testing.T) {
 	}
 	defer func(){
 		test.RemoveFile(path)
-		test.RemoveFile(cfg.LogFile)
+		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
 	test.RunCmdWithError("qdownload", "-c", "4", path)
@@ -84,7 +85,7 @@ func TestDownloadFromBucket(t *testing.T) {
 		t.Fail()
 	}
 
-	if !test.IsFileHasContent(cfg.LogFile) {
+	if !test.IsFileHasContent(cfg.LogFile.Value()) {
 		t.Fatal("log file should has content")
 	}
 
@@ -117,7 +118,7 @@ func TestDownloadNoBucket(t *testing.T) {
 	}
 	defer func(){
 		test.RemoveFile(path)
-		test.RemoveFile(cfg.LogFile)
+		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
 	_, errs := test.RunCmdWithError("qdownload", "-c", "4", path)
@@ -148,7 +149,7 @@ func TestDownloadNoDomain(t *testing.T) {
 	}
 	defer func(){
 		test.RemoveFile(path)
-		test.RemoveFile(cfg.LogFile)
+		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
 	_, errs := test.RunCmdWithError("qdownload", "-c", "4", path)
@@ -173,10 +174,10 @@ func createDownloadConfigFile(cfg *config.Download) (cfgPath string, err error) 
 		cfg.DestDir = ""
 	}
 	cfg.LogSetting = &config.LogSetting{
-		LogLevel:  config.DebugKey,
-		LogFile:   filepath.Join(cfg.DestDir, "log.txt"),
-		LogRotate: 7,
-		LogStdout: "true",
+		LogLevel:  data2.NewString(config.DebugKey),
+		LogFile:   data2.NewString(filepath.Join(cfg.DestDir, "log.txt")),
+		LogRotate: data2.NewInt(7),
+		LogStdout: data2.NewBool(true),
 	}
 
 	data, err := json.MarshalIndent(cfg, "", "\t")

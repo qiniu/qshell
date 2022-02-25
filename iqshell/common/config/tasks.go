@@ -1,10 +1,12 @@
 package config
 
-import "github.com/qiniu/qshell/v2/iqshell/common/utils"
+import (
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+)
 
 type Tasks struct {
-	ConcurrentCount       int    `json:"concurrent_count,omitempty"`
-	StopWhenOneTaskFailed string `json:"stop_when_one_task_failed,omitempty"`
+	ConcurrentCount       *data.Int  `json:"concurrent_count,omitempty"`
+	StopWhenOneTaskFailed *data.Bool `json:"stop_when_one_task_failed,omitempty"`
 }
 
 func (t *Tasks) merge(from *Tasks) {
@@ -12,6 +14,6 @@ func (t *Tasks) merge(from *Tasks) {
 		return
 	}
 
-	t.ConcurrentCount = utils.GetNotZeroIntIfExist(t.ConcurrentCount, from.ConcurrentCount)
-	t.StopWhenOneTaskFailed = utils.GetNotEmptyStringIfExist(t.StopWhenOneTaskFailed, from.StopWhenOneTaskFailed)
+	t.ConcurrentCount = data.GetNotEmptyIntIfExist(t.ConcurrentCount, from.ConcurrentCount)
+	t.StopWhenOneTaskFailed = data.GetNotEmptyBoolIfExist(t.StopWhenOneTaskFailed, from.StopWhenOneTaskFailed)
 }

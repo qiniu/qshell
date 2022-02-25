@@ -18,7 +18,7 @@ type Config struct {
 }
 
 func (c *Config) IsUseHttps() bool {
-	if c.UseHttps != nil {
+	if c.UseHttps == nil {
 		return false
 	}
 	return c.UseHttps.Value()

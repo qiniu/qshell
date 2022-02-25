@@ -23,10 +23,10 @@ have already in local disk and need to skip download or not.`,
 				cfg.DownloadConfigFile = args[0]
 			}
 			cfg.CmdCfg.Download.LogSetting = &config.LogSetting{
-				LogLevel:  config.InfoKey,
-				LogFile:   "",
-				LogRotate: 0,
-				LogStdout: data.TrueString,
+				LogLevel:  data.NewString(config.InfoKey),
+				LogFile:   nil,
+				LogRotate: nil,
+				LogStdout: data.NewBool(true),
 			}
 			operations.BatchDownload(cfg, info)
 		},

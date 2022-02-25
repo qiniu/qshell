@@ -22,7 +22,7 @@ func defaultConfig() *config.Config {
 			UC: []string{"uc.qbox.me"},
 		},
 		Up: &config.Up{
-			PutThreshold: 1024 * 1024 * 4,
+			PutThreshold: data.NewInt64(1024 * 1024 * 4),
 			Policy: &storage.PutPolicy{
 				Scope:               "",
 				Expires:             0,
@@ -49,22 +49,22 @@ func defaultConfig() *config.Config {
 				FileType:            0,
 			},
 			Tasks: &config.Tasks{
-				ConcurrentCount:       3,
-				StopWhenOneTaskFailed: data.FalseString,
+				ConcurrentCount:       data.NewInt(3),
+				StopWhenOneTaskFailed: data.NewBool(false),
 			},
 			Retry: &config.Retry{
-				Max:      1,
-				Interval: 1000,
+				Max:      data.NewInt(1),
+				Interval: data.NewInt(1000),
 			},
 		},
 		Download: &config.Download{
 			Tasks: &config.Tasks{
-				ConcurrentCount:       3,
-				StopWhenOneTaskFailed: data.FalseString,
+				ConcurrentCount:       data.NewInt(3),
+				StopWhenOneTaskFailed: data.NewBool(false),
 			},
 			Retry: &config.Retry{
-				Max:      1,
-				Interval: 1000,
+				Max:      data.NewInt(1),
+				Interval: data.NewInt(1000),
 			},
 		},
 	}

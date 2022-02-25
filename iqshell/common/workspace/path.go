@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
 	"path/filepath"
@@ -12,9 +13,9 @@ func UploadCachePath() string {
 	}
 
 	upCfg := cfg.Up
-	rootPath := upCfg.RecordRoot
-	if len(rootPath) == 0 {
-		rootPath = GetWorkspace()
+	rootPath := GetWorkspace()
+	if data.NotEmpty(upCfg.RecordRoot) {
+		rootPath = upCfg.RecordRoot.Value()
 	}
 
 	cachePath := filepath.Join(rootPath, "qupload", cfg.Up.JobId())

@@ -76,23 +76,23 @@ func uploadFileWithProgress(info UploadInfo, progress progress.Progress) (res up
 		ToBucket:         info.Bucket,
 		SaveKey:          info.Key,
 		MimeType:         info.MimeType,
-		FileType:         uploadConfig.FileType,
+		FileType:         uploadConfig.FileType.Value(),
 		CheckExist:       uploadConfig.IsCheckExists(),
 		CheckHash:        uploadConfig.IsCheckHash(),
 		CheckSize:        uploadConfig.IsCheckSize(),
 		Overwrite:        uploadConfig.IsOverwrite(),
-		UpHost:           uploadConfig.UpHost,
+		UpHost:           uploadConfig.UpHost.Value(),
 		FileStatusDBPath: info.FileStatusDBPath,
 		TokenProvider:    info.TokenProvider,
-		TryTimes:         uploadConfig.Retry.Max,
-		TryInterval:      time.Duration(uploadConfig.Retry.Interval) * time.Millisecond,
+		TryTimes:         uploadConfig.Retry.Max.Value(),
+		TryInterval:      time.Duration(uploadConfig.Retry.Interval.Value()) * time.Millisecond,
 		FileSize:         info.FileSize,
 		FileModifyTime:   info.FileModifyTime,
 		DisableForm:      uploadConfig.IsDisableForm(),
 		DisableResume:    uploadConfig.IsDisableResume(),
-		UseResumeV2:      uploadConfig.IsResumableAPIV2(),
-		ChunkSize:        uploadConfig.ResumableAPIV2PartSize,
-		PutThreshold:     uploadConfig.PutThreshold,
+		UseResumeV2:      uploadConfig.IsResumeAPIV2(),
+		ChunkSize:        uploadConfig.ResumableAPIV2PartSize.Value(),
+		PutThreshold:     uploadConfig.PutThreshold.Value(),
 		Progress:         progress,
 	}
 	if apiInfo.TokenProvider == nil {
@@ -149,7 +149,7 @@ func createTokenProviderWithMac(mac *qbox.Mac, upConfig *config.Up, info *Upload
 		policy.InsertOnly = 0
 	}
 	policy.ReturnBody = upload.ApiResultFormat()
-	policy.FileType = upConfig.FileType
+	policy.FileType = upConfig.FileType.Value()
 	return func() string {
 		policy.Expires = 7 * 24 * 3600
 		return policy.UploadToken(mac)

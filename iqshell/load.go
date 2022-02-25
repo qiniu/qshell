@@ -110,18 +110,18 @@ func load(cfg *Config) error {
 		return err
 	}
 
-	if ls := workspace.GetLogConfig(); ls != nil {
-		err := utils.CreateFileDirIfNotExist(ls.LogFile)
+	if ls := workspace.GetLogConfig(); ls != nil && ls.LogFile != nil {
+		err := utils.CreateFileDirIfNotExist(ls.LogFile.Value())
 		if err != nil {
 			return errors.New("create log file error:" + err.Error())
 		}
 		_ = log.LoadFileLogger(log.Config{
-			Filename:       ls.LogFile,
+			Filename:       ls.LogFile.Value(),
 			Level:          ls.GetLogLevel(),
 			Daily:          true,
 			StdOutColorful: false,
 			EnableStdout:   ls.IsLogStdout(),
-			MaxDays:        ls.LogRotate,
+			MaxDays:        ls.LogRotate.Value(),
 		})
 	}
 

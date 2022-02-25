@@ -15,35 +15,35 @@ import (
 type Up struct {
 	*LogSetting
 
-	UpHost    string `json:"up_host,omitempty"`
-	BindUpIp  string `json:"bind_up_ip,omitempty"`
-	BindRsIp  string `json:"bind_rs_ip,omitempty"`
-	BindNicIp string `json:"bind_nic_ip,omitempty"` //local network interface card config
+	UpHost    *data.String `json:"up_host,omitempty"`
+	BindUpIp  *data.String `json:"bind_up_ip,omitempty"`
+	BindRsIp  *data.String `json:"bind_rs_ip,omitempty"`
+	BindNicIp *data.String `json:"bind_nic_ip,omitempty"` //local network interface card config
 
-	SrcDir                 string `json:"src_dir"`
-	FileList               string `json:"file_list"`
-	IgnoreDir              string `json:"ignore_dir"`
-	SkipFilePrefixes       string `json:"skip_file_prefixes"`
-	SkipPathPrefixes       string `json:"skip_path_prefixes"`
-	SkipFixedStrings       string `json:"skip_fixed_strings"`
-	SkipSuffixes           string `json:"skip_suffixes"`
-	FileEncoding           string `json:"file_encoding"`
-	Bucket                 string `json:"bucket"`
-	ResumableAPIV2         string `json:"resumable_api_v2,omitempty"`
-	ResumableAPIV2PartSize int64  `json:"resumable_api_v2_part_size,omitempty"`
-	PutThreshold           int64  `json:"put_threshold,omitempty"`
-	KeyPrefix              string `json:"key_prefix,omitempty"`
-	Overwrite              string `json:"overwrite,omitempty"`
-	CheckExists            string `json:"check_exists,omitempty"`
-	CheckHash              string `json:"check_hash,omitempty"`
-	CheckSize              string `json:"check_size,omitempty"`
-	RescanLocal            string `json:"rescan_local,omitempty"`
-	FileType               int    `json:"file_type,omitempty"`
-	DeleteOnSuccess        string `json:"delete_on_success,omitempty"`
-	DisableResume          string `json:"disable_resume,omitempty"`
-	DisableForm            string `json:"disable_form"`
-	WorkerCount            int    `json:"work_count"` // 分片上传并发数
-	RecordRoot             string `json:"record_root"`
+	SrcDir                 *data.String `json:"src_dir"`
+	FileList               *data.String `json:"file_list"`
+	IgnoreDir              *data.Bool   `json:"ignore_dir"`
+	SkipFilePrefixes       *data.String `json:"skip_file_prefixes"`
+	SkipPathPrefixes       *data.String `json:"skip_path_prefixes"`
+	SkipFixedStrings       *data.String `json:"skip_fixed_strings"`
+	SkipSuffixes           *data.String `json:"skip_suffixes"`
+	FileEncoding           *data.String `json:"file_encoding"`
+	Bucket                 *data.String `json:"bucket"`
+	ResumableAPIV2         *data.Bool   `json:"resumable_api_v2,omitempty"`
+	ResumableAPIV2PartSize *data.Int64  `json:"resumable_api_v2_part_size,omitempty"`
+	PutThreshold           *data.Int64  `json:"put_threshold,omitempty"`
+	KeyPrefix              *data.String `json:"key_prefix,omitempty"`
+	Overwrite              *data.Bool   `json:"overwrite,omitempty"`
+	CheckExists            *data.Bool   `json:"check_exists,omitempty"`
+	CheckHash              *data.Bool   `json:"check_hash,omitempty"`
+	CheckSize              *data.Bool   `json:"check_size,omitempty"`
+	RescanLocal            *data.Bool   `json:"rescan_local,omitempty"`
+	FileType               *data.Int    `json:"file_type,omitempty"`
+	DeleteOnSuccess        *data.Bool   `json:"delete_on_success,omitempty"`
+	DisableResume          *data.Bool   `json:"disable_resume,omitempty"`
+	DisableForm            *data.Bool   `json:"disable_form"`
+	WorkerCount            *data.Int    `json:"work_count"` // 分片上传并发数
+	RecordRoot             *data.String `json:"record_root"`
 
 	Tasks  *Tasks             `json:"tasks,omitempty"`
 	Retry  *Retry             `json:"retry,omitempty"`
@@ -51,43 +51,73 @@ type Up struct {
 }
 
 func (up *Up) IsIgnoreDir() bool {
-	return up.IgnoreDir == data.TrueString
+	if up.IgnoreDir == nil {
+		return false
+	}
+	return up.IgnoreDir.Value()
 }
 
-func (up *Up) IsResumableAPIV2() bool {
-	return up.ResumableAPIV2 == data.TrueString
+func (up *Up) IsResumeAPIV2() bool {
+	if up.ResumableAPIV2 == nil {
+		return false
+	}
+	return up.ResumableAPIV2.Value()
 }
 
 func (up *Up) IsOverwrite() bool {
-	return up.Overwrite == data.TrueString
+	if up.Overwrite == nil {
+		return false
+	}
+	return up.Overwrite.Value()
 }
 
 func (up *Up) IsCheckExists() bool {
-	return up.CheckExists == data.TrueString
+	if up.CheckExists == nil {
+		return false
+	}
+	return up.CheckExists.Value()
 }
 
 func (up *Up) IsCheckHash() bool {
-	return up.CheckHash == data.TrueString
+	if up.CheckHash == nil {
+		return false
+	}
+	return up.CheckHash.Value()
 }
 
 func (up *Up) IsCheckSize() bool {
-	return up.CheckSize == data.TrueString
+	if up.CheckSize == nil {
+		return false
+	}
+	return up.CheckSize.Value()
 }
 
 func (up *Up) IsRescanLocal() bool {
-	return up.RescanLocal == data.TrueString
+	if up.RescanLocal == nil {
+		return false
+	}
+	return up.RescanLocal.Value()
 }
 
 func (up *Up) IsDeleteOnSuccess() bool {
-	return up.DeleteOnSuccess == data.TrueString
+	if up.DeleteOnSuccess == nil {
+		return false
+	}
+	return up.DeleteOnSuccess.Value()
 }
 
 func (up *Up) IsDisableResume() bool {
-	return up.DisableResume == data.TrueString
+	if up.DisableResume == nil {
+		return false
+	}
+	return up.DisableResume.Value()
 }
 
 func (up *Up) IsDisableForm() bool {
-	return up.DisableForm == data.TrueString
+	if up.DisableForm == nil {
+		return false
+	}
+	return up.DisableForm.Value()
 }
 
 func (up *Up) merge(from *Up) {
@@ -95,46 +125,42 @@ func (up *Up) merge(from *Up) {
 		return
 	}
 
-	up.SrcDir = utils.GetNotEmptyStringIfExist(up.SrcDir, from.SrcDir)
-	up.FileList = utils.GetNotEmptyStringIfExist(up.FileList, from.FileList)
-	up.IgnoreDir = utils.GetNotEmptyStringIfExist(up.IgnoreDir, from.IgnoreDir)
-	up.SkipFilePrefixes = utils.GetNotEmptyStringIfExist(up.SkipFilePrefixes, from.SkipFilePrefixes)
-	up.SkipPathPrefixes = utils.GetNotEmptyStringIfExist(up.SkipPathPrefixes, from.SkipPathPrefixes)
-	up.SkipFixedStrings = utils.GetNotEmptyStringIfExist(up.SkipFixedStrings, from.SkipFixedStrings)
-	up.SkipSuffixes = utils.GetNotEmptyStringIfExist(up.SkipSuffixes, from.SkipSuffixes)
+	up.SrcDir = data.GetNotEmptyStringIfExist(up.SrcDir, from.SrcDir)
+	up.FileList = data.GetNotEmptyStringIfExist(up.FileList, from.FileList)
+	up.IgnoreDir = data.GetNotEmptyBoolIfExist(up.IgnoreDir, from.IgnoreDir)
+	up.SkipFilePrefixes = data.GetNotEmptyStringIfExist(up.SkipFilePrefixes, from.SkipFilePrefixes)
+	up.SkipPathPrefixes = data.GetNotEmptyStringIfExist(up.SkipPathPrefixes, from.SkipPathPrefixes)
+	up.SkipFixedStrings = data.GetNotEmptyStringIfExist(up.SkipFixedStrings, from.SkipFixedStrings)
+	up.SkipSuffixes = data.GetNotEmptyStringIfExist(up.SkipSuffixes, from.SkipSuffixes)
 
-	up.UpHost = utils.GetNotEmptyStringIfExist(up.UpHost, from.UpHost)
-	up.BindUpIp = utils.GetNotEmptyStringIfExist(up.BindUpIp, from.BindUpIp)
-	up.BindRsIp = utils.GetNotEmptyStringIfExist(up.BindRsIp, from.BindRsIp)
-	up.BindNicIp = utils.GetNotEmptyStringIfExist(up.BindNicIp, from.BindNicIp)
+	up.UpHost = data.GetNotEmptyStringIfExist(up.UpHost, from.UpHost)
+	up.BindUpIp = data.GetNotEmptyStringIfExist(up.BindUpIp, from.BindUpIp)
+	up.BindRsIp = data.GetNotEmptyStringIfExist(up.BindRsIp, from.BindRsIp)
+	up.BindNicIp = data.GetNotEmptyStringIfExist(up.BindNicIp, from.BindNicIp)
 
-	up.FileEncoding = utils.GetNotEmptyStringIfExist(up.FileEncoding, from.FileEncoding)
-	up.Bucket = utils.GetNotEmptyStringIfExist(up.Bucket, from.Bucket)
-	up.ResumableAPIV2 = utils.GetNotEmptyStringIfExist(up.ResumableAPIV2, from.ResumableAPIV2)
-	up.ResumableAPIV2PartSize = utils.GetNotZeroInt64IfExist(up.ResumableAPIV2PartSize, from.ResumableAPIV2PartSize)
-	up.PutThreshold = utils.GetNotZeroInt64IfExist(up.PutThreshold, from.PutThreshold)
-	up.KeyPrefix = utils.GetNotEmptyStringIfExist(up.KeyPrefix, from.KeyPrefix)
-	up.Overwrite = utils.GetNotEmptyStringIfExist(up.Overwrite, from.Overwrite)
-	up.CheckExists = utils.GetNotEmptyStringIfExist(up.CheckExists, from.CheckExists)
-	up.CheckHash = utils.GetNotEmptyStringIfExist(up.CheckHash, from.CheckHash)
-	up.CheckSize = utils.GetNotEmptyStringIfExist(up.CheckSize, from.CheckSize)
-	up.RescanLocal = utils.GetNotEmptyStringIfExist(up.RescanLocal, from.RescanLocal)
-	up.FileType = utils.GetNotZeroIntIfExist(up.FileType, from.FileType)
-	up.DeleteOnSuccess = utils.GetNotEmptyStringIfExist(up.DeleteOnSuccess, from.DeleteOnSuccess)
-	up.DisableResume = utils.GetNotEmptyStringIfExist(up.DisableResume, from.DisableResume)
-	up.DisableForm = utils.GetNotEmptyStringIfExist(up.DisableForm, from.DisableForm)
-	up.WorkerCount = utils.GetNotZeroIntIfExist(up.WorkerCount, from.WorkerCount)
-	up.RecordRoot = utils.GetNotEmptyStringIfExist(up.RecordRoot, from.RecordRoot)
+	up.FileEncoding = data.GetNotEmptyStringIfExist(up.FileEncoding, from.FileEncoding)
+	up.Bucket = data.GetNotEmptyStringIfExist(up.Bucket, from.Bucket)
+	up.ResumableAPIV2 = data.GetNotEmptyBoolIfExist(up.ResumableAPIV2, from.ResumableAPIV2)
+	up.ResumableAPIV2PartSize = data.GetNotEmptyInt64IfExist(up.ResumableAPIV2PartSize, from.ResumableAPIV2PartSize)
+	up.PutThreshold = data.GetNotEmptyInt64IfExist(up.PutThreshold, from.PutThreshold)
+	up.KeyPrefix = data.GetNotEmptyStringIfExist(up.KeyPrefix, from.KeyPrefix)
+	up.Overwrite = data.GetNotEmptyBoolIfExist(up.Overwrite, from.Overwrite)
+	up.CheckExists = data.GetNotEmptyBoolIfExist(up.CheckExists, from.CheckExists)
+	up.CheckHash = data.GetNotEmptyBoolIfExist(up.CheckHash, from.CheckHash)
+	up.CheckSize = data.GetNotEmptyBoolIfExist(up.CheckSize, from.CheckSize)
+	up.RescanLocal = data.GetNotEmptyBoolIfExist(up.RescanLocal, from.RescanLocal)
+	up.FileType = data.GetNotEmptyIntIfExist(up.FileType, from.FileType)
+	up.DeleteOnSuccess = data.GetNotEmptyBoolIfExist(up.DeleteOnSuccess, from.DeleteOnSuccess)
+	up.DisableResume = data.GetNotEmptyBoolIfExist(up.DisableResume, from.DisableResume)
+	up.DisableForm = data.GetNotEmptyBoolIfExist(up.DisableForm, from.DisableForm)
+	up.WorkerCount = data.GetNotEmptyIntIfExist(up.WorkerCount, from.WorkerCount)
+	up.RecordRoot = data.GetNotEmptyStringIfExist(up.RecordRoot, from.RecordRoot)
 
 	if from.Tasks != nil {
 		if up.LogSetting == nil {
 			up.LogSetting = &LogSetting{}
 		}
 		up.LogSetting.merge(from.LogSetting)
-	}
-
-	if up.PutThreshold == 0 {
-		up.PutThreshold = from.PutThreshold
 	}
 
 	if from.Policy != nil {
@@ -164,10 +190,13 @@ func (up *Up) JobId() string {
 }
 
 func (up *Up) GetLogLevel() int {
+	if up.LogLevel == nil {
+		return log.LevelInfo
+	}
 
 	//init log level
 	logLevel := log.LevelInfo
-	switch up.LogLevel {
+	switch up.LogLevel.Value() {
 	case "debug":
 		logLevel = log.LevelDebug
 	case "info":
@@ -184,27 +213,31 @@ func (up *Up) GetLogLevel() int {
 
 func (up *Up) GetLogRotate() int {
 	logRotate := 1
-	if up.LogRotate > 0 {
-		logRotate = up.LogRotate
+	if data.NotEmpty(up.LogRotate) {
+		logRotate = up.LogRotate.Value()
 	}
 	return logRotate
 }
 
 func (up *Up) Check() error {
 	// 验证大小
-	if up.ResumableAPIV2PartSize <= 0 {
-		up.ResumableAPIV2PartSize = data.BLOCK_SIZE
-	} else if up.ResumableAPIV2PartSize < int64(utils.MB) {
-		up.ResumableAPIV2PartSize = int64(utils.MB)
-	} else if up.ResumableAPIV2PartSize > int64(utils.GB) {
-		up.ResumableAPIV2PartSize = int64(utils.GB)
+	if up.ResumableAPIV2PartSize == nil {
+		up.ResumableAPIV2PartSize = data.NewInt64(data.BLOCK_SIZE)
+	} else if up.ResumableAPIV2PartSize.Value() < int64(utils.MB) {
+		up.ResumableAPIV2PartSize = data.NewInt64(utils.MB)
+	} else if up.ResumableAPIV2PartSize.Value() > int64(utils.GB) {
+		up.ResumableAPIV2PartSize = data.NewInt64(utils.GB)
 	}
 
-	if up.FileType != 1 && up.FileType != 0 {
+	if up.FileType.Value() != 1 && up.FileType.Value() != 0 {
 		return errors.New("wrong Filetype, It should be 0 or 1")
 	}
 
-	srcFileInfo, err := os.Stat(up.SrcDir)
+	if data.Empty(up.SrcDir) {
+		return errors.New("upload config no `src_dir` specified")
+	}
+
+	srcFileInfo, err := os.Stat(up.SrcDir.Value())
 	if err != nil {
 		return errors.New("upload config error for parameter `SrcDir`:" + err.Error())
 	}
@@ -213,7 +246,7 @@ func (up *Up) Check() error {
 		return errors.New("upload src dir should be a directory")
 	}
 
-	if up.Bucket == "" {
+	if data.Empty(up.Bucket) {
 		return errors.New("upload config no `bucket` specified")
 	}
 
@@ -240,9 +273,9 @@ func (up *Up) Check() error {
 
 func (up *Up) HitByPathPrefixes(localFileRelativePath string) (hit bool, pathPrefix string) {
 
-	if up.SkipPathPrefixes != "" {
+	if data.NotEmpty(up.SkipPathPrefixes) {
 		//unpack skip prefix
-		pathPrefixes := strings.Split(up.SkipPathPrefixes, ",")
+		pathPrefixes := strings.Split(up.SkipPathPrefixes.Value(), ",")
 		for _, prefix := range pathPrefixes {
 			if strings.TrimSpace(prefix) == "" {
 				continue
@@ -259,9 +292,9 @@ func (up *Up) HitByPathPrefixes(localFileRelativePath string) (hit bool, pathPre
 }
 
 func (up *Up) HitByFilePrefixes(localFileRelativePath string) (hit bool, filePrefix string) {
-	if up.SkipFilePrefixes != "" {
+	if data.NotEmpty(up.SkipFilePrefixes) {
 		//unpack skip prefix
-		filePrefixes := strings.Split(up.SkipFilePrefixes, ",")
+		filePrefixes := strings.Split(up.SkipFilePrefixes.Value(), ",")
 		for _, prefix := range filePrefixes {
 			if strings.TrimSpace(prefix) == "" {
 				continue
@@ -279,9 +312,9 @@ func (up *Up) HitByFilePrefixes(localFileRelativePath string) (hit bool, filePre
 }
 
 func (up *Up) HitByFixesString(localFileRelativePath string) (hit bool, hitFixedStr string) {
-	if up.SkipFixedStrings != "" {
+	if data.NotEmpty(up.SkipFixedStrings) {
 		//unpack fixed strings
-		fixedStrings := strings.Split(up.SkipFixedStrings, ",")
+		fixedStrings := strings.Split(up.SkipFixedStrings.Value(), ",")
 		for _, fixedStr := range fixedStrings {
 			if strings.TrimSpace(fixedStr) == "" {
 				continue
@@ -299,8 +332,8 @@ func (up *Up) HitByFixesString(localFileRelativePath string) (hit bool, hitFixed
 }
 
 func (up *Up) HitBySuffixes(localFileRelativePath string) (hit bool, hitSuffix string) {
-	if up.SkipSuffixes != "" {
-		suffixes := strings.Split(up.SkipSuffixes, ",")
+	if data.NotEmpty(up.SkipSuffixes) {
+		suffixes := strings.Split(up.SkipSuffixes.Value(), ",")
 		for _, suffix := range suffixes {
 			if strings.TrimSpace(suffix) == "" {
 				continue

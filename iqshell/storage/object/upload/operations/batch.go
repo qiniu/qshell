@@ -79,20 +79,32 @@ func batchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 
 	// 扫描本地文件
 	needScanLocal := false
-	_, localFileStatErr := os.Stat(uploadConfig.FileList)
-	if uploadConfig.FileList != "" && localFileStatErr == nil {
-		info.GroupInfo.InputFile = uploadConfig.FileList
+
+	if data.Empty(uploadConfig.FileList) {
+		needScanLocal = true
 	} else {
-		info.GroupInfo.InputFile = filepath.Join(cachePath, jobId+".cache")
-		if _, statErr := os.Stat(info.GroupInfo.InputFile); statErr == nil {
-			//file exists
-			needScanLocal = uploadConfig.IsRescanLocal()
+		if _, err := os.Stat(uploadConfig.FileList.Value()); err == nil {
+			// 存在 file list 无需再重新扫描
+			needScanLocal = false
+			info.GroupInfo.InputFile = uploadConfig.FileList.Value()
 		} else {
-			needScanLocal = true
+			info.GroupInfo.InputFile = filepath.Join(cachePath, jobId+".cache")
+			if _, statErr := os.Stat(info.GroupInfo.InputFile); statErr == nil {
+				//file exists
+				needScanLocal = uploadConfig.IsRescanLocal()
+			} else {
+				needScanLocal = true
+			}
 		}
 	}
+
 	if needScanLocal {
-		_, err := utils.DirCache(uploadConfig.SrcDir, info.GroupInfo.InputFile)
+		if uploadConfig.SrcDir != nil {
+			log.ErrorF("scan error: src dir was empty")
+			return
+		}
+
+		_, err := utils.DirCache(uploadConfig.SrcDir.Value(), info.GroupInfo.InputFile)
 		if err != nil {
 			log.ErrorF("create dir files cache error:%v", err)
 			return
@@ -173,22 +185,22 @@ func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath strin
 			key = filepath.Base(key)
 		}
 		//check prefix
-		if uploadConfig.KeyPrefix != "" {
-			key = strings.Join([]string{uploadConfig.KeyPrefix, key}, "")
+		if data.NotEmpty(uploadConfig.KeyPrefix) {
+			key = strings.Join([]string{uploadConfig.KeyPrefix.Value(), key}, "")
 		}
 		//convert \ to / under windows
 		if utils.IsWindowsOS() {
 			key = strings.Replace(key, "\\", "/", -1)
 		}
 		//check file encoding
-		if utils.IsGBKEncoding(uploadConfig.FileEncoding) {
+		if data.NotEmpty(uploadConfig.FileEncoding) && utils.IsGBKEncoding(uploadConfig.FileEncoding.Value()) {
 			key, _ = utils.Gbk2Utf8(key)
 		}
 
-		localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
+		localFilePath := filepath.Join(uploadConfig.SrcDir.Value(), fileRelativePath)
 		apiInfo := &UploadInfo{
 			FilePath:         localFilePath,
-			Bucket:           uploadConfig.Bucket,
+			Bucket:           uploadConfig.Bucket.Value(),
 			Key:              key,
 			MimeType:         "",
 			FileStatusDBPath: dbPath,

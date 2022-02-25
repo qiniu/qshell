@@ -8,6 +8,7 @@ import (
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"path/filepath"
 )
 
@@ -47,10 +48,10 @@ func GetLogConfig() *config.LogSetting {
 		if cfg.Up == nil || cfg.Up.LogSetting == nil {
 			return nil
 		}
-		if len(cfg.Up.LogSetting.LogFile) == 0 {
+		if data.Empty(cfg.Up.LogSetting.LogFile) {
 			cachePath := UploadCachePath()
 			if len(cachePath) > 0 {
-				cfg.Up.LogSetting.LogFile = filepath.Join(cachePath, cfg.Up.JobId())
+				cfg.Up.LogSetting.LogFile = data.NewString(filepath.Join(cachePath, cfg.Up.JobId()))
 			}
 		}
 		return cfg.Up.LogSetting
@@ -60,10 +61,10 @@ func GetLogConfig() *config.LogSetting {
 		if cfg.Download == nil || cfg.Download.LogSetting == nil {
 			return nil
 		}
-		if len(cfg.Download.LogSetting.LogFile) == 0 {
+		if data.Empty(cfg.Download.LogSetting.LogFile) {
 			cachePath := DownloadCachePath()
 			if len(cachePath) > 0 {
-				cfg.Download.LogSetting.LogFile = filepath.Join(cachePath, cfg.Download.JobId())
+				cfg.Download.LogSetting.LogFile = data.NewString(filepath.Join(cachePath, cfg.Download.JobId()))
 			}
 		}
 		return cfg.Download.LogSetting

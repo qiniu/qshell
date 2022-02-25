@@ -1,10 +1,12 @@
 package config
 
-import "github.com/qiniu/qshell/v2/iqshell/common/utils"
+import (
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+)
 
 type Retry struct {
-	Max      int `json:"max,omitempty"`
-	Interval int `json:"interval,omitempty"`
+	Max      *data.Int `json:"max,omitempty"`
+	Interval *data.Int `json:"interval,omitempty"`
 }
 
 func (r *Retry) merge(from *Retry) {
@@ -12,6 +14,6 @@ func (r *Retry) merge(from *Retry) {
 		return
 	}
 
-	r.Max = utils.GetNotZeroIntIfExist(r.Max, from.Max)
-	r.Interval = utils.GetNotZeroIntIfExist(r.Interval, from.Interval)
+	r.Max = data.GetNotEmptyIntIfExist(r.Max, from.Max)
+	r.Interval = data.GetNotEmptyIntIfExist(r.Interval, from.Interval)
 }
