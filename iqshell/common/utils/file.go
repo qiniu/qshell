@@ -23,15 +23,15 @@ const (
 // FormatFileSize 转化文件大小到人工可读的字符串，以相应的单位显示
 func FormatFileSize(size int64) (result string) {
 	if size > TB {
-		result = fmt.Sprintf("%.2f TB", float64(size)/float64(TB))
+		result = fmt.Sprintf("%.2fTB", float64(size)/float64(TB))
 	} else if size > GB {
-		result = fmt.Sprintf("%.2f GB", float64(size)/float64(GB))
+		result = fmt.Sprintf("%.2fGB", float64(size)/float64(GB))
 	} else if size > MB {
-		result = fmt.Sprintf("%.2f MB", float64(size)/float64(MB))
+		result = fmt.Sprintf("%.2fMB", float64(size)/float64(MB))
 	} else if size > KB {
-		result = fmt.Sprintf("%.2f KB", float64(size)/float64(KB))
+		result = fmt.Sprintf("%.2fKB", float64(size)/float64(KB))
 	} else {
-		result = fmt.Sprintf("%d B", size)
+		result = fmt.Sprintf("%dB", size)
 	}
 	return
 }

@@ -2,27 +2,24 @@ package progress
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"strings"
 	"sync"
-	"unicode/utf8"
 )
 
 const (
-	wordsCountPerLine    = 40
-	titleSeparateWord    = "="
-	progressSeparateWord = "-"
+	wordsCountPerLine = 60
 )
 
 type printer struct {
 	mu               sync.Mutex
 	hasPrintProgress bool
 	title            string
+	total            int64
+	current          int64
 }
 
 func NewPrintProgress(title string) Progress {
-	if len(title) == 0{
-		title = "action"
-	}
 	return &printer{
 		title:            title,
 		hasPrintProgress: false,
@@ -32,41 +29,46 @@ func NewPrintProgress(title string) Progress {
 var _ Progress = (*printer)(nil)
 
 func (p *printer) Start() {
-	p.mu.Lock()
-
-	separateStringCount := (wordsCountPerLine - 8 - utf8.RuneCountInString(p.title)) / 2
-	separateString := strings.Repeat(titleSeparateWord, separateStringCount)
-	fmt.Printf("%s %s Start %s\n", separateString, p.title, separateString)
-	p.mu.Unlock()
+	p.printProgress(0, 0)
 }
 
 func (p *printer) Progress(total, current int64) {
 	if total == 0 {
 		return
 	}
-	p.mu.Lock()
-	progress := fmt.Sprintf("[%d:%d]%.2f%%", current, total, float32(current)/float32(total))
-	p.printProgress(progress)
-	p.mu.Unlock()
+	p.printProgress(total, current)
 }
 
 func (p *printer) End() {
-	p.mu.Lock()
-	separateStringCount := (wordsCountPerLine - 8 - utf8.RuneCountInString(p.title)) / 2
-	separateString := strings.Repeat(titleSeparateWord, separateStringCount)
-	fmt.Printf("%s %s   End %s\n", separateString, p.title, separateString)
-	p.mu.Unlock()
+	p.printProgress(p.total, p.total)
 }
 
-func (p *printer) printProgress(progress string) {
+func (p *printer) printProgress(total, current int64) {
+	if current < p.current {
+		return
+	}
+	p.total = total
+	p.current = current
+
+	currentString := utils.FormatFileSize(current)
+	totalString := "--"
+	percentString := "--"
+	if total > 0 {
+		totalString = utils.FormatFileSize(total)
+		percentString = fmt.Sprintf("%.2f", float32(current*100)/float32(total))
+	}
+	progress := fmt.Sprintf("[%s:%s]%s%%", currentString, totalString, percentString)
+
+	p.mu.Lock()
 	if p.hasPrintProgress {
 		fmt.Printf("\033[%dA\033[K", 1) // 将光标向上移动一行
 	}
-	separateStringCount := wordsCountPerLine - utf8.RuneCountInString(progress) - 1
+	separateStringCount := wordsCountPerLine - len(p.title) - len(progress) - 2
 	if separateStringCount < 1 {
 		separateStringCount = 1
 	}
-	separateString := strings.Repeat(progressSeparateWord, separateStringCount)
-	fmt.Printf("%s %s\033[K\n", separateString, progress) // 输出第二行结果
+	separateString := strings.Repeat("-", separateStringCount)
+	fmt.Printf("%s %s %s\033[K\n", p.title, separateString, progress) // 输出第二行结果
 	p.hasPrintProgress = true
+	p.mu.Unlock()
 }
