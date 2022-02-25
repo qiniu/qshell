@@ -33,19 +33,29 @@ func (r *resumeV1Uploader) upload(info ApiInfo) (ret ApiResult, err error) {
 		return
 	}
 
+	token := info.TokenProvider()
+	log.DebugF("upload token:%s", token)
+
+	progress := newResumeProgress(info.Progress, info.FileSize)
+	progress.start()
+
 	up := storage.NewResumeUploader(r.cfg)
-	err = up.Put(workspace.GetContext(), &ret, info.TokenProvider(), info.SaveKey, file, fileStatus.Size(), &storage.RputExtra{
+	err = up.Put(workspace.GetContext(), &ret, token, info.SaveKey, file, fileStatus.Size(), &storage.RputExtra{
 		Recorder:   nil,
 		Params:     nil,
 		UpHost:     info.UpHost,
 		MimeType:   info.MimeType,
 		TryTimes:   info.TryTimes,
 		Progresses: nil,
-		Notify:     nil,
+		Notify: func(blkIdx int, blkSize int, ret *storage.BlkputRet) {
+			progress.completeSendBlock(int64(blkSize))
+		},
 		NotifyErr:  nil,
 	})
 	if err != nil {
 		err = errors.New("resume v1 upload: upload error:" + err.Error())
+	} else {
+		progress.end()
 	}
 
 	return

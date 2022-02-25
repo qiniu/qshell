@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	wordsCountPerLine = 60
+	wordsCountPerLine = 80
 )
 
 type printer struct {
@@ -52,12 +52,12 @@ func (p *printer) printProgress(total, current int64) {
 
 	currentString := utils.FormatFileSize(current)
 	totalString := "--"
-	percentString := "--"
+	percentString := "-"
 	if total > 0 {
 		totalString = utils.FormatFileSize(total)
-		percentString = fmt.Sprintf("%.2f", float32(current*100)/float32(total))
+		percentString = fmt.Sprintf("%.0f", float32(current*100)/float32(total))
 	}
-	progress := fmt.Sprintf("[%s:%s]%s%%", currentString, totalString, percentString)
+	progress := fmt.Sprintf("[%s:%s] %s%%", currentString, totalString, percentString)
 
 	p.mu.Lock()
 	if p.hasPrintProgress {

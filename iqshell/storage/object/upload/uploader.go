@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
@@ -14,27 +15,28 @@ import (
 )
 
 type ApiInfo struct {
-	FilePath         string        // 文件路径，可为网络资源，也可为本地资源
-	ToBucket         string        // 文件保存至 bucket 的名称
-	SaveKey          string        // 文件保存的名称
-	MimeType         string        // 文件类型
-	FileType         int           // 存储状态
-	CheckExist       bool          // 检查服务端是否已存在此文件
-	CheckHash        bool          // 是否检查 hash, 检查是会对比服务端文件 hash
-	CheckSize        bool          // 是否检查文件大小，检查是会对比服务端文件大小
-	Overwrite        bool          // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
-	UpHost           string        // 上传使用的域名
-	FileStatusDBPath string        // 文件上传状态信息保存的 db 路径
-	TokenProvider    func() string // token provider
-	TryTimes         int           // 失败时，最多重试次数【可选】
-	TryInterval      time.Duration // 重试间隔时间 【可选】
-	FileSize         int64         // 待上传文件的大小, 如果不配置会动态读取 【可选】
-	FileModifyTime   int64         // 本地文件修改时间, 如果不配置会动态读取 【可选】
-	DisableForm      bool          // 不使用 form 上传 【可选】
-	DisableResume    bool          // 不使用分片上传 【可选】
-	UseResumeV2      bool          // 分片上传时是否使用分片 v2 上传 【可选】
-	ChunkSize        int64         // 分片上传时的分片大小
-	PutThreshold     int64         // 分片上传时上传阈值
+	FilePath         string            // 文件路径，可为网络资源，也可为本地资源
+	ToBucket         string            // 文件保存至 bucket 的名称
+	SaveKey          string            // 文件保存的名称
+	MimeType         string            // 文件类型
+	FileType         int               // 存储状态
+	CheckExist       bool              // 检查服务端是否已存在此文件
+	CheckHash        bool              // 是否检查 hash, 检查是会对比服务端文件 hash
+	CheckSize        bool              // 是否检查文件大小，检查是会对比服务端文件大小
+	Overwrite        bool              // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
+	UpHost           string            // 上传使用的域名
+	FileStatusDBPath string            // 文件上传状态信息保存的 db 路径
+	TokenProvider    func() string     // token provider
+	TryTimes         int               // 失败时，最多重试次数【可选】
+	TryInterval      time.Duration     // 重试间隔时间 【可选】
+	FileSize         int64             // 待上传文件的大小, 如果不配置会动态读取 【可选】
+	FileModifyTime   int64             // 本地文件修改时间, 如果不配置会动态读取 【可选】
+	DisableForm      bool              // 不使用 form 上传 【可选】
+	DisableResume    bool              // 不使用分片上传 【可选】
+	UseResumeV2      bool              // 分片上传时是否使用分片 v2 上传 【可选】
+	ChunkSize        int64             // 分片上传时的分片大小
+	PutThreshold     int64             // 分片上传时上传阈值
+	Progress         progress.Progress // 上传进度回调
 }
 
 func (a *ApiInfo) Check() (err error) {

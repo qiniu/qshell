@@ -9,6 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
@@ -47,7 +48,7 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 		return
 	}
 
-	ret, err := uploadFile(info)
+	ret, err := uploadFileWithProgress(info, progress.NewPrintProgress(""))
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {
 			log.ErrorF("Upload file error %d: %s, Reqid: %s", v.Code, v.Err, v.Reqid)
@@ -63,6 +64,10 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 }
 
 func uploadFile(info UploadInfo) (res upload.ApiResult, err error) {
+	return uploadFileWithProgress(info, nil)
+}
+
+func uploadFileWithProgress(info UploadInfo, progress progress.Progress) (res upload.ApiResult, err error) {
 	startTime := time.Now().UnixNano() / 1e6
 	cfg := workspace.GetConfig()
 	uploadConfig := cfg.Up
@@ -88,6 +93,7 @@ func uploadFile(info UploadInfo) (res upload.ApiResult, err error) {
 		UseResumeV2:      uploadConfig.IsResumableAPIV2(),
 		ChunkSize:        uploadConfig.ResumableAPIV2PartSize,
 		PutThreshold:     uploadConfig.PutThreshold,
+		Progress:         progress,
 	}
 	if apiInfo.TokenProvider == nil {
 		apiInfo.TokenProvider, err = createTokenProvider(&info)

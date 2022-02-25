@@ -35,10 +35,22 @@ func (f *formUploader) upload(info ApiInfo) (ret ApiResult, err error) {
 		return
 	}
 
+	token := info.TokenProvider()
+	log.DebugF("upload token:%s", token)
+
+	if info.Progress != nil {
+		info.Progress.Start()
+		f.ext.OnProgress = func(fsize, uploaded int64) {
+			info.Progress.Progress(fsize, uploaded)
+		}
+	}
+
 	up := storage.NewFormUploader(f.cfg)
-	err = up.Put(workspace.GetContext(), &ret, info.TokenProvider(), info.SaveKey, file, fileStatus.Size(), f.ext)
+	err = up.Put(workspace.GetContext(), &ret, token, info.SaveKey, file, fileStatus.Size(), f.ext)
 	if err != nil {
 		err = errors.New("form upload: upload error:" + err.Error())
+	} else {
+		info.Progress.End()
 	}
 
 	return
