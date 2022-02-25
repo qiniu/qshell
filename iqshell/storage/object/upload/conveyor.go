@@ -64,6 +64,11 @@ func (c *conveyor) upload(info ApiInfo) (ret ApiResult, err error) {
 	recorder.CheckValid(info.FileSize, 0, info.UseResumeV2)
 	recorder.TotalSize = info.FileSize
 
+	if info.Progress != nil {
+		info.Progress.SetFileSize(info.FileSize)
+		info.Progress.Start()
+	}
+
 	uploader := api.NewResume(api.ResumeInfo{
 		UpHost:        info.UpHost,
 		Bucket:        info.ToBucket,
@@ -93,6 +98,11 @@ func (c *conveyor) upload(info ApiInfo) (ret ApiResult, err error) {
 	totalBlkCnt := storage.BlockCount(info.FileSize) //range get and mkblk upload
 	rangeStartOffset := recorder.Offset              //init the range offset
 	fromBlkIndex := int(rangeStartOffset / data.BLOCK_SIZE)
+
+	if info.Progress != nil {
+		info.Progress.SendSize(rangeStartOffset)
+	}
+
 	var bf *bytes.Buffer
 	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
 
@@ -120,6 +130,10 @@ func (c *conveyor) upload(info ApiInfo) (ret ApiResult, err error) {
 		err = uploader.UploadBlock(ctx, 0, dataBytes)
 		if err != nil {
 			return
+		} else {
+			if info.Progress != nil {
+				info.Progress.SendSize(int64(len(dataBytes)))
+			}
 		}
 
 		//advance range offset
@@ -134,6 +148,10 @@ func (c *conveyor) upload(info ApiInfo) (ret ApiResult, err error) {
 	if err != nil {
 		err = fmt.Errorf("sync complete error:%v", err)
 		return
+	} else {
+		if info.Progress != nil {
+			info.Progress.End()
+		}
 	}
 
 	//delete progress file

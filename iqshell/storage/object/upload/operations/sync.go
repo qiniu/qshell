@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
@@ -27,7 +28,7 @@ func SyncFile(cfg *iqshell.Config, info SyncInfo) {
 		return
 	}
 
-	ret, err := uploadFile(UploadInfo(info))
+	ret, err := uploadFileWithProgress(UploadInfo(info), progress.NewPrintProgress(" 进度"))
 
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {

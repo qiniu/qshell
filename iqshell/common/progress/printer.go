@@ -78,5 +78,6 @@ func (p *printer) Progress(current int64) {
 }
 
 func (p *printer) End() {
+	_ = p.progressBar.Add(int(p.fileSize - p.current))
 	_ = p.progressBar.Finish()
 }
