@@ -25,7 +25,3 @@ func GetBoolString(value bool) string {
 		return FalseString
 	}
 }
-
-func BoolValue(value string) bool {
-	return value == TrueString
-}

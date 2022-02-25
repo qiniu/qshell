@@ -3,7 +3,7 @@ package data
 // Bool bool 引用类型
 type Bool *bool
 
-func BoolV(b Bool) bool {
+func BoolValue(b Bool) bool {
 	if b == nil {
 		return false
 	}
