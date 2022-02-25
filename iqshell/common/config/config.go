@@ -11,14 +11,17 @@ import (
 type Config struct {
 	CmdId       string            `json:"-"` // 命令 Id
 	Credentials *auth.Credentials `json:"-"`
-	UseHttps    string            `json:"use_https,omitempty"`
+	UseHttps    *data.Bool         `json:"use_https,omitempty"`
 	Hosts       *Hosts            `json:"hosts,omitempty"`
 	Up          *Up               `json:"up,omitempty"`
 	Download    *Download         `json:"download,omitempty"`
 }
 
 func (c *Config) IsUseHttps() bool {
-	return c.UseHttps == data.FalseString
+	if c.UseHttps != nil {
+		return false
+	}
+	return c.UseHttps.Value()
 }
 
 func (c *Config) HasCredentials() bool {
@@ -47,13 +50,9 @@ func (c *Config) Merge(from *Config) {
 	}
 
 	c.CmdId = utils.GetNotEmptyStringIfExist(c.CmdId, from.CmdId)
-
+	c.UseHttps = data.GetNotEmptyBoolIfExist(c.UseHttps, from.UseHttps)
 	if !c.HasCredentials() {
 		c.Credentials = from.Credentials
-	}
-
-	if len(c.UseHttps) == 0 {
-		c.UseHttps = from.UseHttps
 	}
 
 	if from.Hosts != nil {

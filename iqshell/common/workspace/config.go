@@ -14,7 +14,7 @@ func defaultConfig() *config.Config {
 			AccessKey: "",
 			SecretKey: nil,
 		},
-		UseHttps: data.TrueString,
+		UseHttps: data.NewBool(true),
 		Hosts: &config.Hosts{
 			//Rs:  []string{"rs.qiniu.com"},
 			//Rsf: []string{"rsf.qiniu.com"},

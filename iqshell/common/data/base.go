@@ -1,43 +1,70 @@
 package data
 
 // Bool bool 引用类型
-type Bool *bool
+type Bool bool
 
-func BoolValue(b Bool) bool {
+func NewBool(b bool) *Bool {
+	return (*Bool)(&b)
+}
+
+func (b *Bool) Value() bool {
 	if b == nil {
 		return false
 	}
-	return *b
+	return bool(*b)
 }
 
-func NewBool(b bool) Bool {
-	return &b
+func GetNotEmptyBoolIfExist(values ...*Bool) *Bool {
+	for _, value := range values {
+		if value != nil {
+			return value
+		}
+	}
+	return nil
 }
 
 // Int int 引用类型
-type Int *int
+type Int int
 
-func IntValue(i Int) int {
+func (i *Int) Value() int {
 	if i == nil {
 		return 0
 	}
-	return *i
+	return int(*i)
 }
 
-func NewInt(i int) Int {
-	return &i
+func NewInt(i int) *Int {
+	return (*Int)(&i)
+}
+
+func GetNotEmptyIntIfExist(values ...*Int) *Int {
+	for _, value := range values {
+		if value != nil {
+			return value
+		}
+	}
+	return nil
 }
 
 // String string 引用类型
-type String *string
+type String string
 
-func StringValue(s String) string {
+func NewString(s string) *String {
+	return (*String)(&s)
+}
+
+func (s *String) Value() string {
 	if s == nil {
 		return ""
 	}
-	return *s
+	return string(*s)
 }
 
-func NewString(s string) String {
-	return &s
+func GetNotEmptyStringIfExist(values ...*String) *String {
+	for _, value := range values {
+		if value != nil {
+			return value
+		}
+	}
+	return nil
 }

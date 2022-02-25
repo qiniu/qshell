@@ -67,7 +67,7 @@ func Execute() {
 		Local:          false,
 		CmdCfg: config.Config{
 			Credentials: nil,
-			UseHttps:    "",
+			UseHttps:    nil,
 			Hosts:       &config.Hosts{},
 			Up: &config.Up{
 				LogSetting: &config.LogSetting{},
