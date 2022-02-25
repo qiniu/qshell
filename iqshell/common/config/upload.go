@@ -20,15 +20,15 @@ type Up struct {
 	BindRsIp  *data.String `json:"bind_rs_ip,omitempty"`
 	BindNicIp *data.String `json:"bind_nic_ip,omitempty"` //local network interface card config
 
-	SrcDir                 *data.String `json:"src_dir"`
-	FileList               *data.String `json:"file_list"`
-	IgnoreDir              *data.Bool   `json:"ignore_dir"`
-	SkipFilePrefixes       *data.String `json:"skip_file_prefixes"`
-	SkipPathPrefixes       *data.String `json:"skip_path_prefixes"`
-	SkipFixedStrings       *data.String `json:"skip_fixed_strings"`
-	SkipSuffixes           *data.String `json:"skip_suffixes"`
-	FileEncoding           *data.String `json:"file_encoding"`
-	Bucket                 *data.String `json:"bucket"`
+	SrcDir                 *data.String `json:"src_dir,omitempty"`
+	FileList               *data.String `json:"file_list,omitempty"`
+	IgnoreDir              *data.Bool   `json:"ignore_dir,omitempty"`
+	SkipFilePrefixes       *data.String `json:"skip_file_prefixes,omitempty"`
+	SkipPathPrefixes       *data.String `json:"skip_path_prefixes,omitempty"`
+	SkipFixedStrings       *data.String `json:"skip_fixed_strings,omitempty"`
+	SkipSuffixes           *data.String `json:"skip_suffixes,omitempty"`
+	FileEncoding           *data.String `json:"file_encoding,omitempty"`
+	Bucket                 *data.String `json:"bucket,omitempty"`
 	ResumableAPIV2         *data.Bool   `json:"resumable_api_v2,omitempty"`
 	ResumableAPIV2PartSize *data.Int64  `json:"resumable_api_v2_part_size,omitempty"`
 	PutThreshold           *data.Int64  `json:"put_threshold,omitempty"`
@@ -41,9 +41,9 @@ type Up struct {
 	FileType               *data.Int    `json:"file_type,omitempty"`
 	DeleteOnSuccess        *data.Bool   `json:"delete_on_success,omitempty"`
 	DisableResume          *data.Bool   `json:"disable_resume,omitempty"`
-	DisableForm            *data.Bool   `json:"disable_form"`
-	WorkerCount            *data.Int    `json:"work_count"` // 分片上传并发数
-	RecordRoot             *data.String `json:"record_root"`
+	DisableForm            *data.Bool   `json:"disable_form,omitempty"`
+	WorkerCount            *data.Int    `json:"work_count,omitempty"` // 分片上传并发数
+	RecordRoot             *data.String `json:"record_root,omitempty"`
 
 	Tasks  *Tasks             `json:"tasks,omitempty"`
 	Retry  *Retry             `json:"retry,omitempty"`
