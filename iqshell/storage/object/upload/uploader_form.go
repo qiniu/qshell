@@ -39,9 +39,10 @@ func (f *formUploader) upload(info ApiInfo) (ret ApiResult, err error) {
 	log.DebugF("upload token:%s", token)
 
 	if info.Progress != nil {
+		info.Progress.SetFileSize(info.FileSize)
 		info.Progress.Start()
 		f.ext.OnProgress = func(fsize, uploaded int64) {
-			info.Progress.Progress(fsize, uploaded)
+			info.Progress.Progress(uploaded)
 		}
 	}
 

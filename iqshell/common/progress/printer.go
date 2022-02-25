@@ -2,8 +2,7 @@ package progress
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"strings"
+	"github.com/schollz/progressbar/v3"
 	"sync"
 )
 
@@ -12,63 +11,72 @@ const (
 )
 
 type printer struct {
-	mu               sync.Mutex
-	hasPrintProgress bool
-	title            string
-	total            int64
-	current          int64
+	mu          sync.Mutex
+	title       string
+	fileSize    int64
+	current     int64
+	progressBar *progressbar.ProgressBar
 }
 
 func NewPrintProgress(title string) Progress {
 	return &printer{
-		title:            title,
-		hasPrintProgress: false,
+		title:    title,
+		progressBar: progressbar.NewOptions(0,
+			progressbar.OptionFullWidth(),
+			progressbar.OptionShowBytes(true),
+			progressbar.OptionEnableColorCodes(true),
+			progressbar.OptionShowCount(),
+			progressbar.OptionOnCompletion(func() {
+				fmt.Printf("\n")
+			}),
+			progressbar.OptionSpinnerType(14),
+			progressbar.OptionSetDescription("[green]" + title + "[reset]"),
+			progressbar.OptionSetTheme(progressbar.Theme{
+				Saucer:        "[green]-[reset]",
+				SaucerHead:    "[green]>[reset]",
+				SaucerPadding: " ",
+				BarStart:      "[",
+				BarEnd:        "]",
+			})),
 	}
 }
 
 var _ Progress = (*printer)(nil)
 
 func (p *printer) Start() {
-	p.printProgress(0, 0)
+	_ = p.progressBar.Add(0)
 }
 
-func (p *printer) Progress(total, current int64) {
-	if total == 0 {
+func (p *printer) SetFileSize(fileSize int64) {
+	p.fileSize = fileSize
+	p.progressBar.ChangeMax64(fileSize)
+}
+
+func (p *printer) SendSize(newSize int64) {
+	p.mu.Lock()
+	if p.current + newSize > p.fileSize {
+		newSize =  p.fileSize - p.current
+	}
+	_ = p.progressBar.Add(int(newSize))
+	p.current += newSize
+	p.mu.Unlock()
+}
+
+func (p *printer) Progress(current int64) {
+	if p.fileSize == 0 {
 		return
 	}
-	p.printProgress(total, current)
+	if current > p.fileSize {
+		current = p.fileSize
+	}
+
+	p.mu.Lock()
+	newSize := current - p.current
+	_ = p.progressBar.Add(int(newSize))
+	p.current = current
+	p.mu.Unlock()
 }
 
 func (p *printer) End() {
-	p.printProgress(p.total, p.total)
-}
-
-func (p *printer) printProgress(total, current int64) {
-	if current < p.current {
-		return
-	}
-	p.total = total
-	p.current = current
-
-	currentString := utils.FormatFileSize(current)
-	totalString := "--"
-	percentString := "-"
-	if total > 0 {
-		totalString = utils.FormatFileSize(total)
-		percentString = fmt.Sprintf("%.0f", float32(current*100)/float32(total))
-	}
-	progress := fmt.Sprintf("[%s:%s] %s%%", currentString, totalString, percentString)
-
-	p.mu.Lock()
-	if p.hasPrintProgress {
-		fmt.Printf("\033[%dA\033[K", 1) // 将光标向上移动一行
-	}
-	separateStringCount := wordsCountPerLine - len(p.title) - len(progress) - 2
-	if separateStringCount < 1 {
-		separateStringCount = 1
-	}
-	separateString := strings.Repeat("-", separateStringCount)
-	fmt.Printf("%s %s %s\033[K\n", p.title, separateString, progress) // 输出第二行结果
-	p.hasPrintProgress = true
-	p.mu.Unlock()
+	_ = p.progressBar.Finish()
 }

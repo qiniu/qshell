@@ -48,7 +48,7 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 		return
 	}
 
-	ret, err := uploadFileWithProgress(info, progress.NewPrintProgress(""))
+	ret, err := uploadFileWithProgress(info, progress.NewPrintProgress(" 进度"))
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {
 			log.ErrorF("Upload file error %d: %s, Reqid: %s", v.Code, v.Err, v.Reqid)

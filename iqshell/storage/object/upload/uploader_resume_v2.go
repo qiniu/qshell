@@ -36,8 +36,10 @@ func (r *resumeV2Uploader) upload(info ApiInfo) (ret ApiResult, err error) {
 	token := info.TokenProvider()
 	log.DebugF("upload token:%s", token)
 
-	progress := newResumeProgress(info.Progress, info.FileSize)
-	progress.start()
+	if info.Progress != nil {
+		info.Progress.SetFileSize(info.FileSize)
+		info.Progress.Start()
+	}
 
 	up := storage.NewResumeUploaderV2(r.cfg)
 	err = up.Put(workspace.GetContext(), &ret, token, info.SaveKey, file, fileStatus.Size(), &storage.RputV2Extra{
@@ -50,14 +52,18 @@ func (r *resumeV2Uploader) upload(info ApiInfo) (ret ApiResult, err error) {
 		TryTimes:   info.TryTimes,
 		Progresses: nil,
 		Notify: func(partNumber int64, ret *storage.UploadPartsRet) {
-			progress.completeSendBlock(info.ChunkSize)
+			if info.Progress != nil {
+				info.Progress.SendSize(info.ChunkSize)
+			}
 		},
 		NotifyErr:  nil,
 	})
 	if err != nil {
 		err = errors.New("resume v2 upload: upload error:" + err.Error())
 	} else {
-		progress.end()
+		if info.Progress != nil {
+			info.Progress.End()
+		}
 	}
 
 	return
