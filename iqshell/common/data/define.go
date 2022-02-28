@@ -17,11 +17,3 @@ const (
 	BLOCK_BITS = 22              // Indicate that the blocksize is 4M
 	BLOCK_SIZE = 1 << BLOCK_BITS // BLOCK SIZE
 )
-
-func GetBoolString(value bool) string {
-	if value {
-		return TrueString
-	} else {
-		return FalseString
-	}
-}

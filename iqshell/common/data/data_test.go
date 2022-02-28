@@ -7,9 +7,9 @@ import (
 )
 
 type Data struct {
-	Can  Bool   `json:"can"`
-	Age  Int    `json:"age"`
-	Name String `json:"name"`
+	Can  *Bool   `json:"can"`
+	Age  *Int    `json:"age"`
+	Name *String `json:"name"`
 }
 
 func TestData(t *testing.T) {
