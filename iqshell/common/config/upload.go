@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -186,7 +187,7 @@ func (up *Up) merge(from *Up) {
 }
 
 func (up *Up) JobId() string {
-	return utils.Md5Hex(fmt.Sprintf("%s:%s:%s", up.SrcDir, up.Bucket, up.FileList))
+	return utils.Md5Hex(fmt.Sprintf("%s:%s:%s", up.SrcDir.Value(), up.Bucket.Value(), up.FileList.Value()))
 }
 
 func (up *Up) GetLogLevel() int {
@@ -229,8 +230,8 @@ func (up *Up) Check() error {
 		up.ResumableAPIV2PartSize = data.NewInt64(utils.GB)
 	}
 
-	if up.FileType.Value() != 1 && up.FileType.Value() != 0 {
-		return errors.New("wrong Filetype, It should be 0 or 1")
+	if data.Empty(up.Bucket) {
+		return alert.CannotEmptyError("Bucket", "")
 	}
 
 	if data.Empty(up.SrcDir) {
@@ -239,15 +240,26 @@ func (up *Up) Check() error {
 
 	srcFileInfo, err := os.Stat(up.SrcDir.Value())
 	if err != nil {
-		return errors.New("upload config error for parameter `SrcDir`:" + err.Error())
+		return errors.New("invalid SrcDir:" + err.Error())
 	}
 
 	if !srcFileInfo.IsDir() {
-		return errors.New("upload src dir should be a directory")
+		return fmt.Errorf("SrcDir should be a directory: %s", *up.SrcDir)
 	}
 
-	if data.Empty(up.Bucket) {
-		return errors.New("upload config no `bucket` specified")
+	if !data.Empty(up.FileList) {
+		fileListInfo, err := os.Stat(up.FileList.Value())
+		if err != nil {
+			return errors.New("invalid FileList:" + err.Error())
+		}
+
+		if fileListInfo.IsDir() {
+			return fmt.Errorf("FileList should be a file: %s", *up.FileList)
+		}
+	}
+
+	if up.FileType.Value() != 1 && up.FileType.Value() != 0 {
+		return errors.New("wrong Filetype, It should be one of 1, 2, 3")
 	}
 
 	if up.Policy != nil {

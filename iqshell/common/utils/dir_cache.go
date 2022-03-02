@@ -62,7 +62,7 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 	//walk start
 	walkStart := time.Now()
 
-	log.InfoF("Walk `%s` start from %s", cacheRootPath, walkStart.String())
+	log.DebugF("Walk `%s` start from %s", cacheRootPath, walkStart.String())
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, walkErr error) error {
 		var retErr error
 		//check error

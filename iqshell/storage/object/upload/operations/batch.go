@@ -70,7 +70,7 @@ func batchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 		return
 	}
 
-	log.AlertF("Writing upload log to file:%s \n\n", uploadConfig.LogFile)
+	log.AlertF("Writing upload log to file:%s \n\n", uploadConfig.LogFile.Value())
 
 	jobId := uploadConfig.JobId()
 	cachePath := workspace.UploadCachePath()
@@ -260,7 +260,7 @@ func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath strin
 	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
 	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("---------------------------------------------")
-	log.AlertF("See upload log at path:%s \n\n", uploadConfig.LogFile)
+	log.AlertF("See upload log at path:%s \n\n", uploadConfig.LogFile.Value())
 
 	if failureFileCount > 0 {
 		os.Exit(data.StatusError)
