@@ -21,7 +21,7 @@ import (
 
 const (
 	resumeV2MaxPart = 10000
-	httpTimeout     = time.Second * 10
+	httpTimeout     = time.Second * 60
 )
 
 type conveyor struct {
@@ -245,7 +245,7 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 	buffer := bytes.NewBuffer(nil)
 	cpCnt, cpErr := io.Copy(buffer, dResp.Body)
 	if cpErr != nil || cpCnt != rangeSize {
-		err = errors.New("sync Read range block response error, not fully read")
+		err = fmt.Errorf("sync Read range block response error, not fully read:%v", cpErr)
 		return
 	}
 

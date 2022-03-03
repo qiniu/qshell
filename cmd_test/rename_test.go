@@ -8,6 +8,8 @@ import (
 )
 
 func TestRename(t *testing.T) {
+	TestBatchCopy(t)
+
 	TestUserIntegration(t)
 	key := "qshell_rename.json"
 	_, errs := test.RunCmdWithError("rename", test.Bucket, test.Key, key, "-w")
@@ -52,7 +54,7 @@ func TestRenameNoSrcKey(t *testing.T) {
 
 func TestRenameNoDestKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("rename", test.Bucket, test.Key)
-	if !strings.Contains(errs, "DestBucket can't empty") {
+	if !strings.Contains(errs, "DestKey can't empty") {
 		t.Fail()
 	}
 }

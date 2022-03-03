@@ -77,6 +77,7 @@ func TestDownloadFromBucket(t *testing.T) {
 	}
 	defer func() {
 		test.RemoveFile(path)
+		test.RemoveFile(cfg.DestDir.Value())
 		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
@@ -118,6 +119,7 @@ func TestDownloadNoBucket(t *testing.T) {
 	}
 	defer func() {
 		test.RemoveFile(path)
+		test.RemoveFile(cfg.DestDir.Value())
 		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
@@ -131,11 +133,9 @@ func TestDownloadNoBucket(t *testing.T) {
 func TestDownloadNoDomain(t *testing.T) {
 	cfg := &config.Download{
 		ThreadCount: data.NewInt(4),
-		KeyFile:     data.NewString("/user"),
-		Bucket:      data.NewString(""),
+		Bucket:      data.NewString(test.Bucket),
 		Prefix:      data.NewString("hello3,hello5,hello7"),
 		Suffixes:    data.NewString(""),
-		IoHost:      data.NewString(test.BucketDomain),
 		Public:      data.NewBool(true),
 		CheckHash:   data.NewBool(true),
 		Referer:     data.NewString(""),
@@ -150,12 +150,22 @@ func TestDownloadNoDomain(t *testing.T) {
 	}
 	defer func() {
 		test.RemoveFile(path)
+		test.RemoveFile(cfg.DestDir.Value())
 		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
-	_, errs := test.RunCmdWithError("qdownload", "-c", "4", path)
-	if !strings.Contains(errs, "bucket / io_host / cdn_domain one them should has value") {
+	test.RunCmdWithError("qdownload", "-c", "4", path)
+	if test.FileCountInDir(cfg.DestDir.Value()) < 2 {
 		t.Fail()
+	}
+
+	if !test.IsFileHasContent(cfg.LogFile.Value()) {
+		t.Fatal("log file should has content")
+	}
+
+	err = test.RemoveFile(cfg.DestDir.Value())
+	if err != nil {
+		t.Log("remove file error:", err)
 	}
 	return
 }
