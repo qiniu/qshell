@@ -51,7 +51,9 @@ func (f *formUploader) upload(info ApiInfo) (ret ApiResult, err error) {
 	if err != nil {
 		err = errors.New("form upload: upload error:" + err.Error())
 	} else {
-		info.Progress.End()
+		if info.Progress != nil {
+			info.Progress.End()
+		}
 	}
 
 	return

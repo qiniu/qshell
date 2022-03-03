@@ -9,6 +9,13 @@ import (
 )
 
 func TestQUpload(t *testing.T) {
+	deleteFile(t, "1K.tmp")
+	deleteFile(t, "32K.tmp")
+	deleteFile(t, "64K.tmp")
+	deleteFile(t, "256K.tmp")
+	copyFile(t, test.Key, "512K.tmp")
+	copyFile(t, test.Key,"1024K.tmp")
+
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
 	fileSizeList = []int{1, 2}
 	for _, size := range fileSizeList {
@@ -20,15 +27,28 @@ func TestQUpload(t *testing.T) {
 		t.Fatal("create upload temp file error:", err)
 	}
 
+	resultPath, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result path error:", err)
+	}
+
+	successLogPath := filepath.Join(resultPath, "qupload2_success.txt")
+	failLogPath :=  filepath.Join(resultPath, "qupload2_fail.txt")
+	overwriteLogPath :=  filepath.Join(resultPath, "qupload2_overwrite.txt")
+	logPath := filepath.Join(resultPath, "qupload2_log.txt")
+	recordPath := filepath.Join(resultPath, "record")
+
 	cfgContent := fmt.Sprintf(`{
 	"bucket": "%s",
 	"src_dir": "%s",
-	"log_stdout": "true",
-	"overwrite": "true",
-	"check_exists": "true",
-	"check_size": "true",
-	"work_count": 4
-}`, test.Bucket, fileDir)
+	"log_stdout": true,
+	"overwrite": true,
+	"check_exists": true,
+	"check_size": true,
+	"work_count": 4,
+	"log_file": "%s",
+	"record_root": "%s"
+}`, test.Bucket, fileDir, logPath, recordPath)
 	cfgFile, err := test.CreateFileWithContent("upload_cfg.json", cfgContent)
 	defer test.RemoveFile(cfgFile)
 
@@ -36,14 +56,32 @@ func TestQUpload(t *testing.T) {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	result, errs := test.RunCmdWithError("qupload", cfgFile)
-	if len(errs) > 0 {
-		t.Fail()
+	test.RunCmdWithError("qupload", cfgFile,
+		"--success-list", successLogPath,
+		"--failure-list", failLogPath,
+		"--overwrite-list", overwriteLogPath)
+	defer func() {
+		test.RemoveFile(successLogPath)
+		test.RemoveFile(failLogPath)
+		test.RemoveFile(overwriteLogPath)
+		test.RemoveFile(logPath)
+		test.RemoveFile(recordPath)
+	}()
+
+	if !test.IsFileHasContent(successLogPath) {
+		t.Fatal("batch result: success log to file error: file empty")
 	}
 
-	result = strings.ReplaceAll(result, "\n", "")
-	if !strings.Contains(result, "Upload File success") {
-		t.Fatal(result)
+	if test.IsFileHasContent(failLogPath) {
+		t.Fatal("batch result: fail log to file error: file can't empty")
+	}
+
+	if !test.IsFileHasContent(overwriteLogPath) {
+		t.Fatal("batch result: overwrite log to file error: file empty")
+	}
+
+	if !test.IsFileHasContent(logPath) {
+		t.Fatal("batch result: log to file error: file empty")
 	}
 }
 
@@ -52,6 +90,11 @@ func TestQUploadDocument(t *testing.T) {
 }
 
 func TestQUpload2WithSrcDir(t *testing.T) {
+	deleteFile(t, "1K.tmp")
+	deleteFile(t, "32K.tmp")
+	deleteFile(t, "64K.tmp")
+	deleteFile(t, "256K.tmp")
+
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
 	for _, size := range fileSizeList {
 		test.CreateTempFile(size)
@@ -60,6 +103,18 @@ func TestQUpload2WithSrcDir(t *testing.T) {
 	fileDir, err := test.TempPath()
 	if err != nil {
 		t.Fatal("create upload temp file error:", err)
+	}
+
+	resultPath, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result path error:", err)
+	}
+
+	fileListPath := filepath.Join(resultPath, "qupload2_file_list.txt")
+	_, errs := test.RunCmdWithError("dircache", fileDir,
+		"-o", fileListPath)
+	if len(errs) > 0 {
+		t.Fatal("upload2 dircache error:", err)
 	}
 
 	result, errs := test.RunCmdWithError("qupload2",
@@ -144,9 +199,7 @@ mock02.jpg	10485760	16455233472998522
 		"--log-rotate", "10",
 		"--up-host", "",
 		"-d")
-	if len(errs) > 0 {
-		t.Fail()
-	}
+
 	defer func() {
 		test.RemoveFile(successLogPath)
 		test.RemoveFile(failLogPath)

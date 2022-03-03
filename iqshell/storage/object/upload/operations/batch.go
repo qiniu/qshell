@@ -99,9 +99,13 @@ func batchUpload(info BatchUploadInfo) {
 	}
 
 	if needScanLocal {
-		if uploadConfig.SrcDir != nil {
+		if data.Empty(uploadConfig.SrcDir) {
 			log.ErrorF("scan error: src dir was empty")
 			return
+		}
+
+		if len(info.GroupInfo.InputFile) == 0 {
+			info.GroupInfo.InputFile = filepath.Join(cachePath, jobId+".cache")
 		}
 
 		_, err := utils.DirCache(uploadConfig.SrcDir.Value(), info.GroupInfo.InputFile)

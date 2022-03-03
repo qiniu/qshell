@@ -101,11 +101,9 @@ func Load(info LoadInfo) (err error) {
 		return
 	}
 
-	if err == nil {
-		cfg.Credentials = &auth.Credentials{
-			AccessKey: currentAccount.AccessKey,
-			SecretKey: []byte(currentAccount.SecretKey),
-		}
+	cfg.Credentials = &auth.Credentials{
+		AccessKey: currentAccount.AccessKey,
+		SecretKey: []byte(currentAccount.SecretKey),
 	}
 
 	// 在工作区加载之后监听
