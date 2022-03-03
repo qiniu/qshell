@@ -52,6 +52,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		SkipFixedStrings             = ""
 		SkipSuffixes                 = ""
 		UpHost                       = ""
+		RecordRoot					 = ""
 		LogFile                      = ""
 		LogLevel                     = ""
 		LogRotate                    = 7
@@ -81,6 +82,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			cfg.CmdCfg.Up.SkipFixedStrings = data.NewString(SkipFixedStrings)
 			cfg.CmdCfg.Up.SkipSuffixes = data.NewString(SkipSuffixes)
 			cfg.CmdCfg.Up.UpHost = data.NewString(UpHost)
+			cfg.CmdCfg.Up.RecordRoot = data.NewString(RecordRoot)
 			cfg.CmdCfg.Up.LogFile = data.NewString(LogFile)
 			cfg.CmdCfg.Up.LogLevel = data.NewString(LogLevel)
 			cfg.CmdCfg.Up.LogRotate = data.NewInt(LogRotate)
@@ -113,6 +115,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&SkipFixedStrings, "skip-fixed-strings", "", "skip files with the fixed string in the name")
 	cmd.Flags().StringVar(&SkipSuffixes, "skip-suffixes", "", "skip files with these suffixes")
 	cmd.Flags().StringVar(&UpHost, "up-host", "", "upload host")
+	cmd.Flags().StringVar(&RecordRoot, "record-root", "", "record root dir, and will save record info to the dir(db and log), default <UserRoot>/.qshell")
 	cmd.Flags().StringVar(&LogFile, "log-file", "", "log file")
 	cmd.Flags().StringVar(&LogLevel, "log-level", "debug", "log level")
 	cmd.Flags().IntVar(&LogRotate, "log-rotate", 7, "log rotate days")

@@ -8,7 +8,11 @@ import (
 )
 
 func TestCopy(t *testing.T) {
-	_, errs := test.RunCmdWithError("copy", test.Bucket, test.Key, test.Bucket, "-k", "qshell_copy.json", "-w")
+	copyFile(t, test.Key, "qshell_copy.json")
+}
+
+func copyFile(t *testing.T, srcKey, destKey string) {
+	_, errs := test.RunCmdWithError("copy", test.Bucket, srcKey, test.Bucket, "-k", destKey, "-w")
 	if len(errs) > 0 {
 		t.Fail()
 	}

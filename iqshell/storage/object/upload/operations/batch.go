@@ -49,7 +49,7 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 		return
 	}
 
-	batchUpload(cfg, info)
+	batchUpload(info)
 }
 
 func BatchUpload2(cfg *iqshell.Config, info BatchUploadInfo) {
@@ -59,10 +59,10 @@ func BatchUpload2(cfg *iqshell.Config, info BatchUploadInfo) {
 		return
 	}
 
-	batchUpload(cfg, info)
+	batchUpload(info)
 }
 
-func batchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
+func batchUpload(info BatchUploadInfo) {
 
 	uploadConfig := workspace.GetConfig().Up
 	if err := uploadConfig.Check(); err != nil {
@@ -137,15 +137,19 @@ func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath strin
 	var skippedFileCount int64
 	work.NewFlowHandler(info.GroupInfo.Info).ReadWork(func() (work work.Work, hasMore bool) {
 		line, hasMore := handler.Scanner().ScanLine()
+		if !hasMore {
+			return
+		}
+
 		if len(line) == 0 {
+			syncLocker.Do(func() { skippedFileCount += 1 })
+			log.InfoF("Skip by invalid line, items should more than 2:%s", line)
 			return
 		}
 
 		items := strings.Split(line, info.GroupInfo.ItemSeparate)
 		if len(items) < 3 {
-			syncLocker.Do(func() {
-				skippedFileCount += 1
-			})
+			syncLocker.Do(func() { skippedFileCount += 1 })
 			log.InfoF("Skip by invalid line, items should more than 2:%s", line)
 			return nil, true
 		}
@@ -228,7 +232,13 @@ func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath strin
 	}).OnWorkResult(func(work work.Work, result work.Result) {
 		apiInfo := work.(*UploadInfo)
 		res := result.(upload.ApiResult)
-		handler.Export().Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.Bucket, apiInfo.Key)
+		if res.IsOverWrite {
+			handler.Export().Override().ExportF("upload overwrite, %s => [%s:%s]", apiInfo.FilePath, apiInfo.Bucket, apiInfo.Key)
+		} else if res.IsSkip {
+
+		} else {
+			handler.Export().Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.Bucket, apiInfo.Key)
+		}
 
 		syncLocker.Do(func() {
 			if res.IsNotOverWrite {
@@ -261,10 +271,6 @@ func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath strin
 	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("---------------------------------------------")
 	log.AlertF("See upload log at path:%s \n\n", uploadConfig.LogFile.Value())
-
-	if failureFileCount > 0 {
-		os.Exit(data.StatusError)
-	}
 }
 
 type BatchUploadConfigMouldInfo struct {

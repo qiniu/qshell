@@ -44,7 +44,7 @@ func GetLogConfig() *config.LogSetting {
 		return nil
 	}
 
-	if cfg.CmdId == docs.QUploadType {
+	if cfg.CmdId == docs.QUploadType || cfg.CmdId == docs.QUpload2Type {
 		if cfg.Up == nil || cfg.Up.LogSetting == nil {
 			return nil
 		}

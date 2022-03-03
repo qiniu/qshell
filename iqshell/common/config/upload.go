@@ -235,7 +235,7 @@ func (up *Up) Check() error {
 	}
 
 	if data.Empty(up.SrcDir) {
-		return errors.New("upload config no `src_dir` specified")
+		return alert.CannotEmptyError("SrcDir", "")
 	}
 
 	srcFileInfo, err := os.Stat(up.SrcDir.Value())

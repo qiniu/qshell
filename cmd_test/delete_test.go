@@ -9,12 +9,12 @@ import (
 
 func TestDelete(t *testing.T) {
 	deleteKey := "qshell_delete.json"
-	_, errs := test.RunCmdWithError("copy", test.Bucket, test.Key, test.Bucket, "-k", deleteKey, "-w")
-	if len(errs) > 0 {
-		t.Fail()
-	}
+	copyFile(t, test.Key, deleteKey)
+	deleteFile(t, deleteKey)
+}
 
-	_, errs = test.RunCmdWithError("delete", test.Bucket, deleteKey)
+func deleteFile(t *testing.T, deleteKey string) {
+	_, errs := test.RunCmdWithError("delete", test.Bucket, deleteKey)
 	if len(errs) > 0 {
 		t.Fail()
 	}

@@ -77,6 +77,12 @@ func TestQUpload2WithSrcDir(t *testing.T) {
 }
 
 func TestQUpload2WithFileList(t *testing.T) {
+	deleteFile(t, "1K.tmp")
+	deleteFile(t, "32K.tmp")
+	deleteFile(t, "64K.tmp")
+	deleteFile(t, "256K.tmp")
+	copyFile(t, test.Key, "512K.tmp")
+	copyFile(t, test.Key,"1024K.tmp")
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
 	for _, size := range fileSizeList {
 		test.CreateTempFile(size)
@@ -91,6 +97,13 @@ func TestQUpload2WithFileList(t *testing.T) {
 	if err != nil {
 		t.Fatal("get result path error:", err)
 	}
+
+	successLogPath := filepath.Join(resultPath, "qupload2_success.txt")
+	failLogPath :=  filepath.Join(resultPath, "qupload2_fail.txt")
+	overwriteLogPath :=  filepath.Join(resultPath, "qupload2_overwrite.txt")
+	logPath := filepath.Join(resultPath, "qupload2_log.txt")
+	recordPath := filepath.Join(resultPath, "record")
+
 	fileListPath := filepath.Join(resultPath, "qupload2_file_list.txt")
 	_, errs := test.RunCmdWithError("dircache", fileDir,
 		"-o", fileListPath)
@@ -98,17 +111,64 @@ func TestQUpload2WithFileList(t *testing.T) {
 		t.Fatal("upload2 dircache error:", err)
 	}
 
-	result, errs := test.RunCmdWithError("qupload2",
+	if err := test.AppendToFile(fileListPath, `
+mock01.jpg	10485760	16455233472998522
+mock02.jpg	10485760	16455233472998522
+`); err != nil {
+		t.Fatal("upload2 upload file list append error:", err)
+	}
+
+	test.RunCmdWithError("qupload2",
 		"--bucket", test.Bucket,
 		"--src-dir", fileDir,
-		"--file-list", fileListPath, "-d")
+		"--file-list", fileListPath,
+		"--overwrite",
+		"--check-exists",
+		"--check-hash",
+		"--check-size",
+		"--file-type", "1",
+		"--rescan-local", "false",
+		"--ignore-dir", "",
+		"--key-prefix", "",
+		"--skip-file-prefixes", "",
+		"--skip-fixed-strings", "",
+		"--skip-path-prefixes", "",
+		"--skip-suffixes", "",
+		"--thread-count", "4",
+		"--success-list", successLogPath,
+		"--failure-list", failLogPath,
+		"--overwrite-list", overwriteLogPath,
+		"--record-root", recordPath,
+		"--log-file", logPath,
+		"--log-level", "debug",
+		"--log-rotate", "10",
+		"--up-host", "",
+		"-d")
 	if len(errs) > 0 {
 		t.Fail()
 	}
+	defer func() {
+		test.RemoveFile(successLogPath)
+		test.RemoveFile(failLogPath)
+		test.RemoveFile(overwriteLogPath)
+		test.RemoveFile(logPath)
+		test.RemoveFile(recordPath)
+	}()
 
-	result = strings.ReplaceAll(result, "\n", "")
-	if !strings.Contains(result, "Upload File success") {
-		t.Fatal(result)
+	if !test.IsFileHasContent(successLogPath) {
+		t.Fatal("batch result: success log to file error: file empty")
+	}
+
+	if !test.IsFileHasContent(failLogPath) {
+		t.Fatal("batch result: fail log  to file error: file empty")
+	}
+
+	if !test.IsFileHasContent(overwriteLogPath) {
+		t.Fatal("batch result: overwrite log to file error: file empty")
+	}
+
+	if !test.IsFileHasContent(logPath) {
+		t.Fatal("batch result: log to file error: file empty")
 	}
 }
 

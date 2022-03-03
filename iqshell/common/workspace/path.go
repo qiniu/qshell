@@ -32,9 +32,9 @@ func DownloadCachePath() string {
 	}
 
 	downloadCfg := cfg.Download
-	rootPath := downloadCfg.RecordRoot
-	if len(rootPath) == 0 {
-		rootPath = GetWorkspace()
+	rootPath := GetWorkspace()
+	if data.NotEmpty(downloadCfg.RecordRoot) {
+		rootPath = downloadCfg.RecordRoot.Value()
 	}
 
 	cachePath := filepath.Join(rootPath, "qdownload", cfg.Up.JobId())

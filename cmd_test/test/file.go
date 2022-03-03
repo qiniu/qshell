@@ -165,3 +165,14 @@ func FileContent(path string) string {
 	}
 	return string(content)
 }
+
+func AppendToFile(path string, content string) error {
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_APPEND, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(content)
+	return err
+}

@@ -44,7 +44,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}
 
 	downloadCfg := workspace.GetConfig().Download
-	info.GroupInfo.InputFile = downloadCfg.KeyFile
+	info.GroupInfo.InputFile = downloadCfg.KeyFile.Value()
 
 	if err := downloadCfg.Check(); err != nil {
 		log.ErrorF("download config check error:%v", err)
@@ -53,7 +53,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 	downloadDomain := downloadCfg.DownloadDomain()
 	if len(downloadDomain) == 0 {
-		downloadDomain, _ = bucket.DomainOfBucket(downloadCfg.Bucket)
+		downloadDomain, _ = bucket.DomainOfBucket(downloadCfg.Bucket.Value())
 	}
 	if len(downloadDomain) == 0 {
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", downloadCfg.Bucket)
@@ -75,7 +75,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	ds, err := newDownloadScanner(downloadCfg.KeyFile, info.GroupInfo.ItemSeparate, downloadCfg.Bucket, exporter)
+	ds, err := newDownloadScanner(downloadCfg.KeyFile.Value(), info.GroupInfo.ItemSeparate, downloadCfg.Bucket.Value(), exporter)
 	if err != nil {
 		log.Error(err)
 		return
@@ -91,8 +91,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	var failureFileCount int64
 	var skipBySuffixes int64
 
-	hasPrefixes := len(downloadCfg.Prefix) > 0
-	prefixes := strings.Split(downloadCfg.Prefix, ",")
+	hasPrefixes := len(downloadCfg.Prefix.Value()) > 0
+	prefixes := strings.Split(downloadCfg.Prefix.Value(), ",")
 	filterPrefix := func(name string) bool {
 		if !hasPrefixes {
 			return false
@@ -124,12 +124,12 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		apiInfo := work.(*download.ApiInfo)
 		apiInfo.Url = "" // downloadFile 时会自动创建
 		apiInfo.Domain = downloadDomain
-		apiInfo.ToFile = filepath.Join(downloadCfg.DestDir, apiInfo.Key)
+		apiInfo.ToFile = filepath.Join(downloadCfg.DestDir.Value(), apiInfo.Key)
 		apiInfo.StatusDBPath = dbPath
-		apiInfo.Referer = downloadCfg.Referer
-		apiInfo.FileEncoding = downloadCfg.FileEncoding
-		apiInfo.Bucket = downloadCfg.Bucket
-		if !downloadCfg.CheckHash {
+		apiInfo.Referer = downloadCfg.Referer.Value()
+		apiInfo.FileEncoding = downloadCfg.FileEncoding.Value()
+		apiInfo.Bucket = downloadCfg.Bucket.Value()
+		if !downloadCfg.CheckHash.Value() {
 			apiInfo.FileHash = ""
 		}
 
@@ -146,7 +146,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 		file, err := downloadFile(DownloadInfo{
 			ApiInfo:  *apiInfo,
-			IsPublic: downloadCfg.Public,
+			IsPublic: downloadCfg.Public.Value(),
 		})
 
 		if err != nil {
@@ -197,7 +197,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.AlertF("%10s%10d", "Failure:", failureFileCount)
 	log.AlertF("%10s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("-----------------------------")
-	log.AlertF("See download log at path:%s", downloadCfg.LogFile)
+	log.AlertF("See download log at path:%s", downloadCfg.LogFile.Value())
 
 	if failureFileCount > 0 {
 		os.Exit(data.StatusError)
