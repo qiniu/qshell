@@ -3,6 +3,7 @@ package docs
 import (
 	_ "embed"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"io"
 	"os"
 	"os/exec"
@@ -40,7 +41,7 @@ func ShowCmdDocument(name string) {
 		return
 	}
 
-	if showMethod == ShowMethodStdOut {
+	if showMethod == ShowMethodStdOut || !utils.IsCmdExist("less") {
 		fmt.Fprintln(sdtout, document)
 	} else {
 		showDocumentByLessCmd(name, document)
