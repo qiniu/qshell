@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/servers"
@@ -46,6 +47,7 @@ func (g *getFileApiDownloader) download(info ApiInfo) (response *http.Response, 
 		return nil, fmt.Errorf("PublicUrlToPrivate error:%v", err)
 	}
 
+	log.DebugF("get file api download, url:%s", url)
 	//new request
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

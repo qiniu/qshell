@@ -1,6 +1,10 @@
 package progress
 
+import "io"
+
 type Progress interface {
+	io.Writer
+
 	Start()
 	SetFileSize(fileSize int64)
 	SendSize(newSize int64)

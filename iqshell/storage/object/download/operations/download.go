@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"os"
@@ -48,6 +49,8 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 			log.DebugF("bucket:%s domain:%s", info.Bucket, info.Domain)
 		}
 	}
+
+	info.Progress = progress.NewPrintProgress(" 进度")
 	_, _ = downloadFile(info)
 }
 

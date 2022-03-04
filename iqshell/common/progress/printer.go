@@ -62,6 +62,10 @@ func (p *printer) SendSize(newSize int64) {
 	p.mu.Unlock()
 }
 
+func (p *printer) Write(b []byte) (n int, err error) {
+	return p.progressBar.Write(b)
+}
+
 func (p *printer) Progress(current int64) {
 	if p.fileSize == 0 {
 		return

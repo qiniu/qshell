@@ -7,13 +7,11 @@ import (
 	"github.com/qiniu/go-sdk/v7/client"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/servers"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -61,48 +59,11 @@ func (g *getApiDownloader) download(info ApiInfo) (response *http.Response, err 
 	ctx := auth.WithCredentials(workspace.GetContext(), g.mac)
 	headers := http.Header{}
 
+	log.DebugF("get api download, get url:%s", url)
 	if err := storage.DefaultClient.Call(ctx, &data, "GET", url, headers); err != nil {
 		return nil, err
 	}
+
+	log.DebugF("get api download, url:%s", data.URL)
 	return storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", data.URL, headers)
-
-	//defer resp.Body.Close()
-	//
-	//if resp.StatusCode/100 != 2 {
-	//	body, err := ioutil.ReadAll(resp.Body)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	return nil, errors.New(fmt.Sprintf("Qget: http respcode: %d, respbody: %s\n", resp.StatusCode, string(body)))
-	//}
-	//
-	//return
-	// resp.Body, nil
-}
-
-func writeDataToFile(data io.Reader, destFile string) (err error) {
-	var file *os.File
-	for {
-		file, err = os.OpenFile(destFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
-		if err == nil {
-			break
-		} else if os.IsNotExist(err) {
-			destDir := filepath.Dir(destFile)
-			if err = os.MkdirAll(destDir, 0700); err != nil {
-				err = errors.New("Qget: err:" + err.Error())
-				break
-			}
-		}
-	}
-
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	if _, err = io.Copy(file, data); err != nil {
-		err = errors.New("Qget: err:" + err.Error())
-	}
-
-	return
 }

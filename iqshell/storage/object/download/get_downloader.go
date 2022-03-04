@@ -3,6 +3,7 @@ package download
 import (
 	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"net/http"
 )
 
@@ -27,6 +28,7 @@ func (g *getDownloader) Download(info ApiInfo) (response *http.Response, err err
 		})
 	}
 
+	log.DebugF("get download, url:%s", url)
 	//new request
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

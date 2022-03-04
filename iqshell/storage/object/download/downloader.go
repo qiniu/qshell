@@ -4,27 +4,30 @@ import (
 	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type ApiInfo struct {
-	IsPublic       bool   // 是否使用共有链接 【必填】
-	Domain         string // 文件下载的 domain 【必填】
-	ToFile         string // 文件保存的路径 【必填】
-	StatusDBPath   string // 下载状态缓存的 db 路径 【选填】
-	Referer        string // 请求 header 中的 Referer 【选填】
-	FileEncoding   string // 文件编码方式 【选填】
-	Bucket         string // 文件所在 bucket，用于验证 hash 【选填】
-	Key            string // 文件被保存的 key，用于验证 hash 【选填】
-	FileModifyTime int64  // 文件修改时间 【选填】
-	FileSize       int64  // 文件大小，有值则会检测文件大小 【选填】
-	FileHash       string // 文件 hash，有值则会检测 hash 【选填】
-	FromBytes      int64  // 下载开始的位置，内部会缓存 【选填】
-	UserGetFileApi bool   // 是否使用 get file api(私有云会使用)
+	IsPublic       bool              // 是否使用共有链接 【必填】
+	Domain         string            // 文件下载的 domain 【必填】
+	ToFile         string            // 文件保存的路径 【必填】
+	StatusDBPath   string            // 下载状态缓存的 db 路径 【选填】
+	Referer        string            // 请求 header 中的 Referer 【选填】
+	FileEncoding   string            // 文件编码方式 【选填】
+	Bucket         string            // 文件所在 bucket，用于验证 hash 【选填】
+	Key            string            // 文件被保存的 key，用于验证 hash 【选填】
+	FileModifyTime int64             // 文件修改时间 【选填】
+	FileSize       int64             // 文件大小，有值则会检测文件大小 【选填】
+	FileHash       string            // 文件 hash，有值则会检测 hash 【选填】
+	FromBytes      int64             // 下载开始的位置，内部会缓存 【选填】
+	UserGetFileApi bool              // 是否使用 get file api(私有云会使用)
+	Progress       progress.Progress // 下载进度回调
 }
 
 type ApiResult struct {
@@ -149,9 +152,19 @@ func downloadFile(fInfo fileInfo, info ApiInfo) error {
 	}
 
 	response, err := dl.Download(info)
+
 	if response != nil && response.Body != nil {
+		if info.Progress != nil {
+			size := response.Header.Get("Content-Length")
+			if sizeInt, err := strconv.ParseInt(size, 10, 64); err == nil {
+				info.Progress.SetFileSize(sizeInt)
+				info.Progress.SendSize(info.FromBytes)
+				info.Progress.Start()
+			}
+		}
 		defer response.Body.Close()
 	}
+
 	if err != nil {
 		return errors.New(" Download error:" + err.Error())
 	}
@@ -173,7 +186,12 @@ func downloadFile(fInfo fileInfo, info ApiInfo) error {
 	}
 	defer tempFileHandle.Close()
 
-	_, err = io.Copy(tempFileHandle, response.Body)
+	if info.Progress != nil {
+		_, err = io.Copy(tempFileHandle, io.TeeReader(response.Body, info.Progress))
+		info.Progress.End()
+	} else {
+		_, err = io.Copy(tempFileHandle, response.Body)
+	}
 	if err != nil {
 		return fmt.Errorf(" Download error:%v", err)
 	}
@@ -201,8 +219,8 @@ func createDownloader(info ApiInfo) (downloader, error) {
 			return nil, fmt.Errorf("download get mac error:%v", mac)
 		}
 		return &getFileApiDownloader{
-			useHttps:   userHttps,
-			mac:        mac,
+			useHttps: userHttps,
+			mac:      mac,
 		}, nil
 	} else {
 		return &getDownloader{useHttps: userHttps}, nil
