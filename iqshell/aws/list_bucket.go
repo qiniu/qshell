@@ -26,13 +26,18 @@ type ListBucketInfo struct {
 }
 
 func (info *ListBucketInfo) Check() error {
-	if info.Id == "" || info.SecretKey == "" {
-		return alert.CannotEmptyError("AWS ID and SecretKey", "")
+	// check AWS bucket
+	if info.Bucket == "" {
+		return alert.CannotEmptyError("AWS bucket", "")
 	}
 
 	// check AWS region
 	if info.Region == "" {
 		return alert.CannotEmptyError("AWS region", "")
+	}
+
+	if info.Id == "" || info.SecretKey == "" {
+		return alert.CannotEmptyError("AWS ID and SecretKey", "")
 	}
 
 	if info.MaxKeys <= 0 || info.MaxKeys > 1000 {

@@ -25,17 +25,23 @@ type FetchInfo struct {
 }
 
 func (info *FetchInfo) Check() error {
-	if info.AwsBucketInfo.Id == "" || info.AwsBucketInfo.SecretKey == "" {
-		return alert.CannotEmptyError("AWS ID and SecretKey", "")
+	// check AWS bucket
+	if info.AwsBucketInfo.Bucket == "" {
+		return alert.CannotEmptyError("AWS bucket", "")
 	}
 
+	// check AWS region
 	if info.AwsBucketInfo.Region == "" {
 		return alert.CannotEmptyError("AWS region", "")
 	}
 
-	if info.AwsBucketInfo.MaxKeys <= 0 || info.AwsBucketInfo.MaxKeys > 1000 {
-		log.Warning("max key:%d out of range {}, change to 1000", info.AwsBucketInfo.MaxKeys)
-		info.AwsBucketInfo.MaxKeys = 1000
+	// check AWS region
+	if info.QiniuBucket == "" {
+		return alert.CannotEmptyError("Qiniu bucket", "")
+	}
+
+	if info.AwsBucketInfo.Id == "" || info.AwsBucketInfo.SecretKey == "" {
+		return alert.CannotEmptyError("AWS ID and SecretKey", "")
 	}
 
 	if info.BatchInfo.WorkCount <= 0 || info.BatchInfo.WorkCount >= 1000 {

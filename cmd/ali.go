@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var aliCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+var aliListBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = ali.ListBucketInfo{}
 	var cmd = &cobra.Command{
 		Use:   "alilistbucket <DataCenter> <Bucket> <AccessKeyId> <AccessKeySecret> [Prefix] <ListBucketResultFile>",
@@ -45,5 +45,5 @@ func init() {
 }
 
 func aliCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
-	superCmd.AddCommand(aliCmdBuilder(cfg))
+	superCmd.AddCommand(aliListBucketCmdBuilder(cfg))
 }
