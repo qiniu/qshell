@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type files struct {
+type fileInfo struct {
 	toFile       string // 保存路径
 	toAbsFile    string // 保存的绝对路径
 	fileEncoding string // 文件编码方式
@@ -18,8 +18,8 @@ type files struct {
 	fromBytes int64  // 下载开始位置，检查本地 tempFile 文件，读取已下载文件长度
 }
 
-func createDownloadFiles(toFile, fileEncoding string) (files, error) {
-	f := files{
+func createDownloadFiles(toFile, fileEncoding string) (fileInfo, error) {
+	f := fileInfo{
 		toFile:       toFile,
 		fileEncoding: fileEncoding,
 	}
@@ -33,14 +33,14 @@ func createDownloadFiles(toFile, fileEncoding string) (files, error) {
 	return f, err
 }
 
-func (d *files) check() error {
+func (d *fileInfo) check() error {
 	if len(d.toFile) == 0 {
 		return errors.New("the filename saved after downloading is empty")
 	}
 	return nil
 }
 
-func (d *files) prepare() (err error) {
+func (d *fileInfo) prepare() (err error) {
 	// 文件路径
 	d.toAbsFile, err = filepath.Abs(d.toFile)
 	if err != nil {
@@ -77,7 +77,7 @@ func (d *files) prepare() (err error) {
 	return nil
 }
 
-func (d *files) clean() error {
+func (d *fileInfo) clean() error {
 	err := os.Remove(d.toAbsFile)
 	if e := os.Remove(d.tempFile); err == nil {
 		err = e

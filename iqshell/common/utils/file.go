@@ -88,7 +88,7 @@ func NetworkFileLength(srcResUrl string) (fileSize int64, err error) {
 
 	contentLength := resp.Header.Get("Content-Length")
 	if contentLength == "" {
-		err = errors.New("Head request with no Content-Length found error")
+		err = errors.New("head request with no Content-Length found error")
 		return
 	}
 

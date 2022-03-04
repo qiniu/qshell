@@ -4,11 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"io"
+	"net/http"
 	"os"
 )
 
 type ApiInfo struct {
-	Url            string // 文件下载的 url 【必填】
+	IsPublic       bool   // 是否使用共有链接 【必填】
 	Domain         string // 文件下载的 domain 【必填】
 	ToFile         string // 文件保存的路径 【必填】
 	StatusDBPath   string // 下载状态缓存的 db 路径 【选填】
@@ -19,6 +23,8 @@ type ApiInfo struct {
 	FileModifyTime int64  // 文件修改时间 【选填】
 	FileSize       int64  // 文件大小，有值则会检测文件大小 【选填】
 	FileHash       string // 文件 hash，有值则会检测 hash 【选填】
+	FromBytes      int64  // 下载开始的位置，内部会缓存 【选填】
+	UserGetFileApi bool   // 是否使用 get file api(私有云会使用)
 }
 
 type ApiResult struct {
@@ -84,13 +90,7 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 
 	// 下载
 	if shouldDownload {
-		downloader := &Downloader{
-			files:   f,
-			Url:     info.Url,
-			Domain:  info.Domain,
-			Referer: info.Referer,
-		}
-		err = downloader.Download()
+		err = download(f, info)
 		if err != nil {
 			return
 		}
@@ -115,4 +115,101 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 	}
 
 	return
+}
+
+func download(fInfo fileInfo, info ApiInfo) (err error) {
+	defer func() {
+		if err != nil {
+			e := os.Remove(fInfo.tempFile)
+			if e != nil && !os.IsNotExist(e) {
+				log.WarningF("download: remove temp file error:%v", e)
+			}
+
+			e = os.Remove(fInfo.toFile)
+			if e != nil && !os.IsNotExist(e) {
+				log.WarningF("download: remove file error:%v", e)
+			}
+		}
+	}()
+
+	info.FromBytes = fInfo.fromBytes
+	err = downloadFile(fInfo, info)
+	if err != nil {
+		return err
+	}
+
+	err = renameTempFile(fInfo, info)
+	return err
+}
+
+func downloadFile(fInfo fileInfo, info ApiInfo) error {
+	dl, err := createDownloader(info)
+	if err != nil {
+		return errors.New(" Download create downloader error:" + err.Error())
+	}
+
+	response, err := dl.Download(info)
+	if response != nil && response.Body != nil {
+		defer response.Body.Close()
+	}
+	if err != nil {
+		return errors.New(" Download error:" + err.Error())
+	}
+	if response == nil {
+		return errors.New(" Download error: response empty")
+	}
+	if response.StatusCode/100 != 2 {
+		return fmt.Errorf(" Download error: %v", response)
+	}
+
+	var tempFileHandle *os.File
+	if info.FromBytes > 0 {
+		tempFileHandle, err = os.OpenFile(fInfo.tempFile, os.O_APPEND|os.O_WRONLY, 0655)
+	} else {
+		tempFileHandle, err = os.Create(fInfo.tempFile)
+	}
+	if err != nil {
+		return errors.New(" Open local temp file error:" + fInfo.tempFile + " error:" + err.Error())
+	}
+	defer tempFileHandle.Close()
+
+	_, err = io.Copy(tempFileHandle, response.Body)
+	if err != nil {
+		return fmt.Errorf(" Download error:%v", err)
+	}
+
+	return nil
+}
+
+func renameTempFile(fInfo fileInfo, info ApiInfo) error {
+	err := os.Rename(fInfo.tempFile, fInfo.toFile)
+	if err != nil {
+		return errors.New(" Rename temp file to final file error" + err.Error())
+	}
+	return nil
+}
+
+type downloader interface {
+	Download(info ApiInfo) (response *http.Response, err error)
+}
+
+func createDownloader(info ApiInfo) (downloader, error) {
+	userHttps := workspace.GetConfig().IsUseHttps()
+	if info.UserGetFileApi {
+		mac, err := workspace.GetMac()
+		if err != nil {
+			return nil, fmt.Errorf("download get mac error:%v", mac)
+		}
+		return &getFileApiDownloader{
+			useHttps:   userHttps,
+			mac:        mac,
+		}, nil
+	} else {
+		return &getDownloader{useHttps: userHttps}, nil
+	}
+}
+
+func utf82GBK(text string) (string, error) {
+	var gbkEncoder = simplifiedchinese.GBK.NewEncoder()
+	return gbkEncoder.String(text)
 }

@@ -280,8 +280,7 @@ func SimpleUnescape(s *string) string {
 
 func Endpoint(useHttps bool, host string) string {
 	host = strings.TrimSpace(host)
-	host = strings.TrimLeft(host, "http://")
-	host = strings.TrimLeft(host, "https://")
+	host = RemoveUrlScheme(host)
 	if host == "" {
 		return ""
 	}
@@ -290,4 +289,10 @@ func Endpoint(useHttps bool, host string) string {
 		scheme = "https://"
 	}
 	return fmt.Sprintf("%s%s", scheme, host)
+}
+
+func RemoveUrlScheme(url string) string {
+	url = strings.TrimLeft(url, "http://")
+	url = strings.TrimLeft(url, "https://")
+	return url
 }

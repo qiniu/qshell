@@ -122,7 +122,6 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return apiInfo, hasMore
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		apiInfo := work.(*download.ApiInfo)
-		apiInfo.Url = "" // downloadFile 时会自动创建
 		apiInfo.Domain = downloadDomain
 		apiInfo.ToFile = filepath.Join(downloadCfg.DestDir.Value(), apiInfo.Key)
 		apiInfo.StatusDBPath = dbPath

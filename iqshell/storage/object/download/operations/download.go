@@ -5,7 +5,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"os"
@@ -53,37 +52,22 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 }
 
 func downloadFile(info DownloadInfo) (download.ApiResult, error) {
-	// 构造下载 url
-	if info.IsPublic {
-		info.Url = download.PublicUrl(download.UrlApiInfo{
-			BucketDomain: info.Domain,
-			Key:          info.Key,
-			UseHttps:     workspace.GetConfig().IsUseHttps(),
-		})
-	} else {
-		info.Url = download.PrivateUrl(download.UrlApiInfo{
-			BucketDomain: info.Domain,
-			Key:          info.Key,
-			UseHttps:     workspace.GetConfig().IsUseHttps(),
-		})
-	}
-
-	log.InfoF("Download: %s => %s", info.Url, info.ToFile)
+	log.InfoF("Download [%s:%s] => %s", info.Bucket, info.Key, info.ToFile)
 
 	startTime := time.Now().UnixNano() / 1e6
 	res, err := download.Download(info.ApiInfo)
 	if err != nil {
-		log.ErrorF("Download  failed: %s => %s error:%v", info.Url, info.ToFile, err)
+		log.ErrorF("Download  failed, [%s:%s] => %s error:%v", info.Bucket, info.Key, info.ToFile, err)
 		return res, err
 	}
 
 	fileStatus, err := os.Stat(res.FileAbsPath)
 	if err != nil {
-		log.ErrorF("Download  failed: %s => %s get file status error:%v", info.Url, info.ToFile, err)
+		log.ErrorF("Download  failed, [%s:%s] => %s get file status error:%v", info.Bucket, info.Key, info.ToFile, err)
 		return res, err
 	}
 	if fileStatus == nil {
-		log.ErrorF("Download  failed: %s => %s download speed: can't get file status", info.Url, info.ToFile)
+		log.ErrorF("Download  failed, [%s:%s] => %s download speed: can't get file status", info.Bucket, info.Key, info.ToFile)
 		return res, err
 	}
 
@@ -91,11 +75,11 @@ func downloadFile(info DownloadInfo) (download.ApiResult, error) {
 	duration := float64(endTime-startTime) / 1000
 	speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/duration/1024)
 	if res.IsExist {
-		log.AlertF("Download skip because file exist: %s => %s", info.Url, res.FileAbsPath)
+		log.AlertF("Download skip because file exist, [%s:%s] => %s", info.Bucket, info.Key, res.FileAbsPath)
 	} else if res.IsUpdate {
-		log.AlertF("Download update success: %s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+		log.AlertF("Download update success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
 	} else {
-		log.AlertF("Download success: %s => %s speed:%s", info.Url, res.FileAbsPath, speed)
+		log.AlertF("Download success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
 	}
 
 	return res, nil
