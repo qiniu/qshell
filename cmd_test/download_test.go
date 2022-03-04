@@ -170,7 +170,7 @@ func TestDownloadNoDomain(t *testing.T) {
 	return
 }
 
-func TestDocumentDocument(t *testing.T) {
+func TestDownloadDocument(t *testing.T) {
 	test.TestDocument("qdownload", t)
 }
 

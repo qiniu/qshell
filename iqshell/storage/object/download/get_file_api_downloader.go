@@ -20,7 +20,7 @@ func (g *getFileApiDownloader) Download(info ApiInfo) (response *http.Response, 
 	if len(info.ToFile) == 0 {
 		info.ToFile = info.Key
 	}
-	return g.Download(info)
+	return g.download(info)
 }
 
 func (g *getFileApiDownloader) download(info ApiInfo) (response *http.Response, err error) {
