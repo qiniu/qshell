@@ -27,7 +27,7 @@ var rpcDecodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.RpcInfo{}
 	var cmd = &cobra.Command{
 		Use:        "rpcdecode [DataToEncode...]",
-		Short:      "PRC Decode of qiniu",
+		Short:      "RPC Decode of qiniu",
 		SuggestFor: []string{"rpc"},
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.RpcDecodeType
