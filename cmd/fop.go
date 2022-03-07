@@ -27,7 +27,7 @@ var preFopCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.PreFopInfo{}
 	var cmd = &cobra.Command{
 		Use:   "pfop <Bucket> <Key> <fopCommand>",
-		Short: "issue a request to process file in bucket",
+		Short: "Issue a request to process file in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.PFopType
 			if len(args) > 0 {

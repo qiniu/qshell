@@ -10,7 +10,7 @@ import (
 func completeCmdBuilder(superCmd *cobra.Command, cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "completion bash",
-		Short: "generate autocompletion script for bash",
+		Short: "Generate autocompletion script for bash",
 		Long: `To load completion run
 
 . <(qshell completion <bash|zsh>)

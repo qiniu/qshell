@@ -10,7 +10,7 @@ import (
 func versionCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "version",
-		Short: "show version",
+		Short: "Show version",
 		Run: func(cmd *cobra.Command, params []string) {
 			cfg.CmdCfg.CmdId = docs.VersionType
 			operations.Version(cfg, operations.VersionInfo{})
