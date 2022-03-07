@@ -3,7 +3,7 @@
 
 # 格式
 ```
-qshell domains <Bucket>
+qshell domains <Bucket> [--detail]
 ```
 
 # 鉴权
@@ -11,6 +11,9 @@ qshell domains <Bucket>
 
 # 参数
 - Bucket：空间名称，可以为公开空间或者私有空间【必选】
+
+# 选项
+--detail：展示域名的详细信息，默认只展示域名的名称。
 
 # 示例
 获取空间 `if-pbl` 对应的所有的域名：

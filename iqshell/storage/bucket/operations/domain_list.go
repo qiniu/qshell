@@ -11,6 +11,7 @@ import (
 
 type ListDomainInfo struct {
 	Bucket string
+	Detail bool
 }
 
 func (info *ListDomainInfo) Check() error {
@@ -35,8 +36,14 @@ func ListDomains(cfg *iqshell.Config, info ListDomainInfo) {
 		if len(domains) == 0 {
 			log.ErrorF("No domains found for bucket `%s`\n", info.Bucket)
 		} else {
-			for _, domain := range domains {
-				log.Alert(domain)
+			if info.Detail {
+				for _, domain := range domains {
+					log.Alert(domain.DetailDescriptionString())
+				}
+			} else {
+				for _, domain := range domains {
+					log.Alert(domain.DescriptionString())
+				}
 			}
 		}
 	}

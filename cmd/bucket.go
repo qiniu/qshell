@@ -20,6 +20,7 @@ var domainsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.ListDomains(cfg, info)
 		},
 	}
+	cmd.Flags().BoolVarP(&info.Detail, "detail", "", false, "print detail info for domain")
 	return cmd
 }
 

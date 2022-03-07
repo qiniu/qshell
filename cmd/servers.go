@@ -19,7 +19,7 @@ var bucketsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&info.Region, "region", "", "", "region of bucket; z0, z1, z2, as0, na0")
-	cmd.Flags().BoolVarP(&info.Detail, "detail", "r", false, "print detail info for bucket")
+	cmd.Flags().BoolVarP(&info.Detail, "detail", "", false, "print detail info for bucket")
 	return cmd
 }
 
