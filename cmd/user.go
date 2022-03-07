@@ -16,7 +16,7 @@ var accountCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.Account
 			if len(args) == 0 {
-				operations.Current()
+				operations.Current(cfg)
 				return
 			}
 
@@ -79,7 +79,7 @@ var userCurrentCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Example: `qshell user current`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User
-			operations.Current()
+			operations.Current(cfg)
 		},
 	}
 	return cmd

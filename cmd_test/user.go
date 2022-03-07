@@ -117,7 +117,7 @@ func TestUserIntegration(t *testing.T) {
 	}
 
 	// 添加测试账号
-	userName = "Kodo"
+	userName = "QShell"
 	success, err = addUser(userName, accessKey, secretKey)
 	if len(err) > 0 || !success {
 		t.Fatal("add user not success:", err)

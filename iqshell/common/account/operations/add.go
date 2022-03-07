@@ -29,7 +29,7 @@ func (info *AddInfo) Check() error {
 	return nil
 }
 
-// 保存账户信息到账户文件中， 并保存在本地数据库
+// Add 保存账户信息到账户文件中， 并保存在本地数据库
 func Add(cfg *iqshell.Config, info AddInfo) {
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,

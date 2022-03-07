@@ -55,8 +55,14 @@ func List(cfg *iqshell.Config, info ListInfo) {
 	}
 }
 
-// 当前用户
-func Current() {
+// Current 当前用户
+func Current(cfg *iqshell.Config) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: nil,
+	}); !shouldContinue {
+		return
+	}
+
 	acc, err := account.GetAccount()
 	if err != nil {
 		log.ErrorF("user current error: %v", err)
@@ -65,7 +71,7 @@ func Current() {
 	log.AlertF(acc.String())
 }
 
-// 查找某个用户
+// LookUpInfo 查找某个用户
 type LookUpInfo struct {
 	Name string
 }
@@ -78,6 +84,12 @@ func (info *LookUpInfo) Check() error {
 }
 
 func LookUp(cfg *iqshell.Config, info LookUpInfo) {
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
 	acc, err := account.LookUp(info.Name)
 	if err != nil {
 		log.ErrorF("user lookup error: %v", err)
