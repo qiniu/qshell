@@ -143,10 +143,18 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 		}
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s", apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
-			log.ErrorF("Delete '%s' when put time:'%s' Failed, Code: %d, Error: %s", apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
+			if len(apiInfo.Condition.PutTime) == 0 {
+				log.ErrorF("Delete '%s' Failed, Code: %d, Error: %s", apiInfo.Key, result.Code, result.Error)
+			} else {
+				log.ErrorF("Delete '%s' when put time:'%s' Failed, Code: %d, Error: %s", apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
+			}
 		} else {
 			handler.Export().Success().ExportF("%s\t%s", apiInfo.Key, apiInfo.Condition.PutTime)
-			log.InfoF("Delete '%s' when put time:'%s' success", apiInfo.Key, apiInfo.Condition.PutTime)
+			if len(apiInfo.Condition.PutTime) == 0 {
+				log.InfoF("Delete '%s' success", apiInfo.Key)
+			} else {
+				log.InfoF("Delete '%s' when put time:'%s' success", apiInfo.Key, apiInfo.Condition.PutTime)
+			}
 		}
 	}).OnError(func(err error) {
 		log.ErrorF("batch delete error:%v:", err)
