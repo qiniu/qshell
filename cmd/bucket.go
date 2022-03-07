@@ -36,7 +36,7 @@ var listBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "listbucket <Bucket>",
 		Short: "List all the files in the bucket",
-		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
+		Long:  "List all the files in the bucket to stdout if output file not specified",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ListBucketType
 			if len(args) > 0 {
@@ -55,7 +55,7 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "listbucket2 <Bucket>",
 		Short: "List all the files in the bucket using v2/list interface",
-		Long:  "List all the files in the bucket to stdout if ListBucketResultFile not specified",
+		Long:  "List all the files in the bucket using v2/list interface to stdout if output file not specified",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ListBucket2Type
 			if len(args) > 0 {

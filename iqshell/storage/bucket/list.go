@@ -62,6 +62,11 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 
 		if lErr != nil {
 			errorHandler(info.Marker, lErr)
+			// 空间不存在，直接结束
+			if strings.Contains(lErr.Error(), "query region error, no such bucket") {
+				break
+			}
+
 			retryCount++
 			time.Sleep(1)
 			continue
