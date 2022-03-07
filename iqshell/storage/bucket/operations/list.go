@@ -16,6 +16,7 @@ type ListInfo struct {
 	Prefix     string
 	Marker     string
 	Delimiter  string
+	Limit      int    //  最大输出条数，默认：-1, 无限输出
 	StartDate  string // list item 的 put time 区间的开始时间 【闭区间】
 	EndDate    string // list item 的 put time 区间的终止时间 【闭区间】
 	Suffixes   string // list item 必须包含前缀
@@ -56,6 +57,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 			Prefix:    info.Prefix,
 			Marker:    info.Marker,
 			Delimiter: info.Delimiter,
+			Limit:     info.Limit,
 			StartTime: startTime,
 			EndTime:   endTime,
 			Suffixes:  info.getSuffixes(),

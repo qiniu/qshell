@@ -21,6 +21,7 @@ type ListApiInfo struct {
 	Prefix    string
 	Marker    string
 	Delimiter string
+	Limit     int       //  最大输出条数，默认：-1, 无限输出
 	StartTime time.Time // list item 的 put time 区间的开始时间 【闭区间】
 	EndTime   time.Time // list item 的 put time 区间的终止时间 【闭区间】
 	Suffixes  []string  // list item 必须包含前缀
@@ -30,7 +31,9 @@ type ListApiInfo struct {
 type ListObject storage.ListItem
 
 // List list 某个 bucket 所有的文件
-func List(info ListApiInfo, objectHandler func(marker string, object ListObject) error, errorHandler func(marker string, err error)) {
+func List(info ListApiInfo,
+	objectHandler func(marker string, object ListObject) (shouldContinue bool, err error),
+	errorHandler func(marker string, err error)) {
 	if objectHandler == nil {
 		log.Error(alert.CannotEmpty("list bucket: object handler", ""))
 		return
@@ -54,7 +57,9 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	retryCount := 0
-	for info.MaxRetry < 0 || retryCount <= info.MaxRetry {
+	outputCount := 0
+	complete := false
+	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
 		entries, lErr := bucketManager.ListBucketContext(workspace.GetContext(), info.Bucket, info.Prefix, info.Delimiter, info.Marker)
 		if entries == nil && lErr == nil {
 			lErr = errors.New("meet empty body when list not completed")
@@ -92,9 +97,19 @@ func List(info ListApiInfo, objectHandler func(marker string, object ListObject)
 				continue
 			}
 
-			hErr := objectHandler(listItem.Marker, ListObject(listItem.Item))
+			shouldContinue, hErr := objectHandler(listItem.Marker, ListObject(listItem.Item))
 			if hErr != nil {
 				errorHandler(listItem.Marker, hErr)
+			}
+			if !shouldContinue {
+				complete = true
+				break
+			}
+
+			outputCount ++
+			if info.Limit > 0 && outputCount > info.Limit {
+				complete = true
+				break
 			}
 		}
 
@@ -155,7 +170,7 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 		_, _ = bWriter.WriteString("Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser\t\n")
 		_ = bWriter.Flush()
 	}
-	List(info.ListApiInfo, func(marker string, object ListObject) error {
+	List(info.ListApiInfo, func(marker string, object ListObject) (bool, error) {
 		var fileSize interface{}
 		if info.Readable {
 			fileSize = utils.BytesToReadable(object.Fsize)
@@ -168,13 +183,13 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 			object.PutTime, object.MimeType, object.Type, object.EndUser)
 		_, wErr := bWriter.WriteString(lineData)
 		if wErr != nil {
-			return errors.New("write error:" + wErr.Error())
+			return false, errors.New("write error:" + wErr.Error())
 		}
 		fErr := bWriter.Flush()
 		if fErr != nil {
-			return errors.New("flush error:" + fErr.Error())
+			return false, errors.New("flush error:" + fErr.Error())
 		}
-		return nil
+		return true, nil
 	}, errorHandler)
 }
 

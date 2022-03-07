@@ -10,7 +10,7 @@ Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 
 # 格式
 ```
-qshell listbucket2 [-m|--marker <Marker>][--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [--readable] [ [-a] -o <ListBucketResultFile>]
+qshell listbucket2 [-m|--marker <Marker>] [--limit <Limit>] [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [--readable] [ [-a] -o <ListBucketResultFile>]
 ```
 
 # 鉴权
@@ -21,6 +21,7 @@ qshell listbucket2 [-m|--marker <Marker>][--prefix <Prefix> | --suffixes <suffix
   
 # 选项
 - --prefix： 七牛空间中文件名的前缀，该参数为可选参数，如果不指定则获取空间中所有的文件列表 【可选】
+- --limit：最罗列条目的数量；默认输出所有条目。【可选】
 - --out： 获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用 【可选】
 - --start： 列举整个空间，然后从中筛选出文件上传日期在 <StartDate> 之后的文件；格式：yyyy-mm-dd-hh-MM-ss eg:2022-01-10-08-30-20 【可选】
 - --end： 列举整个空间， 然后从中筛选出文件上传日期在<EndDate>之前的文件；格式：yyyy-mm-dd-hh-MM-ss eg:2022-01-10-08-30-20 【可选】

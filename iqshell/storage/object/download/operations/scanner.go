@@ -64,14 +64,14 @@ func (d *downloadScanner) createBucketScanOperation() {
 			EndTime:   time.Time{},
 			Suffixes:  nil,
 			MaxRetry:  20,
-		}, func(marker string, object bucket.ListObject) error {
+		}, func(marker string, object bucket.ListObject) (bool, error) {
 			d.infoChan <- &download.ApiInfo{
 				Key:            object.Key,
 				FileHash:       object.Hash,
 				FileSize:       object.Fsize,
 				FileModifyTime: object.PutTime,
 			}
-			return nil
+			return true, nil
 		}, func(marker string, err error) {
 		})
 		close(d.infoChan)

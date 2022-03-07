@@ -72,8 +72,9 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
 	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
-	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "append to file")
+	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "result append to file instead of overwriting")
 	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
+	cmd.Flags().IntVarP(&info.Limit, "limit", "", -1, "max count of items to output")
 
 	return cmd
 }
