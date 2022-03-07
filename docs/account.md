@@ -20,7 +20,7 @@ qshell account [--overwrite | -w]<Your AccessKey> <Your SecretKey> <Your Account
 # 参数
 - AccessKey：七牛账号对应的 AccessKey [获取](https://portal.qiniu.com/user/key) 。【必选】
 - SecretKey：七牛账号对应的 SecretKey [获取](https://portal.qiniu.com/user/key) 。【必选】
-- Name：账户的名字, 可以任意取，和在七牛注册的邮箱信息没有关系， 只是 qshell 本地用来标示 <ak, sk> 对。【必选】
+- Name：AccessKey 和 SecretKey 对的 id, 可以任意取，但同一台机器此 id 不可重复；和在七牛注册的邮箱信息没有关系， 只是 qshell 本地用来标示 <ak, sk> 对。【必选】
 
 # 选项
 -w --overwrite 强制覆盖已经存在的账户

@@ -97,7 +97,6 @@ func SaveToDB(acc Account, accountOver bool) (err error) {
 }
 
 func getAccount(pt string) (account Account, err error) {
-
 	accountFh, openErr := os.Open(pt)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error, %s, please use `account` to set Id and SecretKey first", openErr)
@@ -175,6 +174,10 @@ func ChUser(userName string) (err error) {
 
 		return SetAccountToLocalJson(user)
 	} else {
+		if _, err = GetOldAccount(); err != nil {
+			return fmt.Errorf("get last account error:%v", err)
+		}
+
 		rErr := os.Rename(info.OldAccountPath, info.AccountPath+".tmp")
 		if rErr != nil {
 			err = fmt.Errorf("rename file: %v", rErr)
