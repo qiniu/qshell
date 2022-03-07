@@ -24,7 +24,7 @@ func observerCmdInterrupt() {
 	go func() {
 		si := <-s
 		log.Alert("")
-		log.ErrorF("Got signal:%s", si)
+		log.DebugF("Got signal:%s", si)
 		isCmdInterrupt = true
 		Cancel()
 		time.Sleep(time.Millisecond * 500)
