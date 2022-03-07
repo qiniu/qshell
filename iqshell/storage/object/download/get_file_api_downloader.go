@@ -7,7 +7,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/servers"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"net/http"
 	"strings"
 )
@@ -29,7 +29,7 @@ func (g *getFileApiDownloader) download(info ApiInfo) (response *http.Response, 
 		info.Domain = workspace.GetConfig().Hosts.GetOneIo()
 	}
 	if len(info.Domain) == 0 {
-		zone, err := servers.BucketRegion(info.Bucket)
+		zone, err := bucket.Region(info.Bucket)
 		if err != nil {
 			return nil, err
 		}

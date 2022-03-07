@@ -204,7 +204,7 @@ var changeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "chtype <Bucket> <Key> <FileType>",
 		Short: "Change the file type of a file",
-		Long: `Change the file type of a file, file type must be in 0/1 or 2. 
+		Long: `Change the file type of a file, file type must be one of 0, 1, 2. 
 And 0 means standard storage, 
 while 1 means low frequency visit storage,
 while 2 means low archive storage.`,

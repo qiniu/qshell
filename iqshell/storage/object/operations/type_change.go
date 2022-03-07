@@ -42,7 +42,7 @@ func (info *ChangeTypeInfo) getTypeOfInt() (int, error) {
 	}
 
 	if ret < 0 || ret > 2 {
-		return -1, errors.New("type must be 0 / 1 or 2")
+		return -1, errors.New("type must be one of 0, 1, 2")
 	}
 	return ret, nil
 }

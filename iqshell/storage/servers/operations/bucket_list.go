@@ -9,7 +9,9 @@ import (
 )
 
 type ListInfo struct {
-	Shared bool
+	servers.ListApiInfo
+
+	Detail bool
 }
 
 func (info *ListInfo) Check() error {
@@ -24,7 +26,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 		return
 	}
 
-	buckets, err := servers.AllBuckets(info.Shared)
+	buckets, err := servers.AllBuckets(info.ListApiInfo)
 	if err != nil {
 		log.ErrorF("Get buckets error: %v", err)
 		os.Exit(data.StatusError)
@@ -33,7 +35,14 @@ func List(cfg *iqshell.Config, info ListInfo) {
 		return
 	}
 
-	for _, b := range buckets {
-		log.Alert(b)
+	if info.Detail {
+		for _, b := range buckets {
+			log.AlertF("%s", b.DetailDescriptionString())
+		}
+	} else {
+		for _, b := range buckets {
+			log.AlertF("%s", b.DescriptionString())
+		}
 	}
+
 }
