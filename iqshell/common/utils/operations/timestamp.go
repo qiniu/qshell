@@ -87,5 +87,5 @@ func Date2Timestamp(cfg *iqshell.Config, info TimestampInfo) {
 
 	t := time.Now()
 	t = t.Add(time.Second * time.Duration(duration))
-	log.Alert(t.String())
+	log.AlertF("%d", t.Unix())
 }

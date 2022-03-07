@@ -43,7 +43,7 @@ var base64EncodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:        "b64encode <DataToEncode>",
 		Short:      "Base64 Encode, default not url safe",
-		Long:       "Base64 encode of data, url safe base64 is not turn on by default. Use -safe flag to turn it on",
+		Long:       "Base64 encode of data, url safe base64 is not turn on by default. Use --safe flag to turn it on",
 		SuggestFor: []string{"b64"},
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.B64Encode
@@ -62,7 +62,7 @@ var base64DecodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:        "b64decode <DataToDecode>",
 		Short:      "Base64 Decode, default nor url safe",
-		Long:       "Base64 Decode of data, urlsafe base64 is not turn on by default. Use -safe flag to turn it on",
+		Long:       "Base64 Decode of data, urlsafe base64 is not turn on by default. Use --safe flag to turn it on",
 		SuggestFor: []string{"b64"},
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.B64Decode
@@ -128,7 +128,7 @@ var d2tsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.TimestampInfo{}
 	var cmd = &cobra.Command{
 		Use:   "d2ts <SecondsToNow>",
-		Short: "Create a timestamp in seconds using seconds to now",
+		Short: "Create a timestamp of some seconds later, unit of timestamp is second",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.DateToTimestampType
 			if len(args) > 0 {
