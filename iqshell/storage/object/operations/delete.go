@@ -129,7 +129,8 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 		if len(items) > 1 {
 			putTime = items[1]
 		}
-		if len(putTime) != 18 && len(items) > 3 {
+		// list 结果格式
+		if len(putTime) != 18 && len(items) > 3 && len(items[3]) == 18 {
 			putTime = items[3]
 		}
 		return object.DeleteApiInfo{
