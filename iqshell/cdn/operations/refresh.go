@@ -1,13 +1,10 @@
 package operations
 
 import (
-	"bufio"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/cdn"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"io"
-	"os"
 	"strings"
 )
 
@@ -24,33 +21,35 @@ func (info *RefreshInfo) Check() error {
 
 // Refresh 【cdnrefresh】刷新所有CDN节点
 func Refresh(cfg *iqshell.Config, info RefreshInfo) {
-	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
-
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
 		return
 	}
 
-	var err error
-	var urlReader io.ReadCloser
-	if len(info.ItemListFile) == 0 {
-		urlReader = os.Stdin
-	} else {
-		urlReader, err = os.Open(info.ItemListFile)
-		if err != nil {
-			log.ErrorF("Open url list file error:%v", err)
-			os.Exit(data.StatusHalt)
-		}
+	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
+
+	handler, err := group.NewHandler(group.Info{
+		InputFile: info.ItemListFile,
+		Force:     true,
+	})
+	if err != nil {
+		log.Error(err)
+		return
 	}
-	defer urlReader.Close()
 
 	createQpsLimitIfNeeded(info.QpsLimit)
 
-	scanner := bufio.NewScanner(urlReader)
+	line := ""
+	hasMore := false
 	itemsToRefresh := make([]string, 0, 50)
-	for scanner.Scan() {
-		item := strings.TrimSpace(scanner.Text())
+	for {
+		line, hasMore = handler.Scanner().ScanLine()
+		if !hasMore {
+			break
+		}
+
+		item := strings.TrimSpace(line)
 		log.DebugF("read line:%s", item)
 		if item == "" {
 			continue

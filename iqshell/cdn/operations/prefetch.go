@@ -1,13 +1,10 @@
 package operations
 
 import (
-	"bufio"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/cdn"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"io"
-	"os"
 	"strings"
 )
 
@@ -22,33 +19,35 @@ func (info *PrefetchInfo) Check() error {
 }
 
 func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
-	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
-
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
 		return
 	}
 
-	var err error
-	var urlReader io.ReadCloser
-	if len(info.UrlListFile) == 0 {
-		urlReader = os.Stdin
-	} else {
-		urlReader, err = os.Open(info.UrlListFile)
-		if err != nil {
-			log.ErrorF("Open url list file error:%v", err)
-			os.Exit(data.StatusHalt)
-		}
-		defer urlReader.Close()
+	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
+
+	handler, err := group.NewHandler(group.Info{
+		InputFile:              info.UrlListFile,
+		Force:                  true,
+	})
+	if err != nil {
+		log.Error(err)
+		return
 	}
 
 	createQpsLimitIfNeeded(info.QpsLimit)
 
-	scanner := bufio.NewScanner(urlReader)
+	line := ""
+	hasMore := false
 	urlsToPrefetch := make([]string, 0, 50)
-	for scanner.Scan() {
-		url := strings.TrimSpace(scanner.Text())
+	for {
+		line, hasMore = handler.Scanner().ScanLine()
+		if !hasMore {
+			break
+		}
+
+		url := strings.TrimSpace(line)
 		if url == "" {
 			continue
 		}

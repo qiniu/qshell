@@ -60,6 +60,7 @@ func Load(info LoadInfo) (err error) {
 		if len(accountName) == 0 {
 			accountName = currentAccount.AccessKey
 		}
+		log.DebugF("current User:%s", accountName)
 
 		currentAccountDir = filepath.Join(workspacePath, accountName)
 		err := utils.CreateDirIfNotExist(currentAccountDir)
