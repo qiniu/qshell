@@ -52,8 +52,8 @@ var rootCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
 	// ddebug 开启 client debug
 	cmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
-	cmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "config file (default is $HOME/.qshell.json)")
-	cmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory as config file path")
+	cmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "set config file (default is $HOME/.qshell.json)")
+	cmd.PersistentFlags().BoolVarP(&cfg.Local, "local", "L", false, "use current directory qshell workspace (default is $HOME/.qshell)")
 	cmd.PersistentFlags().BoolVarP(&cfg.Document, "doc", "", false, "document of command")
 	return cmd
 }

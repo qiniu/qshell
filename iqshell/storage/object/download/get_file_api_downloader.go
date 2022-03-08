@@ -13,8 +13,8 @@ import (
 )
 
 type getFileApiDownloader struct {
-	useHttps   bool
-	mac        *qbox.Mac
+	useHttps bool
+	mac      *qbox.Mac
 }
 
 func (g *getFileApiDownloader) Download(info ApiInfo) (response *http.Response, err error) {
@@ -34,6 +34,11 @@ func (g *getFileApiDownloader) download(info ApiInfo) (response *http.Response, 
 			return nil, err
 		}
 		info.Domain = zone.IovipHost
+	}
+
+	if len(info.Domain) == 0 {
+		log.Error("get file api: can't get io domain")
+		return
 	}
 
 	// /getfile/<ak>/<bucket>/<UrlEncodedKey>[?e=<Deadline>&token=<DownloadToken>

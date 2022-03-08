@@ -16,7 +16,7 @@ func TestGet(t *testing.T) {
 	}
 	path := filepath.Join(resultPath, test.Key)
 	_, errs := test.RunCmdWithError("get", test.Bucket, test.Key,
-		"-o", path)
+		"-o", path, "-C", "/Users/senyang/.qshell_test.json")
 	defer test.RemoveFile(path)
 
 	if len(errs) > 0 {

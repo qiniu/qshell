@@ -10,6 +10,7 @@ func GetGlobal() *Config {
 			AccessKey: getAccessKey(ConfigTypeGlobal),
 			SecretKey: []byte(getSecretKey(ConfigTypeGlobal)),
 		},
+		UseHttps: getIsUseHttps(ConfigTypeGlobal),
 		Hosts: &Hosts{
 			UC:  GetUcHosts(ConfigTypeGlobal),
 			Api: GetApiHosts(ConfigTypeGlobal),

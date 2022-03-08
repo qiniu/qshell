@@ -11,7 +11,7 @@ import (
 type Config struct {
 	CmdId       string            `json:"-"` // 命令 Id
 	Credentials *auth.Credentials `json:"-"`
-	UseHttps    *data.Bool         `json:"use_https,omitempty"`
+	UseHttps    *data.Bool        `json:"use_https,omitempty"`
 	Hosts       *Hosts            `json:"hosts,omitempty"`
 	Up          *Up               `json:"up,omitempty"`
 	Download    *Download         `json:"download,omitempty"`

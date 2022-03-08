@@ -8,6 +8,7 @@ func GetUser() *Config {
 			AccessKey: getAccessKey(ConfigTypeUser),
 			SecretKey: []byte(getSecretKey(ConfigTypeUser)),
 		},
+		UseHttps: getIsUseHttps(ConfigTypeUser),
 		Hosts: &Hosts{
 			UC:  GetUcHosts(ConfigTypeUser),
 			Api: GetApiHosts(ConfigTypeUser),

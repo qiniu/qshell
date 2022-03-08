@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/qiniu/go-sdk/v7/auth"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/spf13/viper"
 )
 
@@ -45,6 +46,9 @@ var (
 	localKeyHostUc  = []string{"hosts.uc", "hosts.uc_host"}
 	localKeyHostUcs = []string{"hosts.ucs", "hosts.uc_hosts"}
 
+	// UC HOST
+	localKeyIsUseHttps  = []string{"use_https"}
+
 	// 账户密钥信息
 	localKeyAccessKey = []string{"access_key"}
 	localKeySecretKey = []string{"secret_key"}
@@ -56,11 +60,11 @@ var (
 )
 
 func GetAccountDBPath(configType ConfigType) string {
-	return getStringValueFromLocal(configType, localKeyAccountDBPath)
+	return getStringValue(configType, localKeyAccountDBPath).Value()
 }
 
 func GetAccountFilePath(configType ConfigType) string {
-	return getStringValueFromLocal(configType, localKeyAccountFilePath)
+	return getStringValue(configType, localKeyAccountFilePath).Value()
 }
 
 func GetUpHosts(configType ConfigType) []string {
@@ -95,74 +99,36 @@ func GetCredentials(configType ConfigType) auth.Credentials {
 }
 
 func getAccessKey(configType ConfigType) string {
-	return getStringValueFromLocal(configType, localKeyAccessKey)
+	return getStringValue(configType, localKeyAccessKey).Value()
 }
 
 func getSecretKey(configType ConfigType) string {
-	return getStringValueFromLocal(configType, localKeySecretKey)
+	return getStringValue(configType, localKeySecretKey).Value()
 }
 
-// ----- 业务封装
+func getIsUseHttps(configType ConfigType) *data.Bool {
+	return getBoolValue(configType, localKeyIsUseHttps)
+}
+
+func getStringValue(configType ConfigType, localKey []string) *data.String {
+	return getStringValueFromLocal(getVipersWithConfigType(configType), localKey)
+}
+
+func getBoolValue(configType ConfigType, localKey []string) *data.Bool {
+	return getBoolValueFromLocal(getVipersWithConfigType(configType), localKey)
+}
+
 func getHostsFromLocal(configType ConfigType, hostKey []string, hostsKey []string) []string {
 	var hosts []string
-	hosts = getStringArrayValueFromLocal(configType, hostsKey)
+	vipers := getVipersWithConfigType(configType)
+	hosts = getStringArrayValueFromLocal(vipers, hostsKey)
 	if hosts == nil {
-		host := getStringValueFromLocal(configType, hostKey)
-		if len(host) > 0 {
-			hosts = []string{host}
+		host := getStringValueFromLocal(vipers, hostKey)
+		if data.NotEmpty(host) {
+			hosts = []string{host.Value()}
 		}
 	}
 	return hosts
-}
-
-func getStringValueFromLocal(configType ConfigType, localKey []string) string {
-	value := ""
-	vipers := getVipersWithConfigType(configType)
-	if vipers != nil {
-		for _, v := range vipers {
-			value = getStringValueFromLocalByViper(v, localKey)
-			if len(value) > 0 {
-				break
-			}
-		}
-	}
-	return value
-}
-
-func getStringValueFromLocalByViper(viper *viper.Viper, localKey []string) string {
-	value := ""
-	for _, key := range localKey {
-		value = viper.GetString(key)
-		if len(value) > 0 {
-			break
-		}
-	}
-	return value
-}
-
-func getStringArrayValueFromLocal(configType ConfigType, localKey []string) []string {
-	var value []string
-	vipers := getVipersWithConfigType(configType)
-	if vipers != nil {
-		for _, viper := range vipers {
-			value = getStringArrayValueFromLocalByViper(viper, localKey)
-			if len(value) > 0 {
-				break
-			}
-		}
-	}
-	return value
-}
-
-func getStringArrayValueFromLocalByViper(viper *viper.Viper, localKey []string) []string {
-	var value []string
-	for _, key := range localKey {
-		value = viper.GetStringSlice(key)
-		if len(value) > 0 {
-			break
-		}
-	}
-	return value
 }
 
 func getVipersWithConfigType(configType ConfigType) []*viper.Viper {

@@ -6,7 +6,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"os"
 	"time"
@@ -37,17 +36,6 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	// 如果 ToFile 不存在则保存在当前文件录下，文件名为：key
 	if len(info.ToFile) == 0 {
 		info.ToFile = info.Key
-	}
-
-	if len(info.Domain) == 0 {
-		log.DebugF("get domain of bucket:%s", info.Bucket)
-		if d, err := bucket.DomainOfBucket(info.Bucket); err != nil {
-			log.ErrorF("get bucket domain error:%v, domain can't be empty", err)
-			return
-		} else {
-			info.Domain = d
-			log.DebugF("bucket:%s domain:%s", info.Bucket, info.Domain)
-		}
 	}
 
 	info.Progress = progress.NewPrintProgress(" 进度")
