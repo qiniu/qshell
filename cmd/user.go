@@ -11,8 +11,8 @@ var accountCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 	var accountOver bool
 	var cmd = &cobra.Command{
-		Use:   "account [<AccessKey> <SecretKey> <Name>]",
-		Short: "Get/Set current account's Id and SecretKey",
+		Use:   "account [<AccessKey> <SecretKey> <UserName>]",
+		Short: "Get/Set current user's AccessKey and SecretKey from local",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.Account
 			if len(args) == 0 {
@@ -44,7 +44,7 @@ var accountCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var userCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "user",
-		Short: "Manage users",
+		Short: "Manage local users",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User
 			operations.User(cfg, operations.UserInfo{})
@@ -58,7 +58,7 @@ var userLsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ListInfo{}
 	var cmd = &cobra.Command{
 		Use:     "ls",
-		Short:   "List all user registered",
+		Short:   "List all users registered of local",
 		Example: `qshell user ls`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User
@@ -75,7 +75,7 @@ var userLsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var userCurrentCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:     "current",
-		Short:   "Get current user info",
+		Short:   "Get current user info from local",
 		Example: `qshell user current`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User
@@ -90,7 +90,7 @@ var userLookupCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.LookUpInfo{}
 	var cmd = &cobra.Command{
 		Use:     "lookup <UserName>",
-		Short:   "Lookup user info by user name",
+		Short:   "Lookup user info by user name of local",
 		Example: `qshell user lookup <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User
@@ -136,7 +136,7 @@ var userChCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ChangeInfo{}
 	var cmd = &cobra.Command{
 		Use:     "cu [<UserName>]",
-		Short:   "Change user to UserName",
+		Short:   "Change current user with UserName",
 		Example: `qshell user cu <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User
@@ -154,7 +154,7 @@ var userCleanCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:     "clean",
 		Short:   "Clean account db",
-		Long:    "Remove all users from inner dbs.",
+		Long:    "Remove all users of local, just remove db, current user will not remove.",
 		Example: `qshell user clean`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User
@@ -169,7 +169,7 @@ var userRmCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.RemoveInfo{}
 	var cmd = &cobra.Command{
 		Use:     "remove <UserName>",
-		Short:   "Remove user info from inner db",
+		Short:   "Remove user info with user name, just remove db, not influence current user.",
 		Example: `qshell user remove <UserName>`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User

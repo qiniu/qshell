@@ -244,7 +244,7 @@ var TokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "token",
 		Short: "Token related command",
-		Long:  "Create QBox token, Qiniu token, Upload token and Download token",
+		Long:  "Create QBox token, Qiniu token and Upload token",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.TokenType
 			operations.Token(cfg)
