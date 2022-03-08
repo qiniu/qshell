@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"net/http"
 )
@@ -13,6 +14,10 @@ type getDownloader struct {
 }
 
 func (g *getDownloader) Download(info ApiInfo) (response *http.Response, err error) {
+	if len(info.Domain) == 0  {
+		info.Domain = workspace.GetConfig().Hosts.GetOneIo()
+	}
+
 	if len(info.Domain) == 0  {
 		log.DebugF("download: get domain of bucket:%s", info.Bucket)
 		if d, e := bucket.DomainOfBucket(info.Bucket); e != nil {

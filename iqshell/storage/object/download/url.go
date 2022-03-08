@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"net/url"
 	"strings"
@@ -21,10 +22,11 @@ type UrlApiInfo struct {
 
 // PublicUrl 返回公有空间的下载链接，不可以用于私有空间的下载
 func PublicUrl(info UrlApiInfo) (fileUrl string) {
+	domain := utils.RemoveUrlScheme(info.BucketDomain)
 	if info.UseHttps {
-		fileUrl = fmt.Sprintf("https://%s/%s", info.BucketDomain, url.PathEscape(info.Key))
+		fileUrl = fmt.Sprintf("https://%s/%s", domain, url.PathEscape(info.Key))
 	} else {
-		fileUrl = fmt.Sprintf("http://%s/%s", info.BucketDomain, url.PathEscape(info.Key))
+		fileUrl = fmt.Sprintf("http://%s/%s", domain, url.PathEscape(info.Key))
 	}
 	return
 }
