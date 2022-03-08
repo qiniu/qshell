@@ -70,11 +70,10 @@ func (i *DomainInfo) DescriptionString() string {
 }
 
 func (i *DomainInfo) DetailDescriptionString() string {
-	i.FreezeTypes = []string{"1", "2"}
-	return fmt.Sprintf("%s\n%-12s: %s(%d)\n%-12s: %s(%d)\n%-12s: %s\n",
+	return fmt.Sprintf("%s\n%-12s: %d(%s)\n%-12s: %d(%s)\n%-12s: %s\n",
 		i.Domain.Value(),
-		"type", i.getTypeString(), i.DomainType.Value(),
-		"ApiScope", i.getApiScopeString(), i.ApiScope.Value(),
+		"type", i.DomainType.Value(), i.getTypeString(),
+		"ApiScope", i.ApiScope.Value(), i.getApiScopeString(),
 		"FreezeTypes", i.FreezeTypes)
 }
 
