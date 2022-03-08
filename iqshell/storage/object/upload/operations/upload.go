@@ -144,6 +144,7 @@ func createTokenProvider(info *UploadInfo) (provider func() string, err error) {
 func createTokenProviderWithMac(mac *qbox.Mac, upConfig *config.Up, info *UploadInfo) func() string {
 	policy := *upConfig.Policy
 	policy.Scope = info.Bucket
+	policy.InsertOnly = 1 // 仅新增不覆盖
 	if upConfig.IsOverwrite() {
 		policy.Scope = fmt.Sprintf("%s:%s", info.Bucket, info.Key)
 		policy.InsertOnly = 0
