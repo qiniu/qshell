@@ -27,7 +27,7 @@ type ApiInfo struct {
 	FileSize       int64             // 文件大小，有值则会检测文件大小 【选填】
 	FileHash       string            // 文件 hash，有值则会检测 hash 【选填】
 	FromBytes      int64             // 下载开始的位置，内部会缓存 【选填】
-	UserGetFileApi bool              // 是否使用 get file api(私有云会使用)
+	UserGetFileApi bool              // 是否使用 get file api(私有云会使用)【选填】
 	Progress       progress.Progress // 下载进度回调
 }
 
@@ -38,7 +38,7 @@ type ApiResult struct {
 }
 
 // Download 下载一个文件，从 Url 下载保存至 ToFile
-func Download(info ApiInfo) (res ApiResult, err error) {
+func Download(info *ApiInfo) (res ApiResult, err error) {
 	if len(info.ToFile) == 0 {
 		err = errors.New("the filename saved after downloading is empty")
 		return
@@ -121,7 +121,7 @@ func Download(info ApiInfo) (res ApiResult, err error) {
 	return
 }
 
-func download(fInfo fileInfo, info ApiInfo) (err error) {
+func download(fInfo *fileInfo, info *ApiInfo) (err error) {
 	defer func() {
 		if err != nil {
 			e := os.Remove(fInfo.tempFile)
@@ -146,7 +146,7 @@ func download(fInfo fileInfo, info ApiInfo) (err error) {
 	return err
 }
 
-func downloadFile(fInfo fileInfo, info ApiInfo) error {
+func downloadFile(fInfo *fileInfo, info *ApiInfo) error {
 	dl, err := createDownloader(info)
 	if err != nil {
 		return errors.New(" Download create downloader error:" + err.Error())
@@ -200,7 +200,7 @@ func downloadFile(fInfo fileInfo, info ApiInfo) error {
 	return nil
 }
 
-func renameTempFile(fInfo fileInfo, info ApiInfo) error {
+func renameTempFile(fInfo *fileInfo, info *ApiInfo) error {
 	err := os.Rename(fInfo.tempFile, fInfo.toFile)
 	if err != nil {
 		return errors.New(" Rename temp file to final file error" + err.Error())
@@ -209,10 +209,10 @@ func renameTempFile(fInfo fileInfo, info ApiInfo) error {
 }
 
 type downloader interface {
-	Download(info ApiInfo) (response *http.Response, err error)
+	Download(info *ApiInfo) (response *http.Response, err error)
 }
 
-func createDownloader(info ApiInfo) (downloader, error) {
+func createDownloader(info *ApiInfo) (downloader, error) {
 	userHttps := workspace.GetConfig().IsUseHttps()
 	if info.UserGetFileApi {
 		mac, err := workspace.GetMac()

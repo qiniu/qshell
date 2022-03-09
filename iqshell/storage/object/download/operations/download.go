@@ -6,20 +6,18 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"os"
 	"time"
 )
 
 type DownloadInfo struct {
-	download.ApiInfo
-	IsPublic bool // 是否是公有云
+	Key    string // 文件被保存的 key
+	ToFile string // 文件保存的路径
 }
 
 func (info *DownloadInfo) Check() error {
-	if len(info.Bucket) == 0 {
-		return alert.CannotEmptyError("Bucket", "")
-	}
 	if len(info.Key) == 0 {
 		return alert.CannotEmptyError("Key", "")
 	}
@@ -38,15 +36,38 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		info.ToFile = info.Key
 	}
 
-	info.Progress = progress.NewPrintProgress(" 进度")
-	_, _ = downloadFile(info)
+	downloadCfg := workspace.GetConfig().Download
+	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig())
+	if len(downloadDomain) == 0 && len(downloadHost) == 0 {
+		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", downloadCfg.Bucket)
+		return
+	}
+
+	log.DebugF("Download Domain:%s", downloadDomain)
+	log.DebugF("Download Domain:%s", downloadHost)
+	_, _ = downloadFile(&download.ApiInfo{
+		IsPublic:       downloadCfg.Public.Value(),
+		Domain:         downloadDomain,
+		Host:           downloadHost,
+		ToFile:         info.ToFile,
+		StatusDBPath:   "",
+		Referer:        downloadCfg.Referer.Value(),
+		FileEncoding:   downloadCfg.FileEncoding.Value(),
+		Bucket:         downloadCfg.Bucket.Value(),
+		Key:            info.Key,
+		FileModifyTime: 0,
+		FileSize:       0,
+		FileHash:       "",
+		FromBytes:      0,
+		UserGetFileApi: downloadCfg.GetFileApi.Value(),
+		Progress:       progress.NewPrintProgress(" 进度"),
+	})
 }
 
-func downloadFile(info DownloadInfo) (download.ApiResult, error) {
+func downloadFile(info *download.ApiInfo) (download.ApiResult, error) {
 	log.InfoF("Download [%s:%s] => %s", info.Bucket, info.Key, info.ToFile)
-
 	startTime := time.Now().UnixNano() / 1e6
-	res, err := download.Download(info.ApiInfo)
+	res, err := download.Download(info)
 	if err != nil {
 		log.ErrorF("Download  failed, [%s:%s] => %s error:%v", info.Bucket, info.Key, info.ToFile, err)
 		return res, err

@@ -33,7 +33,6 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
     "check_hash" "   false,
     "cdn_domain" :   "down.example.com",
     "referer"    :   "http://www.example.com",
-    "use_https"   :  true,
     "public"     :   true,
     "log_file"   :   "download.log",
     "log_level"  :   "info",
@@ -51,7 +50,6 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - check_hash：是否验证 hash，如果开启可能会耗费较长时间，默认为 `false` 【可选】
 - cdn_domain：设置下载的 CDN 域名，默认为空表示从存储源站下载，【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】 【可选】
 - referer：如果 CDN 域名配置了域名白名单防盗链，需要指定一个允许访问的 referer 地址 【可选】
-- use_https：设置下载的 CDN 域名是否是使用 HTTPS 协议 【可选】
 - public：空间为公开空间，下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为私有空间 【可选】
 - log_level：下载日志输出级别，可选值为 `debug`,`info`,`warn`,`error`,默认 `info` 【可选】
 - log_file：下载日志的输出文件，如果不指定会输出到 qshell 工作目录下默认的文件中，文件名可以在终端输出看到 【可选】

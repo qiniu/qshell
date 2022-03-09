@@ -18,8 +18,8 @@ type fileInfo struct {
 	fromBytes int64  // 下载开始位置，检查本地 tempFile 文件，读取已下载文件长度
 }
 
-func createDownloadFiles(toFile, fileEncoding string) (fileInfo, error) {
-	f := fileInfo{
+func createDownloadFiles(toFile, fileEncoding string) (*fileInfo, error) {
+	f := &fileInfo{
 		toFile:       toFile,
 		fileEncoding: fileEncoding,
 	}

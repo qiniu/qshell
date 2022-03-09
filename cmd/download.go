@@ -36,14 +36,18 @@ have already in local disk and need to skip download or not.`,
 }
 
 var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	ioHost := ""
+	getFileApi := false
 	info := operations.DownloadInfo{}
 	var cmd = &cobra.Command{
 		Use:   "get <Bucket> <Key>",
 		Short: "Download a single file from bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.GetType
+			cfg.CmdCfg.Download.IoHost = data.NewString(ioHost)
+			cfg.CmdCfg.Download.GetFileApi = data.NewBool(getFileApi)
 			if len(args) > 0 {
-				info.Bucket = args[0]
+				cfg.CmdCfg.Download.Bucket = data.NewString(args[0])
 			}
 			if len(args) > 1 {
 				info.Key = args[1]
@@ -53,8 +57,8 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&info.ToFile, "outfile", "o", "", "save file as specified by this option")
-	cmd.Flags().StringVarP(&info.Host, "domain", "", "", "domain of request")
-	cmd.Flags().BoolVarP(&info.UserGetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")
+	cmd.Flags().StringVarP(&ioHost, "domain", "", "", "domain of request")
+	cmd.Flags().BoolVarP(&getFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")
 
 	return cmd
 }

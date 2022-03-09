@@ -5,7 +5,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"strings"
 )
 
 type Download struct {
@@ -25,7 +24,9 @@ type Download struct {
 	//down from cdn
 	Referer   *data.String `json:"referer,omitempty"`
 	CdnDomain *data.String `json:"cdn_domain,omitempty"`
-	UseHttps  *data.Bool   `json:"use_https,omitempty"`
+
+	// 是否使用 getfile api，私有云使用
+	GetFileApi *data.Bool `json:"get_file_api"`
 
 	// 下载状态保存路径
 	RecordRoot *data.String `json:"record_root,omitempty"`
@@ -34,18 +35,6 @@ type Download struct {
 
 	Tasks *Tasks `json:"tasks,omitempty"`
 	Retry *Retry `json:"retry,omitempty"`
-}
-
-// DownloadDomain 获取一个存储空间的下载域名， 默认使用用户配置的域名，如果没有就使用接口随机选择一个下载域名
-func (d *Download) DownloadDomain() (domain string) {
-	if data.NotEmpty(d.CdnDomain) {
-		domain = d.CdnDomain.Value()
-	} else if data.NotEmpty(d.IoHost) {
-		domain = d.IoHost.Value()
-	}
-	domain = strings.TrimPrefix(domain, "http://")
-	domain = strings.TrimPrefix(domain, "https://")
-	return
 }
 
 func (d *Download) merge(from *Download) {
@@ -81,7 +70,6 @@ func (d *Download) merge(from *Download) {
 	//down from cdn
 	d.Referer = data.GetNotEmptyStringIfExist(d.Referer, from.Referer)
 	d.CdnDomain = data.GetNotEmptyStringIfExist(d.CdnDomain, from.CdnDomain)
-	d.UseHttps = data.GetNotEmptyBoolIfExist(d.UseHttps, from.UseHttps)
 
 	// 下载状态保存路径
 	d.RecordRoot = data.GetNotEmptyStringIfExist(d.RecordRoot, from.RecordRoot)
@@ -105,7 +93,7 @@ func (d *Download) Check() error {
 		return alert.CannotEmptyError("bucket", "")
 	}
 
-	if data.Empty(d.Bucket) && len(d.DownloadDomain()) == 0 {
+	if data.Empty(d.Bucket) && data.Empty(d.IoHost) && data.Empty(d.CdnDomain) {
 		return alert.Error("bucket / io_host / cdn_domain one them should has value)", "")
 	}
 

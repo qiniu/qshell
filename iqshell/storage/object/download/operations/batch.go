@@ -8,7 +8,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"os"
 	"path/filepath"
@@ -51,12 +50,14 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	downloadDomain := downloadCfg.DownloadDomain()
-	downloadHost, _ := bucket.DomainOfBucket(downloadCfg.Bucket.Value())
+	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig())
 	if len(downloadDomain) == 0 && len(downloadHost) == 0 {
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", downloadCfg.Bucket)
 		return
 	}
+
+	log.DebugF("Download Domain:%s", downloadDomain)
+	log.DebugF("Download Domain:%s", downloadHost)
 
 	jobId := downloadCfg.JobId()
 	cachePath := workspace.DownloadCachePath()
@@ -127,6 +128,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		apiInfo.Referer = downloadCfg.Referer.Value()
 		apiInfo.FileEncoding = downloadCfg.FileEncoding.Value()
 		apiInfo.Bucket = downloadCfg.Bucket.Value()
+		apiInfo.UserGetFileApi = downloadCfg.GetFileApi.Value()
 		if !downloadCfg.CheckHash.Value() {
 			apiInfo.FileHash = ""
 		}
@@ -142,10 +144,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			log.AlertF("Downloading %s [%d/-, -] ...", apiInfo.Key, currentFileCount)
 		}
 
-		file, err := downloadFile(DownloadInfo{
-			ApiInfo:  *apiInfo,
-			IsPublic: downloadCfg.Public.Value(),
-		})
+		file, err := downloadFile(apiInfo)
 
 		if err != nil {
 			return nil, err

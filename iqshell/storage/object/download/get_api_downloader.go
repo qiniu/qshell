@@ -10,7 +10,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"net/http"
 	"strings"
 )
@@ -21,7 +20,7 @@ type getApiDownloader struct {
 	httpClient *client.Client
 }
 
-func (g *getApiDownloader) Download(info ApiInfo) (response *http.Response, err error) {
+func (g *getApiDownloader) Download(info *ApiInfo) (response *http.Response, err error) {
 	if len(info.Bucket) == 0 {
 		return nil, errors.New(alert.CannotEmpty("bucket", ""))
 	}
@@ -36,22 +35,9 @@ func (g *getApiDownloader) Download(info ApiInfo) (response *http.Response, err 
 	return g.download(info)
 }
 
-func (g *getApiDownloader) download(info ApiInfo) (response *http.Response, err error) {
+func (g *getApiDownloader) download(info *ApiInfo) (response *http.Response, err error) {
 	entryUri := strings.Join([]string{info.Bucket, info.Key}, ":")
-
-	reqDomain := info.Domain
-	if len(reqDomain) == 0 {
-		reqDomain = workspace.GetConfig().Hosts.GetOneRs()
-	}
-	if len(reqDomain) == 0 {
-		zone, err := bucket.Region(info.Bucket)
-		if err != nil {
-			return nil, err
-		}
-		reqDomain = zone.RsHost
-	}
-
-	url := strings.Join([]string{reqDomain, "get", utils.Encode(entryUri)}, "/")
+	url := strings.Join([]string{info.Domain, "get", utils.Encode(entryUri)}, "/")
 
 	var data struct {
 		URL string `json:"url"`
