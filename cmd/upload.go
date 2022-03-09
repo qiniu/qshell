@@ -1,14 +1,20 @@
 package cmd
 
 import (
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
 	"github.com/spf13/cobra"
 )
 
 var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var (
+		callbackUrl  = ""
+		callbackHost = ""
+	)
 	info := operations.BatchUploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "qupload <LocalDownloadConfig>",
@@ -18,6 +24,33 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if len(args) > 0 {
 				cfg.UploadConfigFile = args[0]
 			}
+			cfg.CmdCfg.Up = &config.Up{
+				Policy:                 &storage.PutPolicy{
+					Scope:               "",
+					Expires:             0,
+					IsPrefixalScope:     0,
+					InsertOnly:          0,
+					DetectMime:          0,
+					FsizeMin:            0,
+					FsizeLimit:          0,
+					MimeLimit:           "",
+					ForceSaveKey:        false,
+					SaveKey:             "",
+					CallbackFetchKey:    0,
+					CallbackURL:         callbackUrl,
+					CallbackHost:        callbackHost,
+					CallbackBody:        "",
+					CallbackBodyType:    "",
+					ReturnURL:           "",
+					ReturnBody:          "",
+					PersistentOps:       "",
+					PersistentNotifyURL: "",
+					PersistentPipeline:  "",
+					EndUser:             "",
+					DeleteAfterDays:     0,
+					FileType:            0,
+				},
+			}
 			info.GroupInfo.Force = true
 			operations.BatchUpload(cfg, info)
 		},
@@ -26,8 +59,8 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.GroupInfo.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
 	cmd.Flags().StringVarP(&info.GroupInfo.OverrideExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
 	cmd.Flags().IntVarP(&info.GroupInfo.WorkCount, "worker", "c", 1, "worker count")
-	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
-	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
+	cmd.Flags().StringVarP(&callbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	cmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 	return cmd
 }
 
@@ -52,11 +85,13 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		SkipFixedStrings             = ""
 		SkipSuffixes                 = ""
 		UpHost                       = ""
-		RecordRoot					 = ""
+		RecordRoot                   = ""
 		LogFile                      = ""
 		LogLevel                     = ""
 		LogRotate                    = 7
 		FileType                     = 0
+		callbackUrl                  = ""
+		callbackHost                 = ""
 	)
 	info := operations.BatchUploadInfo{}
 	cmd := &cobra.Command{
@@ -64,29 +99,69 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QUpload2Type
-			cfg.CmdCfg.Up.ResumableAPIV2 = data.NewBool(ResumableAPIV2)
-			cfg.CmdCfg.Up.IgnoreDir = data.NewBool(IgnoreDir)
-			cfg.CmdCfg.Up.Overwrite = data.NewBool(Overwrite)
-			cfg.CmdCfg.Up.CheckExists = data.NewBool(CheckExists)
-			cfg.CmdCfg.Up.CheckHash = data.NewBool(CheckHash)
-			cfg.CmdCfg.Up.CheckSize = data.NewBool(CheckSize)
-			cfg.CmdCfg.Up.RescanLocal = data.NewBool(RescanLocal)
-			cfg.CmdCfg.Up.ResumableAPIV2PartSize = data.NewInt64(data.BLOCK_SIZE)
-			cfg.CmdCfg.Up.SrcDir = data.NewString(SrcDir)
-			cfg.CmdCfg.Up.FileList = data.NewString(FileList)
-			cfg.CmdCfg.Up.Bucket = data.NewString(Bucket)
-			cfg.CmdCfg.Up.PutThreshold = data.NewInt64(PutThreshold)
-			cfg.CmdCfg.Up.KeyPrefix = data.NewString(KeyPrefix)
-			cfg.CmdCfg.Up.SkipFilePrefixes = data.NewString(SkipFilePrefixes)
-			cfg.CmdCfg.Up.SkipPathPrefixes = data.NewString(SkipPathPrefixes)
-			cfg.CmdCfg.Up.SkipFixedStrings = data.NewString(SkipFixedStrings)
-			cfg.CmdCfg.Up.SkipSuffixes = data.NewString(SkipSuffixes)
-			cfg.CmdCfg.Up.UpHost = data.NewString(UpHost)
-			cfg.CmdCfg.Up.RecordRoot = data.NewString(RecordRoot)
-			cfg.CmdCfg.Up.LogFile = data.NewString(LogFile)
-			cfg.CmdCfg.Up.LogLevel = data.NewString(LogLevel)
-			cfg.CmdCfg.Up.LogRotate = data.NewInt(LogRotate)
-			cfg.CmdCfg.Up.FileType = data.NewInt(FileType)
+			cfg.CmdCfg.Up = &config.Up{
+				LogSetting:             &config.LogSetting{
+					LogLevel:  data.NewString(LogLevel),
+					LogFile:   data.NewString(LogFile),
+					LogRotate: data.NewInt(LogRotate),
+					LogStdout: nil,
+				},
+				UpHost:                 data.NewString(UpHost),
+				BindUpIp:               nil,
+				BindRsIp:               nil,
+				BindNicIp:              nil,
+				SrcDir:                 data.NewString(SrcDir),
+				FileList:               data.NewString(FileList),
+				IgnoreDir:              data.NewBool(IgnoreDir),
+				SkipFilePrefixes:       data.NewString(SkipFilePrefixes),
+				SkipPathPrefixes:       data.NewString(SkipPathPrefixes),
+				SkipFixedStrings:       data.NewString(SkipFixedStrings),
+				SkipSuffixes:           data.NewString(SkipSuffixes),
+				FileEncoding:           nil,
+				Bucket:                 data.NewString(Bucket),
+				ResumableAPIV2:         data.NewBool(ResumableAPIV2),
+				ResumableAPIV2PartSize: data.NewInt64(data.BLOCK_SIZE),
+				PutThreshold:           data.NewInt64(PutThreshold),
+				KeyPrefix:              data.NewString(KeyPrefix),
+				Overwrite:              data.NewBool(Overwrite),
+				CheckExists:            data.NewBool(CheckExists),
+				CheckHash:              data.NewBool(CheckHash),
+				CheckSize:              data.NewBool(CheckSize),
+				RescanLocal:            data.NewBool(RescanLocal),
+				FileType:               data.NewInt(FileType),
+				DeleteOnSuccess:        nil,
+				DisableResume:          nil,
+				DisableForm:            nil,
+				WorkerCount:            nil,
+				RecordRoot:             data.NewString(RecordRoot),
+				Tasks:                  nil,
+				Retry:                  nil,
+				Policy:                 &storage.PutPolicy{
+					Scope:               "",
+					Expires:             0,
+					IsPrefixalScope:     0,
+					InsertOnly:          0,
+					DetectMime:          0,
+					FsizeMin:            0,
+					FsizeLimit:          0,
+					MimeLimit:           "",
+					ForceSaveKey:        false,
+					SaveKey:             "",
+					CallbackFetchKey:    0,
+					CallbackURL:         callbackUrl,
+					CallbackHost:        callbackHost,
+					CallbackBody:        "",
+					CallbackBodyType:    "",
+					ReturnURL:           "",
+					ReturnBody:          "",
+					PersistentOps:       "",
+					PersistentNotifyURL: "",
+					PersistentPipeline:  "",
+					EndUser:             "",
+					DeleteAfterDays:     0,
+					FileType:            0,
+				},
+			}
 			info.GroupInfo.Force = true
 			operations.BatchUpload2(cfg, info)
 		},
@@ -121,8 +196,8 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().IntVar(&LogRotate, "log-rotate", 7, "log rotate days")
 
 	cmd.Flags().IntVar(&FileType, "file-type", 0, "set storage file type")
-	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
-	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
+	cmd.Flags().StringVarP(&callbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	cmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindUpIp, "bind-up-ip", "", "upload host ip to bind")
 	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindRsIp, "bind-rs-ip", "", "rs host ip to bind")
 	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindNicIp, "bind-nic-ip", "", "local network interface card to bind")
@@ -131,7 +206,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var (
-		UpHost      = ""
+		upHost      = ""
 		resumeAPIV2 = false
 	)
 	info := operations.SyncInfo{}
@@ -140,8 +215,49 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Sync big file to qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SyncType
-			cfg.CmdCfg.Up.UpHost = data.NewString(UpHost)
-			cfg.CmdCfg.Up.ResumableAPIV2 = data.NewBool(resumeAPIV2)
+			cfg.CmdCfg.Up = &config.Up{
+				LogSetting:             nil,
+				UpHost:                 data.NewString(upHost),
+				FileEncoding:           nil,
+				Bucket:                 nil,
+				ResumableAPIV2:         data.NewBool(resumeAPIV2),
+				ResumableAPIV2PartSize: nil,
+				PutThreshold:           nil,
+				Overwrite:              nil,
+				CheckExists:            nil,
+				CheckHash:              nil,
+				CheckSize:              nil,
+				FileType:               nil,
+				DeleteOnSuccess:        nil,
+				DisableResume:          data.NewBool(true),
+				DisableForm:            nil,
+				WorkerCount:            nil,
+				Policy: &storage.PutPolicy{
+					Scope:               "",
+					Expires:             0,
+					IsPrefixalScope:     0,
+					InsertOnly:          0,
+					DetectMime:          0,
+					FsizeMin:            0,
+					FsizeLimit:          0,
+					MimeLimit:           "",
+					ForceSaveKey:        false,
+					SaveKey:             "",
+					CallbackFetchKey:    0,
+					CallbackURL:         "",
+					CallbackHost:        "",
+					CallbackBody:        "",
+					CallbackBodyType:    "",
+					ReturnURL:           "",
+					ReturnBody:          "",
+					PersistentOps:       "",
+					PersistentNotifyURL: "",
+					PersistentPipeline:  "",
+					EndUser:             "",
+					DeleteAfterDays:     0,
+					FileType:            0,
+				},
+			}
 			if len(args) > 0 {
 				info.FilePath = args[0]
 			}
@@ -153,15 +269,17 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&info.Key, "key", "k", "", "save as <key> in bucket")
 	cmd.Flags().BoolVarP(&resumeAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
-	cmd.Flags().StringVarP(&UpHost, "uphost", "u", "", "upload host")
+	cmd.Flags().StringVarP(&upHost, "uphost", "u", "", "upload host")
 	return cmd
 }
 
 var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var (
-		UpHost    = ""
-		FileType  = 0
-		Overwrite = false
+		upHost       = ""
+		fileType     = 0
+		overwrite    = false
+		callbackUrl  = ""
+		callbackHost = ""
 	)
 
 	info := operations.UploadInfo{}
@@ -170,10 +288,49 @@ var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Form upload a local file",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.FormPutType
-			cfg.CmdCfg.Up.DisableResume = data.NewBool(true)
-			cfg.CmdCfg.Up.Overwrite = data.NewBool(Overwrite)
-			cfg.CmdCfg.Up.FileType = data.NewInt(FileType)
-			cfg.CmdCfg.Up.UpHost = data.NewString(UpHost)
+			cfg.CmdCfg.Up = &config.Up{
+				LogSetting:             nil,
+				UpHost:                 data.NewString(upHost),
+				FileEncoding:           nil,
+				Bucket:                 nil,
+				ResumableAPIV2:         nil,
+				ResumableAPIV2PartSize: nil,
+				PutThreshold:           nil,
+				Overwrite:              data.NewBool(overwrite),
+				CheckExists:            nil,
+				CheckHash:              nil,
+				CheckSize:              nil,
+				FileType:               data.NewInt(fileType),
+				DeleteOnSuccess:        nil,
+				DisableResume:          data.NewBool(true),
+				DisableForm:            nil,
+				WorkerCount:            nil,
+				Policy: &storage.PutPolicy{
+					Scope:               "",
+					Expires:             0,
+					IsPrefixalScope:     0,
+					InsertOnly:          0,
+					DetectMime:          0,
+					FsizeMin:            0,
+					FsizeLimit:          0,
+					MimeLimit:           "",
+					ForceSaveKey:        false,
+					SaveKey:             "",
+					CallbackFetchKey:    0,
+					CallbackURL:         callbackUrl,
+					CallbackHost:        callbackHost,
+					CallbackBody:        "",
+					CallbackBodyType:    "",
+					ReturnURL:           "",
+					ReturnBody:          "",
+					PersistentOps:       "",
+					PersistentNotifyURL: "",
+					PersistentPipeline:  "",
+					EndUser:             "",
+					DeleteAfterDays:     0,
+					FileType:            0,
+				},
+			}
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -186,12 +343,14 @@ var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.UploadFile(cfg, info)
 		},
 	}
-	cmd.Flags().BoolVar(&Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
+	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
-	cmd.Flags().IntVarP(&FileType, "storage", "s", 0, "storage type")
-	cmd.Flags().StringVarP(&UpHost, "up-host", "u", "", "uphost")
+	cmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
+	cmd.Flags().StringVarP(&upHost, "up-host", "u", "", "uphost")
 	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
+	cmd.Flags().StringVarP(&callbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	cmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 
 	return cmd
 }
@@ -204,6 +363,8 @@ var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		WorkerCount                  = 16
 		UpHost                       = ""
 		ResumableAPIV2PartSize int64 = data.BLOCK_SIZE
+		callbackUrl                  = ""
+		callbackHost                 = ""
 	)
 	info := operations.UploadInfo{}
 	cmd := &cobra.Command{
@@ -211,13 +372,49 @@ var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Resumable upload a local file",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.RPutType
-			cfg.CmdCfg.Up.DisableForm = data.NewBool(true)
-			cfg.CmdCfg.Up.ResumableAPIV2 = data.NewBool(resumeAPIV2)
-			cfg.CmdCfg.Up.Overwrite = data.NewBool(overwrite)
-			cfg.CmdCfg.Up.ResumableAPIV2PartSize = data.NewInt64(ResumableAPIV2PartSize)
-			cfg.CmdCfg.Up.FileType = data.NewInt(FileType)
-			cfg.CmdCfg.Up.WorkerCount = data.NewInt(WorkerCount)
-			cfg.CmdCfg.Up.UpHost = data.NewString(UpHost)
+			cfg.CmdCfg.Up = &config.Up{
+				LogSetting:             nil,
+				UpHost:                 data.NewString(UpHost),
+				FileEncoding:           nil,
+				Bucket:                 nil,
+				ResumableAPIV2:         data.NewBool(resumeAPIV2),
+				ResumableAPIV2PartSize: data.NewInt64(ResumableAPIV2PartSize),
+				PutThreshold:           nil,
+				Overwrite:              data.NewBool(overwrite),
+				CheckExists:            nil,
+				CheckHash:              nil,
+				CheckSize:              nil,
+				FileType:               data.NewInt(FileType),
+				DeleteOnSuccess:        nil,
+				DisableResume:          nil,
+				DisableForm:            data.NewBool(true),
+				WorkerCount:            data.NewInt(WorkerCount),
+				Policy: &storage.PutPolicy{
+					Scope:               "",
+					Expires:             0,
+					IsPrefixalScope:     0,
+					InsertOnly:          0,
+					DetectMime:          0,
+					FsizeMin:            0,
+					FsizeLimit:          0,
+					MimeLimit:           "",
+					ForceSaveKey:        false,
+					SaveKey:             "",
+					CallbackFetchKey:    0,
+					CallbackURL:         callbackUrl,
+					CallbackHost:        callbackHost,
+					CallbackBody:        "",
+					CallbackBodyType:    "",
+					ReturnURL:           "",
+					ReturnBody:          "",
+					PersistentOps:       "",
+					PersistentNotifyURL: "",
+					PersistentPipeline:  "",
+					EndUser:             "",
+					DeleteAfterDays:     0,
+					FileType:            0,
+				},
+			}
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -232,15 +429,15 @@ var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
+
 	cmd.Flags().BoolVarP(&resumeAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "overwrite the file of same key in bucket")
-
 	cmd.Flags().Int64VarP(&ResumableAPIV2PartSize, "v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
 	cmd.Flags().IntVarP(&FileType, "storage", "s", 0, "storage type")
 	cmd.Flags().IntVarP(&WorkerCount, "worker", "c", 16, "worker count")
 	cmd.Flags().StringVarP(&UpHost, "up-host", "u", "", "uphost")
-	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
-	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
+	cmd.Flags().StringVarP(&callbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	cmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 	return cmd
 }
 

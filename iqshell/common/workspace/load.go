@@ -93,8 +93,8 @@ func Load(info LoadInfo) (err error) {
 	cfg = resultCfg
 
 	log.DebugF("cmd    config:\n%v", info.CmdConfig)
-	log.DebugF("user   config:\n%v", config.GetUser())
-	log.DebugF("global config:\n%v", config.GetGlobal())
+	log.DebugF("user   config(%s):\n%v",info.UserConfigPath, config.GetUser())
+	log.DebugF("global config(%s):\n%v",info.globalConfigPath, config.GetGlobal())
 	log.DebugF("final  config:\n%v", cfg)
 
 	err = checkConfig(cfg)

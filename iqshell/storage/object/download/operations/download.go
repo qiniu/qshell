@@ -13,11 +13,15 @@ import (
 )
 
 type DownloadInfo struct {
+	Bucket string // 文件被保存的 bucket
 	Key    string // 文件被保存的 key
 	ToFile string // 文件保存的路径
 }
 
 func (info *DownloadInfo) Check() error {
+	if len(info.Bucket) == 0 {
+		return alert.CannotEmptyError("Bucket", "")
+	}
 	if len(info.Key) == 0 {
 		return alert.CannotEmptyError("Key", "")
 	}
@@ -39,7 +43,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	downloadCfg := workspace.GetConfig().Download
 	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig())
 	if len(downloadDomain) == 0 && len(downloadHost) == 0 {
-		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", downloadCfg.Bucket)
+		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", downloadCfg.Bucket.Value())
 		return
 	}
 
@@ -53,7 +57,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		StatusDBPath:   "",
 		Referer:        downloadCfg.Referer.Value(),
 		FileEncoding:   downloadCfg.FileEncoding.Value(),
-		Bucket:         downloadCfg.Bucket.Value(),
+		Bucket:         info.Bucket,
 		Key:            info.Key,
 		FileModifyTime: 0,
 		FileSize:       0,

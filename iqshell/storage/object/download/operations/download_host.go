@@ -37,7 +37,7 @@ func getDownloadDomain(cfg *config.Config) string {
 
 	// 3. 动态获取 bucket 绑定的 domain
 	b := cfg.Download.Bucket.Value()
-	log.DebugF(" get domain of bucket:%s", b)
+	log.DebugF("get domain of bucket:%s", b)
 	if d, e := bucket.DomainOfBucket(b); e != nil {
 		log.DebugF("get bucket:%s domain error:%v", b, e)
 	} else {
@@ -48,9 +48,9 @@ func getDownloadDomain(cfg *config.Config) string {
 	}
 
 	// 4. 通过 uc query 查询 bucket 所在的 region，并从 region 获取 ioHost
-	log.DebugF(" get region of bucket:%s", b)
+	log.DebugF("get region of bucket:%s", b)
 	if region, err := bucket.Region(cfg.Download.Bucket.Value()); err != nil {
-		log.DebugF(" get region of bucket:%s err:%v", b, err)
+		log.DebugF("get region of bucket:%s err:%v", b, err)
 	} else {
 		domain = region.IovipHost
 	}

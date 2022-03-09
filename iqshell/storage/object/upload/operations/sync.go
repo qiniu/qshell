@@ -15,6 +15,9 @@ func (info *SyncInfo) Check() error {
 	if len(info.FilePath) == 0 {
 		return alert.CannotEmptyError("SrcResUrl", "")
 	}
+	if !utils.IsNetworkSource(info.FilePath) {
+		return alert.Error("sync only for network source", "")
+	}
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}

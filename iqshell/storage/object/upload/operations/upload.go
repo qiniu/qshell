@@ -38,6 +38,9 @@ func (info *UploadInfo) Check() error {
 	if len(info.FilePath) == 0 {
 		return alert.CannotEmptyError("LocalFile", "")
 	}
+	if utils.IsNetworkSource(info.FilePath) {
+		return alert.Error("file can't be network source", "")
+	}
 	return nil
 }
 

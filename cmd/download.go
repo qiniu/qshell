@@ -47,7 +47,7 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			cfg.CmdCfg.Download.IoHost = data.NewString(ioHost)
 			cfg.CmdCfg.Download.GetFileApi = data.NewBool(getFileApi)
 			if len(args) > 0 {
-				cfg.CmdCfg.Download.Bucket = data.NewString(args[0])
+				info.Bucket = args[0]
 			}
 			if len(args) > 1 {
 				info.Key = args[1]
