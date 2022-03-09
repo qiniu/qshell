@@ -48,6 +48,12 @@ func defaultConfig() *config.Config {
 				DeleteAfterDays:     0,
 				FileType:            0,
 			},
+			LogSetting: &config.LogSetting{
+				LogLevel:  data.NewString(config.InfoKey),
+				LogFile:   nil,
+				LogRotate: data.NewInt(7),
+				LogStdout: data.NewBool(true),
+			},
 			Tasks: &config.Tasks{
 				ConcurrentCount:       data.NewInt(3),
 				StopWhenOneTaskFailed: data.NewBool(false),
@@ -58,6 +64,12 @@ func defaultConfig() *config.Config {
 			},
 		},
 		Download: &config.Download{
+			LogSetting: &config.LogSetting{
+				LogLevel:  data.NewString(config.InfoKey),
+				LogFile:   nil,
+				LogRotate: data.NewInt(7),
+				LogStdout: data.NewBool(true),
+			},
 			Tasks: &config.Tasks{
 				ConcurrentCount:       data.NewInt(3),
 				StopWhenOneTaskFailed: data.NewBool(false),

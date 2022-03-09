@@ -22,11 +22,7 @@ have already in local disk and need to skip download or not.`,
 			if len(args) > 0 {
 				cfg.DownloadConfigFile = args[0]
 			}
-			cfg.CmdCfg.Download.LogSetting = &config.LogSetting{
-				LogLevel:  data.NewString(config.InfoKey),
-				LogFile:   nil,
-				LogRotate: nil,
-				LogStdout: data.NewBool(true),
+			cfg.CmdCfg.Download = &config.Download{
 			}
 			operations.BatchDownload(cfg, info)
 		},
@@ -44,8 +40,31 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Download a single file from bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.GetType
-			cfg.CmdCfg.Download.IoHost = data.NewString(ioHost)
-			cfg.CmdCfg.Download.GetFileApi = data.NewBool(getFileApi)
+			cfg.CmdCfg.Download = &config.Download{
+				LogSetting:   &config.LogSetting{
+					LogLevel:  nil,
+					LogFile:   nil,
+					LogRotate: nil,
+					LogStdout: nil,
+				},
+				ThreadCount:  nil,
+				FileEncoding: nil,
+				KeyFile:      nil,
+				DestDir:      nil,
+				Bucket:       nil,
+				Prefix:       nil,
+				Suffixes:     nil,
+				IoHost:       data.NewString(ioHost),
+				Public:       nil,
+				CheckHash:    nil,
+				Referer:      nil,
+				CdnDomain:    nil,
+				GetFileApi:   data.NewBool(getFileApi),
+				RecordRoot:   nil,
+				BatchNum:     nil,
+				Tasks:        nil,
+				Retry:        nil,
+			}
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}

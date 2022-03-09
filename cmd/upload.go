@@ -347,8 +347,6 @@ var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
 	cmd.Flags().IntVarP(&fileType, "storage", "s", 0, "storage type")
 	cmd.Flags().StringVarP(&upHost, "up-host", "u", "", "uphost")
-	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
-	cmd.Flags().StringVarP(&cfg.CmdCfg.Up.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
 	cmd.Flags().StringVarP(&callbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&callbackHost, "callback-host", "T", "", "upload callback host")
 

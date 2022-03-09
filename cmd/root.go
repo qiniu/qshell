@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/version"
@@ -65,22 +64,7 @@ func Execute() {
 		DDebugEnable:   false,
 		ConfigFilePath: "",
 		Local:          false,
-		CmdCfg: config.Config{
-			Credentials: nil,
-			UseHttps:    nil,
-			Hosts:       &config.Hosts{},
-			Up: &config.Up{
-				LogSetting: &config.LogSetting{},
-				Tasks:      &config.Tasks{},
-				Retry:      &config.Retry{},
-				Policy:     &storage.PutPolicy{},
-			},
-			Download: &config.Download{
-				LogSetting: &config.LogSetting{},
-				Tasks:      &config.Tasks{},
-				Retry:      &config.Retry{},
-			},
-		},
+		CmdCfg: config.Config{},
 	}
 
 	rootCmd := rootCmdBuilder(cfg)
