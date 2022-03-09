@@ -51,7 +51,7 @@ func GetLogConfig() *config.LogSetting {
 		if data.Empty(cfg.Up.LogSetting.LogFile) {
 			cachePath := UploadCachePath()
 			if len(cachePath) > 0 {
-				cfg.Up.LogSetting.LogFile = data.NewString(filepath.Join(cachePath, cfg.Up.JobId()))
+				cfg.Up.LogSetting.LogFile = data.NewString(filepath.Join(cachePath, cfg.Up.JobId()+".log"))
 			}
 		}
 		return cfg.Up.LogSetting
@@ -64,7 +64,7 @@ func GetLogConfig() *config.LogSetting {
 		if data.Empty(cfg.Download.LogSetting.LogFile) {
 			cachePath := DownloadCachePath()
 			if len(cachePath) > 0 {
-				cfg.Download.LogSetting.LogFile = data.NewString(filepath.Join(cachePath, cfg.Download.JobId()))
+				cfg.Download.LogSetting.LogFile = data.NewString(filepath.Join(cachePath, cfg.Download.JobId()+".log"))
 			}
 		}
 		return cfg.Download.LogSetting

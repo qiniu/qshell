@@ -157,7 +157,7 @@ func (up *Up) merge(from *Up) {
 	up.WorkerCount = data.GetNotEmptyIntIfExist(up.WorkerCount, from.WorkerCount)
 	up.RecordRoot = data.GetNotEmptyStringIfExist(up.RecordRoot, from.RecordRoot)
 
-	if from.Tasks != nil {
+	if from.LogSetting != nil {
 		if up.LogSetting == nil {
 			up.LogSetting = &LogSetting{}
 		}

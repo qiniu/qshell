@@ -42,7 +42,7 @@ func (d *Download) merge(from *Download) {
 		return
 	}
 
-	if from.Tasks != nil {
+	if from.LogSetting != nil {
 		if d.LogSetting == nil {
 			d.LogSetting = &LogSetting{}
 		}

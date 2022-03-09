@@ -19,6 +19,9 @@ func getDownloadDomainAndHost(cfg *config.Config) (domain string, host string) {
 			host = h
 		}
 	}
+	if len(domain) == 0 {
+		domain = host
+	}
 	return
 }
 

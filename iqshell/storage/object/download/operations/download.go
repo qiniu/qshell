@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -41,6 +42,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	}
 
 	downloadCfg := workspace.GetConfig().Download
+	downloadCfg.Bucket = data.NewString(info.Bucket)
 	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig())
 	if len(downloadDomain) == 0 && len(downloadHost) == 0 {
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", downloadCfg.Bucket.Value())

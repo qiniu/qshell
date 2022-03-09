@@ -16,7 +16,7 @@ func TestGet(t *testing.T) {
 	}
 	path := filepath.Join(resultPath, test.Key)
 	_, errs := test.RunCmdWithError("get", test.Bucket, test.Key,
-		"-o", path, "-C", "/Users/senyang/.qshell_test.json")
+		"-o", path)
 	defer test.RemoveFile(path)
 
 	if len(errs) > 0 {
@@ -58,7 +58,7 @@ func TestGetNoExistDomain(t *testing.T) {
 
 func TestGetNoExistBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("get", test.BucketNotExist, test.Key)
-	if !strings.Contains(errs, "Get domains of bucket error:") {
+	if !strings.Contains(errs, "get download domain error:") {
 		t.Fail()
 	}
 }

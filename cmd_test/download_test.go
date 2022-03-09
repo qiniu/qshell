@@ -29,7 +29,6 @@ func TestDownloadWithKeyFile(t *testing.T) {
 		CheckHash:   data.NewBool(true),
 		Referer:     data.NewString(""),
 		CdnDomain:   data.NewString(""),
-		UseHttps:    data.NewBool(true),
 		BatchNum:    data.NewInt(0),
 		RecordRoot:  data.NewString(""),
 	}
@@ -67,7 +66,6 @@ func TestDownloadFromBucket(t *testing.T) {
 		CheckHash:   data.NewBool(true),
 		Referer:     data.NewString(""),
 		CdnDomain:   data.NewString(""),
-		UseHttps:    data.NewBool(true),
 		BatchNum:    data.NewInt(0),
 		RecordRoot:  data.NewString(""),
 	}
@@ -109,7 +107,6 @@ func TestDownloadNoBucket(t *testing.T) {
 		CheckHash:   data.NewBool(true),
 		Referer:     data.NewString(""),
 		CdnDomain:   data.NewString(""),
-		UseHttps:    data.NewBool(true),
 		BatchNum:    data.NewInt(0),
 		RecordRoot:  data.NewString(""),
 	}
@@ -140,7 +137,6 @@ func TestDownloadNoDomain(t *testing.T) {
 		CheckHash:   data.NewBool(true),
 		Referer:     data.NewString(""),
 		CdnDomain:   data.NewString(""),
-		UseHttps:    data.NewBool(true),
 		BatchNum:    data.NewInt(0),
 		RecordRoot:  data.NewString(""),
 	}

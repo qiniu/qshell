@@ -16,9 +16,6 @@ func defaultConfig() *config.Config {
 		},
 		UseHttps: data.NewBool(true),
 		Hosts: &config.Hosts{
-			//Rs:  []string{"rs.qiniu.com"},
-			//Rsf: []string{"rsf.qiniu.com"},
-			//Api: []string{"api.qiniu.com"},
 			UC: []string{"uc.qbox.me"},
 		},
 		Up: &config.Up{
