@@ -1,5 +1,7 @@
 package config
 
+import "github.com/qiniu/qshell/v2/iqshell/common/utils"
+
 type Hosts struct {
 	UC  []string `json:"uc,omitempty"`
 	Api []string `json:"api,omitempty"`
@@ -34,11 +36,24 @@ func (h *Hosts) GetOneUp() string {
 }
 
 func getOneHostFromStringArray(hosts []string) string {
+	hosts = getRealHosts(hosts)
 	if len(hosts) > 0 {
 		return hosts[0]
 	} else {
 		return ""
 	}
+}
+
+func getRealHosts(hosts []string) []string {
+	if hosts == nil {
+		return nil
+	}
+
+	newHosts := make([]string, 0, len(hosts))
+	for _, host := range hosts{
+		newHosts = append(newHosts, utils.RemoveUrlScheme(host))
+	}
+	return newHosts
 }
 
 func (h *Hosts) merge(from *Hosts) {
@@ -47,26 +62,26 @@ func (h *Hosts) merge(from *Hosts) {
 	}
 
 	if len(h.UC) == 0 {
-		h.UC = from.UC
+		h.UC = getRealHosts(from.UC)
 	}
 
 	if len(h.Api) == 0 {
-		h.Api = from.Api
+		h.Api = getRealHosts(from.Api)
 	}
 
 	if len(h.Rsf) == 0 {
-		h.Rsf = from.Rsf
+		h.Rsf = getRealHosts(from.Rsf)
 	}
 
 	if len(h.Rs) == 0 {
-		h.Rs = from.Rs
+		h.Rs = getRealHosts(from.Rs)
 	}
 
 	if len(h.Io) == 0 {
-		h.Io = from.Io
+		h.Io = getRealHosts(from.Io)
 	}
 
 	if len(h.Up) == 0 {
-		h.Up = from.Up
+		h.Up = getRealHosts(from.Up)
 	}
 }

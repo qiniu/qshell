@@ -37,13 +37,16 @@ func (g *getFileApiDownloader) download(info ApiInfo) (response *http.Response, 
 	}
 
 	if len(info.Domain) == 0 {
-		log.Error("get file api: can't get io domain")
-		return
+		if len(info.Host) == 0 {
+			err = errors.New("get file api: can't get io domain")
+			return
+		}
+		info.Domain = info.Host
 	}
 
 	// /getfile/<ak>/<bucket>/<UrlEncodedKey>[?e=<Deadline>&token=<DownloadToken>
 	url := utils.Endpoint(g.useHttps, info.Domain)
-	url = strings.Join([]string{url, "getfile", g.mac.AccessKey, info.Bucket, utils.Encode(info.Key)}, "/")
+	url = strings.Join([]string{url, "getfile", g.mac.AccessKey, info.Bucket, info.Key}, "/")
 	url, err = PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
 		PublicUrl: url,
 		Deadline:  7 * 24 * 3600,
@@ -67,5 +70,6 @@ func (g *getFileApiDownloader) download(info ApiInfo) (response *http.Response, 
 	if len(info.Referer) > 0 {
 		req.Header.Add("Referer", info.Referer)
 	}
+	log.DebugF("request:\n%+v", req)
 	return http.DefaultClient.Do(req)
 }

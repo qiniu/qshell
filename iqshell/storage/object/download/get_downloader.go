@@ -30,8 +30,11 @@ func (g *getDownloader) Download(info ApiInfo) (response *http.Response, err err
 	}
 
 	if len(info.Domain) == 0 {
-		err = errors.New("download: get bucket domain: can't get bucket domain")
-		return
+		if len(info.Host) == 0 {
+			err = errors.New("download: get bucket domain: can't get bucket domain")
+			return
+		}
+		info.Domain = info.Host
 	}
 
 	url := ""
@@ -57,8 +60,8 @@ func (g *getDownloader) Download(info ApiInfo) (response *http.Response, err err
 		return nil, errors.New("New request failed by url:" + url + " error:" + err.Error())
 	}
 	// set host
-	if len(info.Domain) > 0 {
-		req.Host = info.Domain
+	if len(info.Host) > 0 {
+		req.Host = info.Host
 	}
 	// 设置断点续传
 	if info.FromBytes > 0 {
@@ -68,5 +71,6 @@ func (g *getDownloader) Download(info ApiInfo) (response *http.Response, err err
 	if len(info.Referer) > 0 {
 		req.Header.Add("Referer", info.Referer)
 	}
+	log.DebugF("request:\n%+v", req)
 	return http.DefaultClient.Do(req)
 }

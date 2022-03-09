@@ -16,6 +16,7 @@ import (
 type ApiInfo struct {
 	IsPublic       bool              // 是否使用共有链接 【必填】
 	Domain         string            // 文件下载的 domain 【必填】
+	Host           string            // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
 	ToFile         string            // 文件保存的路径 【必填】
 	StatusDBPath   string            // 下载状态缓存的 db 路径 【选填】
 	Referer        string            // 请求 header 中的 Referer 【选填】

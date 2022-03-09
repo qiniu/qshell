@@ -52,10 +52,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}
 
 	downloadDomain := downloadCfg.DownloadDomain()
-	if len(downloadDomain) == 0 {
-		downloadDomain, _ = bucket.DomainOfBucket(downloadCfg.Bucket.Value())
-	}
-	if len(downloadDomain) == 0 {
+	downloadHost, _ := bucket.DomainOfBucket(downloadCfg.Bucket.Value())
+	if len(downloadDomain) == 0 && len(downloadHost) == 0 {
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", downloadCfg.Bucket)
 		return
 	}
@@ -123,6 +121,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		apiInfo := work.(*download.ApiInfo)
 		apiInfo.Domain = downloadDomain
+		apiInfo.Host = downloadHost
 		apiInfo.ToFile = filepath.Join(downloadCfg.DestDir.Value(), apiInfo.Key)
 		apiInfo.StatusDBPath = dbPath
 		apiInfo.Referer = downloadCfg.Referer.Value()

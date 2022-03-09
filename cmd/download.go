@@ -53,7 +53,7 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&info.ToFile, "outfile", "o", "", "save file as specified by this option")
-	cmd.Flags().StringVarP(&info.Domain, "domain", "", "", "domain of server")
+	cmd.Flags().StringVarP(&info.Host, "domain", "", "", "domain of request")
 	cmd.Flags().BoolVarP(&info.UserGetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")
 
 	return cmd
