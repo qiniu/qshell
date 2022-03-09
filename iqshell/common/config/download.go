@@ -89,7 +89,7 @@ func (d *Download) JobId() string {
 }
 
 func (d *Download) Check() error {
-	if data.Empty(d.Bucket) && data.Empty(d.KeyFile) {
+	if data.Empty(d.Bucket) {
 		return alert.CannotEmptyError("bucket", "")
 	}
 
