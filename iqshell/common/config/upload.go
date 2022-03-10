@@ -247,14 +247,14 @@ func (up *Up) Check() error {
 		return fmt.Errorf("SrcDir should be a directory: %s", *up.SrcDir)
 	}
 
-	if !data.Empty(up.FileList) {
+	if data.NotEmpty(up.FileList) {
 		fileListInfo, err := os.Stat(up.FileList.Value())
 		if err != nil {
-			return errors.New("invalid FileList:" + err.Error())
+			return fmt.Errorf("invalid FileList:%s error:%v", up.FileList.Value(), err.Error())
 		}
 
 		if fileListInfo.IsDir() {
-			return fmt.Errorf("FileList should be a file: %s", *up.FileList)
+			return fmt.Errorf("FileList should be a file: %s", up.FileList.Value())
 		}
 	}
 

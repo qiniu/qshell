@@ -1,8 +1,8 @@
 package operations
 
 import (
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -19,8 +19,10 @@ import (
 )
 
 type BatchUploadInfo struct {
-	// 输入文件通过 upload config 输入
-	GroupInfo group.Info
+	GroupInfo        group.Info
+	UploadConfigFile string
+	CallbackHost     string
+	CallbackUrl      string
 }
 
 func (info *BatchUploadInfo) Check() error {
@@ -44,15 +46,54 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 		return
 	}
 
-	if len(cfg.UploadConfigFile) == 0 {
+	if len(info.UploadConfigFile) == 0 {
 		log.Error("LocalDownloadConfig can't empty")
 		return
 	}
 
-	batchUpload(info)
+	upload2Info := BatchUpload2Info{
+		GroupInfo: info.GroupInfo,
+		UploadConfig: UploadConfig{
+			Policy: &storage.PutPolicy{
+				CallbackURL:  info.CallbackUrl,
+				CallbackHost: info.CallbackHost,
+			},
+		},
+	}
+	if err := utils.UnMarshalFromFile(info.UploadConfigFile, &upload2Info.UploadConfig); err != nil {
+		log.ErrorF("UnMarshal: read upload config error:%v config file:%s", err, info.UploadConfigFile)
+		return
+	}
+	if err := utils.UnMarshalFromFile(info.UploadConfigFile, &cfg.CmdCfg.Log); err != nil {
+		log.ErrorF("UnMarshal: read log setting error:%v config file:%s", err, info.UploadConfigFile)
+		return
+	}
+
+	BatchUpload2(cfg, upload2Info)
 }
 
-func BatchUpload2(cfg *iqshell.Config, info BatchUploadInfo) {
+type BatchUpload2Info struct {
+	// 输入文件通过 upload config 输入
+	GroupInfo group.Info
+	UploadConfig
+}
+
+func (info *BatchUpload2Info) Check() error {
+	if info.GroupInfo.WorkCount < 1 || info.GroupInfo.WorkCount > 2000 {
+		info.GroupInfo.WorkCount = 5
+		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
+			info.GroupInfo.Info.WorkCount)
+	}
+	if err := info.GroupInfo.Check(); err != nil {
+		return err
+	}
+	if err := info.UploadConfig.Check(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
@@ -62,36 +103,29 @@ func BatchUpload2(cfg *iqshell.Config, info BatchUploadInfo) {
 	batchUpload(info)
 }
 
-func batchUpload(info BatchUploadInfo) {
+func batchUpload(info BatchUpload2Info) {
+	log.AlertF("Writing upload log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
 
-	uploadConfig := workspace.GetConfig().Up
-	if err := uploadConfig.Check(); err != nil {
-		log.ErrorF("batch upload:%v", err)
-		return
-	}
-
-	log.AlertF("Writing upload log to file:%s \n\n", uploadConfig.LogFile.Value())
-
-	jobId := uploadConfig.JobId()
-	cachePath := workspace.UploadCachePath()
+	jobId := info.JobId()
+	cachePath := uploadCachePath(workspace.GetConfig(), &info.UploadConfig)
 	dbPath := filepath.Join(cachePath, jobId+".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
 
 	// 扫描本地文件
 	needScanLocal := false
 
-	if data.Empty(uploadConfig.FileList) {
+	if data.Empty(info.FileList) {
 		needScanLocal = true
 	} else {
-		if _, err := os.Stat(uploadConfig.FileList.Value()); err == nil {
+		if _, err := os.Stat(info.FileList); err == nil {
 			// 存在 file list 无需再重新扫描
 			needScanLocal = false
-			info.GroupInfo.InputFile = uploadConfig.FileList.Value()
+			info.GroupInfo.InputFile = info.FileList
 		} else {
 			info.GroupInfo.InputFile = filepath.Join(cachePath, jobId+".cache")
 			if _, statErr := os.Stat(info.GroupInfo.InputFile); statErr == nil {
 				//file exists
-				needScanLocal = uploadConfig.IsRescanLocal()
+				needScanLocal = info.IsRescanLocal()
 			} else {
 				needScanLocal = true
 			}
@@ -99,7 +133,7 @@ func batchUpload(info BatchUploadInfo) {
 	}
 
 	if needScanLocal {
-		if data.Empty(uploadConfig.SrcDir) {
+		if data.Empty(info.SrcDir) {
 			log.ErrorF("scan error: src dir was empty")
 			return
 		}
@@ -108,17 +142,17 @@ func batchUpload(info BatchUploadInfo) {
 			info.GroupInfo.InputFile = filepath.Join(cachePath, jobId+".cache")
 		}
 
-		_, err := utils.DirCache(uploadConfig.SrcDir.Value(), info.GroupInfo.InputFile)
+		_, err := utils.DirCache(info.SrcDir, info.GroupInfo.InputFile)
 		if err != nil {
 			log.ErrorF("create dir files cache error:%v", err)
 			return
 		}
 	}
 
-	batchUploadFlow(info, uploadConfig, dbPath)
+	batchUploadFlow(info, info.UploadConfig, dbPath)
 }
 
-func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath string) {
+func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath string) {
 	handler, err := group.NewHandler(info.GroupInfo)
 	if err != nil {
 		log.Error(err)
@@ -194,29 +228,47 @@ func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath strin
 		}
 		//check prefix
 		if data.NotEmpty(uploadConfig.KeyPrefix) {
-			key = strings.Join([]string{uploadConfig.KeyPrefix.Value(), key}, "")
+			key = strings.Join([]string{uploadConfig.KeyPrefix, key}, "")
 		}
 		//convert \ to / under windows
 		if utils.IsWindowsOS() {
 			key = strings.Replace(key, "\\", "/", -1)
 		}
 		//check file encoding
-		if data.NotEmpty(uploadConfig.FileEncoding) && utils.IsGBKEncoding(uploadConfig.FileEncoding.Value()) {
+		if data.NotEmpty(uploadConfig.FileEncoding) && utils.IsGBKEncoding(uploadConfig.FileEncoding) {
 			key, _ = utils.Gbk2Utf8(key)
 		}
 
-		localFilePath := filepath.Join(uploadConfig.SrcDir.Value(), fileRelativePath)
+		localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
 		apiInfo := &UploadInfo{
-			FilePath:         localFilePath,
-			Bucket:           uploadConfig.Bucket.Value(),
-			Key:              key,
-			MimeType:         "",
-			FileStatusDBPath: dbPath,
-			FileSize:         fileSize,
-			FileModifyTime:   modifyTime,
-			TokenProvider:    nil,
+			ApiInfo: upload.ApiInfo{
+				FilePath:         localFilePath,
+				ToBucket:         uploadConfig.Bucket,
+				SaveKey:          key,
+				MimeType:         "",
+				FileType:         uploadConfig.FileType,
+				CheckExist:       uploadConfig.CheckExists,
+				CheckHash:        uploadConfig.CheckHash,
+				CheckSize:        uploadConfig.CheckSize,
+				Overwrite:        uploadConfig.Overwrite,
+				UpHost:           uploadConfig.UpHost,
+				FileStatusDBPath: dbPath,
+				TokenProvider:    nil,
+				TryTimes:         3,
+				TryInterval:      500 * time.Millisecond,
+				FileSize:         fileSize,
+				FileModifyTime:   modifyTime,
+				DisableForm:      uploadConfig.DisableForm,
+				DisableResume:    uploadConfig.DisableResume,
+				UseResumeV2:      uploadConfig.ResumableAPIV2,
+				ChunkSize:        uploadConfig.ResumableAPIV2PartSize,
+				PutThreshold:     uploadConfig.PutThreshold,
+				Progress:         nil,
+			},
+			Policy:          uploadConfig.Policy,
+			DeleteOnSuccess: uploadConfig.DeleteOnSuccess,
 		}
-		apiInfo.TokenProvider = createTokenProviderWithMac(mac, uploadConfig, apiInfo)
+		apiInfo.TokenProvider = createTokenProviderWithMac(mac, apiInfo)
 		return apiInfo, hasMore
 	}).DoWork(func(work work.Work) (work.Result, error) {
 		syncLocker.Do(func() {
@@ -227,7 +279,7 @@ func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath strin
 		log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
 			float32(currentFileCount)*100/float32(totalFileCount))
 
-		res, err := uploadFile(*apiInfo)
+		res, err := uploadFile(apiInfo)
 
 		if err != nil {
 			return nil, err
@@ -237,11 +289,11 @@ func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath strin
 		apiInfo := work.(*UploadInfo)
 		res := result.(upload.ApiResult)
 		if res.IsOverWrite {
-			handler.Export().Override().ExportF("upload overwrite, %s => [%s:%s]", apiInfo.FilePath, apiInfo.Bucket, apiInfo.Key)
+			handler.Export().Override().ExportF("upload overwrite, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
 		} else if res.IsSkip {
 
 		} else {
-			handler.Export().Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.Bucket, apiInfo.Key)
+			handler.Export().Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
 		}
 
 		syncLocker.Do(func() {
@@ -274,7 +326,7 @@ func batchUploadFlow(info BatchUploadInfo, uploadConfig *config.Up, dbPath strin
 	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
 	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("---------------------------------------------")
-	log.AlertF("See upload log at path:%s \n\n", uploadConfig.LogFile.Value())
+	log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
 }
 
 type BatchUploadConfigMouldInfo struct {

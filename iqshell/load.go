@@ -22,7 +22,6 @@ type Config struct {
 	ConfigFilePath     string // 配置文件路径，用户可以指定配置文件
 	Local              bool   // 是否使用当前文件夹作为工作区
 	StdoutColorful     bool   // 控制台输出是否多彩
-	UploadConfigFile   string // 上传配置文件
 	CmdCfg             config.Config
 }
 
@@ -85,13 +84,6 @@ func load(cfg *Config) error {
 
 	// 配置 user agent
 	storage.UserAgent = utils.UserAgent()
-
-	// 合并上传配置
-	if len(cfg.UploadConfigFile) > 0 {
-		if err := utils.UnMarshalFromFile(cfg.UploadConfigFile, &cfg.CmdCfg.Up); err != nil {
-			return fmt.Errorf("read upload config error:%v config file:%s", err, cfg.UploadConfigFile)
-		}
-	}
 
 	// 加载工作区
 	if err := workspace.Load(workspace.LoadInfo{

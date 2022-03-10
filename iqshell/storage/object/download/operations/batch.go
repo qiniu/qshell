@@ -40,11 +40,11 @@ func BatchDownloadWithConfig(cfg *iqshell.Config, info BatchDownloadWithConfigIn
 		DownloadCfg: DownloadCfg{},
 	}
 	if err := utils.UnMarshalFromFile(info.LocalDownloadConfig, &downloadInfo.DownloadCfg); err != nil {
-		log.ErrorF("UnMarshal file:%s error:%v", info.LocalDownloadConfig, err)
+		log.ErrorF("UnMarshal: read download config error:%v config file:%s", info.LocalDownloadConfig, err)
 		return
 	}
 	if err := utils.UnMarshalFromFile(info.LocalDownloadConfig, cfg.CmdCfg.Log); err != nil {
-		log.ErrorF("UnMarshal file:%s error:%v", info.LocalDownloadConfig, err)
+		log.ErrorF("UnMarshal: read log setting error:%v config file:%s", info.LocalDownloadConfig, err)
 		return
 	}
 	BatchDownload(cfg, downloadInfo)

@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -18,19 +19,21 @@ func TestDownloadWithKeyFile(t *testing.T) {
 	}
 	defer test.RemoveFile(keysFilePath)
 
-	cfg := &config.Download{
-		ThreadCount: data.NewInt(4),
-		KeyFile:     data.NewString(keysFilePath),
-		Bucket:      data.NewString(test.Bucket),
-		Prefix:      data.NewString("hell"),
-		Suffixes:    data.NewString(".json"),
-		IoHost:      data.NewString(""),
-		Public:      data.NewBool(true),
-		CheckHash:   data.NewBool(true),
-		Referer:     data.NewString(""),
-		CdnDomain:   data.NewString(""),
-		BatchNum:    data.NewInt(0),
-		RecordRoot:  data.NewString(""),
+	cfg := &DownloadCfg{
+		DownloadCfg: operations.DownloadCfg{
+			ThreadCount: 4,
+			KeyFile:     keysFilePath,
+			Bucket:      test.Bucket,
+			Prefix:      "hell",
+			Suffixes:    ".json",
+			IoHost:      "",
+			Public:      true,
+			CheckHash:   true,
+			Referer:     "",
+			CdnDomain:   "",
+			BatchNum:    0,
+			RecordRoot:  "",
+		},
 	}
 	path, err := createDownloadConfigFile(cfg)
 	if err != nil {
@@ -39,7 +42,7 @@ func TestDownloadWithKeyFile(t *testing.T) {
 	defer test.RemoveFile(path)
 
 	test.RunCmdWithError("qdownload", "-c", "4", path)
-	if test.FileCountInDir(cfg.DestDir.Value()) < 2 {
+	if test.FileCountInDir(cfg.DestDir) < 2 {
 		t.Fail()
 	}
 
@@ -47,7 +50,7 @@ func TestDownloadWithKeyFile(t *testing.T) {
 		t.Fatal("log file should has content")
 	}
 
-	err = test.RemoveFile(cfg.DestDir.Value())
+	err = test.RemoveFile(cfg.DestDir)
 	if err != nil {
 		t.Log("remove file error:", err)
 	}
@@ -55,19 +58,21 @@ func TestDownloadWithKeyFile(t *testing.T) {
 }
 
 func TestDownloadFromBucket(t *testing.T) {
-	cfg := &config.Download{
-		ThreadCount: data.NewInt(4),
-		KeyFile:     data.NewString(""),
-		Bucket:      data.NewString(test.Bucket),
-		Prefix:      data.NewString("hello3,hello5,hello7"),
-		Suffixes:    data.NewString(""),
-		IoHost:      data.NewString(test.BucketDomain),
-		Public:      data.NewBool(true),
-		CheckHash:   data.NewBool(true),
-		Referer:     data.NewString(""),
-		CdnDomain:   data.NewString(""),
-		BatchNum:    data.NewInt(0),
-		RecordRoot:  data.NewString(""),
+	cfg := &DownloadCfg{
+		DownloadCfg: operations.DownloadCfg{
+			ThreadCount: 4,
+			KeyFile:     "",
+			Bucket:      test.Bucket,
+			Prefix:      "hello3,hello5,hello7",
+			Suffixes:    "",
+			IoHost:      test.BucketDomain,
+			Public:      true,
+			CheckHash:   true,
+			Referer:     "",
+			CdnDomain:   "",
+			BatchNum:    0,
+			RecordRoot:  "",
+		},
 	}
 	path, err := createDownloadConfigFile(cfg)
 	if err != nil {
@@ -75,12 +80,12 @@ func TestDownloadFromBucket(t *testing.T) {
 	}
 	defer func() {
 		test.RemoveFile(path)
-		test.RemoveFile(cfg.DestDir.Value())
+		test.RemoveFile(cfg.DestDir)
 		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
 	test.RunCmdWithError("qdownload", "-c", "4", path)
-	if test.FileCountInDir(cfg.DestDir.Value()) < 2 {
+	if test.FileCountInDir(cfg.DestDir) < 2 {
 		t.Fail()
 	}
 
@@ -88,7 +93,7 @@ func TestDownloadFromBucket(t *testing.T) {
 		t.Fatal("log file should has content")
 	}
 
-	err = test.RemoveFile(cfg.DestDir.Value())
+	err = test.RemoveFile(cfg.DestDir)
 	if err != nil {
 		t.Log("remove file error:", err)
 	}
@@ -96,19 +101,21 @@ func TestDownloadFromBucket(t *testing.T) {
 }
 
 func TestDownloadNoBucket(t *testing.T) {
-	cfg := &config.Download{
-		ThreadCount: data.NewInt(4),
-		KeyFile:     data.NewString(""),
-		Bucket:      data.NewString(""),
-		Prefix:      data.NewString("hello3,hello5,hello7"),
-		Suffixes:    data.NewString(""),
-		IoHost:      data.NewString(test.BucketDomain),
-		Public:      data.NewBool(true),
-		CheckHash:   data.NewBool(true),
-		Referer:     data.NewString(""),
-		CdnDomain:   data.NewString(""),
-		BatchNum:    data.NewInt(0),
-		RecordRoot:  data.NewString(""),
+	cfg := &DownloadCfg{
+		DownloadCfg: operations.DownloadCfg{
+			ThreadCount: 4,
+			KeyFile:     "",
+			Bucket:      "",
+			Prefix:      "hello3,hello5,hello7",
+			Suffixes:    "",
+			IoHost:      test.BucketDomain,
+			Public:      true,
+			CheckHash:   true,
+			Referer:     "",
+			CdnDomain:   "",
+			BatchNum:    0,
+			RecordRoot:  "",
+		},
 	}
 	path, err := createDownloadConfigFile(cfg)
 	if err != nil {
@@ -116,7 +123,7 @@ func TestDownloadNoBucket(t *testing.T) {
 	}
 	defer func() {
 		test.RemoveFile(path)
-		test.RemoveFile(cfg.DestDir.Value())
+		test.RemoveFile(cfg.DestDir)
 		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
@@ -128,17 +135,19 @@ func TestDownloadNoBucket(t *testing.T) {
 }
 
 func TestDownloadNoDomain(t *testing.T) {
-	cfg := &config.Download{
-		ThreadCount: data.NewInt(4),
-		Bucket:      data.NewString(test.Bucket),
-		Prefix:      data.NewString("hello3,hello5,hello7"),
-		Suffixes:    data.NewString(""),
-		Public:      data.NewBool(true),
-		CheckHash:   data.NewBool(true),
-		Referer:     data.NewString(""),
-		CdnDomain:   data.NewString(""),
-		BatchNum:    data.NewInt(0),
-		RecordRoot:  data.NewString(""),
+	cfg := &DownloadCfg{
+	 	DownloadCfg: operations.DownloadCfg{
+			ThreadCount: 4,
+			Bucket:      test.Bucket,
+			Prefix:      "hello3,hello5,hello7",
+			Suffixes:    "",
+			Public:      true,
+			CheckHash:   true,
+			Referer:     "",
+			CdnDomain:   "",
+			BatchNum:    0,
+			RecordRoot:  "",
+		},
 	}
 	path, err := createDownloadConfigFile(cfg)
 	if err != nil {
@@ -146,12 +155,12 @@ func TestDownloadNoDomain(t *testing.T) {
 	}
 	defer func() {
 		test.RemoveFile(path)
-		test.RemoveFile(cfg.DestDir.Value())
+		test.RemoveFile(cfg.DestDir)
 		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
 	test.RunCmdWithError("qdownload", "-c", "4", path)
-	if test.FileCountInDir(cfg.DestDir.Value()) < 2 {
+	if test.FileCountInDir(cfg.DestDir) < 2 {
 		t.Fail()
 	}
 
@@ -159,7 +168,7 @@ func TestDownloadNoDomain(t *testing.T) {
 		t.Fatal("log file should has content")
 	}
 
-	err = test.RemoveFile(cfg.DestDir.Value())
+	err = test.RemoveFile(cfg.DestDir)
 	if err != nil {
 		t.Log("remove file error:", err)
 	}
@@ -170,22 +179,20 @@ func TestDownloadDocument(t *testing.T) {
 	test.TestDocument("qdownload", t)
 }
 
-func createDownloadConfigFile(cfg *config.Download) (cfgPath string, err error) {
+func createDownloadConfigFile(cfg *DownloadCfg) (cfgPath string, err error) {
 	if data.Empty(cfg.DestDir) {
 		rootPath, err := test.RootPath()
 		if err != nil {
 			return "", errors.New("get root path error:" + err.Error())
 		}
-		cfg.DestDir = data.NewString(filepath.Join(rootPath, "download"))
-	} else if cfg.DestDir.Value() == "empty" {
-		cfg.DestDir = data.NewString("")
+		cfg.DestDir = filepath.Join(rootPath, "download")
+	} else if cfg.DestDir == "empty" {
+		cfg.DestDir = ""
 	}
-	cfg.LogSetting = &config.LogSetting{
-		LogLevel:  data.NewString(config.DebugKey),
-		LogFile:   data.NewString(filepath.Join(cfg.DestDir.Value(), "log.txt")),
-		LogRotate: data.NewInt(7),
-		LogStdout: data.NewBool(true),
-	}
+	cfg.LogLevel = data.NewString(config.DebugKey)
+	cfg.LogFile = data.NewString(filepath.Join(cfg.DestDir, "log.txt"))
+	cfg.LogRotate = data.NewInt(7)
+	cfg.LogStdout = data.NewBool(true)
 
 	data, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
@@ -197,4 +204,12 @@ func createDownloadConfigFile(cfg *config.Download) (cfgPath string, err error) 
 		err = errors.New("create cdn config file error:" + err.Error())
 	}
 	return cfgPath, err
+}
+
+type DownloadCfg struct {
+	operations.DownloadCfg
+	LogLevel  *data.String
+	LogFile   *data.String
+	LogRotate *data.Int
+	LogStdout *data.Bool
 }

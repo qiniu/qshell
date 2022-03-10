@@ -18,7 +18,7 @@ func (info *SyncInfo) Check() error {
 	if !utils.IsNetworkSource(info.FilePath) {
 		return alert.Error("sync only for network source", "")
 	}
-	if len(info.Bucket) == 0 {
+	if len(info.ToBucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
 	return nil
@@ -31,8 +31,8 @@ func SyncFile(cfg *iqshell.Config, info SyncInfo) {
 		return
 	}
 
-	ret, err := uploadFileWithProgress(UploadInfo(info), progress.NewPrintProgress(" 进度"))
-
+	info.Progress = progress.NewPrintProgress(" 进度")
+	ret, err := uploadFile((*UploadInfo)(&info))
 	if err != nil {
 		if v, ok := err.(*storage.ErrorInfo); ok {
 			log.ErrorF("Sync file error %d: %s, Reqid: %s", v.Code, v.Err, v.Reqid)

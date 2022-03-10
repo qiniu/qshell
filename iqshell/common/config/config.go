@@ -15,7 +15,7 @@ type Config struct {
 	UseHttps    *data.Bool        `json:"use_https,omitempty"`
 	Hosts       *Hosts            `json:"hosts,omitempty"`
 	Log         *LogSetting       `json:"log"`
-	Up          *Up               `json:"up,omitempty"`
+	//Up          *Up               `json:"up,omitempty"`
 	//Download    *Download         `json:"download,omitempty"`
 }
 
@@ -62,13 +62,6 @@ func (c *Config) Merge(from *Config) {
 			c.Hosts = &Hosts{}
 		}
 		c.Hosts.merge(from.Hosts)
-	}
-
-	if from.Up != nil {
-		if c.Up == nil {
-			c.Up = &Up{}
-		}
-		c.Up.merge(from.Up)
 	}
 
 	if from.Log != nil {
