@@ -110,7 +110,7 @@ func createTokenProvider(info *UploadInfo) (provider func() string, err error) {
 }
 
 func createTokenProviderWithMac(mac *qbox.Mac, info *UploadInfo) func() string {
-	policy := info.Policy
+	policy := *info.Policy
 	policy.Scope = info.ToBucket
 	policy.InsertOnly = 1 // 仅新增不覆盖
 	if info.Overwrite {
