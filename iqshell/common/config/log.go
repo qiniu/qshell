@@ -6,7 +6,7 @@ import (
 )
 
 type LogSetting struct {
-	LogLevel  *data.String    `json:"log_level,omitempty"`
+	LogLevel  *data.String `json:"log_level,omitempty"`
 	LogFile   *data.String `json:"log_file,omitempty"`
 	LogRotate *data.Int    `json:"log_rotate,omitempty"`
 	LogStdout *data.Bool   `json:"log_stdout,omitempty"`

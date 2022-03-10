@@ -11,10 +11,12 @@ import (
 type Config struct {
 	CmdId       string            `json:"-"` // 命令 Id
 	Credentials *auth.Credentials `json:"-"`
+	RecordRoot  *data.String      `json:"-"`
 	UseHttps    *data.Bool        `json:"use_https,omitempty"`
 	Hosts       *Hosts            `json:"hosts,omitempty"`
+	Log         *LogSetting       `json:"log"`
 	Up          *Up               `json:"up,omitempty"`
-	Download    *Download         `json:"download,omitempty"`
+	//Download    *Download         `json:"download,omitempty"`
 }
 
 func (c *Config) IsUseHttps() bool {
@@ -69,11 +71,11 @@ func (c *Config) Merge(from *Config) {
 		c.Up.merge(from.Up)
 	}
 
-	if from.Download != nil {
-		if c.Download == nil {
-			c.Download = &Download{}
+	if from.Log != nil {
+		if c.Log == nil {
+			c.Log = &LogSetting{}
 		}
-		c.Download.merge(from.Download)
+		c.Log.merge(from.Log)
 	}
 }
 

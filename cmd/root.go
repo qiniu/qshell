@@ -64,7 +64,9 @@ func Execute() {
 		DDebugEnable:   false,
 		ConfigFilePath: "",
 		Local:          false,
-		CmdCfg: config.Config{},
+		CmdCfg: config.Config{
+			Log: &config.LogSetting{},
+		},
 	}
 
 	rootCmd := rootCmdBuilder(cfg)

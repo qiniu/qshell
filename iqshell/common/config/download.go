@@ -33,8 +33,8 @@ type Download struct {
 
 	BatchNum *data.Int `json:"-"`
 
-	Tasks *Tasks `json:"tasks,omitempty"`
-	Retry *Retry `json:"retry,omitempty"`
+	Tasks *Tasks `json:"-"`
+	Retry *Retry `json:"-"`
 }
 
 func (d *Download) merge(from *Download) {

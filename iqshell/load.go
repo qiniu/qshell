@@ -23,7 +23,6 @@ type Config struct {
 	Local              bool   // 是否使用当前文件夹作为工作区
 	StdoutColorful     bool   // 控制台输出是否多彩
 	UploadConfigFile   string // 上传配置文件
-	DownloadConfigFile string // 下载配置文件
 	CmdCfg             config.Config
 }
 
@@ -91,13 +90,6 @@ func load(cfg *Config) error {
 	if len(cfg.UploadConfigFile) > 0 {
 		if err := utils.UnMarshalFromFile(cfg.UploadConfigFile, &cfg.CmdCfg.Up); err != nil {
 			return fmt.Errorf("read upload config error:%v config file:%s", err, cfg.UploadConfigFile)
-		}
-	}
-
-	// 合并下载配置
-	if len(cfg.DownloadConfigFile) > 0 {
-		if err := utils.UnMarshalFromFile(cfg.DownloadConfigFile, &cfg.CmdCfg.Download); err != nil {
-			return fmt.Errorf("read download config error:%v config file:%s", err, cfg.UploadConfigFile)
 		}
 	}
 

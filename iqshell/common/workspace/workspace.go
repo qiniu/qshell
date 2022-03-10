@@ -57,20 +57,20 @@ func GetLogConfig() *config.LogSetting {
 		return cfg.Up.LogSetting
 	}
 
-	if cfg.CmdId == docs.QDownloadType {
-		if cfg.Download == nil || cfg.Download.LogSetting == nil {
-			return nil
-		}
-		if data.Empty(cfg.Download.LogSetting.LogFile) {
-			cachePath := DownloadCachePath()
-			if len(cachePath) > 0 {
-				cfg.Download.LogSetting.LogFile = data.NewString(filepath.Join(cachePath, cfg.Download.JobId()+".log"))
-			}
-		}
-		return cfg.Download.LogSetting
-	}
+	//if cfg.CmdId == docs.QDownloadType {
+	//	if cfg.Download == nil || cfg.Download.LogSetting == nil {
+	//		return nil
+	//	}
+	//	if data.Empty(cfg.Download.LogSetting.LogFile) {
+	//		cachePath := DownloadCachePath()
+	//		if len(cachePath) > 0 {
+	//			cfg.Download.LogSetting.LogFile = data.NewString(filepath.Join(cachePath, cfg.Download.JobId()+".log"))
+	//		}
+	//	}
+	//	return cfg.Download.LogSetting
+	//}
 
-	return nil
+	return cfg.Log
 }
 
 func GetStorageConfig() *storage.Config {

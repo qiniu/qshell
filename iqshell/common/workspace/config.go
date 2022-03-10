@@ -18,6 +18,12 @@ func defaultConfig() *config.Config {
 		Hosts: &config.Hosts{
 			UC: []string{"uc.qbox.me"},
 		},
+		Log: &config.LogSetting{
+			LogLevel:  data.NewString(config.InfoKey),
+			LogFile:   nil,
+			LogRotate: data.NewInt(7),
+			LogStdout: data.NewBool(true),
+		},
 		Up: &config.Up{
 			PutThreshold: data.NewInt64(1024 * 1024 * 4),
 			Policy: &storage.PutPolicy{
@@ -60,22 +66,22 @@ func defaultConfig() *config.Config {
 				Interval: data.NewInt(1000),
 			},
 		},
-		Download: &config.Download{
-			LogSetting: &config.LogSetting{
-				LogLevel:  data.NewString(config.InfoKey),
-				LogFile:   nil,
-				LogRotate: data.NewInt(7),
-				LogStdout: data.NewBool(true),
-			},
-			Tasks: &config.Tasks{
-				ConcurrentCount:       data.NewInt(3),
-				StopWhenOneTaskFailed: data.NewBool(false),
-			},
-			Retry: &config.Retry{
-				Max:      data.NewInt(1),
-				Interval: data.NewInt(1000),
-			},
-		},
+		//Download: &config.Download{
+		//	LogSetting: &config.LogSetting{
+		//		LogLevel:  data.NewString(config.InfoKey),
+		//		LogFile:   nil,
+		//		LogRotate: data.NewInt(7),
+		//		LogStdout: data.NewBool(true),
+		//	},
+		//	Tasks: &config.Tasks{
+		//		ConcurrentCount:       data.NewInt(3),
+		//		StopWhenOneTaskFailed: data.NewBool(false),
+		//	},
+		//	Retry: &config.Retry{
+		//		Max:      data.NewInt(1),
+		//		Interval: data.NewInt(1000),
+		//	},
+		//},
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
@@ -16,8 +17,42 @@ import (
 	"time"
 )
 
+type BatchDownloadWithConfigInfo struct {
+	GroupInfo           group.Info
+	LocalDownloadConfig string
+}
+
+func (info *BatchDownloadWithConfigInfo) Check() error {
+	if err := info.GroupInfo.Check(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func BatchDownloadWithConfig(cfg *iqshell.Config, info BatchDownloadWithConfigInfo) {
+	if err := info.Check(); err != nil {
+		log.ErrorF("Check errorL%v", err)
+		return
+	}
+
+	downloadInfo := BatchDownloadInfo{
+		GroupInfo:   info.GroupInfo,
+		DownloadCfg: DownloadCfg{},
+	}
+	if err := utils.UnMarshalFromFile(info.LocalDownloadConfig, &downloadInfo.DownloadCfg); err != nil {
+		log.ErrorF("UnMarshal file:%s error:%v", info.LocalDownloadConfig, err)
+		return
+	}
+	if err := utils.UnMarshalFromFile(info.LocalDownloadConfig, cfg.CmdCfg.Log); err != nil {
+		log.ErrorF("UnMarshal file:%s error:%v", info.LocalDownloadConfig, err)
+		return
+	}
+	BatchDownload(cfg, downloadInfo)
+}
+
 type BatchDownloadInfo struct {
 	GroupInfo group.Info
+	DownloadCfg
 }
 
 func (info *BatchDownloadInfo) Check() error {
@@ -27,40 +62,32 @@ func (info *BatchDownloadInfo) Check() error {
 	if err := info.GroupInfo.Check(); err != nil {
 		return err
 	}
+	if err := info.DownloadCfg.Check(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
+	cfg.CmdCfg.RecordRoot = data.NewString(info.RecordRoot)
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
 		return
 	}
 
-	if len(cfg.DownloadConfigFile) == 0 {
-		log.Error("LocalDownloadConfig can't empty")
-		return
-	}
-
-	downloadCfg := workspace.GetConfig().Download
-	info.GroupInfo.InputFile = downloadCfg.KeyFile.Value()
-
-	if err := downloadCfg.Check(); err != nil {
-		log.ErrorF("download config check error:%v", err)
-		return
-	}
-
-	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig())
+	info.GroupInfo.InputFile = info.KeyFile
+	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig(), &info.DownloadCfg)
 	if len(downloadDomain) == 0 && len(downloadHost) == 0 {
-		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", downloadCfg.Bucket.Value())
+		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", info.Bucket)
 		return
 	}
 
 	log.DebugF("Download Domain:%s", downloadDomain)
 	log.DebugF("Download Domain:%s", downloadHost)
 
-	jobId := downloadCfg.JobId()
-	cachePath := workspace.DownloadCachePath()
+	jobId := info.DownloadCfg.JobId()
+	cachePath := downloadCachePath(workspace.GetConfig(), &info.DownloadCfg)
 	dbPath := filepath.Join(cachePath, jobId, ".list")
 	log.InfoF("download db dir:%s", dbPath)
 
@@ -74,7 +101,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	ds, err := newDownloadScanner(downloadCfg.KeyFile.Value(), info.GroupInfo.ItemSeparate, downloadCfg.Bucket.Value(), exporter)
+	ds, err := newDownloadScanner(info.KeyFile, info.GroupInfo.ItemSeparate, info.Bucket, exporter)
 	if err != nil {
 		log.Error(err)
 		return
@@ -90,8 +117,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	var failureFileCount int64
 	var skipBySuffixes int64
 
-	hasPrefixes := len(downloadCfg.Prefix.Value()) > 0
-	prefixes := strings.Split(downloadCfg.Prefix.Value(), ",")
+	hasPrefixes := len(info.Prefix) > 0
+	prefixes := strings.Split(info.Prefix, ",")
 	filterPrefix := func(name string) bool {
 		if !hasPrefixes {
 			return false
@@ -123,13 +150,13 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		apiInfo := work.(*download.ApiInfo)
 		apiInfo.Domain = downloadDomain
 		apiInfo.Host = downloadHost
-		apiInfo.ToFile = filepath.Join(downloadCfg.DestDir.Value(), apiInfo.Key)
+		apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
 		apiInfo.StatusDBPath = dbPath
-		apiInfo.Referer = downloadCfg.Referer.Value()
-		apiInfo.FileEncoding = downloadCfg.FileEncoding.Value()
-		apiInfo.Bucket = downloadCfg.Bucket.Value()
-		apiInfo.UserGetFileApi = downloadCfg.GetFileApi.Value()
-		if !downloadCfg.CheckHash.Value() {
+		apiInfo.Referer = info.Referer
+		apiInfo.FileEncoding = info.FileEncoding
+		apiInfo.Bucket = info.Bucket
+		apiInfo.UserGetFileApi = info.GetFileApi
+		if !info.CheckHash {
 			apiInfo.FileHash = ""
 		}
 
@@ -194,7 +221,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.AlertF("%10s%10d", "Failure:", failureFileCount)
 	log.AlertF("%10s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("-----------------------------")
-	log.AlertF("See download log at path:%s", downloadCfg.LogFile.Value())
+	log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile)
 
 	if failureFileCount > 0 {
 		os.Exit(data.StatusError)

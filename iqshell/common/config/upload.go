@@ -46,8 +46,8 @@ type Up struct {
 	WorkerCount            *data.Int    `json:"work_count,omitempty"` // 分片上传并发数
 	RecordRoot             *data.String `json:"record_root,omitempty"`
 
-	Tasks  *Tasks             `json:"tasks,omitempty"`
-	Retry  *Retry             `json:"retry,omitempty"`
+	Tasks  *Tasks             `json:"-"`
+	Retry  *Retry             `json:"-"`
 	Policy *storage.PutPolicy `json:"policy"`
 }
 

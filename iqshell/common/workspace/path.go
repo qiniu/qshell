@@ -25,22 +25,3 @@ func UploadCachePath() string {
 	}
 	return cachePath
 }
-
-func DownloadCachePath() string {
-	if cfg == nil || cfg.Download == nil {
-		return ""
-	}
-
-	downloadCfg := cfg.Download
-	rootPath := GetWorkspace()
-	if data.NotEmpty(downloadCfg.RecordRoot) {
-		rootPath = downloadCfg.RecordRoot.Value()
-	}
-
-	cachePath := filepath.Join(rootPath, "qdownload", cfg.Up.JobId())
-	if cErr := os.MkdirAll(cachePath, os.ModePerm); cErr != nil {
-		log.WarningF("download create cache dir error:%v", cErr)
-		return ""
-	}
-	return cachePath
-}
