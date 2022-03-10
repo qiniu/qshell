@@ -10,9 +10,7 @@ const fopObjectKey = "test_mv.mp4"
 const fopObjectValue = "avthumb/mp4"
 
 func TestFop(t *testing.T) {
-	result, errs := test.RunCmdWithError("pfop", test.Bucket, fopObjectKey, fopObjectValue,
-		"--notify-url", "",
-		"--pipeline")
+	result, errs := test.RunCmdWithError("pfop", test.Bucket, fopObjectKey, fopObjectValue)
 	if len(errs) > 0 {
 		t.Fail()
 	}

@@ -121,6 +121,10 @@ func TestQUpload2WithSrcDir(t *testing.T) {
 		"--bucket", test.Bucket,
 		"--src-dir", fileDir,
 		"--rescan-local")
+	defer func() {
+		test.RemoveFile(fileListPath)
+	}()
+
 	if len(errs) > 0 {
 		t.Fail()
 	}

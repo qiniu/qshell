@@ -269,7 +269,7 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&info.Key, "key", "k", "", "save as <key> in bucket")
 	cmd.Flags().BoolVarP(&resumeAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
-	cmd.Flags().StringVarP(&upHost, "uphost", "u", "", "upload host")
+	cmd.Flags().StringVarP(&upHost, "up-host", "u", "", "upload host")
 	return cmd
 }
 

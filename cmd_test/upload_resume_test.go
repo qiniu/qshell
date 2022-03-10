@@ -41,12 +41,7 @@ func TestResumeV1Upload(t *testing.T) {
 		"--mimetype", "image/png",
 		"--storage", "1",
 		"--worker", "4")
-	// v1 会覆盖
-	if !strings.Contains(result, "Upload File success") {
-		t.Fatal(result)
-	}
-
-	if !strings.Contains(result, "MimeType: image/png") {
+	if !strings.Contains(errs, "upload error:file exists") {
 		t.Fatal(result)
 	}
 

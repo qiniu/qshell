@@ -49,6 +49,8 @@ func (c *conveyor) upload(info ApiInfo) (ret ApiResult, err error) {
 			err = fmt.Errorf("sync get up host error:%v", err)
 			return
 		}
+	} else {
+		info.UpHost = utils.Endpoint(c.cfg.UseHTTPS, info.UpHost)
 	}
 
 	ctx := workspace.GetContext()

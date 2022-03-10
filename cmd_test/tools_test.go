@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"strconv"
 	"strings"
@@ -109,9 +110,9 @@ func TestB64DecodeDocument(t *testing.T) {
 func TestD2ts(t *testing.T) {
 	duration := 0
 	currentTime := time.Now()
-	timeString := currentTime.Format("2006-01-02 15:04:05")
+	timestampString := fmt.Sprintf("%d", currentTime.Unix())
 	result := test.RunCmd(t, "d2ts", strconv.Itoa(duration))
-	if !strings.Contains(result, timeString) {
+	if !strings.Contains(result, timestampString) {
 		t.Fail()
 	}
 	return

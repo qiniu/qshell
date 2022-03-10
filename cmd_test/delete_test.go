@@ -15,7 +15,7 @@ func TestDelete(t *testing.T) {
 
 func deleteFile(t *testing.T, deleteKey string) {
 	_, errs := test.RunCmdWithError("delete", test.Bucket, deleteKey)
-	if len(errs) > 0 {
+	if len(errs) > 0 && !strings.Contains(errs, "no such file or directory") {
 		t.Fail()
 	}
 }
