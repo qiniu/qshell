@@ -55,6 +55,7 @@ func Load(info LoadInfo) (err error) {
 	// 检查用户路径
 	acc, err := account.GetAccount()
 	if err == nil {
+		currentAccount = &acc
 		accountName := acc.Name
 		if len(accountName) == 0 {
 			accountName = currentAccount.AccessKey

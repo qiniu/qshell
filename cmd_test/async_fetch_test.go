@@ -11,7 +11,7 @@ func TestAsyncFetch(t *testing.T) {
 	fetchKeys = append(fetchKeys, "hello10.json")
 	content := ""
 	for _, key := range fetchKeys {
-		content += test.BucketDomain + "/" + key + "\t" + "0" + "\t" + "fetch_" + key + "\n"
+		content += "https://" + test.BucketDomain + "/" + key + "\t" + "0" + "\t" + "fetch_" + key + "\n"
 	}
 	path, err := test.CreateFileWithContent("async_fetch.txt", content)
 	if err != nil {

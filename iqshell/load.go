@@ -52,6 +52,12 @@ func CheckAndLoad(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
 }
 
 func load(cfg *Config) error {
+	//set cpu count
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	// 配置 user agent
+	storage.UserAgent = utils.UserAgent()
+
 	// 加载 log
 	logLevel := log.LevelInfo
 	if cfg.DebugEnable || cfg.DDebugEnable {
@@ -79,12 +85,6 @@ func load(cfg *Config) error {
 		workspacePath = dir
 	}
 
-	//set cpu count
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	// 配置 user agent
-	storage.UserAgent = utils.UserAgent()
-
 	// 加载工作区
 	if err := workspace.Load(workspace.LoadInfo{
 		CmdConfig:      &cfg.CmdCfg,
@@ -94,6 +94,7 @@ func load(cfg *Config) error {
 		return err
 	}
 
+	// 配置日志文件输出
 	if ls := workspace.GetLogConfig(); ls != nil && ls.LogFile != nil {
 		err := utils.CreateFileDirIfNotExist(ls.LogFile.Value())
 		if err != nil {
