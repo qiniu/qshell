@@ -55,7 +55,7 @@ func init() {
 	registerLoader(m3u8CmdLoader)
 }
 
-func m3u8CmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func m3u8CmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		m3u8ReplaceDomainCmdBuilder(cfg),
 		m3u8DeleteCmdBuilder(cfg),

@@ -64,7 +64,7 @@ func TestBatchFetch(t *testing.T) {
 	}
 
 	successLogPath := filepath.Join(resultDir, "batch_copy_success.txt")
-	failLogPath :=  filepath.Join(resultDir, "batch_copy_fail.txt")
+	failLogPath := filepath.Join(resultDir, "batch_copy_fail.txt")
 
 	path, err := test.CreateFileWithContent("batch_fetch.txt", batchConfig)
 	if err != nil {

@@ -54,7 +54,7 @@ func (r *resumeV1Uploader) upload(info *ApiInfo) (ret ApiResult, err error) {
 				info.Progress.SendSize(int64(blkSize))
 			}
 		},
-		NotifyErr:  nil,
+		NotifyErr: nil,
 	})
 	if err != nil {
 		err = errors.New("resume v1 upload: upload error:" + err.Error())

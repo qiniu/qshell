@@ -46,7 +46,7 @@ func Fetch(info FetchApiInfo) (result FetchResult, err error) {
 type AsyncFetchApiInfo storage.AsyncFetchParam
 type AsyncFetchApiResult storage.AsyncFetchRet
 
-func (result AsyncFetchApiResult)String() string {
+func (result AsyncFetchApiResult) String() string {
 	return fmt.Sprintf(`{"id":"%s", "wait":%d}`, result.Id, result.Wait)
 }
 

@@ -40,8 +40,7 @@ func (info *QBoxTokenInfo) Check() error {
 
 // Token QBox Token, 一般bucket相关的接口需要这个token
 func Token(cfg *iqshell.Config) {
-	iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
-	})
+	iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{})
 }
 
 // CreateQBoxToken QBox Token, 一般bucket相关的接口需要这个token

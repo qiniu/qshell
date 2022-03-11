@@ -52,7 +52,7 @@ func init() {
 	registerLoader(cdnCmdLoader)
 }
 
-func cdnCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func cdnCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		cdnPrefetchCmdBuilder(cfg),
 		cdnRefreshCmdBuilder(cfg),

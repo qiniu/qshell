@@ -72,7 +72,7 @@ func init() {
 	registerLoader(awsCmdLoader)
 }
 
-func awsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func awsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		awsFetchCmdBuilder(cfg),
 		awsListCmdBuilder(cfg),

@@ -79,7 +79,7 @@ func TestBatchRename(t *testing.T) {
 	}
 
 	successLogPath := filepath.Join(resultDir, "batch_success.txt")
-	failLogPath :=  filepath.Join(resultDir, "batch_fail.txt")
+	failLogPath := filepath.Join(resultDir, "batch_fail.txt")
 
 	path, err := test.CreateFileWithContent("batch_rename.txt", batchConfig)
 	if err != nil {

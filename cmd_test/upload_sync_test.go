@@ -36,7 +36,7 @@ func TestSyncV1WithKey(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	if !strings.Contains(result, "Key: " + key) {
+	if !strings.Contains(result, "Key: "+key) {
 		t.Fatal(result)
 	}
 }
@@ -67,7 +67,7 @@ func TestSyncV2WithKey(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	if !strings.Contains(result, "Key: " + key) {
+	if !strings.Contains(result, "Key: "+key) {
 		t.Fatal(result)
 	}
 }

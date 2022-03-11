@@ -20,7 +20,7 @@ type printer struct {
 
 func NewPrintProgress(title string) Progress {
 	return &printer{
-		title:    title,
+		title: title,
 		progressBar: progressbar.NewOptions(0,
 			progressbar.OptionFullWidth(),
 			progressbar.OptionShowBytes(true),
@@ -30,7 +30,7 @@ func NewPrintProgress(title string) Progress {
 				fmt.Printf("\n")
 			}),
 			progressbar.OptionSpinnerType(14),
-			progressbar.OptionSetDescription("[green]" + title + "[reset]"),
+			progressbar.OptionSetDescription("[green]"+title+"[reset]"),
 			progressbar.OptionSetTheme(progressbar.Theme{
 				Saucer:        "[green]-[reset]",
 				SaucerHead:    "[green]>[reset]",
@@ -54,8 +54,8 @@ func (p *printer) SetFileSize(fileSize int64) {
 
 func (p *printer) SendSize(newSize int64) {
 	p.mu.Lock()
-	if p.current + newSize > p.fileSize {
-		newSize =  p.fileSize - p.current
+	if p.current+newSize > p.fileSize {
+		newSize = p.fileSize - p.current
 	}
 	_ = p.progressBar.Add(int(newSize))
 	p.current += newSize

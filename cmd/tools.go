@@ -346,7 +346,7 @@ func init() {
 	registerLoader(toolsCmdLoader)
 }
 
-func toolsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func toolsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		rpcEncodeCmdBuilder(cfg),
 		rpcDecodeCmdBuilder(cfg),

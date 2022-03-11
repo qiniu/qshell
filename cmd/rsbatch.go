@@ -229,7 +229,7 @@ func init() {
 	registerLoader(rsBatchCmdLoader)
 }
 
-func rsBatchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func rsBatchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		batchStatCmdBuilder(cfg),
 		batchCopyCmdBuilder(cfg),

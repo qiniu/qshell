@@ -16,13 +16,13 @@ import (
 )
 
 type Config struct {
-	Document           bool   // 是否展示 document
-	DebugEnable        bool   // 开启命令行的调试模式
-	DDebugEnable       bool   // go SDK client 和命令行开启调试模式
-	ConfigFilePath     string // 配置文件路径，用户可以指定配置文件
-	Local              bool   // 是否使用当前文件夹作为工作区
-	StdoutColorful     bool   // 控制台输出是否多彩
-	CmdCfg             config.Config
+	Document       bool   // 是否展示 document
+	DebugEnable    bool   // 开启命令行的调试模式
+	DDebugEnable   bool   // go SDK client 和命令行开启调试模式
+	ConfigFilePath string // 配置文件路径，用户可以指定配置文件
+	Local          bool   // 是否使用当前文件夹作为工作区
+	StdoutColorful bool   // 控制台输出是否多彩
+	CmdCfg         config.Config
 }
 
 type CheckAndLoadInfo struct {

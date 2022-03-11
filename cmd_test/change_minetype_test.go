@@ -75,7 +75,7 @@ func TestBatchChangeMimeType(t *testing.T) {
 	}
 
 	successLogPath := filepath.Join(resultDir, "batch_chgm_success.txt")
-	failLogPath :=  filepath.Join(resultDir, "batch_chgm_fail.txt")
+	failLogPath := filepath.Join(resultDir, "batch_chgm_fail.txt")
 
 	path, err := test.CreateFileWithContent("batch_chgm.txt", batchConfig)
 	if err != nil {

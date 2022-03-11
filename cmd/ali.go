@@ -44,6 +44,6 @@ func init() {
 	registerLoader(aliCmdLoader)
 }
 
-func aliCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func aliCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(aliListBucketCmdBuilder(cfg))
 }

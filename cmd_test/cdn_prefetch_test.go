@@ -25,5 +25,3 @@ func TestCdnPrefetch(t *testing.T) {
 func TestCdnPrefetchDocument(t *testing.T) {
 	test.TestDocument("cdnprefetch", t)
 }
-
-

@@ -31,7 +31,7 @@ func TestResumeV1Upload(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5 * 1024 + 1)
+	path, err = test.CreateTempFile(5*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -85,7 +85,7 @@ func TestResumeV1UploadWithUploadHost(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5 * 1024 + 1)
+	path, err = test.CreateTempFile(5*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -117,7 +117,7 @@ func TestResumeV2Upload(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5 * 1024 + 1)
+	path, err = test.CreateTempFile(5*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -173,7 +173,7 @@ func TestResumeV2UploadWithUploadHost(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5 * 1024 + 1)
+	path, err = test.CreateTempFile(5*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}

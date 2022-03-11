@@ -71,7 +71,7 @@ func GetWorkspace() string {
 
 func GetAccount() (account.Account, error) {
 	if currentAccount == nil {
-		 return account.Account{}, errors.New("can't get current user")
+		return account.Account{}, errors.New("can't get current user")
 	}
 	return *currentAccount, nil
 }

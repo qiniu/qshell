@@ -14,7 +14,7 @@ func TestQUpload(t *testing.T) {
 	deleteFile(t, "64K.tmp")
 	deleteFile(t, "256K.tmp")
 	copyFile(t, test.Key, "512K.tmp")
-	copyFile(t, test.Key,"1024K.tmp")
+	copyFile(t, test.Key, "1024K.tmp")
 
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
 	fileSizeList = []int{1, 2}
@@ -33,8 +33,8 @@ func TestQUpload(t *testing.T) {
 	}
 
 	successLogPath := filepath.Join(resultPath, "qupload2_success.txt")
-	failLogPath :=  filepath.Join(resultPath, "qupload2_fail.txt")
-	overwriteLogPath :=  filepath.Join(resultPath, "qupload2_overwrite.txt")
+	failLogPath := filepath.Join(resultPath, "qupload2_fail.txt")
+	overwriteLogPath := filepath.Join(resultPath, "qupload2_overwrite.txt")
 	logPath := filepath.Join(resultPath, "qupload2_log.txt")
 	recordPath := filepath.Join(resultPath, "record")
 
@@ -141,7 +141,7 @@ func TestQUpload2WithFileList(t *testing.T) {
 	deleteFile(t, "64K.tmp")
 	deleteFile(t, "256K.tmp")
 	copyFile(t, test.Key, "512K.tmp")
-	copyFile(t, test.Key,"1024K.tmp")
+	copyFile(t, test.Key, "1024K.tmp")
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
 	for _, size := range fileSizeList {
 		test.CreateTempFile(size)
@@ -158,8 +158,8 @@ func TestQUpload2WithFileList(t *testing.T) {
 	}
 
 	successLogPath := filepath.Join(resultPath, "qupload2_success.txt")
-	failLogPath :=  filepath.Join(resultPath, "qupload2_fail.txt")
-	overwriteLogPath :=  filepath.Join(resultPath, "qupload2_overwrite.txt")
+	failLogPath := filepath.Join(resultPath, "qupload2_fail.txt")
+	overwriteLogPath := filepath.Join(resultPath, "qupload2_overwrite.txt")
 	logPath := filepath.Join(resultPath, "qupload2_log.txt")
 	recordPath := filepath.Join(resultPath, "record")
 

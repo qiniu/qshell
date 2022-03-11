@@ -50,7 +50,7 @@ func getRealHosts(hosts []string) []string {
 	}
 
 	newHosts := make([]string, 0, len(hosts))
-	for _, host := range hosts{
+	for _, host := range hosts {
 		newHosts = append(newHosts, utils.RemoveUrlScheme(host))
 	}
 	return newHosts

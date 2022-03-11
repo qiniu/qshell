@@ -186,6 +186,7 @@ func Upload(info *ApiInfo) (res ApiResult, err error) {
 }
 
 var once sync.Once
+
 func uploadSource(info *ApiInfo) (ApiResult, error) {
 	once.Do(func() {
 		storage.SetSettings(&storage.Settings{

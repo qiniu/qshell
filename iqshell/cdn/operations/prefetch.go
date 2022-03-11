@@ -28,8 +28,8 @@ func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
 	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
 
 	handler, err := group.NewHandler(group.Info{
-		InputFile:              info.UrlListFile,
-		Force:                  true,
+		InputFile: info.UrlListFile,
+		Force:     true,
 	})
 	if err != nil {
 		log.Error(err)

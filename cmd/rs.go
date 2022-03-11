@@ -334,7 +334,7 @@ func init() {
 	registerLoader(rsCmdLoader)
 }
 
-func rsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func rsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		statCmdBuilder(cfg),
 		forbiddenCmdBuilder(cfg),

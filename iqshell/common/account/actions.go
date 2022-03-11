@@ -16,7 +16,7 @@ import (
 )
 
 // 保存账户信息到账户文件中
-func SetAccountToLocalJson(acc Account) (err error) {
+func SetAccountToLocalFile(acc Account) (err error) {
 	accountFh, openErr := os.OpenFile(info.AccountPath, os.O_CREATE|os.O_RDWR, 0600)
 	if openErr != nil {
 		err = fmt.Errorf("Open account file error: %s", openErr)
@@ -172,7 +172,7 @@ func ChUser(userName string) (err error) {
 			return
 		}
 
-		return SetAccountToLocalJson(user)
+		return SetAccountToLocalFile(user)
 	} else {
 		if _, err = GetOldAccount(); err != nil {
 			return fmt.Errorf("get last account error:%v", err)

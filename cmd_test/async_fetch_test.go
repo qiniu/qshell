@@ -59,7 +59,7 @@ func TestAsyncFetchDocument(t *testing.T) {
 func TestACheck(t *testing.T) {
 	id := "eyJ6b25lIjoibmEwIiwicXVldWUiOiJTSVNZUEhVUy1KT0JTLVYzIiwicGFydF9pZCI6OSwib2Zmc2V0Ijo1NTEzMTU3fQ=="
 	result, err := test.RunCmdWithError("acheck", test.Bucket, id)
-	if len(err) > 0 || len(result) == 0{
+	if len(err) > 0 || len(result) == 0 {
 		t.Fail()
 	}
 }

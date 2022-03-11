@@ -136,7 +136,7 @@ func TestDownloadNoBucket(t *testing.T) {
 
 func TestDownloadNoDomain(t *testing.T) {
 	cfg := &DownloadCfg{
-	 	DownloadCfg: operations.DownloadCfg{
+		DownloadCfg: operations.DownloadCfg{
 			ThreadCount: 4,
 			Bucket:      test.Bucket,
 			Prefix:      "hello3,hello5,hello7",

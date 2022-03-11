@@ -42,14 +42,14 @@ func asyncCheckCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 		Use:   "acheck <Bucket> <ID>",
 		Short: "Check Async fetch status",
 		Run: func(cmd *cobra.Command, args []string) {
-			 cfg.CmdCfg.CmdId = docs.ACheckType
+			cfg.CmdCfg.CmdId = docs.ACheckType
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
 			if len(args) > 1 {
 				info.Id = args[1]
 			}
-				operations.CheckAsyncFetchStatus(cfg, info)
+			operations.CheckAsyncFetchStatus(cfg, info)
 		},
 	}
 	return cmd
@@ -59,9 +59,9 @@ func init() {
 	registerLoader(asyncFetchCmdLoader)
 }
 
-func asyncFetchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func asyncFetchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		asyncFetchCmdBuilder(cfg),
 		asyncCheckCmdBuilder(cfg),
-		)
+	)
 }

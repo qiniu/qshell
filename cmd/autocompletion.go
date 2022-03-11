@@ -180,9 +180,8 @@ func init() {
 	registerLoader(completeCmdLoader)
 }
 
-func completeCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func completeCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		completeCmdBuilder(superCmd, cfg),
 	)
 }
-

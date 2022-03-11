@@ -28,7 +28,7 @@ func TestBucketListToFile(t *testing.T) {
 		t.Fatal("get root path error:", err)
 		return
 	}
-	file := filepath.Join(rootPath, test.Bucket + "_listbucket.txt")
+	file := filepath.Join(rootPath, test.Bucket+"_listbucket.txt")
 	_, errs := test.RunCmdWithError("listbucket", test.Bucket, "--prefix", "hello", "-o", file)
 	defer test.RemoveFile(file)
 
@@ -61,7 +61,6 @@ func TestBucketListDocument(t *testing.T) {
 	test.TestDocument("listbucket", t)
 }
 
-
 func TestBucketList2(t *testing.T) {
 	result, errs := test.RunCmdWithError("listbucket2", test.Bucket,
 		"--prefix", "hello",
@@ -81,7 +80,7 @@ func TestBucketList2(t *testing.T) {
 
 func TestBucketList2ToFile(t *testing.T) {
 	defaultContent := "AAAAAAA\n"
-	file, err := test.CreateFileWithContent(test.Bucket + "-listbucket2.txt", defaultContent)
+	file, err := test.CreateFileWithContent(test.Bucket+"-listbucket2.txt", defaultContent)
 	if err != nil {
 		t.Fatal("get root path error:", err)
 		return
@@ -95,7 +94,7 @@ func TestBucketList2ToFile(t *testing.T) {
 	}
 
 	content := test.FileContent(file)
-	if strings.HasPrefix(content, defaultContent){
+	if strings.HasPrefix(content, defaultContent) {
 		t.Fatal("list bucket to file error: should't append")
 	}
 
@@ -108,7 +107,7 @@ func TestBucketList2ToFile(t *testing.T) {
 
 func TestBucketList2ToFileByAppend(t *testing.T) {
 	defaultContent := "AAAAAAA\n"
-	file, err := test.CreateFileWithContent(test.Bucket + "-listbucket2.txt", defaultContent)
+	file, err := test.CreateFileWithContent(test.Bucket+"-listbucket2.txt", defaultContent)
 	if err != nil {
 		t.Fatal("get root path error:", err)
 		return
@@ -125,7 +124,7 @@ func TestBucketList2ToFileByAppend(t *testing.T) {
 	}
 
 	content := test.FileContent(file)
-	if !strings.HasPrefix(content, defaultContent){
+	if !strings.HasPrefix(content, defaultContent) {
 		t.Fatal("list bucket to file append error")
 	}
 
@@ -146,4 +145,3 @@ func TestBucketList2NoBucket(t *testing.T) {
 func TestBucketList2Document(t *testing.T) {
 	test.TestDocument("listbucket2", t)
 }
-

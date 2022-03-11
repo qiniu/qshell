@@ -43,7 +43,7 @@ func Add(cfg *iqshell.Config, info AddInfo) {
 		SecretKey: info.SecretKey,
 	}
 
-	if err := account.SetAccountToLocalJson(acc); err != nil {
+	if err := account.SetAccountToLocalFile(acc); err != nil {
 		log.ErrorF("user add: set current error:%v", err)
 		os.Exit(data.StatusError)
 		return

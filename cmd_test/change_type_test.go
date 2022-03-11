@@ -74,7 +74,7 @@ func TestBatchChangeType(t *testing.T) {
 	}
 
 	successLogPath := filepath.Join(resultDir, "batch_chtype_success.txt")
-	failLogPath :=  filepath.Join(resultDir, "batch_chtype_fail.txt")
+	failLogPath := filepath.Join(resultDir, "batch_chtype_fail.txt")
 
 	path, err := test.CreateFileWithContent("batch_chtype.txt", batchConfig)
 	if err != nil {

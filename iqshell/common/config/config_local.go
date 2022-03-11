@@ -47,7 +47,7 @@ var (
 	localKeyHostUcs = []string{"hosts.ucs", "hosts.uc_hosts"}
 
 	// UC HOST
-	localKeyIsUseHttps  = []string{"use_https"}
+	localKeyIsUseHttps = []string{"use_https"}
 
 	// 账户密钥信息
 	localKeyAccessKey = []string{"access_key"}

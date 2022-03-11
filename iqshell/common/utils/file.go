@@ -129,7 +129,6 @@ func CreateFileDirIfNotExist(path string) error {
 	return err
 }
 
-
 func ExistFile(path string) (bool, error) {
 	if s, err := os.Stat(path); err == nil {
 		return !s.IsDir(), nil

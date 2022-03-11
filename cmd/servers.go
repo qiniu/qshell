@@ -27,7 +27,7 @@ func init() {
 	registerLoader(serversCmdLoader)
 }
 
-func serversCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func serversCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		bucketsCmdBuilder(cfg),
 	)

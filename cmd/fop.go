@@ -52,7 +52,7 @@ func init() {
 	registerLoader(fopCmdLoader)
 }
 
-func fopCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config)  {
+func fopCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		preFopCmdBuilder(cfg),
 		preFopStatusCmdBuilder(cfg),

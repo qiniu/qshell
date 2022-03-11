@@ -30,7 +30,7 @@ func TestFormUpload(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(1 * 1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -83,7 +83,7 @@ func TestFormUploadWithUploadHost(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(1 * 1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
