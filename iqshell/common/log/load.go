@@ -32,6 +32,7 @@ func LoadFileLogger(cfg Config) (err error) {
 		if err != nil {
 			err = fmt.Errorf("set file logger error:%v", err)
 		}
+		DebugF("log file:%s", cfg.Filename)
 	}
 
 	if !cfg.EnableStdout {
