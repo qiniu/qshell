@@ -3,6 +3,7 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
 	"path/filepath"
 )
@@ -10,10 +11,12 @@ import (
 func downloadCachePath(cfg *config.Config, downloadCfg *DownloadCfg) string {
 	recordRoot := downloadCfg.RecordRoot
 	if len(recordRoot) == 0 {
-		if cfg == nil {
-			return ""
-		}
-		recordRoot = cfg.RecordRoot.Value()
+		recordRoot = workspace.GetWorkspace()
+	}
+
+	if len(recordRoot) == 0 {
+		log.Debug("download can't get record root")
+		return ""
 	}
 
 	cachePath := filepath.Join(recordRoot, "qdownload", downloadCfg.JobId())

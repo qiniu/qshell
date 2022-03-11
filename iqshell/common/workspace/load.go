@@ -2,9 +2,9 @@ package workspace
 
 import (
 	"errors"
+	"github.com/qiniu/go-sdk/v7/auth"
 	"path/filepath"
 
-	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -53,25 +53,30 @@ func Load(info LoadInfo) (err error) {
 	}
 
 	// 检查用户路径
-	currentAccount, err := account.GetAccount()
-	currentAccountDir := ""
+	acc, err := account.GetAccount()
 	if err == nil {
-		accountName := currentAccount.Name
+		accountName := acc.Name
 		if len(accountName) == 0 {
 			accountName = currentAccount.AccessKey
 		}
-		log.DebugF("current User:%s", accountName)
+		log.DebugF("current user name:%s", accountName)
 
-		currentAccountDir = filepath.Join(workspacePath, accountName)
-		err := utils.CreateDirIfNotExist(currentAccountDir)
+		userPath = filepath.Join(workspacePath, "user", accountName)
+		err = utils.CreateDirIfNotExist(userPath)
 		if err != nil {
 			return errors.New("create user dir error:" + err.Error())
+		}
+
+		// 配置 config 的 Credentials
+		cfg.Credentials = &auth.Credentials{
+			AccessKey: acc.AccessKey,
+			SecretKey: []byte(acc.SecretKey),
 		}
 	}
 
 	// 检查用户配置，用户配置可能被指定，如果未指定则使用用户目录下配置
-	if len(info.UserConfigPath) == 0 {
-		info.UserConfigPath = filepath.Join(currentAccountDir, configFileName)
+	if len(info.UserConfigPath) == 0 && len(userPath) > 0 {
+		info.UserConfigPath = filepath.Join(userPath, configFileName)
 	}
 
 	// 设置配置文件路径
@@ -93,18 +98,13 @@ func Load(info LoadInfo) (err error) {
 	cfg = resultCfg
 
 	log.DebugF("cmd    config:\n%v", info.CmdConfig)
-	log.DebugF("user   config(%s):\n%v",info.UserConfigPath, config.GetUser())
-	log.DebugF("global config(%s):\n%v",info.globalConfigPath, config.GetGlobal())
+	log.DebugF("user   config(%s):\n%v", info.UserConfigPath, config.GetUser())
+	log.DebugF("global config(%s):\n%v", info.globalConfigPath, config.GetGlobal())
 	log.DebugF("final  config:\n%v", cfg)
 
 	err = checkConfig(cfg)
 	if err != nil {
 		return
-	}
-
-	cfg.Credentials = &auth.Credentials{
-		AccessKey: currentAccount.AccessKey,
-		SecretKey: []byte(currentAccount.SecretKey),
 	}
 
 	// 在工作区加载之后监听

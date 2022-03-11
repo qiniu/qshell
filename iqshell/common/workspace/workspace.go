@@ -2,7 +2,7 @@ package workspace
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
@@ -27,6 +27,10 @@ var (
 
 	// 工作路径
 	workspacePath = ""
+	// 用户目录
+	userPath = ""
+	// 当前账户
+	currentAccount *account.Account
 
 	cancelFunc func()
 )
@@ -37,9 +41,13 @@ func GetConfig() *config.Config {
 }
 
 func GetLogConfig() *config.LogSetting {
-	if cfg == nil {
+	if cfg == nil || cfg.Log == nil {
 		return nil
 	}
+	//if data.Empty(cfg.Log.LogFile) {
+	//	logFile := filepath.Join(workspacePath, "log", "qshell.log")
+	//	cfg.Log.LogFile = data.NewString(logFile)
+	//}
 	return cfg.Log
 }
 
@@ -62,13 +70,16 @@ func GetWorkspace() string {
 }
 
 func GetAccount() (account.Account, error) {
-	return account.GetAccount()
+	if currentAccount == nil {
+		 return account.Account{}, errors.New("can't get current user")
+	}
+	return *currentAccount, nil
 }
 
 func GetMac() (mac *qbox.Mac, err error) {
-	acc, gErr := account.GetAccount()
+	acc, gErr := GetAccount()
 	if gErr != nil {
-		err = fmt.Errorf("get account: %v", gErr)
+		err = gErr
 		return
 	}
 

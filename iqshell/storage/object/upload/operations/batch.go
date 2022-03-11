@@ -105,10 +105,16 @@ func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 
 func batchUpload(info BatchUpload2Info) {
 	log.AlertF("Writing upload log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
-
+	if len(info.RecordRoot) == 0 {
+		info.RecordRoot = workspace.GetWorkspace()
+	}
 	jobId := info.JobId()
 	cachePath := uploadCachePath(workspace.GetConfig(), &info.UploadConfig)
-	dbPath := filepath.Join(cachePath, jobId+".ldb")
+	dbPath := ""
+	if len(cachePath) > 0 {
+		dbPath = filepath.Join(cachePath, jobId+".ldb")
+	}
+
 	log.InfoF("upload status db file path:%s", dbPath)
 
 	// 扫描本地文件

@@ -69,7 +69,6 @@ func (info *BatchDownloadInfo) Check() error {
 }
 
 func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
-	cfg.CmdCfg.RecordRoot = data.NewString(info.RecordRoot)
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
@@ -86,6 +85,9 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.DebugF("Download Domain:%s", downloadDomain)
 	log.DebugF("Download Domain:%s", downloadHost)
 
+	if len(info.RecordRoot) == 0 {
+		info.RecordRoot = workspace.GetWorkspace()
+	}
 	jobId := info.DownloadCfg.JobId()
 	cachePath := downloadCachePath(workspace.GetConfig(), &info.DownloadCfg)
 	dbPath := filepath.Join(cachePath, jobId, ".list")

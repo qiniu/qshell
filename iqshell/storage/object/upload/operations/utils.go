@@ -10,10 +10,8 @@ import (
 func uploadCachePath(cfg *config.Config, uploadCfg *UploadConfig) string {
 	recordRoot := uploadCfg.RecordRoot
 	if len(recordRoot) == 0 {
-		if cfg == nil {
-			return ""
-		}
-		recordRoot = cfg.RecordRoot.Value()
+		log.Debug("upload can't get record root")
+		return ""
 	}
 
 	cachePath := filepath.Join(recordRoot, "qupload", uploadCfg.JobId())

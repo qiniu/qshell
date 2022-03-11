@@ -11,12 +11,9 @@ import (
 type Config struct {
 	CmdId       string            `json:"-"` // 命令 Id
 	Credentials *auth.Credentials `json:"-"`
-	RecordRoot  *data.String      `json:"-"`
 	UseHttps    *data.Bool        `json:"use_https,omitempty"`
 	Hosts       *Hosts            `json:"hosts,omitempty"`
 	Log         *LogSetting       `json:"log"`
-	//Up          *Up               `json:"up,omitempty"`
-	//Download    *Download         `json:"download,omitempty"`
 }
 
 func (c *Config) IsUseHttps() bool {

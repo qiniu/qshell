@@ -107,6 +107,7 @@ func load(cfg *Config) error {
 			EnableStdout:   ls.IsLogStdout(),
 			MaxDays:        ls.LogRotate.Value(),
 		})
+		log.DebugF("log file:%s", ls.LogFile.Value())
 	}
 
 	return nil

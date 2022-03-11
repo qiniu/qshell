@@ -7,7 +7,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 )
 
-// Name - 用户自定义的账户名称
+// Account - 用户自定义的账户名称
 type Account struct {
 	Name      string
 	AccessKey string
@@ -16,9 +16,7 @@ type Account struct {
 
 // 获取qbox.Mac
 func (acc *Account) mac() (mac *qbox.Mac) {
-
-	mac = qbox.NewMac(acc.AccessKey, acc.SecretKey)
-	return
+	return qbox.NewMac(acc.AccessKey, acc.SecretKey)
 }
 
 // 对SecretKey进行加密， 保存AccessKey, 加密后的SecretKey在本地数据库中
