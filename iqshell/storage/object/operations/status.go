@@ -106,7 +106,7 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 
 var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储"}
 
-func getResultInfo(bucket, key string, status batch.OperationResult) string {
+func getResultInfo(bucket, key string, status object.StatusResult) string {
 	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", bucket)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", key)
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "FileHash:", status.Hash)
@@ -115,6 +115,23 @@ func getResultInfo(bucket, key string, status batch.OperationResult) string {
 	putTime := time.Unix(0, status.PutTime*100)
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "PutTime:", status.PutTime, putTime.String())
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "MimeType:", status.MimeType)
+
+	resoreStatus := ""
+	if status.RestoreStatus > 0 {
+		if status.RestoreStatus == 1 {
+			resoreStatus = "解冻中"
+		} else if status.RestoreStatus == 2 {
+			resoreStatus = "解冻完成"
+		}
+	}
+	if len(resoreStatus) > 0 {
+		statInfo += fmt.Sprintf("%-20s%d(%s)\r\n", "RestoreStatus:", status.RestoreStatus, resoreStatus)
+	}
+
+	if status.Expiration > 0 {
+		expiration := time.Unix(status.Expiration, 0)
+		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Expiration:", status.Expiration, expiration.String())
+	}
 
 	typeString := "未知类型"
 	if status.Type >= 0 && status.Type < len(objectTypes) {

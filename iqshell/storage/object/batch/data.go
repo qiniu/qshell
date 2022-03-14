@@ -44,11 +44,11 @@ type Operation interface {
 
 type OperationResult struct {
 	Code     int
-	Hash     string
-	FSize    int64
-	PutTime  int64
-	MimeType string
-	Type     int
+	Hash     string `json:"hash"`
+	FSize    int64  `json:"fsize"`
+	PutTime  int64  `json:"putTime"`
+	MimeType string `json:"mimeType"`
+	Type     int    `json:"type"`
 	Error    string
-	Parts    []int64
+	Parts    []int64 `json:"parts"`
 }

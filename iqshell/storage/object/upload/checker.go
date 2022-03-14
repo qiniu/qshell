@@ -36,12 +36,12 @@ func (c *serverChecker) check() (exist, match bool, err error) {
 	}
 
 	if checkHash {
-		return c.checkHash(fileServerStatus)
+		return c.checkHash(fileServerStatus.OperationResult)
 	} else if c.CheckSize {
-		return c.checkServerSize(fileServerStatus)
+		return c.checkServerSize(fileServerStatus.OperationResult)
 	} else {
 		//return true, true, nil
-		return c.checkServerSize(fileServerStatus)
+		return c.checkServerSize(fileServerStatus.OperationResult)
 	}
 }
 

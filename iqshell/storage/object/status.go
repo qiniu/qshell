@@ -1,8 +1,10 @@
 package object
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
@@ -10,8 +12,22 @@ import (
 )
 
 type StatusApiInfo struct {
-	Bucket string
-	Key    string
+	Bucket   string
+	Key      string
+	NeedPart bool
+}
+
+type StatusResult struct {
+	batch.OperationResult
+
+	// 归档存储文件的解冻状态，uint32 类型，2表示解冻完成，1表示解冻中；归档文件冻结时，不返回该字段。
+	RestoreStatus int `json:"restoreStatus"`
+	// 文件状态，uint32 类型。1 表示禁用；只有禁用状态的文件才会返回该字段。
+	Status int `json:"status"`
+	// 文件 md5 值
+	MD5 string `json:"md5"`
+	// 文件过期删除日期，int64 类型，Unix 时间戳格式
+	Expiration int64 `json:"expiration"`
 }
 
 func (s StatusApiInfo) ToOperation() (string, error) {
@@ -21,27 +37,30 @@ func (s StatusApiInfo) ToOperation() (string, error) {
 	return storage.URIStat(s.Bucket, s.Key), nil
 }
 
-func Status(info StatusApiInfo) (res batch.OperationResult, err error) {
+func Status(info StatusApiInfo) (res StatusResult, err error) {
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {
 		err = fmt.Errorf("status object:[%s|%s] error:%v", info.Bucket, info.Key, err.Error())
 		return
 	}
-	status, err := bucketManager.Stat(info.Bucket, info.Key)
+
+	reqHost, reqErr := bucketManager.RsReqHost(info.Bucket)
+	if reqErr != nil {
+		err = reqErr
+		return
+	}
+
+	needParts := "false"
+	if info.NeedPart {
+		needParts = "true"
+	}
+	reqURL := fmt.Sprintf("%s%s?needparts=%s", reqHost, storage.URIStat(info.Bucket, info.Key), needParts)
+	err = bucketManager.Client.CredentialedCall(context.Background(), bucketManager.Mac, auth.TokenQiniu, &res, "POST", reqURL, nil)
 	if err != nil {
 		err = fmt.Errorf("status object:[%s|%s] status error:%v", info.Bucket, info.Key, err.Error())
 		return
 	}
-	return batch.OperationResult{
-		Code:     200,
-		Hash:     status.Hash,
-		FSize:    status.Fsize,
-		PutTime:  status.PutTime,
-		MimeType: status.MimeType,
-		Type:     status.Type,
-		Error:    "",
-		Parts:    status.Parts,
-	}, nil
+	return res, nil
 }
 
 // ChangeStatusApiInfo 修改 status
