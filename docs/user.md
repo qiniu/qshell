@@ -48,7 +48,12 @@ qshell user cu test  // 切换到 `test` 账号，`test` 为 ak,sk 对的 id
 qshell user ls
 ```
 
-5. 删除`test`账号
+5. 输出某个账户信息
+```
+qshell user lookup test // `test` 为 ak,sk 对的 id
+```
+
+6. 删除`test`账号
 ```
 qshell user remove test // `test` 为 ak,sk 对的 id
 ```

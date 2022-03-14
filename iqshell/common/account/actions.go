@@ -263,20 +263,19 @@ func RmUser(userName string) (err error) {
 	return
 }
 
-// 查找用户
-func LookUp(userName string) (acc Account, err error) {
+// LookUp 查找用户
+func LookUp(userName string) ([]Account, error) {
 	if len(info.AccountDBPath) == 0 {
-		err = fmt.Errorf("empty account db path\n")
-		return
+		return nil, fmt.Errorf("empty account db path\n")
 	}
 
 	db, err := leveldb.OpenFile(info.AccountDBPath, nil)
 	if err != nil {
-		err = fmt.Errorf("open db: %v", err)
-		return
+		return nil, fmt.Errorf("open db: %v", err)
 	}
 	defer db.Close()
 
+	accounts := make([]Account, 0, 1)
 	iter := db.NewIterator(nil, nil)
 	defer iter.Release()
 	var name string
@@ -285,13 +284,13 @@ func LookUp(userName string) (acc Account, err error) {
 		name = string(iter.Key())
 		if strings.Contains(name, userName) {
 			value = string(iter.Value())
-			acc, err = decrypt(value)
-			if err != nil {
-				err = fmt.Errorf("Decrypt account bytes: %v", err)
-				return
+			acc, DErr := decrypt(value)
+			if DErr != nil {
+				log.ErrorF("Decrypt account bytes: %v", err)
+				continue
 			}
-			break
+			accounts = append(accounts, acc)
 		}
 	}
-	return
+	return accounts, nil
 }

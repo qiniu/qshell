@@ -90,11 +90,15 @@ func LookUp(cfg *iqshell.Config, info LookUpInfo) {
 		return
 	}
 
-	acc, err := account.LookUp(info.Name)
+	accounts, err := account.LookUp(info.Name)
 	if err != nil {
 		log.ErrorF("user lookup error: %v", err)
 		os.Exit(data.StatusError)
 	}
-	log.AlertF(acc.String())
+	for _, acc := range accounts {
+		log.AlertF(acc.String())
+		log.Alert("")
+	}
+
 	return
 }
