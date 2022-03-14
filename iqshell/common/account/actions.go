@@ -163,7 +163,7 @@ func ChUser(userName string) (err error) {
 
 		value, gErr := db.Get([]byte(userName), nil)
 		if gErr != nil {
-			err = gErr
+			err = fmt.Errorf("can't find user by name:%s , error:%v", userName, gErr)
 			return
 		}
 		user, dErr := decrypt(string(value))
