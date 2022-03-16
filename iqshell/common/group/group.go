@@ -18,7 +18,7 @@ type Info struct {
 	ItemSeparate           string
 	InputFile              string // batch 操作输入文件
 	Force                  bool   // 无需验证即可 batch 操作，类似于二维码验证
-	Overwrite              bool   // 强制执行，服务端参数
+	Overwrite              bool   // 强制执行，服务端参数，此参数在此仅为占位，不处理相关逻辑
 	FailExportFilePath     string // 错误输出
 	SuccessExportFilePath  string // 成功输出
 	OverrideExportFilePath string // 覆盖输出
