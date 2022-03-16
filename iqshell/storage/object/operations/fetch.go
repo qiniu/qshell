@@ -73,7 +73,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		return
 	}
 
-	work.NewFlowHandler(info.BatchInfo.Info.Info).ReadWork(func() (work work.Work, hasMore bool) {
+	work.NewFlowHandler(info.BatchInfo.Info.FlowInfo).ReadWork(func() (work work.Work, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
 			return nil, false
@@ -187,7 +187,7 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 
 	// fetch
 	go func() {
-		work.NewFlowHandler(info.GroupInfo.Info).
+		work.NewFlowHandler(info.GroupInfo.FlowInfo).
 			ReadWork(func() (work work.Work, hasMore bool) {
 				line, success := handler.Scanner().ScanLine()
 				if !success {

@@ -40,7 +40,7 @@ func Prefetch(urls []string) (err error) {
 	} else if resp.Code != 200 {
 		err = errors.New(fmt.Sprintf("CDN prefetch Code: %d, Error: %s", resp.Code, resp.Error))
 	} else {
-		log.InfoF("CDN prefetch Code: %d, Info: %s", resp.Code, resp.Error)
+		log.InfoF("CDN prefetch Code: %d, FlowInfo: %s", resp.Code, resp.Error)
 	}
 	return
 }
@@ -58,7 +58,7 @@ func Refresh(urls []string, dirs []string) (err error) {
 	} else if resp.Code != 200 {
 		err = errors.New(fmt.Sprintf("CDN refresh Code: %d, Error: %s", resp.Code, resp.Error))
 	} else {
-		log.InfoF("CDN refresh Code: %d, Info: %s", resp.Code, resp.Error)
+		log.InfoF("CDN refresh Code: %d, FlowInfo: %s", resp.Code, resp.Error)
 	}
 	return
 }

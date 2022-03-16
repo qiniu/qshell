@@ -16,14 +16,14 @@ type FlowHandler interface {
 	Start()
 }
 
-func NewFlowHandler(info Info) FlowHandler {
+func NewFlowHandler(info FlowInfo) FlowHandler {
 	return &flowHandler{
 		info: &info,
 	}
 }
 
 type flowHandler struct {
-	info                *Info
+	info                *FlowInfo
 	workReader          func() (work Work, hasMore bool)
 	workHandler         func(work Work) (Result, error)
 	workErrorHandler    func(action Work, err error)
@@ -91,7 +91,7 @@ func (b *flowHandler) handlerComplete() {
 func (b *flowHandler) Start() {
 	log.Debug("work flow did start")
 
-	workChan := make(chan Work, b.info.WorkCount)
+	workChan := make(chan Work, b.info.WorkerCount)
 	// 生产者
 	go func() {
 		log.DebugF("work producer start")
@@ -113,8 +113,8 @@ func (b *flowHandler) Start() {
 
 	// 消费者
 	wait := &sync.WaitGroup{}
-	wait.Add(b.info.WorkCount)
-	for i := 0; i < b.info.WorkCount; i++ {
+	wait.Add(b.info.WorkerCount)
+	for i := 0; i < b.info.WorkerCount; i++ {
 		go func(index int) {
 			log.DebugF("work consumer %d start", index)
 			for work := range workChan {

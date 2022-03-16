@@ -39,7 +39,7 @@ func SyncFile(cfg *iqshell.Config, info SyncInfo) {
 		}
 	} else {
 		log.Alert("")
-		log.Alert("-------------- File Info --------------")
+		log.Alert("-------------- File FlowInfo --------------")
 		log.AlertF("%10s%s", "Key: ", ret.Key)
 		log.AlertF("%10s%s", "Hash: ", ret.Hash)
 		log.AlertF("%10s%d%s", "Fsize: ", ret.FSize, "("+utils.FormatFileSize(ret.FSize)+")")

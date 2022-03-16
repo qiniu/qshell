@@ -26,10 +26,10 @@ type BatchUploadInfo struct {
 }
 
 func (info *BatchUploadInfo) Check() error {
-	if info.GroupInfo.WorkCount < 1 || info.GroupInfo.WorkCount > 2000 {
-		info.GroupInfo.WorkCount = 5
+	if info.GroupInfo.WorkerCount < 1 || info.GroupInfo.WorkerCount > 2000 {
+		info.GroupInfo.WorkerCount = 5
 		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
-			info.GroupInfo.Info.WorkCount)
+			info.GroupInfo.FlowInfo.WorkerCount)
 	}
 	if err := info.GroupInfo.Check(); err != nil {
 		return err
@@ -79,10 +79,10 @@ type BatchUpload2Info struct {
 }
 
 func (info *BatchUpload2Info) Check() error {
-	if info.GroupInfo.WorkCount < 1 || info.GroupInfo.WorkCount > 2000 {
-		info.GroupInfo.WorkCount = 5
+	if info.GroupInfo.WorkerCount < 1 || info.GroupInfo.WorkerCount > 2000 {
+		info.GroupInfo.WorkerCount = 5
 		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
-			info.GroupInfo.Info.WorkCount)
+			info.GroupInfo.FlowInfo.WorkerCount)
 	}
 	if err := info.GroupInfo.Check(); err != nil {
 		return err
@@ -179,7 +179,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	var failureFileCount int64
 	var notOverwriteCount int64
 	var skippedFileCount int64
-	work.NewFlowHandler(info.GroupInfo.Info).ReadWork(func() (work work.Work, hasMore bool) {
+	work.NewFlowHandler(info.GroupInfo.FlowInfo).ReadWork(func() (work work.Work, hasMore bool) {
 		line, hasMore := handler.Scanner().ScanLine()
 		if !hasMore {
 			return

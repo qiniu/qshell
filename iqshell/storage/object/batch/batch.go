@@ -76,7 +76,7 @@ func (f *flow) Start() {
 		return
 	}
 
-	work.NewFlowHandler(f.info.Info.Info).ReadWork(func() (work work.Work, hasMore bool) {
+	work.NewFlowHandler(f.info.Info.FlowInfo).ReadWork(func() (work work.Work, hasMore bool) {
 		task := &batchOperations{
 			operations:       make([]Operation, 0, 0),
 			operationStrings: make([]string, 0, 0),

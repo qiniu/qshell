@@ -207,7 +207,7 @@ func setBatchCmdInputFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.InputFile, "input-file", "i", "", "input file, read from stdin if not set")
 }
 func setBatchCmdWorkCountFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().IntVarP(&info.WorkCount, "worker", "c", 1, "worker count")
+	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 1, "worker count")
 }
 func setBatchCmdSuccessExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "rename success list")

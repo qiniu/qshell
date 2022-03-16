@@ -87,7 +87,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 		return
 	}
 
-	work.NewFlowHandler(info.BatchInfo.Info.Info).ReadWork(func() (work work.Work, hasMore bool) {
+	work.NewFlowHandler(info.BatchInfo.Info.FlowInfo).ReadWork(func() (work work.Work, hasMore bool) {
 		line, success := handler.Scanner().ScanLine()
 		if !success {
 			return nil, false

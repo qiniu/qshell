@@ -23,7 +23,7 @@ have already in local disk and need to skip download or not.`,
 			operations.BatchDownloadWithConfig(cfg, info)
 		},
 	}
-	cmd.Flags().IntVarP(&info.GroupInfo.WorkCount, "thread", "c", 5, "num of threads to download files")
+	cmd.Flags().IntVarP(&info.GroupInfo.WorkerCount, "thread", "c", 5, "num of threads to download files")
 	return cmd
 }
 

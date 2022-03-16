@@ -13,7 +13,7 @@ func TestCdnRefreshFile(t *testing.T) {
 	}
 
 	result, _ := test.RunCmdWithError("cdnrefresh", "-i", path, "--qps", "1", "--size", "2")
-	if !strings.Contains(result, "CDN refresh Code: 200, Info: success") {
+	if !strings.Contains(result, "CDN refresh Code: 200, FlowInfo: success") {
 		t.Fail()
 	}
 

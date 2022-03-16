@@ -15,8 +15,8 @@ func Some(operations []Operation) ([]OperationResult, error) {
 
 	NewFlow(Info{
 		Info: group.Info{
-			Info: work.Info{
-				WorkCount:         1,
+			FlowInfo: work.FlowInfo{
+				WorkerCount:       1,
 				StopWhenWorkError: true,
 			},
 		},

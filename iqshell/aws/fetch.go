@@ -44,8 +44,8 @@ func (info *FetchInfo) Check() error {
 		return alert.CannotEmptyError("AWS ID and SecretKey", "")
 	}
 
-	if info.BatchInfo.WorkCount <= 0 || info.BatchInfo.WorkCount >= 1000 {
-		info.BatchInfo.WorkCount = 20
+	if info.BatchInfo.WorkerCount <= 0 || info.BatchInfo.WorkerCount >= 1000 {
+		info.BatchInfo.WorkerCount = 20
 	}
 
 	return nil
@@ -69,7 +69,7 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 		return
 	}
 
-	fetchInfoChan := make(chan object.FetchApiInfo, info.BatchInfo.WorkCount)
+	fetchInfoChan := make(chan object.FetchApiInfo, info.BatchInfo.WorkerCount)
 	// 生产者
 	go func() {
 		// AWS related code
@@ -127,8 +127,8 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 
 	// 消费者
 	waiter := sync.WaitGroup{}
-	waiter.Add(info.BatchInfo.WorkCount)
-	for i := 0; i < info.BatchInfo.WorkCount; i++ {
+	waiter.Add(info.BatchInfo.WorkerCount)
+	for i := 0; i < info.BatchInfo.WorkerCount; i++ {
 		go func() {
 			for info := range fetchInfoChan {
 				_, err := object.Fetch(info)

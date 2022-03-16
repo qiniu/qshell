@@ -13,7 +13,7 @@ import (
 
 // Info Batch 参数
 type Info struct {
-	work.Info
+	work.FlowInfo
 
 	ItemSeparate           string
 	InputFile              string // batch 操作输入文件
@@ -25,7 +25,7 @@ type Info struct {
 }
 
 func (info *Info) Check() error {
-	if err := info.Info.Check(); err != nil {
+	if err := info.FlowInfo.Check(); err != nil {
 		return err
 	}
 
@@ -70,7 +70,7 @@ func NewHandler(info Info) (Handler, error) {
 
 func prepareToBatch(info Info) error {
 	log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, bsuccessFname: %q, bfailureFname: %q, sep: %q",
-		info.Force, info.Overwrite, info.WorkCount, info.InputFile, info.SuccessExportFilePath, info.FailExportFilePath, info.ItemSeparate)
+		info.Force, info.Overwrite, info.WorkerCount, info.InputFile, info.SuccessExportFilePath, info.FailExportFilePath, info.ItemSeparate)
 
 	if info.Force {
 		return nil

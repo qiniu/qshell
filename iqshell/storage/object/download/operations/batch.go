@@ -56,8 +56,8 @@ type BatchDownloadInfo struct {
 }
 
 func (info *BatchDownloadInfo) Check() error {
-	if info.GroupInfo.WorkCount < 1 || info.GroupInfo.WorkCount > 2000 {
-		info.GroupInfo.WorkCount = 5
+	if info.GroupInfo.WorkerCount < 1 || info.GroupInfo.WorkerCount > 2000 {
+		info.GroupInfo.WorkerCount = 5
 	}
 	if err := info.GroupInfo.Check(); err != nil {
 		return err
@@ -133,7 +133,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		}
 		return true
 	}
-	work.NewFlowHandler(info.GroupInfo.Info).ReadWork(func() (work work.Work, hasMore bool) {
+	work.NewFlowHandler(info.GroupInfo.FlowInfo).ReadWork(func() (work work.Work, hasMore bool) {
 		apiInfo, hasMore := ds.scan()
 		if apiInfo == nil {
 			return

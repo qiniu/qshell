@@ -13,7 +13,7 @@ func TestCdnPrefetch(t *testing.T) {
 	}
 
 	result := test.RunCmd(t, "cdnprefetch", "-i", path, "--qps", "1", "--size", "2")
-	if !strings.Contains(result, "CDN prefetch Code: 200, Info: success") {
+	if !strings.Contains(result, "CDN prefetch Code: 200, FlowInfo: success") {
 		t.Fail()
 	}
 
