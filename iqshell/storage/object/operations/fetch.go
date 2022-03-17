@@ -149,6 +149,7 @@ type BatchAsyncFetchInfo struct {
 	CallbackBodyType string
 	CallbackHost     string // 回调时使用的HOST
 	FileType         int    // 文件存储类型， 0 标准存储， 1 低频存储
+	Overwrite        bool
 }
 
 func (info *BatchAsyncFetchInfo) Check() error {
@@ -235,6 +236,7 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 						CallbackBody:     info.CallbackBody,
 						CallbackBodyType: info.CallbackBodyType,
 						FileType:         info.FileType,
+						IgnoreSameKey:    !info.Overwrite, // 此处需要翻转逻辑
 					},
 				}, true
 			}).

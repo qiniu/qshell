@@ -1,6 +1,7 @@
 package object
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth"
@@ -43,20 +44,43 @@ func Fetch(info FetchApiInfo) (result FetchResult, err error) {
 	return result, err
 }
 
-type AsyncFetchApiInfo storage.AsyncFetchParam
-type AsyncFetchApiResult storage.AsyncFetchRet
+type AsyncFetchApiInfo struct {
+	Url              string `json:"url"`
+	Host             string `json:"host,omitempty"`
+	Bucket           string `json:"bucket"`
+	Key              string `json:"key,omitempty"`
+	Md5              string `json:"md5,omitempty"`
+	Etag             string `json:"etag,omitempty"`
+	CallbackURL      string `json:"callbackurl,omitempty"`
+	CallbackBody     string `json:"callbackbody,omitempty"`
+	CallbackBodyType string `json:"callbackbodytype,omitempty"`
+	FileType         int    `json:"file_type,omitempty"`
+	IgnoreSameKey    bool   `json:"ignore_same_key"` // false: 如果空间中已经存在同名文件则放弃本次抓取(仅对比 Key，不校验文件内容), true: 有同名会抓取
+}
+
+type AsyncFetchApiResult struct {
+	Id   string `json:"id"`
+	Wait int    `json:"wait"`
+}
 
 func (result AsyncFetchApiResult) String() string {
 	return fmt.Sprintf(`{"id":"%s", "wait":%d}`, result.Id, result.Wait)
 }
 
-func AsyncFetch(info AsyncFetchApiInfo) (AsyncFetchApiResult, error) {
+func AsyncFetch(info AsyncFetchApiInfo) (result AsyncFetchApiResult, err error) {
 	bm, err := bucket.GetBucketManager()
 	if err != nil {
-		return AsyncFetchApiResult{}, err
+		return result, err
 	}
-	ret, err := bm.AsyncFetch(storage.AsyncFetchParam(info))
-	return AsyncFetchApiResult(ret), err
+	reqUrl, err := bm.ApiReqHost(info.Bucket)
+	if err != nil {
+		return result, err
+	}
+
+	reqUrl += "/sisyphus/fetch"
+
+	err = bm.Client.CredentialedCallWithJson(context.Background(), bm.Mac, auth.TokenQiniu, &result, "POST", reqUrl, nil, info)
+	return result, err
 }
 
 func CheckAsyncFetchStatus(toBucket, id string) (ret AsyncFetchApiResult, err error) {

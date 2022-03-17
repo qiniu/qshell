@@ -27,6 +27,7 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.CallbackBody, "callback-body", "b", "", "callback body")
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "callback HOST")
 	cmd.Flags().IntVarP(&info.FileType, "storage-type", "g", 0, "storage type")
+	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().StringVarP(&info.GroupInfo.InputFile, "input-file", "i", "", "input file with urls")
 	cmd.Flags().IntVarP(&info.GroupInfo.WorkerCount, "thread-count", "c", 20, "thread count")
 	cmd.Flags().StringVarP(&info.GroupInfo.SuccessExportFilePath, "success-list", "s", "", "success fetch list")
