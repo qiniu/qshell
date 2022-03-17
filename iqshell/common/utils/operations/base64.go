@@ -29,8 +29,10 @@ func Base64Encode(cfg *iqshell.Config, info Base64Info) {
 
 	dataEncoded := ""
 	if info.UrlSafe {
+		log.DebugF("Url safe")
 		dataEncoded = base64.URLEncoding.EncodeToString([]byte(info.Data))
 	} else {
+		log.DebugF("No url safe")
 		dataEncoded = base64.StdEncoding.EncodeToString([]byte(info.Data))
 	}
 	log.Alert(dataEncoded)

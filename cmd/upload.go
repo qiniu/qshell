@@ -119,6 +119,8 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.SaveKey, "key", "k", "", "save as <key> in bucket")
 	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "upload host")
+	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
+
 	return cmd
 }
 

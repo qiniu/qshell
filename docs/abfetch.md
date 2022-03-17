@@ -1,5 +1,5 @@
 # 简介
-`abfetch` 使用异步抓取接口抓取网络资源到七牛存储空间。
+`abfetch` 使用批量异步抓取接口抓取网络资源到七牛存储空间。
 
 参考文档：[异步抓取 (async fetch)](https://developer.qiniu.com/kodo/api/4097/asynch-fetch)
 
@@ -12,10 +12,11 @@ qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <Callback
 - Bucket：空间名，可以为公开空间或私有空间。 【必选】
 
 # 选项
-- -i：要抓取的资源列表， 一行一个资源，每一行多个元素时使用\t分割；每一行样式如下：（【必选】）
-  - [FileUrl]
+- -i：要抓取的资源列表， 一行一个资源，每一行多个元素时使用\t分割；如果没有通过该选项指定该文件参数， 从标准输入读取内容。每行具体格式如下：（【可选】）
+  - [FileUrl]                     
   - [FileUrl]\t[FileSize] 
-  - [FileUrl]\t[FileSize]\t[Key], eg:https://qiniu.com/a.png\t1024\ta.png                                       
+  - [FileUrl]\t[FileSize]\t[Key], // eg:https://qiniu.com/a.png\t1024\ta.png    
+  注：如果不指定 key 则从 url 中获取最后一个 path 信息作为 key；eg:https://qiniu.com/a.png\t1024\ta.png  key 为：ta.png
 - -b：回调的 http Body。 【可选】          
 - -T：回调时的 HOST 头。 【可选】
 - -a：回调的请求地址。 【可选】

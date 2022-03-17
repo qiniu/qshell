@@ -30,8 +30,9 @@ func (info *BatchDownloadWithConfigInfo) Check() error {
 }
 
 func BatchDownloadWithConfig(cfg *iqshell.Config, info BatchDownloadWithConfigInfo) {
-	if err := info.Check(); err != nil {
-		log.ErrorF("Check errorL%v", err)
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
 		return
 	}
 
