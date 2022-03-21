@@ -102,11 +102,11 @@ func (up *UploadConfig) Check() error {
 		up.ResumableAPIV2PartSize = utils.GB
 	}
 
-	if data.Empty(up.Bucket) {
+	if len(up.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
 
-	if data.Empty(up.SrcDir) {
+	if len(up.SrcDir) == 0 {
 		return alert.CannotEmptyError("SrcDir", "")
 	}
 

@@ -208,8 +208,8 @@ func createDownloadConfigFile(cfg *DownloadCfg) (cfgPath string, err error) {
 
 type DownloadCfg struct {
 	operations.DownloadCfg
-	LogLevel  *data.String
-	LogFile   *data.String
-	LogRotate *data.Int
-	LogStdout *data.Bool
+	LogLevel  *data.String `json:"log_level"`
+	LogFile   *data.String `json:"log_file"`
+	LogRotate *data.Int    `json:"log_rotate"`
+	LogStdout *data.Bool   `json:"log_stdout"`
 }

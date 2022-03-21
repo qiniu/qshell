@@ -224,7 +224,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.AlertF("%10s%10d", "Failure:", failureFileCount)
 	log.AlertF("%10s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("-----------------------------")
-	log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile)
+	log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
 
 	if failureFileCount > 0 {
 		os.Exit(data.StatusError)

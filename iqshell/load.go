@@ -95,7 +95,7 @@ func load(cfg *Config) error {
 	}
 
 	// 配置日志文件输出
-	if ls := workspace.GetLogConfig(); ls != nil && ls.LogFile != nil {
+	if ls := workspace.GetLogConfig(); ls != nil && data.NotEmpty(ls.LogFile) {
 		err := utils.CreateFileDirIfNotExist(ls.LogFile.Value())
 		if err != nil {
 			return errors.New("create log file error:" + err.Error())
