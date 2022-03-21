@@ -135,12 +135,12 @@ func (up *UploadConfig) Check() error {
 	}
 
 	if up.Policy != nil {
-		if (up.Policy.CallbackURL == "" && up.Policy.CallbackHost != "") ||
-			(up.Policy.CallbackURL != "" && up.Policy.CallbackHost == "") {
-			return errors.New("callbackUrls and callback must exist at the same time")
-		}
+		//if (up.Policy.CallbackURL == "" && up.Policy.CallbackHost != "") ||
+		//	(up.Policy.CallbackURL != "" && up.Policy.CallbackHost == "") {
+		//	return errors.New("callbackUrls and callback must exist at the same time")
+		//}
 
-		if up.Policy.CallbackHost != "" && up.Policy.CallbackURL != "" {
+		if up.Policy.CallbackURL != "" {
 			callbackUrls := strings.Replace(up.Policy.CallbackURL, ",", ";", -1)
 			up.Policy.CallbackURL = callbackUrls
 			if len(up.Policy.CallbackBody) == 0 {
