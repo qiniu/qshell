@@ -180,14 +180,12 @@ func TestDownloadDocument(t *testing.T) {
 }
 
 func createDownloadConfigFile(cfg *DownloadCfg) (cfgPath string, err error) {
-	if data.Empty(cfg.DestDir) {
+	if len(cfg.DestDir) == 0 {
 		rootPath, err := test.RootPath()
 		if err != nil {
 			return "", errors.New("get root path error:" + err.Error())
 		}
 		cfg.DestDir = filepath.Join(rootPath, "download")
-	} else if cfg.DestDir == "empty" {
-		cfg.DestDir = ""
 	}
 	cfg.LogLevel = data.NewString(config.DebugKey)
 	cfg.LogFile = data.NewString(filepath.Join(cfg.DestDir, "log.txt"))
