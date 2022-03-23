@@ -1,5 +1,6 @@
 # 2.6.3
-1. download 支持检测 hash
+1. qdownload 命令支持检测七牛云 Etag，在下载配置的 json 文件中增加选项："check_hash" : true即可，详情见 [文档](https://github.com/qiniu/qshell/blob/master/docs/qdownload.md)
+2. 更新依赖 go-sdk 版本至 [v7.10.1](https://github.com/qiniu/go-sdk/releases/tag/v7.10.1)，解决分片上传内存占用超大问题
 
 # 2.6.2
 1. 修复 qshell get -o 保存本地制定路径已知问题
