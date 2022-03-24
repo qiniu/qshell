@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"io/ioutil"
@@ -70,6 +71,7 @@ func ReplaceDomain(info ReplaceDomainApiInfo) error {
 	for bReader.Scan() {
 		line := strings.TrimSpace(bReader.Text())
 		newLine := replaceTsNewDomain(line, info.NewDomain, info.RemoveSparePreSlash)
+		log.DebugF("NewLine:%s", newLine)
 		newM3u8Lines = append(newM3u8Lines, newLine)
 	}
 

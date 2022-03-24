@@ -175,6 +175,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) error {
 	if response.StatusCode/100 != 2 {
 		return fmt.Errorf(" Download error: %v", response)
 	}
+	defer response.Body.Close()
 
 	var tempFileHandle *os.File
 	if info.FromBytes > 0 {
