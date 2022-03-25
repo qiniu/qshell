@@ -105,13 +105,16 @@ func (d *downloadScanner) createFileScanOperation() {
 				d.exporter.Fail().ExportF("%s: error:%s", line, "line must contain key fileSize fileHash and fileModifyTime")
 				continue
 			} else if len(items) < 4 {
+				// Key FileSize FileHash FileModifyTime, 数据不齐全则通过 stat 接口获取具体信息
 				keys = append(keys, items[0])
 				continue
 			}
 
+			// Key FileSize FileHash FileModifyTime, 数据齐全则直接构建下载文件信息
 			fileKey := items[0]
 			fileSize, err := strconv.ParseInt(items[1], 10, 64)
 			if err != nil {
+				// 格式有误，不下载，防止误下载
 				log.ErrorF("invalid line, get file size error:%s", line)
 				d.exporter.Fail().ExportF("%s: get file size error:%s", line, err)
 				continue
@@ -120,6 +123,7 @@ func (d *downloadScanner) createFileScanOperation() {
 			fileHash := items[2]
 			fileModifyTime, err := strconv.ParseInt(items[3], 10, 64)
 			if err != nil {
+				// 格式有误，不下载，防止误下载
 				log.ErrorF("invalid line, get file modify time error:%s", line)
 				d.exporter.Fail().ExportF("%s: get file modify time error:%s", line, err)
 				continue
