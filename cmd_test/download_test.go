@@ -31,7 +31,6 @@ func TestDownloadWithKeyFile(t *testing.T) {
 			CheckHash:   true,
 			Referer:     "",
 			CdnDomain:   "",
-			BatchNum:    0,
 			RecordRoot:  "",
 		},
 	}
@@ -70,7 +69,6 @@ func TestDownloadFromBucket(t *testing.T) {
 			CheckHash:   true,
 			Referer:     "",
 			CdnDomain:   "",
-			BatchNum:    0,
 			RecordRoot:  "",
 		},
 	}
@@ -113,7 +111,6 @@ func TestDownloadNoBucket(t *testing.T) {
 			CheckHash:   true,
 			Referer:     "",
 			CdnDomain:   "",
-			BatchNum:    0,
 			RecordRoot:  "",
 		},
 	}
@@ -145,7 +142,6 @@ func TestDownloadNoDomain(t *testing.T) {
 			CheckHash:   true,
 			Referer:     "",
 			CdnDomain:   "",
-			BatchNum:    0,
 			RecordRoot:  "",
 		},
 	}

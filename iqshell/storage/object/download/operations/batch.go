@@ -38,7 +38,7 @@ func BatchDownloadWithConfig(cfg *iqshell.Config, info BatchDownloadWithConfigIn
 
 	downloadInfo := BatchDownloadInfo{
 		GroupInfo:   info.GroupInfo,
-		DownloadCfg: DownloadCfg{},
+		DownloadCfg: DefaultDownloadCfg(),
 	}
 	if err := utils.UnMarshalFromFile(info.LocalDownloadConfig, &downloadInfo.DownloadCfg); err != nil {
 		log.ErrorF("UnMarshal: read download config error:%v config file:%s", info.LocalDownloadConfig, err)

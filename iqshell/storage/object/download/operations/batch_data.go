@@ -27,8 +27,25 @@ type DownloadCfg struct {
 
 	// 下载状态保存路径
 	RecordRoot string `json:"record_root,omitempty"`
+}
 
-	BatchNum int `json:"-"`
+func DefaultDownloadCfg() DownloadCfg {
+	return DownloadCfg{
+		ThreadCount:  5,
+		FileEncoding: "",
+		KeyFile:      "",
+		DestDir:      "",
+		Bucket:       "",
+		Prefix:       "",
+		Suffixes:     "",
+		IoHost:       "",
+		Public:       false,
+		CheckHash:    false,
+		Referer:      "",
+		CdnDomain:    "",
+		GetFileApi:   false,
+		RecordRoot:   "",
+	}
 }
 
 func (d *DownloadCfg) JobId() string {
@@ -38,9 +55,6 @@ func (d *DownloadCfg) JobId() string {
 func (d *DownloadCfg) Check() error {
 	if len(d.Bucket) == 0 {
 		return alert.CannotEmptyError("bucket", "")
-	}
-	if d.BatchNum == 0 {
-		d.BatchNum = 1000
 	}
 	return nil
 }
