@@ -76,6 +76,12 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
+	if data.NotEmpty(workspace.GetConfig().Log.LogFile) {
+		log.AlertF("Writing upload log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+	} else {
+		log.Debug("log file not set \n\n")
+	}
+
 	info.GroupInfo.InputFile = info.KeyFile
 	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig(), &info.DownloadCfg)
 	if len(downloadDomain) == 0 && len(downloadHost) == 0 {
@@ -224,7 +230,10 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.AlertF("%10s%10d", "Failure:", failureFileCount)
 	log.AlertF("%10s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("-----------------------------")
-	log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
+
+	if data.Empty(workspace.GetConfig().Log.LogFile) {
+		log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
+	}
 
 	if failureFileCount > 0 {
 		os.Exit(data.StatusError)

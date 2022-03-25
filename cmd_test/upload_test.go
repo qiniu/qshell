@@ -120,7 +120,8 @@ func TestQUpload2WithSrcDir(t *testing.T) {
 	result, errs := test.RunCmdWithError("qupload2",
 		"--bucket", test.Bucket,
 		"--src-dir", fileDir,
-		"--rescan-local")
+		"--rescan-local",
+		"--check-exists")
 	defer func() {
 		test.RemoveFile(fileListPath)
 	}()

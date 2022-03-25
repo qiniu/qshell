@@ -104,7 +104,12 @@ func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 }
 
 func batchUpload(info BatchUpload2Info) {
-	log.AlertF("Writing upload log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+	if data.NotEmpty(workspace.GetConfig().Log.LogFile) {
+		log.AlertF("Writing upload log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+	} else {
+		log.Debug("log file not set \n\n")
+	}
+
 	if len(info.RecordRoot) == 0 {
 		info.RecordRoot = workspace.GetWorkspace()
 	}
@@ -332,7 +337,9 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
 	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("---------------------------------------------")
-	log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+	if data.Empty(workspace.GetConfig().Log.LogFile) {
+		log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+	}
 }
 
 type BatchUploadConfigMouldInfo struct {
