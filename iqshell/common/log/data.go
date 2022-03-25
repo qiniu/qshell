@@ -11,6 +11,7 @@ const (
 	LevelWarning Level = logs.LevelWarning
 	LevelInfo    Level = logs.LevelInformational
 	LevelDebug   Level = logs.LevelDebug
+	LevelNone    Level = 100000 // 不输出日志
 )
 
 type Level = int

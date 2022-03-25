@@ -51,10 +51,14 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - cdn_domain：设置下载的 CDN 域名，默认为空表示从存储源站下载，【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】 【可选】
 - referer：如果 CDN 域名配置了域名白名单防盗链，需要指定一个允许访问的 referer 地址；默认为空 【可选】
 - public：空间是否为公开空间；为 `true` 时为公有空间，公有空间下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为 `false`（私有空间）【可选】
-- log_level：下载日志输出级别，可选值为 `debug`,`info`,`warn`,`error`，默认 `info` 【可选】
-- log_file：下载日志的输出文件，如果不指定会输出到 qshell 工作目录下默认的文件中，文件名可以在终端输出看到 【可选】
+- log_level：下载日志输出级别，可选值为 `debug`,`info`,`warn`,`error`，其他任何字段均会导致不输出日志。默认 `debug` 。【可选】
+- log_file：下载日志的输出文件，默认为输出到 `record_root` 指定的文件中，具体文件路径可以在终端输出看到。【可选】
 - log_rotate：下载日志文件的切换周期，单位为天，默认为 7 天即切换到新的下载日志文件 【可选】
 - log_stdout：下载日志是否同时输出一份到标准终端，默认为 `false`，主要在调试下载功能时可以指定为 `true` 【可选】
+- record_root：下载记录信息保存路径，包括日志文件和下载进度文件；默认为 `qshell` 下载目录；【可选】
+    - 通过 `-L` 指定工作目录时，`record_root` 则为 `此工作目录/qupload/$jobId`，
+    - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/qupload/$jobId`
+    - 注意 `jobId` 是根据上传任务动态生成；据图方式为 MD5("DestDir:$Bucket:KeyFile")
 
 ##### 备注：
 1. 在Windows系统下面使用的时候，注意 `dest_dir` 的设置遵循 `D:\\jemy\\backup` 这种方式。也就是路径里面的 `\` 要有两个（`\\`）。

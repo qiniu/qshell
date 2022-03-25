@@ -43,9 +43,41 @@ type UploadConfig struct {
 	WorkerCount            int    `json:"work_count,omitempty"` // 分片上传并发数
 	RecordRoot             string `json:"record_root,omitempty"`
 
-	//Tasks  *Tasks             `json:"-"`
-	//Retry  *Retry             `json:"-"`
 	Policy *storage.PutPolicy `json:"policy"`
+}
+
+func DefaultUploadConfig() UploadConfig {
+	return UploadConfig{
+		UpHost:                 "",
+		BindUpIp:               "",
+		BindRsIp:               "",
+		BindNicIp:              "",
+		SrcDir:                 "",
+		FileList:               "",
+		IgnoreDir:              false,
+		SkipFilePrefixes:       "",
+		SkipPathPrefixes:       "",
+		SkipFixedStrings:       "",
+		SkipSuffixes:           "",
+		FileEncoding:           "",
+		Bucket:                 "",
+		ResumableAPIV2:         false,
+		ResumableAPIV2PartSize: 4 * 1024 * 1024,
+		PutThreshold:           8 * 1024 * 1024,
+		KeyPrefix:              "",
+		Overwrite:              false,
+		CheckExists:            true,
+		CheckHash:              false,
+		CheckSize:              true,
+		RescanLocal:            false,
+		FileType:               0,
+		DeleteOnSuccess:        false,
+		DisableResume:          false,
+		DisableForm:            false,
+		WorkerCount:            0,
+		RecordRoot:             "",
+		Policy:                 nil,
+	}
 }
 
 func (up *UploadConfig) IsIgnoreDir() bool {

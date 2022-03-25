@@ -40,7 +40,7 @@ func (s StatusApiInfo) ToOperation() (string, error) {
 func Status(info StatusApiInfo) (res StatusResult, err error) {
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {
-		err = fmt.Errorf("status object:[%s|%s] error:%v", info.Bucket, info.Key, err.Error())
+		err = fmt.Errorf("status object [%s:%s] error:%v", info.Bucket, info.Key, err.Error())
 		return
 	}
 
@@ -57,7 +57,7 @@ func Status(info StatusApiInfo) (res StatusResult, err error) {
 	reqURL := fmt.Sprintf("%s%s?needparts=%s", reqHost, storage.URIStat(info.Bucket, info.Key), needParts)
 	err = bucketManager.Client.CredentialedCall(context.Background(), bucketManager.Mac, auth.TokenQiniu, &res, "POST", reqURL, nil)
 	if err != nil {
-		err = fmt.Errorf("status object:[%s|%s] status error:%v", info.Bucket, info.Key, err.Error())
+		err = fmt.Errorf("status object [%s:%s] status error:%v", info.Bucket, info.Key, err.Error())
 		return
 	}
 	return res, nil

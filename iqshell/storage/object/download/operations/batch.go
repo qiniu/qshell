@@ -30,9 +30,13 @@ func (info *BatchDownloadWithConfigInfo) Check() error {
 }
 
 func BatchDownloadWithConfig(cfg *iqshell.Config, info BatchDownloadWithConfigInfo) {
-	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+	if iqshell.ShowDocumentIfNeeded(cfg) {
+		return
+	}
+
+	if !iqshell.Check(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
-	}); !shouldContinue {
+	}) {
 		return
 	}
 
@@ -72,15 +76,19 @@ func (info *BatchDownloadInfo) Check() error {
 func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
+		BeforeLogFile: func() {
+			if len(info.RecordRoot) == 0 {
+				info.RecordRoot = downloadCachePath(workspace.GetConfig(), &info.DownloadCfg)
+			}
+			if data.Empty(cfg.CmdCfg.Log.LogFile) {
+				workspace.GetConfig().Log.LogFile = data.NewString(filepath.Join(info.RecordRoot, "log.txt"))
+			}
+		},
 	}); !shouldContinue {
 		return
 	}
 
-	if data.NotEmpty(workspace.GetConfig().Log.LogFile) {
-		log.AlertF("Writing upload log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
-	} else {
-		log.Debug("log file not set \n\n")
-	}
+	log.DebugF("record root: %s", info.RecordRoot)
 
 	info.GroupInfo.InputFile = info.KeyFile
 	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig(), &info.DownloadCfg)
@@ -92,12 +100,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.DebugF("Download Domain:%s", downloadDomain)
 	log.DebugF("Download Domain:%s", downloadHost)
 
-	if len(info.RecordRoot) == 0 {
-		info.RecordRoot = workspace.GetWorkspace()
-	}
-	jobId := info.DownloadCfg.JobId()
-	cachePath := downloadCachePath(workspace.GetConfig(), &info.DownloadCfg)
-	dbPath := filepath.Join(cachePath, jobId, ".list")
+	dbPath := filepath.Join(info.RecordRoot, ".ldb")
 	log.InfoF("download db dir:%s", dbPath)
 
 	exporter, err := export.NewFileExport(export.FileExporterConfig{
@@ -231,7 +234,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.AlertF("%10s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("-----------------------------")
 
-	if data.Empty(workspace.GetConfig().Log.LogFile) {
+	if workspace.GetConfig().Log.Enable() {
 		log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
 	}
 

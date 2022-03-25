@@ -32,18 +32,18 @@ qshell qupload [-c <ThreadCount>] [--sucess-list <SuccessFileName>] [--failure-l
    "up_host"            :   "<Upload Host>",
    "ignore_dir"         :   false,
    "overwrite"          :   false,
-   "check_exists"       :   false,
+   "check_exists"       :   true,
    "check_hash"         :   false,
-   "check_size"         :   false,
-   "rescan_local"       :   true,
+   "check_size"         :   true,
+   "rescan_local"       :   false,
    "skip_file_prefixes" :   "test,demo,",
    "skip_path_prefixes" :   "hello/,temp/",
    "skip_fixed_strings" :   ".svn,.git",
    "skip_suffixes"      :   ".DS_Store,.exe",
    "log_file"           :   "upload.log",
    "log_level"          :   "info",
-   "log_rotate"         :   1,
-   "log_stdout"         :   false,
+   "log_rotate"         :   7,
+   "log_stdout"         :   true,
    "file_type"          :   0,
    "resumable_api_v2"   :   false,
    "resumable_api_v2_part_size" : 4194304
@@ -56,23 +56,28 @@ qshell qupload [-c <ThreadCount>] [--sucess-list <SuccessFileName>] [--failure-l
 - up_host：上传域名，可选设置，一般情况下不需要指定。【可选】
 - ignore_dir：保存文件在七牛空间时，使用的文件名是否忽略本地路径，默认为 `false`。 【可选】
 - key_prefix：在保存文件在七牛空间时，使用的文件名的前缀，默认为空字符串【可选】
-- overwrite：是否覆盖空间中已有的同名文件，默认不覆盖。【可选】
-- check_exists：每个文件上传之前是否检查空间中是否存在同名文件，默认为 `false`，不检查。 【可选】
-- check_hash：在 `check_exists` 设置为 `true` 的情况下生效，是否检查本地文件 hash 和空间文件 hash 一致，默认不检查，节约同步时间。 【可选】
-- check_size：在 `check_exists` 设置为 `true` 的情况下，如果 `check_hash` 为 `false`，那么你可以设置 `check_size` 为 `true` 做简单的大小检查，以查看本地文件和空间文件大小是否一致，默认不检查。 【可选】
+- overwrite：是否覆盖空间中已有的同名文件，默认为 `false`（不覆盖）。【可选】
+- check_exists：每个文件上传之前是否检查空间中是否存在同名文件，默认为 `true`（检查文件是否在空间中存在）。 【可选】
+- check_hash：在 `check_exists` 设置为 `true` 的情况下生效，是否检查本地文件 hash 和空间文件 hash 一致；默认为 `false`（不检查 hash），节约同步时间。 【可选】
+- check_size：在 `check_exists` 设置为 `true` 的情况下生效，是否检查本地大小和空间文件大小一致，优先级低于 `check_hash`；检查耗时小于 `check_hash`；默认为 `true`（检查文件大小是否一致）。 【可选】
 - skip_file_prefixes：跳过所有文件名（不带相对路径）以该前缀列表里面字符串为前缀的文件，默认为空字符。 【可选】
 - skip_path_prefixes：跳过所有文件路径（相对路径）以该前缀列表里面字符串为前缀的文件，默认为空字符。 【可选】
 - skip_fixed_strings：跳过所有文件路径（相对路径）中包含该字符串列表中字符串的文件，默认为空字符。 【可选】
 - skip_suffixes：跳过所有以该后缀列表里面字符串为后缀的文件或者目录，默认为空字符。 【可选】
-- rescan_local：默认情况下，本地新增的文件不会被同步，需要手动设置为 `true` 才会去检测新增文件。 【可选】
-- log_level：上传日志输出级别，可选值为 `debug`, `info`, `warn`, `error`,默认 `info` 。 【可选】
-- log_file：上传日志的输出文件，如果不指定会输出到 `qshell` 工作目录下默认的文件中，文件名可以在终端输出看到。 【可选】
+- rescan_local：命令执行时，是否重新从上传文件夹中扫描需要上传的文件并生成上传列表进行缓存，默认为 `false`，尽在本地不存在缓存文件的情况下才进行扫描；如果本地有新增的文件需要上传步，需要手动设置为 `true`。 【可选】
+- log_level：上传日志输出级别，可选值为 `debug`, `info`, `warn`, `error`其他任何字段均会导致不输出日志。默认 `debug` 。【可选】
+- log_file：上传日志的输出文件，默认为输出到 `record_root` 指定的文件中，具体文件路径可以在终端输出看到。 【可选】
 - log_rotate：上传日志文件的切换周期，单位为天，默认为 7 天即切换到新的上传日志文件。 【可选】
 - log_stdout：上传日志是否同时输出一份到标准终端，默认为 `false`，主要在调试上传功能时可以指定为 `true`。 【可选】
 - file_type：文件存储类型，默认为 `0`(标准存储） `1`为低频存储。 【可选】
 - delete_on_success：上传成功的文件，同时删除本地文件，以达到节约磁盘的目的，比如日志归档的场景，默认为 `false`，如果需要开启功能，设置为 `true`即可。【可选】
 - resumable_api_v2：使用分片 V2 进行上传，默认为 `false`使用分片 V1 。【可选】
-- resumable_api_v2_part_size：使用分片 V2 进行上传时定制分片大小，默认 4M 。【可选】
+- resumable_api_v2_part_size：使用分片 V2 进行上传时定制分片大小，默认 4194304（4M） 。【可选】
+- put_threshold：上传阈值，上传文件大小超过此值会使用分片上传，不超过使用表单上传；默认为 8388608（8M） 。【可选】
+- record_root：上传记录信息保存路径，包括日志文件和上传进度文件；默认为 `qshell` 上传目录；【可选】
+  - 通过 `-L` 指定工作目录时，`record_root` 则为此工作目录/qdownload/$jobId， 
+  - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/qdownload/$jobId`
+  - 注意 `jobId` 是根据上传任务动态生成；据图方式为 MD5("$SrcDir:$Bucket:$FileList")
 
 对于那么多的参数，我们可以分为几类来解释：
 

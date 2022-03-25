@@ -19,6 +19,10 @@ func (l *LogSetting) Check() error {
 	return nil
 }
 
+func (l *LogSetting) Enable() bool {
+	return l.GetLogLevel() != log.LevelNone
+}
+
 func (l *LogSetting) IsLogStdout() bool {
 	if l.LogStdout == nil {
 		return true
@@ -59,7 +63,7 @@ func (l *LogSetting) GetLogLevel() (logLevel int) {
 	case ErrorKey:
 		logLevel = log.LevelError
 	default:
-		logLevel = log.LevelDebug
+		logLevel = log.LevelNone
 	}
 	return
 }

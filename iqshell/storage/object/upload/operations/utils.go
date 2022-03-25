@@ -3,12 +3,17 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
 	"path/filepath"
 )
 
 func uploadCachePath(cfg *config.Config, uploadCfg *UploadConfig) string {
 	recordRoot := uploadCfg.RecordRoot
+	if len(recordRoot) == 0 {
+		recordRoot = workspace.GetWorkspace()
+	}
+
 	if len(recordRoot) == 0 {
 		log.Debug("upload can't get record root")
 		return ""

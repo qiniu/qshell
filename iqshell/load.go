@@ -1,7 +1,6 @@
 package iqshell
 
 import (
-	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/client"
 	"github.com/qiniu/go-sdk/v7/storage"
@@ -26,24 +25,45 @@ type Config struct {
 }
 
 type CheckAndLoadInfo struct {
-	Checker data.Checker
+	Checker       data.Checker
+	BeforeLogFile func()
+	AfterLogFile  func()
 }
 
 func CheckAndLoad(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
-	if cfg.Document {
-		docs.ShowCmdDocument(cfg.CmdCfg.CmdId)
+	if !Load(cfg, info) {
+		return false
+	}
+	return Check(cfg, info)
+}
+
+func Load(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
+	if ShowDocumentIfNeeded(cfg) {
+		return false
+	}
+	if !LoadBase(cfg) {
+		return false
+	}
+	if !LoadWorkspace(cfg) {
+		return false
+	}
+	if info.BeforeLogFile != nil {
+		info.BeforeLogFile()
+	}
+	shouldContinue = LoadFileLog(cfg)
+	if info.AfterLogFile != nil {
+		info.AfterLogFile()
+	}
+	if !shouldContinue {
 		return false
 	}
 
-	err := load(cfg)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "load error: %v\n", err)
-		return false
-	}
+	return true
+}
 
+func Check(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
 	if info.Checker != nil {
-		err = info.Checker.Check()
-		if err != nil {
+		if err := info.Checker.Check(); err != nil {
 			log.ErrorF("check error: %v", err)
 			return false
 		}
@@ -51,7 +71,15 @@ func CheckAndLoad(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
 	return true
 }
 
-func load(cfg *Config) error {
+func ShowDocumentIfNeeded(cfg *Config) bool {
+	if !cfg.Document {
+		return false
+	}
+	docs.ShowCmdDocument(cfg.CmdCfg.CmdId)
+	return true
+}
+
+func LoadBase(cfg *Config) (shouldContinue bool) {
 	//set cpu count
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -73,7 +101,10 @@ func load(cfg *Config) error {
 		Level:          logLevel,
 		StdOutColorful: cfg.StdoutColorful,
 	})
+	return true
+}
 
+func LoadWorkspace(cfg *Config) (shouldContinue bool) {
 	// 获取工作目录
 	workspacePath := ""
 	if cfg.Local {
@@ -91,14 +122,19 @@ func load(cfg *Config) error {
 		WorkspacePath:  workspacePath,
 		UserConfigPath: cfg.ConfigFilePath,
 	}); err != nil {
-		return err
+		_, _ = fmt.Fprintf(os.Stderr, "load workspace error: %v\n", err)
+		return false
 	}
+	return true
+}
 
+func LoadFileLog(cfg *Config) (shouldContinue bool) {
 	// 配置日志文件输出
-	if ls := workspace.GetLogConfig(); ls != nil && data.NotEmpty(ls.LogFile) {
+	if ls := workspace.GetLogConfig(); ls != nil && ls.Enable() && data.NotEmpty(ls.LogFile) {
 		err := utils.CreateFileDirIfNotExist(ls.LogFile.Value())
 		if err != nil {
-			return errors.New("create log file error:" + err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "load file log, create log file error: %v\n", err)
+			return false
 		}
 		_ = log.LoadFileLogger(log.Config{
 			Filename:       ls.LogFile.Value(),
@@ -108,8 +144,9 @@ func load(cfg *Config) error {
 			EnableStdout:   ls.IsLogStdout(),
 			MaxDays:        ls.LogRotate.Value(),
 		})
-		log.DebugF("log file:%s", ls.LogFile.Value())
+		log.AlertF("Writing log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+	} else {
+		log.DebugF("log file not enable, log level:%s \n\n", workspace.GetConfig().Log.LogLevel.Value())
 	}
-
-	return nil
+	return true
 }

@@ -40,9 +40,13 @@ func (info *BatchUploadInfo) Check() error {
 // BatchUpload 该命令会读取配置文件， 上传本地文件系统的文件到七牛存储中;
 // 可以设置多线程上传，默认的线程区间在[iqshell.min_upload_thread_count, iqshell.max_upload_thread_count]
 func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
-	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+	if iqshell.ShowDocumentIfNeeded(cfg) {
+		return
+	}
+
+	if !iqshell.Check(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
-	}); !shouldContinue {
+	}) {
 		return
 	}
 
@@ -52,14 +56,14 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 	}
 
 	upload2Info := BatchUpload2Info{
-		GroupInfo: info.GroupInfo,
-		UploadConfig: UploadConfig{
-			Policy: &storage.PutPolicy{
-				CallbackURL:  info.CallbackUrl,
-				CallbackHost: info.CallbackHost,
-			},
-		},
+		GroupInfo:    info.GroupInfo,
+		UploadConfig: DefaultUploadConfig(),
 	}
+	upload2Info.UploadConfig.Policy = &storage.PutPolicy{
+		CallbackURL:  info.CallbackUrl,
+		CallbackHost: info.CallbackHost,
+	}
+
 	if err := utils.UnMarshalFromFile(info.UploadConfigFile, &upload2Info.UploadConfig); err != nil {
 		log.ErrorF("UnMarshal: read upload config error:%v config file:%s", err, info.UploadConfigFile)
 		return
@@ -96,35 +100,29 @@ func (info *BatchUpload2Info) Check() error {
 func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
+		BeforeLogFile: func() {
+			if len(info.RecordRoot) == 0 {
+				info.RecordRoot = uploadCachePath(workspace.GetConfig(), &info.UploadConfig)
+			}
+			if data.Empty(cfg.CmdCfg.Log.LogFile) {
+				workspace.GetConfig().Log.LogFile = data.NewString(filepath.Join(info.RecordRoot, "log.txt"))
+			}
+		},
 	}); !shouldContinue {
 		return
 	}
+
+	log.DebugF("record root: %s", info.RecordRoot)
 
 	batchUpload(info)
 }
 
 func batchUpload(info BatchUpload2Info) {
-	if data.NotEmpty(workspace.GetConfig().Log.LogFile) {
-		log.AlertF("Writing upload log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
-	} else {
-		log.Debug("log file not set \n\n")
-	}
-
-	if len(info.RecordRoot) == 0 {
-		info.RecordRoot = workspace.GetWorkspace()
-	}
-	jobId := info.JobId()
-	cachePath := uploadCachePath(workspace.GetConfig(), &info.UploadConfig)
-	dbPath := ""
-	if len(cachePath) > 0 {
-		dbPath = filepath.Join(cachePath, jobId+".ldb")
-	}
-
+	dbPath := filepath.Join(info.RecordRoot, ".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
 
 	// 扫描本地文件
 	needScanLocal := false
-
 	if data.Empty(info.FileList) {
 		needScanLocal = true
 	} else {
@@ -133,7 +131,7 @@ func batchUpload(info BatchUpload2Info) {
 			needScanLocal = false
 			info.GroupInfo.InputFile = info.FileList
 		} else {
-			info.GroupInfo.InputFile = filepath.Join(cachePath, jobId+".cache")
+			info.GroupInfo.InputFile = filepath.Join(info.RecordRoot, ".cache")
 			if _, statErr := os.Stat(info.GroupInfo.InputFile); statErr == nil {
 				//file exists
 				needScanLocal = info.IsRescanLocal()
@@ -150,7 +148,7 @@ func batchUpload(info BatchUpload2Info) {
 		}
 
 		if len(info.GroupInfo.InputFile) == 0 {
-			info.GroupInfo.InputFile = filepath.Join(cachePath, jobId+".cache")
+			info.GroupInfo.InputFile = filepath.Join(info.RecordRoot, ".cache")
 		}
 
 		_, err := utils.DirCache(info.SrcDir, info.GroupInfo.InputFile)
@@ -196,7 +194,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			return
 		}
 
-		items := strings.Split(line, info.GroupInfo.ItemSeparate)
+		items := utils.SplitString(line, info.GroupInfo.ItemSeparate)
 		if len(items) < 3 {
 			syncLocker.Do(func() { skippedFileCount += 1 })
 			log.InfoF("Skip by invalid line, items should more than 2:%s", line)
@@ -249,6 +247,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 		if data.NotEmpty(uploadConfig.FileEncoding) && utils.IsGBKEncoding(uploadConfig.FileEncoding) {
 			key, _ = utils.Gbk2Utf8(key)
 		}
+		log.DebugF("Key:%s FileSize:%d ModifyTime:%d", key, fileSize, modifyTime)
 
 		localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
 		apiInfo := &UploadInfo{
@@ -337,7 +336,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
 	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
 	log.AlertF("---------------------------------------------")
-	if data.Empty(workspace.GetConfig().Log.LogFile) {
+	if workspace.GetConfig().Log.Enable() {
 		log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
 	}
 }
