@@ -78,8 +78,8 @@ func TestDownloadFromBucket(t *testing.T) {
 	}
 	defer func() {
 		test.RemoveFile(path)
-		test.RemoveFile(cfg.DestDir)
-		test.RemoveFile(cfg.LogFile.Value())
+		//test.RemoveFile(cfg.DestDir)
+		//test.RemoveFile(cfg.LogFile.Value())
 	}()
 
 	test.RunCmdWithError("qdownload", "-c", "4", path)
@@ -90,12 +90,6 @@ func TestDownloadFromBucket(t *testing.T) {
 	if !test.IsFileHasContent(cfg.LogFile.Value()) {
 		t.Fatal("log file should has content")
 	}
-
-	err = test.RemoveFile(cfg.DestDir)
-	if err != nil {
-		t.Log("remove file error:", err)
-	}
-	return
 }
 
 func TestDownloadNoBucket(t *testing.T) {

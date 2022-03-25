@@ -123,10 +123,7 @@ func CreateFileDirIfNotExist(path string) error {
 	if err := CreateDirIfNotExist(dir); err != nil {
 		return err
 	}
-
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
-	defer f.Close()
-	return err
+	return nil
 }
 
 func ExistFile(path string) (bool, error) {
