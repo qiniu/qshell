@@ -92,8 +92,10 @@ func (d *downloadScanner) createFileScanOperation() {
 
 			line, success := d.lineScanner.ScanLine()
 			if !success {
-				d.getDownloadObjectStatusAndAddToChan(keys)
-				keys = nil
+				if len(keys) > 0 {
+					d.getDownloadObjectStatusAndAddToChan(keys)
+					keys = nil
+				}
 				break
 			}
 
