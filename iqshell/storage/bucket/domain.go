@@ -25,11 +25,22 @@ func DomainOfBucket(bucket string) (domain string, err error) {
 		return
 	}
 
+	cdnDomain := ""
+	sourceDomain := ""
 	for _, d := range domainsOfBucket {
 		if d.Domain != nil && !strings.HasPrefix(d.Domain.Value(), ".") {
-			domain = d.Domain.Value()
-			break
+			if d.DomainType.Value() == 0 {
+				cdnDomain = d.Domain.Value()
+			} else if d.DomainType.Value() == 1 {
+				sourceDomain = d.Domain.Value()
+			}
 		}
+	}
+
+	if len(cdnDomain) > 0 {
+		domain = cdnDomain
+	} else {
+		domain = sourceDomain
 	}
 	return
 }
@@ -41,8 +52,8 @@ var (
 
 type DomainInfo struct {
 	Domain      *data.String `json:"domain"`
-	DomainType  *data.Int    `json:"domaintype"`
-	ApiScope    *data.Int    `json:"apiscope"`
+	DomainType  *data.Int    `json:"domaintype"`   // 0:cdn 1:源站
+	ApiScope    *data.Int    `json:"apiscope"`     //
 	FreezeTypes []string     `json:"freeze_types"` // 不为空表示已被冻结
 	Tbl         *data.String `json:"tbl"`          // 存储空间名字
 	Owner       *data.Int    `json:"uid"`          // 用户UID
@@ -70,8 +81,8 @@ func (i *DomainInfo) DescriptionString() string {
 }
 
 func (i *DomainInfo) DetailDescriptionString() string {
-	return fmt.Sprintf("%s\n%-12s: %d(%s)\n%-12s: %d(%s)\n%-12s: %s\n",
-		i.Domain.Value(),
+	return fmt.Sprintf("%-12s: %s\n%-12s: %d(%s)\n%-12s: %d(%s)\n%-12s: %s\n",
+		"domain", i.Domain.Value(),
 		"type", i.DomainType.Value(), i.getTypeString(),
 		"ApiScope", i.ApiScope.Value(), i.getApiScopeString(),
 		"FreezeTypes", i.FreezeTypes)
@@ -98,6 +109,7 @@ func allDomainsOfBucket(cfg *config.Config, bucket string) (domains []DomainInfo
 	}
 
 	reqURL := fmt.Sprintf("%s/v7/domain/list?tbl=%s", utils.Endpoint(cfg.IsUseHttps(), reqHost), bucket)
+	//reqURL = fmt.Sprintf("%s/domain?bucket=%s&type=all", utils.Endpoint(cfg.IsUseHttps(), reqHost), bucket)
 	err = bucketManager.Client.CredentialedCall(workspace.GetContext(), bucketManager.Mac, auth.TokenQiniu, &domains, "GET", reqURL, nil)
 	if err != nil {
 		if e, ok := err.(*storage.ErrorInfo); ok {

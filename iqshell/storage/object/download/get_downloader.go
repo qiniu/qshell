@@ -1,9 +1,10 @@
 package download
 
 import (
-	"errors"
 	"fmt"
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"net/http"
 )
 
@@ -29,23 +30,19 @@ func (g *getDownloader) Download(info *ApiInfo) (response *http.Response, err er
 	}
 
 	log.DebugF("get download, url:%s", url)
-	//new request
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, errors.New("New request failed by url:" + url + " error:" + err.Error())
-	}
+
+	headers := http.Header{}
 	// set host
 	if len(info.Host) > 0 {
-		req.Host = info.Host
+		headers.Add("Host", info.Host)
 	}
 	// 设置断点续传
 	if info.FromBytes > 0 {
-		req.Header.Add("Range", fmt.Sprintf("bytes=%d-", info.FromBytes))
+		headers.Add("Range", fmt.Sprintf("bytes=%d-", info.FromBytes))
 	}
 	// 配置 referer
 	if len(info.Referer) > 0 {
-		req.Header.Add("Referer", info.Referer)
+		headers.Add("Referer", info.Referer)
 	}
-	log.DebugF("request:\n%+v", req)
-	return http.DefaultClient.Do(req)
+	return storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
 }

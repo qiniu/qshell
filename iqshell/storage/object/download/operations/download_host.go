@@ -8,19 +8,15 @@ import (
 )
 
 func getDownloadDomainAndHost(cfg *config.Config, downloadCfg *DownloadCfg) (domain string, host string) {
-	host = getDownloadHost(cfg, downloadCfg)
 	domain = getDownloadDomain(cfg, downloadCfg)
 	log.DebugF("get download domain and host, host:%s domain:%s", host, domain)
-	if len(host) == 0 && utils.IsIPUrlString(domain) {
+	if utils.IsIPUrlString(domain) {
 		// 如果 domain 配置的为 IP，则查询 bucket 绑定的 host
 		if h, err := bucket.DomainOfBucket(downloadCfg.Bucket); err != nil {
 			log.DebugF("get download domain and host, error:%v", err)
 		} else {
 			host = h
 		}
-	}
-	if len(domain) == 0 {
-		domain = host
 	}
 	return
 }
@@ -62,6 +58,11 @@ func getFileApiDomain(cfg *config.Config, downloadCfg *DownloadCfg) string {
 		return domain
 	}
 
+	domain = downloadCfg.IoHost
+	if len(domain) > 0 {
+		return domain
+	}
+
 	// 2. 从 region 中获取 ioHost
 	domain = cfg.Hosts.GetOneIo()
 	if len(domain) > 0 {
@@ -77,8 +78,4 @@ func getFileApiDomain(cfg *config.Config, downloadCfg *DownloadCfg) string {
 	}
 
 	return domain
-}
-
-func getDownloadHost(cfg *config.Config, downloadCfg *DownloadCfg) string {
-	return downloadCfg.IoHost
 }

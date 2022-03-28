@@ -18,7 +18,7 @@ type DownloadInfo struct {
 	ToFile        string // 文件保存的路径
 	UseGetFileApi bool   //
 	IsPublic      bool   //
-	IoHost        string // io host, region 的 io 配置的可能为 ip, 搭配使用
+	Domain        string // 下载的 domain
 }
 
 func (info *DownloadInfo) Check() error {
@@ -44,8 +44,9 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	}
 
 	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig(), &DownloadCfg{
-		IoHost: info.IoHost,
-		Bucket: info.Bucket,
+		IoHost:    info.Domain,
+		CdnDomain: info.Domain,
+		Bucket:    info.Bucket,
 	})
 	if len(downloadDomain) == 0 && len(downloadHost) == 0 {
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", info.Bucket)

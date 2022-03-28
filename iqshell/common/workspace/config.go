@@ -13,7 +13,7 @@ func defaultConfig() *config.Config {
 			AccessKey: "",
 			SecretKey: nil,
 		},
-		UseHttps: data.NewBool(true),
+		UseHttps: data.NewBool(false),
 		Hosts: &config.Hosts{
 			UC: []string{"uc.qbox.me"},
 		},
