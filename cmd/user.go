@@ -45,7 +45,7 @@ var userCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "user",
 		Short: "Manage local users",
-		Args: cobra.MaximumNArgs(0),
+		Args:  cobra.MaximumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.User
 			operations.User(cfg, operations.UserInfo{})
