@@ -11,7 +11,7 @@ import (
 func downloadCachePath(cfg *config.Config, downloadCfg *DownloadCfg) string {
 	recordRoot := downloadCfg.RecordRoot
 	if len(recordRoot) == 0 {
-		recordRoot = workspace.GetWorkspace()
+		recordRoot = workspace.GetUserPath()
 	}
 
 	if len(recordRoot) == 0 {

@@ -57,8 +57,8 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - log_stdout：下载日志是否同时输出一份到标准终端，默认为 `false`，主要在调试下载功能时可以指定为 `true` 【可选】
 - record_root：下载记录信息保存路径，包括日志文件和下载进度文件；默认为 `qshell` 下载目录；【可选】
     - 通过 `-L` 指定工作目录时，`record_root` 则为 `此工作目录/qupload/$jobId`，
-    - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/qupload/$jobId`
-    - 注意 `jobId` 是根据上传任务动态生成；据图方式为 MD5("DestDir:$Bucket:KeyFile")
+    - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qupload/$jobId`
+    - 注意 `jobId` 是根据上传任务动态生成；据图方式为 MD5("DestDir:$Bucket:KeyFile")；`CurrentUserName` 当前用户的名称
 
 ##### 备注：
 1. 在Windows系统下面使用的时候，注意 `dest_dir` 的设置遵循 `D:\\jemy\\backup` 这种方式。也就是路径里面的 `\` 要有两个（`\\`）。

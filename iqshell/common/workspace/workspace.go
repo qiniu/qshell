@@ -25,10 +25,6 @@ var (
 	// config 配置信息
 	cfg = &config.Config{}
 
-	// 工作路径
-	workspacePath = ""
-	// 用户目录
-	userPath = ""
 	// 当前账户
 	currentAccount *account.Account
 
@@ -44,10 +40,6 @@ func GetLogConfig() *config.LogSetting {
 	if cfg == nil || cfg.Log == nil {
 		return nil
 	}
-	//if data.Empty(cfg.Log.LogFile) {
-	//	logFile := filepath.Join(workspacePath, "log", "qshell.log")
-	//	cfg.Log.LogFile = data.NewString(logFile)
-	//}
 	return cfg.Log
 }
 
@@ -63,10 +55,6 @@ func GetStorageConfig() *storage.Config {
 		Zone:          r,
 		CentralRsHost: cfg.Hosts.GetOneRs(),
 	}
-}
-
-func GetWorkspace() string {
-	return workspacePath
 }
 
 func GetAccount() (account.Account, error) {

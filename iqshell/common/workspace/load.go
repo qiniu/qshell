@@ -62,7 +62,7 @@ func Load(info LoadInfo) (err error) {
 		}
 		log.DebugF("current user name:%s", accountName)
 
-		userPath = filepath.Join(workspacePath, "user", accountName)
+		userPath = filepath.Join(workspacePath, usersDirName, accountName)
 		err = utils.CreateDirIfNotExist(userPath)
 		if err != nil {
 			return errors.New("create user dir error:" + err.Error())

@@ -76,8 +76,8 @@ qshell qupload [-c <ThreadCount>] [--sucess-list <SuccessFileName>] [--failure-l
 - put_threshold：上传阈值，上传文件大小超过此值会使用分片上传，不超过使用表单上传；默认为 8388608（8M） 。【可选】
 - record_root：上传记录信息保存路径，包括日志文件和上传进度文件；默认为 `qshell` 上传目录；【可选】
   - 通过 `-L` 指定工作目录时，`record_root` 则为此工作目录/qdownload/$jobId， 
-  - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/qdownload/$jobId`
-  - 注意 `jobId` 是根据上传任务动态生成；据图方式为 MD5("$SrcDir:$Bucket:$FileList")
+  - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qdownload/$jobId`
+  - 注意 `jobId` 是根据上传任务动态生成；据图方式为 MD5("$SrcDir:$Bucket:$FileList")； `CurrentUserName` 当前用户的名称
 
 对于那么多的参数，我们可以分为几类来解释：
 
