@@ -41,8 +41,8 @@ func (info *ChangeTypeInfo) getTypeOfInt() (int, error) {
 		return -1, errors.New("parse type error:" + err.Error())
 	}
 
-	if ret < 0 || ret > 2 {
-		return -1, errors.New("type must be one of 0, 1, 2")
+	if ret < 0 || ret > 3 {
+		return -1, errors.New("type must be one of 0, 1, 2, 3")
 	}
 	return ret, nil
 }

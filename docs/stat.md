@@ -23,10 +23,11 @@ $ qshell stat if-pbl qiniu.png
 
 输出：
 ```
-Bucket:             if-pbl
-Key:                test.png
-Hash:               FpHyF0kkil3sp-SaXXX8TBJY3jDh
-Fsize:              163469 -> 159.64 KB
-PutTime:            14832477937031429 -> 2017-01-01 13:16:33.7031429 +0800 CST
-MimeType:           image/png
+Bucket:             qshell-na0
+Key:                hello2.json
+FileHash:           FvySxBAiQRAd1iSF4XrC4SrDrhff
+Fsize:              29 -> 29B
+PutTime:            16455255178836491 -> 2022-02-22 18:25:17.8836491 +0800 CST
+MimeType:           image/jpeg
+FileType:           1 -> 低频存储
 ```
