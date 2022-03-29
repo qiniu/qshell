@@ -37,7 +37,7 @@ func addCmdDocumentInfo(cmdName string, document string) {
 func ShowCmdDocument(name string) {
 	document := documentInfo[name]
 	if len(document) == 0 {
-		fmt.Printf("doesn't document for cmd:%s \n", name)
+		fmt.Printf("doesn't found document for cmd:%s \n", name)
 		return
 	}
 

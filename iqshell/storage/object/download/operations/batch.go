@@ -167,7 +167,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		apiInfo.Referer = info.Referer
 		apiInfo.FileEncoding = info.FileEncoding
 		apiInfo.Bucket = info.Bucket
-		apiInfo.UserGetFileApi = info.GetFileApi
+		apiInfo.UseGetFileApi = info.GetFileApi
 		if !info.CheckHash {
 			apiInfo.FileHash = ""
 		}

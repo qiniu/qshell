@@ -10,15 +10,13 @@ qshell move [-overwrite] <SrcBucket> <SrcKey> <DestBucket> <DestKey>
 ```
 
 # 鉴权
-需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
 
 # 参数
-|    参数名   |  描述     |
-|------------|----------|
-| SrcBucket  |源空间名称  |
-|   SrcKey   |源文件名称  |
-| DestBucket |目标空间名称|
-|   DestKey  |目标文件名称|
+- SrcBucket: 源空间名称
+- SrcKey: 源文件名称
+- DestBucket: 目标空间名称
+- DestKey: 目标文件名称
 
 # 示例
 1 将空间 `if-pbl` 中的 `qiniu.jpg` 移动到 `if-pri` 中

@@ -230,6 +230,30 @@ and you can check result by command:
 	return cmd
 }
 
+var restoreArCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.RestoreArchiveInfo{}
+	var cmd = &cobra.Command{
+		Use: "restorear <Bucket> <Key> <FreezeAfterDays>",
+		Short: `Unfreeze archive file and file freeze after <FreezeAfterDays> days,
+<FreezeAfterDays> value should be between 1 and 7, include 1 and 7`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.RestoreArchiveType
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
+				info.Key = args[1]
+			}
+			if len(args) > 2 {
+				info.FreezeAfterDays = args[2]
+			}
+			operations.RestoreArchive(cfg, info)
+		},
+	}
+
+	return cmd
+}
+
 var privateUrlCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.PrivateUrlInfo{}
 	var cmd = &cobra.Command{
@@ -346,6 +370,7 @@ func rsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 		copyCmdBuilder(cfg),
 		changeMimeCmdBuilder(cfg),
 		changeTypeCmdBuilder(cfg),
+		restoreArCmdBuilder(cfg),
 		privateUrlCmdBuilder(cfg),
 		saveAsCmdBuilder(cfg),
 		mirrorUpdateCmdBuilder(cfg),

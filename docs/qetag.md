@@ -1,5 +1,7 @@
 # 简介
-[qetag](https://github.com/qiniu/qetag) 算法是七牛用来计算文件hash的自定义算法。这个命令用来根据 `qetag` 算法快速计算文件 `hash`。
+`qtag` 算法是七牛用来计算文件hash的自定义算法。这个命令用来根据 `qetag` 算法快速计算文件 `hash`。
+
+参考文档：[qetag](https://github.com/qiniu/qetag)
 
 # 格式
 ```

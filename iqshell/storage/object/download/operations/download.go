@@ -44,9 +44,10 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	}
 
 	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig(), &DownloadCfg{
-		IoHost:    info.Domain,
-		CdnDomain: info.Domain,
-		Bucket:    info.Bucket,
+		IoHost:     info.Domain,
+		CdnDomain:  info.Domain,
+		Bucket:     info.Bucket,
+		GetFileApi: info.UseGetFileApi,
 	})
 	if len(downloadDomain) == 0 && len(downloadHost) == 0 {
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket", info.Bucket)
@@ -69,7 +70,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		FileSize:       0,
 		FileHash:       "",
 		FromBytes:      0,
-		UserGetFileApi: info.UseGetFileApi,
+		UseGetFileApi:  info.UseGetFileApi,
 		Progress:       progress.NewPrintProgress(" 进度"),
 	})
 }

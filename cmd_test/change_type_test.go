@@ -19,6 +19,13 @@ func TestChangeType(t *testing.T) {
 	}
 }
 
+func changeType(t *testing.T, key string, ty string) {
+	_, errs := test.RunCmdWithError("chtype", test.Bucket, key, ty)
+	if len(errs) > 0 {
+		t.Fail()
+	}
+}
+
 func TestChangeTypeNoExistBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("chtype", test.BucketNotExist, test.Key, "0")
 	if !strings.Contains(errs, "no such bucket") {

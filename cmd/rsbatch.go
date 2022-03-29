@@ -80,6 +80,27 @@ var batchChangeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var batchRestoreArCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.BatchRestoreArchiveInfo{}
+	var cmd = &cobra.Command{
+		Use: "batchrestorear <Bucket> <FreezeAfterDays>",
+		Short: `Batch unfreeze archive file and file freeze after <FreezeAfterDays> days,
+<FreezeAfterDays> value should be between 1 and 7, include 1 and 7`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.BatchRestoreArchiveType
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
+				info.FreezeAfterDays = args[1]
+			}
+			operations.BatchRestoreArchive(cfg, info)
+		},
+	}
+	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
+	return cmd
+}
+
 var batchDeleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchDeleteInfo{}
 	var cmd = &cobra.Command{
@@ -239,6 +260,7 @@ func rsBatchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 		batchDeleteAfterCmdBuilder(cfg),
 		batchChangeMimeCmdBuilder(cfg),
 		batchChangeTypeCmdBuilder(cfg),
+		batchRestoreArCmdBuilder(cfg),
 		batchSignCmdBuilder(cfg),
 		batchFetchCmdBuilder(cfg),
 	)

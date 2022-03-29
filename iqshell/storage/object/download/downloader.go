@@ -27,7 +27,7 @@ type ApiInfo struct {
 	FileSize       int64             // 文件大小，有值则会检测文件大小 【选填】
 	FileHash       string            // 文件 hash，有值则会检测 hash 【选填】
 	FromBytes      int64             // 下载开始的位置，内部会缓存 【选填】
-	UserGetFileApi bool              // 是否使用 get file api(私有云会使用)【选填】
+	UseGetFileApi  bool              // 是否使用 get file api(私有云会使用)【选填】
 	Progress       progress.Progress // 下载进度回调【选填】
 }
 
@@ -215,7 +215,7 @@ type downloader interface {
 
 func createDownloader(info *ApiInfo) (downloader, error) {
 	userHttps := workspace.GetConfig().IsUseHttps()
-	if info.UserGetFileApi {
+	if info.UseGetFileApi {
 		mac, err := workspace.GetMac()
 		if err != nil {
 			return nil, fmt.Errorf("download get mac error:%v", mac)
