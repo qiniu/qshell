@@ -37,18 +37,26 @@ func Move(cfg *iqshell.Config, info MoveInfo) {
 
 	result, err := object.Move(object.MoveApiInfo(info))
 	if err != nil {
-		log.ErrorF("Move error:%v", err)
+		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Error: %v",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			err)
 		return
 	}
 
 	if len(result.Error) != 0 {
-		log.ErrorF("Move error:%v", result.Error)
+		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			result.Code, result.Error)
 		return
 	}
 
-	log.InfoF("Move '%s:%s' => '%s:%s' success",
-		info.SourceBucket, info.SourceKey,
-		info.DestBucket, info.DestKey)
+	if result.IsSuccess() {
+		log.InfoF("Move Success, [%s:%s] => [%s:%s]",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey)
+	}
 }
 
 type BatchMoveInfo struct {
@@ -117,17 +125,17 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s", apiInfo.SourceKey, apiInfo.DestKey, result.Code, result.Error)
-			log.ErrorF("Move '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
+			log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 				apiInfo.SourceBucket, apiInfo.SourceKey,
 				apiInfo.DestBucket, apiInfo.DestKey,
 				result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%s", apiInfo.SourceKey, apiInfo.DestKey)
-			log.InfoF("Move '%s:%s' => '%s:%s' success",
+			log.InfoF("Move Success, [%s:%s] => [%s:%s]",
 				apiInfo.SourceBucket, apiInfo.SourceKey,
 				apiInfo.DestBucket, apiInfo.DestKey)
 		}
 	}).OnError(func(err error) {
-		log.ErrorF("batch move error:%v:", err)
+		log.ErrorF("Batch move error:%v:", err)
 	}).Start()
 }

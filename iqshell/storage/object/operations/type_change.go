@@ -38,7 +38,7 @@ func (info *ChangeTypeInfo) getTypeOfInt() (int, error) {
 
 	ret, err := strconv.Atoi(info.Type)
 	if err != nil {
-		return -1, errors.New("parse type error:" + err.Error())
+		return -1, errors.New("Parse type error:" + err.Error())
 	}
 
 	if ret < 0 || ret > 3 {
@@ -56,7 +56,7 @@ func ChangeType(cfg *iqshell.Config, info ChangeTypeInfo) {
 
 	t, err := info.getTypeOfInt()
 	if err != nil {
-		log.ErrorF("Change Type error:%v", err)
+		log.ErrorF("Change Type Failed, [%s:%s] error:%v", err)
 		return
 	}
 
@@ -67,13 +67,19 @@ func ChangeType(cfg *iqshell.Config, info ChangeTypeInfo) {
 	})
 
 	if err != nil {
-		log.ErrorF("Change Type error:%v", err)
+		log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Error: %v",
+			info.Bucket, info.Key, t, getStorageTypeDescription(t), err)
 		return
 	}
 
 	if len(result.Error) != 0 {
-		log.ErrorF("Change Type:%v", result.Error)
+		log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Code: %d, Error: %s",
+			info.Bucket, info.Key, t, getStorageTypeDescription(t), result.Code, result.Error)
 		return
+	}
+
+	if result.IsSuccess() {
+		log.InfoF("Change Type Success, [%s:%s] => '%d'(%s)", info.Bucket, info.Key, t, getStorageTypeDescription(t))
 	}
 }
 
@@ -116,7 +122,7 @@ func BatchChangeType(cfg *iqshell.Config, info BatchChangeTypeInfo) {
 			key, t := items[0], items[1]
 			tInt, err := strconv.Atoi(t)
 			if err != nil {
-				log.ErrorF("parse type error:%v", err)
+				log.ErrorF("Parse type error:%v", err)
 			} else if len(key) > 0 && len(t) > 0 {
 				return object.ChangeTypeApiInfo{
 					Bucket: info.Bucket,
@@ -133,13 +139,14 @@ func BatchChangeType(cfg *iqshell.Config, info BatchChangeTypeInfo) {
 		}
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%d\t%d\t%s", in.Key, in.Type, result.Code, result.Error)
-			log.ErrorF("Change Type '%s' => '%d' Failed, Code: %d, Error: %s",
-				in.Key, in.Type, result.Code, result.Error)
+			log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Code: %d, Error: %s",
+				info.Bucket, in.Key, in.Type, getStorageTypeDescription(in.Type), result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%d", in.Key, in.Type)
-			log.InfoF("Change Type '%s' => '%d' success", in.Key, in.Type)
+			log.InfoF("Change Type Success, [%s:%s] => '%d'(%s) ",
+				info.Bucket, in.Key, in.Type, getStorageTypeDescription(in.Type))
 		}
 	}).OnError(func(err error) {
-		log.ErrorF("batch change Type error:%v:", err)
+		log.ErrorF("Batch change Type error:%v:", err)
 	}).Start()
 }

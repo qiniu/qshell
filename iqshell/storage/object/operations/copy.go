@@ -23,7 +23,8 @@ func (info *CopyInfo) Check() error {
 		return alert.CannotEmptyError("DestBucket", "")
 	}
 	if len(info.DestKey) == 0 {
-		return alert.CannotEmptyError("DestKey", "")
+		info.DestKey = info.SourceKey
+		log.WarningF("No set DestKey and set DestKey to SourceKey:%s", info.SourceKey)
 	}
 	return nil
 }
@@ -37,18 +38,26 @@ func Copy(cfg *iqshell.Config, info CopyInfo) {
 
 	result, err := object.Copy(object.CopyApiInfo(info))
 	if err != nil {
-		log.ErrorF("Copy error:%v", err)
+		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Error: %v",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			err)
 		return
 	}
 
 	if len(result.Error) != 0 {
-		log.ErrorF("Copy error:%v", result.Error)
+		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			result.Code, result.Error)
 		return
 	}
 
-	log.InfoF("copy success [%s:%s] => [%s:%s]",
-		info.SourceBucket, info.SourceKey,
-		info.DestBucket, info.DestKey)
+	if result.IsSuccess() {
+		log.InfoF("Copy Success, [%s:%s] => [%s:%s]",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey)
+	}
 }
 
 type BatchCopyInfo struct {
@@ -119,17 +128,17 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 		in := CopyInfo(apiInfo)
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s", in.SourceKey, in.DestKey, result.Code, result.Error)
-			log.ErrorF("Copy '%s:%s' => '%s:%s' Failed, Code: %d, Error: %s",
+			log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey,
 				result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%s", in.SourceKey, in.DestKey)
-			log.InfoF("Copy '%s:%s' => '%s:%s' success",
+			log.InfoF("Copy Success, '%s:%s' => '%s:%s'",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey)
 		}
 	}).OnError(func(err error) {
-		log.ErrorF("batch copy error:%v:", err)
+		log.ErrorF("Batch copy error:%v:", err)
 	}).Start()
 }

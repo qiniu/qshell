@@ -34,8 +34,10 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 
 	result, err := object.Fetch(object.FetchApiInfo(info))
 	if err != nil {
-		log.ErrorF("Fetch error: %v", err)
+		log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error:%v",
+			info.FromUrl, info.Bucket, info.Key, err)
 	} else {
+		log.InfoF("Fetch Success, '%s' => [%s:%s]", info.FromUrl, info.Bucket, info.Key)
 		log.AlertF("Key:%s", result.Key)
 		log.AlertF("FileHash:%s", result.Hash)
 		log.AlertF("Fsize: %d (%s)", result.Fsize, utils.FormatFileSize(result.Fsize))
@@ -102,11 +104,11 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 	}).OnWorkResult(func(work work.Work, result work.Result) {
 		in := work.(object.FetchApiInfo)
 		handler.Export().Success().ExportF("%s\t%s", in.FromUrl, in.Bucket)
-		log.InfoF("Fetch '%s' => %s:%s Success", in.FromUrl, info.Bucket, in.Key)
+		log.InfoF("Fetch Success, '%s' => [%s:%s]", in.FromUrl, info.Bucket, in.Key)
 	}).OnWorkError(func(work work.Work, err error) {
 		in := work.(object.FetchApiInfo)
 		handler.Export().Fail().ExportF("%s\t%s\t%v", in.FromUrl, in.Key, err)
-		log.ErrorF("Fetch '%s' => %s:%s Failed, Error: %v", in.FromUrl, in.Bucket, in.Key, err)
+		log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.FromUrl, in.Bucket, in.Key, err)
 	}).Start()
 }
 
@@ -254,12 +256,12 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 					fileSize: in.fileSize,
 					info:     res,
 				}
-				log.DebugF("Fetch Response '%s' => %s:%s id:%s wait:%d", in.info.Url, in.info.Bucket, in.info.Key, res.Id, res.Wait)
+				log.DebugF("Fetch Response, '%s' => [%s:%s] id:%s wait:%d", in.info.Url, in.info.Bucket, in.info.Key, res.Id, res.Wait)
 			}).
 			OnWorkError(func(work work.Work, err error) {
 				in := work.(fetchItem)
 				handler.Export().Fail().ExportF("%s: %v", in.info.Url, err)
-				log.ErrorF("Fetch '%s' => %s:%s Failed, Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
+				log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
 			}).
 			OnWorksComplete(func() {
 				close(fetchResultChan)
@@ -286,7 +288,7 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 					})
 					if exist {
 						handler.Export().Success().ExportF("%s\t%s", result.url, result.key)
-						log.AlertF("fetch %s => %s:%s success", result.url, result.bucket, result.key)
+						log.AlertF("Fetch Success, %s => [%s:%s]", result.url, result.bucket, result.key)
 						break
 					} else {
 						log.ErrorF("Stat:%s error:%v ID:%s", result.key, err, result.info.Id)
@@ -297,7 +299,7 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 		}
 		if counter >= 3 {
 			handler.Export().Fail().ExportF("%s\t%d\t%s", result.url, result.fileSize, result.key)
-			log.ErrorF("fetch %s => %s:%s, ID:%s failed", result.url, result.bucket, result.key, result.info.Id)
+			log.ErrorF("Fetch Failed, %s => [%s:%s], ID:%s", result.url, result.bucket, result.key, result.info.Id)
 		}
 	}
 }

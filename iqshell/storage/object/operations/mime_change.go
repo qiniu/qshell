@@ -34,13 +34,17 @@ func ChangeMime(cfg *iqshell.Config, info ChangeMimeInfo) {
 
 	result, err := object.ChangeMimeType(object.ChangeMimeApiInfo(info))
 	if err != nil {
-		log.ErrorF("Change Mime error:%v", err)
+		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Error:%v", info.Bucket, info.Key, info.Mime, err)
 		return
 	}
 
 	if len(result.Error) != 0 {
-		log.ErrorF("Change Mime result error:%v", result.Error)
+		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code:%s, Error:%v", info.Bucket, info.Key, info.Mime, result.Code, err)
 		return
+	}
+
+	if result.IsSuccess() {
+		log.InfoF("Change mimetype Success, [%s:%s] => '%s'", info.Bucket, info.Key, info.Mime)
 	}
 }
 
@@ -98,13 +102,13 @@ func BatchChangeMime(cfg *iqshell.Config, info BatchChangeMimeInfo) {
 		in := ChangeMimeInfo(apiInfo)
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s", in.Key, in.Mime, result.Code, result.Error)
-			log.ErrorF("Chgm '%s' => '%s' Failed, Code: %d, Error: %s",
-				in.Key, in.Mime, result.Code, result.Error)
+			log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code: %d, Error: %s",
+				in.Bucket, in.Key, in.Mime, result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%s", in.Key, in.Mime)
-			log.InfoF("Chgm '%s' => '%s' success", in.Key, in.Mime)
+			log.InfoF("Change mimetype Success, [%s:%s] => '%s'", in.Bucket, in.Key, in.Mime)
 		}
 	}).OnError(func(err error) {
-		log.ErrorF("batch chgm error:%v:", err)
+		log.ErrorF("Batch change mimetype error:%v:", err)
 	}).Start()
 }

@@ -33,10 +33,15 @@ func Status(cfg *iqshell.Config, info StatusInfo) {
 
 	result, err := object.Status(object.StatusApiInfo(info))
 	if err != nil {
-		log.ErrorF("Stat error:%v", err)
+		log.ErrorF("Status Failed, [%s:%s], Error:%v",
+			info.Bucket, info.Key, err)
 		return
 	}
-	log.Alert(getResultInfo(info.Bucket, info.Key, result))
+
+	if result.IsSuccess() {
+		log.InfoF("Status Success, [%s:%s]", info.Bucket, info.Key)
+		log.Alert(getResultInfo(info.Bucket, info.Key, result))
+	}
 }
 
 type BatchStatusInfo struct {
@@ -92,7 +97,7 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 		in := StatusInfo(apiInfo)
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%d\t%s", in.Key, result.Code, result.Error)
-			log.ErrorF("Status '%s' Failed, Code: %d, Error: %s", in.Key, result.Code, result.Error)
+			log.ErrorF("Status Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)
 		} else {
 			status := fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d",
 				in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
@@ -100,11 +105,9 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 			log.Alert(status)
 		}
 	}).OnError(func(err error) {
-		log.ErrorF("batch Status error:%v:", err)
+		log.ErrorF("Batch Status error:%v:", err)
 	}).Start()
 }
-
-var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储"}
 
 func getResultInfo(bucket, key string, status object.StatusResult) string {
 	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", bucket)
@@ -133,11 +136,17 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Expiration:", status.Expiration, expiration.String())
 	}
 
-	typeString := "未知类型"
-	if status.Type >= 0 && status.Type < len(objectTypes) {
-		typeString = objectTypes[status.Type]
-	}
-	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "FileType:", status.Type, typeString)
+	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "FileType:", status.Type, getStorageTypeDescription(status.Type))
 
 	return statInfo
+}
+
+var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储"}
+
+func getStorageTypeDescription(storageType int) string {
+	typeString := "未知类型"
+	if storageType >= 0 && storageType < len(objectTypes) {
+		typeString = objectTypes[storageType]
+	}
+	return typeString
 }

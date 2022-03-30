@@ -7,10 +7,10 @@ import (
 )
 
 type DeleteApiInfo struct {
-	Bucket    string
-	Key       string
-	AfterDays int
-	Condition batch.OperationCondition
+	Bucket          string
+	Key             string
+	DeleteAfterDays int
+	Condition       batch.OperationCondition
 }
 
 func (d DeleteApiInfo) ToOperation() (string, error) {
@@ -19,12 +19,12 @@ func (d DeleteApiInfo) ToOperation() (string, error) {
 	}
 
 	condition := batch.OperationConditionURI(d.Condition)
-	if d.AfterDays < 0 {
-		return "", alert.Error("AfterDays can't be smaller than 0", "")
-	} else if d.AfterDays == 0 {
+	if d.DeleteAfterDays < 0 {
+		return "", alert.Error("DeleteAfterDays can't be smaller than 0", "")
+	} else if d.DeleteAfterDays == 0 {
 		return storage.URIDelete(d.Bucket, d.Key) + condition, nil
 	} else {
-		return storage.URIDeleteAfterDays(d.Bucket, d.Key, d.AfterDays) + condition, nil
+		return storage.URIDeleteAfterDays(d.Bucket, d.Key, d.DeleteAfterDays) + condition, nil
 	}
 }
 

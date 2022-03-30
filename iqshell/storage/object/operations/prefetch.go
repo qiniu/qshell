@@ -3,10 +3,8 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage"
-	"os"
 )
 
 type MirrorUpdateInfo storage.PrefetchApiInfo
@@ -30,7 +28,8 @@ func MirrorUpdate(cfg *iqshell.Config, info MirrorUpdateInfo) {
 
 	err := storage.Prefetch(storage.PrefetchApiInfo(info))
 	if err != nil {
-		log.ErrorF("mirror update error: %v", err)
-		os.Exit(data.StatusError)
+		log.ErrorF("Mirror update Failed, [%s:%s], Error: %v", info.Bucket, info.Key, err)
+	} else {
+		log.InfoF("Mirror update Success, [%s:%s]", info.Bucket, info.Key)
 	}
 }

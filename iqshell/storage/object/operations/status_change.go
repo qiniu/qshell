@@ -36,6 +36,15 @@ func (info *ForbiddenInfo) getStatus() int {
 	}
 }
 
+func (info *ForbiddenInfo) getStatusDesc() string {
+	// 0:启用  1:禁用
+	if info.UnForbidden {
+		return "启用"
+	} else {
+		return "禁用"
+	}
+}
+
 func ForbiddenObject(cfg *iqshell.Config, info ForbiddenInfo) {
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
@@ -49,14 +58,22 @@ func ForbiddenObject(cfg *iqshell.Config, info ForbiddenInfo) {
 		Status: info.getStatus(),
 	})
 
+	statusDesc := info.getStatusDesc()
 	if err != nil {
-		log.ErrorF("change stat error:%v", err)
+		log.ErrorF("Change status Failed, [%s:%s] => %s, Error: %v",
+			info.Bucket, info.Key, info.getStatus(), statusDesc)
 		return
 	}
 
 	if len(result.Error) > 0 {
-		log.ErrorF("change stat error:%s", result.Error)
+		log.ErrorF("Change status Failed, [%s:%s] => %s, Code:%s, Error: %s",
+			info.Bucket, info.Key, statusDesc, result.Code, result.Error)
 		return
+	}
+
+	if result.IsSuccess() {
+		log.Info("Change status Success, [%s:%s] => %s",
+			info.Bucket, info.Key, statusDesc)
 	}
 }
 
@@ -112,11 +129,11 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 		}
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%d\t%d\t%s", in.Key, in.Status, result.Code, result.Error)
-			log.ErrorF("Change status '%s' => '%s' Failed, Code: %d, Error: %s",
-				in.Key, in.Status, result.Code, result.Error)
+			log.ErrorF("Change status Failed, [%s:%s] => %d, Code: %d, Error: %s",
+				in.Bucket, in.Key, in.Status, result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s\t%d", in.Key, in.Status)
-			log.ErrorF("Change status '%s' => '%d' success\n", in.Key, in.Status)
+			log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
 		}
 	}).OnError(func(err error) {
 		log.ErrorF("batch change status error:%v:", err)

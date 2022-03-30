@@ -52,3 +52,11 @@ type OperationResult struct {
 	Error    string
 	Parts    []int64 `json:"parts"`
 }
+
+func (r *OperationResult) IsSuccess() bool {
+	if r == nil {
+		return false
+	}
+
+	return r.Code == 200
+}

@@ -28,9 +28,9 @@ func Delete(info DeleteApiInfo) ([]batch.OperationResult, error) {
 	operations := make([]batch.Operation, 0, len(m3u8FileList))
 	for _, file := range m3u8FileList {
 		operations = append(operations, &object.DeleteApiInfo{
-			Bucket:    file.Bucket,
-			Key:       file.Key,
-			AfterDays: 0,
+			Bucket:          file.Bucket,
+			Key:             file.Key,
+			DeleteAfterDays: 0,
 		})
 	}
 

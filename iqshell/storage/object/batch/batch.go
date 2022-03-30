@@ -95,8 +95,10 @@ func (f *flow) Start() {
 			}
 			operationString, err := operation.ToOperation()
 			if err != nil {
-				log.Debug("batch task producer: parse operation error")
-				log.Warning(err)
+				f.onResult(operation, OperationResult{
+					Code:  -999,
+					Error: err.Error(),
+				})
 				continue
 			}
 			task.operations = append(task.operations, operation)

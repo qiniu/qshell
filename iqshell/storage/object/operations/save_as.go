@@ -33,7 +33,7 @@ func SaveAs(cfg *iqshell.Config, info SaveAsInfo) {
 
 	url, err := object.SaveAs(object.SaveAsApiInfo(info))
 	if err != nil {
-		log.ErrorF("save as error: %v", err)
+		log.ErrorF("Save as Failed, Error: %v", err)
 		os.Exit(data.StatusError)
 	} else {
 		log.Alert(url)

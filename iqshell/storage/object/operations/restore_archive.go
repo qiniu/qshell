@@ -66,16 +66,22 @@ func RestoreArchive(cfg *iqshell.Config, info RestoreArchiveInfo) {
 		FreezeAfterDays: info.freezeAfterDaysInt,
 	})
 	if err != nil {
-		log.ErrorF("Restore archive error:%v", err)
+		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Error: %v",
+			info.Bucket, info.Key, info.FreezeAfterDays, err)
 		return
 	}
 
 	if len(result.Error) != 0 {
-		log.ErrorF("Restore archive error:%v", result.Error)
+		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Code: %d, Error: %s",
+			info.Bucket, info.Key, info.FreezeAfterDays,
+			result.Code, result.Error)
 		return
 	}
 
-	log.InfoF("Restore archive [%s:%s] FreezeAfterDays:%s success", info.Bucket, info.Key, info.FreezeAfterDays)
+	if result.IsSuccess() {
+		log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%s",
+			info.Bucket, info.Key, info.FreezeAfterDays)
+	}
 }
 
 type BatchRestoreArchiveInfo struct {
@@ -141,14 +147,15 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 
 		if result.Code != 200 || result.Error != "" {
 			handler.Export().Fail().ExportF("%s\t%d\t%s", apiInfo.Key, result.Code, result.Error)
-			log.ErrorF("Restore archive [%s:%s] FreezeAfterDays:%s Failed, Code: %d, Error: %s",
+			log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%d, Code: %d, Error: %s",
 				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays,
 				result.Code, result.Error)
 		} else {
 			handler.Export().Success().ExportF("%s", apiInfo.Key)
-			log.InfoF("Restore archive [%s:%s] FreezeAfterDays:%s success", apiInfo.Bucket, apiInfo.Key, info.FreezeAfterDays)
+			log.InfoF("Restore archive Success, [%s:%d], FreezeAfterDays:%s",
+				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
 		}
 	}).OnError(func(err error) {
-		log.ErrorF("batch move error:%v:", err)
+		log.ErrorF("Batch restore archive error:%v:", err)
 	}).Start()
 }

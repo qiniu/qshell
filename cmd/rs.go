@@ -64,7 +64,7 @@ var deleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var deleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.DeleteInfo{}
+	var info = operations.DeleteAfterInfo{}
 	var cmd = &cobra.Command{
 		Use:   "expire <Bucket> <Key> <DeleteAfterDays>",
 		Short: "Set the deleteAfterDays of a file",
@@ -161,9 +161,6 @@ you can check if B.png has exists by:
 			}
 			if len(args) > 2 {
 				info.DestBucket = args[2]
-			}
-			if len(info.DestKey) == 0 {
-				info.DestKey = info.SourceKey
 			}
 			operations.Copy(cfg, info)
 		},
