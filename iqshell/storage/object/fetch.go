@@ -18,6 +18,10 @@ type FetchApiInfo struct {
 	FromUrl string
 }
 
+func (i *FetchApiInfo) WorkId() string {
+	return fmt.Sprintf("%s:%s:%s", i.Bucket, i.Key, i.FromUrl)
+}
+
 type FetchResult = storage.FetchRet
 
 func Fetch(info FetchApiInfo) (result FetchResult, err error) {

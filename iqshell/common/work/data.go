@@ -13,5 +13,8 @@ func (i *FlowInfo) Check() error {
 	return nil
 }
 
-type Work interface{}
+type Work interface {
+	WorkId() string
+}
+
 type Result interface{}

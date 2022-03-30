@@ -144,3 +144,7 @@ type batchOperations struct {
 	operations       []Operation
 	operationStrings []string
 }
+
+func (b batchOperations) WorkId() string {
+	return ""
+}

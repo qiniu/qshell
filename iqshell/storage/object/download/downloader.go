@@ -31,6 +31,10 @@ type ApiInfo struct {
 	Progress       progress.Progress // 下载进度回调【选填】
 }
 
+func (i *ApiInfo) WorkId() string {
+	return fmt.Sprintf("%s:%s:%s", i.Bucket, i.Key, i.ToFile)
+}
+
 type ApiResult struct {
 	FileAbsPath string // 文件被保存的绝对路径
 	IsUpdate    bool   // 是否为接续下载

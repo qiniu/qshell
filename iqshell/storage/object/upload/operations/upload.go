@@ -38,6 +38,10 @@ func (info *UploadInfo) Check() error {
 	return nil
 }
 
+func (info *UploadInfo) WorkId() string {
+	return fmt.Sprintf("%s:%s:%s", info.FilePath, info.ToBucket, info.SaveKey)
+}
+
 func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,

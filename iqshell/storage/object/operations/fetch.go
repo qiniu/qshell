@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
@@ -93,20 +94,20 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		if len(key) == 0 || len(fromUrl) == 0 {
 			return nil, true
 		}
-		return object.FetchApiInfo{
+		return &object.FetchApiInfo{
 			Bucket:  info.Bucket,
 			Key:     key,
 			FromUrl: fromUrl,
 		}, true
 	}).DoWork(func(work work.Work) (work.Result, error) {
-		in := work.(object.FetchApiInfo)
-		return object.Fetch(in)
+		in := work.(*object.FetchApiInfo)
+		return object.Fetch(*in)
 	}).OnWorkResult(func(work work.Work, result work.Result) {
-		in := work.(object.FetchApiInfo)
+		in := work.(*object.FetchApiInfo)
 		handler.Export().Success().ExportF("%s\t%s", in.FromUrl, in.Bucket)
 		log.InfoF("Fetch Success, '%s' => [%s:%s]", in.FromUrl, info.Bucket, in.Key)
 	}).OnWorkError(func(work work.Work, err error) {
-		in := work.(object.FetchApiInfo)
+		in := work.(*object.FetchApiInfo)
 		handler.Export().Fail().ExportF("%s\t%s\t%v", in.FromUrl, in.Key, err)
 		log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.FromUrl, in.Bucket, in.Key, err)
 	}).Start()
@@ -175,17 +176,6 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 		return
 	}
 
-	type fetchItem struct {
-		fileSize uint64
-		info     object.AsyncFetchApiInfo
-	}
-	type fetchResult struct {
-		bucket   string
-		key      string
-		url      string
-		fileSize uint64
-		info     object.AsyncFetchApiResult
-	}
 	fetchResultChan := make(chan fetchResult, 10)
 
 	// fetch
@@ -318,4 +308,21 @@ func asyncFetchCheckMaxDuration(size uint64) time.Duration {
 		duration = 6
 	}
 	return time.Duration(duration) * time.Second
+}
+
+type fetchItem struct {
+	fileSize uint64
+	info     object.AsyncFetchApiInfo
+}
+
+func (f fetchItem) WorkId() string {
+	return fmt.Sprintf("%s:%s:%s", f.info.Url, f.info.Bucket, f.info.Key)
+}
+
+type fetchResult struct {
+	bucket   string
+	key      string
+	url      string
+	fileSize uint64
+	info     object.AsyncFetchApiResult
 }

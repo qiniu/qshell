@@ -24,8 +24,12 @@ type PrivateUrlInfo struct {
 	Deadline  string
 }
 
-func (info *PrivateUrlInfo) Check() error {
-	if len(info.PublicUrl) == 0 {
+func (p PrivateUrlInfo) WorkId() string {
+	return p.PublicUrl
+}
+
+func (p *PrivateUrlInfo) Check() error {
+	if len(p.PublicUrl) == 0 {
 		return alert.CannotEmptyError("PublicUrl", "")
 	}
 	return nil
