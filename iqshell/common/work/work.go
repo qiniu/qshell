@@ -9,6 +9,7 @@ import (
 
 type FlowHandler interface {
 	ReadWork(func() (work Work, hasMore bool)) FlowHandler
+	OnWillWork(func(work Work) (shouldContinue bool, err error)) FlowHandler
 	DoWork(func(work Work) (Result, error)) FlowHandler
 	OnWorkError(func(work Work, err error)) FlowHandler
 	OnWorkResult(func(work Work, result Result)) FlowHandler
@@ -26,6 +27,7 @@ type flowHandler struct {
 	info                *FlowInfo
 	workReader          func() (work Work, hasMore bool)
 	workHandler         func(work Work) (Result, error)
+	willWorkHandler     func(work Work) (shouldContinue bool, err error)
 	workErrorHandler    func(action Work, err error)
 	workResultHandler   func(action Work, result Result)
 	workCompleteHandler func()
@@ -33,6 +35,11 @@ type flowHandler struct {
 
 func (b *flowHandler) ReadWork(reader func() (work Work, hasMore bool)) FlowHandler {
 	b.workReader = reader
+	return b
+}
+
+func (b *flowHandler) OnWillWork(handler func(work Work) (shouldContinue bool, err error)) FlowHandler {
+	b.willWorkHandler = handler
 	return b
 }
 
@@ -61,6 +68,14 @@ func (b *flowHandler) readWork() (Work, bool) {
 		return b.workReader()
 	}
 	return nil, true
+}
+
+func (b *flowHandler) willWork(work Work) (bool, error) {
+	if b.willWorkHandler != nil {
+		return b.willWorkHandler(work)
+	} else {
+		return true, nil
+	}
 }
 
 func (b *flowHandler) doWork(action Work) (Result, error) {
@@ -103,6 +118,12 @@ func (b *flowHandler) Start() {
 				} else {
 					continue
 				}
+			}
+
+			// 检测 work 是否有问题
+			if shouldContinue, err := b.willWorkHandler(work); !shouldContinue {
+				b.handleActionError(work, err)
+				continue
 			}
 
 			workChan <- work
