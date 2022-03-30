@@ -2,6 +2,7 @@ package object
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -21,6 +22,10 @@ func (m CopyApiInfo) ToOperation() (string, error) {
 	}
 
 	return storage.URICopy(m.SourceBucket, m.SourceKey, m.DestBucket, m.DestKey, m.Force), nil
+}
+
+func (m CopyApiInfo) WorkId() string {
+	return fmt.Sprintf("Copy|%s|%s|%s|%s", m.SourceBucket, m.SourceKey, m.DestBucket, m.DestKey)
 }
 
 func Copy(info CopyApiInfo) (batch.OperationResult, error) {

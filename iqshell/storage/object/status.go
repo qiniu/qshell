@@ -17,6 +17,10 @@ type StatusApiInfo struct {
 	NeedPart bool
 }
 
+func (s StatusApiInfo) WorkId() string {
+	return fmt.Sprintf("ChangeStatus|%s|%s|%t", s.Bucket, s.Key, s.NeedPart)
+}
+
 type StatusResult struct {
 	batch.OperationResult
 
@@ -75,6 +79,10 @@ func (c ChangeStatusApiInfo) ToOperation() (string, error) {
 		return "", errors.New(alert.CannotEmpty("change status operation bucket or key", ""))
 	}
 	return fmt.Sprintf("/chstatus/%s/status/%c", storage.EncodedEntry(c.Bucket, c.Key), c.Status), nil
+}
+
+func (c ChangeStatusApiInfo) WorkId() string {
+	return fmt.Sprintf("ChangeStatus|%s|%s|%d", c.Bucket, c.Key, c.Status)
 }
 
 func ChangeStatus(info ChangeStatusApiInfo) (batch.OperationResult, error) {

@@ -3,6 +3,7 @@ package batch
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/work"
 )
 
 var (
@@ -39,6 +40,8 @@ func OperationConditionURI(condition OperationCondition) string {
 }
 
 type Operation interface {
+	work.Work
+
 	ToOperation() (string, error)
 }
 

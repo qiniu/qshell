@@ -1,6 +1,21 @@
 package data
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+var (
+	ErrorCodeUnknown     = 10000
+	ErrorCodeAlreadyDone = 10001
+)
+
+func NewAlreadyDoneError(desc string) error {
+	return &codeError{
+		Code: ErrorCodeAlreadyDone,
+		err:  errors.New(desc),
+	}
+}
 
 func NewError(code int, err error) error {
 	return &codeError{

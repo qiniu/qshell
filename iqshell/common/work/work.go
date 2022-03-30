@@ -2,6 +2,7 @@ package work
 
 import (
 	"errors"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"sync"
@@ -71,6 +72,13 @@ func (b *flowHandler) readWork() (Work, bool) {
 }
 
 func (b *flowHandler) willWork(work Work) (bool, error) {
+	if b.info.WorkOverseer != nil {
+		if b.info.WorkOverseer.HasDone(work) {
+			return false, data.NewAlreadyDoneError("")
+		}
+		b.info.WorkOverseer.WillWork(work)
+	}
+
 	if b.willWorkHandler != nil {
 		return b.willWorkHandler(work)
 	} else {
@@ -78,22 +86,30 @@ func (b *flowHandler) willWork(work Work) (bool, error) {
 	}
 }
 
-func (b *flowHandler) doWork(action Work) (Result, error) {
+func (b *flowHandler) doWork(work Work) (Result, error) {
 	if b.workHandler != nil {
-		return b.workHandler(action)
+		return b.workHandler(work)
 	}
 	return nil, errors.New("no worker")
 }
 
-func (b *flowHandler) handlerActionResult(worker Work, result Result) {
+func (b *flowHandler) handlerActionResult(work Work, result Result) {
+	if b.info.WorkOverseer != nil {
+		b.info.WorkOverseer.WorkDone(work, result, nil)
+	}
+
 	if b.workResultHandler != nil {
-		b.workResultHandler(worker, result)
+		b.workResultHandler(work, result)
 	}
 }
 
-func (b *flowHandler) handleActionError(worker Work, err error) {
+func (b *flowHandler) handleActionError(work Work, err error) {
+	if b.info.WorkOverseer != nil {
+		b.info.WorkOverseer.WorkDone(work, nil, err)
+	}
+
 	if b.workErrorHandler != nil {
-		b.workErrorHandler(worker, err)
+		b.workErrorHandler(work, err)
 	}
 }
 
@@ -121,7 +137,7 @@ func (b *flowHandler) Start() {
 			}
 
 			// 检测 work 是否有问题
-			if shouldContinue, err := b.willWorkHandler(work); !shouldContinue {
+			if shouldContinue, err := b.willWork(work); !shouldContinue {
 				b.handleActionError(work, err)
 				continue
 			}

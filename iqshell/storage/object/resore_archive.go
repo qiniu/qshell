@@ -2,6 +2,7 @@ package object
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -19,6 +20,10 @@ func (r RestoreArchiveApiInfo) ToOperation() (string, error) {
 	}
 
 	return storage.URIRestoreAr(r.Bucket, r.Key, r.FreezeAfterDays), nil
+}
+
+func (r RestoreArchiveApiInfo) WorkId() string {
+	return fmt.Sprintf("RestoreArchive|%s|%s|%d", r.Bucket, r.Key, r.FreezeAfterDays)
 }
 
 func RestoreArchive(info RestoreArchiveApiInfo) (batch.OperationResult, error) {

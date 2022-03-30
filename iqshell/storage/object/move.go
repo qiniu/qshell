@@ -2,6 +2,7 @@ package object
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -21,6 +22,10 @@ func (m MoveApiInfo) ToOperation() (string, error) {
 	}
 
 	return storage.URIMove(m.SourceBucket, m.SourceKey, m.DestBucket, m.DestKey, m.Force), nil
+}
+
+func (m MoveApiInfo) WorkId() string {
+	return fmt.Sprintf("Move|%s|%s|%s|%s", m.SourceBucket, m.SourceKey, m.DestBucket, m.DestKey)
 }
 
 func Move(info MoveApiInfo) (batch.OperationResult, error) {

@@ -2,6 +2,7 @@ package object
 
 import (
 	"errors"
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -19,6 +20,10 @@ func (c ChangeTypeApiInfo) ToOperation() (string, error) {
 	}
 
 	return storage.URIChangeType(c.Bucket, c.Key, c.Type), nil
+}
+
+func (c ChangeTypeApiInfo) WorkId() string {
+	return fmt.Sprintf("ChangeStatus|%s|%s|%d", c.Bucket, c.Key, c.Type)
 }
 
 func ChangeType(info ChangeTypeApiInfo) (batch.OperationResult, error) {

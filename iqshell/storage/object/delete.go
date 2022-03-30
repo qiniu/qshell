@@ -1,6 +1,7 @@
 package object
 
 import (
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -26,6 +27,10 @@ func (d DeleteApiInfo) ToOperation() (string, error) {
 	} else {
 		return storage.URIDeleteAfterDays(d.Bucket, d.Key, d.DeleteAfterDays) + condition, nil
 	}
+}
+
+func (d DeleteApiInfo) WorkId() string {
+	return fmt.Sprintf("Delete|%s|%s", d.Bucket, d.Key)
 }
 
 func Delete(info DeleteApiInfo) (batch.OperationResult, error) {
