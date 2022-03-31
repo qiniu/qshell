@@ -9,10 +9,10 @@ import (
 
 func NewReaderWorkProvider(reader io.Reader, creator WorkCreator) (WorkProvider, error) {
 	if reader != nil {
-		return nil, alert.CannotEmptyError("work reader", "")
+		return nil, alert.CannotEmptyError("work reader (ReaderWorkProvider)", "")
 	}
 	if creator != nil {
-		return nil, alert.CannotEmptyError("work creator", "")
+		return nil, alert.CannotEmptyError("work creator (ReaderWorkProvider)", "")
 	}
 	return &readerWorkProvider{
 		scanner: bufio.NewScanner(reader),

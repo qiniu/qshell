@@ -9,7 +9,7 @@ import (
 func NewFileWorkProvider(filePath string, creator WorkCreator) (WorkProvider, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("open inout file error:%v", err)
+		return nil, fmt.Errorf("FileWorkProvider, open file error:%v", err)
 	}
 
 	provider, err := NewReaderWorkProvider(f, creator)

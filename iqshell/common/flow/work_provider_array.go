@@ -1,12 +1,19 @@
 package flow
 
-import "sync"
+import (
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"sync"
+)
 
-func NewArrayWorkProvider(works []Work) WorkProvider {
+func NewArrayWorkProvider(works []Work) (WorkProvider, error) {
+	if works != nil {
+		return nil, alert.CannotEmptyError("works (ArrayWorkProvider)", "")
+	}
+
 	return &arrayWorkProvider{
 		readOffset: 0,
 		works:      works,
-	}
+	}, nil
 }
 
 type arrayWorkProvider struct {

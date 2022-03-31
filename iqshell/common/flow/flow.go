@@ -20,14 +20,15 @@ func (i *Info) Check() error {
 }
 
 type Flow struct {
-	Info              Info
-	WorkProvider      WorkProvider
-	WorkPacker        *WorkPacker
-	WorkerProvider    WorkerProvider
-	EventListener     EventListener
-	Overseer          Overseer
-	Redo              Redo
-	workErrorHappened bool // 执行中是否出现错误
+	Info           Info           // flow 的参数信息 【可选】
+	WorkProvider   WorkProvider   // work 提供者 【必填】
+	WorkerProvider WorkerProvider // worker 提供者 【必填】
+
+	WorkPacker        *WorkPacker   // work 打包，有些工作需要对工作进行批量处理 【可选】
+	EventListener     EventListener // work 处理事项监听者 【可选】
+	Overseer          Overseer      // work 监工，涉及 work 是否已处理相关的逻辑 【可选】
+	Redo              Redo          // work 是否需要重新做相关逻辑，有些工作虽然已经做过，但下次处理时可能条件发生变化，需要重新处理 【可选】
+	workErrorHappened bool          // 执行中是否出现错误 【内部变量】
 }
 
 func (f *Flow) Check() error {
@@ -85,7 +86,7 @@ func (f *Flow) Start() {
 			}
 
 			// 工作进行打包
-			if f.WorkPacker != nil{
+			if f.WorkPacker != nil {
 				if e := f.WorkPacker.Pack(work); e != nil {
 					log.ErrorF("work pack error:%v", e)
 					break
