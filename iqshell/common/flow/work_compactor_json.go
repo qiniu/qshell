@@ -11,7 +11,5 @@ func (j *jsonWorkCompactor) Compact(work Work) (info string, err error) {
 }
 
 func NewJsonWorkCompactor() WorkCompactor {
-	return &jsonWorkCompactor{
-	}
+	return &jsonWorkCompactor{}
 }
-

@@ -5,7 +5,7 @@ import (
 )
 
 type jsonWorkCreator struct {
-	BlankQuotedWorkCreatFunc func()Work
+	BlankQuotedWorkCreatFunc func() Work
 }
 
 func (w *jsonWorkCreator) Create(info string) (work Work, err error) {
@@ -14,9 +14,8 @@ func (w *jsonWorkCreator) Create(info string) (work Work, err error) {
 	return
 }
 
-func NewJsonWorkCreator(blankQuotedWorkCreatFunc func()Work) WorkCreator {
+func NewJsonWorkCreator(blankQuotedWorkCreatFunc func() Work) WorkCreator {
 	return &jsonWorkCreator{
 		BlankQuotedWorkCreatFunc: blankQuotedWorkCreatFunc,
 	}
 }
-

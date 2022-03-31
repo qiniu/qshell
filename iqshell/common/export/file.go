@@ -5,6 +5,7 @@ import "fmt"
 type FileExporter struct {
 	success  Exporter
 	fail     Exporter
+	skip     Exporter
 	override Exporter
 }
 
@@ -14,6 +15,10 @@ func (b *FileExporter) Success() Exporter {
 
 func (b *FileExporter) Fail() Exporter {
 	return b.fail
+}
+
+func (b *FileExporter) Skip() Exporter {
+	return b.skip
 }
 
 func (b *FileExporter) Override() Exporter {
@@ -33,6 +38,7 @@ func (b *FileExporter) Close() error {
 type FileExporterConfig struct {
 	SuccessExportFilePath  string
 	FailExportFilePath     string
+	SkipExportFilePath     string
 	OverrideExportFilePath string
 }
 
@@ -44,6 +50,11 @@ func NewFileExport(config FileExporterConfig) (export *FileExporter, err error) 
 	}
 
 	export.fail, err = New(config.FailExportFilePath)
+	if err != nil {
+		return
+	}
+
+	export.skip, err = New(config.FailExportFilePath)
 	if err != nil {
 		return
 	}

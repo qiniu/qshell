@@ -12,12 +12,12 @@ type WorkProvider interface {
 	Provide() (hasMore bool, work Work, err error)
 }
 
-func NewWorkProviderOfFile(filepath string, enableStdIn bool, creator WorkCreator) (provider WorkProvider, err error) {
+func NewWorkProviderOfFile(filepath string, enableStdin bool, creator WorkCreator) (provider WorkProvider, err error) {
 	if len(filepath) > 0 {
 		return NewFileWorkProvider(filepath, creator)
 	}
 
-	if enableStdIn {
+	if enableStdin {
 		return NewReaderWorkProvider(os.Stdin, creator)
 	}
 

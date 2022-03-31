@@ -39,6 +39,6 @@ func (p *arrayWorkProvider) provide() (hasMore bool, work Work, err error) {
 	}
 	hasMore = true
 	work = p.works[p.readOffset]
-	p.readOffset ++
+	p.readOffset++
 	return
 }

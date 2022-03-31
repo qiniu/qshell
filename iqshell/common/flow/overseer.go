@@ -9,6 +9,5 @@ type Overseer interface {
 type WorkRecord struct {
 	Work   Work   `json:"work"`
 	Result Result `json:"result"`
-	Err    string `json:"err"`
+	Err    error  `json:"-"`
 }
-

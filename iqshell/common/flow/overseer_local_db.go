@@ -27,7 +27,7 @@ func (l *localDBRecordOverseer) WillWork(work Work) {
 	}
 	status := &workStatus{
 		WorkRecord: &WorkRecord{
-			Work:   work,
+			Work: work,
 		},
 		Status: workStatusDoing,
 	}
@@ -41,7 +41,7 @@ func (l *localDBRecordOverseer) WorkDone(record *WorkRecord) {
 	status := &workStatus{
 		WorkRecord: record,
 	}
-	if len(record.Err) > 0 {
+	if record.Err != nil {
 		status.Status = workStatusError
 	} else {
 		status.Status = workStatusSuccess
@@ -113,7 +113,7 @@ var (
 	workStatusError   = 3
 )
 
-func unmarshalWorkStatus(data string, s *workStatus)  error {
+func unmarshalWorkStatus(data string, s *workStatus) error {
 	return json.Unmarshal([]byte(data), s)
 }
 
