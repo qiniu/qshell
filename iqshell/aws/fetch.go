@@ -61,7 +61,7 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 	resultExport, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:  info.BatchInfo.SuccessExportFilePath,
 		FailExportFilePath:     info.BatchInfo.FailExportFilePath,
-		OverrideExportFilePath: info.BatchInfo.OverrideExportFilePath,
+		OverrideExportFilePath: info.BatchInfo.OverwriteExportFilePath,
 	})
 
 	if err != nil {

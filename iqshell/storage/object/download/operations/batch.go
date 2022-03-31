@@ -106,7 +106,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	exporter, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:  info.GroupInfo.SuccessExportFilePath,
 		FailExportFilePath:     info.GroupInfo.FailExportFilePath,
-		OverrideExportFilePath: info.GroupInfo.OverrideExportFilePath,
+		OverrideExportFilePath: info.GroupInfo.OverwriteExportFilePath,
 	})
 	if err != nil {
 		log.Error(err)

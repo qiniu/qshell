@@ -26,7 +26,7 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&info.GroupInfo.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
 	cmd.Flags().StringVarP(&info.GroupInfo.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
-	cmd.Flags().StringVarP(&info.GroupInfo.OverrideExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
+	cmd.Flags().StringVarP(&info.GroupInfo.OverwriteExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
 	cmd.Flags().IntVarP(&info.GroupInfo.WorkerCount, "worker", "c", 1, "worker count")
 	cmd.Flags().StringVarP(&info.CallbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "upload callback host")
@@ -61,7 +61,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&info.GroupInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
 	cmd.Flags().StringVar(&info.GroupInfo.FailExportFilePath, "failure-list", "", "upload failure file list")
-	cmd.Flags().StringVar(&info.GroupInfo.OverrideExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
+	cmd.Flags().StringVar(&info.GroupInfo.OverwriteExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
 	cmd.Flags().IntVar(&info.GroupInfo.WorkerCount, "thread-count", 1, "multiple thread count")
 
 	cmd.Flags().BoolVarP(&info.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")

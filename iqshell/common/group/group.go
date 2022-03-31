@@ -15,13 +15,13 @@ import (
 type Info struct {
 	work.FlowInfo
 
-	ItemSeparate           string
-	InputFile              string // batch 操作输入文件
-	Force                  bool   // 无需验证即可 batch 操作，类似于二维码验证
-	Overwrite              bool   // 强制执行，服务端参数，此参数在此仅为占位，不处理相关逻辑
-	FailExportFilePath     string // 错误输出
-	SuccessExportFilePath  string // 成功输出
-	OverrideExportFilePath string // 覆盖输出
+	ItemSeparate            string
+	InputFile               string // batch 操作输入文件
+	Force                   bool   // 无需验证即可 batch 操作，类似于二维码验证
+	Overwrite               bool   // 强制执行，服务端参数，此参数在此仅为占位，不处理相关逻辑
+	FailExportFilePath      string // 错误输出
+	SuccessExportFilePath   string // 成功输出
+	OverwriteExportFilePath string // 覆盖输出
 }
 
 func (info *Info) Check() error {
@@ -48,7 +48,7 @@ func NewHandler(info Info) (Handler, error) {
 	e, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:  info.SuccessExportFilePath,
 		FailExportFilePath:     info.FailExportFilePath,
-		OverrideExportFilePath: info.OverrideExportFilePath,
+		OverrideExportFilePath: info.OverwriteExportFilePath,
 	})
 	if err != nil {
 		return nil, errors.New("get export error:" + err.Error())

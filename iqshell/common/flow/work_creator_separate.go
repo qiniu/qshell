@@ -12,8 +12,7 @@ func (l *lineSeparateWorkCreator) Create(info string) (work Work, err error) {
 	return l.creatorFunc(items)
 }
 
-func NewLineSeparateWorkCreator(separate string,
-	creatorFunc func(items []string) (work Work, err error)) WorkCreator {
+func NewLineSeparateWorkCreator(separate string, creatorFunc func(items []string) (work Work, err error)) WorkCreator {
 	return &lineSeparateWorkCreator{
 		separate:    separate,
 		creatorFunc: creatorFunc,
