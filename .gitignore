@@ -27,6 +27,7 @@ _testmain.go
 .idea
 
 .vscode
+.DS_Store
 
 # go test coverage file
 coverage.txt
