@@ -539,10 +539,15 @@ func printStat(bucket string, key string, entry storage.FileInfo) {
 	putTime := time.Unix(0, entry.PutTime*100)
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "PutTime:", entry.PutTime, putTime.String())
 	statInfo += fmt.Sprintf("%-20s%s\r\n", "MimeType:", entry.MimeType)
-	if entry.Type == 0 {
+	switch entry.Type {
+	case 0:
 		statInfo += fmt.Sprintf("%-20s%d -> 标准存储\r\n", "FileType:", entry.Type)
-	} else {
+	case 1:
 		statInfo += fmt.Sprintf("%-20s%d -> 低频存储\r\n", "FileType:", entry.Type)
+	case 2:
+		statInfo += fmt.Sprintf("%-20s%d -> 归档存储\r\n", "FileType:", entry.Type)
+	default:
+		statInfo += fmt.Sprintf("%-20s%d -> 未知\r\n", "FileType:", entry.Type)
 	}
 	fmt.Println(statInfo)
 }
