@@ -15,19 +15,23 @@ type arrayWorkProvider struct {
 	works      []Work
 }
 
-func (a *arrayWorkProvider) Provide() (hasMore bool, work Work, err error) {
-	a.mu.Lock()
-	hasMore, work, err = a.provide()
-	a.mu.Unlock()
+func (p *arrayWorkProvider) WorkTotalCount() int64 {
+	return int64(len(p.works))
+}
+
+func (p *arrayWorkProvider) Provide() (hasMore bool, work Work, err error) {
+	p.mu.Lock()
+	hasMore, work, err = p.provide()
+	p.mu.Unlock()
 	return
 }
 
-func (a *arrayWorkProvider) provide() (hasMore bool, work Work, err error) {
-	if a.readOffset > len(a.works)-1 {
+func (p *arrayWorkProvider) provide() (hasMore bool, work Work, err error) {
+	if p.readOffset > len(p.works)-1 {
 		return false, nil, nil
 	}
 	hasMore = true
-	work = a.works[a.readOffset]
-	a.readOffset ++
+	work = p.works[p.readOffset]
+	p.readOffset ++
 	return
 }
