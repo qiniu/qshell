@@ -3,9 +3,9 @@ package m3u8
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
@@ -24,7 +24,7 @@ type ReplaceDomainApiInfo struct {
 	RemoveSparePreSlash bool
 }
 
-func ReplaceDomain(info ReplaceDomainApiInfo) error {
+func ReplaceDomain(info ReplaceDomainApiInfo) *data.CodeError {
 	dnLink, err := downloadLink(downloadLinkApiInfo{
 		Bucket: info.Bucket,
 		Key:    info.Key,
@@ -42,27 +42,27 @@ func ReplaceDomain(info ReplaceDomainApiInfo) error {
 	//get m3u8 file content
 	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)
 	if reqErr != nil {
-		return fmt.Errorf("new request for url %s error, %s", dnLink, reqErr)
+		return data.NewEmptyError().AppendDescF("new request for url %s error, %s", dnLink, reqErr)
 	}
 
 	m3u8Resp, m3u8Err := http.DefaultClient.Do(m3u8Req)
 	if m3u8Err != nil {
-		return fmt.Errorf("open url %s error, %s", dnLink, m3u8Err)
+		return data.NewEmptyError().AppendDescF("open url %s error, %s", dnLink, m3u8Err)
 	}
 	defer m3u8Resp.Body.Close()
 
 	if m3u8Resp.StatusCode != 200 {
-		return fmt.Errorf("download m3u8 file error, %s", m3u8Resp.Status)
+		return data.NewEmptyError().AppendDescF("download m3u8 file error, %s", m3u8Resp.Status)
 	}
 
 	m3u8Bytes, readErr := ioutil.ReadAll(m3u8Resp.Body)
 	if readErr != nil {
-		return fmt.Errorf("read m3u8 file content error, %s", readErr.Error())
+		return data.NewEmptyError().AppendDescF("read m3u8 file content error, %s", readErr.Error())
 	}
 
 	//check content
 	if !strings.HasPrefix(string(m3u8Bytes), "#EXTM3U") {
-		return errors.New("invalid m3u8 file")
+		return data.NewEmptyError().AppendDesc("invalid m3u8 file")
 	}
 
 	newM3u8Lines := make([]string, 0, 200)
@@ -94,7 +94,7 @@ func ReplaceDomain(info ReplaceDomainApiInfo) error {
 	putErr := uploader.Put(workspace.GetContext(), putRet, upToken, info.Key, bytes.NewReader(newM3u8Data), int64(len(newM3u8Data)), &putExtra)
 
 	if putErr != nil {
-		return putErr
+		return data.ConvertError(putErr)
 	}
 
 	return nil

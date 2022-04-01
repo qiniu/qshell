@@ -1,7 +1,7 @@
 package account
 
 import (
-	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
@@ -15,17 +15,17 @@ type LoadInfo struct {
 var info LoadInfo
 
 // Load 保证 AccountPath、OldAccountPath、AccountDBPath 均不为空
-func Load(i LoadInfo) error {
+func Load(i LoadInfo) *data.CodeError {
 	if i.AccountDBPath == "" {
-		return fmt.Errorf("empty account db path\n")
+		return data.NewEmptyError().AppendDescF("empty account db path\n")
 	}
 
 	if i.AccountPath == "" {
-		return fmt.Errorf("empty account path\n")
+		return data.NewEmptyError().AppendDescF("empty account path\n")
 	}
 
 	if i.OldAccountPath == "" {
-		return fmt.Errorf("empty old account db path\n")
+		return data.NewEmptyError().AppendDescF("empty old account db path\n")
 	}
 
 	info = i

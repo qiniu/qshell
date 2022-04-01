@@ -1,13 +1,15 @@
 package alert
 
-import "errors"
+import (
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+)
 
-func CannotEmptyError(words string, suggest string) error {
-	return errors.New(CannotEmpty(words, suggest))
+func CannotEmptyError(words string, suggest string) *data.CodeError {
+	return data.NewError(data.ErrorCodeParamNotExist, CannotEmpty(words, suggest))
 }
 
-func Error(desc string, suggest string) error {
-	return errors.New(Description(desc, suggest))
+func Error(desc string, suggest string) *data.CodeError {
+	return data.NewError(data.ErrorCodeParamNotExist, Description(desc, suggest))
 }
 
 func CannotEmpty(words string, suggest string) string {

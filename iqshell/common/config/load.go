@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/spf13/viper"
 )
@@ -10,7 +11,7 @@ type LoadInfo struct {
 	GlobalConfigPath string
 }
 
-func Load(info LoadInfo) error {
+func Load(info LoadInfo) *data.CodeError {
 	if len(info.GlobalConfigPath) > 0 {
 		globalConfigViper = viper.New()
 		globalConfigViper.SetConfigFile(info.GlobalConfigPath)

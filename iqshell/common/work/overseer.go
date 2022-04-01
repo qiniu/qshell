@@ -8,10 +8,10 @@ import (
 type Overseer interface {
 	HasDone(work Work) bool
 	WillWork(work Work)
-	WorkDone(work Work, result Result, err error)
+	WorkDone(work Work, result Result, err *data.CodeError)
 }
 
-func NewDBRecordOverseer(dbPath string) (Overseer, error) {
+func NewDBRecordOverseer(dbPath string) (Overseer, *data.CodeError) {
 	if r, err := recorder.CreateDBRecorder(dbPath); err != nil {
 		return nil, err
 	} else {
@@ -42,7 +42,7 @@ func (l *localDBRecordOverseer) WillWork(work Work) {
 	l.setWorkStatus(work, s)
 }
 
-func (l *localDBRecordOverseer) WorkDone(work Work, result Result, err error) {
+func (l *localDBRecordOverseer) WorkDone(work Work, result Result, err *data.CodeError) {
 	if l == nil || l.Recorder == nil {
 		return
 	}
@@ -99,7 +99,7 @@ var (
 	workStatusError   = 3
 )
 
-func newWorkStatus(data string) (*workStatus, error) {
+func newWorkStatus(data string) (*workStatus, *data.CodeError) {
 	s := &workStatus{}
 	err := json.Unmarshal([]byte(data), s)
 	return s, err
@@ -109,7 +109,7 @@ type workStatus struct {
 	Status int `json:"status"`
 }
 
-func (s *workStatus) toData() (string, error) {
+func (s *workStatus) toData() (string, *data.CodeError) {
 	data, err := json.Marshal(s)
 	return string(data), err
 }

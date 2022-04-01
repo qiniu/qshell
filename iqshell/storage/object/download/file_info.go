@@ -1,8 +1,8 @@
 package download
 
 import (
-	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,7 +18,7 @@ type fileInfo struct {
 	fromBytes int64  // 下载开始位置，检查本地 tempFile 文件，读取已下载文件长度
 }
 
-func createDownloadFiles(toFile, fileEncoding string) (*fileInfo, error) {
+func createDownloadFiles(toFile, fileEncoding string) (*fileInfo, *data.CodeError) {
 	f := &fileInfo{
 		toFile:       toFile,
 		fileEncoding: fileEncoding,
@@ -33,26 +33,27 @@ func createDownloadFiles(toFile, fileEncoding string) (*fileInfo, error) {
 	return f, err
 }
 
-func (d *fileInfo) check() error {
+func (d *fileInfo) check() *data.CodeError {
 	if len(d.toFile) == 0 {
-		return errors.New("the filename saved after downloading is empty")
+		return data.NewEmptyError().AppendDesc("the filename saved after downloading is empty")
 	}
 	return nil
 }
 
-func (d *fileInfo) prepare() (err error) {
+func (d *fileInfo) prepare() (*data.CodeError) {
 	// 文件路径
+	var err error
 	d.toAbsFile, err = filepath.Abs(d.toFile)
 	if err != nil {
-		err = errors.New("get save file abs path error:" + err.Error())
-		return
+		err = data.NewEmptyError().AppendDesc("get save file abs path error:" + err.Error())
+		return data.ConvertError(err)
 	}
 
 	if strings.ToLower(d.fileEncoding) == "gbk" {
 		d.toAbsFile, err = utf82GBK(d.toFile)
 		if err != nil {
-			err = errors.New("gbk file path:" + d.toFile + " error:" + err.Error())
-			return
+			err = data.NewEmptyError().AppendDesc("gbk file path:" + d.toFile + " error:" + err.Error())
+			return data.ConvertError(err)
 		}
 	}
 
@@ -61,7 +62,7 @@ func (d *fileInfo) prepare() (err error) {
 
 	err = os.MkdirAll(d.fileDir, 0775)
 	if err != nil {
-		return errors.New("MkdirAll failed for " + d.fileDir + " error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("MkdirAll failed for " + d.fileDir + " error:" + err.Error())
 	}
 
 	tempFileStatus, err := os.Stat(d.tempFile)
@@ -77,10 +78,10 @@ func (d *fileInfo) prepare() (err error) {
 	return nil
 }
 
-func (d *fileInfo) clean() error {
+func (d *fileInfo) clean() *data.CodeError {
 	err := os.Remove(d.toAbsFile)
 	if e := os.Remove(d.tempFile); err == nil {
 		err = e
 	}
-	return err
+	return data.ConvertError(err)
 }

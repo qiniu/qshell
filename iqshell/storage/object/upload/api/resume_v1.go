@@ -3,8 +3,8 @@ package api
 import (
 	"bytes"
 	"context"
-	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 type resumeV1 struct {
@@ -13,31 +13,30 @@ type resumeV1 struct {
 	uploader *storage.ResumeUploader
 }
 
-func (r *resumeV1) InitServer(ctx context.Context) error {
+func (r *resumeV1) InitServer(ctx context.Context) *data.CodeError {
 	return nil
 }
 
 // UploadBlock size 必须是 4M 整数倍
-func (r *resumeV1) UploadBlock(ctx context.Context, index int, data []byte) error {
-	size := len(data)
+func (r *resumeV1) UploadBlock(ctx context.Context, index int, d []byte) *data.CodeError {
+	size := len(d)
 	var blkCtx storage.BlkputRet
-	err := r.uploader.Mkblk(ctx, r.TokenProvider(), r.UpHost, &blkCtx, size, bytes.NewReader(data), size)
+	err := r.uploader.Mkblk(ctx, r.TokenProvider(), r.UpHost, &blkCtx, size, bytes.NewReader(d), size)
 	if err == nil {
 		r.Recorder.BlkCtxs = append(r.Recorder.BlkCtxs, blkCtx)
 		r.Recorder.Offset += int64(size)
 	} else {
-		err = errors.New("resume v1 upload block error:" + err.Error())
+		err = data.NewEmptyError().AppendDesc("resume v1 upload block error:" + err.Error())
 	}
-	return err
+	return data.NewEmptyError().AppendError(err)
 }
 
-func (r *resumeV1) Complete(ctx context.Context, putRet interface{}) (err error) {
+func (r *resumeV1) Complete(ctx context.Context, putRet interface{}) *data.CodeError {
 	putExtra := storage.RputExtra{
 		Progresses: r.Recorder.BlkCtxs,
 	}
-	err = r.uploader.Mkfile(ctx, r.TokenProvider(), r.UpHost, putRet, r.Key, true, r.Recorder.TotalSize, &putExtra)
-	if err != nil {
-		err = errors.New("resume v1 complete error:" + err.Error())
+	if err := r.uploader.Mkfile(ctx, r.TokenProvider(), r.UpHost, putRet, r.Key, true, r.Recorder.TotalSize, &putExtra); err != nil {
+		return data.NewEmptyError().AppendDescF("resume v1 complete error:%v", err)
 	}
-	return
+	return nil
 }

@@ -3,7 +3,8 @@ package batch
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/work"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 )
 
 var (
@@ -40,9 +41,13 @@ func OperationConditionURI(condition OperationCondition) string {
 }
 
 type Operation interface {
-	work.Work
+	flow.Work
 
-	ToOperation() (string, error)
+	ToOperation() (string, *data.CodeError)
+}
+
+type OperationCreator interface {
+	Create(info string) (work Operation, err *data.CodeError)
 }
 
 type OperationResult struct {

@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"net/url"
 	"os"
@@ -90,7 +90,7 @@ func encode(v string) string {
 	return string(t)
 }
 
-func decode(s string) (v string, err error) {
+func decode(s string) (v string, err *data.CodeError) {
 	n := 0
 	hasEscape := false
 	for i := 0; i < len(s); {
@@ -98,7 +98,7 @@ func decode(s string) (v string, err error) {
 		case escapeChar:
 			n++
 			if i+2 >= len(s) || encoding[s[i+1]] >= 16 || encoding[s[i+2]] >= 16 {
-				return "", syscall.EINVAL
+				return "", data.NewEmptyError().AppendError(syscall.EINVAL)
 			}
 			i += 3
 		case '!':
@@ -175,7 +175,7 @@ func Encode(uri string) string {
 	return "!" + encodedURI
 }
 
-func Decode(encodedURI string) (uri string, err error) {
+func Decode(encodedURI string) (uri string, err *data.CodeError) {
 
 	size := len(encodedURI)
 	if size == 0 {
@@ -194,28 +194,31 @@ func Decode(encodedURI string) (uri string, err error) {
 	}
 
 	b := make([]byte, base64.URLEncoding.DecodedLen(len(encodedURI)))
-	n, err := base64.URLEncoding.Decode(b, []byte(encodedURI))
-	return string(b[:n]), err
+	if n, e := base64.URLEncoding.Decode(b, []byte(encodedURI)); e != nil {
+		return "", data.NewEmptyError().AppendError(e)
+	} else {
+		return string(b[:n]), nil
+	}
 }
 
-func GetAkBucketFromUploadToken(token string) (ak, bucket string, err error) {
+func GetAkBucketFromUploadToken(token string) (ak, bucket string, err *data.CodeError) {
 	items := strings.Split(token, ":")
 	if len(items) != 3 {
-		err = errors.New("invalid upload token, format error")
+		err = data.NewEmptyError().AppendDesc("invalid upload token, format error")
 		return
 	}
 
 	ak = items[0]
 	policyBytes, dErr := base64.URLEncoding.DecodeString(items[2])
 	if dErr != nil {
-		err = errors.New("invalid upload token, invalid put policy")
+		err = data.NewEmptyError().AppendDesc("invalid upload token, invalid put policy")
 		return
 	}
 
 	putPolicy := storage.PutPolicy{}
 	uErr := json.Unmarshal(policyBytes, &putPolicy)
 	if uErr != nil {
-		err = errors.New("invalid upload token, invalid put policy")
+		err = data.NewEmptyError().AppendDesc("invalid upload token, invalid put policy")
 		return
 	}
 
@@ -224,10 +227,10 @@ func GetAkBucketFromUploadToken(token string) (ak, bucket string, err error) {
 }
 
 // KeyFromUrl 从URL中获取文件名字
-func KeyFromUrl(uri string) (key string, err error) {
+func KeyFromUrl(uri string) (key string, err *data.CodeError) {
 	u, pErr := url.Parse(uri)
 	if pErr != nil {
-		err = pErr
+		err = data.NewEmptyError().AppendError(pErr)
 		return
 	}
 	for _, c := range u.Path {

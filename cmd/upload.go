@@ -49,7 +49,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QUpload2Type
-			info.GroupInfo.Force = true
+			info.BatchInfo.Force = true
 			cfg.CmdCfg.Log = &config.LogSetting{
 				LogLevel:  data.NewString(LogLevel),
 				LogFile:   data.NewString(LogFile),
@@ -59,10 +59,10 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.BatchUpload2(cfg, info)
 		},
 	}
-	cmd.Flags().StringVar(&info.GroupInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
-	cmd.Flags().StringVar(&info.GroupInfo.FailExportFilePath, "failure-list", "", "upload failure file list")
-	cmd.Flags().StringVar(&info.GroupInfo.OverwriteExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
-	cmd.Flags().IntVar(&info.GroupInfo.WorkerCount, "thread-count", 1, "multiple thread count")
+	cmd.Flags().StringVar(&info.BatchInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
+	cmd.Flags().StringVar(&info.BatchInfo.FailExportFilePath, "failure-list", "", "upload failure file list")
+	cmd.Flags().StringVar(&info.BatchInfo.OverwriteExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
+	cmd.Flags().IntVar(&info.BatchInfo.WorkerCount, "thread-count", 1, "multiple thread count")
 
 	cmd.Flags().BoolVarP(&info.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&info.IgnoreDir, "ignore-dir", false, "ignore the dir in the dest file key")

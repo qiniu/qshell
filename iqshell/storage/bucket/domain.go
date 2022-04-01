@@ -12,16 +12,16 @@ import (
 	"strings"
 )
 
-func DomainOfBucket(bucket string) (domain string, err error) {
+func DomainOfBucket(bucket string) (domain string, err *data.CodeError) {
 	//get domains of bucket
 	domainsOfBucket, gErr := AllDomainsOfBucket(bucket)
 	if gErr != nil {
-		err = fmt.Errorf("Get domains of bucket error: %v", gErr)
+		err = data.NewEmptyError().AppendDescF("Get domains of bucket error: %v", gErr)
 		return
 	}
 
 	if len(domainsOfBucket) == 0 {
-		err = fmt.Errorf("No domains found for bucket: %s", bucket)
+		err = data.NewEmptyError().AppendDescF("No domains found for bucket: %s", bucket)
 		return
 	}
 
@@ -89,11 +89,11 @@ func (i *DomainInfo) DetailDescriptionString() string {
 }
 
 // AllDomainsOfBucket 获取一个存储空间绑定的CDN域名
-func AllDomainsOfBucket(bucket string) (domains []DomainInfo, err error) {
+func AllDomainsOfBucket(bucket string) (domains []DomainInfo, err *data.CodeError) {
 	return allDomainsOfBucket(workspace.GetConfig(), bucket)
 }
 
-func allDomainsOfBucket(cfg *config.Config, bucket string) (domains []DomainInfo, err error) {
+func allDomainsOfBucket(cfg *config.Config, bucket string) ([]DomainInfo, *data.CodeError) {
 	bucketManager, gErr := GetBucketManager()
 	if gErr != nil {
 		return nil, gErr
@@ -108,17 +108,18 @@ func allDomainsOfBucket(cfg *config.Config, bucket string) (domains []DomainInfo
 		}
 	}
 
+	var domains []DomainInfo
 	reqURL := fmt.Sprintf("%s/v7/domain/list?tbl=%s", utils.Endpoint(cfg.IsUseHttps(), reqHost), bucket)
 	//reqURL = fmt.Sprintf("%s/domain?bucket=%s&type=all", utils.Endpoint(cfg.IsUseHttps(), reqHost), bucket)
-	err = bucketManager.Client.CredentialedCall(workspace.GetContext(), bucketManager.Mac, auth.TokenQiniu, &domains, "GET", reqURL, nil)
+	err := bucketManager.Client.CredentialedCall(workspace.GetContext(), bucketManager.Mac, auth.TokenQiniu, &domains, "GET", reqURL, nil)
 	if err != nil {
 		if e, ok := err.(*storage.ErrorInfo); ok {
 			if e.Code != 404 {
-				return
+				return nil, data.ConvertError(e)
 			}
 			err = nil
 		} else {
-			return
+			return nil, data.ConvertError(err)
 		}
 	}
 	return domains, nil

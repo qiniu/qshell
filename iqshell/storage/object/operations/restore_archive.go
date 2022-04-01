@@ -3,15 +3,15 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/group"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"strconv"
 )
 
-func convertFreezeAfterDaysToInt(freezeAfterDays string) (int, error) {
+func convertFreezeAfterDaysToInt(freezeAfterDays string) (int, *data.CodeError) {
 	if len(freezeAfterDays) == 0 {
 		return 0, alert.CannotEmptyError("FreezeAfterDays", "")
 	}
@@ -33,7 +33,7 @@ type RestoreArchiveInfo struct {
 	freezeAfterDaysInt int
 }
 
-func (info *RestoreArchiveInfo) Check() error {
+func (info *RestoreArchiveInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
@@ -60,7 +60,7 @@ func RestoreArchive(cfg *iqshell.Config, info RestoreArchiveInfo) {
 		return
 	}
 
-	result, err := object.RestoreArchive(object.RestoreArchiveApiInfo{
+	result, err := object.RestoreArchive(&object.RestoreArchiveApiInfo{
 		Bucket:          info.Bucket,
 		Key:             info.Key,
 		FreezeAfterDays: info.freezeAfterDaysInt,
@@ -91,7 +91,7 @@ type BatchRestoreArchiveInfo struct {
 	freezeAfterDaysInt int
 }
 
-func (info *BatchRestoreArchiveInfo) Check() error {
+func (info *BatchRestoreArchiveInfo) Check() *data.CodeError {
 	if err := info.BatchInfo.Check(); err != nil {
 		return err
 	}
@@ -115,47 +115,39 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 		return
 	}
 
-	handler, err := group.NewHandler(info.BatchInfo.Info)
+	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
-		line, success := handler.Scanner().ScanLine()
-		if !success {
-			return nil, false
+	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+		key := items[0]
+		if len(key) > 0 {
+			return &object.RestoreArchiveApiInfo{
+				Bucket:          info.Bucket,
+				Key:             key,
+				FreezeAfterDays: info.freezeAfterDaysInt,
+			}, nil
 		}
-
-		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
-		if len(items) > 0 {
-			key := items[0]
-			if len(key) > 0 {
-				return object.RestoreArchiveApiInfo{
-					Bucket:          info.Bucket,
-					Key:             key,
-					FreezeAfterDays: info.freezeAfterDaysInt,
-				}, true
-			}
-		}
-		return nil, true
-	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
-		apiInfo, ok := (operation).(object.RestoreArchiveApiInfo)
+		return nil, alert.Error("key invalid", "")
+	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+		apiInfo, ok := (operation).(*object.RestoreArchiveApiInfo)
 		if !ok {
 			return
 		}
 
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%d\t%s", apiInfo.Key, result.Code, result.Error)
+			exporter.Fail().ExportF("%s\t%d\t%s", apiInfo.Key, result.Code, result.Error)
 			log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%d, Code: %d, Error: %s",
 				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays,
 				result.Code, result.Error)
 		} else {
-			handler.Export().Success().ExportF("%s", apiInfo.Key)
+			exporter.Success().ExportF("%s", apiInfo.Key)
 			log.InfoF("Restore archive Success, [%s:%d], FreezeAfterDays:%s",
 				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
 		}
-	}).OnError(func(err error) {
+	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch restore archive error:%v:", err)
 	}).Start()
 }

@@ -14,7 +14,7 @@ type ListDomainInfo struct {
 	Detail bool
 }
 
-func (info *ListDomainInfo) Check() error {
+func (info *ListDomainInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}

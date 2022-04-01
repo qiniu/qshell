@@ -11,7 +11,7 @@ import (
 
 type SaveAsInfo object.SaveAsApiInfo
 
-func (info *SaveAsInfo) Check() error {
+func (info *SaveAsInfo) Check() *data.CodeError {
 	if len(info.PublicUrl) == 0 {
 		return alert.CannotEmptyError("PublicUrlWithFop", "")
 	}

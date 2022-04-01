@@ -2,7 +2,6 @@ package upload
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -34,19 +33,19 @@ func newConveyorUploader(cfg *storage.Config) Uploader {
 	}
 }
 
-func (c *conveyor) upload(info *ApiInfo) (ret ApiResult, err error) {
+func (c *conveyor) upload(info *ApiInfo) (ret ApiResult, err *data.CodeError) {
 	log.DebugF("conveyor upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 
 	// 检查 Host
 	if len(info.UpHost) == 0 {
 		acc, gErr := workspace.GetAccount()
 		if gErr != nil {
-			err = fmt.Errorf("sync get account error:%v", gErr)
+			err = data.NewEmptyError().AppendDescF("sync get account error:%v", gErr)
 			return
 		}
 		info.UpHost, err = getUpHost(c.cfg, acc.AccessKey, info.ToBucket)
 		if err != nil {
-			err = fmt.Errorf("sync get up host error:%v", err)
+			err = data.NewEmptyError().AppendDescF("sync get up host error:%v", err)
 			return
 		}
 	} else {
@@ -116,7 +115,7 @@ func (c *conveyor) upload(info *ApiInfo) (ret ApiResult, err error) {
 		for {
 			bf, err = getRange(info.FilePath, info.FileSize, rangeStartOffset, blockSize)
 			if err != nil && retryTimes >= info.TryTimes {
-				err = errors.New(strings.Join([]string{"sync Get range block data failed: ", err.Error()}, ""))
+				err = data.NewEmptyError().AppendDesc(strings.Join([]string{"sync Get range block data failed: ", err.Error()}, ""))
 				return
 			}
 			if err == nil {
@@ -148,7 +147,7 @@ func (c *conveyor) upload(info *ApiInfo) (ret ApiResult, err error) {
 	// 3. 合并文件
 	err = uploader.Complete(ctx, &ret)
 	if err != nil {
-		err = fmt.Errorf("sync complete error:%v", err)
+		err = data.NewEmptyError().AppendDescF("sync complete error:%v", err)
 		return
 	} else {
 		if info.Progress != nil {
@@ -164,7 +163,7 @@ func (c *conveyor) upload(info *ApiInfo) (ret ApiResult, err error) {
 	return
 }
 
-func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, err error) {
+func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, err *data.CodeError) {
 
 	//create sync id
 	syncId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", srcResUrl, bucket, key))
@@ -172,12 +171,12 @@ func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, er
 	//local storage path
 	QShellRootPath := workspace.GetWorkspace()
 	if QShellRootPath == "" {
-		err = fmt.Errorf("empty root path\n")
+		err = data.NewEmptyError().AppendDescF("empty root path\n")
 		return
 	}
 	storePath := filepath.Join(QShellRootPath, ".qshell", "sync")
 	if mkdirErr := os.MkdirAll(storePath, 0775); mkdirErr != nil {
-		err = fmt.Errorf("sync Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
+		err = data.NewEmptyError().AppendDescF("sync Failed to mkdir `%s` due to `%s`", storePath, mkdirErr)
 		return
 	}
 
@@ -185,11 +184,11 @@ func ProgressFileFromUrl(srcResUrl, bucket, key string) (progressFile string, er
 	return
 }
 
-func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int64) (data *bytes.Buffer, err error) {
+func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int64) (buffer *bytes.Buffer, err *data.CodeError) {
 	//range get
 	dReq, dReqErr := http.NewRequest("GET", srcResUrl, nil)
 	if dReqErr != nil {
-		err = fmt.Errorf("New request error, %s", dReqErr.Error())
+		err = data.NewEmptyError().AppendDescF("New request error, %s", dReqErr.Error())
 		return
 	}
 
@@ -208,7 +207,7 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 	//	Proxy: http.ProxyURL(proxyURL),
 	//}
 
-	client.CheckRedirect = func(rReq *http.Request, rVias []*http.Request) (err error) {
+	client.CheckRedirect = func(rReq *http.Request, rVias []*http.Request) error {
 		rReq.Header.Add("Range", dReq.Header.Get("Range"))
 		return nil
 	}
@@ -216,20 +215,20 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 	//get response
 	dResp, dRespErr := client.Do(dReq)
 	if dRespErr != nil {
-		err = fmt.Errorf("Get response error, %s", dRespErr.Error())
+		err = data.NewEmptyError().AppendDescF("Get response error, %s", dRespErr.Error())
 		return
 	}
 	defer dResp.Body.Close()
 
 	//status error
 	if dResp.StatusCode/100 != 2 {
-		err = fmt.Errorf("Get resource error, %s", dResp.Status)
+		err = data.NewEmptyError().AppendDescF("Get resource error, %s", dResp.Status)
 		return
 	}
 
 	//if not support range, go back and err
 	if dResp.Header.Get("Content-Range") == "" {
-		err = errors.New("sync Remote server not support range")
+		err = data.NewEmptyError().AppendDesc("sync Remote server not support range")
 		return
 	}
 
@@ -239,15 +238,15 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 
 	//check ranged block size
 	if rangeSize != (rangeEndOffset - rangeStartOffset + 1) {
-		err = errors.New("sync Block read error, only the last range block can has bytes less than <RangeBlockSize>")
+		err = data.NewEmptyError().AppendDesc("sync Block read error, only the last range block can has bytes less than <RangeBlockSize>")
 		return
 	}
 
 	//read content
-	buffer := bytes.NewBuffer(nil)
+	buffer = bytes.NewBuffer(nil)
 	cpCnt, cpErr := io.Copy(buffer, dResp.Body)
 	if cpErr != nil || cpCnt != rangeSize {
-		err = fmt.Errorf("sync Read range block response error, not fully read:%v", cpErr)
+		err = data.NewEmptyError().AppendDescF("sync Read range block response error, not fully read:%v", cpErr)
 		return
 	}
 
@@ -270,14 +269,14 @@ func parseContentRange(contentRange string) (rangeSize, totalSize int64) {
 	return
 }
 
-func getUpHost(cfg *storage.Config, ak, bucket string) (upHost string, err error) {
+func getUpHost(cfg *storage.Config, ak, bucket string) (upHost string, err *data.CodeError) {
 
 	var zone *storage.Zone
 	if cfg.Zone != nil {
 		zone = cfg.Zone
 	} else {
 		if v, zoneErr := storage.GetZone(ak, bucket); zoneErr != nil {
-			err = zoneErr
+			err = data.ConvertError(zoneErr)
 			return
 		} else {
 			zone = v

@@ -2,6 +2,7 @@ package progress
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/schollz/progressbar/v3"
 	"sync"
 )
@@ -62,8 +63,12 @@ func (p *printer) SendSize(newSize int64) {
 	p.mu.Unlock()
 }
 
-func (p *printer) Write(b []byte) (n int, err error) {
-	return p.progressBar.Write(b)
+func (p *printer) Write(b []byte) (int, error) {
+	if n, e := p.progressBar.Write(b); e != nil {
+		return n, data.NewEmptyError().AppendError(e)
+	} else {
+		return n, nil
+	}
 }
 
 func (p *printer) Progress(current int64) {

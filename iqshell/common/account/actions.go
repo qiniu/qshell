@@ -1,7 +1,6 @@
 package account
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -16,24 +15,24 @@ import (
 )
 
 // 保存账户信息到账户文件中
-func SetAccountToLocalFile(acc Account) (err error) {
+func SetAccountToLocalFile(acc Account) (err *data.CodeError) {
 	accountFh, openErr := os.OpenFile(info.AccountPath, os.O_CREATE|os.O_RDWR, 0600)
 	if openErr != nil {
-		err = fmt.Errorf("Open account file error: %s", openErr)
+		err = data.NewEmptyError().AppendDescF("Open account file error: %s", openErr)
 		return
 	}
 	defer accountFh.Close()
 
 	oldAccountFh, openErr := os.OpenFile(info.OldAccountPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if openErr != nil {
-		err = fmt.Errorf("Open account file error: %s", openErr)
+		err = data.NewEmptyError().AppendDescF("Open account file error: %s", openErr)
 		return
 	}
 	defer oldAccountFh.Close()
 
 	_, cErr := io.Copy(oldAccountFh, accountFh)
 	if cErr != nil {
-		err = cErr
+		err = data.ConvertError(cErr)
 		return
 	}
 	jsonStr, mErr := acc.value()
@@ -43,26 +42,26 @@ func SetAccountToLocalFile(acc Account) (err error) {
 	}
 	_, sErr := accountFh.Seek(0, io.SeekStart)
 	if sErr != nil {
-		err = sErr
+		err = data.ConvertError(sErr)
 		return
 	}
 	tErr := accountFh.Truncate(0)
 	if tErr != nil {
-		err = tErr
+		err = data.ConvertError(tErr)
 		return
 	}
 	_, wErr := accountFh.WriteString(jsonStr)
 	if wErr != nil {
-		err = fmt.Errorf("Write account info error, %s", wErr)
+		err = data.NewEmptyError().AppendDescF("Write account info error, %s", wErr)
 		return
 	}
 	return
 }
 
-func SaveToDB(acc Account, accountOver bool) (err error) {
+func SaveToDB(acc Account, accountOver bool) (err *data.CodeError) {
 	ldb, lErr := leveldb.OpenFile(info.AccountDBPath, nil)
 	if lErr != nil {
-		err = fmt.Errorf("open db: %v", err)
+		err = data.NewEmptyError().AppendDescF("open db: %v", err)
 		os.Exit(data.StatusHalt)
 	}
 	defer ldb.Close()
@@ -71,11 +70,11 @@ func SaveToDB(acc Account, accountOver bool) (err error) {
 
 		exists, hErr := ldb.Has([]byte(acc.Name), nil)
 		if hErr != nil {
-			err = hErr
+			err = data.ConvertError(hErr)
 			return
 		}
 		if exists {
-			err = fmt.Errorf("Account Name: %s already exist in local db", acc.Name)
+			err = data.NewEmptyError().AppendDescF("Account Name: %s already exist in local db", acc.Name)
 			return
 		}
 	}
@@ -85,39 +84,39 @@ func SaveToDB(acc Account, accountOver bool) (err error) {
 	}
 	ldbValue, mError := acc.value()
 	if mError != nil {
-		err = fmt.Errorf("Account.Value: %v", mError)
+		err = data.NewEmptyError().AppendDescF("Account.Value: %v", mError)
 		return
 	}
 	putErr := ldb.Put([]byte(acc.Name), []byte(ldbValue), &ldbWOpt)
 	if putErr != nil {
-		err = fmt.Errorf("leveldb Put: %v", putErr)
+		err = data.NewEmptyError().AppendDescF("leveldb Put: %v", putErr)
 		return
 	}
 	return
 }
 
-func getAccount(pt string) (account Account, err error) {
+func getAccount(pt string) (account Account, err *data.CodeError) {
 	accountFh, openErr := os.Open(pt)
 	if openErr != nil {
-		err = fmt.Errorf("Open account file error, %s, please use `account` to set Id and SecretKey first", openErr)
+		err = data.NewEmptyError().AppendDescF("Open account file error, %s, please use `account` to set Id and SecretKey first", openErr)
 		return
 	}
 	defer accountFh.Close()
 
 	accountBytes, readErr := ioutil.ReadAll(accountFh)
 	if readErr != nil {
-		err = fmt.Errorf("Read account file error, %s", readErr)
+		err = data.NewEmptyError().AppendDescF("Read account file error, %s", readErr)
 		return
 	}
 
 	if len(accountBytes) == 0 {
-		err = fmt.Errorf("Read account file error, account is empty")
+		err = data.NewEmptyError().AppendDescF("Read account file error, account is empty")
 		return
 	}
 
 	acc, dErr := decrypt(string(accountBytes))
 	if dErr != nil {
-		err = fmt.Errorf("Decrypt account bytes: %v", dErr)
+		err = data.NewEmptyError().AppendDescF("Decrypt account bytes: %v", dErr)
 		return
 	}
 	account = acc
@@ -126,12 +125,12 @@ func getAccount(pt string) (account Account, err error) {
 
 // qshell 会记录当前的user信息，当切换账户后， 老的账户信息会记录下来
 // qshell user cu就可以切换到老的账户信息， 参考cd -回到先前的目录
-func GetOldAccount() (account Account, err error) {
+func GetOldAccount() (account Account, err *data.CodeError) {
 	return getAccount(info.OldAccountPath)
 }
 
 // 返回Account
-func GetAccount() (account Account, err error) {
+func GetAccount() (account Account, err *data.CodeError) {
 	credentials := config.GetCredentials(config.ConfigTypeDefault)
 	if credentials.AccessKey != "" && credentials.SecretKey != nil {
 		return Account{
@@ -143,7 +142,7 @@ func GetAccount() (account Account, err error) {
 }
 
 // 获取Mac
-func GetMac() (mac *qbox.Mac, err error) {
+func GetMac() (mac *qbox.Mac, err *data.CodeError) {
 	account, err := GetAccount()
 	if err != nil {
 		return nil, err
@@ -152,47 +151,47 @@ func GetMac() (mac *qbox.Mac, err error) {
 }
 
 // 切换账户
-func ChUser(userName string) (err error) {
+func ChUser(userName string) (err *data.CodeError) {
 	if userName != "" {
 		db, oErr := leveldb.OpenFile(info.AccountDBPath, nil)
-		if err != nil {
-			err = fmt.Errorf("open db: %v", oErr)
+		if oErr != nil {
+			err = data.NewEmptyError().AppendDescF("open db: %v", oErr)
 			return
 		}
 		defer db.Close()
 
 		value, gErr := db.Get([]byte(userName), nil)
 		if gErr != nil {
-			err = fmt.Errorf("can't find user by name:%s , error:%v", userName, gErr)
+			err = data.NewEmptyError().AppendDescF("can't find user by name:%s , error:%v", userName, gErr)
 			return
 		}
 		user, dErr := decrypt(string(value))
 		if dErr != nil {
-			err = fmt.Errorf("Decrypt account bytes: %v", dErr)
+			err = data.NewEmptyError().AppendDescF("Decrypt account bytes: %v", dErr)
 			return
 		}
 
 		return SetAccountToLocalFile(user)
 	} else {
 		if _, err = GetOldAccount(); err != nil {
-			return fmt.Errorf("get last account error:%v", err)
+			return data.NewEmptyError().AppendDescF("get last account error:%v", err)
 		}
 
 		rErr := os.Rename(info.OldAccountPath, info.AccountPath+".tmp")
 		if rErr != nil {
-			err = fmt.Errorf("rename file: %v", rErr)
+			err = data.NewEmptyError().AppendDescF("rename file: %v", rErr)
 			return
 		}
 
 		rErr = os.Rename(info.AccountPath, info.OldAccountPath)
 		if rErr != nil {
-			err = fmt.Errorf("rename file: %v", rErr)
+			err = data.NewEmptyError().AppendDescF("rename file: %v", rErr)
 			return
 		}
 
 		rErr = os.Rename(info.AccountPath+".tmp", info.AccountPath)
 		if rErr != nil {
-			err = fmt.Errorf("rename file: %v", rErr)
+			err = data.NewEmptyError().AppendDescF("rename file: %v", rErr)
 			return
 		}
 	}
@@ -200,11 +199,11 @@ func ChUser(userName string) (err error) {
 }
 
 // 获取用户列表
-func GetUsers() (ret []*Account, err error) {
+func GetUsers() (ret []*Account, err *data.CodeError) {
 
 	db, gErr := leveldb.OpenFile(info.AccountDBPath, nil)
 	if gErr != nil {
-		err = fmt.Errorf("open db: %v", err)
+		err = data.NewEmptyError().AppendDescF("open db: %v", err)
 		return
 	}
 	defer db.Close()
@@ -230,48 +229,45 @@ func GetUsers() (ret []*Account, err error) {
 }
 
 // 清除本地账户数据库
-func CleanUser() (err error) {
-	err = os.RemoveAll(info.AccountDBPath)
+func CleanUser() *data.CodeError {
+	err := os.RemoveAll(info.AccountDBPath)
 	if err != nil {
-		return
+		return data.ConvertError(err)
 	}
 
 	err = os.RemoveAll(info.AccountPath)
 	if err != nil {
-		return
+		return data.ConvertError(err)
 	}
 
 	err = os.RemoveAll(info.OldAccountPath)
-
-	return
+	return data.ConvertError(err)
 }
 
 // 从本地数据库删除用户
-func RmUser(userName string) (err error) {
+func RmUser(userName string) *data.CodeError {
 	if len(info.AccountDBPath) == 0 {
-		err = fmt.Errorf("empty account db path\n")
-		return
+		return data.NewEmptyError().AppendDesc("empty account db path\n")
 	}
 	db, err := leveldb.OpenFile(info.AccountDBPath, nil)
 	if err != nil {
-		err = fmt.Errorf("open db: %v", err)
-		return
+		return data.NewEmptyError().AppendDescF("open db: %v", err)
 	}
 	defer db.Close()
 	err = db.Delete([]byte(userName), nil)
 	log.DebugF("Removing user: %d\n", userName)
-	return
+	return nil
 }
 
 // LookUp 查找用户
-func LookUp(userName string) ([]Account, error) {
+func LookUp(userName string) ([]Account, *data.CodeError) {
 	if len(info.AccountDBPath) == 0 {
-		return nil, fmt.Errorf("empty account db path\n")
+		return nil, data.NewEmptyError().AppendDesc("empty account db path\n")
 	}
 
 	db, err := leveldb.OpenFile(info.AccountDBPath, nil)
 	if err != nil {
-		return nil, fmt.Errorf("open db: %v", err)
+		return nil, data.NewEmptyError().AppendDescF("open db: %v", err)
 	}
 	defer db.Close()
 

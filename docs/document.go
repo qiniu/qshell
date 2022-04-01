@@ -3,6 +3,7 @@ package docs
 import (
 	_ "embed"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"io"
 	"os"
@@ -49,7 +50,7 @@ func ShowCmdDocument(name string) {
 }
 
 func showDocumentByLessCmd(name string, document string) {
-	errorAlerter := func(err error) {
+	errorAlerter := func(err *data.CodeError) {
 		fmt.Printf("show document for cmd:%s error:%v", name, err)
 	}
 
@@ -65,23 +66,23 @@ func showDocumentByLessCmd(name string, document string) {
 	lessCmd.Stdin = reader
 	lessCmd.Stderr = os.Stderr
 	if err := echoCmd.Start(); err != nil {
-		errorAlerter(fmt.Errorf("echo start:%v", err))
+		errorAlerter(data.NewEmptyError().AppendDescF("echo start:%v", err))
 		return
 	}
 	if err := lessCmd.Start(); err != nil {
-		errorAlerter(fmt.Errorf("less start:%v", err))
+		errorAlerter(data.NewEmptyError().AppendDescF("less start:%v", err))
 		return
 	}
 	if err := echoCmd.Wait(); err != nil {
-		errorAlerter(fmt.Errorf("echo wait:%v", err))
+		errorAlerter(data.NewEmptyError().AppendDescF("echo wait:%v", err))
 		return
 	}
 	if err := reader.Close(); err != nil {
-		errorAlerter(fmt.Errorf("less reader close:%v", err))
+		errorAlerter(data.NewEmptyError().AppendDescF("less reader close:%v", err))
 		return
 	}
 	if err := lessCmd.Wait(); err != nil && !strings.Contains(err.Error(), "read/write on closed pipe") {
-		errorAlerter(fmt.Errorf("less wait error%v", err))
+		errorAlerter(data.NewEmptyError().AppendDescF("less wait error%v", err))
 		return
 	}
 }

@@ -3,11 +3,12 @@ package flow
 import (
 	"bufio"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"sync"
 )
 
-func NewReaderWorkProvider(reader io.Reader, creator WorkCreator) (WorkProvider, error) {
+func NewReaderWorkProvider(reader io.Reader, creator WorkCreator) (WorkProvider, *data.CodeError) {
 	if reader != nil {
 		return nil, alert.CannotEmptyError("work reader (ReaderWorkProvider)", "")
 	}
@@ -30,14 +31,14 @@ func (p *readerWorkProvider) WorkTotalCount() int64 {
 	return UnknownWorkCount
 }
 
-func (p *readerWorkProvider) Provide() (hasMore bool, work Work, err error) {
+func (p *readerWorkProvider) Provide() (hasMore bool, work Work, err *data.CodeError) {
 	p.mu.Lock()
 	hasMore, work, err = p.provide()
 	p.mu.Unlock()
 	return
 }
 
-func (p *readerWorkProvider) provide() (hasMore bool, work Work, err error) {
+func (p *readerWorkProvider) provide() (hasMore bool, work Work, err *data.CodeError) {
 	success := p.scanner.Scan()
 	if success {
 		hasMore = true

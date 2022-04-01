@@ -2,10 +2,10 @@ package operations
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"net/http"
 	"time"
@@ -20,7 +20,7 @@ type IpQueryInfo struct {
 	Ips []string
 }
 
-func (info *IpQueryInfo) Check() error {
+func (info *IpQueryInfo) Check() *data.CodeError {
 	if len(info.Ips) == 0 {
 		return alert.CannotEmptyError("Ip", "")
 	}
@@ -35,7 +35,7 @@ func IpQuery(cfg *iqshell.Config, info IpQueryInfo) {
 	}
 
 	if len(info.Ips) == 0 {
-		log.Error(errors.New(alert.CannotEmpty("ip", "")))
+		log.Error(data.NewEmptyError().AppendDesc(alert.CannotEmpty("ip", "")))
 		return
 	}
 

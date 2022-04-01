@@ -31,7 +31,7 @@ type QBoxTokenInfo struct {
 	TokenInfo
 }
 
-func (info *QBoxTokenInfo) Check() error {
+func (info *QBoxTokenInfo) Check() *data.CodeError {
 	if len(info.Url) == 0 {
 		return alert.CannotEmptyError("Url", "")
 	}
@@ -68,7 +68,7 @@ type QiniuTokenInfo struct {
 	TokenInfo
 }
 
-func (info *QiniuTokenInfo) Check() error {
+func (info *QiniuTokenInfo) Check() *data.CodeError {
 	if len(info.Url) == 0 {
 		return alert.CannotEmptyError("Url", "")
 	}
@@ -101,7 +101,7 @@ type UploadTokenInfo struct {
 	PutPolicyFilePath string
 }
 
-func (info *UploadTokenInfo) Check() error {
+func (info *UploadTokenInfo) Check() *data.CodeError {
 	if len(info.PutPolicyFilePath) == 0 {
 		return alert.CannotEmptyError("PutPolicyConfigFile", "")
 	}
@@ -156,7 +156,7 @@ func CreateUploadToken(cfg *iqshell.Config, info UploadTokenInfo) {
 	fmt.Println("UpToken " + uploadToken)
 }
 
-func getMacAndRequest(info TokenInfo) (mac *qbox.Mac, req *http.Request, err error) {
+func getMacAndRequest(info TokenInfo) (mac *qbox.Mac, req *http.Request, err *data.CodeError) {
 
 	var mErr error
 	var rErr error
@@ -166,7 +166,7 @@ func getMacAndRequest(info TokenInfo) (mac *qbox.Mac, req *http.Request, err err
 	} else {
 		mac, mErr = account.GetMac()
 		if mErr != nil {
-			err = fmt.Errorf("get mac: %v\n", mErr)
+			err = data.NewEmptyError().AppendDescF("get mac: %v\n", mErr)
 			return
 		}
 	}
@@ -178,7 +178,7 @@ func getMacAndRequest(info TokenInfo) (mac *qbox.Mac, req *http.Request, err err
 	}
 	req, rErr = http.NewRequest(info.Method, info.Url, httpBody)
 	if rErr != nil {
-		err = fmt.Errorf("create request: %v\n", rErr)
+		err = data.NewEmptyError().AppendDescF("create request: %v\n", rErr)
 		return
 	}
 	headers := http.Header{}

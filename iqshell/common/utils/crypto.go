@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"encoding/hex"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 // 字符串的md5值
@@ -16,10 +17,10 @@ func Md5Hex(from string) string {
 }
 
 // 加密数据
-func AesEncrypt(origData, key []byte) ([]byte, error) {
+func AesEncrypt(origData, key []byte) ([]byte, *data.CodeError) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		return nil, data.NewEmptyError().AppendError(err)
 	}
 	blockSize := block.BlockSize()
 	origData = PKCS5Padding(origData, blockSize)
@@ -30,10 +31,10 @@ func AesEncrypt(origData, key []byte) ([]byte, error) {
 }
 
 // 解密数据
-func AesDecrypt(crypted, key []byte) ([]byte, error) {
+func AesDecrypt(crypted, key []byte) ([]byte, *data.CodeError) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		return nil, data.NewEmptyError().AppendError(err)
 	}
 	blockSize := block.BlockSize()
 	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])

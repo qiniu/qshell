@@ -4,9 +4,9 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"net/url"
@@ -38,13 +38,13 @@ type PublicUrlToPrivateApiInfo struct {
 }
 
 // PublicUrlToPrivate 公转私
-func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (finalUrl string, err error) {
+func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (finalUrl string, err *data.CodeError) {
 	if len(info.PublicUrl) == 0 {
-		return "", errors.New(alert.CannotEmpty("url", ""))
+		return "", alert.CannotEmptyError("url", "")
 	}
 
 	if info.Deadline < 1 {
-		return "", errors.New("deadline is invalid")
+		return "", data.NewEmptyError().AppendDesc("deadline is invalid")
 	}
 
 	m, err := bucket.GetBucketManager()
@@ -54,7 +54,7 @@ func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (finalUrl string, err er
 
 	srcUri, pErr := url.Parse(info.PublicUrl)
 	if pErr != nil {
-		err = pErr
+		err = data.ConvertError(pErr)
 		return
 	}
 

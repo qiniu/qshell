@@ -1,8 +1,8 @@
 package workspace
 
 import (
-	"errors"
 	"github.com/qiniu/go-sdk/v7/auth"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"path/filepath"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
@@ -19,7 +19,7 @@ type LoadInfo struct {
 }
 
 // Load 加载工作环境
-func Load(info LoadInfo) (err error) {
+func Load(info LoadInfo) (err *data.CodeError) {
 	err = info.initInfo()
 	if err != nil {
 		return
@@ -27,7 +27,7 @@ func Load(info LoadInfo) (err error) {
 
 	// 检查工作目录
 	if len(info.WorkspacePath) == 0 {
-		err = errors.New("can't get home dir")
+		err = data.NewEmptyError().AppendDesc("can't get home dir")
 		return
 	}
 	workspacePath = info.WorkspacePath
@@ -65,7 +65,7 @@ func Load(info LoadInfo) (err error) {
 		userPath = filepath.Join(workspacePath, usersDirName, accountName)
 		err = utils.CreateDirIfNotExist(userPath)
 		if err != nil {
-			return errors.New("create user dir error:" + err.Error())
+			return data.NewEmptyError().AppendDescF("create user dir error:%v", err)
 		}
 
 		// 配置 config 的 Credentials
@@ -114,10 +114,10 @@ func Load(info LoadInfo) (err error) {
 	return
 }
 
-func (w *LoadInfo) initInfo() error {
+func (w *LoadInfo) initInfo() *data.CodeError {
 	home, err := utils.GetHomePath()
 	if err != nil {
-		return errors.New("get home path error:" + err.Error())
+		return data.NewEmptyError().AppendDescF("get home path error:%v", err)
 	}
 	if len(w.WorkspacePath) == 0 {
 		w.WorkspacePath = filepath.Join(home, workspaceName)

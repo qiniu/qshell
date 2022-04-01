@@ -16,7 +16,7 @@ type AddInfo struct {
 	Over      bool
 }
 
-func (info *AddInfo) Check() error {
+func (info *AddInfo) Check() *data.CodeError {
 	if len(info.Name) == 0 {
 		return alert.CannotEmptyError("Name", "")
 	}

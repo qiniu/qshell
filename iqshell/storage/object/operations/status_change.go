@@ -3,9 +3,9 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/group"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"strconv"
@@ -17,7 +17,7 @@ type ForbiddenInfo struct {
 	UnForbidden bool
 }
 
-func (info *ForbiddenInfo) Check() error {
+func (info *ForbiddenInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
@@ -52,7 +52,7 @@ func ForbiddenObject(cfg *iqshell.Config, info ForbiddenInfo) {
 		return
 	}
 
-	result, err := object.ChangeStatus(object.ChangeStatusApiInfo{
+	result, err := object.ChangeStatus(&object.ChangeStatusApiInfo{
 		Bucket: info.Bucket,
 		Key:    info.Key,
 		Status: info.getStatus(),
@@ -82,7 +82,7 @@ type BatchChangeStatusInfo struct {
 	Bucket    string
 }
 
-func (info *BatchChangeStatusInfo) Check() error {
+func (info *BatchChangeStatusInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
@@ -96,46 +96,41 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 		return
 	}
 
-	handler, err := group.NewHandler(info.BatchInfo.Info)
+	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
-		line, success := handler.Scanner().ScanLine()
-		if !success {
-			return nil, false
-		}
-		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
+	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		if len(items) > 1 {
 			key, status := items[0], items[1]
-			statusInt, err := strconv.Atoi(status)
-			if err != nil {
-				log.ErrorF("parse status error:", err)
+			statusInt, e := strconv.Atoi(status)
+			if e != nil {
+				return nil, data.NewEmptyError().AppendDescF("parse status error:%v", e)
 			} else if key != "" && status != "" {
-				return object.ChangeStatusApiInfo{
+				return &object.ChangeStatusApiInfo{
 					Bucket: info.Bucket,
 					Key:    key,
 					Status: statusInt,
-				}, true
+				}, nil
 			}
 		}
-		return nil, true
-	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
-		in, ok := (operation).(object.ChangeStatusApiInfo)
+		return nil, alert.Error("need more than one param", "")
+	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+		in, ok := (operation).(*object.ChangeStatusApiInfo)
 		if !ok {
 			return
 		}
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%d\t%d\t%s", in.Key, in.Status, result.Code, result.Error)
+			exporter.Fail().ExportF("%s\t%d\t%d\t%s", in.Key, in.Status, result.Code, result.Error)
 			log.ErrorF("Change status Failed, [%s:%s] => %d, Code: %d, Error: %s",
 				in.Bucket, in.Key, in.Status, result.Code, result.Error)
 		} else {
-			handler.Export().Success().ExportF("%s\t%d", in.Key, in.Status)
+			exporter.Success().ExportF("%s\t%d", in.Key, in.Status)
 			log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
 		}
-	}).OnError(func(err error) {
+	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("batch change status error:%v:", err)
 	}).Start()
 }

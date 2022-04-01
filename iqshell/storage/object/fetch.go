@@ -2,11 +2,11 @@ package object
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
@@ -24,28 +24,30 @@ func (i *FetchApiInfo) WorkId() string {
 
 type FetchResult = storage.FetchRet
 
-func Fetch(info FetchApiInfo) (result FetchResult, err error) {
+func Fetch(info FetchApiInfo) (FetchResult, *data.CodeError) {
+	var result FetchResult
 	if len(info.Bucket) == 0 {
-		return result, errors.New(alert.CannotEmpty("bucket", ""))
+		return result, alert.CannotEmptyError("bucket", "")
 	}
 
 	if len(info.FromUrl) == 0 {
-		return result, errors.New(alert.CannotEmpty("from url", ""))
+		return result, alert.CannotEmptyError("from url", "")
 	}
 
 	log.DebugF("fetch start: %s => [%s|%s]", info.FromUrl, info.Bucket, info.Key)
-	bucketManager, err := bucket.GetBucketManager()
-	if err != nil {
-		return result, err
+	bucketManager, e := bucket.GetBucketManager()
+	if e != nil {
+		return result, e
 	}
 
+	var err error
 	if len(info.Key) == 0 {
 		result, err = bucketManager.FetchWithoutKey(info.FromUrl, info.Bucket)
 	} else {
 		result, err = bucketManager.Fetch(info.FromUrl, info.Bucket, info.Key)
 	}
 	log.DebugF("fetch   end: %s => [%s|%s]", info.FromUrl, info.Bucket, info.Key)
-	return result, err
+	return result, data.ConvertError(err)
 }
 
 type AsyncFetchApiInfo struct {
@@ -71,23 +73,23 @@ func (result AsyncFetchApiResult) String() string {
 	return fmt.Sprintf(`{"id":"%s", "wait":%d}`, result.Id, result.Wait)
 }
 
-func AsyncFetch(info AsyncFetchApiInfo) (result AsyncFetchApiResult, err error) {
+func AsyncFetch(info AsyncFetchApiInfo) (result AsyncFetchApiResult, err *data.CodeError) {
 	bm, err := bucket.GetBucketManager()
 	if err != nil {
 		return result, err
 	}
-	reqUrl, err := bm.ApiReqHost(info.Bucket)
-	if err != nil {
-		return result, err
+	reqUrl, e := bm.ApiReqHost(info.Bucket)
+	if e != nil {
+		return result, data.ConvertError(e)
 	}
 
 	reqUrl += "/sisyphus/fetch"
 
-	err = bm.Client.CredentialedCallWithJson(context.Background(), bm.Mac, auth.TokenQiniu, &result, "POST", reqUrl, nil, info)
-	return result, err
+	e = bm.Client.CredentialedCallWithJson(context.Background(), bm.Mac, auth.TokenQiniu, &result, "POST", reqUrl, nil, info)
+	return result, data.ConvertError(e)
 }
 
-func CheckAsyncFetchStatus(toBucket, id string) (ret AsyncFetchApiResult, err error) {
+func CheckAsyncFetchStatus(toBucket, id string) (ret AsyncFetchApiResult, err *data.CodeError) {
 	bm, gErr := bucket.GetBucketManager()
 	if gErr != nil {
 		err = gErr
@@ -96,7 +98,7 @@ func CheckAsyncFetchStatus(toBucket, id string) (ret AsyncFetchApiResult, err er
 
 	reqUrl, aErr := bm.ApiReqHost(toBucket)
 	if aErr != nil {
-		err = aErr
+		err = data.ConvertError(aErr)
 		return
 	}
 
@@ -108,6 +110,6 @@ func CheckAsyncFetchStatus(toBucket, id string) (ret AsyncFetchApiResult, err er
 
 	reqUrl += ("/sisyphus/fetch?id=" + id)
 	ctx := auth.WithCredentialsType(workspace.GetContext(), mac, auth.TokenQiniu)
-	err = bm.Client.Call(ctx, &ret, "GET", reqUrl, nil)
+	err = data.ConvertError(bm.Client.Call(ctx, &ret, "GET", reqUrl, nil))
 	return
 }

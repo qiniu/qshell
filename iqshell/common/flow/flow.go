@@ -2,6 +2,7 @@ package flow
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"sync"
@@ -12,7 +13,7 @@ type Info struct {
 	StopWhenWorkError bool // 当某个 work 遇到执行错误是否结束 batch 任务
 }
 
-func (i *Info) Check() error {
+func (i *Info) Check() *data.CodeError {
 	if i.WorkerCount < 1 {
 		i.WorkerCount = 1
 	}
@@ -27,11 +28,12 @@ type Flow struct {
 	WorkPacker        *WorkPacker   // work 打包，有些工作需要对工作进行批量处理 【可选】
 	EventListener     EventListener // work 处理事项监听者 【可选】
 	Overseer          Overseer      // work 监工，涉及 work 是否已处理相关的逻辑 【可选】
+	Skipper           Skipper       // work 是否跳过相关逻辑 【可选】
 	Redo              Redo          // work 是否需要重新做相关逻辑，有些工作虽然已经做过，但下次处理时可能条件发生变化，需要重新处理 【可选】
 	workErrorHappened bool          // 执行中是否出现错误 【内部变量】
 }
 
-func (f *Flow) Check() error {
+func (f *Flow) Check() *data.CodeError {
 	if err := f.Info.Check(); err != nil {
 		return err
 	}
@@ -67,10 +69,12 @@ func (f *Flow) Start() {
 				}
 			}
 
-			// 检测 work 是否有问题
-			if shouldContinue, err := f.EventListener.WillWork(work); !shouldContinue {
-				f.EventListener.OnWorkSkip(work, err)
-				continue
+			// 检测 work 是否需要过
+			if f.Skipper != nil {
+				if skip, cause := f.Skipper.ShouldSkip(work); skip {
+					f.EventListener.OnWorkSkip(work, cause)
+					continue
+				}
 			}
 
 			// 检测 work 是否已经做过
@@ -83,6 +87,12 @@ func (f *Flow) Start() {
 						continue
 					}
 				}
+			}
+
+			// 通知 work 将要执行
+			if shouldContinue, err := f.EventListener.WillWork(work); !shouldContinue {
+				f.EventListener.OnWorkSkip(work, err)
+				continue
 			}
 
 			// 工作进行打包

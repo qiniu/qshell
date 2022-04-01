@@ -1,7 +1,7 @@
 package operations
 
 import (
-	"errors"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/scanner"
@@ -23,7 +23,7 @@ type downloadScanner struct {
 	bucket       string
 }
 
-func newDownloadScanner(inputFile string, itemSeparate string, bucket string, exporter *export.FileExporter) (r *downloadScanner, err error) {
+func newDownloadScanner(inputFile string, itemSeparate string, bucket string, exporter *export.FileExporter) (r *downloadScanner, err *data.CodeError) {
 	r = &downloadScanner{
 		exporter:     exporter,
 		itemSeparate: itemSeparate,
@@ -39,7 +39,7 @@ func newDownloadScanner(inputFile string, itemSeparate string, bucket string, ex
 		})
 
 		if err != nil {
-			err = errors.New("new download reader error:" + err.Error())
+			err = data.NewEmptyError().AppendDesc("new download reader error:" + err.Error())
 			return nil, err
 		}
 
@@ -64,7 +64,7 @@ func (d *downloadScanner) createBucketScanOperation() {
 			EndTime:   time.Time{},
 			Suffixes:  nil,
 			MaxRetry:  20,
-		}, func(marker string, object bucket.ListObject) (bool, error) {
+		}, func(marker string, object bucket.ListObject) (bool, *data.CodeError) {
 			d.infoChan <- &download.ApiInfo{
 				Key:            object.Key,
 				FileHash:       object.Hash,
@@ -72,7 +72,7 @@ func (d *downloadScanner) createBucketScanOperation() {
 				FileModifyTime: object.PutTime,
 			}
 			return true, nil
-		}, func(marker string, err error) {
+		}, func(marker string, err *data.CodeError) {
 		})
 		close(d.infoChan)
 	}()

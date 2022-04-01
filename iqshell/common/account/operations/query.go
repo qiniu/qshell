@@ -12,7 +12,7 @@ import (
 type UserInfo struct {
 }
 
-func (info *UserInfo) Check() error {
+func (info *UserInfo) Check() *data.CodeError {
 	return nil
 }
 
@@ -26,7 +26,7 @@ type ListInfo struct {
 	OnlyListName bool
 }
 
-func (info *ListInfo) Check() error {
+func (info *ListInfo) Check() *data.CodeError {
 	return nil
 }
 
@@ -76,7 +76,7 @@ type LookUpInfo struct {
 	Name string
 }
 
-func (info *LookUpInfo) Check() error {
+func (info *LookUpInfo) Check() *data.CodeError {
 	if len(info.Name) == 0 {
 		return alert.CannotEmptyError("user name", "")
 	}

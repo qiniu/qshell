@@ -11,7 +11,7 @@ import (
 
 type ReplaceDomainInfo m3u8.ReplaceDomainApiInfo
 
-func (info *ReplaceDomainInfo) Check() error {
+func (info *ReplaceDomainInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}

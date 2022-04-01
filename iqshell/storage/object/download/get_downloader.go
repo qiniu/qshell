@@ -3,6 +3,7 @@ package download
 import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"net/http"
@@ -12,7 +13,7 @@ type getDownloader struct {
 	useHttps bool
 }
 
-func (g *getDownloader) Download(info *ApiInfo) (response *http.Response, err error) {
+func (g *getDownloader) Download(info *ApiInfo) (*http.Response, *data.CodeError) {
 	url := ""
 	// 构造下载 url
 	if info.IsPublic {
@@ -44,5 +45,6 @@ func (g *getDownloader) Download(info *ApiInfo) (response *http.Response, err er
 	if len(info.Referer) > 0 {
 		headers.Add("Referer", info.Referer)
 	}
-	return storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+	response, err := storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+	return response, data.ConvertError(err)
 }

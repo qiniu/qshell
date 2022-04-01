@@ -1,31 +1,36 @@
 package group
 
 import (
-	"errors"
-	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/scanner"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"github.com/qiniu/qshell/v2/iqshell/common/work"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 )
 
-// Info Batch 参数
 type Info struct {
-	work.FlowInfo
+	flow.Info
+	export.FileExporterConfig
 
-	ItemSeparate            string
-	InputFile               string // batch 操作输入文件
-	Force                   bool   // 无需验证即可 batch 操作，类似于二维码验证
-	Overwrite               bool   // 强制执行，服务端参数，此参数在此仅为占位，不处理相关逻辑
-	FailExportFilePath      string // 错误输出
-	SuccessExportFilePath   string // 成功输出
+	// 工作数据源
+	WorkList    []flow.Work // 工作数据源：列表
+	InputFile   string      // 工作数据源：文件
+	EnableStdin bool        // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
+
+	// 解析每行数据
+	ItemSeparate         string                                                     // 每行元素按分隔符分割：分隔符
+	WorkBuilderWithItems func(items []string) (work flow.Work, err *data.CodeError) // 根据work 元素创建 work
+	EnableParseJson      bool                                                       // 每行元素为 json：开启 json 检测
+	BlankWorkBuilder     func() flow.Work                                           // 每行元素为 json：创建引用类型的 work，用于 json unmarshal
+
+	// 数据处理
+	WorkerProvider flow.WorkerProvider
+
+	Force                   bool   // 无需验证即可 batch 操作，类似于验证码验证
 	OverwriteExportFilePath string // 覆盖输出
 }
 
-func (info *Info) Check() error {
-	if err := info.FlowInfo.Check(); err != nil {
+func (info *Info) Check() *data.CodeError {
+	if err := info.Info.Check(); err != nil {
 		return err
 	}
 
@@ -35,72 +40,61 @@ func (info *Info) Check() error {
 	return nil
 }
 
-type Handler interface {
-	Scanner() scanner.Scanner
-	Export() *export.FileExporter
-}
-
-func NewHandler(info Info) (Handler, error) {
-	if err := prepareToBatch(info); err != nil {
+func NewHandler(info Info) (*Handler, *data.CodeError) {
+	if err := info.Check(); err != nil {
 		return nil, err
 	}
 
-	e, err := export.NewFileExport(export.FileExporterConfig{
-		SuccessExportFilePath:  info.SuccessExportFilePath,
-		FailExportFilePath:     info.FailExportFilePath,
-		OverrideExportFilePath: info.OverwriteExportFilePath,
-	})
+	if info.WorkBuilderWithItems == nil && (!info.EnableParseJson || info.BlankWorkBuilder == nil) {
+		return nil, alert.CannotEmptyError("batch handler: WorkBuilderWithItems", " set WorkBuilderWithItems or enable parse json")
+	}
+
+	if info.WorkerProvider == nil {
+		return nil, alert.CannotEmptyError("batch handler: WorkerProvider", "")
+	}
+
+	var workCreator flow.WorkCreator
+	if info.WorkBuilderWithItems != nil {
+		workCreator = flow.NewLineSeparateWorkCreator(info.ItemSeparate, info.WorkBuilderWithItems)
+	} else {
+		workCreator = flow.NewJsonWorkCreator(info.BlankWorkBuilder)
+	}
+
+	handler := &Handler{}
+	if e, err := export.NewFileExport(info.FileExporterConfig); err != nil {
+		return nil, err
+	} else {
+		handler.e = e
+	}
+
+	var err *data.CodeError
+	var workProvider flow.WorkProvider
+	if info.WorkList != nil && len(info.WorkList) > 0 {
+		workProvider, err = flow.NewArrayWorkProvider(info.WorkList)
+	} else {
+		workProvider, err = flow.NewWorkProviderOfFile(info.InputFile, info.EnableStdin, workCreator)
+	}
 	if err != nil {
-		return nil, errors.New("get export error:" + err.Error())
+		return nil, err
 	}
 
-	s, err := scanner.NewScanner(scanner.Info{
-		StdInEnable: true,
-		InputFile:   info.InputFile,
-	})
-	if err != nil {
-		return nil, errors.New("get scanner error:" + err.Error())
+	handler.f = &flow.Flow{
+		Info:           info.Info,
+		WorkProvider:   workProvider,
+		WorkerProvider: info.WorkerProvider,
 	}
-
-	return &handler{
-		export:  e,
-		scanner: s,
-	}, nil
+	return handler, nil
 }
 
-func prepareToBatch(info Info) error {
-	log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, bsuccessFname: %q, bfailureFname: %q, sep: %q",
-		info.Force, info.Overwrite, info.WorkerCount, info.InputFile, info.SuccessExportFilePath, info.FailExportFilePath, info.ItemSeparate)
-
-	if info.Force {
-		return nil
-	}
-
-	code := utils.CreateRandString(6)
-	log.Warning(fmt.Sprintf("<DANGER> Input %s to confirm operation: ", code))
-
-	confirm := ""
-	_, err := fmt.Scanln(&confirm)
-	if err != nil {
-		return errors.New("scan error:" + err.Error())
-	}
-
-	if code != confirm {
-		return errors.New("Task quit!")
-	}
-
-	return nil
+type Handler struct {
+	f *flow.Flow
+	e *export.FileExporter
 }
 
-type handler struct {
-	export  *export.FileExporter
-	scanner scanner.Scanner
+func (h *Handler) Flow() *flow.Flow {
+	return h.f
 }
 
-func (b *handler) Scanner() scanner.Scanner {
-	return b.scanner
-}
-
-func (b *handler) Export() *export.FileExporter {
-	return b.export
+func (h *Handler) Exporter() *export.FileExporter {
+	return h.e
 }

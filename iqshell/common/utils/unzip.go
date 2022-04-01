@@ -2,8 +2,7 @@ package utils
 
 import (
 	"archive/zip"
-	"errors"
-	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"os"
 	"path/filepath"
@@ -13,7 +12,7 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
-func Gbk2Utf8(text string) (string, error) {
+func Gbk2Utf8(text string) (string, *data.CodeError) {
 	var gDecoder = simplifiedchinese.GBK.NewDecoder()
 	utf8Dst := make([]byte, len(text)*3)
 	_, _, err := gDecoder.Transform(utf8Dst, []byte(text), true)
@@ -30,10 +29,10 @@ func Gbk2Utf8(text string) (string, error) {
 	return string(utf8Bytes), nil
 }
 
-func Unzip(zipFilePath string, unzipPath string) (err error) {
+func Unzip(zipFilePath string, unzipPath string) (err *data.CodeError) {
 	zipReader, zipErr := zip.OpenReader(zipFilePath)
 	if zipErr != nil {
-		err = fmt.Errorf("Open zip file error, %s", zipErr)
+		err = data.NewEmptyError().AppendDescF("Open zip file error, %s", zipErr)
 		return
 	}
 	defer zipReader.Close()
@@ -49,7 +48,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 		if !utf8.Valid([]byte(fileName)) {
 			fileName, err = Gbk2Utf8(fileName)
 			if err != nil {
-				err = errors.New("Unsupported filename encoding")
+				err = data.NewEmptyError().AppendDesc("Unsupported filename encoding")
 				continue
 			}
 		}
@@ -59,7 +58,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 			log.Debug("Mkdir", fullPath)
 			mErr := os.MkdirAll(fullPath, 0775)
 			if mErr != nil {
-				err = fmt.Errorf("Mkdir error, %s", mErr)
+				err = data.NewEmptyError().AppendDescF("Mkdir error, %s", mErr)
 				continue
 			}
 		}
@@ -74,7 +73,7 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 		if !utf8.Valid([]byte(fileName)) {
 			fileName, err = Gbk2Utf8(fileName)
 			if err != nil {
-				err = errors.New("Unsupported filename encoding")
+				err = data.NewEmptyError().AppendDesc("Unsupported filename encoding")
 				continue
 			}
 		}
@@ -85,28 +84,28 @@ func Unzip(zipFilePath string, unzipPath string) (err error) {
 			fullPathDir := filepath.Dir(fullPath)
 			mErr := os.MkdirAll(fullPathDir, 0755)
 			if mErr != nil {
-				err = fmt.Errorf("Mkdir error, %s", mErr)
+				err = data.NewEmptyError().AppendDescF("Mkdir error, %v", mErr)
 				continue
 			}
 
 			log.Debug("Creating file", fullPath)
 			localFp, openErr := os.OpenFile(fullPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, zipFile.Mode())
 			if openErr != nil {
-				err = fmt.Errorf("Open local file error, %s", openErr)
+				err = data.NewEmptyError().AppendDescF("Open local file error, %v", openErr)
 				continue
 			}
 			defer localFp.Close()
 
 			zipFp, openErr := zipFile.Open()
 			if openErr != nil {
-				err = fmt.Errorf("Read zip content error, %s", openErr)
+				err = data.NewEmptyError().AppendDescF("Read zip content error, %v", openErr)
 				continue
 			}
 			defer zipFp.Close()
 
 			_, wErr := io.Copy(localFp, zipFp)
 			if wErr != nil {
-				err = fmt.Errorf("Save zip content error, %s", wErr)
+				err = data.NewEmptyError().AppendDescF("Save zip content error, %v", wErr)
 				continue
 			}
 		}

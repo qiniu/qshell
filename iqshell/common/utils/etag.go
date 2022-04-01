@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/base64"
-	"errors"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"io/ioutil"
 	"os"
@@ -14,16 +14,16 @@ const (
 	defaultChunkSize = 4 * 1024 * 1024
 )
 
-func GetEtag(filename string) (etag string, err error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return
+func GetEtag(filename string) (etag string, err *data.CodeError) {
+	f, e := os.Open(filename)
+	if e != nil {
+		return "", data.NewEmptyError().AppendError(e)
 	}
 	defer f.Close()
 	return EtagV1(f)
 }
 
-func EtagV1(reader io.Reader) (string, error) {
+func EtagV1(reader io.Reader) (string, *data.CodeError) {
 	data, err := etagV1WithoutBase64Encoded(reader)
 	if err != nil {
 		return "", err
@@ -32,12 +32,12 @@ func EtagV1(reader io.Reader) (string, error) {
 	}
 }
 
-func etagV1WithoutBase64Encoded(reader io.Reader) ([]byte, error) {
+func etagV1WithoutBase64Encoded(reader io.Reader) ([]byte, *data.CodeError) {
 	var sha1s [][]byte
 	for {
 		dataBuf, err := ioutil.ReadAll(io.LimitReader(reader, defaultChunkSize))
 		if err != nil {
-			return nil, err
+			return nil, data.NewEmptyError().AppendError(err)
 		} else if len(dataBuf) == 0 {
 			break
 		}
@@ -47,9 +47,9 @@ func etagV1WithoutBase64Encoded(reader io.Reader) ([]byte, error) {
 	return hashSha1s(sha1s), nil
 }
 
-var ErrPartSizeMismatch = errors.New("part size mismatch with data from reader")
+var ErrPartSizeMismatch = data.NewEmptyError().AppendDesc("part size mismatch with data from reader")
 
-func EtagV2(reader io.Reader, parts []int64) (string, error) {
+func EtagV2(reader io.Reader, parts []int64) (string, *data.CodeError) {
 	if is4MbParts(parts) {
 		return EtagV1(reader)
 	}
@@ -58,13 +58,13 @@ func EtagV2(reader io.Reader, parts []int64) (string, error) {
 	for _, partSize := range parts {
 		dataBuf, err := ioutil.ReadAll(io.LimitReader(reader, partSize))
 		if err != nil {
-			return "", err
+			return "", data.NewEmptyError().AppendError(err)
 		} else if len(dataBuf) != int(partSize) {
-			return "", ErrPartSizeMismatch
+			return "", data.NewEmptyError().AppendError(ErrPartSizeMismatch)
 		}
 		etagResult, err := etagV1WithoutBase64Encoded(bytes.NewReader(dataBuf))
 		if err != nil {
-			return "", err
+			return "", data.NewEmptyError().AppendError(err)
 		}
 		sha1Buf = append(sha1Buf, etagResult[1:]...)
 	}

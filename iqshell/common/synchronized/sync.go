@@ -11,7 +11,7 @@ type Locker interface {
 
 type Synchronized interface {
 	Do(fn func())
-	DoError(fn func() error) error
+	DoError(fn func() *data.CodeError) error
 }
 
 func NewSynchronized(locker Locker) Synchronized {
@@ -39,7 +39,7 @@ func (s *synchronized) Do(fn func()) {
 	return
 }
 
-func (s *synchronized) DoError(fn func() error) (err error) {
+func (s *synchronized) DoError(fn func() *data.CodeError) (err *data.CodeError) {
 	if fn == nil {
 		return
 	}

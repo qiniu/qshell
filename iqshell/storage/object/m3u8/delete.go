@@ -1,7 +1,7 @@
 package m3u8
 
 import (
-	"errors"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 )
@@ -11,18 +11,18 @@ type DeleteApiInfo struct {
 	Key    string
 }
 
-func Delete(info DeleteApiInfo) ([]batch.OperationResult, error) {
+func Delete(info DeleteApiInfo) ([]*batch.OperationResult, *data.CodeError) {
 	m3u8FileList, err := Slices(SliceListApiInfo{
 		Bucket: info.Bucket,
 		Key:    info.Key,
 	})
 
 	if err != nil {
-		return nil, errors.New("Get m3u8 file list error:" + err.Error())
+		return nil, data.NewEmptyError().AppendDesc("Get m3u8 file list error:" + err.Error())
 	}
 
 	if len(m3u8FileList) == 0 {
-		return nil, errors.New("no m3u8 slices found")
+		return nil, data.NewEmptyError().AppendDesc("no m3u8 slices found")
 	}
 
 	operations := make([]batch.Operation, 0, len(m3u8FileList))

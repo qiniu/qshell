@@ -12,7 +12,7 @@ type LogSetting struct {
 	LogStdout *data.Bool   `json:"log_stdout,omitempty"`
 }
 
-func (l *LogSetting) Check() error {
+func (l *LogSetting) Check() *data.CodeError {
 	if l.LogRotate == nil {
 		l.LogRotate = data.NewInt(7)
 	}

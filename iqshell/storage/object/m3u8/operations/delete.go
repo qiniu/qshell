@@ -11,7 +11,7 @@ import (
 
 type DeleteInfo m3u8.DeleteApiInfo
 
-func (info *DeleteInfo) Check() error {
+func (info *DeleteInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}

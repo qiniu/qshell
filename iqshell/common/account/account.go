@@ -2,6 +2,7 @@ package account
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"strings"
 
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
@@ -20,7 +21,7 @@ func (acc *Account) mac() (mac *qbox.Mac) {
 }
 
 // 对SecretKey进行加密， 保存AccessKey, 加密后的SecretKey在本地数据库中
-func (acc *Account) encrypt() (s string, err error) {
+func (acc *Account) encrypt() (s string, err *data.CodeError) {
 	encryptedKey, eErr := encryptSecretKey(acc.AccessKey, acc.SecretKey)
 	if eErr != nil {
 		err = eErr
@@ -31,7 +32,7 @@ func (acc *Account) encrypt() (s string, err error) {
 }
 
 // 对SecretKey加密， 形成最后的数据格式
-func (acc *Account) value() (v string, err error) {
+func (acc *Account) value() (v string, err *data.CodeError) {
 	encryptedKey, eErr := encryptSecretKey(acc.AccessKey, acc.SecretKey)
 	if eErr != nil {
 		err = eErr

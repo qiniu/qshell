@@ -1,7 +1,6 @@
 package operations
 
 import (
-	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
@@ -124,7 +123,7 @@ func (up *UploadConfig) JobId() string {
 	return utils.Md5Hex(fmt.Sprintf("%s:%s:%s", up.SrcDir, up.Bucket, up.FileList))
 }
 
-func (up *UploadConfig) Check() error {
+func (up *UploadConfig) Check() *data.CodeError {
 	// 验证大小
 	if up.ResumableAPIV2PartSize == 0 {
 		up.ResumableAPIV2PartSize = data.BLOCK_SIZE
@@ -144,32 +143,32 @@ func (up *UploadConfig) Check() error {
 
 	srcFileInfo, err := os.Stat(up.SrcDir)
 	if err != nil {
-		return errors.New("invalid SrcDir:" + err.Error())
+		return data.NewEmptyError().AppendDesc("invalid SrcDir:" + err.Error())
 	}
 
 	if !srcFileInfo.IsDir() {
-		return fmt.Errorf("SrcDir should be a directory: %s", up.SrcDir)
+		return data.NewEmptyError().AppendDescF("SrcDir should be a directory: %s", up.SrcDir)
 	}
 
 	if len(up.FileList) > 0 {
 		fileListInfo, err := os.Stat(up.FileList)
 		if err != nil {
-			return errors.New("invalid FileList:" + err.Error())
+			return data.NewEmptyError().AppendDesc("invalid FileList:" + err.Error())
 		}
 
 		if fileListInfo.IsDir() {
-			return fmt.Errorf("FileList should be a file: %s", up.FileList)
+			return data.NewEmptyError().AppendDescF("FileList should be a file: %s", up.FileList)
 		}
 	}
 
 	if up.FileType != 1 && up.FileType != 0 {
-		return errors.New("wrong Filetype, It should be one of 1, 2, 3")
+		return data.NewEmptyError().AppendDesc("wrong Filetype, It should be one of 1, 2, 3")
 	}
 
 	if up.Policy != nil {
 		//if (up.Policy.CallbackURL == "" && up.Policy.CallbackHost != "") ||
 		//	(up.Policy.CallbackURL != "" && up.Policy.CallbackHost == "") {
-		//	return errors.New("callbackUrls and callback must exist at the same time")
+		//	return data.NewEmptyError().AppendDesc("callbackUrls and callback must exist at the same time")
 		//}
 
 		if up.Policy.CallbackURL != "" {

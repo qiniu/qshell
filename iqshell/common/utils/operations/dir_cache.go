@@ -13,7 +13,7 @@ type DirCacheInfo struct {
 	SaveToFile string
 }
 
-func (info *DirCacheInfo) Check() error {
+func (info *DirCacheInfo) Check() *data.CodeError {
 	if len(info.Dir) == 0 {
 		return alert.CannotEmptyError("directory path", "")
 	}

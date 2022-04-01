@@ -2,7 +2,7 @@ package account
 
 import (
 	"encoding/base64"
-	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"strings"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -13,16 +13,16 @@ func splits(joinStr string) []string {
 }
 
 // 对保存在account.json中的文件字符串进行揭秘操作, 返回Account
-func decrypt(joinStr string) (acc Account, err error) {
+func decrypt(joinStr string) (acc Account, err *data.CodeError) {
 	ss := splits(joinStr)
 	name, accessKey, encryptedKey := ss[0], ss[1], ss[2]
 	if name == "" || accessKey == "" || encryptedKey == "" {
-		err = fmt.Errorf("name, accessKey and encryptedKey should not be empty")
+		err = data.NewEmptyError().AppendDescF("name, accessKey and encryptedKey should not be empty")
 		return
 	}
 	secretKey, dErr := decryptSecretKey(accessKey, encryptedKey)
 	if dErr != nil {
-		err = fmt.Errorf("DecryptSecretKey: %v", dErr)
+		err = data.NewEmptyError().AppendDescF("DecryptSecretKey: %v", dErr)
 		return
 	}
 	acc.Name = name
@@ -37,7 +37,7 @@ func encrypt(accessKey, encryptedKey, name string) string {
 }
 
 // 对SecretKey加密, 返回加密后的字符串
-func encryptSecretKey(accessKey, secretKey string) (string, error) {
+func encryptSecretKey(accessKey, secretKey string) (string, *data.CodeError) {
 	aesKey := utils.Md5Hex(accessKey)
 	encryptedSecretKeyBytes, encryptedErr := utils.AesEncrypt([]byte(secretKey), []byte(aesKey[7:23]))
 	if encryptedErr != nil {
@@ -48,11 +48,11 @@ func encryptSecretKey(accessKey, secretKey string) (string, error) {
 }
 
 // 对加密的SecretKey进行解密， 返回SecretKey
-func decryptSecretKey(accessKey, encryptedKey string) (string, error) {
+func decryptSecretKey(accessKey, encryptedKey string) (string, *data.CodeError) {
 	aesKey := utils.Md5Hex(accessKey)
 	encryptedSecretKeyBytes, decodeErr := base64.URLEncoding.DecodeString(encryptedKey)
 	if decodeErr != nil {
-		return "", decodeErr
+		return "", data.ConvertError(decodeErr)
 	}
 	secretKeyBytes, decryptErr := utils.AesDecrypt([]byte(encryptedSecretKeyBytes), []byte(aesKey[7:23]))
 	if decryptErr != nil {

@@ -4,46 +4,46 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io/ioutil"
 	"os"
 )
 
-func NewConfigWithPath(path string) (config *Config, err error) {
+func NewConfigWithPath(path string) (*Config, *data.CodeError) {
 	file, err := os.Open(path)
 	if err != nil || file == nil {
-		return
+		return nil, data.NewEmptyError().AppendError(err)
 	}
 
 	defer func(file *os.File) {
-		if e := file.Close(); e != nil && err != nil {
-			err = e
-		}
+		file.Close()
 	}(file)
 
 	configData, err := ioutil.ReadAll(file)
 	if err != nil || configData == nil {
-		return
+		return nil, data.NewEmptyError().AppendError(err)
 	}
 
-	err = json.Unmarshal(configData, &config)
-	return
+	config := &Config{}
+	if e := json.Unmarshal(configData, &config); e != nil {
+		return nil, data.NewEmptyError().AppendError(err)
+	}
+	return config, nil
 }
 
-func (c *Config) UpdateToLocal(path string) (err error) {
+func (c *Config) UpdateToLocal(path string) *data.CodeError {
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0666)
 	if err != nil || file == nil {
-		return
+		return data.NewEmptyError().AppendError(err)
 	}
 
 	defer func(file *os.File) {
-		if e := file.Close(); e != nil && err != nil {
-			err = e
-		}
+		file.Close()
 	}(file)
 
 	configData, err := json.MarshalIndent(c, "", "\t")
 	if err != nil || configData == nil || len(configData) == 0 {
-		return
+		return data.ConvertError(err)
 	}
 
 	fmt.Println("configData:" + string(configData))
@@ -51,10 +51,10 @@ func (c *Config) UpdateToLocal(path string) (err error) {
 
 	_, err = writer.Write(configData)
 	if err != nil {
-		return
+		return data.NewEmptyError().AppendError(err)
 	}
 
 	err = writer.Flush()
 
-	return
+	return data.ConvertError(err)
 }

@@ -3,13 +3,14 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 )
 
 type CreateInfo bucket.CreateApiInfo
 
-func (i *CreateInfo) Check() error {
+func (i *CreateInfo) Check() *data.CodeError {
 	if len(i.RegionId) == 0 {
 		return alert.CannotEmptyError("RegionId", "")
 	}

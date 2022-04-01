@@ -1,10 +1,10 @@
 package object
 
 import (
-	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 )
 
@@ -16,18 +16,18 @@ type MoveApiInfo struct {
 	Force        bool
 }
 
-func (m MoveApiInfo) ToOperation() (string, error) {
+func (m *MoveApiInfo) ToOperation() (string, *data.CodeError) {
 	if len(m.SourceBucket) == 0 || len(m.SourceKey) == 0 || len(m.DestBucket) == 0 || len(m.DestKey) == 0 {
-		return "", errors.New(alert.CannotEmpty("move operation bucket or key of source and dest", ""))
+		return "", alert.CannotEmptyError("move operation bucket or key of source and dest", "")
 	}
 
 	return storage.URIMove(m.SourceBucket, m.SourceKey, m.DestBucket, m.DestKey, m.Force), nil
 }
 
-func (m MoveApiInfo) WorkId() string {
+func (m *MoveApiInfo) WorkId() string {
 	return fmt.Sprintf("Move|%s|%s|%s|%s", m.SourceBucket, m.SourceKey, m.DestBucket, m.DestKey)
 }
 
-func Move(info MoveApiInfo) (batch.OperationResult, error) {
+func Move(info *MoveApiInfo) (*batch.OperationResult, *data.CodeError) {
 	return batch.One(info)
 }

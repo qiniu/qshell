@@ -2,8 +2,8 @@ package utils
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"os"
 	"path/filepath"
@@ -18,19 +18,17 @@ import (
 // @param cacheRootPath - dir to generate cache file
 // @param cacheResultFile - cache result file path
 // @return (fileCount, retErr) - total file count and any error meets
-func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, retErr error) {
+func DirCache(cacheRootPath string, cacheResultFile string) (int64, *data.CodeError) {
 	//check dir
 	rootPathFileInfo, statErr := os.Stat(cacheRootPath)
 	if statErr != nil {
-		retErr = statErr
 		log.ErrorF("Failed to stat path `%s`, %s", cacheRootPath, statErr)
-		return
+		return 0, data.NewEmptyError().AppendError(statErr)
 	}
 
 	if !rootPathFileInfo.IsDir() {
-		retErr = errors.New("dircache failed")
 		log.ErrorF("Dir cache failed, `%s` should be a directory rather than a file", cacheRootPath)
-		return
+		return 0, data.NewEmptyError().AppendDesc("dircache failed")
 	}
 
 	var cacheResultFh io.Writer
@@ -40,17 +38,15 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 		catchDir := filepath.Dir(cacheResultFile)
 		mkErr := os.MkdirAll(catchDir, os.ModePerm)
 		if mkErr != nil {
-			retErr = mkErr
 			log.ErrorF("Failed to create cache dir `%s`, %s", catchDir, mkErr)
-			return
+			return 0, data.NewEmptyError().AppendError(mkErr)
 		}
 
 		//create result file
 		cResultFh, createErr := os.Create(cacheResultFile)
 		if createErr != nil {
-			retErr = createErr
 			log.ErrorF("Failed to open cache file `%s`, %s", cacheResultFile, createErr)
-			return
+			return 0, data.NewEmptyError().AppendError(createErr)
 		}
 		defer cResultFh.Close()
 		cacheResultFh = cResultFh
@@ -63,6 +59,8 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 	walkStart := time.Now()
 
 	log.DebugF("Walk `%s` start from %s", cacheRootPath, walkStart.String())
+
+	var fileCount int64 = 0
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, walkErr error) error {
 		var retErr error
 		//check error
@@ -100,13 +98,12 @@ func DirCache(cacheRootPath string, cacheResultFile string) (fileCount int64, re
 
 	if fErr := bWriter.Flush(); fErr != nil {
 		log.ErrorF("Failed to flush to cache file `%s`", cacheResultFile)
-		retErr = fErr
-		return
+		return 0, data.NewEmptyError().AppendError(fErr)
 	}
 
 	walkEnd := time.Now()
 	log.DebugF("Walk `%s` end at %s", cacheRootPath, walkEnd.String())
 	log.DebugF("Walk `%s` last for %s", cacheRootPath, time.Since(walkStart))
 	log.DebugF("Total file count cached %d", fileCount)
-	return
+	return fileCount, nil
 }

@@ -3,6 +3,7 @@ package operations
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
@@ -52,7 +53,7 @@ func (d *DownloadCfg) JobId() string {
 	return utils.Md5Hex(fmt.Sprintf("%s:%s:%s", d.DestDir, d.Bucket, d.KeyFile))
 }
 
-func (d *DownloadCfg) Check() error {
+func (d *DownloadCfg) Check() *data.CodeError {
 	if len(d.Bucket) == 0 {
 		return alert.CannotEmptyError("bucket", "")
 	}

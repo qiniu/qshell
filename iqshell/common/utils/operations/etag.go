@@ -3,6 +3,7 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
@@ -11,7 +12,7 @@ type EtagInfo struct {
 	FilePath string
 }
 
-func (info *EtagInfo) Check() error {
+func (info *EtagInfo) Check() *data.CodeError {
 	if len(info.FilePath) == 0 {
 		return alert.CannotEmptyError("LocalFilePath", "")
 	}

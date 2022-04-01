@@ -3,16 +3,16 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/group"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 )
 
 type ChangeMimeInfo object.ChangeMimeApiInfo
 
-func (info *ChangeMimeInfo) Check() error {
+func (info *ChangeMimeInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
@@ -32,7 +32,7 @@ func ChangeMime(cfg *iqshell.Config, info ChangeMimeInfo) {
 		return
 	}
 
-	result, err := object.ChangeMimeType(object.ChangeMimeApiInfo(info))
+	result, err := object.ChangeMimeType((*object.ChangeMimeApiInfo)(&info))
 	if err != nil {
 		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Error:%v", info.Bucket, info.Key, info.Mime, err)
 		return
@@ -53,7 +53,7 @@ type BatchChangeMimeInfo struct {
 	Bucket    string
 }
 
-func (info *BatchChangeMimeInfo) Check() error {
+func (info *BatchChangeMimeInfo) Check() *data.CodeError {
 	if err := info.BatchInfo.Check(); err != nil {
 		return err
 	}
@@ -71,44 +71,39 @@ func BatchChangeMime(cfg *iqshell.Config, info BatchChangeMimeInfo) {
 		return
 	}
 
-	handler, err := group.NewHandler(info.BatchInfo.Info)
+	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
-		line, success := handler.Scanner().ScanLine()
-		if !success {
-			return nil, false
-		}
-
-		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
+	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		if len(items) > 1 {
 			key, mime := items[0], items[1]
 			if key != "" && mime != "" {
-				return object.ChangeMimeApiInfo{
+				return &object.ChangeMimeApiInfo{
 					Bucket: info.Bucket,
 					Key:    key,
 					Mime:   mime,
-				}, true
+				}, nil
 			}
+			return nil, alert.Error("key or mime invalid", "")
 		}
-		return nil, true
-	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
-		apiInfo, ok := (operation).(object.ChangeMimeApiInfo)
+		return nil, alert.Error("need more than one param", "")
+	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+		apiInfo, ok := (operation).(*object.ChangeMimeApiInfo)
 		if !ok {
 			return
 		}
-		in := ChangeMimeInfo(apiInfo)
+		in := (*ChangeMimeInfo)(apiInfo)
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s", in.Key, in.Mime, result.Code, result.Error)
+			exporter.Fail().ExportF("%s\t%s\t%d\t%s", in.Key, in.Mime, result.Code, result.Error)
 			log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code: %d, Error: %s",
 				in.Bucket, in.Key, in.Mime, result.Code, result.Error)
 		} else {
-			handler.Export().Success().ExportF("%s\t%s", in.Key, in.Mime)
+			exporter.Success().ExportF("%s\t%s", in.Key, in.Mime)
 			log.InfoF("Change mimetype Success, [%s:%s] => '%s'", in.Bucket, in.Key, in.Mime)
 		}
-	}).OnError(func(err error) {
+	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch change mimetype error:%v:", err)
 	}).Start()
 }

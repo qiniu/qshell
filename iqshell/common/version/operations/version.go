@@ -2,6 +2,7 @@ package operations
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/version"
 )
@@ -9,7 +10,7 @@ import (
 type VersionInfo struct {
 }
 
-func (info *VersionInfo) Check() error {
+func (info *VersionInfo) Check() *data.CodeError {
 	return nil
 }
 

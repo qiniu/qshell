@@ -1,8 +1,8 @@
 package download
 
 import (
-	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -42,9 +42,9 @@ type ApiResult struct {
 }
 
 // Download 下载一个文件，从 Url 下载保存至 ToFile
-func Download(info *ApiInfo) (res ApiResult, err error) {
+func Download(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 	if len(info.ToFile) == 0 {
-		err = errors.New("the filename saved after downloading is empty")
+		err = data.NewEmptyError().AppendDesc("the filename saved after downloading is empty")
 		return
 	}
 
@@ -69,9 +69,9 @@ func Download(info *ApiInfo) (res ApiResult, err error) {
 	shouldDownload := true
 
 	// 文件存在则检查文件状态
-	fileStatus, err := os.Stat(f.toAbsFile)
+	fileStatus, sErr := os.Stat(f.toAbsFile)
 	tempFileStatus, tempErr := os.Stat(f.tempFile)
-	if err == nil || os.IsExist(err) || tempErr == nil || os.IsExist(tempErr) {
+	if sErr == nil || os.IsExist(err) || tempErr == nil || os.IsExist(tempErr) {
 		// 中间文件 和 最终文件 中任意一个存在
 		if cErr := dbChecker.checkInfoOfDB(); cErr != nil {
 			// 检查服务端文件是否变更，如果变更则清除
@@ -104,7 +104,7 @@ func Download(info *ApiInfo) (res ApiResult, err error) {
 		}
 		err = dbChecker.saveInfoToDB()
 		if err != nil {
-			err = fmt.Errorf("download info save to db error:%v key:%s localFile:%s", err, f.toAbsFile, info.Key)
+			err = data.NewEmptyError().AppendDescF("download info save to db, %v key:%s localFile:%s", err, f.toAbsFile, info.Key)
 			return
 		}
 	}
@@ -125,7 +125,7 @@ func Download(info *ApiInfo) (res ApiResult, err error) {
 	return
 }
 
-func download(fInfo *fileInfo, info *ApiInfo) (err error) {
+func download(fInfo *fileInfo, info *ApiInfo) (err *data.CodeError) {
 	defer func() {
 		if err != nil {
 			e := os.Remove(fInfo.tempFile)
@@ -150,10 +150,10 @@ func download(fInfo *fileInfo, info *ApiInfo) (err error) {
 	return err
 }
 
-func downloadFile(fInfo *fileInfo, info *ApiInfo) error {
+func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	dl, err := createDownloader(info)
 	if err != nil {
-		return errors.New(" Download create downloader error:" + err.Error())
+		return data.NewEmptyError().AppendDesc(" Download create downloader error:" + err.Error())
 	}
 
 	response, err := dl.Download(info)
@@ -171,58 +171,59 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) error {
 	}
 
 	if err != nil {
-		return errors.New(" Download error:" + err.Error())
+		return data.NewEmptyError().AppendDesc(" Download error:" + err.Error())
 	}
 	if response == nil {
-		return errors.New(" Download error: response empty")
+		return data.NewEmptyError().AppendDesc(" Download error: response empty")
 	}
 	if response.StatusCode/100 != 2 {
-		return fmt.Errorf(" Download error: %v", response)
+		return data.NewEmptyError().AppendDescF(" Download error: %v", response)
 	}
 	defer response.Body.Close()
 
+	var fErr error
 	var tempFileHandle *os.File
 	if info.FromBytes > 0 {
-		tempFileHandle, err = os.OpenFile(fInfo.tempFile, os.O_APPEND|os.O_WRONLY, 0655)
+		tempFileHandle, fErr = os.OpenFile(fInfo.tempFile, os.O_APPEND|os.O_WRONLY, 0655)
 	} else {
-		tempFileHandle, err = os.Create(fInfo.tempFile)
+		tempFileHandle, fErr = os.Create(fInfo.tempFile)
 	}
-	if err != nil {
-		return errors.New(" Open local temp file error:" + fInfo.tempFile + " error:" + err.Error())
+	if fErr != nil {
+		return data.NewEmptyError().AppendDesc(" Open local temp file error:" + fInfo.tempFile + " error:" + fErr.Error())
 	}
 	defer tempFileHandle.Close()
 
 	if info.Progress != nil {
-		_, err = io.Copy(tempFileHandle, io.TeeReader(response.Body, info.Progress))
+		_, fErr = io.Copy(tempFileHandle, io.TeeReader(response.Body, info.Progress))
 		info.Progress.End()
 	} else {
-		_, err = io.Copy(tempFileHandle, response.Body)
+		_, fErr = io.Copy(tempFileHandle, response.Body)
 	}
-	if err != nil {
-		return fmt.Errorf(" Download error:%v", err)
+	if fErr != nil {
+		return data.NewEmptyError().AppendDescF(" Download error:%v", err)
 	}
 
 	return nil
 }
 
-func renameTempFile(fInfo *fileInfo, info *ApiInfo) error {
+func renameTempFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	err := os.Rename(fInfo.tempFile, fInfo.toFile)
 	if err != nil {
-		return errors.New(" Rename temp file to final file error" + err.Error())
+		return data.NewEmptyError().AppendDesc(" Rename temp file to final file error" + err.Error())
 	}
 	return nil
 }
 
 type downloader interface {
-	Download(info *ApiInfo) (response *http.Response, err error)
+	Download(info *ApiInfo) (response *http.Response, err *data.CodeError)
 }
 
-func createDownloader(info *ApiInfo) (downloader, error) {
+func createDownloader(info *ApiInfo) (downloader, *data.CodeError) {
 	userHttps := workspace.GetConfig().IsUseHttps()
 	if info.UseGetFileApi {
 		mac, err := workspace.GetMac()
 		if err != nil {
-			return nil, fmt.Errorf("download get mac error:%v", mac)
+			return nil, data.NewEmptyError().AppendDescF("download get mac error:%v", mac)
 		}
 		return &getFileApiDownloader{
 			useHttps: userHttps,
@@ -233,7 +234,8 @@ func createDownloader(info *ApiInfo) (downloader, error) {
 	}
 }
 
-func utf82GBK(text string) (string, error) {
+func utf82GBK(text string) (string, *data.CodeError) {
 	var gbkEncoder = simplifiedchinese.GBK.NewEncoder()
-	return gbkEncoder.String(text)
+	d, err := gbkEncoder.String(text)
+	return d, data.ConvertError(err)
 }

@@ -169,11 +169,11 @@ func TestDownloadDocument(t *testing.T) {
 	test.TestDocument("qdownload", t)
 }
 
-func createDownloadConfigFile(cfg *DownloadCfg) (cfgPath string, err error) {
+func createDownloadConfigFile(cfg *DownloadCfg) (cfgPath string, err *data.CodeError) {
 	if len(cfg.DestDir) == 0 {
 		rootPath, err := test.RootPath()
 		if err != nil {
-			return "", errors.New("get root path error:" + err.Error())
+			return "", data.NewEmptyError().AppendDesc("get root path error:" + err.Error())
 		}
 		cfg.DestDir = filepath.Join(rootPath, "download")
 	}
@@ -184,12 +184,12 @@ func createDownloadConfigFile(cfg *DownloadCfg) (cfgPath string, err error) {
 
 	data, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
-		return "", errors.New("json marshal error:" + err.Error())
+		return "", data.NewEmptyError().AppendDesc("json marshal error:" + err.Error())
 	}
 
 	cfgPath, err = test.CreateFileWithContent("download_config.txt", string(data))
 	if err != nil {
-		err = errors.New("create cdn config file error:" + err.Error())
+		err = data.NewEmptyError().AppendDesc("create cdn config file error:" + err.Error())
 	}
 	return cfgPath, err
 }

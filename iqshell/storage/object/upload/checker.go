@@ -1,7 +1,7 @@
 package upload
 
 import (
-	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -19,13 +19,13 @@ type serverChecker struct {
 	FileSize   int64  // 文件大小，核对文件大小时使用
 }
 
-func (c *serverChecker) check() (exist, match bool, err error) {
+func (c *serverChecker) check() (exist, match bool, err *data.CodeError) {
 	fileServerStatus, err := object.Status(object.StatusApiInfo{
 		Bucket: c.Bucket,
 		Key:    c.Key,
 	})
 	if err != nil {
-		err = fmt.Errorf("get file status, %s", err)
+		err = data.NewEmptyError().AppendDescF("get file status, %s", err)
 		return false, false, err
 	}
 
@@ -45,10 +45,10 @@ func (c *serverChecker) check() (exist, match bool, err error) {
 	}
 }
 
-func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool, bool, error) {
+func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool, bool, *data.CodeError) {
 	file, err := os.Open(c.FilePath)
 	if err != nil {
-		return true, false, fmt.Errorf("check hash: open local file:%s error, %s", c.FilePath, err)
+		return true, false, data.NewEmptyError().AppendDescF("check hash: open local file:%s error, %s", c.FilePath, err)
 	}
 	defer func() {
 		if e := file.Close(); e != nil {
@@ -60,12 +60,12 @@ func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool,
 	if utils.IsSignByEtagV2(fileServerStatus.Hash) {
 		localHash, err = utils.EtagV2(file, fileServerStatus.Parts)
 		if err != nil {
-			return true, false, fmt.Errorf("check hash: get etag v2:%s error, %s", c.FilePath, err)
+			return true, false, data.NewEmptyError().AppendDescF("check hash: get etag v2:%s error, %s", c.FilePath, err)
 		}
 	} else {
 		localHash, err = utils.EtagV1(file)
 		if err != nil {
-			return true, false, fmt.Errorf("check hash: get etag v1:%s error, %s", c.FilePath, err)
+			return true, false, data.NewEmptyError().AppendDescF("check hash: get etag v1:%s error, %s", c.FilePath, err)
 		}
 	}
 
@@ -78,7 +78,7 @@ func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool,
 	}
 }
 
-func (c *serverChecker) checkServerSize(fileServerStatus batch.OperationResult) (bool, bool, error) {
+func (c *serverChecker) checkServerSize(fileServerStatus batch.OperationResult) (bool, bool, *data.CodeError) {
 	if c.FileSize == fileServerStatus.FSize {
 		return true, true, nil
 	} else {

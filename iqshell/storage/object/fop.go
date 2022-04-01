@@ -1,15 +1,15 @@
 package object
 
 import (
-	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
-func PreFopStatus(persistentId string) (storage.PrefopRet, error) {
+func PreFopStatus(persistentId string) (storage.PrefopRet, *data.CodeError) {
 	if len(persistentId) == 0 {
-		return storage.PrefopRet{}, errors.New(alert.CannotEmpty("persistent id", ""))
+		return storage.PrefopRet{}, alert.CannotEmptyError("persistent id", "")
 	}
 
 	mac, err := account.GetMac()
@@ -18,8 +18,8 @@ func PreFopStatus(persistentId string) (storage.PrefopRet, error) {
 	}
 
 	opManager := storage.NewOperationManager(mac, nil)
-	ret, err := opManager.Prefop(persistentId)
-	return ret, err
+	ret, e := opManager.Prefop(persistentId)
+	return ret, data.ConvertError(e)
 }
 
 type PreFopApiInfo struct {
@@ -31,24 +31,24 @@ type PreFopApiInfo struct {
 	NotifyForce bool
 }
 
-func PreFop(info PreFopApiInfo) (persistentId string, err error) {
+func PreFop(info PreFopApiInfo) (string, *data.CodeError) {
 	if len(info.Bucket) == 0 {
-		return "", errors.New(alert.CannotEmpty("bucket", ""))
+		return "", alert.CannotEmptyError("bucket", "")
 	}
 
 	if len(info.Key) == 0 {
-		return "", errors.New(alert.CannotEmpty("key", ""))
+		return "", alert.CannotEmptyError("key", "")
 	}
 
 	if len(info.Fops) == 0 {
-		return "", errors.New(alert.CannotEmpty("fops", ""))
+		return "", alert.CannotEmptyError("fops", "")
 	}
 
 	mac, err := account.GetMac()
 	if err != nil {
-		return
+		return "", err
 	}
 	opManager := storage.NewOperationManager(mac, nil)
-	persistentId, err = opManager.Pfop(info.Bucket, info.Key, info.Fops, info.Pipeline, info.NotifyURL, info.NotifyForce)
-	return
+	persistentId, e := opManager.Pfop(info.Bucket, info.Key, info.Fops, info.Pipeline, info.NotifyURL, info.NotifyForce)
+	return persistentId, data.ConvertError(e)
 }

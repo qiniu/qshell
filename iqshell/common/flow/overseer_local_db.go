@@ -2,10 +2,11 @@ package flow
 
 import (
 	"encoding/json"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/recorder"
 )
 
-func NewDBRecordOverseer(dbPath string, blankWorkRecordBuilder func() *WorkRecord) (Overseer, error) {
+func NewDBRecordOverseer(dbPath string, blankWorkRecordBuilder func() *WorkRecord) (Overseer, *data.CodeError) {
 	if r, err := recorder.CreateDBRecorder(dbPath); err != nil {
 		return nil, err
 	} else {
@@ -113,8 +114,9 @@ var (
 	workStatusError   = 3
 )
 
-func unmarshalWorkStatus(data string, s *workStatus) error {
-	return json.Unmarshal([]byte(data), s)
+func unmarshalWorkStatus(d string, s *workStatus) *data.CodeError {
+	err := json.Unmarshal([]byte(d), s)
+	return data.ConvertError(err)
 }
 
 type workStatus struct {
@@ -123,7 +125,7 @@ type workStatus struct {
 	Status int `json:"status"`
 }
 
-func (s *workStatus) toData() (string, error) {
-	data, err := json.Marshal(s)
-	return string(data), err
+func (s *workStatus) toData() (string, *data.CodeError) {
+	d, err := json.Marshal(s)
+	return string(d), data.ConvertError(err)
 }

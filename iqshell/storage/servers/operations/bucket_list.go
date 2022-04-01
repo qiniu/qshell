@@ -14,7 +14,7 @@ type ListInfo struct {
 	Detail bool
 }
 
-func (info *ListInfo) Check() error {
+func (info *ListInfo) Check() *data.CodeError {
 	return nil
 }
 

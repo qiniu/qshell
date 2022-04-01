@@ -4,8 +4,8 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
-	"errors"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"net/url"
 )
@@ -16,22 +16,22 @@ type SaveAsApiInfo struct {
 	SaveKey    string
 }
 
-func SaveAs(info SaveAsApiInfo) (string, error) {
+func SaveAs(info SaveAsApiInfo) (string, *data.CodeError) {
 	if len(info.PublicUrl) == 0 {
-		return "", errors.New(alert.CannotEmpty("public url", ""))
+		return "", alert.CannotEmptyError("public url", "")
 	}
 
 	uri, parseErr := url.Parse(info.PublicUrl)
 	if parseErr != nil {
-		return "", errors.New("parse public url error:" + parseErr.Error())
+		return "", data.NewEmptyError().AppendDesc("parse public url error:" + parseErr.Error())
 	}
 
 	if len(info.SaveBucket) == 0 {
-		return "", errors.New(alert.CannotEmpty("save bucket", ""))
+		return "", alert.CannotEmptyError("save bucket", "")
 	}
 
 	if len(info.SaveBucket) == 0 {
-		return "", errors.New(alert.CannotEmpty("save key", ""))
+		return "", alert.CannotEmptyError("save key", "")
 	}
 
 	acc, err := workspace.GetAccount()

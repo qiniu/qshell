@@ -3,8 +3,8 @@ package m3u8
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
@@ -26,7 +26,7 @@ type SliceListApiInfo struct {
 	Key    string
 }
 
-func Slices(info SliceListApiInfo) ([]Slice, error) {
+func Slices(info SliceListApiInfo) ([]Slice, *data.CodeError) {
 	dnLink, err := downloadLink(downloadLinkApiInfo(info))
 	if err != nil {
 		return nil, err
@@ -43,27 +43,27 @@ func Slices(info SliceListApiInfo) ([]Slice, error) {
 	//get m3u8 file content
 	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)
 	if reqErr != nil {
-		return nil, fmt.Errorf("new request for url %s error, %s", dnLink, reqErr)
+		return nil, data.NewEmptyError().AppendDescF("new request for url %s error, %s", dnLink, reqErr)
 	}
 
 	m3u8Resp, m3u8Err := http.DefaultClient.Do(m3u8Req)
 	if m3u8Err != nil {
-		return nil, fmt.Errorf("open url %s error, %s", dnLink, m3u8Err)
+		return nil, data.NewEmptyError().AppendDescF("open url %s error, %s", dnLink, m3u8Err)
 	}
 
 	defer m3u8Resp.Body.Close()
 	if m3u8Resp.StatusCode != 200 {
-		return nil, fmt.Errorf("download m3u8 file error, %s", m3u8Resp.Status)
+		return nil, data.NewEmptyError().AppendDescF("download m3u8 file error, %s", m3u8Resp.Status)
 	}
 
 	m3u8Bytes, readErr := ioutil.ReadAll(m3u8Resp.Body)
 	if readErr != nil {
-		return nil, fmt.Errorf("read m3u8 file content error, %s", readErr.Error())
+		return nil, data.NewEmptyError().AppendDescF("read m3u8 file content error, %s", readErr.Error())
 	}
 
 	//check content
 	if !strings.HasPrefix(string(m3u8Bytes), "#EXTM3U") {
-		return nil, errors.New("invalid m3u8 file")
+		return nil, data.NewEmptyError().AppendDesc("invalid m3u8 file")
 	}
 
 	slices := make([]Slice, 0)
@@ -92,7 +92,7 @@ func Slices(info SliceListApiInfo) ([]Slice, error) {
 
 type downloadLinkApiInfo SliceListApiInfo
 
-func downloadLink(info downloadLinkApiInfo) (dnLink string, err error) {
+func downloadLink(info downloadLinkApiInfo) (dnLink string, err *data.CodeError) {
 	m, err := bucket.GetBucketManager()
 	if err != nil {
 		return "", err
@@ -100,18 +100,18 @@ func downloadLink(info downloadLinkApiInfo) (dnLink string, err error) {
 
 	_, sErr := m.Stat(info.Bucket, info.Key)
 	if sErr != nil {
-		err = fmt.Errorf("stat m3u8 file error, %s", sErr)
+		err = data.NewEmptyError().AppendDescF("stat m3u8 file error, %s", sErr)
 		return
 	}
 
 	bucketDomains, bErr := m.ListBucketDomains(info.Bucket)
 	if bErr != nil {
-		err = fmt.Errorf("get domain of bucket failed, %s", bErr.Error())
+		err = data.NewEmptyError().AppendDescF("get domain of bucket failed, %s", bErr.Error())
 		return
 	}
 
 	if len(bucketDomains) == 0 {
-		err = errors.New("no domain found for the bucket")
+		err = data.NewEmptyError().AppendDesc("no domain found for the bucket")
 		return
 	}
 

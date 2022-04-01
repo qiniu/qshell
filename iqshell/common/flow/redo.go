@@ -1,5 +1,7 @@
 package flow
 
+import "github.com/qiniu/qshell/v2/iqshell/common/data"
+
 type Redo interface {
 
 	// ShouldRedo
@@ -8,5 +10,5 @@ type Redo interface {
 	// @param workRecord 此工作的记录
 	// @return shouldRedo 是否需要重做
 	// @return cause 需要重做或不能重做的原因
-	ShouldRedo(work Work, workRecord *WorkRecord) (shouldRedo bool, cause error)
+	ShouldRedo(work Work, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError)
 }

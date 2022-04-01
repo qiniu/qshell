@@ -1,13 +1,11 @@
 package operations
 
 import (
-	"errors"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/group"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"github.com/qiniu/qshell/v2/iqshell/common/work"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"strconv"
@@ -28,20 +26,20 @@ func (p PrivateUrlInfo) WorkId() string {
 	return p.PublicUrl
 }
 
-func (p *PrivateUrlInfo) Check() error {
+func (p *PrivateUrlInfo) Check() *data.CodeError {
 	if len(p.PublicUrl) == 0 {
 		return alert.CannotEmptyError("PublicUrl", "")
 	}
 	return nil
 }
 
-func (p PrivateUrlInfo) getDeadlineOfInt() (int64, error) {
+func (p PrivateUrlInfo) getDeadlineOfInt() (int64, *data.CodeError) {
 	if len(p.Deadline) == 0 {
 		return time.Now().Add(time.Second * DefaultDeadline).Unix(), nil
 	}
 
 	if val, err := strconv.ParseInt(p.Deadline, 10, 64); err != nil {
-		return 0, errors.New("invalid deadline")
+		return 0, data.NewEmptyError().AppendDesc("invalid deadline")
 	} else {
 		return val, nil
 	}
@@ -73,7 +71,7 @@ type BatchPrivateUrlInfo struct {
 	Deadline  string
 }
 
-func (info *BatchPrivateUrlInfo) Check() error {
+func (info *BatchPrivateUrlInfo) Check() *data.CodeError {
 	return nil
 }
 
@@ -85,47 +83,57 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 		return
 	}
 
-	handler, err := group.NewHandler(info.BatchInfo.Info)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	work.NewFlowHandler(info.BatchInfo.Info.FlowInfo).ReadWork(func() (work work.Work, hasMore bool) {
-		line, success := handler.Scanner().ScanLine()
-		if !success {
-			return nil, false
-		}
-		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
-		if len(items) < 1 {
-			return nil, true
-		}
+	f := &flow.Flow{}
+	// 配置 work provider
+	workCreator := flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, func(items []string) (work flow.Work, err *data.CodeError) {
 		url := items[0]
 		if url == "" {
-			return nil, true
+			return nil, alert.Error("url invalid", "")
 		}
+
 		urlToSign := strings.TrimSpace(url)
 		if urlToSign == "" {
-			return nil, true
+			return nil, alert.Error("url invalid after TrimSpace", "")
 		}
 		return PrivateUrlInfo{
 			PublicUrl: url,
 			Deadline:  info.Deadline,
-		}, true
-	}).DoWork(func(work work.Work) (work.Result, error) {
-		in := work.(PrivateUrlInfo)
-		deadline, err := in.getDeadlineOfInt()
-		if err != nil {
-			return nil, err
-		}
-		return download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
-			PublicUrl: in.PublicUrl,
-			Deadline:  deadline,
-		})
-	}).OnWorkResult(func(work work.Work, result work.Result) {
-		url := result.(string)
-		log.Alert(url)
-	}).OnWorkError(func(work work.Work, err error) {
-		log.Error(err)
-	}).Start()
+		}, nil
+	})
+	if provider, e := flow.NewWorkProviderOfFile(info.BatchInfo.InputFile, info.BatchInfo.EnableStdin, workCreator); e != nil {
+		return
+	} else {
+		f.WorkProvider = provider
+	}
+
+	// 配置 worker provider
+	f.WorkerProvider = flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
+		return flow.NewWorker(func(work flow.Work) (flow.Result, *data.CodeError) {
+			in := work.(PrivateUrlInfo)
+			if deadline, e := in.getDeadlineOfInt(); e != nil {
+				return nil, e
+			} else {
+				return download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
+					PublicUrl: in.PublicUrl,
+					Deadline:  deadline,
+				})
+			}
+		}), nil
+	})
+
+	// 配置时间监听
+	f.EventListener = flow.EventListener{
+		WillWorkFunc:   nil,
+		OnWorkSkipFunc: nil,
+		OnWorkSuccessFunc: func(work flow.Work, result flow.Result) {
+			url := result.(string)
+			log.Alert(url)
+		},
+		OnWorkFailFunc: func(work flow.Work, err *data.CodeError) {
+			log.Error(err)
+		},
+	}
+
+	// 开始
+	f.Start()
 }

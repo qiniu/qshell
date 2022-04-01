@@ -1,12 +1,12 @@
 package operations
 
 import (
-	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -22,7 +22,7 @@ type UploadInfo struct {
 	DeleteOnSuccess bool
 }
 
-func (info *UploadInfo) Check() error {
+func (info *UploadInfo) Check() *data.CodeError {
 	if len(info.ToBucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
@@ -52,9 +52,7 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 	info.Progress = progress.NewPrintProgress(" 进度")
 	ret, err := uploadFile(&info)
 	if err != nil {
-		if v, ok := err.(*storage.ErrorInfo); ok {
-			log.ErrorF("Upload file error %d: %s, Reqid: %s", v.Code, v.Err, v.Reqid)
-		}
+		log.ErrorF("Upload file error %v",err)
 	} else {
 		log.Alert("")
 		log.Alert("-------------- File FlowInfo --------------")
@@ -65,7 +63,7 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 	}
 }
 
-func uploadFile(info *UploadInfo) (res upload.ApiResult, err error) {
+func uploadFile(info *UploadInfo) (res upload.ApiResult, err *data.CodeError) {
 	startTime := time.Now().UnixNano() / 1e6
 	if info.TokenProvider == nil {
 		info.TokenProvider, err = createTokenProvider(info)
@@ -103,10 +101,10 @@ func uploadFile(info *UploadInfo) (res upload.ApiResult, err error) {
 	return res, nil
 }
 
-func createTokenProvider(info *UploadInfo) (provider func() string, err error) {
+func createTokenProvider(info *UploadInfo) (provider func() string, err *data.CodeError) {
 	mac, gErr := workspace.GetMac()
 	if gErr != nil {
-		return nil, errors.New("get mac error:" + gErr.Error())
+		return nil, data.NewEmptyError().AppendDesc("get mac error:" + gErr.Error())
 	}
 
 	provider = createTokenProviderWithMac(mac, info)

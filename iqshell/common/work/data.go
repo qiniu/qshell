@@ -7,7 +7,7 @@ type FlowInfo struct {
 	workErrorHappened bool     // 执行中是否出现错误
 }
 
-func (i *FlowInfo) Check() error {
+func (i *FlowInfo) Check() *data.CodeError {
 	if i.WorkerCount <= 0 {
 		i.WorkerCount = 1
 	}

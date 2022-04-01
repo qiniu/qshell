@@ -1,5 +1,7 @@
 package flow
 
+import "github.com/qiniu/qshell/v2/iqshell/common/data"
+
 type WorkPackage struct {
 	WorkRecords []*WorkRecord
 }
@@ -26,7 +28,7 @@ func NewWorkPacker(maxWorkCountPerPackage int) *WorkPacker {
 	}
 }
 
-func (w *WorkPacker) Pack(work Work) error {
+func (w *WorkPacker) Pack(work Work) *data.CodeError {
 	w.workPackage.WorkRecords = append(w.workPackage.WorkRecords, &WorkRecord{
 		Work:   work,
 		Result: nil,

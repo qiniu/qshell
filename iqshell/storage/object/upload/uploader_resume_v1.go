@@ -1,8 +1,8 @@
 package upload
 
 import (
-	"errors"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
@@ -18,19 +18,18 @@ func newResumeV1Uploader(cfg *storage.Config) Uploader {
 	}
 }
 
-func (r *resumeV1Uploader) upload(info *ApiInfo) (ret ApiResult, err error) {
+func (r *resumeV1Uploader) upload(info *ApiInfo) (ApiResult, *data.CodeError) {
 	log.DebugF("resume v1 upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 
+	var ret ApiResult
 	file, err := os.Open(info.FilePath)
 	if err != nil {
-		err = errors.New("resume v1 upload: open file error:" + err.Error())
-		return
+		return ret, data.NewEmptyError().AppendDesc("resume v1 upload: open file error:" + err.Error())
 	}
 
 	fileStatus, err := file.Stat()
 	if err != nil {
-		err = errors.New("resume v1 upload: ger file status error:" + err.Error())
-		return
+		return ret, data.NewEmptyError().AppendDesc("resume v1 upload: ger file status error:" + err.Error())
 	}
 
 	token := info.TokenProvider()
@@ -57,12 +56,12 @@ func (r *resumeV1Uploader) upload(info *ApiInfo) (ret ApiResult, err error) {
 		NotifyErr: nil,
 	})
 	if err != nil {
-		err = errors.New("resume v1 upload: upload error:" + err.Error())
+		err = data.NewEmptyError().AppendDesc("resume v1 upload: upload error:" + err.Error())
 	} else {
 		if info.Progress != nil {
 			info.Progress.End()
 		}
 	}
 
-	return
+	return ret, data.ConvertError(err)
 }

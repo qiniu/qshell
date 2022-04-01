@@ -1,10 +1,9 @@
 package upload
 
 import (
-	"errors"
-	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -41,9 +40,9 @@ type ApiInfo struct {
 	Progress          progress.Progress // 上传进度回调
 }
 
-func (a *ApiInfo) Check() (err error) {
+func (a *ApiInfo) Check() (err *data.CodeError) {
 	if len(a.FilePath) == 0 {
-		return errors.New(alert.CannotEmpty("upload file path", ""))
+		return alert.CannotEmptyError("upload file path", "")
 	}
 
 	// 获取文件信息
@@ -51,12 +50,12 @@ func (a *ApiInfo) Check() (err error) {
 		if utils.IsNetworkSource(a.FilePath) {
 			a.FileSize, err = utils.NetworkFileLength(a.FilePath)
 			if err != nil {
-				return fmt.Errorf("get network file:%s size error:%v", a.FilePath, err)
+				return data.NewEmptyError().AppendDescF("get network file:%s size error:%v", a.FilePath, err)
 			}
 		} else {
 			localFileStatus, err := os.Stat(a.FilePath)
 			if err != nil {
-				return fmt.Errorf("get local file:%s status error:%v", a.FilePath, err)
+				return data.NewEmptyError().AppendDescF("get local file:%s status error:%v", a.FilePath, err)
 			}
 			a.FileSize = localFileStatus.Size()
 			a.FileModifyTime = localFileStatus.ModTime().UnixNano() / 100 // 兼容老版本：Unit is 100ns
@@ -93,10 +92,10 @@ func ApiResultFormat() string {
 }
 
 type Uploader interface {
-	upload(info *ApiInfo) (ApiResult, error)
+	upload(info *ApiInfo) (ApiResult, *data.CodeError)
 }
 
-func Upload(info *ApiInfo) (res ApiResult, err error) {
+func Upload(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 	err = info.Check()
 	if err != nil {
 		log.WarningF("upload: info init error:%v", err)
@@ -173,7 +172,7 @@ func Upload(info *ApiInfo) (res ApiResult, err error) {
 	log.DebugF("upload:   end upload:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
 
 	if err != nil {
-		err = errors.New("upload error:" + err.Error())
+		err = data.NewEmptyError().AppendDesc("upload error:" + err.Error())
 		return
 	}
 
@@ -187,7 +186,7 @@ func Upload(info *ApiInfo) (res ApiResult, err error) {
 
 var once sync.Once
 
-func uploadSource(info *ApiInfo) (ApiResult, error) {
+func uploadSource(info *ApiInfo) (ApiResult, *data.CodeError) {
 	once.Do(func() {
 		storage.SetSettings(&storage.Settings{
 			TaskQsize: 0,

@@ -25,7 +25,7 @@ type ListBucketInfo struct {
 	Bucket    string
 }
 
-func (info *ListBucketInfo) Check() error {
+func (info *ListBucketInfo) Check() *data.CodeError {
 	// check AWS bucket
 	if info.Bucket == "" {
 		return alert.CannotEmptyError("AWS bucket", "")

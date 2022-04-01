@@ -3,6 +3,7 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"net/url"
 )
@@ -11,7 +12,7 @@ type UrlInfo struct {
 	Url string
 }
 
-func (info *UrlInfo) Check() error {
+func (info *UrlInfo) Check() *data.CodeError {
 	if len(info.Url) == 0 {
 		return alert.CannotEmptyError("Data", "")
 	}

@@ -1,8 +1,8 @@
 package storage
 
 import (
-	"errors"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 )
 
@@ -11,13 +11,13 @@ type PrefetchApiInfo struct {
 	Key    string
 }
 
-func Prefetch(info PrefetchApiInfo) error {
+func Prefetch(info PrefetchApiInfo) *data.CodeError {
 	if len(info.Bucket) == 0 {
-		return errors.New(alert.CannotEmpty("bucket", ""))
+		return alert.CannotEmptyError("bucket", "")
 	}
 
 	if len(info.Key) == 0 {
-		return errors.New(alert.CannotEmpty("key", ""))
+		return alert.CannotEmptyError("key", "")
 	}
 
 	m, err := bucket.GetBucketManager()
@@ -25,5 +25,5 @@ func Prefetch(info PrefetchApiInfo) error {
 		return err
 	}
 
-	return m.Prefetch(info.Bucket, info.Key)
+	return data.ConvertError(m.Prefetch(info.Bucket, info.Key))
 }

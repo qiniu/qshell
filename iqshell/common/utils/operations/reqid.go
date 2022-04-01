@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"strconv"
 	"time"
@@ -14,7 +15,7 @@ type ReqIdInfo struct {
 	ReqId string
 }
 
-func (info *ReqIdInfo) Check() error {
+func (info *ReqIdInfo) Check() *data.CodeError {
 	if len(info.ReqId) == 0 {
 		return alert.CannotEmptyError("ReqId", "")
 	}

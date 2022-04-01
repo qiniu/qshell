@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
@@ -12,7 +13,7 @@ type Base64Info struct {
 	UrlSafe bool
 }
 
-func (info *Base64Info) Check() error {
+func (info *Base64Info) Check() *data.CodeError {
 	if len(info.Data) == 0 {
 		return alert.CannotEmptyError("Data", "")
 	}

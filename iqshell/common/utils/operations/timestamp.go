@@ -3,6 +3,7 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"strconv"
 	"time"
@@ -12,7 +13,7 @@ type TimestampInfo struct {
 	Value string
 }
 
-func (info *TimestampInfo) Check() error {
+func (info *TimestampInfo) Check() *data.CodeError {
 	if len(info.Value) == 0 {
 		return alert.CannotEmptyError("args", "")
 	}

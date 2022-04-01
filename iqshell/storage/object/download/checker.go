@@ -1,7 +1,7 @@
 package download
 
 import (
-	"errors"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -17,7 +17,7 @@ type LocalFileInfo struct {
 	RemoveFileWhenError bool   // 当遇到错误时是否该移除文件【选填】
 }
 
-func (l *LocalFileInfo) CheckDownloadFile() (err error) {
+func (l *LocalFileInfo) CheckDownloadFile() (err *data.CodeError) {
 	defer func() {
 		if err != nil && l.RemoveFileWhenError {
 			e := os.Remove(l.File)
@@ -36,7 +36,7 @@ func (l *LocalFileInfo) CheckDownloadFile() (err error) {
 	return
 }
 
-func (l *LocalFileInfo) CheckFileSizeOfDownloadFile() error {
+func (l *LocalFileInfo) CheckFileSizeOfDownloadFile() *data.CodeError {
 	if l.FileSize <= 0 {
 		log.Debug("download file check size: needn't to check")
 		return nil
@@ -44,21 +44,21 @@ func (l *LocalFileInfo) CheckFileSizeOfDownloadFile() error {
 
 	tempFileStatus, err := os.Stat(l.File)
 	if err != nil {
-		return err
+		return data.ConvertError(err)
 	}
 
 	if tempFileStatus == nil {
-		return errors.New("download file check: can't get file status:" + l.File)
+		return data.NewEmptyError().AppendDesc("download file check: can't get file status:" + l.File)
 	}
 
 	if l.FileSize != tempFileStatus.Size() {
-		return errors.New("download file check: download file size is unexpected:" + l.File)
+		return data.NewEmptyError().AppendDesc("download file check: download file size is unexpected:" + l.File)
 	}
 
 	return nil
 }
 
-func (l *LocalFileInfo) CheckFileHashOfDownloadFile() error {
+func (l *LocalFileInfo) CheckFileHashOfDownloadFile() *data.CodeError {
 	if len(l.FileHash) == 0 {
 		log.Debug("download file check hash: needn't to check")
 		return nil
@@ -66,14 +66,14 @@ func (l *LocalFileInfo) CheckFileHashOfDownloadFile() error {
 
 	hashFile, err := os.Open(l.File)
 	if err != nil {
-		return errors.New("download file check: get temp file error when check hash:" + err.Error())
+		return data.NewEmptyError().AppendDesc("download file check: get temp file error when check hash:" + err.Error())
 	}
 
 	var hash string
 	if utils.IsSignByEtagV2(l.FileHash) {
 		log.Debug("download file check hash: get etag by v2 for key:" + l.Key)
 		if len(l.Bucket) == 0 || len(l.Key) == 0 {
-			return errors.New("download file check hash: etag v2 check should provide bucket and key")
+			return data.NewEmptyError().AppendDesc("download file check hash: etag v2 check should provide bucket and key")
 		}
 
 		stat, err := object.Status(object.StatusApiInfo{
@@ -81,7 +81,7 @@ func (l *LocalFileInfo) CheckFileHashOfDownloadFile() error {
 			Key:    l.Key,
 		})
 		if err != nil {
-			return errors.New("download file check hash: etag v2 get file status error:" + err.Error())
+			return data.NewEmptyError().AppendDesc("download file check hash: etag v2 get file status error:" + err.Error())
 		}
 
 		hash, err = utils.EtagV2(hashFile, stat.Parts)
@@ -91,11 +91,11 @@ func (l *LocalFileInfo) CheckFileHashOfDownloadFile() error {
 	}
 
 	if err != nil {
-		return errors.New("download file check: get file etag error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("download file check: get file etag error:" + err.Error())
 	}
 
 	if hash != l.FileHash {
-		return errors.New("download file check: file hash doesn't match for key:" + l.Key + "download file hash:" + hash + " excepted:" + l.FileHash)
+		return data.NewEmptyError().AppendDesc("download file check: file hash doesn't match for key:" + l.Key + "download file hash:" + hash + " excepted:" + l.FileHash)
 	}
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -21,7 +22,7 @@ type DownloadInfo struct {
 	Domain        string // 下载的 domain
 }
 
-func (info *DownloadInfo) Check() error {
+func (info *DownloadInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
@@ -75,7 +76,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	})
 }
 
-func downloadFile(info *download.ApiInfo) (download.ApiResult, error) {
+func downloadFile(info *download.ApiInfo) (download.ApiResult, *data.CodeError) {
 	log.InfoF("Download [%s:%s] => %s", info.Bucket, info.Key, info.ToFile)
 	startTime := time.Now().UnixNano() / 1e6
 	res, err := download.Download(info)
@@ -84,14 +85,14 @@ func downloadFile(info *download.ApiInfo) (download.ApiResult, error) {
 		return res, err
 	}
 
-	fileStatus, err := os.Stat(res.FileAbsPath)
-	if err != nil {
+	fileStatus, sErr := os.Stat(res.FileAbsPath)
+	if sErr != nil {
 		log.ErrorF("Download  failed, [%s:%s] => %s get file status error:%v", info.Bucket, info.Key, info.ToFile, err)
-		return res, err
+		return res, data.ConvertError(sErr)
 	}
 	if fileStatus == nil {
 		log.ErrorF("Download  failed, [%s:%s] => %s download speed: can't get file status", info.Bucket, info.Key, info.ToFile)
-		return res, err
+		return res, data.NewEmptyError().AppendDesc("can't get file status")
 	}
 
 	endTime := time.Now().UnixNano() / 1e6

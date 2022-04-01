@@ -1,8 +1,8 @@
 package upload
 
 import (
-	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/db"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"strconv"
@@ -18,20 +18,20 @@ type dbHandler struct {
 	dbHandler      *db.DB
 }
 
-func (d *dbHandler) init() (err error) {
+func (d *dbHandler) init() (err *data.CodeError) {
 	if len(d.DBFilePath) == 0 {
 		return nil
 	}
 
 	d.dbHandler, err = db.OpenDB(d.DBFilePath)
 	if err != nil {
-		return errors.New("download init error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("download init error:" + err.Error())
 	}
 	return
 }
 
-// 当数据库中不存在相应文件信息 或 文件信息不匹配 则返回 error, (exist, match, error)
-func (d *dbHandler) checkInfoOfDB() (bool, bool, error) {
+// 当数据库中不存在相应文件信息 或 文件信息不匹配 则返回 error, (exist, match, *data.CodeError)
+func (d *dbHandler) checkInfoOfDB() (bool, bool, *data.CodeError) {
 	if d.dbHandler == nil {
 		log.Debug("upload db check error:no db handler")
 		return false, false, nil
@@ -47,7 +47,7 @@ func (d *dbHandler) checkInfoOfDB() (bool, bool, error) {
 	// db 数据：服务端文件修改时间
 	fileUpdateTime, err := strconv.ParseInt(items[0], 10, 64)
 	if err != nil {
-		return true, false, errors.New("db check: get file modify time error from db, error:" + err.Error())
+		return true, false, data.NewEmptyError().AppendDesc("db check: get file modify time error from db, error:" + err.Error())
 	}
 
 	// 验证修改时间，修改时间一致则说明文件为同一个文件
@@ -59,7 +59,7 @@ func (d *dbHandler) checkInfoOfDB() (bool, bool, error) {
 	}
 }
 
-func (d *dbHandler) saveInfoToDB() (err error) {
+func (d *dbHandler) saveInfoToDB() (err *data.CodeError) {
 	if d.dbHandler == nil {
 		log.Debug("upload save status to db error:no db handler")
 		return

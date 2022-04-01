@@ -18,7 +18,7 @@ func newLineWriter(writeStringFunc func(line string)) *lineWriter {
 	return lw
 }
 
-func (w *lineWriter) Write(p []byte) (n int, err error) {
+func (w *lineWriter) Write(p []byte) (n int, err *data.CodeError) {
 	w.buff += string(p)
 
 	for len(w.buff) > 0 {
@@ -38,6 +38,6 @@ func (w *lineWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func (w *lineWriter) Close() error {
+func (w *lineWriter) Close() *data.CodeError {
 	return nil
 }

@@ -1,6 +1,8 @@
 package export
 
-import "fmt"
+import (
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+)
 
 type FileExporter struct {
 	success  Exporter
@@ -25,24 +27,27 @@ func (b *FileExporter) Override() Exporter {
 	return b.override
 }
 
-func (b *FileExporter) Close() error {
+func (b *FileExporter) Close() *data.CodeError {
 	errS := b.success.Close()
 	errF := b.fail.Close()
 	errO := b.override.Close()
 	if errS == nil && errF == nil && errO == nil {
 		return nil
 	}
-	return fmt.Errorf("export close: success error:%v fail error:%v override error:%v", errS, errF, errO)
+	return data.NewEmptyError().AppendDesc("export close:").
+		AppendDesc("success").AppendError(errS).
+		AppendDesc("fail").AppendError(errF).
+		AppendDesc("override").AppendError(errO)
 }
 
 type FileExporterConfig struct {
-	SuccessExportFilePath  string
-	FailExportFilePath     string
-	SkipExportFilePath     string
-	OverrideExportFilePath string
+	SuccessExportFilePath   string
+	FailExportFilePath      string
+	SkipExportFilePath      string
+	OverwriteExportFilePath string
 }
 
-func NewFileExport(config FileExporterConfig) (export *FileExporter, err error) {
+func NewFileExport(config FileExporterConfig) (export *FileExporter, err *data.CodeError) {
 	export = &FileExporter{}
 	export.success, err = New(config.SuccessExportFilePath)
 	if err != nil {
@@ -59,6 +64,6 @@ func NewFileExport(config FileExporterConfig) (export *FileExporter, err error) 
 		return
 	}
 
-	export.override, err = New(config.OverrideExportFilePath)
+	export.override, err = New(config.OverwriteExportFilePath)
 	return
 }

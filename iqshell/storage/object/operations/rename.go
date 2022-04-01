@@ -3,9 +3,9 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/group"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 )
@@ -14,7 +14,7 @@ import (
 
 type RenameInfo object.MoveApiInfo
 
-func (info *RenameInfo) Check() error {
+func (info *RenameInfo) Check() *data.CodeError {
 	if len(info.SourceBucket) == 0 {
 		return alert.CannotEmptyError("SourceBucket", "")
 	}
@@ -37,7 +37,7 @@ func Rename(cfg *iqshell.Config, info RenameInfo) {
 		return
 	}
 
-	result, err := object.Move(object.MoveApiInfo(info))
+	result, err := object.Move((*object.MoveApiInfo)(&info))
 	if err != nil {
 		log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Error: %v",
 			info.SourceBucket, info.SourceKey,
@@ -66,7 +66,7 @@ type BatchRenameInfo struct {
 	Bucket    string
 }
 
-func (info *BatchRenameInfo) Check() error {
+func (info *BatchRenameInfo) Check() *data.CodeError {
 	if err := info.BatchInfo.Check(); err != nil {
 		return err
 	}
@@ -84,50 +84,47 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 		return
 	}
 
-	handler, err := group.NewHandler(info.BatchInfo.Info)
+	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
-		line, success := handler.Scanner().ScanLine()
-		if !success {
-			return nil, false
-		}
-		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
+	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		if len(items) > 1 {
 			sourceKey, destKey := items[0], items[1]
 			if sourceKey != "" && destKey != "" {
-				return object.MoveApiInfo{
+				return &object.MoveApiInfo{
 					SourceBucket: info.Bucket,
 					SourceKey:    sourceKey,
 					DestBucket:   info.Bucket,
 					DestKey:      destKey,
 					Force:        info.BatchInfo.Force,
-				}, true
+				}, nil
+			} else {
+				return nil, alert.Error("key invalid", "")
 			}
 		}
-		return nil, true
-	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
-		apiInfo, ok := (operation).(object.MoveApiInfo)
+		return nil, alert.Error("need more than one param", "")
+	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+		apiInfo, ok := (operation).(*object.MoveApiInfo)
 		if !ok {
 			return
 		}
-		in := RenameInfo(apiInfo)
+		in := (*RenameInfo)(apiInfo)
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%s\t%d\t%s", in.SourceKey, in.DestKey, result.Code, result.Error)
+			exporter.Fail().ExportF("%s\t%s\t%d\t%s", in.SourceKey, in.DestKey, result.Code, result.Error)
 			log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey,
 				result.Code, result.Error)
 		} else {
-			handler.Export().Success().ExportF("%s\t%s", in.SourceKey, in.DestKey)
+			exporter.Success().ExportF("%s\t%s", in.SourceKey, in.DestKey)
 			log.InfoF("Rename Success, [%s:%s] => [%s:%s]",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey)
 		}
-	}).OnError(func(err error) {
+	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch rename error:%v:", err)
 	}).Start()
 }

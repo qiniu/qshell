@@ -1,8 +1,8 @@
 package download
 
 import (
-	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/db"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"strconv"
@@ -22,19 +22,19 @@ type dbHandler struct {
 	dbHandler            *db.DB
 }
 
-func (d *dbHandler) init() (err error) {
+func (d *dbHandler) init() (err *data.CodeError) {
 	if len(d.DBFilePath) == 0 {
 		return nil
 	}
 
 	d.dbHandler, err = db.OpenDB(d.DBFilePath)
 	if err != nil {
-		return errors.New("download init error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("download init error:" + err.Error())
 	}
 	return
 }
 
-func (d *dbHandler) checkInfoOfDB() error {
+func (d *dbHandler) checkInfoOfDB() *data.CodeError {
 	if d.dbHandler == nil {
 		log.Debug("check db: no db handler set")
 		return nil
@@ -51,35 +51,35 @@ func (d *dbHandler) checkInfoOfDB() error {
 	// db 数据：服务端文件修改时间
 	fileServerUpdateTime, err := strconv.ParseInt(items[0], 10, 64)
 	if err != nil {
-		return errors.New("get file modify time error from db, error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("get file modify time error from db, error:" + err.Error())
 	}
 	// db 数据：文件大小
 	fileSize, err := strconv.ParseInt(items[1], 10, 64)
 	if err != nil {
-		return errors.New("get file size error from db, error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("get file size error from db, error:" + err.Error())
 	}
 	// db 数据：文件 hash
 	fileHash := items[2]
 
 	// 验证文件大小
 	if d.FileSize > 0 && fileSize != d.FileSize {
-		return fmt.Errorf("local file size doesn't match server, fileSize: %d|%d", fileSize, d.FileSize)
+		return data.NewEmptyError().AppendDescF("local file size doesn't match server, fileSize: %d|%d", fileSize, d.FileSize)
 	}
 
 	// 验证数据库 hash
 	if len(d.FileHash) > 0 && len(fileHash) > 0 && fileHash != d.FileHash {
-		return fmt.Errorf("local file hash doesn't match server, fileHash: %s|%s", fileHash, d.FileHash)
+		return data.NewEmptyError().AppendDescF("local file hash doesn't match server, fileHash: %s|%s", fileHash, d.FileHash)
 	}
 
 	// 验证修改时间
 	if fileServerUpdateTime > 0 && fileServerUpdateTime != d.FileServerUpdateTime {
-		return fmt.Errorf("local file update time doesn't match server, updateTime: %d|%s", fileServerUpdateTime, d.FileServerUpdateTime)
+		return data.NewEmptyError().AppendDescF("local file update time doesn't match server, updateTime: %d|%s", fileServerUpdateTime, d.FileServerUpdateTime)
 	}
 
 	return nil
 }
 
-func (d *dbHandler) saveInfoToDB() (err error) {
+func (d *dbHandler) saveInfoToDB() (err *data.CodeError) {
 	if d.dbHandler == nil {
 		return nil
 	}

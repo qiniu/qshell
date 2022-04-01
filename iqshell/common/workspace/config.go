@@ -1,7 +1,6 @@
 package workspace
 
 import (
-	"errors"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -26,7 +25,7 @@ func defaultConfig() *config.Config {
 	}
 }
 
-func checkConfig(cfg *config.Config) (err error) {
+func checkConfig(cfg *config.Config) (err *data.CodeError) {
 	// host
 	configHostCount := 0
 	if len(cfg.Hosts.Api) > 0 {
@@ -45,7 +44,7 @@ func checkConfig(cfg *config.Config) (err error) {
 		configHostCount += 1
 	}
 	if configHostCount != 0 && configHostCount != 5 {
-		err = errors.New("hosts: api/rs/rsf/io/up should config all")
+		err = data.NewEmptyError().AppendDesc("hosts: api/rs/rsf/io/up should config all")
 	}
 	return
 }

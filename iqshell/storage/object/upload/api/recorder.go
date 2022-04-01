@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -29,14 +28,14 @@ func NewProgressRecorder(filePath string) *ProgressRecorder {
 	return p
 }
 
-func (p *ProgressRecorder) Recover() (err error) {
+func (p *ProgressRecorder) Recover() (err *data.CodeError) {
 	if statInfo, statErr := os.Stat(p.FilePath); statErr == nil {
 		//check file last modified time, if older than one week, ignore
 		if statInfo.ModTime().Add(time.Hour * 24 * 5).After(time.Now()) {
 			//try read old progress
 			progressFh, openErr := os.Open(p.FilePath)
 			if openErr != nil {
-				err = openErr
+				err = data.NewEmptyError().AppendError(openErr)
 				return
 			}
 			decoder := json.NewDecoder(progressFh)
@@ -130,23 +129,23 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 	}
 }
 
-func (p *ProgressRecorder) RecordProgress() (err error) {
+func (p *ProgressRecorder) RecordProgress() (err *data.CodeError) {
 	fh, openErr := os.Create(p.FilePath)
 	if openErr != nil {
-		err = fmt.Errorf("Open progress file %s error, %s", p.FilePath, openErr.Error())
+		err = data.NewEmptyError().AppendDescF("Open progress file %s error, %s", p.FilePath, openErr.Error())
 		return
 	}
 	defer fh.Close()
 
 	jsonBytes, mErr := json.Marshal(p)
 	if mErr != nil {
-		err = fmt.Errorf("Marshal sync progress error, %s", mErr.Error())
+		err = data.NewEmptyError().AppendDescF("Marshal sync progress error, %s", mErr.Error())
 		return
 	}
 
 	_, wErr := fh.Write(jsonBytes)
 	if wErr != nil {
-		err = fmt.Errorf("Write sync progress error, %s", wErr.Error())
+		err = data.NewEmptyError().AppendDescF("Write sync progress error, %s", wErr.Error())
 	}
 
 	return

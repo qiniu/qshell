@@ -1,17 +1,17 @@
 package bucket
 
 import (
-	"errors"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 )
 
-func GetBucketManager() (manager *storage.BucketManager, err error) {
+func GetBucketManager() (manager *storage.BucketManager, err *data.CodeError) {
 	acc, gErr := account.GetAccount()
 	if gErr != nil {
-		err = errors.New("GetBucketManager: get current account error:" + gErr.Error())
+		err = data.NewEmptyError().AppendDescF("GetBucketManager: get current account error:%v", gErr)
 		return
 	}
 

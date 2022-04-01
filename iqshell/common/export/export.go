@@ -3,6 +3,7 @@ package export
 import (
 	"bufio"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"os"
 	"sync"
 )
@@ -10,18 +11,18 @@ import (
 type Exporter interface {
 	Export(a ...interface{})
 	ExportF(format string, a ...interface{})
-	Close() error
+	Close() *data.CodeError
 }
 
-func New(file string) (Exporter, error) {
+func New(file string) (Exporter, *data.CodeError) {
 	if len(file) == 0 {
 		return empty(), nil
 	}
 
 	fileHandler, err := os.Create(file)
 	if err != nil {
-		err = fmt.Errorf("open file: %s: %v\n", file, err)
-		return empty(), err
+		err = data.NewEmptyError().AppendDescF("open file: %s: %v\n", file, err)
+		return empty(), data.NewEmptyError().AppendDesc("open file:" + file).AppendError(err)
 	}
 
 	return &exporter{
@@ -43,11 +44,15 @@ type exporter struct {
 
 var _ Exporter = (*exporter)(nil)
 
-func (e *exporter) Close() error {
+func (e *exporter) Close() *data.CodeError {
 	if e == nil || e.file == nil {
 		return nil
 	}
-	return e.file.Close()
+
+	if err := e.file.Close(); err != nil {
+		return data.NewEmptyError().AppendError(err)
+	}
+	return nil
 }
 
 func (e *exporter) Export(a ...interface{}) {

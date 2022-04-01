@@ -1,45 +1,41 @@
 package batch
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/common/group"
-	"github.com/qiniu/qshell/v2/iqshell/common/work"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 )
 
-func Some(operations []Operation) ([]OperationResult, error) {
-	handler := &someBatchHandler{
+func Some(operations []Operation) ([]*OperationResult, *data.CodeError) {
+	h := &someBatchHandler{
 		readIndex:  0,
 		operations: operations,
-		results:    make([]OperationResult, 0, len(operations)),
+		results:    make([]*OperationResult, 0, len(operations)),
 		err:        nil,
 	}
 
-	NewFlow(Info{
-		Info: group.Info{
-			FlowInfo: work.FlowInfo{
-				WorkerCount:       1,
-				StopWhenWorkError: true,
-			},
+	works := make([]flow.Work, len(operations))
+	for _, operation := range operations {
+		works = append(works, operation)
+	}
+	NewHandler(Info{
+		Info: flow.Info{
+			WorkerCount:       1,
+			StopWhenWorkError: true,
 		},
+		WorkList:                    works,
 		MaxOperationCountPerRequest: 1000,
-	}).ReadOperation(func() (operation Operation, complete bool) {
-		if handler.readIndex >= len(handler.operations) {
-			return nil, false
-		}
-		operation = handler.operations[handler.readIndex]
-		handler.readIndex += 1
-		return
-	}).OnResult(func(operation Operation, result OperationResult) {
-		handler.results = append(handler.results, result)
-	}).OnError(func(err error) {
-		handler.err = err
+	}).OnResult(func(operation Operation, result *OperationResult) {
+		h.results = append(h.results, result)
+	}).OnError(func(err *data.CodeError) {
+		h.err = err
 	}).Start()
 
-	return handler.results, handler.err
+	return h.results, h.err
 }
 
 type someBatchHandler struct {
 	readIndex  int
 	operations []Operation
-	results    []OperationResult
-	err        error
+	results    []*OperationResult
+	err        *data.CodeError
 }

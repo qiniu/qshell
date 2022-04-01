@@ -2,7 +2,6 @@ package bucket
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
@@ -32,15 +31,15 @@ type ListObject storage.ListItem
 
 // List list 某个 bucket 所有的文件
 func List(info ListApiInfo,
-	objectHandler func(marker string, object ListObject) (shouldContinue bool, err error),
-	errorHandler func(marker string, err error)) {
+	objectHandler func(marker string, object ListObject) (shouldContinue bool, err *data.CodeError),
+	errorHandler func(marker string, err *data.CodeError)) {
 	if objectHandler == nil {
 		log.Error(alert.CannotEmpty("list bucket: object handler", ""))
 		return
 	}
 
 	if errorHandler == nil {
-		errorHandler = func(marker string, err error) {
+		errorHandler = func(marker string, err *data.CodeError) {
 			log.ErrorF("marker: %s", info.Marker)
 			log.ErrorF("list bucket Error: %v", err)
 		}
@@ -62,11 +61,11 @@ func List(info ListApiInfo,
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
 		entries, lErr := bucketManager.ListBucketContext(workspace.GetContext(), info.Bucket, info.Prefix, info.Delimiter, info.Marker)
 		if entries == nil && lErr == nil {
-			lErr = errors.New("meet empty body when list not completed")
+			lErr = data.NewEmptyError().AppendDesc("meet empty body when list not completed")
 		}
 
 		if lErr != nil {
-			errorHandler(info.Marker, lErr)
+			errorHandler(info.Marker, data.ConvertError(lErr))
 			// 空间不存在，直接结束
 			if strings.Contains(lErr.Error(), "query region error, no such bucket") ||
 				strings.Contains(lErr.Error(), "incorrect zone") {
@@ -135,9 +134,9 @@ type ListToFileApiInfo struct {
 	Readable   bool
 }
 
-func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err error)) {
+func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *data.CodeError)) {
 	if errorHandler == nil {
-		errorHandler = func(marker string, err error) {
+		errorHandler = func(marker string, err *data.CodeError) {
 			log.ErrorF("marker: %s", marker)
 			log.ErrorF("list bucket Error: %v", err)
 		}
@@ -159,7 +158,7 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 		}
 		listResultFh, openErr = os.OpenFile(info.FilePath, mode, 0666)
 		if openErr != nil {
-			errorHandler("", fmt.Errorf("failed to open list result file `%s`, error:%v", info.FilePath, openErr))
+			errorHandler("", data.NewEmptyError().AppendDescF("failed to open list result file `%s`, error:%v", info.FilePath, openErr))
 			return
 		}
 		defer listResultFh.Close()
@@ -171,7 +170,7 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 		_, _ = bWriter.WriteString("Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser\t\n")
 		_ = bWriter.Flush()
 	}
-	List(info.ListApiInfo, func(marker string, object ListObject) (bool, error) {
+	List(info.ListApiInfo, func(marker string, object ListObject) (bool, *data.CodeError) {
 		var fileSize interface{}
 		if info.Readable {
 			fileSize = utils.BytesToReadable(object.Fsize)
@@ -184,11 +183,11 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err err
 			object.PutTime, object.MimeType, object.Type, object.EndUser)
 		_, wErr := bWriter.WriteString(lineData)
 		if wErr != nil {
-			return false, errors.New("write error:" + wErr.Error())
+			return false, data.NewEmptyError().AppendDesc("write error:" + wErr.Error())
 		}
 		fErr := bWriter.Flush()
 		if fErr != nil {
-			return false, errors.New("flush error:" + fErr.Error())
+			return false, data.NewEmptyError().AppendDesc("flush error:" + fErr.Error())
 		}
 		return true, nil
 	}, errorHandler)

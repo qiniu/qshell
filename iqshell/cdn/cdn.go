@@ -1,11 +1,10 @@
 package cdn
 
 import (
-	"errors"
-	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/cdn"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
@@ -16,10 +15,10 @@ const (
 )
 
 // GetCdnManager 获取CdnManager
-func getCdnManager() (cdnManager *cdn.CdnManager, err error) {
+func getCdnManager() (cdnManager *cdn.CdnManager, err *data.CodeError) {
 	acc, gErr := account.GetAccount()
 	if gErr != nil {
-		err = errors.New(fmt.Sprintf("GetCdnManager error: %v\n", gErr))
+		err = data.NewEmptyError().AppendDescF("GetCdnManager error: %v\n", gErr)
 		return
 	}
 
@@ -28,37 +27,35 @@ func getCdnManager() (cdnManager *cdn.CdnManager, err error) {
 	return
 }
 
-func Prefetch(urls []string) (err error) {
+func Prefetch(urls []string) *data.CodeError {
 	cdnManager, err := getCdnManager()
 	if err != nil {
 		return err
 	}
 
-	resp, err := cdnManager.PrefetchUrls(urls)
-	if err != nil {
-		err = errors.New("CDN prefetch error:" + err.Error())
+	if resp, e := cdnManager.PrefetchUrls(urls); e != nil {
+		return data.NewEmptyError().AppendDescF("CDN prefetch error:%v", e)
 	} else if resp.Code != 200 {
-		err = errors.New(fmt.Sprintf("CDN prefetch Code: %d, Error: %s", resp.Code, resp.Error))
+		return data.NewEmptyError().AppendDescF("CDN prefetch Code: %d, Error: %s", resp.Code, resp.Error)
 	} else {
 		log.InfoF("CDN prefetch Code: %d, FlowInfo: %s", resp.Code, resp.Error)
 	}
-	return
+	return nil
 }
 
-func Refresh(urls []string, dirs []string) (err error) {
+func Refresh(urls []string, dirs []string) *data.CodeError {
 	cdnManager, err := getCdnManager()
 	if err != nil {
 		return err
 	}
 
 	log.DebugF("cdnRefresh, url size: %d, dir size: %d", len(urls), len(dirs))
-	resp, err := cdnManager.RefreshUrlsAndDirs(urls, dirs)
-	if err != nil {
-		err = errors.New("CDN refresh error:" + err.Error())
+	if resp, e := cdnManager.RefreshUrlsAndDirs(urls, dirs); e != nil {
+		return data.NewEmptyError().AppendDescF("CDN refresh error:%v", err)
 	} else if resp.Code != 200 {
-		err = errors.New(fmt.Sprintf("CDN refresh Code: %d, Error: %s", resp.Code, resp.Error))
+		return data.NewEmptyError().AppendDescF("CDN refresh Code: %d, Error: %s", resp.Code, resp.Error)
 	} else {
 		log.InfoF("CDN refresh Code: %d, FlowInfo: %s", resp.Code, resp.Error)
 	}
-	return
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"os"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -14,7 +15,7 @@ type RpcInfo struct {
 	Params []string
 }
 
-func (info *RpcInfo) Check() error {
+func (info *RpcInfo) Check() *data.CodeError {
 	return nil
 }
 

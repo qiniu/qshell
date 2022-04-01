@@ -2,16 +2,16 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"time"
 )
 
 type Resume interface {
-	InitServer(ctx context.Context) error
-	UploadBlock(ctx context.Context, index int, data []byte) error
-	Complete(ctx context.Context, ret interface{}) (err error)
+	InitServer(ctx context.Context) *data.CodeError
+	UploadBlock(ctx context.Context, index int, data []byte) *data.CodeError
+	Complete(ctx context.Context, ret interface{}) (err *data.CodeError)
 }
 
 type ResumeInfo struct {
@@ -51,7 +51,7 @@ func NewRetryResume(r Resume, retryMax int, retryInterval time.Duration) Resume 
 	}
 }
 
-func (r retryResume) InitServer(ctx context.Context) (err error) {
+func (r retryResume) InitServer(ctx context.Context) (err *data.CodeError) {
 	retryTimes := 0
 	for {
 		err = r.resume.InitServer(ctx)
@@ -69,7 +69,7 @@ func (r retryResume) InitServer(ctx context.Context) (err error) {
 	return err
 }
 
-func (r retryResume) UploadBlock(ctx context.Context, index int, data []byte) (err error) {
+func (r retryResume) UploadBlock(ctx context.Context, index int, data []byte) (err *data.CodeError) {
 	retryTimes := 0
 	for {
 		err = r.resume.UploadBlock(ctx, index, data)
@@ -86,12 +86,12 @@ func (r retryResume) UploadBlock(ctx context.Context, index int, data []byte) (e
 	return err
 }
 
-func (r retryResume) Complete(ctx context.Context, ret interface{}) (err error) {
+func (r retryResume) Complete(ctx context.Context, ret interface{}) (err *data.CodeError) {
 	retryTimes := 0
 	for {
 		err = r.resume.Complete(ctx, &ret)
 		if err != nil && retryTimes >= r.retryMax {
-			err = fmt.Errorf("resume api complete error:%v", err)
+			err = data.NewEmptyError().AppendDescF("resume api complete error:%v", err)
 			return
 		}
 		if err == nil {

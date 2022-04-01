@@ -2,11 +2,11 @@ package workspace
 
 import (
 	"context"
-	"errors"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 const (
@@ -57,14 +57,14 @@ func GetStorageConfig() *storage.Config {
 	}
 }
 
-func GetAccount() (account.Account, error) {
+func GetAccount() (account.Account, *data.CodeError) {
 	if currentAccount == nil {
-		return account.Account{}, errors.New("can't get current user")
+		return account.Account{}, data.NewEmptyError().AppendDesc("can't get current user")
 	}
 	return *currentAccount, nil
 }
 
-func GetMac() (mac *qbox.Mac, err error) {
+func GetMac() (mac *qbox.Mac, err *data.CodeError) {
 	acc, gErr := GetAccount()
 	if gErr != nil {
 		err = gErr

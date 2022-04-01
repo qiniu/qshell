@@ -1,20 +1,20 @@
 package flow
 
 import (
-	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
 )
 
-func NewFileWorkProvider(filePath string, creator WorkCreator) (WorkProvider, error) {
+func NewFileWorkProvider(filePath string, creator WorkCreator) (WorkProvider, *data.CodeError) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("FileWorkProvider, open file error:%v", err)
+		return nil, data.NewEmptyError().AppendDescF("FileWorkProvider, open file error:%v", err)
 	}
 
 	provider, err := NewReaderWorkProvider(f, creator)
 	if err != nil {
-		return nil, err
+		return nil, data.ConvertError(err)
 	}
 
 	workCount, err := utils.FileLineCounts(filePath)
@@ -37,6 +37,6 @@ func (p *fileWorkProvider) WorkTotalCount() int64 {
 	return p.workCount
 }
 
-func (p *fileWorkProvider) Provide() (hasMore bool, work Work, err error) {
+func (p *fileWorkProvider) Provide() (hasMore bool, work Work, err *data.CodeError) {
 	return p.workProvider.Provide()
 }

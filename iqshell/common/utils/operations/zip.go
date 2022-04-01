@@ -3,6 +3,7 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
@@ -13,7 +14,7 @@ type ZipInfo struct {
 	UnzipPath   string
 }
 
-func (info *ZipInfo) Check() error {
+func (info *ZipInfo) Check() *data.CodeError {
 	if len(info.ZipFilePath) == 0 {
 		return alert.CannotEmptyError("QiniuZipFilePath", "")
 	}

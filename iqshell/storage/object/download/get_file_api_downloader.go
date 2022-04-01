@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -16,23 +17,23 @@ type getFileApiDownloader struct {
 	mac      *qbox.Mac
 }
 
-func (g *getFileApiDownloader) Download(info *ApiInfo) (response *http.Response, err error) {
+func (g *getFileApiDownloader) Download(info *ApiInfo) (response *http.Response, err *data.CodeError) {
 	if len(info.ToFile) == 0 {
 		info.ToFile = info.Key
 	}
 	return g.download(info)
 }
 
-func (g *getFileApiDownloader) download(info *ApiInfo) (response *http.Response, err error) {
+func (g *getFileApiDownloader) download(info *ApiInfo) (*http.Response, *data.CodeError) {
 	// /getfile/<ak>/<bucket>/<UrlEncodedKey>[?e=<Deadline>&token=<DownloadToken>
 	url := utils.Endpoint(g.useHttps, info.Domain)
 	url = strings.Join([]string{url, "getfile", g.mac.AccessKey, info.Bucket, info.Key}, "/")
-	url, err = PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
+	url, err := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
 		PublicUrl: url,
 		Deadline:  7 * 24 * 3600,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("PublicUrlToPrivate error:%v", err)
+		return nil, data.NewEmptyError().AppendDescF("PublicUrlToPrivate error:%v", err)
 	}
 
 	log.DebugF("get file api download, url:%s", url)
@@ -52,5 +53,7 @@ func (g *getFileApiDownloader) download(info *ApiInfo) (response *http.Response,
 	if len(info.Referer) > 0 {
 		headers.Add("Referer", info.Referer)
 	}
-	return storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+
+	response, rErr := storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+	return response, data.ConvertError(rErr)
 }

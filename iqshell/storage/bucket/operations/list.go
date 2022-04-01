@@ -1,9 +1,9 @@
 package operations
 
 import (
-	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"strconv"
@@ -26,7 +26,7 @@ type ListInfo struct {
 	Readable   bool
 }
 
-func (info *ListInfo) Check() error {
+func (info *ListInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
@@ -66,38 +66,38 @@ func List(cfg *iqshell.Config, info ListInfo) {
 		FilePath:   info.SaveToFile,
 		AppendMode: info.AppendMode,
 		Readable:   info.Readable,
-	}, func(marker string, err error) {
+	}, func(marker string, err *data.CodeError) {
 		log.ErrorF("marker: %s", marker)
 		log.ErrorF("list bucket Error: %v", err)
 	})
 }
 
-func parseDate(dateString string) (time.Time, error) {
+func parseDate(dateString string) (time.Time, *data.CodeError) {
 	if len(dateString) == 0 {
 		return time.Time{}, nil
 	}
 
 	fields := strings.Split(dateString, "-")
 	if len(fields) > 6 {
-		return time.Time{}, fmt.Errorf("date format must be year-month-day-hour-minute-second")
+		return time.Time{}, data.NewEmptyError().AppendDescF("date format must be year-month-day-hour-minute-second")
 	}
 
 	var dateItems [6]int
 	for ind, field := range fields {
 		field, err := strconv.Atoi(field)
 		if err != nil {
-			return time.Time{}, fmt.Errorf("date format must be year-month-day-hour-minute-second, each field must be integer")
+			return time.Time{}, data.NewEmptyError().AppendDescF("date format must be year-month-day-hour-minute-second, each field must be integer")
 		}
 		dateItems[ind] = field
 	}
 	return time.Date(dateItems[0], time.Month(dateItems[1]), dateItems[2], dateItems[3], dateItems[4], dateItems[5], 0, time.Local), nil
 }
 
-func (info ListInfo) getStartDate() (time.Time, error) {
+func (info ListInfo) getStartDate() (time.Time, *data.CodeError) {
 	return parseDate(info.StartDate)
 }
 
-func (info ListInfo) getEndDate() (time.Time, error) {
+func (info ListInfo) getEndDate() (time.Time, *data.CodeError) {
 	return parseDate(info.EndDate)
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -24,7 +25,7 @@ type FetchInfo struct {
 	AwsBucketInfo ListBucketInfo
 }
 
-func (info *FetchInfo) Check() error {
+func (info *FetchInfo) Check() *data.CodeError {
 	// check AWS bucket
 	if info.AwsBucketInfo.Bucket == "" {
 		return alert.CannotEmptyError("AWS bucket", "")
@@ -59,9 +60,9 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 	}
 
 	resultExport, err := export.NewFileExport(export.FileExporterConfig{
-		SuccessExportFilePath:  info.BatchInfo.SuccessExportFilePath,
-		FailExportFilePath:     info.BatchInfo.FailExportFilePath,
-		OverrideExportFilePath: info.BatchInfo.OverwriteExportFilePath,
+		SuccessExportFilePath:   info.BatchInfo.SuccessExportFilePath,
+		FailExportFilePath:      info.BatchInfo.FailExportFilePath,
+		OverwriteExportFilePath: info.BatchInfo.OverwriteExportFilePath,
 	})
 
 	if err != nil {

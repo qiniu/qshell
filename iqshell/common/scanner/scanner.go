@@ -2,8 +2,7 @@ package scanner
 
 import (
 	"bufio"
-	"errors"
-	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
@@ -21,12 +20,12 @@ type Scanner interface {
 }
 
 // NewScanner 输入
-func NewScanner(info Info) (Scanner, error) {
+func NewScanner(info Info) (Scanner, *data.CodeError) {
 	s := &lineScanner{}
 	if len(info.InputFile) > 0 {
 		f, err := os.Open(info.InputFile)
 		if err != nil {
-			return nil, fmt.Errorf("open inout file error:%v", err)
+			return nil, data.NewEmptyError().AppendDescF("open inout file error:%v", err)
 		}
 		s.lineCount, _ = utils.FileLineCounts(info.InputFile)
 		s.file = f
@@ -36,7 +35,7 @@ func NewScanner(info Info) (Scanner, error) {
 		s.scanner = bufio.NewScanner(os.Stdin)
 		log.Info("read data from stdin, you can end input with ctrl + D and cancel by ctrl + C")
 	} else {
-		return nil, errors.New("no scanner source")
+		return nil, data.NewEmptyError().AppendDesc("no scanner source")
 	}
 	return s, nil
 }
@@ -64,5 +63,9 @@ func (b *lineScanner) Close() error {
 	if b.file == nil {
 		return nil
 	}
-	return b.file.Close()
+	if e := b.file.Close(); e != nil {
+		return data.NewEmptyError().AppendError(e)
+	} else {
+		return nil
+	}
 }

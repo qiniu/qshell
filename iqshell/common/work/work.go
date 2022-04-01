@@ -27,9 +27,9 @@ func NewFlowHandler(info FlowInfo) FlowHandler {
 type flowHandler struct {
 	info                *FlowInfo
 	workReader          func() (work Work, hasMore bool)
-	workHandler         func(work Work) (Result, error)
-	willWorkHandler     func(work Work) (shouldContinue bool, err error)
-	workErrorHandler    func(action Work, err error)
+	workHandler         func(work Work) (Result, *data.CodeError)
+	willWorkHandler     func(work Work) (shouldContinue bool, err *data.CodeError)
+	workErrorHandler    func(action Work, err *data.CodeError)
 	workResultHandler   func(action Work, result Result)
 	workCompleteHandler func()
 }
@@ -71,7 +71,7 @@ func (b *flowHandler) readWork() (Work, bool) {
 	return nil, true
 }
 
-func (b *flowHandler) willWork(work Work) (bool, error) {
+func (b *flowHandler) willWork(work Work) (bool, *data.CodeError) {
 	if b.info.WorkOverseer != nil {
 		if b.info.WorkOverseer.HasDone(work) {
 			return false, data.NewAlreadyDoneError("")
@@ -86,11 +86,11 @@ func (b *flowHandler) willWork(work Work) (bool, error) {
 	}
 }
 
-func (b *flowHandler) doWork(work Work) (Result, error) {
+func (b *flowHandler) doWork(work Work) (Result, *data.CodeError) {
 	if b.workHandler != nil {
 		return b.workHandler(work)
 	}
-	return nil, errors.New("no worker")
+	return nil, data.NewEmptyError().AppendDesc("no worker")
 }
 
 func (b *flowHandler) handlerActionResult(work Work, result Result) {
@@ -103,7 +103,7 @@ func (b *flowHandler) handlerActionResult(work Work, result Result) {
 	}
 }
 
-func (b *flowHandler) handleActionError(work Work, err error) {
+func (b *flowHandler) handleActionError(work Work, err *data.CodeError) {
 	if b.info.WorkOverseer != nil {
 		b.info.WorkOverseer.WorkDone(work, nil, err)
 	}

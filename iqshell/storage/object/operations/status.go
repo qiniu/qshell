@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/group"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -14,7 +15,7 @@ import (
 
 type StatusInfo object.StatusApiInfo
 
-func (info *StatusInfo) Check() error {
+func (info *StatusInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
@@ -49,7 +50,7 @@ type BatchStatusInfo struct {
 	Bucket    string
 }
 
-func (info *BatchStatusInfo) Check() error {
+func (info *BatchStatusInfo) Check() *data.CodeError {
 	if err := info.BatchInfo.Check(); err != nil {
 		return err
 	}
@@ -67,44 +68,37 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 		return
 	}
 
-	handler, err := group.NewHandler(info.BatchInfo.Info)
+	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	batch.NewFlow(info.BatchInfo).ReadOperation(func() (operation batch.Operation, hasMore bool) {
-		line, success := handler.Scanner().ScanLine()
-		if !success {
-			return nil, false
+	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+		key := items[0]
+		if key != "" {
+			return &object.StatusApiInfo{
+				Bucket: info.Bucket,
+				Key:    key,
+			}, nil
 		}
-		items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
-		if len(items) > 0 {
-			key := items[0]
-			if key != "" {
-				return object.StatusApiInfo{
-					Bucket: info.Bucket,
-					Key:    key,
-				}, true
-			}
-		}
-		return nil, true
-	}).OnResult(func(operation batch.Operation, result batch.OperationResult) {
-		apiInfo, ok := (operation).(object.StatusApiInfo)
+		return nil, alert.Error("key invalid", "")
+	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+		apiInfo, ok := (operation).(*object.StatusApiInfo)
 		if !ok {
 			return
 		}
-		in := StatusInfo(apiInfo)
+		in := (*StatusInfo)(apiInfo)
 		if result.Code != 200 || result.Error != "" {
-			handler.Export().Fail().ExportF("%s\t%d\t%s", in.Key, result.Code, result.Error)
+			exporter.Fail().ExportF("%s\t%d\t%s", in.Key, result.Code, result.Error)
 			log.ErrorF("Status Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)
 		} else {
 			status := fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d",
 				in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
-			handler.Export().Success().Export(status)
+			exporter.Success().Export(status)
 			log.Alert(status)
 		}
-	}).OnError(func(err error) {
+	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch Status error:%v:", err)
 	}).Start()
 }

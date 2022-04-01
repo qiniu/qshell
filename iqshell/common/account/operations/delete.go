@@ -12,7 +12,7 @@ import (
 type CleanInfo struct {
 }
 
-func (info *CleanInfo) Check() error {
+func (info *CleanInfo) Check() *data.CodeError {
 	return nil
 }
 
@@ -34,7 +34,7 @@ type RemoveInfo struct {
 	Name string
 }
 
-func (info *RemoveInfo) Check() error {
+func (info *RemoveInfo) Check() *data.CodeError {
 	if len(info.Name) == 0 {
 		return alert.CannotEmptyError("user name", "")
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
 )
@@ -19,7 +20,7 @@ type ListBucketInfo struct {
 	SaveToFile string
 }
 
-func (info *ListBucketInfo) Check() error {
+func (info *ListBucketInfo) Check() *data.CodeError {
 	if len(info.DataCenter) == 0 {
 		return alert.CannotEmptyError("DataCenter", "")
 	}

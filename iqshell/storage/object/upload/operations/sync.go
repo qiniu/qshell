@@ -1,9 +1,9 @@
 package operations
 
 import (
-	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -11,7 +11,7 @@ import (
 
 type SyncInfo UploadInfo
 
-func (info *SyncInfo) Check() error {
+func (info *SyncInfo) Check() *data.CodeError {
 	if len(info.FilePath) == 0 {
 		return alert.CannotEmptyError("SrcResUrl", "")
 	}
@@ -34,9 +34,7 @@ func SyncFile(cfg *iqshell.Config, info SyncInfo) {
 	info.Progress = progress.NewPrintProgress(" 进度")
 	ret, err := uploadFile((*UploadInfo)(&info))
 	if err != nil {
-		if v, ok := err.(*storage.ErrorInfo); ok {
-			log.ErrorF("Sync file error %d: %s, Reqid: %s", v.Code, v.Err, v.Reqid)
-		}
+		log.ErrorF("Sync file error %v", err)
 	} else {
 		log.Alert("")
 		log.Alert("-------------- File FlowInfo --------------")

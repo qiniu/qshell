@@ -3,8 +3,8 @@ package utils
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -36,20 +36,20 @@ func FormatFileSize(size int64) (result string) {
 	return
 }
 
-func UnMarshalFromFile(filePath string, v interface{}) error {
+func UnMarshalFromFile(filePath string, v interface{}) *data.CodeError {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return errors.New("unmarshal: open file error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("unmarshal: open file").AppendError(err)
 	}
 
-	data, err := ioutil.ReadAll(file)
+	d, err := ioutil.ReadAll(file)
 	if err != nil {
-		return errors.New("unmarshal: read file error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("unmarshal: read file").AppendError(err)
 	}
 
-	err = json.Unmarshal(data, v)
+	err = json.Unmarshal(d, v)
 	if err != nil {
-		return errors.New("unmarshal: unmarshal error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("unmarshal: unmarshal").AppendError(err)
 	}
 
 	return nil
@@ -59,7 +59,7 @@ func IsNetworkSource(filePath string) bool {
 	return strings.HasPrefix(filePath, "http://") || strings.HasPrefix(filePath, "https://")
 }
 
-func FileSize(filePath string) (fileSize int64, err error) {
+func FileSize(filePath string) (fileSize int64, err *data.CodeError) {
 	if IsNetworkSource(filePath) {
 		return NetworkFileLength(filePath)
 	} else {
@@ -67,28 +67,25 @@ func FileSize(filePath string) (fileSize int64, err error) {
 	}
 }
 
-func LocalFileSize(filePath string) (fileSize int64, err error) {
+func LocalFileSize(filePath string) (int64, *data.CodeError) {
 	fileStatus, err := os.Stat(filePath)
 	if err != nil {
-		err = errors.New("get file size: get status error:" + err.Error())
-		return
+		return 0, data.NewEmptyError().AppendDescF("get file size: get status error:%v", err)
 	}
-
-	fileSize = fileStatus.Size()
-	return
+	return fileStatus.Size(), nil
 }
 
-func NetworkFileLength(srcResUrl string) (fileSize int64, err error) {
+func NetworkFileLength(srcResUrl string) (fileSize int64, err *data.CodeError) {
 	resp, respErr := http.Head(srcResUrl)
 	if respErr != nil {
-		err = fmt.Errorf("New head request failed, %s", respErr.Error())
+		err = data.NewEmptyError().AppendDescF("New head request failed, %s", respErr.Error())
 		return
 	}
 	defer resp.Body.Close()
 
 	contentLength := resp.Header.Get("Content-Length")
 	if contentLength == "" {
-		err = errors.New("head request with no Content-Length found error")
+		err = data.NewEmptyError().AppendDesc("head request with no Content-Length found error")
 		return
 	}
 
@@ -97,10 +94,10 @@ func NetworkFileLength(srcResUrl string) (fileSize int64, err error) {
 	return
 }
 
-func FileLineCounts(filePath string) (count int64, err error) {
+func FileLineCounts(filePath string) (count int64, err *data.CodeError) {
 	fp, openErr := os.Open(filePath)
 	if openErr != nil {
-		return 0, openErr
+		return 0, data.NewEmptyError().AppendError(openErr)
 	}
 	defer fp.Close()
 
@@ -111,14 +108,14 @@ func FileLineCounts(filePath string) (count int64, err error) {
 	return
 }
 
-func CreateFileIfNotExist(path string) error {
+func CreateFileIfNotExist(path string) *data.CodeError {
 	if exist, err := ExistFile(path); err == nil && exist {
 		return nil
 	}
 	return CreateFileDirIfNotExist(path)
 }
 
-func CreateFileDirIfNotExist(path string) error {
+func CreateFileDirIfNotExist(path string) *data.CodeError {
 	dir := filepath.Dir(path)
 	if err := CreateDirIfNotExist(dir); err != nil {
 		return err
@@ -126,29 +123,33 @@ func CreateFileDirIfNotExist(path string) error {
 	return nil
 }
 
-func ExistFile(path string) (bool, error) {
+func ExistFile(path string) (bool, *data.CodeError) {
 	if s, err := os.Stat(path); err == nil {
 		return !s.IsDir(), nil
 	} else if os.IsNotExist(err) {
 		return false, nil
 	} else {
-		return false, err
+		return false, data.NewEmptyError().AppendError(err)
 	}
 }
 
-func CreateDirIfNotExist(path string) error {
+func CreateDirIfNotExist(path string) *data.CodeError {
 	if exist, err := ExistDir(path); err == nil && exist {
 		return nil
 	}
-	return os.MkdirAll(path, os.ModePerm)
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+		return data.NewEmptyError().AppendError(err)
+	} else {
+		return nil
+	}
 }
 
-func ExistDir(path string) (bool, error) {
+func ExistDir(path string) (bool, *data.CodeError) {
 	if s, err := os.Stat(path); err == nil {
 		return s.IsDir(), nil
 	} else if os.IsNotExist(err) {
 		return false, nil
 	} else {
-		return false, err
+		return false, data.NewEmptyError().AppendError(err)
 	}
 }
