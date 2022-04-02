@@ -18,8 +18,9 @@ import (
 
 type UploadInfo struct {
 	upload.ApiInfo
-	Policy          *storage.PutPolicy
-	DeleteOnSuccess bool
+	RelativePathToSrcPath string // 相对与上传文件夹的路径信息
+	Policy                *storage.PutPolicy
+	DeleteOnSuccess       bool
 }
 
 func (info *UploadInfo) Check() *data.CodeError {

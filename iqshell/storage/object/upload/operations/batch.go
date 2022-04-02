@@ -4,12 +4,19 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/synchronized"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type BatchUploadInfo struct {
@@ -156,309 +163,178 @@ func batchUpload(info BatchUpload2Info) {
 }
 
 func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath string) {
-	//exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
-	//if err != nil {
-	//	log.Error(err)
-	//	return
-	//}
-	//
-	//mac, err := workspace.GetMac()
-	//if err != nil {
-	//	log.Error("get mac error:" + err.Error())
-	//	return
-	//}
-	//
-	//timeStart := time.Now()
-	//syncLocker := synchronized.NewSynchronized(nil)
-	//var totalFileCount = handler.Scanner().LineCount()
-	//var currentFileCount int64
-	//var successFileCount int64
-	//var failureFileCount int64
-	//var notOverwriteCount int64
-	//var skippedFileCount int64
-	//
-	//f := &flow.Flow{}
-	//// 配置 work provider
-	//workCreator := flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, func(items []string) (work flow.Work, err *data.CodeError) {
-	//	if len(items) < 3 {
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		log.InfoF("Skip by invalid line, items should more than 2:%s", line)
-	//		return nil, true
-	//	}
-	//	fileRelativePath := items[0]
-	//
-	//	//check skip local file or folder
-	//	if skip, prefix := uploadConfig.HitByPathPrefixes(fileRelativePath); skip {
-	//		log.InfoF("Skip by path prefix `%s` for local file path `%s`", prefix, fileRelativePath)
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		return nil, true
-	//	}
-	//
-	//	if skip, prefix := uploadConfig.HitByFilePrefixes(fileRelativePath); skip {
-	//		log.InfoF("Skip by file prefix `%s` for local file path `%s`", prefix, fileRelativePath)
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		return nil, true
-	//	}
-	//
-	//	if skip, fixedStr := uploadConfig.HitByFixesString(fileRelativePath); skip {
-	//		log.InfoF("Skip by fixed string `%s` for local file path `%s`", fixedStr, fileRelativePath)
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		return nil, true
-	//	}
-	//
-	//	if skip, suffix := uploadConfig.HitBySuffixes(fileRelativePath); skip {
-	//		log.InfoF("Skip by suffix `%s` for local file `%s`", suffix, fileRelativePath)
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		return nil, true
-	//	}
-	//
-	//	//pack the upload file key
-	//	fileSize, _ := strconv.ParseInt(items[1], 10, 64)
-	//	modifyTime, _ := strconv.ParseInt(items[2], 10, 64)
-	//	key := fileRelativePath
-	//	//check ignore dir
-	//	if uploadConfig.IsIgnoreDir() {
-	//		key = filepath.Base(key)
-	//	}
-	//	//check prefix
-	//	if data.NotEmpty(uploadConfig.KeyPrefix) {
-	//		key = strings.Join([]string{uploadConfig.KeyPrefix, key}, "")
-	//	}
-	//	//convert \ to / under windows
-	//	if utils.IsWindowsOS() {
-	//		key = strings.Replace(key, "\\", "/", -1)
-	//	}
-	//	//check file encoding
-	//	if data.NotEmpty(uploadConfig.FileEncoding) && utils.IsGBKEncoding(uploadConfig.FileEncoding) {
-	//		key, _ = utils.Gbk2Utf8(key)
-	//	}
-	//	log.DebugF("Key:%s FileSize:%d ModifyTime:%d", key, fileSize, modifyTime)
-	//
-	//	localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
-	//	apiInfo := &UploadInfo{
-	//		ApiInfo: upload.ApiInfo{
-	//			FilePath:         localFilePath,
-	//			ToBucket:         uploadConfig.Bucket,
-	//			SaveKey:          key,
-	//			MimeType:         "",
-	//			FileType:         uploadConfig.FileType,
-	//			CheckExist:       uploadConfig.CheckExists,
-	//			CheckHash:        uploadConfig.CheckHash,
-	//			CheckSize:        uploadConfig.CheckSize,
-	//			Overwrite:        uploadConfig.Overwrite,
-	//			UpHost:           uploadConfig.UpHost,
-	//			FileStatusDBPath: dbPath,
-	//			TokenProvider:    nil,
-	//			TryTimes:         3,
-	//			TryInterval:      500 * time.Millisecond,
-	//			FileSize:         fileSize,
-	//			FileModifyTime:   modifyTime,
-	//			DisableForm:      uploadConfig.DisableForm,
-	//			DisableResume:    uploadConfig.DisableResume,
-	//			UseResumeV2:      uploadConfig.ResumableAPIV2,
-	//			ChunkSize:        uploadConfig.ResumableAPIV2PartSize,
-	//			PutThreshold:     uploadConfig.PutThreshold,
-	//			Progress:         nil,
-	//		},
-	//		Policy:          uploadConfig.Policy,
-	//		DeleteOnSuccess: uploadConfig.DeleteOnSuccess,
-	//	}
-	//	apiInfo.TokenProvider = createTokenProviderWithMac(mac, apiInfo)
-	//	return apiInfo, hasMore
-	//})
-	//if provider, e := flow.NewWorkProviderOfFile(info.BatchInfo.InputFile, info.BatchInfo.EnableStdin, workCreator); e != nil {
-	//	return
-	//} else {
-	//	f.WorkProvider = provider
-	//}
-	//
-	//// 配置 worker provider
-	//f.WorkerProvider = flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
-	//	return flow.NewWorker(func(work flow.Work) (flow.Result, *data.CodeError) {
-	//		in := work.(PrivateUrlInfo)
-	//		if deadline, e := in.getDeadlineOfInt(); e != nil {
-	//			return nil, e
-	//		} else {
-	//			return download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
-	//				PublicUrl: in.PublicUrl,
-	//				Deadline:  deadline,
-	//			})
-	//		}
-	//	}), nil
-	//})
-	//
-	//// 配置时间监听
-	//f.EventListener = flow.EventListener{
-	//	WillWorkFunc:   nil,
-	//	OnWorkSkipFunc: nil,
-	//	OnWorkSuccessFunc: func(work flow.Work, result flow.Result) {
-	//		url := result.(string)
-	//		log.Alert(url)
-	//	},
-	//	OnWorkFailFunc: func(work flow.Work, err *data.CodeError) {
-	//		log.Error(err)
-	//	},
-	//}
-	//
-	//// 开始
-	//f.Start()
-	//work.NewFlowHandler(info.BatchInfo.FlowInfo).ReadWork(func() (work work.Work, hasMore bool) {
-	//	line, hasMore := handler.Scanner().ScanLine()
-	//	if !hasMore {
-	//		return
-	//	}
-	//
-	//	if len(line) == 0 {
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		log.InfoF("Skip by invalid line, items should more than 2:%s", line)
-	//		return
-	//	}
-	//
-	//	items := utils.SplitString(line, info.BatchInfo.ItemSeparate)
-	//	if len(items) < 3 {
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		log.InfoF("Skip by invalid line, items should more than 2:%s", line)
-	//		return nil, true
-	//	}
-	//	fileRelativePath := items[0]
-	//
-	//	//check skip local file or folder
-	//	if skip, prefix := uploadConfig.HitByPathPrefixes(fileRelativePath); skip {
-	//		log.InfoF("Skip by path prefix `%s` for local file path `%s`", prefix, fileRelativePath)
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		return nil, true
-	//	}
-	//
-	//	if skip, prefix := uploadConfig.HitByFilePrefixes(fileRelativePath); skip {
-	//		log.InfoF("Skip by file prefix `%s` for local file path `%s`", prefix, fileRelativePath)
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		return nil, true
-	//	}
-	//
-	//	if skip, fixedStr := uploadConfig.HitByFixesString(fileRelativePath); skip {
-	//		log.InfoF("Skip by fixed string `%s` for local file path `%s`", fixedStr, fileRelativePath)
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		return nil, true
-	//	}
-	//
-	//	if skip, suffix := uploadConfig.HitBySuffixes(fileRelativePath); skip {
-	//		log.InfoF("Skip by suffix `%s` for local file `%s`", suffix, fileRelativePath)
-	//		syncLocker.Do(func() { skippedFileCount += 1 })
-	//		return nil, true
-	//	}
-	//
-	//	//pack the upload file key
-	//	fileSize, _ := strconv.ParseInt(items[1], 10, 64)
-	//	modifyTime, _ := strconv.ParseInt(items[2], 10, 64)
-	//	key := fileRelativePath
-	//	//check ignore dir
-	//	if uploadConfig.IsIgnoreDir() {
-	//		key = filepath.Base(key)
-	//	}
-	//	//check prefix
-	//	if data.NotEmpty(uploadConfig.KeyPrefix) {
-	//		key = strings.Join([]string{uploadConfig.KeyPrefix, key}, "")
-	//	}
-	//	//convert \ to / under windows
-	//	if utils.IsWindowsOS() {
-	//		key = strings.Replace(key, "\\", "/", -1)
-	//	}
-	//	//check file encoding
-	//	if data.NotEmpty(uploadConfig.FileEncoding) && utils.IsGBKEncoding(uploadConfig.FileEncoding) {
-	//		key, _ = utils.Gbk2Utf8(key)
-	//	}
-	//	log.DebugF("Key:%s FileSize:%d ModifyTime:%d", key, fileSize, modifyTime)
-	//
-	//	localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
-	//	apiInfo := &UploadInfo{
-	//		ApiInfo: upload.ApiInfo{
-	//			FilePath:         localFilePath,
-	//			ToBucket:         uploadConfig.Bucket,
-	//			SaveKey:          key,
-	//			MimeType:         "",
-	//			FileType:         uploadConfig.FileType,
-	//			CheckExist:       uploadConfig.CheckExists,
-	//			CheckHash:        uploadConfig.CheckHash,
-	//			CheckSize:        uploadConfig.CheckSize,
-	//			Overwrite:        uploadConfig.Overwrite,
-	//			UpHost:           uploadConfig.UpHost,
-	//			FileStatusDBPath: dbPath,
-	//			TokenProvider:    nil,
-	//			TryTimes:         3,
-	//			TryInterval:      500 * time.Millisecond,
-	//			FileSize:         fileSize,
-	//			FileModifyTime:   modifyTime,
-	//			DisableForm:      uploadConfig.DisableForm,
-	//			DisableResume:    uploadConfig.DisableResume,
-	//			UseResumeV2:      uploadConfig.ResumableAPIV2,
-	//			ChunkSize:        uploadConfig.ResumableAPIV2PartSize,
-	//			PutThreshold:     uploadConfig.PutThreshold,
-	//			Progress:         nil,
-	//		},
-	//		Policy:          uploadConfig.Policy,
-	//		DeleteOnSuccess: uploadConfig.DeleteOnSuccess,
-	//	}
-	//	apiInfo.TokenProvider = createTokenProviderWithMac(mac, apiInfo)
-	//	return apiInfo, hasMore
-	//}).DoWork(func(work work.Work) (work.Result, *data.CodeError) {
-	//	syncLocker.Do(func() {
-	//		currentFileCount += 1
-	//	})
-	//	apiInfo := work.(*UploadInfo)
-	//
-	//	log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
-	//		float32(currentFileCount)*100/float32(totalFileCount))
-	//
-	//	res, err := uploadFile(apiInfo)
-	//
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	return res, nil
-	//}).OnWorkResult(func(work work.Work, result work.Result) {
-	//	apiInfo := work.(*UploadInfo)
-	//	res := result.(upload.ApiResult)
-	//	if res.IsOverWrite {
-	//		exporter.Override().ExportF("upload overwrite, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
-	//	} else if res.IsSkip {
-	//
-	//	} else {
-	//		exporter.Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
-	//	}
-	//
-	//	syncLocker.Do(func() {
-	//		if res.IsNotOverWrite {
-	//			notOverwriteCount += 1
-	//		} else if res.IsSkip {
-	//			skippedFileCount += 1
-	//		} else {
-	//			successFileCount += 1
-	//		}
-	//	})
-	//}).OnWorkError(func(work work.Work, err *data.CodeError) {
-	//	syncLocker.Do(func() {
-	//		failureFileCount += 1
-	//	})
-	//
-	//	apiInfo := work.(*UploadInfo)
-	//	exporter.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* path fileSize fileModifyTime */
-	//		apiInfo.FilePath, info.BatchInfo.ItemSeparate,
-	//		apiInfo.FileSize, info.BatchInfo.ItemSeparate,
-	//		apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
-	//		err)
-	//}).Start()
-	//
-	//log.Alert("--------------- Upload Result ---------------")
-	//log.AlertF("%20s%10d", "Total:", totalFileCount)
-	//log.AlertF("%20s%10d", "Success:", successFileCount)
-	//log.AlertF("%20s%10d", "Failure:", failureFileCount)
-	//log.AlertF("%20s%10d", "NotOverwrite:", notOverwriteCount)
-	//log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
-	//log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
-	//log.AlertF("---------------------------------------------")
-	//if workspace.GetConfig().Log.Enable() {
-	//	log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
-	//}
+	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	mac, err := workspace.GetMac()
+	if err != nil {
+		log.Error("get mac error:" + err.Error())
+		return
+	}
+
+	timeStart := time.Now()
+	syncLocker := synchronized.NewSynchronized(nil)
+	var totalFileCount int64
+	var currentFileCount int64
+	var successFileCount int64
+	var failureFileCount int64
+	var notOverwriteCount int64
+	var skippedFileCount int64
+
+	flow.New(info.BatchInfo.Info).
+		WorkProviderWithFile(info.BatchInfo.InputFile,
+			false,
+			flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate,
+				3,
+				func(items []string) (work flow.Work, err *data.CodeError) {
+					fileRelativePath := items[0]
+					//pack the upload file key
+					fileSize, _ := strconv.ParseInt(items[1], 10, 64)
+					modifyTime, _ := strconv.ParseInt(items[2], 10, 64)
+					key := fileRelativePath
+					//check ignore dir
+					if uploadConfig.IsIgnoreDir() {
+						key = filepath.Base(key)
+					}
+					//check prefix
+					if data.NotEmpty(uploadConfig.KeyPrefix) {
+						key = strings.Join([]string{uploadConfig.KeyPrefix, key}, "")
+					}
+					//convert \ to / under windows
+					if utils.IsWindowsOS() {
+						key = strings.Replace(key, "\\", "/", -1)
+					}
+					//check file encoding
+					if data.NotEmpty(uploadConfig.FileEncoding) && utils.IsGBKEncoding(uploadConfig.FileEncoding) {
+						key, _ = utils.Gbk2Utf8(key)
+					}
+					log.DebugF("Key:%s FileSize:%d ModifyTime:%d", key, fileSize, modifyTime)
+
+					localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
+					apiInfo := &UploadInfo{
+						ApiInfo: upload.ApiInfo{
+							FilePath:         localFilePath,
+							ToBucket:         uploadConfig.Bucket,
+							SaveKey:          key,
+							MimeType:         "",
+							FileType:         uploadConfig.FileType,
+							CheckExist:       uploadConfig.CheckExists,
+							CheckHash:        uploadConfig.CheckHash,
+							CheckSize:        uploadConfig.CheckSize,
+							Overwrite:        uploadConfig.Overwrite,
+							UpHost:           uploadConfig.UpHost,
+							FileStatusDBPath: dbPath,
+							TokenProvider:    nil,
+							TryTimes:         3,
+							TryInterval:      500 * time.Millisecond,
+							FileSize:         fileSize,
+							FileModifyTime:   modifyTime,
+							DisableForm:      uploadConfig.DisableForm,
+							DisableResume:    uploadConfig.DisableResume,
+							UseResumeV2:      uploadConfig.ResumableAPIV2,
+							ChunkSize:        uploadConfig.ResumableAPIV2PartSize,
+							PutThreshold:     uploadConfig.PutThreshold,
+							Progress:         nil,
+						},
+						RelativePathToSrcPath: fileRelativePath,
+						Policy:                uploadConfig.Policy,
+						DeleteOnSuccess:       uploadConfig.DeleteOnSuccess,
+					}
+					apiInfo.TokenProvider = createTokenProviderWithMac(mac, apiInfo)
+					return apiInfo, nil
+				})).WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
+		return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
+			syncLocker.Do(func() {
+				currentFileCount += 1
+			})
+			apiInfo := workInfo.Work.(*UploadInfo)
+
+			log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
+				float32(currentFileCount)*100/float32(totalFileCount))
+
+			res, err := uploadFile(apiInfo)
+
+			if err != nil {
+				return nil, err
+			}
+			return res, nil
+		}), nil
+	})).ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+
+		return false, nil
+	}).ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
+		apiInfo := workInfo.Work.(*UploadInfo)
+		if hit, prefix := uploadConfig.HitByPathPrefixes(apiInfo.RelativePathToSrcPath); hit {
+			return true, data.NewEmptyError().AppendDescF("Skip by path prefix `%s` for local file path `%s`", prefix, apiInfo.RelativePathToSrcPath)
+		}
+
+		if hit, prefix := uploadConfig.HitByFilePrefixes(apiInfo.RelativePathToSrcPath); hit {
+			return true, data.NewEmptyError().AppendDescF("Skip by file prefix `%s` for local file path `%s`", prefix, apiInfo.RelativePathToSrcPath)
+		}
+
+		if hit, fixedStr := uploadConfig.HitByFixesString(apiInfo.RelativePathToSrcPath); hit {
+			return true, data.NewEmptyError().AppendDescF("Skip by fixed string `%s` for local file path `%s`", fixedStr, apiInfo.RelativePathToSrcPath)
+		}
+
+		if hit, suffix := uploadConfig.HitBySuffixes(apiInfo.RelativePathToSrcPath); hit {
+			return true, data.NewEmptyError().AppendDescF("Skip by suffix `%s` for local file `%s`", suffix, apiInfo.RelativePathToSrcPath)
+		}
+		return
+	}).FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
+		totalFileCount = flow.WorkProvider.WorkTotalCount()
+		return nil
+	}).OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+		syncLocker.Do(func() {
+			skippedFileCount += 1
+		})
+		log.Info(err.Error())
+	}).OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
+		apiInfo := workInfo.Work.(*UploadInfo)
+		res := result.(upload.ApiResult)
+		if res.IsOverWrite {
+			exporter.Override().ExportF("upload overwrite, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
+		} else if res.IsSkip {
+
+		} else {
+			exporter.Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
+		}
+
+		syncLocker.Do(func() {
+			if res.IsNotOverWrite {
+				notOverwriteCount += 1
+			} else if res.IsSkip {
+				skippedFileCount += 1
+			} else {
+				successFileCount += 1
+			}
+		})
+	}).OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+		syncLocker.Do(func() {
+			failureFileCount += 1
+		})
+
+		apiInfo := workInfo.Work.(*UploadInfo)
+		exporter.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* path fileSize fileModifyTime */
+			apiInfo.FilePath, info.BatchInfo.ItemSeparate,
+			apiInfo.FileSize, info.BatchInfo.ItemSeparate,
+			apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
+			err)
+	}).Builder().Start()
+
+	log.Alert("--------------- Upload Result ---------------")
+	log.AlertF("%20s%10d", "Total:", totalFileCount)
+	log.AlertF("%20s%10d", "Success:", successFileCount)
+	log.AlertF("%20s%10d", "Failure:", failureFileCount)
+	log.AlertF("%20s%10d", "NotOverwrite:", notOverwriteCount)
+	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
+	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
+	log.AlertF("---------------------------------------------")
+	if workspace.GetConfig().Log.Enable() {
+		log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+	}
 }
 
 type BatchUploadConfigMouldInfo struct {

@@ -3,10 +3,26 @@ package flow
 import "github.com/qiniu/qshell/v2/iqshell/common/data"
 
 type EventListener struct {
+	FlowWillStartFunc func(flow *Flow) (err *data.CodeError)
+	FlowWillEndFunc   func(flow *Flow) (err *data.CodeError)
 	WillWorkFunc      func(work *WorkInfo) (shouldContinue bool, err *data.CodeError)
 	OnWorkSkipFunc    func(work *WorkInfo, err *data.CodeError)
 	OnWorkSuccessFunc func(work *WorkInfo, result Result)
 	OnWorkFailFunc    func(work *WorkInfo, err *data.CodeError)
+}
+
+func (e *EventListener) FlowWillStart(flow *Flow) (err *data.CodeError) {
+	if e.FlowWillStartFunc == nil {
+		return nil
+	}
+	return e.FlowWillStartFunc(flow)
+}
+
+func (e *EventListener) FlowWillEnd(flow *Flow) (err *data.CodeError) {
+	if e.FlowWillEndFunc == nil {
+		return nil
+	}
+	return e.FlowWillEndFunc(flow)
 }
 
 func (e *EventListener) WillWork(work *WorkInfo) (shouldContinue bool, err *data.CodeError) {

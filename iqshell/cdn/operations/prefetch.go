@@ -21,7 +21,6 @@ func (info *PrefetchInfo) Check() *data.CodeError {
 }
 
 func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
-	//TODO:
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {

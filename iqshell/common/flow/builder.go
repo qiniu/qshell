@@ -90,6 +90,22 @@ func (b *FlowBuilder) ShouldRedo(f func(workInfo *WorkInfo, workRecord *WorkReco
 	}
 }
 
+func (b *FlowBuilder) FlowWillStartFunc(f func(flow *Flow) (err *data.CodeError)) *FlowBuilder {
+	b.flow.EventListener.FlowWillStartFunc = f
+	return &FlowBuilder{
+		flow: b.flow,
+		err:  b.err,
+	}
+}
+
+func (b *FlowBuilder) FlowWillEndFunc(f func(flow *Flow) (err *data.CodeError)) *FlowBuilder {
+	b.flow.EventListener.FlowWillEndFunc = f
+	return &FlowBuilder{
+		flow: b.flow,
+		err:  b.err,
+	}
+}
+
 func (b *FlowBuilder) OnWillWork(f func(workInfo *WorkInfo) (shouldContinue bool, err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.WillWorkFunc = f
 	return &FlowBuilder{
