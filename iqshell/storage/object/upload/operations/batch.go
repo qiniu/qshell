@@ -245,81 +245,87 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 					}
 					apiInfo.TokenProvider = createTokenProviderWithMac(mac, apiInfo)
 					return apiInfo, nil
-				})).WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
-		return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
-			syncLocker.Do(func() {
-				currentFileCount += 1
-			})
+				})).
+		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
+			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
+				syncLocker.Do(func() {
+					currentFileCount += 1
+				})
+				apiInfo := workInfo.Work.(*UploadInfo)
+
+				log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
+					float32(currentFileCount)*100/float32(totalFileCount))
+
+				res, err := uploadFile(apiInfo)
+
+				if err != nil {
+					return nil, err
+				}
+				return res, nil
+			}), nil
+		})).
+		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
 			apiInfo := workInfo.Work.(*UploadInfo)
-
-			log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
-				float32(currentFileCount)*100/float32(totalFileCount))
-
-			res, err := uploadFile(apiInfo)
-
-			if err != nil {
-				return nil, err
+			if hit, prefix := uploadConfig.HitByPathPrefixes(apiInfo.RelativePathToSrcPath); hit {
+				return true, data.NewEmptyError().AppendDescF("Skip by path prefix `%s` for local file path `%s`", prefix, apiInfo.RelativePathToSrcPath)
 			}
-			return res, nil
-		}), nil
-	})).ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
-		apiInfo := workInfo.Work.(*UploadInfo)
-		if hit, prefix := uploadConfig.HitByPathPrefixes(apiInfo.RelativePathToSrcPath); hit {
-			return true, data.NewEmptyError().AppendDescF("Skip by path prefix `%s` for local file path `%s`", prefix, apiInfo.RelativePathToSrcPath)
-		}
 
-		if hit, prefix := uploadConfig.HitByFilePrefixes(apiInfo.RelativePathToSrcPath); hit {
-			return true, data.NewEmptyError().AppendDescF("Skip by file prefix `%s` for local file path `%s`", prefix, apiInfo.RelativePathToSrcPath)
-		}
+			if hit, prefix := uploadConfig.HitByFilePrefixes(apiInfo.RelativePathToSrcPath); hit {
+				return true, data.NewEmptyError().AppendDescF("Skip by file prefix `%s` for local file path `%s`", prefix, apiInfo.RelativePathToSrcPath)
+			}
 
-		if hit, fixedStr := uploadConfig.HitByFixesString(apiInfo.RelativePathToSrcPath); hit {
-			return true, data.NewEmptyError().AppendDescF("Skip by fixed string `%s` for local file path `%s`", fixedStr, apiInfo.RelativePathToSrcPath)
-		}
+			if hit, fixedStr := uploadConfig.HitByFixesString(apiInfo.RelativePathToSrcPath); hit {
+				return true, data.NewEmptyError().AppendDescF("Skip by fixed string `%s` for local file path `%s`", fixedStr, apiInfo.RelativePathToSrcPath)
+			}
 
-		if hit, suffix := uploadConfig.HitBySuffixes(apiInfo.RelativePathToSrcPath); hit {
-			return true, data.NewEmptyError().AppendDescF("Skip by suffix `%s` for local file `%s`", suffix, apiInfo.RelativePathToSrcPath)
-		}
-		return
-	}).FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
-		totalFileCount = flow.WorkProvider.WorkTotalCount()
-		return nil
-	}).OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
-		syncLocker.Do(func() {
-			skippedFileCount += 1
-		})
-		log.Info(err.Error())
-	}).OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-		apiInfo := workInfo.Work.(*UploadInfo)
-		res := result.(upload.ApiResult)
-		if res.IsOverWrite {
-			exporter.Override().ExportF("upload overwrite, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
-		} else if res.IsSkip {
-
-		} else {
-			exporter.Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
-		}
-
-		syncLocker.Do(func() {
-			if res.IsNotOverWrite {
-				notOverwriteCount += 1
-			} else if res.IsSkip {
+			if hit, suffix := uploadConfig.HitBySuffixes(apiInfo.RelativePathToSrcPath); hit {
+				return true, data.NewEmptyError().AppendDescF("Skip by suffix `%s` for local file `%s`", suffix, apiInfo.RelativePathToSrcPath)
+			}
+			return
+		}).
+		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
+			totalFileCount = flow.WorkProvider.WorkTotalCount()
+			return nil
+		}).
+		OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+			syncLocker.Do(func() {
 				skippedFileCount += 1
-			} else {
-				successFileCount += 1
-			}
-		})
-	}).OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
-		syncLocker.Do(func() {
-			failureFileCount += 1
-		})
+			})
+			log.Info(err.Error())
+		}).
+		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
+			apiInfo := workInfo.Work.(*UploadInfo)
+			res := result.(upload.ApiResult)
+			if res.IsOverWrite {
+				exporter.Override().ExportF("upload overwrite, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
+			} else if res.IsSkip {
 
-		apiInfo := workInfo.Work.(*UploadInfo)
-		exporter.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* path fileSize fileModifyTime */
-			apiInfo.FilePath, info.BatchInfo.ItemSeparate,
-			apiInfo.FileSize, info.BatchInfo.ItemSeparate,
-			apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
-			err)
-	}).Builder().Start()
+			} else {
+				exporter.Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
+			}
+
+			syncLocker.Do(func() {
+				if res.IsNotOverWrite {
+					notOverwriteCount += 1
+				} else if res.IsSkip {
+					skippedFileCount += 1
+				} else {
+					successFileCount += 1
+				}
+			})
+		}).
+		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+			syncLocker.Do(func() {
+				failureFileCount += 1
+			})
+
+			apiInfo := workInfo.Work.(*UploadInfo)
+			exporter.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* path fileSize fileModifyTime */
+				apiInfo.FilePath, info.BatchInfo.ItemSeparate,
+				apiInfo.FileSize, info.BatchInfo.ItemSeparate,
+				apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
+				err)
+		}).Builder().Start()
 
 	log.Alert("--------------- Upload Result ---------------")
 	log.AlertF("%20s%10d", "Total:", totalFileCount)
