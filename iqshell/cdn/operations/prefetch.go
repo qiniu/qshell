@@ -3,8 +3,11 @@ package operations
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/cdn"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"strings"
 )
 
 type PrefetchInfo struct {
@@ -19,50 +22,58 @@ func (info *PrefetchInfo) Check() *data.CodeError {
 
 func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
 	//TODO:
-	//if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
-	//	Checker: &info,
-	//}); !shouldContinue {
-	//	return
-	//}
-	//
-	//log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
-	//
-	//handler, err := g.NewHandler(g.Info{
-	//	InputFile: info.UrlListFile,
-	//	Force:     true,
-	//})
-	//if err != nil {
-	//	log.Error(err)
-	//	return
-	//}
-	//
-	//createQpsLimitIfNeeded(info.QpsLimit)
-	//
-	//line := ""
-	//hasMore := false
-	//urlsToPrefetch := make([]string, 0, 50)
-	//for {
-	//	line, hasMore = handler.Scanner().ScanLine()
-	//	if !hasMore {
-	//		break
-	//	}
-	//
-	//	url := strings.TrimSpace(line)
-	//	if url == "" {
-	//		continue
-	//	}
-	//	urlsToPrefetch = append(urlsToPrefetch, url)
-	//
-	//	if len(urlsToPrefetch) == cdn.BatchPrefetchAllowMax ||
-	//		(info.SizeLimit > 0 && len(urlsToPrefetch) >= info.SizeLimit) {
-	//		prefetchWithQps(urlsToPrefetch)
-	//		urlsToPrefetch = make([]string, 0, 50)
-	//	}
-	//}
-	//
-	//if len(urlsToPrefetch) > 0 {
-	//	prefetchWithQps(urlsToPrefetch)
-	//}
+	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
+		Checker: &info,
+	}); !shouldContinue {
+		return
+	}
+
+	log.DebugF("qps limit: %d, max item-size: %d", info.QpsLimit, info.SizeLimit)
+
+	workProvider, err := flow.NewWorkProviderOfFile(info.UrlListFile,
+		true,
+		flow.NewLineSeparateWorkCreator(flow.DefaultLineItemSeparate,
+			1,
+			func(items []string) (work flow.Work, err *data.CodeError) {
+				item := strings.TrimSpace(items[0])
+				if item == "" {
+					return nil, alert.Error("url invalid", "")
+				}
+				return &prefetchWork{
+					Url: item,
+				}, nil
+			}))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	createQpsLimitIfNeeded(info.QpsLimit)
+
+	urlsToPrefetch := make([]string, 0, 50)
+	for {
+		hasMore, workInfo, pErr := workProvider.Provide()
+		if workInfo == nil || workInfo.Work == nil || pErr != nil {
+			log.ErrorF("read work error:%v", pErr)
+			continue
+		}
+		if !hasMore {
+			break
+		}
+
+		w, _ := workInfo.Work.(*prefetchWork)
+		urlsToPrefetch = append(urlsToPrefetch, w.Url)
+
+		if len(urlsToPrefetch) == cdn.BatchPrefetchAllowMax ||
+			(info.SizeLimit > 0 && len(urlsToPrefetch) >= info.SizeLimit) {
+			prefetchWithQps(urlsToPrefetch)
+			urlsToPrefetch = make([]string, 0, 50)
+		}
+	}
+
+	if len(urlsToPrefetch) > 0 {
+		prefetchWithQps(urlsToPrefetch)
+	}
 }
 
 func prefetchWithQps(urlsToPrefetch []string) {
@@ -76,4 +87,12 @@ func prefetchWithQps(urlsToPrefetch []string) {
 			log.Error(err)
 		}
 	}
+}
+
+type prefetchWork struct {
+	Url string
+}
+
+func (w *prefetchWork) WorkId() string {
+	return w.Url
 }

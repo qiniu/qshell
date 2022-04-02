@@ -13,7 +13,7 @@ type Redo interface {
 	ShouldRedo(work *WorkInfo, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError)
 }
 
-func NewRedo(f func(work *WorkInfo, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError)) Redo  {
+func NewRedo(f func(work *WorkInfo, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError)) Redo {
 	return &redo{f: f}
 }
 
@@ -21,7 +21,7 @@ type redo struct {
 	f func(work *WorkInfo, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError)
 }
 
-func (r *redo)ShouldRedo(work *WorkInfo, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+func (r *redo) ShouldRedo(work *WorkInfo, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError) {
 	if r.f == nil {
 		return false, nil
 	}

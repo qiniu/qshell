@@ -11,9 +11,9 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
-	"github.com/qiniu/qshell/v2/iqshell/common/group"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"strings"
 	"sync"
 )
@@ -21,7 +21,7 @@ import (
 type FetchInfo struct {
 	QiniuBucket   string
 	Host          string
-	BatchInfo     group.Info
+	BatchInfo     batch.Info
 	AwsBucketInfo ListBucketInfo
 }
 

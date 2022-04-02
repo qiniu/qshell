@@ -40,7 +40,7 @@ func (d *fileInfo) check() *data.CodeError {
 	return nil
 }
 
-func (d *fileInfo) prepare() (*data.CodeError) {
+func (d *fileInfo) prepare() *data.CodeError {
 	// 文件路径
 	var err error
 	d.toAbsFile, err = filepath.Abs(d.toFile)

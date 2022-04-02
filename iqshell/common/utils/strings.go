@@ -10,7 +10,7 @@ const (
 	alphaList = "abcdefghijklmnopqrstuvwxyz"
 )
 
-// 生成随机的字符串
+// CreateRandString 生成随机的字符串
 func CreateRandString(num int) (rcode string) {
 	if num <= 0 || num > len(alphaList) {
 		rcode = ""

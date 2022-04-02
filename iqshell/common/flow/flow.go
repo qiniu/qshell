@@ -9,6 +9,7 @@ import (
 )
 
 type Info struct {
+	Force             bool // 是否强制直接进行 Flow, 不强制需要用户输入验证码验证
 	WorkerCount       int  // worker 数量
 	StopWhenWorkError bool // 当某个 work 遇到执行错误是否结束 batch 任务
 }
@@ -55,6 +56,10 @@ func (f *Flow) Check() *data.CodeError {
 func (f *Flow) Start() {
 	if e := f.Check(); e != nil {
 		log.ErrorF("work flow start error:%v", e)
+		return
+	}
+
+	if !f.Info.Force && !UserCodeVerification() {
 		return
 	}
 
@@ -113,7 +118,7 @@ func (f *Flow) Start() {
 			workList = append(workList, workInfo)
 			if len(workList) >= f.DoWorkInfoListMaxCount {
 				workChan <- workList
-				workList =  make([]*WorkInfo, 0, f.DoWorkInfoListMaxCount)
+				workList = make([]*WorkInfo, 0, f.DoWorkInfoListMaxCount)
 			}
 		}
 

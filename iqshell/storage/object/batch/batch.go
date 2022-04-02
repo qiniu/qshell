@@ -13,7 +13,6 @@ type Info struct {
 	flow.Info
 	export.FileExporterConfig
 
-	Force     bool // 无需验证即可 batch 操作，类似于验证码验证
 	Overwrite bool // 是否覆盖
 
 	// 工作数据源
@@ -79,6 +78,9 @@ func (h *handler) OnError(handler func(err *data.CodeError)) Handler {
 }
 
 func (h *handler) Start() {
+	log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, bsuccessFname: %q, bfailureFname: %q, sep: %q",
+		h.info.Force, h.info.Overwrite, h.info.WorkerCount, h.info.InputFile, h.info.SuccessExportFilePath, h.info.FailExportFilePath, h.info.ItemSeparate)
+
 	if h.operationItemsCreator == nil {
 		log.Error(data.NewEmptyError().AppendDesc(alert.CannotEmpty("operation reader", "")))
 		return

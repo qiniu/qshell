@@ -52,7 +52,7 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 	info.Progress = progress.NewPrintProgress(" 进度")
 	ret, err := uploadFile(&info)
 	if err != nil {
-		log.ErrorF("Upload file error %v",err)
+		log.ErrorF("Upload file error %v", err)
 	} else {
 		log.Alert("")
 		log.Alert("-------------- File FlowInfo --------------")

@@ -6,6 +6,8 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
+const DefaultLineItemSeparate = "\t"
+
 type lineSeparateWorkCreator struct {
 	separate      string
 	minItemsCount int
@@ -21,9 +23,12 @@ func (l *lineSeparateWorkCreator) Create(info string) (work Work, err *data.Code
 }
 
 func NewLineSeparateWorkCreator(separate string, minItemsCount int, creatorFunc func(items []string) (work Work, err *data.CodeError)) WorkCreator {
+	if len(separate) == 0 {
+		separate = DefaultLineItemSeparate
+	}
 	return &lineSeparateWorkCreator{
-		separate:    separate,
+		separate:      separate,
 		minItemsCount: minItemsCount,
-		creatorFunc: creatorFunc,
+		creatorFunc:   creatorFunc,
 	}
 }
