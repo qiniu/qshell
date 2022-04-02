@@ -6,22 +6,50 @@ import (
 )
 
 type Worker interface {
-	DoWork(work Work) (Result, *data.CodeError)
+
+	// DoWork 处理工作
+	// @Description: recordList 长度需和 workInfos 长度想等
+	// @param workInfos 工作列表
+	// @return recordList 工作记录列表
+	// @return err 工作错误信息
+	DoWork(workInfos []*WorkInfo) (recordList []*WorkRecord, err *data.CodeError)
 }
 
-func NewWorker(doFunc func(work Work) (Result, *data.CodeError)) Worker {
+func NewWorker(doFunc func(workInfos []*WorkInfo) ([]*WorkRecord, *data.CodeError)) Worker {
 	return &worker{
 		DoFunc: doFunc,
 	}
 }
 
-type worker struct {
-	DoFunc func(work Work) (Result, *data.CodeError)
+func NewSimpleWorker(doFunc func(workInfo *WorkInfo) (Result, *data.CodeError)) Worker {
+	return &worker{
+		SimpleDoFunc: doFunc,
+	}
 }
 
-func (w *worker) DoWork(work Work) (Result, *data.CodeError) {
-	if w == nil || w.DoFunc == nil {
+type worker struct {
+	SimpleDoFunc func(workInfo *WorkInfo) (Result, *data.CodeError)
+	DoFunc       func(workInfos []*WorkInfo) ([]*WorkRecord, *data.CodeError)
+}
+
+func (w *worker) DoWork(workInfoList []*WorkInfo) ([]*WorkRecord, *data.CodeError) {
+	if w == nil {
+		return nil, alert.Error("worker: no worker", "")
+	}
+
+	if w.DoFunc != nil {
+		return w.DoFunc(workInfoList)
+	} else if w.SimpleDoFunc != nil {
+		recordList := make([]*WorkRecord, 0, len(workInfoList))
+		for _, workInfo := range workInfoList {
+			record := &WorkRecord{
+				WorkInfo: workInfo,
+			}
+			record.Result, record.Err = w.SimpleDoFunc(workInfo)
+			recordList = append(recordList, record)
+		}
+		return recordList, nil
+	} else {
 		return nil, alert.Error("worker: no worker func", "")
 	}
-	return w.DoFunc(work)
 }

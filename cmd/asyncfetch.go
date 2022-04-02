@@ -14,7 +14,7 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 		Short: "Async Batch fetch network resources to qiniu Bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ABFetch
-			info.GroupInfo.ItemSeparate = "\t" // 此处用户不可定义
+			info.BatchInfo.ItemSeparate = "\t" // 此处用户不可定义
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -28,10 +28,10 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "callback HOST")
 	cmd.Flags().IntVarP(&info.FileType, "storage-type", "g", 0, "storage type")
 	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
-	cmd.Flags().StringVarP(&info.GroupInfo.InputFile, "input-file", "i", "", "input file with urls")
-	cmd.Flags().IntVarP(&info.GroupInfo.WorkerCount, "thread-count", "c", 20, "thread count")
-	cmd.Flags().StringVarP(&info.GroupInfo.SuccessExportFilePath, "success-list", "s", "", "success fetch list")
-	cmd.Flags().StringVarP(&info.GroupInfo.FailExportFilePath, "failure-list", "e", "", "error fetch list")
+	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file with urls")
+	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "thread-count", "c", 20, "thread count")
+	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "success fetch list")
+	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "error fetch list")
 
 	return cmd
 }

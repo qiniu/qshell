@@ -22,13 +22,13 @@ type localDBRecordOverseer struct {
 	BlankWorkRecordBuilder func() *WorkRecord
 }
 
-func (l *localDBRecordOverseer) WillWork(work Work) {
+func (l *localDBRecordOverseer) WillWork(work *WorkInfo) {
 	if l == nil || l.Recorder == nil {
 		return
 	}
 	status := &workStatus{
 		WorkRecord: &WorkRecord{
-			Work: work,
+			WorkInfo: work,
 		},
 		Status: workStatusDoing,
 	}
@@ -47,10 +47,10 @@ func (l *localDBRecordOverseer) WorkDone(record *WorkRecord) {
 	} else {
 		status.Status = workStatusSuccess
 	}
-	l.setWorkStatus(record.Work, status)
+	l.setWorkStatus(record.WorkInfo, status)
 }
 
-func (l *localDBRecordOverseer) GetWorkRecordIfHasDone(work Work) (hasDone bool, record *WorkRecord) {
+func (l *localDBRecordOverseer) GetWorkRecordIfHasDone(work *WorkInfo) (hasDone bool, record *WorkRecord) {
 	if l == nil || l.Recorder == nil {
 		return false, nil
 	}
@@ -62,12 +62,12 @@ func (l *localDBRecordOverseer) GetWorkRecordIfHasDone(work Work) (hasDone bool,
 	}
 }
 
-func (l *localDBRecordOverseer) getWorkStatus(work Work) *workStatus {
-	if l == nil || l.Recorder == nil || l.BlankWorkRecordBuilder == nil {
+func (l *localDBRecordOverseer) getWorkStatus(work *WorkInfo) *workStatus {
+	if l == nil || l.Recorder == nil || work == nil || work.Work == nil || l.BlankWorkRecordBuilder == nil {
 		return nil
 	}
 
-	workId := work.WorkId()
+	workId := work.Work.WorkId()
 	if len(workId) == 0 {
 		return nil
 	}
@@ -89,12 +89,12 @@ func (l *localDBRecordOverseer) getWorkStatus(work Work) *workStatus {
 	}
 }
 
-func (l *localDBRecordOverseer) setWorkStatus(work Work, status *workStatus) {
-	if l == nil || l.Recorder == nil || status == nil {
+func (l *localDBRecordOverseer) setWorkStatus(work *WorkInfo, status *workStatus) {
+	if l == nil || l.Recorder == nil || work == nil || work.Work == nil || status == nil {
 		return
 	}
 
-	workId := work.WorkId()
+	workId := work.Work.WorkId()
 	if len(workId) == 0 {
 		return
 	}

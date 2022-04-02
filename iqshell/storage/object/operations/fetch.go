@@ -77,58 +77,43 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		return
 	}
 
-	f := &flow.Flow{}
-	// 配置 work provider
-	workCreator := flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, func(items []string) (work flow.Work, err *data.CodeError) {
-		key := ""
-		fromUrl := items[0]
-		if len(items) > 1 {
-			key = items[1]
-		} else if k, e := utils.KeyFromUrl(fromUrl); e == nil {
-			key = k
-		}
-		if len(key) == 0 || len(fromUrl) == 0 {
-			return nil, alert.Error("key or fromUrl invalid", "")
-		}
+	flow.New(info.BatchInfo.Info).
+		WorkProviderWithFile(info.BatchInfo.InputFile,
+			info.BatchInfo.EnableStdin,
+			flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
+				key := ""
+				fromUrl := items[0]
+				if len(items) > 1 {
+					key = items[1]
+				} else if k, e := utils.KeyFromUrl(fromUrl); e == nil {
+					key = k
+				}
+				if len(key) == 0 || len(fromUrl) == 0 {
+					return nil, alert.Error("key or fromUrl invalid", "")
+				}
 
-		return &object.FetchApiInfo{
-			Bucket:  info.Bucket,
-			Key:     key,
-			FromUrl: fromUrl,
-		}, nil
-	})
-	if provider, e := flow.NewWorkProviderOfFile(info.BatchInfo.InputFile, info.BatchInfo.EnableStdin, workCreator); e != nil {
-		return
-	} else {
-		f.WorkProvider = provider
-	}
-
-	// 配置 worker provider
-	f.WorkerProvider = flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
-		return flow.NewWorker(func(work flow.Work) (flow.Result, *data.CodeError) {
-			in := work.(*object.FetchApiInfo)
-			return object.Fetch(*in)
-		}), nil
-	})
-
-	// 配置时间监听
-	f.EventListener = flow.EventListener{
-		WillWorkFunc:   nil,
-		OnWorkSkipFunc: nil,
-		OnWorkSuccessFunc: func(work flow.Work, result flow.Result) {
-			in := work.(*object.FetchApiInfo)
+				return &object.FetchApiInfo{
+					Bucket:  info.Bucket,
+					Key:     key,
+					FromUrl: fromUrl,
+				}, nil
+			})).
+		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
+			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
+				in := workInfo.Work.(*object.FetchApiInfo)
+				return object.Fetch(*in)
+			}), nil
+		})).
+		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
+			in := workInfo.Work.(*object.FetchApiInfo)
 			exporter.Success().ExportF("%s\t%s", in.FromUrl, in.Bucket)
 			log.InfoF("Fetch Success, '%s' => [%s:%s]", in.FromUrl, info.Bucket, in.Key)
-		},
-		OnWorkFailFunc: func(work flow.Work, err *data.CodeError) {
-			in := work.(*object.FetchApiInfo)
+		}).
+		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+			in := workInfo.Work.(*object.FetchApiInfo)
 			exporter.Fail().ExportF("%s\t%s\t%v", in.FromUrl, in.Key, err)
 			log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.FromUrl, in.Bucket, in.Key, err)
-		},
-	}
-
-	// 开始
-	f.Start()
+		}).Builder().Start()
 }
 
 type CheckAsyncFetchStatusInfo struct {
@@ -162,7 +147,7 @@ func CheckAsyncFetchStatus(cfg *iqshell.Config, info CheckAsyncFetchStatusInfo) 
 }
 
 type BatchAsyncFetchInfo struct {
-	GroupInfo        batch.Info
+	BatchInfo        batch.Info
 	Bucket           string // fetch 的目的 bucket
 	Host             string // 从指定URL下载时指定的HOST
 	CallbackUrl      string // 抓取成功的回调地址
@@ -187,8 +172,8 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 		return
 	}
 
-	info.GroupInfo.Force = true
-	exporter, err := export.NewFileExport(info.GroupInfo.FileExporterConfig)
+	info.BatchInfo.Force = true
+	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
 		return
@@ -198,67 +183,56 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 
 	// fetch
 	go func() {
-		f := &flow.Flow{}
-		// 配置 work provider
-		workCreator := flow.NewLineSeparateWorkCreator(info.GroupInfo.ItemSeparate, func(items []string) (work flow.Work, err *data.CodeError) {
-			var size uint64 = 0
-			fromUrl := items[0]
-			if len(items) > 1 {
-				s, pErr := strconv.ParseUint(items[1], 10, 64)
-				if pErr != nil {
-					return nil, alert.Error("parse size error:"+pErr.Error(), "")
-				}
-				size = s
-			}
+		flow.New(info.BatchInfo.Info).
+			WorkProviderWithFile(info.BatchInfo.InputFile,
+				info.BatchInfo.EnableStdin,
+				flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
+					var size uint64 = 0
+					fromUrl := items[0]
+					if len(items) > 1 {
+						s, pErr := strconv.ParseUint(items[1], 10, 64)
+						if pErr != nil {
+							return nil, alert.Error("parse size error:"+pErr.Error(), "")
+						}
+						size = s
+					}
 
-			saveKey := ""
-			if len(items) > 2 && len(items[2]) > 0 {
-				saveKey = items[2]
-			} else {
-				key, pErr := utils.KeyFromUrl(fromUrl)
-				if pErr != nil {
-					return nil, alert.Error("get key form url error:"+pErr.Error(), "")
-				}
-				saveKey = key
-			}
+					saveKey := ""
+					if len(items) > 2 && len(items[2]) > 0 {
+						saveKey = items[2]
+					} else {
+						key, pErr := utils.KeyFromUrl(fromUrl)
+						if pErr != nil {
+							return nil, alert.Error("get key form url error:"+pErr.Error(), "")
+						}
+						saveKey = key
+					}
 
-			return fetchItem{
-				fileSize: size,
-				info: object.AsyncFetchApiInfo{
-					Url:              fromUrl,
-					Host:             info.Host,
-					Bucket:           info.Bucket,
-					Key:              saveKey,
-					Md5:              "", // 设置了该值，抓取的过程使用文件md5值进行校验, 校验失败不存在七牛空间
-					Etag:             "", // 设置了该值， 抓取的过程中使用etag进行校验，失败不保存在存储空间中
-					CallbackURL:      info.CallbackUrl,
-					CallbackBody:     info.CallbackBody,
-					CallbackBodyType: info.CallbackBodyType,
-					FileType:         info.FileType,
-					IgnoreSameKey:    !info.Overwrite, // 此处需要翻转逻辑
-				},
-			}, nil
-		})
-		if provider, e := flow.NewWorkProviderOfFile(info.GroupInfo.InputFile, info.GroupInfo.EnableStdin, workCreator); e != nil {
-			return
-		} else {
-			f.WorkProvider = provider
-		}
-
-		// 配置 worker provider
-		f.WorkerProvider = flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
-			return flow.NewWorker(func(work flow.Work) (flow.Result, *data.CodeError) {
-				in := work.(fetchItem)
-				return object.AsyncFetch(in.info)
-			}), nil
-		})
-
-		// 配置时间监听
-		f.EventListener = flow.EventListener{
-			WillWorkFunc:   nil,
-			OnWorkSkipFunc: nil,
-			OnWorkSuccessFunc: func(work flow.Work, result flow.Result) {
-				in := work.(fetchItem)
+					return fetchItem{
+						fileSize: size,
+						info: object.AsyncFetchApiInfo{
+							Url:              fromUrl,
+							Host:             info.Host,
+							Bucket:           info.Bucket,
+							Key:              saveKey,
+							Md5:              "", // 设置了该值，抓取的过程使用文件md5值进行校验, 校验失败不存在七牛空间
+							Etag:             "", // 设置了该值， 抓取的过程中使用etag进行校验，失败不保存在存储空间中
+							CallbackURL:      info.CallbackUrl,
+							CallbackBody:     info.CallbackBody,
+							CallbackBodyType: info.CallbackBodyType,
+							FileType:         info.FileType,
+							IgnoreSameKey:    !info.Overwrite, // 此处需要翻转逻辑
+						},
+					}, nil
+				})).
+			WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
+				return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
+					in := workInfo.Work.(fetchItem)
+					return object.AsyncFetch(in.info)
+				}), nil
+			})).
+			OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
+				in := workInfo.Work.(fetchItem)
 				res := result.(object.AsyncFetchApiResult)
 				fetchResultChan <- fetchResult{
 					bucket:   in.info.Bucket,
@@ -268,16 +242,12 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 					info:     res,
 				}
 				log.DebugF("Fetch Response, '%s' => [%s:%s] id:%s wait:%d", in.info.Url, in.info.Bucket, in.info.Key, res.Id, res.Wait)
-			},
-			OnWorkFailFunc: func(work flow.Work, err *data.CodeError) {
-				in := work.(fetchItem)
+			}).
+			OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+				in := workInfo.Work.(fetchItem)
 				exporter.Fail().ExportF("%s: %v", in.info.Url, err)
 				log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
-			},
-		}
-
-		// 开始
-		f.Start()
+			}).Builder().Start()
 
 		close(fetchResultChan)
 	}()

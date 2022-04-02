@@ -58,7 +58,7 @@ type WorkerProvideBuilder struct {
 	err  error
 }
 
-func (b *WorkProvideBuilder) WorkerProvider(provider WorkerProvider) *FlowBuilder {
+func (b *WorkerProvideBuilder) WorkerProvider(provider WorkerProvider) *FlowBuilder {
 	b.flow.WorkerProvider = provider
 	return &FlowBuilder{
 		flow: b.flow,
@@ -66,7 +66,31 @@ func (b *WorkProvideBuilder) WorkerProvider(provider WorkerProvider) *FlowBuilde
 	}
 }
 
-func (b *WorkProvideBuilder) OnWillWork(f func(work Work) (shouldContinue bool, err *data.CodeError)) *FlowBuilder {
+func (b *FlowBuilder) DoWorkListMaxCount(count int) *FlowBuilder {
+	b.flow.DoWorkInfoListMaxCount = count
+	return &FlowBuilder{
+		flow: b.flow,
+		err:  b.err,
+	}
+}
+
+func (b *FlowBuilder) ShouldSkip(f func(workInfo *WorkInfo) (skip bool, cause *data.CodeError)) *FlowBuilder {
+	b.flow.Skipper = NewSkipper(f)
+	return &FlowBuilder{
+		flow: b.flow,
+		err:  b.err,
+	}
+}
+
+func (b *FlowBuilder) ShouldRedo(f func(workInfo *WorkInfo, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError)) *FlowBuilder {
+	b.flow.Redo = NewRedo(f)
+	return &FlowBuilder{
+		flow: b.flow,
+		err:  b.err,
+	}
+}
+
+func (b *FlowBuilder) OnWillWork(f func(workInfo *WorkInfo) (shouldContinue bool, err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.WillWorkFunc = f
 	return &FlowBuilder{
 		flow: b.flow,
@@ -74,7 +98,7 @@ func (b *WorkProvideBuilder) OnWillWork(f func(work Work) (shouldContinue bool, 
 	}
 }
 
-func (b *WorkProvideBuilder) OnWorkSkip(f func(work Work, err *data.CodeError)) *FlowBuilder {
+func (b *FlowBuilder) OnWorkSkip(f func(workInfo *WorkInfo, err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.OnWorkSkipFunc = f
 	return &FlowBuilder{
 		flow: b.flow,
@@ -82,7 +106,7 @@ func (b *WorkProvideBuilder) OnWorkSkip(f func(work Work, err *data.CodeError)) 
 	}
 }
 
-func (b *WorkProvideBuilder) OnWorkSuccess(f func(work Work, result Result)) *FlowBuilder {
+func (b *FlowBuilder) OnWorkSuccess(f func(workInfo *WorkInfo, result Result)) *FlowBuilder {
 	b.flow.EventListener.OnWorkSuccessFunc = f
 	return &FlowBuilder{
 		flow: b.flow,
@@ -90,7 +114,7 @@ func (b *WorkProvideBuilder) OnWorkSuccess(f func(work Work, result Result)) *Fl
 	}
 }
 
-func (b *WorkProvideBuilder) OnWorkFail(f func(work Work, err *data.CodeError)) *FlowBuilder {
+func (b *FlowBuilder) OnWorkFail(f func(workInfo *WorkInfo, err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.OnWorkFailFunc = f
 	return &FlowBuilder{
 		flow: b.flow,

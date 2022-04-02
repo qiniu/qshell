@@ -31,19 +31,25 @@ func (p *readerWorkProvider) WorkTotalCount() int64 {
 	return UnknownWorkCount
 }
 
-func (p *readerWorkProvider) Provide() (hasMore bool, work Work, err *data.CodeError) {
+func (p *readerWorkProvider) Provide() (hasMore bool, work *WorkInfo, err *data.CodeError) {
 	p.mu.Lock()
 	hasMore, work, err = p.provide()
 	p.mu.Unlock()
 	return
 }
 
-func (p *readerWorkProvider) provide() (hasMore bool, work Work, err *data.CodeError) {
+func (p *readerWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.CodeError) {
 	success := p.scanner.Scan()
 	if success {
-		hasMore = true
 		line := p.scanner.Text()
-		work, err = p.creator.Create(line)
+		if w, e := p.creator.Create(line); e != nil {
+			return true, nil, e
+		} else {
+			return true, &WorkInfo{
+				Data: line,
+				Work: w,
+			}, nil
+		}
 	}
-	return
+	return false, nil, nil
 }

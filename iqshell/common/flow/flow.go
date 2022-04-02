@@ -25,12 +25,12 @@ type Flow struct {
 	WorkProvider   WorkProvider   // work 提供者 【必填】
 	WorkerProvider WorkerProvider // worker 提供者 【必填】
 
-	WorkPacker        *WorkPacker   // work 打包，有些工作需要对工作进行批量处理 【可选】
-	EventListener     EventListener // work 处理事项监听者 【可选】
-	Overseer          Overseer      // work 监工，涉及 work 是否已处理相关的逻辑 【可选】
-	Skipper           Skipper       // work 是否跳过相关逻辑 【可选】
-	Redo              Redo          // work 是否需要重新做相关逻辑，有些工作虽然已经做过，但下次处理时可能条件发生变化，需要重新处理 【可选】
-	workErrorHappened bool          // 执行中是否出现错误 【内部变量】
+	DoWorkInfoListMaxCount int           // Worker.DoWork 函数中 works 数组最大长度，最小长度为 1
+	EventListener          EventListener // work 处理事项监听者 【可选】
+	Overseer               Overseer      // work 监工，涉及 work 是否已处理相关的逻辑 【可选】
+	Skipper                Skipper       // work 是否跳过相关逻辑 【可选】
+	Redo                   Redo          // work 是否需要重新做相关逻辑，有些工作虽然已经做过，但下次处理时可能条件发生变化，需要重新处理 【可选】
+	workErrorHappened      bool          // 执行中是否出现错误 【内部变量】
 }
 
 func (f *Flow) Check() *data.CodeError {
@@ -44,24 +44,39 @@ func (f *Flow) Check() *data.CodeError {
 	if f.WorkerProvider == nil {
 		return alert.CannotEmptyError("WorkerProvider", "")
 	}
+
+	if f.DoWorkInfoListMaxCount < 1 {
+		f.DoWorkInfoListMaxCount = 1
+	}
+
 	return nil
 }
 
 func (f *Flow) Start() {
-	log.Debug("work flow did start")
+	if e := f.Check(); e != nil {
+		log.ErrorF("work flow start error:%v", e)
+		return
+	}
 
-	workChan := make(chan Work, f.Info.WorkerCount)
+	log.Debug("work flow did start")
+	workChan := make(chan []*WorkInfo, f.Info.WorkerCount)
 	// 生产者
 	go func() {
 		log.DebugF("work producer start")
+
+		workList := make([]*WorkInfo, 0, f.DoWorkInfoListMaxCount)
 		for {
-			hasMore, work, err := f.WorkProvider.Provide()
+			hasMore, workInfo, err := f.WorkProvider.Provide()
 			if err != nil {
-				f.EventListener.OnWorkFail(work, err)
+				if err.Code == data.ErrorCodeParamMissing {
+					f.EventListener.OnWorkSkip(workInfo, err)
+				} else {
+					f.EventListener.OnWorkFail(workInfo, err)
+				}
 				continue
 			}
 
-			if work == nil {
+			if workInfo.Work == nil {
 				if !hasMore {
 					break
 				} else {
@@ -71,47 +86,34 @@ func (f *Flow) Start() {
 
 			// 检测 work 是否需要过
 			if f.Skipper != nil {
-				if skip, cause := f.Skipper.ShouldSkip(work); skip {
-					f.EventListener.OnWorkSkip(work, cause)
+				if skip, cause := f.Skipper.ShouldSkip(workInfo); skip {
+					f.EventListener.OnWorkSkip(workInfo, cause)
 					continue
 				}
 			}
 
 			// 检测 work 是否已经做过
 			if f.Overseer != nil {
-				hasDone, workRecord := f.Overseer.GetWorkRecordIfHasDone(work)
+				hasDone, workRecord := f.Overseer.GetWorkRecordIfHasDone(workInfo)
 				if hasDone && f.Redo == nil {
-					shouldRedo, cause := f.Redo.ShouldRedo(work, workRecord)
+					shouldRedo, cause := f.Redo.ShouldRedo(workInfo, workRecord)
 					if !shouldRedo {
-						f.EventListener.OnWorkSkip(work, cause)
+						f.EventListener.OnWorkSkip(workInfo, cause)
 						continue
 					}
 				}
 			}
 
 			// 通知 work 将要执行
-			if shouldContinue, err := f.EventListener.WillWork(work); !shouldContinue {
-				f.EventListener.OnWorkSkip(work, err)
+			if shouldContinue, e := f.EventListener.WillWork(workInfo); !shouldContinue {
+				f.EventListener.OnWorkSkip(workInfo, e)
 				continue
 			}
 
-			// 工作进行打包
-			if f.WorkPacker != nil {
-				if e := f.WorkPacker.Pack(work); e != nil {
-					log.ErrorF("work pack error:%v", e)
-					break
-				}
-				work = f.WorkPacker.GetWorkPackageAndClean(false)
-			}
-
-			if work != nil {
-				workChan <- work
-			}
-		}
-
-		if f.WorkPacker != nil {
-			if work := f.WorkPacker.GetWorkPackageAndClean(true); work != nil {
-				workChan <- work
+			workList = append(workList, workInfo)
+			if len(workList) >= f.DoWorkInfoListMaxCount {
+				workChan <- workList
+				workList =  make([]*WorkInfo, 0, f.DoWorkInfoListMaxCount)
 			}
 		}
 
@@ -131,38 +133,39 @@ func (f *Flow) Start() {
 				return
 			}
 
-			for work := range workChan {
+			for workList := range workChan {
 				if workspace.IsCmdInterrupt() {
 					break
 				}
 
-				workResult, workErr := worker.DoWork(work)
+				// workRecordList 有数据则长度和 workList 长度相同
+				workRecordList, workErr := worker.DoWork(workList)
+				if len(workRecordList) == 0 && workErr != nil {
+					log.ErrorF("Do Worker Error:%v", err)
+					break
+				}
 
-				resultHandler := func(record *WorkRecord) {
+				resultHandler := func(workRecord *WorkRecord) {
 					if f.Overseer != nil {
-						f.Overseer.WorkDone(record)
+						f.Overseer.WorkDone(&WorkRecord{
+							WorkInfo: workRecord.WorkInfo,
+							Result:   workRecord.Result,
+							Err:      workRecord.Err,
+						})
 					}
-					if record.Err != nil {
-						f.EventListener.OnWorkFail(record.Work, record.Err)
+					if workRecord.Err != nil {
+						f.EventListener.OnWorkFail(workRecord.WorkInfo, workRecord.Err)
 						f.workErrorHappened = true
 					} else {
-						f.EventListener.OnWorkSuccess(record.Work, record.Result)
+						f.EventListener.OnWorkSuccess(workRecord.WorkInfo, workRecord.Result)
 					}
 				}
 
-				if workPackage, ok := work.(*WorkPackage); ok {
-					if _, ok = workResult.(*WorkPackage); !ok {
-						log.Error("result type of workPackage work Error: mast be *WorkPackage")
+				for _, record := range workRecordList {
+					if record.Result == nil && record.Err == nil {
+						record.Err = workErr
 					}
-					for _, record := range workPackage.WorkRecords {
-						resultHandler(record)
-					}
-				} else {
-					resultHandler(&WorkRecord{
-						Work:   work,
-						Result: workResult,
-						Err:    workErr,
-					})
+					resultHandler(record)
 				}
 
 				// 检测是否需要停止

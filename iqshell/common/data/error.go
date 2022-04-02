@@ -7,6 +7,7 @@ import (
 var (
 	ErrorCodeUnknown       = 10000
 	ErrorCodeParamNotExist = 11000
+	ErrorCodeParamMissing  = 11001
 	ErrorCodeAlreadyDone   = 15000
 )
 

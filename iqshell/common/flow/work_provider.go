@@ -10,7 +10,7 @@ const UnknownWorkCount = int64(-1)
 
 type WorkProvider interface {
 	WorkTotalCount() int64
-	Provide() (hasMore bool, work Work, err *data.CodeError)
+	Provide() (hasMore bool, work *WorkInfo, err *data.CodeError)
 }
 
 func NewWorkProviderOfFile(filepath string, enableStdin bool, creator WorkCreator) (provider WorkProvider, err *data.CodeError) {

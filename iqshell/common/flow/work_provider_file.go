@@ -37,6 +37,6 @@ func (p *fileWorkProvider) WorkTotalCount() int64 {
 	return p.workCount
 }
 
-func (p *fileWorkProvider) Provide() (hasMore bool, work Work, err *data.CodeError) {
+func (p *fileWorkProvider) Provide() (hasMore bool, work *WorkInfo, err *data.CodeError) {
 	return p.workProvider.Provide()
 }

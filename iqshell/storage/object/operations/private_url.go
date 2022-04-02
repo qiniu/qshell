@@ -83,57 +83,46 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 		return
 	}
 
-	f := &flow.Flow{}
-	// 配置 work provider
-	workCreator := flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, func(items []string) (work flow.Work, err *data.CodeError) {
-		url := items[0]
-		if url == "" {
-			return nil, alert.Error("url invalid", "")
-		}
+	flow.New(info.BatchInfo.Info).
+		WorkProviderWithFile(info.BatchInfo.InputFile,
+			info.BatchInfo.EnableStdin,
+			flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
+				url := items[0]
+				if url == "" {
+					return nil, alert.Error("url invalid", "")
+				}
 
-		urlToSign := strings.TrimSpace(url)
-		if urlToSign == "" {
-			return nil, alert.Error("url invalid after TrimSpace", "")
-		}
-		return PrivateUrlInfo{
-			PublicUrl: url,
-			Deadline:  info.Deadline,
-		}, nil
-	})
-	if provider, e := flow.NewWorkProviderOfFile(info.BatchInfo.InputFile, info.BatchInfo.EnableStdin, workCreator); e != nil {
-		return
-	} else {
-		f.WorkProvider = provider
-	}
-
-	// 配置 worker provider
-	f.WorkerProvider = flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
-		return flow.NewWorker(func(work flow.Work) (flow.Result, *data.CodeError) {
-			in := work.(PrivateUrlInfo)
-			if deadline, e := in.getDeadlineOfInt(); e != nil {
-				return nil, e
-			} else {
-				return download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
-					PublicUrl: in.PublicUrl,
-					Deadline:  deadline,
-				})
-			}
-		}), nil
-	})
-
-	// 配置时间监听
-	f.EventListener = flow.EventListener{
-		WillWorkFunc:   nil,
-		OnWorkSkipFunc: nil,
-		OnWorkSuccessFunc: func(work flow.Work, result flow.Result) {
+				urlToSign := strings.TrimSpace(url)
+				if urlToSign == "" {
+					return nil, alert.Error("url invalid after TrimSpace", "")
+				}
+				return &PrivateUrlInfo{
+					PublicUrl: url,
+					Deadline:  info.Deadline,
+				}, nil
+			})).
+		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
+			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
+				in := workInfo.Work.(PrivateUrlInfo)
+				if deadline, gErr := in.getDeadlineOfInt(); gErr == nil {
+					if r, pErr := download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
+						PublicUrl: in.PublicUrl,
+						Deadline:  deadline,
+					}); pErr != nil {
+						return nil, pErr
+					} else {
+						return r, nil
+					}
+				} else {
+					return nil, gErr
+				}
+			}), nil
+		})).
+		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			url := result.(string)
 			log.Alert(url)
-		},
-		OnWorkFailFunc: func(work flow.Work, err *data.CodeError) {
+		}).
+		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
 			log.Error(err)
-		},
-	}
-
-	// 开始
-	f.Start()
+		}).Builder().Start()
 }

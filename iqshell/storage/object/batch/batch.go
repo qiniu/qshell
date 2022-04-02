@@ -17,10 +17,11 @@ type Info struct {
 	Overwrite bool // 是否覆盖
 
 	// 工作数据源
-	WorkList     []flow.Work // 工作数据源：列表
-	InputFile    string      // 工作数据源：文件
-	ItemSeparate string      // 工作数据源：每行元素按分隔符分的分隔符
-	EnableStdin  bool        // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
+	WorkList      []flow.Work // 工作数据源：列表
+	InputFile     string      // 工作数据源：文件
+	ItemSeparate  string      // 工作数据源：每行元素按分隔符分的分隔符
+	MinItemsCount int         // 工作数据源：每行元素最小数量
+	EnableStdin   bool        // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
 
 	MaxOperationCountPerRequest int
 }
@@ -28,6 +29,10 @@ type Info struct {
 func (info *Info) Check() *data.CodeError {
 	if err := info.Info.Check(); err != nil {
 		return err
+	}
+
+	if info.MinItemsCount < 1 {
+		info.MinItemsCount = 1
 	}
 
 	if info.MaxOperationCountPerRequest <= 0 ||
@@ -85,59 +90,46 @@ func (h *handler) Start() {
 		return
 	}
 
-	f := &flow.Flow{}
-
-	// 配置 work provider
+	workBuilder := flow.New(h.info.Info)
+	var workerBuilder *flow.WorkerProvideBuilder
 	if h.info.WorkList != nil && len(h.info.WorkList) > 0 {
-		if provider, e := flow.NewArrayWorkProvider(h.info.WorkList); e != nil {
-			return
-		} else {
-			f.WorkProvider = provider
-		}
+		workerBuilder = workBuilder.WorkProviderWithArray(h.info.WorkList)
 	} else {
-		workCreator := flow.NewLineSeparateWorkCreator(h.info.ItemSeparate, func(items []string) (work flow.Work, err *data.CodeError) {
-			return h.operationItemsCreator(items)
-		})
-		if provider, e := flow.NewWorkProviderOfFile(h.info.InputFile, h.info.EnableStdin, workCreator); e != nil {
-			return
-		} else {
-			f.WorkProvider = provider
-		}
+		workerBuilder = workBuilder.WorkProviderWithFile(h.info.InputFile,
+			h.info.EnableStdin,
+			flow.NewLineSeparateWorkCreator(h.info.ItemSeparate, h.info.MinItemsCount, func(items []string) (work flow.Work, err *data.CodeError) {
+				return h.operationItemsCreator(items)
+			}))
 	}
 
-	// 配置 work 打包
-	f.WorkPacker = flow.NewWorkPacker(h.info.MaxOperationCountPerRequest)
+	workerBuilder.
+		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
+			return flow.NewWorker(func(workInfoList []*flow.WorkInfo) ([]*flow.WorkRecord, *data.CodeError) {
 
-	// 配置 worker provider
-	f.WorkerProvider = flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
-		// worker creator
-		return flow.NewWorker(func(work flow.Work) (flow.Result, *data.CodeError) {
+				recordList := make([]*flow.WorkRecord, 0, len(workInfoList))
+				operationStrings := make([]string, 0, len(workInfoList))
+				for _, workInfo := range workInfoList {
+					recordList = append(recordList, &flow.WorkRecord{
+						WorkInfo: workInfo,
+					})
 
-			// batch 使用了 work package
-			workPackage, ok := work.(*flow.WorkPackage)
-			if !ok {
-				return nil, alert.Error("batch WorkerProvider, WorkPackage type conv error", "")
-			}
-
-			operationStrings := make([]string, 0, len(workPackage.WorkRecords))
-			for _, record := range workPackage.WorkRecords {
-				if operation, ok := record.Work.(Operation); !ok {
-					return nil, alert.Error("batch WorkerProvider, operation type conv error", "")
-				} else {
-					if operationString, err := operation.ToOperation(); err != nil {
-						return nil, alert.Error("batch WorkerProvider, ToOperation error:"+err.Error(), "")
+					if operation, ok := workInfo.Work.(Operation); !ok {
+						return nil, alert.Error("batch WorkerProvider, operation type conv error", "")
 					} else {
-						operationStrings = append(operationStrings, operationString)
+						if operationString, e := operation.ToOperation(); e != nil {
+							return nil, alert.Error("batch WorkerProvider, ToOperation error:"+e.Error(), "")
+						} else {
+							operationStrings = append(operationStrings, operationString)
+						}
 					}
 				}
-			}
 
-			if result, e := bucketManager.Batch(operationStrings); e != nil {
-				for _, r := range workPackage.WorkRecords {
-					r.Err = data.ConvertError(e)
+				resultList, e := bucketManager.Batch(operationStrings)
+				if len(resultList) != len(operationStrings) {
+					return recordList, data.ConvertError(e)
 				}
-			} else {
-				for i, r := range result {
+
+				for i, r := range resultList {
 					operationResult := &OperationResult{
 						Code:     r.Code,
 						Hash:     r.Data.Hash,
@@ -147,31 +139,25 @@ func (h *handler) Start() {
 						Type:     r.Data.Type,
 						Error:    r.Data.Error,
 					}
-					workPackage.WorkRecords[i].Result = operationResult
+					recordList[i].Result = operationResult
 				}
-			}
-			return workPackage, nil
-		}), nil
-	})
+				return recordList, nil
+			}), nil
+		})).
+		DoWorkListMaxCount(h.info.MaxOperationCountPerRequest).
+		OnWorkSkip(func(work *flow.WorkInfo, err *data.CodeError) {
 
-	// 配置时间监听
-	f.EventListener = flow.EventListener{
-		WillWorkFunc:   nil,
-		OnWorkSkipFunc: nil,
-		OnWorkSuccessFunc: func(work flow.Work, result flow.Result) {
-			operation, _ := work.(Operation)
+		}).
+		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
+			operation, _ := work.Work.(Operation)
 			operationResult, _ := result.(*OperationResult)
 			h.onResult(operation, operationResult)
-		},
-		OnWorkFailFunc: func(work flow.Work, err *data.CodeError) {
-			operation, _ := work.(Operation)
+		}).
+		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
+			operation, _ := work.Work.(Operation)
 			h.onResult(operation, &OperationResult{
 				Code:  data.ErrorCodeUnknown,
 				Error: err.Error(),
 			})
-		},
-	}
-
-	// 开始
-	f.Start()
+		}).Builder().Start()
 }

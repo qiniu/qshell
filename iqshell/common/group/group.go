@@ -55,7 +55,7 @@ func NewHandler(info Info) (*Handler, *data.CodeError) {
 
 	var workCreator flow.WorkCreator
 	if info.WorkBuilderWithItems != nil {
-		workCreator = flow.NewLineSeparateWorkCreator(info.ItemSeparate, info.WorkBuilderWithItems)
+		workCreator = flow.NewLineSeparateWorkCreator(info.ItemSeparate, 0, info.WorkBuilderWithItems)
 	} else {
 		workCreator = flow.NewJsonWorkCreator(info.BlankWorkBuilder)
 	}
