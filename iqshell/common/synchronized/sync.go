@@ -1,6 +1,7 @@
 package synchronized
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"sync"
 )
 
@@ -11,7 +12,7 @@ type Locker interface {
 
 type Synchronized interface {
 	Do(fn func())
-	DoError(fn func() *data.CodeError) error
+	DoError(fn func() *data.CodeError) *data.CodeError
 }
 
 func NewSynchronized(locker Locker) Synchronized {
