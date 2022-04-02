@@ -262,10 +262,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			}
 			return res, nil
 		}), nil
-	})).ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
-
-		return false, nil
-	}).ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
+	})).ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
 		apiInfo := workInfo.Work.(*UploadInfo)
 		if hit, prefix := uploadConfig.HitByPathPrefixes(apiInfo.RelativePathToSrcPath); hit {
 			return true, data.NewEmptyError().AppendDescF("Skip by path prefix `%s` for local file path `%s`", prefix, apiInfo.RelativePathToSrcPath)
