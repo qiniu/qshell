@@ -20,21 +20,22 @@ import (
 )
 
 type BatchUploadInfo struct {
-	GroupInfo        batch.Info
+	BatchInfo        batch.Info
 	UploadConfigFile string
 	CallbackHost     string
 	CallbackUrl      string
 }
 
 func (info *BatchUploadInfo) Check() *data.CodeError {
-	if info.GroupInfo.WorkerCount < 1 || info.GroupInfo.WorkerCount > 2000 {
-		info.GroupInfo.WorkerCount = 5
+	if info.BatchInfo.WorkerCount < 1 || info.BatchInfo.WorkerCount > 2000 {
+		info.BatchInfo.WorkerCount = 5
 		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
-			info.GroupInfo.Info.WorkerCount)
+			info.BatchInfo.Info.WorkerCount)
 	}
-	if err := info.GroupInfo.Check(); err != nil {
+	if err := info.BatchInfo.Check(); err != nil {
 		return err
 	}
+	info.BatchInfo.Force = true
 	return nil
 }
 
@@ -57,7 +58,7 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 	}
 
 	upload2Info := BatchUpload2Info{
-		BatchInfo:    info.GroupInfo,
+		BatchInfo:    info.BatchInfo,
 		UploadConfig: DefaultUploadConfig(),
 	}
 	upload2Info.UploadConfig.Policy = &storage.PutPolicy{
@@ -292,25 +293,20 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				skippedFileCount += 1
 			})
 			log.Info(err.Error())
+			exporter.Skip().Export(workInfo.Data)
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-			apiInfo := workInfo.Work.(*UploadInfo)
 			res := result.(upload.ApiResult)
-			if res.IsOverWrite {
-				exporter.Override().ExportF("upload overwrite, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
-			} else if res.IsSkip {
-
-			} else {
-				exporter.Success().ExportF("upload success, %s => [%s:%s]", apiInfo.FilePath, apiInfo.ToBucket, apiInfo.SaveKey)
-			}
 
 			syncLocker.Do(func() {
 				if res.IsNotOverWrite {
 					notOverwriteCount += 1
+					exporter.Override().Export(workInfo.Data)
 				} else if res.IsSkip {
 					skippedFileCount += 1
 				} else {
 					successFileCount += 1
+					exporter.Success().Export(workInfo.Data)
 				}
 			})
 		}).
@@ -318,13 +314,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			syncLocker.Do(func() {
 				failureFileCount += 1
 			})
-
-			apiInfo := workInfo.Work.(*UploadInfo)
-			exporter.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* path fileSize fileModifyTime */
-				apiInfo.FilePath, info.BatchInfo.ItemSeparate,
-				apiInfo.FileSize, info.BatchInfo.ItemSeparate,
-				apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
-				err)
+			exporter.Fail().ExportF("%s%s%%s", workInfo.Data, flow.ErrorSeparate, err)
 		}).Build().Start()
 
 	log.Alert("--------------- Upload Result ---------------")

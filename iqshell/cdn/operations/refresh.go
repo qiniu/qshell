@@ -55,7 +55,7 @@ func Refresh(cfg *iqshell.Config, info RefreshInfo) {
 	itemsToRefresh := make([]string, 0, 50)
 	for {
 		hasMore, workInfo, pErr := workProvider.Provide()
-		if workInfo == nil || workInfo.Work == nil || pErr != nil {
+		if pErr != nil {
 			log.ErrorF("read work error:%v", pErr)
 			continue
 		}
@@ -77,7 +77,7 @@ func Refresh(cfg *iqshell.Config, info RefreshInfo) {
 }
 
 func refreshWithQps(info RefreshInfo, items []string, force bool) (isRefresh bool) {
-	var err error
+	var err *data.CodeError
 
 	if info.IsDir {
 		if force || len(items) == cdn.BatchRefreshDirsAllowMax ||

@@ -122,7 +122,7 @@ func (f *Flow) Start() {
 			}
 		}
 
-		if  len(workList) > 0 {
+		if len(workList) > 0 {
 			workChan <- workList
 		}
 

@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -83,20 +84,19 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 			}, nil
 		}
 		return nil, alert.Error("key invalid", "")
-	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.StatusApiInfo)
 		if !ok {
 			return
 		}
 		in := (*StatusInfo)(apiInfo)
 		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s\t%d\t%s", in.Key, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Status Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)
 		} else {
-			status := fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d",
+			exporter.Success().Export(operationInfo)
+			log.AlertF("%s\t%d\t%s\t%s\t%d\t%d",
 				in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
-			exporter.Success().Export(status)
-			log.Alert(status)
 		}
 	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch Status error:%v:", err)

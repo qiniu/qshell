@@ -98,7 +98,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}
 
 	log.DebugF("Download Domain:%s", downloadDomain)
-	log.DebugF("Download Domain:%s", downloadHost)
+	log.DebugF("Download Host  :%s", downloadHost)
 
 	dbPath := filepath.Join(info.RecordRoot, ".ldb")
 	log.InfoF("download db dir:%s", dbPath)
@@ -113,15 +113,9 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	ds, err := newDownloadScanner(info.KeyFile, info.BatchInfo.ItemSeparate, info.Bucket, exporter)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
 	timeStart := time.Now()
 	var locker sync.Mutex
-	var totalFileCount = ds.getFileLineCount()
+	var totalFileCount int64
 	var currentFileCount int64
 	var existsFileCount int64
 	var updateFileCount int64
@@ -186,17 +180,20 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			}
 			return false, nil
 		}).
+		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
+			totalFileCount = flow.WorkProvider.WorkTotalCount()
+			return nil
+		}).
 		OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			locker.Lock()
 			skipBySuffixes += 1
 			locker.Unlock()
+
 			log.Info(err.Error())
+			exporter.Skip().Export(workInfo.Data)
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-			apiInfo := workInfo.Work.(*download.ApiInfo)
 			res := result.(download.ApiResult)
-			exporter.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, res.FileAbsPath)
-
 			locker.Lock()
 			if res.IsExist {
 				existsFileCount += 1
@@ -206,19 +203,17 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				successFileCount += 1
 			}
 			locker.Unlock()
+
+			exporter.Success().Export(workInfo.Data)
+			log.ErrorF("Download success, %s", workInfo.Data)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			locker.Lock()
 			failureFileCount += 1
 			locker.Unlock()
 
-			apiInfo := workInfo.Work.(*download.ApiInfo)
-			exporter.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* key fileSize fileHash and fileModifyTime */
-				apiInfo.Key, info.BatchInfo.ItemSeparate,
-				apiInfo.FileSize, info.BatchInfo.ItemSeparate,
-				apiInfo.FileHash, info.BatchInfo.ItemSeparate,
-				apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
-				err)
+			exporter.Fail().ExportF("%s%s%s", workInfo.Data, flow.ErrorSeparate, err)
+			log.ErrorF("Download  failed, %s error:%v", workInfo.Data, err)
 		}).Build().Start()
 
 	if totalFileCount == 0 {

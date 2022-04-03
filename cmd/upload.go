@@ -20,14 +20,14 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if len(args) > 0 {
 				info.UploadConfigFile = args[0]
 			}
-			info.GroupInfo.Force = true
+			info.BatchInfo.Force = true
 			operations.BatchUpload(cfg, info)
 		},
 	}
-	cmd.Flags().StringVarP(&info.GroupInfo.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
-	cmd.Flags().StringVarP(&info.GroupInfo.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
-	cmd.Flags().StringVarP(&info.GroupInfo.OverwriteExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
-	cmd.Flags().IntVarP(&info.GroupInfo.WorkerCount, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
+	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
+	cmd.Flags().StringVarP(&info.BatchInfo.OverwriteExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
+	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "worker", "c", 1, "worker count")
 	cmd.Flags().StringVarP(&info.CallbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "upload callback host")
 	return cmd

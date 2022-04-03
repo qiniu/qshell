@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -109,20 +110,20 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 			}, nil
 		}
 		return nil, alert.Error("key invalid", "")
-	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.MoveApiInfo)
 		if !ok {
 			return
 		}
 
 		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s\t%s\t%d\t%s", apiInfo.SourceKey, apiInfo.DestKey, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 				apiInfo.SourceBucket, apiInfo.SourceKey,
 				apiInfo.DestBucket, apiInfo.DestKey,
 				result.Code, result.Error)
 		} else {
-			exporter.Success().ExportF("%s\t%s", apiInfo.SourceKey, apiInfo.DestKey)
+			exporter.Success().Export(operationInfo)
 			log.InfoF("Move Success, [%s:%s] => [%s:%s]",
 				apiInfo.SourceBucket, apiInfo.SourceKey,
 				apiInfo.DestBucket, apiInfo.DestKey)

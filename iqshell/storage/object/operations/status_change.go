@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -117,17 +118,17 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 			}
 		}
 		return nil, alert.Error("need more than one param", "")
-	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		in, ok := (operation).(*object.ChangeStatusApiInfo)
 		if !ok {
 			return
 		}
 		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s\t%d\t%d\t%s", in.Key, in.Status, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Change status Failed, [%s:%s] => %d, Code: %d, Error: %s",
 				in.Bucket, in.Key, in.Status, result.Code, result.Error)
 		} else {
-			exporter.Success().ExportF("%s\t%d", in.Key, in.Status)
+			exporter.Success().Export(operationInfo)
 			log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
 		}
 	}).OnError(func(err *data.CodeError) {

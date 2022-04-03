@@ -64,11 +64,12 @@ func (l *LocalFileInfo) CheckFileHashOfDownloadFile() *data.CodeError {
 		return nil
 	}
 
-	hashFile, err := os.Open(l.File)
-	if err != nil {
-		return data.NewEmptyError().AppendDesc("download file check: get temp file error when check hash:" + err.Error())
+	hashFile, oErr := os.Open(l.File)
+	if oErr != nil {
+		return data.NewEmptyError().AppendDesc("download file check: get temp file error when check hash:" + oErr.Error())
 	}
 
+	// 计算本地文件 hash
 	var hash string
 	if utils.IsSignByEtagV2(l.FileHash) {
 		log.Debug("download file check hash: get etag by v2 for key:" + l.Key)
@@ -76,22 +77,26 @@ func (l *LocalFileInfo) CheckFileHashOfDownloadFile() *data.CodeError {
 			return data.NewEmptyError().AppendDesc("download file check hash: etag v2 check should provide bucket and key")
 		}
 
-		stat, err := object.Status(object.StatusApiInfo{
+		stat, sErr := object.Status(object.StatusApiInfo{
 			Bucket: l.Bucket,
 			Key:    l.Key,
 		})
-		if err != nil {
-			return data.NewEmptyError().AppendDesc("download file check hash: etag v2 get file status error:" + err.Error())
+		if sErr != nil {
+			return data.NewEmptyError().AppendDesc("download file check hash: etag v2 get file status error:" + sErr.Error())
+		} else {
+			if h, eErr := utils.EtagV2(hashFile, stat.Parts); eErr != nil {
+				return data.NewEmptyError().AppendDesc("download file check: get file etag v2 error:" + eErr.Error())
+			} else {
+				hash = h
+			}
 		}
-
-		hash, err = utils.EtagV2(hashFile, stat.Parts)
 	} else {
 		log.Debug("download file check hash: get etag by v1 for key:" + l.Key)
-		hash, err = utils.EtagV1(hashFile)
-	}
-
-	if err != nil {
-		return data.NewEmptyError().AppendDesc("download file check: get file etag error:" + err.Error())
+		if h, eErr := utils.EtagV1(hashFile); eErr != nil {
+			return data.NewEmptyError().AppendDesc("download file check: get file etag v1 error:" + eErr.Error())
+		} else {
+			hash = h
+		}
 	}
 
 	if hash != l.FileHash {

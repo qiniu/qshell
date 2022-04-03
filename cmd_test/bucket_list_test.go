@@ -16,7 +16,7 @@ func TestBucketList(t *testing.T) {
 	}
 
 	if !strings.Contains(result, test.Key) {
-		t.Fatal("no expected key:% but not exist", test.BucketDomain)
+		t.Fatal("expected key:% but not exist", test.Key)
 	}
 
 	return
@@ -65,7 +65,7 @@ func TestBucketList2(t *testing.T) {
 	result, errs := test.RunCmdWithError("listbucket2", test.Bucket,
 		"--prefix", "hello",
 		"--readable",
-		"--start", "2022-02-21-00-00-00",
+		"--start", "2022-01-21-00-00-00",
 		"--end", "2022-02-22-00-00-00")
 	if len(errs) > 0 {
 		t.Fatal("error:", errs)

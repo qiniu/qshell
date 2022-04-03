@@ -19,12 +19,13 @@ func Some(operations []Operation) ([]*OperationResult, *data.CodeError) {
 	}
 	NewHandler(Info{
 		Info: flow.Info{
+			Force:             true,
 			WorkerCount:       1,
 			StopWhenWorkError: true,
 		},
 		WorkList:                    works,
 		MaxOperationCountPerRequest: 1000,
-	}).OnResult(func(operation Operation, result *OperationResult) {
+	}).OnResult(func(operationInfo string, operation Operation, result *OperationResult) {
 		h.results = append(h.results, result)
 	}).OnError(func(err *data.CodeError) {
 		h.err = err

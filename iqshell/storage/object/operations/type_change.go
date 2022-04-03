@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -125,17 +126,17 @@ func BatchChangeType(cfg *iqshell.Config, info BatchChangeTypeInfo) {
 			}
 		}
 		return nil, alert.Error("need more than one param", "")
-	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		in, ok := (operation).(*object.ChangeTypeApiInfo)
 		if !ok {
 			return
 		}
 		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s\t%d\t%d\t%s", in.Key, in.Type, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Code: %d, Error: %s",
 				info.Bucket, in.Key, in.Type, getStorageTypeDescription(in.Type), result.Code, result.Error)
 		} else {
-			exporter.Success().ExportF("%s\t%d", in.Key, in.Type)
+			exporter.Success().Export(operationInfo)
 			log.InfoF("Change Type Success, [%s:%s] => '%d'(%s) ",
 				info.Bucket, in.Key, in.Type, getStorageTypeDescription(in.Type))
 		}

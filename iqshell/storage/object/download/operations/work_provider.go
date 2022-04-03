@@ -15,13 +15,19 @@ import (
 )
 
 func NewWorkProvider(bucket string, inputFile string, itemSeparate string) flow.WorkProvider {
-	return &workProvider{
+	provider := &workProvider{
 		totalCount:       0,
 		bucket:           bucket,
 		inputFile:        inputFile,
 		itemSeparate:     itemSeparate,
 		downloadItemChan: make(chan *downloadItem),
 	}
+	if len(inputFile) > 0 {
+		provider.getWorkInfoFromFile()
+	} else {
+		provider.getWorkInfoFromBucket()
+	}
+	return provider
 }
 
 type workProvider struct {
@@ -40,6 +46,7 @@ func (w *workProvider) Provide() (hasMore bool, workInfo *flow.WorkInfo, err *da
 	for item := range w.downloadItemChan {
 		hasMore = true
 		workInfo = item.workInfo
+		err = item.err
 		break
 	}
 	return
@@ -93,13 +100,13 @@ func (w *workProvider) getWorkInfoFromFile() {
 
 		var keys []string
 		for {
-			if len(keys) == 100 {
+			if len(keys) == 10 {
 				w.getWorkInfoOfKeys(keys)
 				keys = nil
 			}
 
 			if keys == nil {
-				keys = make([]string, 0, 100)
+				keys = make([]string, 0, 10)
 			}
 
 			hasMore, workInfo, pErr := workPro.Provide()
@@ -110,7 +117,7 @@ func (w *workProvider) getWorkInfoFromFile() {
 				}
 			} else if workInfo != nil && workInfo.Work != nil {
 				downloadApiInfo, _ := (workInfo.Work).(*download.ApiInfo)
-				if downloadApiInfo.FileModifyTime < 0 {
+				if downloadApiInfo.FileModifyTime < 1 {
 					keys = append(keys, downloadApiInfo.Key)
 				} else {
 					w.downloadItemChan <- &downloadItem{
@@ -187,7 +194,7 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) {
 	}
 }
 
-func (w *workProvider) getWorkInfoOfBucket() {
+func (w *workProvider) getWorkInfoFromBucket() {
 	go func() {
 		bucket.List(bucket.ListApiInfo{
 			Bucket:    w.bucket,

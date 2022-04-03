@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -112,20 +113,20 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 		} else {
 			return nil, alert.Error("", "")
 		}
-	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.CopyApiInfo)
 		if !ok {
 			return
 		}
 		in := (*CopyInfo)(apiInfo)
 		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s\t%s\t%d\t%s", in.SourceKey, in.DestKey, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey,
 				result.Code, result.Error)
 		} else {
-			exporter.Success().ExportF("%s\t%s", in.SourceKey, in.DestKey)
+			exporter.Success().Export(operationInfo)
 			log.InfoF("Copy Success, '%s:%s' => '%s:%s'",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey)

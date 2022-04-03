@@ -29,6 +29,7 @@ func (info *Info) Check() *data.CodeError {
 	if err := info.Info.Check(); err != nil {
 		return err
 	}
+	info.Force = true
 
 	if info.MinItemsCount < 1 {
 		info.MinItemsCount = 1
@@ -44,7 +45,7 @@ func (info *Info) Check() *data.CodeError {
 
 type Handler interface {
 	ItemsToOperation(func(items []string) (operation Operation, err *data.CodeError)) Handler
-	OnResult(func(operation Operation, result *OperationResult)) Handler
+	OnResult(func(operationInfo string, operation Operation, result *OperationResult)) Handler
 	OnError(func(err *data.CodeError)) Handler
 	Start()
 }
@@ -59,7 +60,7 @@ type handler struct {
 	info                  *Info
 	operationItemsCreator func(items []string) (operation Operation, err *data.CodeError)
 	onError               func(err *data.CodeError)
-	onResult              func(operation Operation, result *OperationResult)
+	onResult              func(operationInfo string, operation Operation, result *OperationResult)
 }
 
 func (h *handler) ItemsToOperation(reader func(items []string) (operation Operation, err *data.CodeError)) Handler {
@@ -67,7 +68,7 @@ func (h *handler) ItemsToOperation(reader func(items []string) (operation Operat
 	return h
 }
 
-func (h *handler) OnResult(handler func(operation Operation, result *OperationResult)) Handler {
+func (h *handler) OnResult(handler func(operationInfo string, operation Operation, result *OperationResult)) Handler {
 	h.onResult = handler
 	return h
 }
@@ -78,14 +79,6 @@ func (h *handler) OnError(handler func(err *data.CodeError)) Handler {
 }
 
 func (h *handler) Start() {
-	log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, bsuccessFname: %q, bfailureFname: %q, sep: %q",
-		h.info.Force, h.info.Overwrite, h.info.WorkerCount, h.info.InputFile, h.info.SuccessExportFilePath, h.info.FailExportFilePath, h.info.ItemSeparate)
-
-	if h.operationItemsCreator == nil {
-		log.Error(data.NewEmptyError().AppendDesc(alert.CannotEmpty("operation reader", "")))
-		return
-	}
-
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {
 		h.onError(err)
@@ -97,6 +90,14 @@ func (h *handler) Start() {
 	if h.info.WorkList != nil && len(h.info.WorkList) > 0 {
 		workerBuilder = workBuilder.WorkProviderWithArray(h.info.WorkList)
 	} else {
+		log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, bsuccessFname: %q, bfailureFname: %q, sep: %q",
+			h.info.Force, h.info.Overwrite, h.info.WorkerCount, h.info.InputFile, h.info.SuccessExportFilePath, h.info.FailExportFilePath, h.info.ItemSeparate)
+
+		if h.operationItemsCreator == nil {
+			log.Error(data.NewEmptyError().AppendDesc(alert.CannotEmpty("operation reader", "")))
+			return
+		}
+
 		workerBuilder = workBuilder.WorkProviderWithFile(h.info.InputFile,
 			h.info.EnableStdin,
 			flow.NewItemsWorkCreator(h.info.ItemSeparate, h.info.MinItemsCount, func(items []string) (work flow.Work, err *data.CodeError) {
@@ -153,11 +154,11 @@ func (h *handler) Start() {
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			operation, _ := work.Work.(Operation)
 			operationResult, _ := result.(*OperationResult)
-			h.onResult(operation, operationResult)
+			h.onResult(work.Data, operation, operationResult)
 		}).
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
 			operation, _ := work.Work.(Operation)
-			h.onResult(operation, &OperationResult{
+			h.onResult(work.Data, operation, &OperationResult{
 				Code:  data.ErrorCodeUnknown,
 				Error: err.Error(),
 			})

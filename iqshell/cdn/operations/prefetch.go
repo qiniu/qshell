@@ -52,7 +52,7 @@ func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
 	urlsToPrefetch := make([]string, 0, 50)
 	for {
 		hasMore, workInfo, pErr := workProvider.Provide()
-		if workInfo == nil || workInfo.Work == nil || pErr != nil {
+		if pErr != nil {
 			log.ErrorF("read work error:%v", pErr)
 			continue
 		}

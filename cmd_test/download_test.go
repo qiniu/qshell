@@ -13,7 +13,8 @@ import (
 )
 
 func TestDownloadWithKeyFile(t *testing.T) {
-	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", test.KeysString)
+	keys := test.KeysString + "\nhello_10.json"
+	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", keys)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
@@ -40,7 +41,7 @@ func TestDownloadWithKeyFile(t *testing.T) {
 	}
 	defer test.RemoveFile(path)
 
-	test.RunCmdWithError("qdownload", "-c", "4", path)
+	test.RunCmdWithError("qdownload", "-c", "4", path, "-d")
 	if test.FileCountInDir(cfg.DestDir) < 2 {
 		t.Fail()
 	}

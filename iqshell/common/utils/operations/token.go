@@ -157,25 +157,25 @@ func CreateUploadToken(cfg *iqshell.Config, info UploadTokenInfo) {
 }
 
 func getMacAndRequest(info TokenInfo) (mac *qbox.Mac, req *http.Request, err *data.CodeError) {
-
-	var mErr error
-	var rErr error
-
 	if info.AccessKey != "" && info.SecretKey != "" {
 		mac = qbox.NewMac(info.AccessKey, info.SecretKey)
 	} else {
+		var mErr error
 		mac, mErr = account.GetMac()
 		if mErr != nil {
 			err = data.NewEmptyError().AppendDescF("get mac: %v\n", mErr)
 			return
 		}
 	}
+
 	var httpBody io.Reader
 	if info.Body == "" {
 		httpBody = nil
 	} else {
 		httpBody = strings.NewReader(info.Body)
 	}
+
+	var rErr error
 	req, rErr = http.NewRequest(info.Method, info.Url, httpBody)
 	if rErr != nil {
 		err = data.NewEmptyError().AppendDescF("create request: %v\n", rErr)

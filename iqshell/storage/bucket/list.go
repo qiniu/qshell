@@ -181,12 +181,11 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *da
 		lineData := fmt.Sprintf("%s\t%v\t%s\t%d\t%s\t%d\t%s\r\n",
 			object.Key, fileSize, object.Hash,
 			object.PutTime, object.MimeType, object.Type, object.EndUser)
-		_, wErr := bWriter.WriteString(lineData)
-		if wErr != nil {
+		if _, wErr := bWriter.WriteString(lineData); wErr != nil {
 			return false, data.NewEmptyError().AppendDesc("write error:" + wErr.Error())
 		}
-		fErr := bWriter.Flush()
-		if fErr != nil {
+
+		if fErr := bWriter.Flush(); fErr != nil {
 			return false, data.NewEmptyError().AppendDesc("flush error:" + fErr.Error())
 		}
 		return true, nil

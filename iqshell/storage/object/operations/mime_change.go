@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -34,12 +35,12 @@ func ChangeMime(cfg *iqshell.Config, info ChangeMimeInfo) {
 
 	result, err := object.ChangeMimeType((*object.ChangeMimeApiInfo)(&info))
 	if err != nil {
-		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Error:%v", info.Bucket, info.Key, info.Mime, err)
+		log.ErrorF("Change mimetype Failed, [%s:%s] => '%d', Error:%v", info.Bucket, info.Key, info.Mime, err)
 		return
 	}
 
 	if len(result.Error) != 0 {
-		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code:%s, Error:%v", info.Bucket, info.Key, info.Mime, result.Code, err)
+		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code:%d, Error:%v", info.Bucket, info.Key, info.Mime, result.Code, result.Error)
 		return
 	}
 
@@ -89,18 +90,18 @@ func BatchChangeMime(cfg *iqshell.Config, info BatchChangeMimeInfo) {
 			return nil, alert.Error("key or mime invalid", "")
 		}
 		return nil, alert.Error("need more than one param", "")
-	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.ChangeMimeApiInfo)
 		if !ok {
 			return
 		}
 		in := (*ChangeMimeInfo)(apiInfo)
 		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s\t%s\t%d\t%s", in.Key, in.Mime, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code: %d, Error: %s",
 				in.Bucket, in.Key, in.Mime, result.Code, result.Error)
 		} else {
-			exporter.Success().ExportF("%s\t%s", in.Key, in.Mime)
+			exporter.Success().Export(operationInfo)
 			log.InfoF("Change mimetype Success, [%s:%s] => '%s'", in.Bucket, in.Key, in.Mime)
 		}
 	}).OnError(func(err *data.CodeError) {

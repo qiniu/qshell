@@ -7,7 +7,7 @@ import (
 )
 
 func NewArrayWorkProvider(works []Work) (WorkProvider, *data.CodeError) {
-	if works != nil {
+	if works == nil {
 		return nil, alert.CannotEmptyError("works (ArrayWorkProvider)", "")
 	}
 

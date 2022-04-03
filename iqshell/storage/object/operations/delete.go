@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -105,13 +106,13 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 				PutTime: putTime,
 			},
 		}, nil
-	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.DeleteApiInfo)
 		if !ok {
 			return
 		}
 		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s\t%s\t%d\t%s", apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			if len(apiInfo.Condition.PutTime) == 0 {
 				log.ErrorF("Delete Failed, [%s:%s], Code: %d, Error: %s",
 					apiInfo.Bucket, apiInfo.Key, result.Code, result.Error)
@@ -120,7 +121,7 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 					apiInfo.Bucket, apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
 			}
 		} else {
-			exporter.Success().ExportF("%s\t%s", apiInfo.Key, apiInfo.Condition.PutTime)
+			exporter.Success().Export(operationInfo)
 			if len(apiInfo.Condition.PutTime) == 0 {
 				log.InfoF("Delete Success, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
 			} else {
@@ -229,16 +230,16 @@ func BatchDeleteAfter(cfg *iqshell.Config, info BatchDeleteInfo) {
 			Key:             key,
 			DeleteAfterDays: afterDays,
 		}, nil
-	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.DeleteApiInfo)
 		if !ok {
 			return
 		}
 		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s\t%s\t%d\t%s", apiInfo.Key, apiInfo.DeleteAfterDays, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Expire Failed, [%s:%s], '%d'天后删除, Code: %d, Error: %s", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays, result.Code, result.Error)
 		} else {
-			exporter.Success().ExportF("%s\t%s", apiInfo.Key, apiInfo.DeleteAfterDays)
+			exporter.Success().Export(operationInfo)
 			log.InfoF("Expire Success, [%s:%s], '%d'天后删除", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays)
 		}
 	}).OnError(func(err *data.CodeError) {

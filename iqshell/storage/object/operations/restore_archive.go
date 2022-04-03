@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -131,19 +132,19 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 			}, nil
 		}
 		return nil, alert.Error("key invalid", "")
-	}).OnResult(func(operation batch.Operation, result *batch.OperationResult) {
+	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.RestoreArchiveApiInfo)
 		if !ok {
 			return
 		}
 
 		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s\t%d\t%s", apiInfo.Key, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%d, Code: %d, Error: %s",
 				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays,
 				result.Code, result.Error)
 		} else {
-			exporter.Success().ExportF("%s", apiInfo.Key)
+			exporter.Success().Export(operationInfo)
 			log.InfoF("Restore archive Success, [%s:%d], FreezeAfterDays:%s",
 				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
 		}
