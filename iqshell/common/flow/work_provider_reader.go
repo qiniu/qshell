@@ -48,5 +48,5 @@ func (p *readerWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.
 			Work: w,
 		}, e
 	}
-	return true, &WorkInfo{}, nil
+	return false, &WorkInfo{}, nil
 }

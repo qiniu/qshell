@@ -122,6 +122,10 @@ func (f *Flow) Start() {
 			}
 		}
 
+		if  len(workList) > 0 {
+			workChan <- workList
+		}
+
 		close(workChan)
 		log.DebugF("work producer   end")
 	}()
