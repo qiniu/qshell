@@ -51,7 +51,7 @@ func (t *testFlow) Run() {
 	fmt.Println("")
 }
 
-func (t *testFlow) runByCommand() *data.CodeError {
+func (t *testFlow) runByCommand() error {
 	docs.SetShowMethod(docs.ShowMethodStdOut)
 	cmd := exec.Command("qshell", t.args...)
 	cmd.Stdout = newLineWriter(t.resultHandler)
@@ -59,7 +59,7 @@ func (t *testFlow) runByCommand() *data.CodeError {
 	return cmd.Run()
 }
 
-func (t *testFlow) runByDebug() *data.CodeError {
+func (t *testFlow) runByDebug() error {
 	docs.SetStdout(newLineWriter(t.resultHandler))
 	docs.SetShowMethod(docs.ShowMethodStdOut)
 	data.SetStdout(newLineWriter(t.resultHandler))

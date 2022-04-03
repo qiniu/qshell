@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func RootPath() (string, *data.CodeError) {
+func RootPath() (string, error) {
 	if r, err := homedir.Dir(); err != nil {
 		return "", err
 	} else {
@@ -17,7 +17,7 @@ func RootPath() (string, *data.CodeError) {
 	}
 }
 
-func TempPath() (string, *data.CodeError) {
+func TempPath() (string, error) {
 	rootPath, err := RootPath()
 	if err != nil {
 		return "", err
@@ -25,7 +25,7 @@ func TempPath() (string, *data.CodeError) {
 	return filepath.Join(rootPath, "temp"), nil
 }
 
-func ResultPath() (string, *data.CodeError) {
+func ResultPath() (string, error) {
 	rootPath, err := RootPath()
 	if err != nil {
 		return "", err
@@ -35,7 +35,7 @@ func ResultPath() (string, *data.CodeError) {
 	return path, err
 }
 
-func CreateFileWithContent(fileName, content string) (string, *data.CodeError) {
+func CreateFileWithContent(fileName, content string) (string, error) {
 	rootPath, err := RootPath()
 	if err != nil {
 		return "", err
@@ -57,7 +57,7 @@ func CreateFileWithContent(fileName, content string) (string, *data.CodeError) {
 	}
 }
 
-func CreateTempFile(size int) (string, *data.CodeError) {
+func CreateTempFile(size int) (string, error) {
 	tempPath, err := TempPath()
 	if err != nil {
 		return "", err
@@ -108,11 +108,11 @@ func CreateTempFile(size int) (string, *data.CodeError) {
 	return fileName, err
 }
 
-func RemoveFile(filePath string) *data.CodeError {
+func RemoveFile(filePath string) error {
 	return os.RemoveAll(filePath)
 }
 
-func ExistFile(path string) (bool, *data.CodeError) {
+func ExistFile(path string) (bool, error) {
 	if s, err := os.Stat(path); err == nil {
 		return !s.IsDir(), nil
 	} else if os.IsNotExist(err) {
@@ -122,7 +122,7 @@ func ExistFile(path string) (bool, *data.CodeError) {
 	}
 }
 
-func ExistDir(path string) (bool, *data.CodeError) {
+func ExistDir(path string) (bool, error) {
 	if s, err := os.Stat(path); err == nil {
 		return s.IsDir(), nil
 	} else if os.IsNotExist(err) {
@@ -166,7 +166,7 @@ func FileContent(path string) string {
 	return string(content)
 }
 
-func AppendToFile(path string, content string) *data.CodeError {
+func AppendToFile(path string, content string) error {
 	file, err := os.OpenFile(path, os.O_RDWR|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		return err

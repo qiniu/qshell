@@ -178,44 +178,48 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 					return file, nil
 				}
 			}), nil
-		})).ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
-		apiInfo := workInfo.Work.(*download.ApiInfo)
-		if filterPrefix(apiInfo.Key) {
-			return true, data.NewEmptyError().AppendDescF("Skip download `%s`, suffix filter not match", apiInfo.Key)
-		}
-		return false, nil
-	}).OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
-		locker.Lock()
-		skipBySuffixes += 1
-		locker.Unlock()
-		log.Info(err.Error())
-	}).OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-		apiInfo := workInfo.Work.(*download.ApiInfo)
-		res := result.(download.ApiResult)
-		exporter.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, res.FileAbsPath)
+		})).
+		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
+			apiInfo := workInfo.Work.(*download.ApiInfo)
+			if filterPrefix(apiInfo.Key) {
+				return true, data.NewEmptyError().AppendDescF("Skip download `%s`, suffix filter not match", apiInfo.Key)
+			}
+			return false, nil
+		}).
+		OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+			locker.Lock()
+			skipBySuffixes += 1
+			locker.Unlock()
+			log.Info(err.Error())
+		}).
+		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
+			apiInfo := workInfo.Work.(*download.ApiInfo)
+			res := result.(download.ApiResult)
+			exporter.Success().ExportF("download success, [%s:%s] => %s", apiInfo.Bucket, apiInfo.Key, res.FileAbsPath)
 
-		locker.Lock()
-		if res.IsExist {
-			existsFileCount += 1
-		} else if res.IsUpdate {
-			updateFileCount += 1
-		} else {
-			successFileCount += 1
-		}
-		locker.Unlock()
-	}).OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
-		locker.Lock()
-		failureFileCount += 1
-		locker.Unlock()
+			locker.Lock()
+			if res.IsExist {
+				existsFileCount += 1
+			} else if res.IsUpdate {
+				updateFileCount += 1
+			} else {
+				successFileCount += 1
+			}
+			locker.Unlock()
+		}).
+		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+			locker.Lock()
+			failureFileCount += 1
+			locker.Unlock()
 
-		apiInfo := workInfo.Work.(*download.ApiInfo)
-		exporter.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* key fileSize fileHash and fileModifyTime */
-			apiInfo.Key, info.BatchInfo.ItemSeparate,
-			apiInfo.FileSize, info.BatchInfo.ItemSeparate,
-			apiInfo.FileHash, info.BatchInfo.ItemSeparate,
-			apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
-			err)
-	}).Builder().Start()
+			apiInfo := workInfo.Work.(*download.ApiInfo)
+			exporter.Fail().ExportF("%s%s%ld%s%s%s%ld%s error:%s", /* key fileSize fileHash and fileModifyTime */
+				apiInfo.Key, info.BatchInfo.ItemSeparate,
+				apiInfo.FileSize, info.BatchInfo.ItemSeparate,
+				apiInfo.FileHash, info.BatchInfo.ItemSeparate,
+				apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
+				err)
+		}).Builder().Start()
 
 	if totalFileCount == 0 {
 		totalFileCount = skipBySuffixes + existsFileCount + successFileCount + updateFileCount + failureFileCount
