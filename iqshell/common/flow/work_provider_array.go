@@ -36,7 +36,7 @@ func (p *arrayWorkProvider) Provide() (hasMore bool, work *WorkInfo, err *data.C
 
 func (p *arrayWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.CodeError) {
 	if p.readOffset > len(p.works)-1 {
-		return false, nil, nil
+		return true, &WorkInfo{}, nil
 	}
 	hasMore = true
 	work = p.works[p.readOffset]

@@ -99,7 +99,7 @@ func (h *handler) Start() {
 	} else {
 		workerBuilder = workBuilder.WorkProviderWithFile(h.info.InputFile,
 			h.info.EnableStdin,
-			flow.NewLineSeparateWorkCreator(h.info.ItemSeparate, h.info.MinItemsCount, func(items []string) (work flow.Work, err *data.CodeError) {
+			flow.NewItemsWorkCreator(h.info.ItemSeparate, h.info.MinItemsCount, func(items []string) (work flow.Work, err *data.CodeError) {
 				return h.operationItemsCreator(items)
 			}))
 	}
@@ -161,5 +161,5 @@ func (h *handler) Start() {
 				Code:  data.ErrorCodeUnknown,
 				Error: err.Error(),
 			})
-		}).Builder().Start()
+		}).Build().Start()
 }

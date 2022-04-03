@@ -219,7 +219,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				apiInfo.FileHash, info.BatchInfo.ItemSeparate,
 				apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
 				err)
-		}).Builder().Start()
+		}).Build().Start()
 
 	if totalFileCount == 0 {
 		totalFileCount = skipBySuffixes + existsFileCount + successFileCount + updateFileCount + failureFileCount

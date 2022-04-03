@@ -53,7 +53,7 @@ func (w *workProvider) getWorkInfoFromFile() {
 	w.totalCount = utils.GetFileLineCount(w.inputFile)
 
 	go func() {
-		workPro, err := flow.NewWorkProviderOfFile(w.inputFile, false, flow.NewLineSeparateWorkCreator(w.itemSeparate,
+		workPro, err := flow.NewWorkProviderOfFile(w.inputFile, false, flow.NewItemsWorkCreator(w.itemSeparate,
 			1,
 			func(items []string) (work flow.Work, err *data.CodeError) {
 				downloadApiInfo := &download.ApiInfo{

@@ -187,7 +187,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	flow.New(info.BatchInfo.Info).
 		WorkProviderWithFile(info.BatchInfo.InputFile,
 			false,
-			flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate,
+			flow.NewItemsWorkCreator(info.BatchInfo.ItemSeparate,
 				3,
 				func(items []string) (work flow.Work, err *data.CodeError) {
 					fileRelativePath := items[0]
@@ -325,7 +325,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				apiInfo.FileSize, info.BatchInfo.ItemSeparate,
 				apiInfo.FileModifyTime, info.BatchInfo.ItemSeparate,
 				err)
-		}).Builder().Start()
+		}).Build().Start()
 
 	log.Alert("--------------- Upload Result ---------------")
 	log.AlertF("%20s%10d", "Total:", totalFileCount)

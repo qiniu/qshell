@@ -81,7 +81,7 @@ func (f *Flow) Start() {
 				continue
 			}
 
-			if workInfo.Work == nil {
+			if workInfo == nil || workInfo.Work == nil {
 				if !hasMore {
 					break
 				} else {

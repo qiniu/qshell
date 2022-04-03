@@ -8,13 +8,13 @@ import (
 
 const DefaultLineItemSeparate = "\t"
 
-type lineSeparateWorkCreator struct {
+type itemsWorkCreator struct {
 	separate      string
 	minItemsCount int
 	creatorFunc   func(items []string) (work Work, err *data.CodeError)
 }
 
-func (l *lineSeparateWorkCreator) Create(info string) (work Work, err *data.CodeError) {
+func (l *itemsWorkCreator) Create(info string) (work Work, err *data.CodeError) {
 	items := utils.SplitString(info, l.separate)
 	if len(items) >= l.minItemsCount {
 		return l.creatorFunc(items)
@@ -22,11 +22,11 @@ func (l *lineSeparateWorkCreator) Create(info string) (work Work, err *data.Code
 	return nil, data.NewError(data.ErrorCodeParamMissing, fmt.Sprintf("%s%serror:at least %d parameter is required", info, l.separate, l.minItemsCount))
 }
 
-func NewLineSeparateWorkCreator(separate string, minItemsCount int, creatorFunc func(items []string) (work Work, err *data.CodeError)) WorkCreator {
+func NewItemsWorkCreator(separate string, minItemsCount int, creatorFunc func(items []string) (work Work, err *data.CodeError)) WorkCreator {
 	if len(separate) == 0 {
 		separate = DefaultLineItemSeparate
 	}
-	return &lineSeparateWorkCreator{
+	return &itemsWorkCreator{
 		separate:      separate,
 		minItemsCount: minItemsCount,
 		creatorFunc:   creatorFunc,

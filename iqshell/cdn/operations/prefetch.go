@@ -31,7 +31,7 @@ func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
 
 	workProvider, err := flow.NewWorkProviderOfFile(info.UrlListFile,
 		true,
-		flow.NewLineSeparateWorkCreator(flow.DefaultLineItemSeparate,
+		flow.NewItemsWorkCreator(flow.DefaultLineItemSeparate,
 			1,
 			func(items []string) (work flow.Work, err *data.CodeError) {
 				item := strings.TrimSpace(items[0])

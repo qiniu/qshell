@@ -7,18 +7,18 @@ import (
 )
 
 func NewFileWorkProvider(filePath string, creator WorkCreator) (WorkProvider, *data.CodeError) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, data.NewEmptyError().AppendDescF("FileWorkProvider, open file error:%v", err)
+	f, oErr := os.Open(filePath)
+	if oErr != nil {
+		return nil, data.NewEmptyError().AppendDescF("FileWorkProvider, open file error:%v", oErr)
 	}
 
-	provider, err := NewReaderWorkProvider(f, creator)
-	if err != nil {
-		return nil, data.ConvertError(err)
+	provider, rErr := NewReaderWorkProvider(f, creator)
+	if rErr != nil {
+		return nil, data.ConvertError(rErr)
 	}
 
-	workCount, err := utils.FileLineCounts(filePath)
-	if err != nil {
+	workCount, fErr := utils.FileLineCounts(filePath)
+	if fErr != nil {
 		workCount = UnknownWorkCount
 	}
 

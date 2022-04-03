@@ -1,6 +1,9 @@
 package flow
 
-import "github.com/qiniu/qshell/v2/iqshell/common/data"
+import (
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+)
 
 func New(info Info) *WorkProvideBuilder {
 	return &WorkProvideBuilder{
@@ -143,6 +146,9 @@ type FlowBuilder struct {
 	err  error
 }
 
-func (b *FlowBuilder) Builder() *Flow {
+func (b *FlowBuilder) Build() *Flow {
+	if b.err != nil {
+		log.ErrorF("Flow Builder error:%s", b.err)
+	}
 	return b.flow
 }

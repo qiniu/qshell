@@ -80,7 +80,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 	flow.New(info.BatchInfo.Info).
 		WorkProviderWithFile(info.BatchInfo.InputFile,
 			info.BatchInfo.EnableStdin,
-			flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
+			flow.NewItemsWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
 				key := ""
 				fromUrl := items[0]
 				if len(items) > 1 {
@@ -113,7 +113,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 			in := workInfo.Work.(*object.FetchApiInfo)
 			exporter.Fail().ExportF("%s\t%s\t%v", in.FromUrl, in.Key, err)
 			log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.FromUrl, in.Bucket, in.Key, err)
-		}).Builder().Start()
+		}).Build().Start()
 }
 
 type CheckAsyncFetchStatusInfo struct {
@@ -186,7 +186,7 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 		flow.New(info.BatchInfo.Info).
 			WorkProviderWithFile(info.BatchInfo.InputFile,
 				info.BatchInfo.EnableStdin,
-				flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
+				flow.NewItemsWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
 					var size uint64 = 0
 					fromUrl := items[0]
 					if len(items) > 1 {
@@ -247,7 +247,7 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 				in := workInfo.Work.(fetchItem)
 				exporter.Fail().ExportF("%s: %v", in.info.Url, err)
 				log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
-			}).Builder().Start()
+			}).Build().Start()
 
 		close(fetchResultChan)
 	}()

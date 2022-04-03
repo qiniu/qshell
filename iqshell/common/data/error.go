@@ -89,7 +89,10 @@ func NewErrorWithCode(code int) *CodeError {
 }
 
 func (c *CodeError) Error() string {
-	return fmt.Sprintf("Code:%d desc:%s", c.Code, c.Desc)
+	if c == nil {
+		return ""
+	}
+	return c.Desc
 }
 
 func ErrorCode(err error) *Int {

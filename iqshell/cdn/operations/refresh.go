@@ -34,7 +34,7 @@ func Refresh(cfg *iqshell.Config, info RefreshInfo) {
 
 	workProvider, err := flow.NewWorkProviderOfFile(info.ItemListFile,
 		true,
-		flow.NewLineSeparateWorkCreator(flow.DefaultLineItemSeparate,
+		flow.NewItemsWorkCreator(flow.DefaultLineItemSeparate,
 			1,
 			func(items []string) (work flow.Work, err *data.CodeError) {
 				item := strings.TrimSpace(items[0])

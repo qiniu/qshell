@@ -16,23 +16,23 @@ type Worker interface {
 }
 
 func NewWorker(doFunc func(workInfos []*WorkInfo) ([]*WorkRecord, *data.CodeError)) Worker {
-	return &worker{
+	return &workerStruct{
 		DoFunc: doFunc,
 	}
 }
 
 func NewSimpleWorker(doFunc func(workInfo *WorkInfo) (Result, *data.CodeError)) Worker {
-	return &worker{
+	return &workerStruct{
 		SimpleDoFunc: doFunc,
 	}
 }
 
-type worker struct {
+type workerStruct struct {
 	SimpleDoFunc func(workInfo *WorkInfo) (Result, *data.CodeError)
 	DoFunc       func(workInfos []*WorkInfo) ([]*WorkRecord, *data.CodeError)
 }
 
-func (w *worker) DoWork(workInfoList []*WorkInfo) ([]*WorkRecord, *data.CodeError) {
+func (w *workerStruct) DoWork(workInfoList []*WorkInfo) ([]*WorkRecord, *data.CodeError) {
 	if w == nil {
 		return nil, alert.Error("worker: no worker", "")
 	}

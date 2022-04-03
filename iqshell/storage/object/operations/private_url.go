@@ -86,7 +86,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 	flow.New(info.BatchInfo.Info).
 		WorkProviderWithFile(info.BatchInfo.InputFile,
 			info.BatchInfo.EnableStdin,
-			flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
+			flow.NewItemsWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
 				url := items[0]
 				if url == "" {
 					return nil, alert.Error("url invalid", "")
@@ -124,5 +124,5 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 		}).
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
 			log.Error(err)
-		}).Builder().Start()
+		}).Build().Start()
 }

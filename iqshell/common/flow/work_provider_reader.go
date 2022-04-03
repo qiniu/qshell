@@ -9,10 +9,10 @@ import (
 )
 
 func NewReaderWorkProvider(reader io.Reader, creator WorkCreator) (WorkProvider, *data.CodeError) {
-	if reader != nil {
+	if reader == nil {
 		return nil, alert.CannotEmptyError("work reader (ReaderWorkProvider)", "")
 	}
-	if creator != nil {
+	if creator == nil {
 		return nil, alert.CannotEmptyError("work creator (ReaderWorkProvider)", "")
 	}
 	return &readerWorkProvider{
@@ -48,5 +48,5 @@ func (p *readerWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.
 			Work: w,
 		}, e
 	}
-	return false, nil, nil
+	return true, &WorkInfo{}, nil
 }
