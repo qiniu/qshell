@@ -42,14 +42,11 @@ func (p *readerWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.
 	success := p.scanner.Scan()
 	if success {
 		line := p.scanner.Text()
-		if w, e := p.creator.Create(line); e != nil {
-			return true, nil, e
-		} else {
-			return true, &WorkInfo{
-				Data: line,
-				Work: w,
-			}, nil
-		}
+		w, e := p.creator.Create(line)
+		return true, &WorkInfo{
+			Data: line,
+			Work: w,
+		}, e
 	}
 	return false, nil, nil
 }

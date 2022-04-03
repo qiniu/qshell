@@ -145,14 +145,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}
 
 	flow.New(info.BatchInfo.Info).
-		WorkProviderWithFile(info.BatchInfo.InputFile,
-			false,
-			flow.NewLineSeparateWorkCreator(info.BatchInfo.ItemSeparate,
-				3,
-				func(items []string) (work flow.Work, err *data.CodeError) {
-					// TODO:
-					return
-				})).
+		WorkProvider(NewWorkProvider(info.Bucket, info.BatchInfo.InputFile, info.BatchInfo.InputFile)).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
