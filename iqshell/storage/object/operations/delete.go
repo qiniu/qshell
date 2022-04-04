@@ -109,6 +109,8 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.DeleteApiInfo)
 		if !ok {
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			log.ErrorF("Delete Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
 		if result.Code != 200 || result.Error != "" {
@@ -233,6 +235,8 @@ func BatchDeleteAfter(cfg *iqshell.Config, info BatchDeleteInfo) {
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.DeleteApiInfo)
 		if !ok {
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			log.ErrorF("Delete Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
 		if result.Code != 200 || result.Error != "" {

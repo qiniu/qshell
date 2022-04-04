@@ -5,10 +5,10 @@ import (
 )
 
 var (
-	ErrorCodeUnknown       = 10000
-	ErrorCodeParamNotExist = 11000
-	ErrorCodeParamMissing  = 11001
-	ErrorCodeAlreadyDone   = 15000
+	ErrorCodeUnknown       = -10000
+	ErrorCodeParamNotExist = -11000
+	ErrorCodeParamMissing  = -11001
+	ErrorCodeAlreadyDone   = -15000
 )
 
 func ConvertError(err error) *CodeError {

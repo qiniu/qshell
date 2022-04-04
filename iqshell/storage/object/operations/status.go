@@ -87,6 +87,8 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.StatusApiInfo)
 		if !ok {
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			log.ErrorF("Status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
 		in := (*StatusInfo)(apiInfo)

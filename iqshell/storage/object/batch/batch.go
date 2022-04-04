@@ -153,7 +153,7 @@ func (h *handler) Start() {
 		})).
 		DoWorkListMaxCount(h.info.MaxOperationCountPerRequest).
 		OnWorkSkip(func(work *flow.WorkInfo, err *data.CodeError) {
-
+			log.WarningF("Skip line:%s error:%v", work.Data, err)
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			operation, _ := work.Work.(Operation)

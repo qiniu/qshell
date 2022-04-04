@@ -113,6 +113,8 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.MoveApiInfo)
 		if !ok {
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			log.ErrorF("Change mimetype Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
 
