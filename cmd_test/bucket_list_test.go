@@ -65,8 +65,8 @@ func TestBucketList2(t *testing.T) {
 	result, errs := test.RunCmdWithError("listbucket2", test.Bucket,
 		"--prefix", "hello",
 		"--readable",
-		"--start", "2022-01-21-00-00-00",
-		"--end", "2022-02-22-00-00-00")
+		"--start", "2022-02-21-00-00-00",
+		"--end", "2022-02-23-00-00-00")
 	if len(errs) > 0 {
 		t.Fatal("error:", errs)
 	}

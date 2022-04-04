@@ -9,6 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/syndtr/goleveldb/leveldb/errors"
 	"io"
 	"os"
 	"strings"
@@ -61,7 +62,7 @@ func List(info ListApiInfo,
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
 		entries, lErr := bucketManager.ListBucketContext(workspace.GetContext(), info.Bucket, info.Prefix, info.Delimiter, info.Marker)
 		if entries == nil && lErr == nil {
-			lErr = data.NewEmptyError().AppendDesc("meet empty body when list not completed")
+			lErr = errors.New("meet empty body when list not completed")
 		}
 
 		if lErr != nil {
@@ -83,17 +84,20 @@ func List(info ListApiInfo,
 			}
 
 			if listItem.Item.IsEmpty() {
+				log.Debug("filter: item empty")
 				continue
 			}
 
 			if shouldCheckPutTime {
 				putTime := time.Unix(listItem.Item.PutTime/1e7, 0)
 				if !filterByPutTime(putTime, info.StartTime, info.EndTime) {
+					log.DebugF("filter: putTime not match, %s out of range [start:%s ~ end:%s]", putTime, info.StartTime, info.EndTime)
 					continue
 				}
 			}
 
 			if shouldCheckSuffixes && !filterBySuffixes(listItem.Item.Key, info.Suffixes) {
+				log.DebugF("filter: key not match, key:%s suffixes:%s ", listItem.Item.Key, info.Suffixes)
 				continue
 			}
 
