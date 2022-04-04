@@ -182,6 +182,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	var currentFileCount int64
 	var successFileCount int64
 	var failureFileCount int64
+	var overwriteCount int64
 	var notOverwriteCount int64
 	var skippedFileCount int64
 
@@ -265,6 +266,10 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				return res, nil
 			}), nil
 		})).
+		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
+			totalFileCount = flow.WorkProvider.WorkTotalCount()
+			return nil
+		}).
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
 			apiInfo := workInfo.Work.(*UploadInfo)
 			if hit, prefix := uploadConfig.HitByPathPrefixes(apiInfo.RelativePathToSrcPath); hit {
@@ -284,10 +289,6 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			}
 			return
 		}).
-		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
-			totalFileCount = flow.WorkProvider.WorkTotalCount()
-			return nil
-		}).
 		OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			syncLocker.Do(func() {
 				skippedFileCount += 1
@@ -299,11 +300,14 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			res := result.(upload.ApiResult)
 
 			syncLocker.Do(func() {
-				if res.IsNotOverWrite {
+				if res.IsNotOverwrite {
 					notOverwriteCount += 1
-					exporter.Override().Export(workInfo.Data)
+				} else if res.IsOverwrite {
+					overwriteCount += 1
+					exporter.Overwrite().Export(workInfo.Data)
 				} else if res.IsSkip {
 					skippedFileCount += 1
+					exporter.Skip().Export(workInfo.Data)
 				} else {
 					successFileCount += 1
 					exporter.Success().Export(workInfo.Data)
@@ -315,12 +319,14 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				failureFileCount += 1
 			})
 			exporter.Fail().ExportF("%s%s%%s", workInfo.Data, flow.ErrorSeparate, err)
+			log.ErrorF("Upload Failed, %s error:%s", workInfo.Data, err)
 		}).Build().Start()
 
 	log.Alert("--------------- Upload Result ---------------")
 	log.AlertF("%20s%10d", "Total:", totalFileCount)
 	log.AlertF("%20s%10d", "Success:", successFileCount)
 	log.AlertF("%20s%10d", "Failure:", failureFileCount)
+	log.AlertF("%20s%10d", "Overwrite:", overwriteCount)
 	log.AlertF("%20s%10d", "NotOverwrite:", notOverwriteCount)
 	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
 	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))

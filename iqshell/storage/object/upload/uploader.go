@@ -83,8 +83,8 @@ type ApiResult struct {
 	FSize          int64  `json:"file_size"` // 文件大小
 	Hash           string `json:"hash"`      // 文件 etag
 	IsSkip         bool   `json:"-"`         // 是否被 skip
-	IsNotOverWrite bool   `json:"-"`         // 是否因未开启 overwrite 而未覆盖之前的上传
-	IsOverWrite    bool   `json:"-"`         // 覆盖之前的上传
+	IsNotOverwrite bool   `json:"-"`         // 是否因未开启 overwrite 而未覆盖之前的上传
+	IsOverwrite    bool   `json:"-"`         // 覆盖之前的上传
 }
 
 func ApiResultFormat() string {
@@ -145,8 +145,8 @@ func Upload(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 			log.InfoF("File `%s` exists in bucket:[%s:%s], and match, ignore this upload",
 				info.FilePath, info.ToBucket, info.SaveKey)
 			res.IsSkip = true
-			res.IsOverWrite = false
-			res.IsNotOverWrite = false
+			res.IsOverwrite = false
+			res.IsNotOverwrite = false
 			return
 		}
 
@@ -154,8 +154,8 @@ func Upload(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 			log.WarningF("Skip upload of file `%s` => [%s:%s] because `overwrite` is false",
 				info.FilePath, info.ToBucket, info.SaveKey)
 			res.IsSkip = false
-			res.IsOverWrite = false
-			res.IsNotOverWrite = true
+			res.IsOverwrite = false
+			res.IsNotOverwrite = true
 			return
 		}
 
@@ -167,8 +167,8 @@ func Upload(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 	log.DebugF("upload: start upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 	res, err = uploadSource(info)
 	res.IsSkip = isSkip
-	res.IsOverWrite = isOverWrite
-	res.IsNotOverWrite = isNotOverWrite
+	res.IsOverwrite = isOverWrite
+	res.IsNotOverwrite = isNotOverWrite
 	log.DebugF("upload:   end upload:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
 
 	if err != nil {

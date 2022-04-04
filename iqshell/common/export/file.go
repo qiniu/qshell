@@ -5,10 +5,10 @@ import (
 )
 
 type FileExporter struct {
-	success  Exporter
-	fail     Exporter
-	skip     Exporter
-	override Exporter
+	success   Exporter
+	fail      Exporter
+	skip      Exporter
+	overwrite Exporter
 }
 
 func (b *FileExporter) Success() Exporter {
@@ -23,21 +23,21 @@ func (b *FileExporter) Skip() Exporter {
 	return b.skip
 }
 
-func (b *FileExporter) Override() Exporter {
-	return b.override
+func (b *FileExporter) Overwrite() Exporter {
+	return b.overwrite
 }
 
 func (b *FileExporter) Close() *data.CodeError {
 	errS := b.success.Close()
 	errF := b.fail.Close()
-	errO := b.override.Close()
+	errO := b.overwrite.Close()
 	if errS == nil && errF == nil && errO == nil {
 		return nil
 	}
 	return data.NewEmptyError().AppendDesc("export close:").
 		AppendDesc("success").AppendError(errS).
 		AppendDesc("fail").AppendError(errF).
-		AppendDesc("override").AppendError(errO)
+		AppendDesc("overwrite").AppendError(errO)
 }
 
 type FileExporterConfig struct {
@@ -59,11 +59,11 @@ func NewFileExport(config FileExporterConfig) (export *FileExporter, err *data.C
 		return
 	}
 
-	export.skip, err = New(config.FailExportFilePath)
+	export.skip, err = New(config.SkipExportFilePath)
 	if err != nil {
 		return
 	}
 
-	export.override, err = New(config.OverwriteExportFilePath)
+	export.overwrite, err = New(config.OverwriteExportFilePath)
 	return
 }

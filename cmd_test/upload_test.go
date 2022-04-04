@@ -73,7 +73,7 @@ func TestQUpload(t *testing.T) {
 	}
 
 	if test.IsFileHasContent(failLogPath) {
-		t.Fatal("batch result: fail log to file error: file can't empty")
+		t.Fatal("batch result: fail log to file error: file should empty")
 	}
 
 	if !test.IsFileHasContent(overwriteLogPath) {

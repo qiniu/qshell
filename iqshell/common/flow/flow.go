@@ -63,6 +63,13 @@ func (f *Flow) Start() {
 		return
 	}
 
+	if f.EventListener.FlowWillStartFunc != nil {
+		if err := f.EventListener.FlowWillStartFunc(f); err != nil {
+			log.ErrorF("Flow start error:%v", err)
+			return
+		}
+	}
+
 	log.Debug("work flow did start")
 	workChan := make(chan []*WorkInfo, f.Info.WorkerCount)
 	// 生产者
@@ -188,6 +195,13 @@ func (f *Flow) Start() {
 		}(i)
 	}
 	wait.Wait()
+
+	if f.EventListener.FlowWillEndFunc != nil {
+		if err := f.EventListener.FlowWillEndFunc(f); err != nil {
+			log.ErrorF("Flow end error:%v", err)
+			return
+		}
+	}
 
 	log.Debug("work flow did end")
 }
