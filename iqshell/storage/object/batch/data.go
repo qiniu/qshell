@@ -66,5 +66,5 @@ func (r *OperationResult) IsSuccess() bool {
 		return false
 	}
 
-	return r.Code == 200
+	return r.Code == 0 || r.Code == 200
 }

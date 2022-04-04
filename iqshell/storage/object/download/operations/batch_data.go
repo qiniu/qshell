@@ -26,26 +26,30 @@ type DownloadCfg struct {
 	// 是否使用 getfile api，私有云使用
 	GetFileApi bool `json:"get_file_api"`
 
+	// 当遇到错误时删除临时文件
+	RemoveTempWhileError bool `json:"remove_temp_while_error"`
+
 	// 下载状态保存路径
 	RecordRoot string `json:"record_root,omitempty"`
 }
 
 func DefaultDownloadCfg() DownloadCfg {
 	return DownloadCfg{
-		ThreadCount:  5,
-		FileEncoding: "",
-		KeyFile:      "",
-		DestDir:      "",
-		Bucket:       "",
-		Prefix:       "",
-		Suffixes:     "",
-		IoHost:       "",
-		Public:       false,
-		CheckHash:    false,
-		Referer:      "",
-		CdnDomain:    "",
-		GetFileApi:   false,
-		RecordRoot:   "",
+		ThreadCount:          5,
+		FileEncoding:         "",
+		KeyFile:              "",
+		DestDir:              "",
+		Bucket:               "",
+		Prefix:               "",
+		Suffixes:             "",
+		IoHost:               "",
+		Public:               false,
+		CheckHash:            false,
+		Referer:              "",
+		CdnDomain:            "",
+		GetFileApi:           false,
+		RemoveTempWhileError: false,
+		RecordRoot:           "",
 	}
 }
 

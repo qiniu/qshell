@@ -14,21 +14,22 @@ import (
 )
 
 type ApiInfo struct {
-	Bucket         string            // 文件所在 bucket 【必填】
-	Key            string            // 文件被保存的 key 【必填】
-	IsPublic       bool              // 是否使用共有链接 【必填】
-	Domain         string            // 文件下载的 domain 【必填】
-	Host           string            // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
-	ToFile         string            // 文件保存的路径 【必填】
-	StatusDBPath   string            // 下载状态缓存的 db 路径 【选填】
-	Referer        string            // 请求 header 中的 Referer 【选填】
-	FileEncoding   string            // 文件编码方式 【选填】
-	FileModifyTime int64             // 文件修改时间 【选填】
-	FileSize       int64             // 文件大小，有值则会检测文件大小 【选填】
-	FileHash       string            // 文件 hash，有值则会检测 hash 【选填】
-	FromBytes      int64             // 下载开始的位置，内部会缓存 【选填】
-	UseGetFileApi  bool              // 是否使用 get file api(私有云会使用)【选填】
-	Progress       progress.Progress // 下载进度回调【选填】
+	Bucket               string            // 文件所在 bucket 【必填】
+	Key                  string            // 文件被保存的 key 【必填】
+	IsPublic             bool              // 是否使用共有链接 【必填】
+	Domain               string            // 文件下载的 domain 【必填】
+	Host                 string            // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
+	ToFile               string            // 文件保存的路径 【必填】
+	StatusDBPath         string            // 下载状态缓存的 db 路径 【选填】
+	Referer              string            // 请求 header 中的 Referer 【选填】
+	FileEncoding         string            // 文件编码方式 【选填】
+	FileModifyTime       int64             // 文件修改时间 【选填】
+	FileSize             int64             // 文件大小，有值则会检测文件大小 【选填】
+	FileHash             string            // 文件 hash，有值则会检测 hash 【选填】
+	FromBytes            int64             // 下载开始的位置，内部会缓存 【内部使用】
+	RemoveTempWhileError bool              // 当遇到错误时删除临时文件 【选填】
+	UseGetFileApi        bool              // 是否使用 get file api(私有云会使用)【选填】
+	Progress             progress.Progress // 下载进度回调【选填】
 }
 
 func (i *ApiInfo) WorkId() string {
@@ -87,10 +88,14 @@ func Download(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 			// 文件是否已下载了一部分，需要继续下载
 			res.IsUpdate = true
 		}
-		if fileStatus != nil && fileStatus.Size() == info.FileSize {
-			// 文件是否已下载完成，如果完成跳过下载阶段，直接验证
-			res.IsExist = true
-			shouldDownload = false
+		if fileStatus != nil {
+			if fileStatus.Size() == info.FileSize {
+				// 文件是否已下载完成，如果完成跳过下载阶段，直接验证
+				res.IsExist = true
+				shouldDownload = false
+			} else {
+				log.DebugF("Local file `%s` exist for key `%s`, but not match, FileSize:%d|%d", f.toAbsFile, info.Key, fileStatus.Size(), info.FileSize)
+			}
 		}
 	}
 
@@ -127,15 +132,12 @@ func Download(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 
 func download(fInfo *fileInfo, info *ApiInfo) (err *data.CodeError) {
 	defer func() {
-		if err != nil {
+		if info.RemoveTempWhileError && err != nil {
 			e := os.Remove(fInfo.tempFile)
 			if e != nil && !os.IsNotExist(e) {
 				log.WarningF("download: remove temp file error:%v", e)
-			}
-
-			e = os.Remove(fInfo.toFile)
-			if e != nil && !os.IsNotExist(e) {
-				log.WarningF("download: remove file error:%v", e)
+			} else {
+				log.DebugF("download: remove temp file success:%s", fInfo.tempFile)
 			}
 		}
 	}()
@@ -162,7 +164,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 		if info.Progress != nil {
 			size := response.Header.Get("Content-Length")
 			if sizeInt, err := strconv.ParseInt(size, 10, 64); err == nil {
-				info.Progress.SetFileSize(sizeInt)
+				info.Progress.SetFileSize(sizeInt + info.FromBytes)
 				info.Progress.SendSize(info.FromBytes)
 				info.Progress.Start()
 			}
@@ -185,6 +187,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	var tempFileHandle *os.File
 	if info.FromBytes > 0 {
 		tempFileHandle, fErr = os.OpenFile(fInfo.tempFile, os.O_APPEND|os.O_WRONLY, 0655)
+		log.InfoF("download [%s:%s] => %s from:%d", info.Bucket, info.Key, info.ToFile, info.FromBytes)
 	} else {
 		tempFileHandle, fErr = os.Create(fInfo.tempFile)
 	}
@@ -195,12 +198,14 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 
 	if info.Progress != nil {
 		_, fErr = io.Copy(tempFileHandle, io.TeeReader(response.Body, info.Progress))
-		info.Progress.End()
+		if fErr == nil {
+			info.Progress.End()
+		}
 	} else {
 		_, fErr = io.Copy(tempFileHandle, response.Body)
 	}
 	if fErr != nil {
-		return data.NewEmptyError().AppendDescF(" Download error:%v", err)
+		return data.NewEmptyError().AppendDescF(" Download error:%v", fErr)
 	}
 
 	return nil

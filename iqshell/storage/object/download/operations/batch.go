@@ -10,7 +10,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -88,7 +87,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	log.DebugF("record root: %s", info.RecordRoot)
+	log.InfoF("record root: %s", info.RecordRoot)
 
 	info.BatchInfo.InputFile = info.KeyFile
 	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig(), &info.DownloadCfg)
@@ -97,8 +96,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	log.DebugF("Download Domain:%s", downloadDomain)
-	log.DebugF("Download Host  :%s", downloadHost)
+	log.InfoF("Download Domain:%s", downloadDomain)
+	log.InfoF("Download Host  :%s", downloadHost)
 
 	dbPath := filepath.Join(info.RecordRoot, ".ldb")
 	log.InfoF("download db dir:%s", dbPath)
@@ -139,7 +138,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}
 
 	flow.New(info.BatchInfo.Info).
-		WorkProvider(NewWorkProvider(info.Bucket, info.BatchInfo.InputFile, info.BatchInfo.InputFile)).
+		WorkProvider(NewWorkProvider(info.Bucket, info.BatchInfo.InputFile, info.BatchInfo.ItemSeparate)).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
@@ -150,6 +149,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				apiInfo.Referer = info.Referer
 				apiInfo.FileEncoding = info.FileEncoding
 				apiInfo.Bucket = info.Bucket
+				apiInfo.RemoveTempWhileError = info.RemoveTempWhileError
 				apiInfo.UseGetFileApi = info.GetFileApi
 				if !info.CheckHash {
 					apiInfo.FileHash = ""
@@ -205,7 +205,6 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			locker.Unlock()
 
 			exporter.Success().Export(workInfo.Data)
-			log.ErrorF("Download success, %s", workInfo.Data)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			locker.Lock()
@@ -213,7 +212,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			locker.Unlock()
 
 			exporter.Fail().ExportF("%s%s%s", workInfo.Data, flow.ErrorSeparate, err)
-			log.ErrorF("Download  failed, %s error:%v", workInfo.Data, err)
+			log.ErrorF("Download  Failed, %s error:%v", workInfo.Data, err)
 		}).Build().Start()
 
 	if totalFileCount == 0 {
@@ -234,9 +233,5 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 	if workspace.GetConfig().Log.Enable() {
 		log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
-	}
-
-	if failureFileCount > 0 {
-		os.Exit(data.StatusError)
 	}
 }

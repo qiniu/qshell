@@ -8,18 +8,20 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"os"
 	"time"
 )
 
 type DownloadInfo struct {
-	Bucket        string // 文件被保存的 bucket
-	Key           string // 文件被保存的 key
-	ToFile        string // 文件保存的路径
-	UseGetFileApi bool   //
-	IsPublic      bool   //
-	Domain        string // 下载的 domain
+	Bucket               string // 文件被保存的 bucket
+	Key                  string // 文件被保存的 key
+	ToFile               string // 文件保存的路径
+	UseGetFileApi        bool   //
+	IsPublic             bool   //
+	Domain               string // 下载的 domain
+	RemoveTempWhileError bool   //
 }
 
 func (info *DownloadInfo) Check() *data.CodeError {
@@ -44,6 +46,16 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		info.ToFile = info.Key
 	}
 
+	fileStatus, err := object.Status(object.StatusApiInfo{
+		Bucket:   info.Bucket,
+		Key:      info.Key,
+		NeedPart: false,
+	})
+	if err != nil {
+		log.ErrorF("get file status error:%v", err)
+		return
+	}
+
 	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig(), &DownloadCfg{
 		IoHost:     info.Domain,
 		CdnDomain:  info.Domain,
@@ -58,21 +70,22 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	log.DebugF("Download Domain:%s", downloadDomain)
 	log.DebugF("Download Domain:%s", downloadHost)
 	_, _ = downloadFile(&download.ApiInfo{
-		IsPublic:       info.IsPublic,
-		Domain:         downloadDomain,
-		Host:           downloadHost,
-		ToFile:         info.ToFile,
-		StatusDBPath:   "",
-		Referer:        "",
-		FileEncoding:   "",
-		Bucket:         info.Bucket,
-		Key:            info.Key,
-		FileModifyTime: 0,
-		FileSize:       0,
-		FileHash:       "",
-		FromBytes:      0,
-		UseGetFileApi:  info.UseGetFileApi,
-		Progress:       progress.NewPrintProgress(" 进度"),
+		IsPublic:             info.IsPublic,
+		Domain:               downloadDomain,
+		Host:                 downloadHost,
+		ToFile:               info.ToFile,
+		StatusDBPath:         "",
+		Referer:              "",
+		FileEncoding:         "",
+		Bucket:               info.Bucket,
+		Key:                  info.Key,
+		FileModifyTime:       fileStatus.PutTime,
+		FileSize:             fileStatus.FSize,
+		FileHash:             fileStatus.Hash,
+		FromBytes:            0,
+		RemoveTempWhileError: info.RemoveTempWhileError,
+		UseGetFileApi:        info.UseGetFileApi,
+		Progress:             progress.NewPrintProgress(" 进度"),
 	})
 }
 
@@ -81,17 +94,17 @@ func downloadFile(info *download.ApiInfo) (download.ApiResult, *data.CodeError) 
 	startTime := time.Now().UnixNano() / 1e6
 	res, err := download.Download(info)
 	if err != nil {
-		log.ErrorF("Download  failed, [%s:%s] => %s error:%v", info.Bucket, info.Key, info.ToFile, err)
+		log.ErrorF("Download  Failed, [%s:%s] => %s error:%v", info.Bucket, info.Key, info.ToFile, err)
 		return res, err
 	}
 
 	fileStatus, sErr := os.Stat(res.FileAbsPath)
 	if sErr != nil {
-		log.ErrorF("Download  failed, [%s:%s] => %s get file status error:%v", info.Bucket, info.Key, info.ToFile, err)
+		log.ErrorF("Download  Failed, [%s:%s] => %s get file status error:%v", info.Bucket, info.Key, info.ToFile, err)
 		return res, data.ConvertError(sErr)
 	}
 	if fileStatus == nil {
-		log.ErrorF("Download  failed, [%s:%s] => %s download speed: can't get file status", info.Bucket, info.Key, info.ToFile)
+		log.ErrorF("Download  Failed, [%s:%s] => %s download speed: can't get file status", info.Bucket, info.Key, info.ToFile)
 		return res, data.NewEmptyError().AppendDesc("can't get file status")
 	}
 
@@ -99,11 +112,11 @@ func downloadFile(info *download.ApiInfo) (download.ApiResult, *data.CodeError) 
 	duration := float64(endTime-startTime) / 1000
 	speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/duration/1024)
 	if res.IsExist {
-		log.AlertF("Download skip because file exist, [%s:%s] => %s", info.Bucket, info.Key, res.FileAbsPath)
+		log.InfoF("Download Skip because file exist, [%s:%s] => %s", info.Bucket, info.Key, res.FileAbsPath)
 	} else if res.IsUpdate {
-		log.AlertF("Download update success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
+		log.InfoF("Download update Success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
 	} else {
-		log.AlertF("Download success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
+		log.InfoF("Download Success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
 	}
 
 	return res, nil

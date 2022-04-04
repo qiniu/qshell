@@ -40,6 +40,10 @@ func (info *Info) Check() *data.CodeError {
 		info.MaxOperationCountPerRequest = defaultOperationCountPerRequest
 	}
 
+	if len(info.ItemSeparate) == 0 {
+		info.ItemSeparate = "\t"
+	}
+
 	return nil
 }
 

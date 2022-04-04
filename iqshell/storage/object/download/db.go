@@ -73,7 +73,7 @@ func (d *dbHandler) checkInfoOfDB() *data.CodeError {
 
 	// 验证修改时间
 	if fileServerUpdateTime > 0 && fileServerUpdateTime != d.FileServerUpdateTime {
-		return data.NewEmptyError().AppendDescF("local file update time doesn't match server, updateTime: %d|%s", fileServerUpdateTime, d.FileServerUpdateTime)
+		return data.NewEmptyError().AppendDescF("local file update time doesn't match server, updateTime: %d|%d", fileServerUpdateTime, d.FileServerUpdateTime)
 	}
 
 	return nil
