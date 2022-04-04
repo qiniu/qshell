@@ -103,7 +103,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 			})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
-				in := workInfo.Work.(PrivateUrlInfo)
+				in := workInfo.Work.(*PrivateUrlInfo)
 				if deadline, gErr := in.getDeadlineOfInt(); gErr == nil {
 					if r, pErr := download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
 						PublicUrl: in.PublicUrl,

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/syndtr/goleveldb/leveldb/errors"
 	"time"
 )
 
@@ -30,9 +31,9 @@ func (r *resumeV2) InitServer(ctx context.Context) *data.CodeError {
 		r.Recorder.UploadId = ret.UploadID
 		r.Recorder.ExpireTime = time.Now().Unix() + 3600*24*5
 	} else {
-		err = data.NewEmptyError().AppendDesc("resume v2 init server error:" + err.Error())
+		err = errors.New("resume v2 init server error:" + err.Error())
 	}
-	return data.NewEmptyError().AppendError(err)
+	return data.ConvertError(err)
 }
 
 func (r *resumeV2) UploadBlock(ctx context.Context, index int, d []byte) *data.CodeError {
@@ -51,9 +52,9 @@ func (r *resumeV2) UploadBlock(ctx context.Context, index int, d []byte) *data.C
 		})
 		r.Recorder.Offset += int64(size)
 	} else {
-		err = data.NewEmptyError().AppendDesc("resume v2 upload block error:" + err.Error())
+		err = errors.New("resume v2 upload block error:" + err.Error())
 	}
-	return data.NewEmptyError().AppendError(err)
+	return data.ConvertError(err)
 }
 
 func (r *resumeV2) Complete(ctx context.Context, putRet interface{}) *data.CodeError {
@@ -64,7 +65,7 @@ func (r *resumeV2) Complete(ctx context.Context, putRet interface{}) *data.CodeE
 	err := r.uploader.CompleteParts(ctx, r.TokenProvider(), r.UpHost, &putRet, r.Bucket,
 		r.Key, hasKey, r.Recorder.UploadId, putExtra)
 	if err != nil {
-		err = data.NewEmptyError().AppendDesc("resume v2 complete error:" + err.Error())
+		err = errors.New("resume v2 complete error:" + err.Error())
 	}
-	return data.NewEmptyError().AppendError(err)
+	return data.ConvertError(err)
 }

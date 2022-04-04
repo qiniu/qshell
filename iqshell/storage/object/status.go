@@ -61,7 +61,7 @@ func Status(info StatusApiInfo) (res StatusResult, err *data.CodeError) {
 	reqURL := fmt.Sprintf("%s%s?needparts=%s", reqHost, storage.URIStat(info.Bucket, info.Key), needParts)
 	cErr := bucketManager.Client.CredentialedCall(context.Background(), bucketManager.Mac, auth.TokenQiniu, &res, "POST", reqURL, nil)
 	if cErr != nil {
-		err = data.NewEmptyError().AppendDescF("status object [%s:%s] status error:%v", info.Bucket, info.Key, err.Error())
+		err = data.NewEmptyError().AppendDescF("status object [%s:%s] status error:%v", info.Bucket, info.Key, cErr.Error())
 		return
 	}
 	return res, nil

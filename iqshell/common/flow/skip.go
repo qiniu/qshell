@@ -15,7 +15,7 @@ type skipper struct {
 }
 
 func (s *skipper) ShouldSkip(work *WorkInfo) (skip bool, cause *data.CodeError) {
-	if s.f != nil {
+	if s.f == nil {
 		return false, nil
 	}
 	return s.f(work)

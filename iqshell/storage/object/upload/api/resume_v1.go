@@ -22,13 +22,13 @@ func (r *resumeV1) UploadBlock(ctx context.Context, index int, d []byte) *data.C
 	size := len(d)
 	var blkCtx storage.BlkputRet
 	err := r.uploader.Mkblk(ctx, r.TokenProvider(), r.UpHost, &blkCtx, size, bytes.NewReader(d), size)
-	if err == nil {
+	if err != nil {
+		return data.NewEmptyError().AppendDesc("resume v1 upload block error:" + err.Error())
+	} else {
 		r.Recorder.BlkCtxs = append(r.Recorder.BlkCtxs, blkCtx)
 		r.Recorder.Offset += int64(size)
-	} else {
-		err = data.NewEmptyError().AppendDesc("resume v1 upload block error:" + err.Error())
+		return nil
 	}
-	return data.NewEmptyError().AppendError(err)
 }
 
 func (r *resumeV1) Complete(ctx context.Context, putRet interface{}) *data.CodeError {

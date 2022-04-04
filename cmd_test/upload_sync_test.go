@@ -8,7 +8,7 @@ import (
 
 func TestSyncV1(t *testing.T) {
 	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
-	result, errs := test.RunCmdWithError("sync", url, test.Bucket)
+	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "-d")
 	if len(errs) > 0 {
 		t.Fail()
 	}
@@ -57,7 +57,7 @@ func TestSyncV2(t *testing.T) {
 func TestSyncV2WithKey(t *testing.T) {
 	key := "sync_v1_key.mp4"
 	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
-	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "--resumable-api-v2", "--key", key)
+	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "--resumable-api-v2", "--key", key, "-d")
 	if len(errs) > 0 {
 		t.Fail()
 	}

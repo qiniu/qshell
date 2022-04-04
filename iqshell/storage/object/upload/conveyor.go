@@ -106,9 +106,8 @@ func (c *conveyor) upload(info *ApiInfo) (ret ApiResult, err *data.CodeError) {
 
 	var bf *bytes.Buffer
 	for blkIndex := fromBlkIndex; blkIndex < totalBlkCnt; blkIndex++ {
-
-		syncPercent := fmt.Sprintf("%.2f", float64(blkIndex+1)*100.0/float64(totalBlkCnt))
-		log.DebugF(fmt.Sprintf("Syncing block %d [%s%%] ...", blkIndex, syncPercent))
+		log.DebugF("") // 此处仅为日志换行
+		log.DebugF("Syncing block %d ...", blkIndex)
 
 		// 2.1 获取上传数据
 		var retryTimes int
@@ -202,7 +201,7 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 
 	//set client properties
 	client := http.DefaultClient
-	client.Timeout = time.Duration(httpTimeout)
+	client.Timeout = httpTimeout
 	//client.Transport = &http.Transport{
 	//	Proxy: http.ProxyURL(proxyURL),
 	//}

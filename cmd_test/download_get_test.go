@@ -49,7 +49,7 @@ func TestGetWithDomain(t *testing.T) {
 }
 
 func TestGetNoExistDomain(t *testing.T) {
-	_, errs := test.RunCmdWithError("get", test.BucketNotExist, test.Key,
+	_, errs := test.RunCmdWithError("get", test.Bucket, test.Key,
 		"--domain", "qiniu.mock.com")
 	if !strings.Contains(errs, "lookup qiniu.mock.com: no such host") {
 		t.Fail()
@@ -58,14 +58,14 @@ func TestGetNoExistDomain(t *testing.T) {
 
 func TestGetNoExistBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("get", test.BucketNotExist, test.Key)
-	if !strings.Contains(errs, "get download domain error:") {
+	if !strings.Contains(errs, "query region error, no such bucket") {
 		t.Fail()
 	}
 }
 
 func TestGetNoExistKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("get", test.Bucket, test.KeyNotExist)
-	if !strings.Contains(errs, " Download error:") {
+	if !strings.Contains(errs, "no such file or directory") {
 		t.Fail()
 	}
 }
