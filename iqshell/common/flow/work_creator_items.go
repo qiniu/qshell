@@ -16,10 +16,10 @@ type itemsWorkCreator struct {
 
 func (l *itemsWorkCreator) Create(info string) (work Work, err *data.CodeError) {
 	items := utils.SplitString(info, l.separate)
-	if len(items) >= l.minItemsCount {
+	if len(info) > 0 && len(items) >= l.minItemsCount {
 		return l.creatorFunc(items)
 	}
-	return nil, data.NewError(data.ErrorCodeParamMissing, fmt.Sprintf("%s%serror:at least %d parameter is required", info, l.separate, l.minItemsCount))
+	return nil, data.NewError(data.ErrorCodeParamMissing, fmt.Sprintf("at least %d parameter is required", l.minItemsCount))
 }
 
 func NewItemsWorkCreator(separate string, minItemsCount int, creatorFunc func(items []string) (work Work, err *data.CodeError)) WorkCreator {

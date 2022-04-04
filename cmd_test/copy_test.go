@@ -70,6 +70,7 @@ func TestBatchCopy(t *testing.T) {
 	for i, key := range keys {
 		batchConfig += key + "\t" + test.Keys[i] + "\t" + "\n"
 	}
+	batchConfig += "\n"
 	batchConfig += "hello10.json" + "\t" + "hello10_test.json" + "\t" + "\n"
 
 	resultDir, err := test.ResultPath()
