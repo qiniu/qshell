@@ -91,13 +91,13 @@ func List(info ListApiInfo,
 			if shouldCheckPutTime {
 				putTime := time.Unix(listItem.Item.PutTime/1e7, 0)
 				if !filterByPutTime(putTime, info.StartTime, info.EndTime) {
-					log.DebugF("filter: putTime not match, %s out of range [start:%s ~ end:%s]", putTime, info.StartTime, info.EndTime)
+					log.DebugF("filter %s: putTime not match, %s out of range [start:%s ~ end:%s]", listItem.Item.Key, putTime, info.StartTime, info.EndTime)
 					continue
 				}
 			}
 
 			if shouldCheckSuffixes && !filterBySuffixes(listItem.Item.Key, info.Suffixes) {
-				log.DebugF("filter: key not match, key:%s suffixes:%s ", listItem.Item.Key, info.Suffixes)
+				log.DebugF("filter %s: key not match, key:%s suffixes:%s ", listItem.Item.Key, listItem.Item.Key, info.Suffixes)
 				continue
 			}
 
