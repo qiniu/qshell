@@ -64,27 +64,27 @@ qshell token upload <PutPolicyConfigFile>
 计算 `upload token` 需要上传策略配置文件， 配置文件支持的全部参数如下：
 ```
 {
-	scope                     : "",
-	deadline                  : <Unix时间戳>,
-	isPrefixalScope         : [1|0],
-	insertOnly               : [1|0],
-	detectMime               : [1|0],
-	fsizeLimit               : <限制文件的大小>,
-	mimeLimit                : <限制允许上传的文件MimeType>,
-	saveKey                  : <自定义上传的资源名>,
-	callbackFetchKey        : "",
-	callbackUrl              : <回调地址>,
-	callbackHost             : <回调Host>,
-	callbackBody             : <回调Body>,
-	callbackBodyType        : <回调ContentType>,
-	returnUrl                : "",
-	returnBody               : "",
-	persistentOps            : "",
-	persistentNotifyUrl     : "",
-	persistentPipeline       : "",
-	endUser                  : "",
-	deleteAfterDays         : "",
-	fileType                 : [1|0]
+	"scope"                     : "",
+	"deadline"                  : <Unix时间戳>,
+	"isPrefixalScope"         : [1|0],
+	"insertOnly"               : [1|0],
+	"detectMime"               : [1|0],
+	"fsizeLimit"               : <限制文件的大小>,
+	"mimeLimit"                : <限制允许上传的文件MimeType>,
+	"saveKey"                  : <自定义上传的资源名>,
+	"callbackFetchKey"        : "",
+	"callbackUrl"              : <回调地址>,
+	"callbackHost"             : <回调Host>,
+	"callbackBody"             : <回调Body>,
+	"callbackBodyType"        : <回调ContentType>,
+	"returnUrl"                : "",
+	"returnBody"               : "",
+	"persistentOps"            : "",
+	"persistentNotifyUrl"     : "",
+	"persistentPipeline"       : "",
+	"endUser"                  : "",
+	"deleteAfterDays"         : "",
+	"fileType"                 : [1|0]
 }
 ```
 上传策略的各个参数 [详解](https://developer.qiniu.com/kodo/manual/1206/put-policy) 。

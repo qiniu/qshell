@@ -10,7 +10,7 @@ qshell b64encode [-s|--s] <DataToEncode>
 - DataToDecode：待编码字符串。【必选】
 
 # 选项
-- -s：标志开启 urlsafe 的 base64 编码。【可选】
+- -s/--safe：标志开启 urlsafe 的 base64 编码。【可选】
 
 # 示例
 ```

@@ -83,7 +83,7 @@ var batchChangeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var batchRestoreArCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchRestoreArchiveInfo{}
 	var cmd = &cobra.Command{
-		Use: "batchrestorear <Bucket> <FreezeAfterDays>",
+		Use:   "batchrestorear <Bucket> <FreezeAfterDays>",
 		Short: `Batch unfreeze archive file and file freeze after <FreezeAfterDays> days, <FreezeAfterDays> value should be between 1 and 7, include 1 and 7`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchRestoreArchiveType

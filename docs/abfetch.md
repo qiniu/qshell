@@ -12,19 +12,19 @@ qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <Callback
 - Bucket：空间名，可以为公开空间或私有空间。 【必选】
 
 # 选项
-- -i：要抓取的资源列表， 一行一个资源，每一行多个元素时使用\t分割；如果没有通过该选项指定该文件参数， 从标准输入读取内容。每行具体格式如下：（【可选】）
+- -i/--input-file：要抓取的资源列表， 一行一个资源，每一行多个元素时使用\t分割；如果没有通过该选项指定该文件参数， 从标准输入读取内容。每行具体格式如下：（【可选】）
   - [FileUrl]                     
   - [FileUrl]\t[FileSize] 
   - [FileUrl]\t[FileSize]\t[Key], // eg:https://qiniu.com/a.png\t1024\ta.png    
   注：如果不指定 key 则从 url 中获取最后一个 path 信息作为 key；eg:https://qiniu.com/a.png\t1024\ta.png  key 为：ta.png
-- -b：回调的 http Body。 【可选】          
-- -T：回调时的 HOST 头。 【可选】
-- -a：回调的请求地址。 【可选】
-- -t：下载资源时使用的 HOST 头。 【可选】
-- -g：抓取的资源存储在七牛存储空间的类型，0:低频存储 1:标准存储 2:归档存储, 默认为: 0 。 【可选】
-- -c：抓取指定的线程数目。 【可选】
-- -s：抓取成功后导出到的文件。 【可选】
-- -e：抓取失败导出的文件列表。 【可选】
+- -b/--callback-body：回调的 http Body。 【可选】          
+- -T/--callback-host：回调时的 HOST 头。 【可选】
+- -a/--callback-url：回调的请求地址。 【可选】
+- -t/--host：下载资源时使用的 HOST 头。 【可选】
+- -g/--storage-type：抓取的资源存储在七牛存储空间的类型，0:低频存储 1:标准存储 2:归档存储 3:深度归档, 默认为: 0 。 【可选】
+- -c/--thread-count：抓取指定的线程数目，默认：20。 【可选】
+- -s/--success-list：抓取成功后导出到的文件。 【可选】
+- -e/--failure-list：抓取失败后导出到的文件。 【可选】
 
 详细的选项介绍，请参考：[异步抓取 (async fetch)](https://developer.qiniu.com/kodo/api/4097/asynch-fetch)
 

@@ -22,10 +22,10 @@ qshell rput [--overwrite] [--v2] [--mimetype <MimeType>] [--callback-urls <Callb
 
 # 选项
 - --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
-- --mimetype：指定文件的 MimeType 。【可选】
-- --storage：文件存储类型；0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储；默认为`0`(标准存储）。 【可选】
-- --callback-urls：上传回调地址，可以指定多个地址，以逗号分开。【可选】
-- --CallbackHost：上传回调HOST, 必须和 CallbackUrls 一起指定。 【可选】
+- -t/--mimetype：指定文件的 MimeType 。【可选】
+- -s/--storage：文件存储类型；0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储；默认为`0`(标准存储）。 【可选】
+- -l/--callback-urls：上传回调地址，可以指定多个地址，以逗号分开。【可选】
+- -T/--callbackHost：上传回调HOST, 必须和 CallbackUrls 一起指定。 【可选】
 - --resumable-api-v2：使用分片上传 API V2 进行上传，默认为 `false`, 使用 V1 上传。【可选】
 - --v2-part-size：使用分片上传 API V2 进行上传时的分片大小，默认为 4M 。【可选】
 

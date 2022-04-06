@@ -230,7 +230,7 @@ and you can check result by command:
 var restoreArCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.RestoreArchiveInfo{}
 	var cmd = &cobra.Command{
-		Use: "restorear <Bucket> <Key> <FreezeAfterDays>",
+		Use:   "restorear <Bucket> <Key> <FreezeAfterDays>",
 		Short: `Unfreeze archive file and file freeze after <FreezeAfterDays> days, <FreezeAfterDays> value should be between 1 and 7, include 1 and 7`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.RestoreArchiveType

@@ -10,7 +10,7 @@ qshell b64decode [-s|--safe] <DataToDecode>
 - DataToDecode：待解码字符串。【必选】
 
 # 选项
-- -s：标志开启 urlsafe 的 base64 编码。【可选】
+- -s/--safe：标志开启 urlsafe 的 base64 编码。【可选】
 
 # 示例
 我们可以解码七牛上传凭证的第三部分，即编码后的PutPolicy：

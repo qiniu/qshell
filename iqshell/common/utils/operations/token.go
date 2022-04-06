@@ -142,7 +142,7 @@ func CreateUploadToken(cfg *iqshell.Config, info UploadTokenInfo) {
 	}
 
 	var mac *qbox.Mac
-	var mErr error
+	var mErr *data.CodeError
 	if info.AccessKey != "" && info.SecretKey != "" {
 		mac = qbox.NewMac(info.AccessKey, info.SecretKey)
 	} else {

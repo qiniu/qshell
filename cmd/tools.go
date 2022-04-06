@@ -312,7 +312,7 @@ var UploadTokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.TokenType
 			if len(args) > 0 {
-				info.Url = args[0]
+				info.PutPolicyFilePath = args[0]
 			}
 			operations.CreateUploadToken(cfg, info)
 		},

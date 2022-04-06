@@ -22,11 +22,11 @@ $ qshell awslist -h
 - AwsRegion: 亚马逊存储空间所在的地区
 
 # 选项
-- -A：亚马逊账户的Access Key ID 。【必选】
-- -S：亚马逊账户的Secret Key 。【必选】
-- -p：亚马逊存储空间要抓取资源的前缀。【可选】
-- -n：亚马逊接口每次返回的数据条目数量。【可选】
-- -m：亚马逊接口数据每次会返回的token, 用于下次列举。【可选】
+- -A/--aws-id：亚马逊账户的Access Key ID 。【必选】
+- -S/--aws-secret-key：亚马逊账户的Secret Key 。【必选】
+- -p/--prefix：亚马逊存储空间要抓取资源的前缀。【可选】
+- -n/-max-keys：亚马逊接口每次返回的数据条目数量。【可选】
+- -m/--continuation-token：亚马逊接口数据每次会返回的token, 用于下次列举。【可选】
 
 # 列举
 使用场景：
