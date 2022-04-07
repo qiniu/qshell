@@ -95,7 +95,7 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 				if aErr, ok := lErr.(awserr.Error); ok {
 					switch aErr.Code() {
 					case s3.ErrCodeNoSuchBucket:
-						log.ErrorF("list error, Code:%d, Error:%v", s3.ErrCodeNoSuchBucket, aErr.Error())
+						log.ErrorF("list error:%s, %v", s3.ErrCodeNoSuchBucket, aErr.Error())
 					default:
 						log.Error(aErr.Error())
 					}
