@@ -90,14 +90,14 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 		}
 
 		for {
-			result, err := svc.ListObjectsV2(input)
-			if err != nil {
-				if aerr, ok := err.(awserr.Error); ok {
-					switch aerr.Code() {
+			result, lErr := svc.ListObjectsV2(input)
+			if lErr != nil {
+				if aErr, ok := lErr.(awserr.Error); ok {
+					switch aErr.Code() {
 					case s3.ErrCodeNoSuchBucket:
-						log.ErrorF(s3.ErrCodeNoSuchBucket, aerr.Error())
+						log.ErrorF("list error, Code:%d, Error:%v", s3.ErrCodeNoSuchBucket, aErr.Error())
 					default:
-						log.Error(aerr.Error())
+						log.Error(aErr.Error())
 					}
 				} else {
 					log.Error(err.Error())

@@ -41,7 +41,7 @@ func (info *ListBucketInfo) Check() *data.CodeError {
 	}
 
 	if info.MaxKeys <= 0 || info.MaxKeys > 1000 {
-		log.Warning("max key:%d out of range {}, change to 1000", info.MaxKeys)
+		log.WarningF("max key:%d out of range [0, 1000], change to 1000", info.MaxKeys)
 		info.MaxKeys = 1000
 	}
 

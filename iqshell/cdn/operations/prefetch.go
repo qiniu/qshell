@@ -79,7 +79,7 @@ func prefetchWithQps(urlsToPrefetch []string) {
 
 	waiterIfNeeded()
 
-	log.Debug("cdnPrefetch, url size: %d", len(urlsToPrefetch))
+	log.DebugF("cdnPrefetch, url size: %d", len(urlsToPrefetch))
 	if len(urlsToPrefetch) > 0 {
 		err := cdn.Prefetch(urlsToPrefetch)
 		if err != nil {

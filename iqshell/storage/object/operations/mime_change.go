@@ -35,7 +35,7 @@ func ChangeMime(cfg *iqshell.Config, info ChangeMimeInfo) {
 
 	result, err := object.ChangeMimeType((*object.ChangeMimeApiInfo)(&info))
 	if err != nil {
-		log.ErrorF("Change mimetype Failed, [%s:%s] => '%d', Error:%v", info.Bucket, info.Key, info.Mime, err)
+		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Error:%v", info.Bucket, info.Key, info.Mime, err)
 		return
 	}
 

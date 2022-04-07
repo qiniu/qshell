@@ -147,7 +147,7 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 				result.Code, result.Error)
 		} else {
 			exporter.Success().Export(operationInfo)
-			log.InfoF("Restore archive Success, [%s:%d], FreezeAfterDays:%s",
+			log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%d",
 				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
 		}
 	}).OnError(func(err *data.CodeError) {

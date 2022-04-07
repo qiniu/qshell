@@ -255,7 +255,7 @@ func RmUser(userName string) *data.CodeError {
 	}
 	defer db.Close()
 	err = db.Delete([]byte(userName), nil)
-	log.DebugF("Removing user: %d\n", userName)
+	log.DebugF("Removing user: %s\n", userName)
 	return nil
 }
 

@@ -60,7 +60,7 @@ func (c *conveyor) upload(info *ApiInfo) (ret ApiResult, err *data.CodeError) {
 	}
 	recorder := api.NewProgressRecorder(progressFile)
 	if rErr := recorder.Recover(); rErr != nil {
-		log.WarningF("sync progress recover error:", rErr)
+		log.WarningF("sync progress recover error:%v", rErr)
 	}
 	recorder.CheckValid(info.FileSize, 0, info.UseResumeV2)
 	recorder.TotalSize = info.FileSize

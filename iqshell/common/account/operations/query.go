@@ -39,7 +39,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 
 	accounts, err := account.GetUsers()
 	if err != nil {
-		log.ErrorF("user list error:", err)
+		log.ErrorF("user list error:%v", err)
 		os.Exit(data.StatusError)
 		return
 	}

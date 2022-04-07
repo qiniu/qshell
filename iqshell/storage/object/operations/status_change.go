@@ -62,18 +62,18 @@ func ForbiddenObject(cfg *iqshell.Config, info ForbiddenInfo) {
 	statusDesc := info.getStatusDesc()
 	if err != nil {
 		log.ErrorF("Change status Failed, [%s:%s] => %s, Error: %v",
-			info.Bucket, info.Key, info.getStatus(), statusDesc)
+			info.Bucket, info.Key, statusDesc, err)
 		return
 	}
 
 	if len(result.Error) > 0 {
-		log.ErrorF("Change status Failed, [%s:%s] => %s, Code:%s, Error: %s",
+		log.ErrorF("Change status Failed, [%s:%s] => %s, Code:%d, Error:%s",
 			info.Bucket, info.Key, statusDesc, result.Code, result.Error)
 		return
 	}
 
 	if result.IsSuccess() {
-		log.Info("Change status Success, [%s:%s] => %s",
+		log.InfoF("Change status Success, [%s:%s] => %s",
 			info.Bucket, info.Key, statusDesc)
 	}
 }

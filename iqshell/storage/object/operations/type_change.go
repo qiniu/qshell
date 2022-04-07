@@ -56,7 +56,7 @@ func ChangeType(cfg *iqshell.Config, info ChangeTypeInfo) {
 
 	t, err := info.getTypeOfInt()
 	if err != nil {
-		log.ErrorF("Change Type Failed, [%s:%s] error:%v", err)
+		log.ErrorF("Change Type Failed, [%s:%s] error:%v", info.Bucket, info.Key, err)
 		return
 	}
 

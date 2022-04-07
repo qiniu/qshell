@@ -84,9 +84,9 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 		prefixLen     = len(info.Prefix)
 	)
 	for {
-		lbr, err := ossBucket.ListObjects(oss.MaxKeys(limit), oss.Prefix(info.Prefix), oss.Marker(marker))
-		if err != nil {
-			log.Error("Parse list result error,", "marker=[", marker, "]", err)
+		lbr, lErr := ossBucket.ListObjects(oss.MaxKeys(limit), oss.Prefix(info.Prefix), oss.Marker(marker))
+		if lErr != nil {
+			log.Error("Parse list result error,", "marker=[", marker, "]", lErr)
 			if retryTimes <= maxRetryTimes {
 				log.Warning("Retry marker=", marker, "] for", retryTimes, "time...")
 				retryTimes += 1
@@ -100,9 +100,8 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 
 		for _, object := range lbr.Objects {
 			lmdTime := object.LastModified
-			_, err := bw.WriteString(fmt.Sprintln(fmt.Sprintf("%s\t%d\t%d", object.Key[prefixLen:], object.Size, lmdTime.UnixNano()/100)))
-			if err != nil {
-				log.Error("write result to file:%s error:%v", info.SaveToFile, err)
+			if _, e := bw.WriteString(fmt.Sprintf("%s\t%d\t%d\n", object.Key[prefixLen:], object.Size, lmdTime.UnixNano()/100)); e != nil {
+				log.ErrorF("write result to file:%s error:%v", info.SaveToFile, e)
 			}
 		}
 
