@@ -1,3 +1,5 @@
+//go:build integration
+
 package cmd
 
 import (
@@ -79,8 +81,8 @@ func TestDownloadFromBucket(t *testing.T) {
 	}
 	defer func() {
 		test.RemoveFile(path)
-		//test.RemoveFile(cfg.DestDir)
-		//test.RemoveFile(cfg.LogFile.Value())
+		test.RemoveFile(cfg.DestDir)
+		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
 	test.RunCmdWithError("qdownload", "-c", "4", path)
