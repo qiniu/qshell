@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-//db 金检查是否已下载过，且下载后保存的数据符合预期；
+//db 检查是否已下载过，且下载后保存的数据符合预期；
 
 const infoSegment = "|"
 

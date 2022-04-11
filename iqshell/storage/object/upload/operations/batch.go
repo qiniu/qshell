@@ -102,7 +102,7 @@ func (info *BatchUpload2Info) Check() *data.CodeError {
 func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
-		BeforeLogFile: func() {
+		BeforeLoadFileLog: func() {
 			if len(info.RecordRoot) == 0 {
 				info.RecordRoot = uploadCachePath(workspace.GetConfig(), &info.UploadConfig)
 			}

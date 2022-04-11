@@ -25,9 +25,9 @@ type Config struct {
 }
 
 type CheckAndLoadInfo struct {
-	Checker       data.Checker
-	BeforeLogFile func()
-	AfterLogFile  func()
+	Checker           data.Checker
+	BeforeLoadFileLog func()
+	AfterLoadFileLog  func()
 }
 
 func CheckAndLoad(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
@@ -47,12 +47,12 @@ func Load(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
 	if !LoadWorkspace(cfg) {
 		return false
 	}
-	if info.BeforeLogFile != nil {
-		info.BeforeLogFile()
+	if info.BeforeLoadFileLog != nil {
+		info.BeforeLoadFileLog()
 	}
 	shouldContinue = LoadFileLog(cfg)
-	if info.AfterLogFile != nil {
-		info.AfterLogFile()
+	if info.AfterLoadFileLog != nil {
+		info.AfterLoadFileLog()
 	}
 	if !shouldContinue {
 		return false

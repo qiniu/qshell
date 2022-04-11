@@ -75,7 +75,7 @@ func (info *BatchDownloadInfo) Check() *data.CodeError {
 func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
-		BeforeLogFile: func() {
+		BeforeLoadFileLog: func() {
 			if len(info.RecordRoot) == 0 {
 				info.RecordRoot = downloadCachePath(workspace.GetConfig(), &info.DownloadCfg)
 			}
