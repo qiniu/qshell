@@ -53,7 +53,7 @@ func List(info ListApiInfo,
 		return
 	}
 
-	log.Debug("will list bucket start")
+	log.Debug("will list bucket")
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	retryCount := 0

@@ -1,4 +1,4 @@
-//go:build integration
+////go:build integration
 
 package cmd
 
@@ -74,7 +74,6 @@ func TestBatchCopy(t *testing.T) {
 	}
 	batchConfig += "\n"
 	batchConfig += "hello10.json" + "\t" + "hello10_test.json" + "\t" + "\n"
-
 	resultDir, err := test.ResultPath()
 	if err != nil {
 		t.Fatal("get result dir error:", err)

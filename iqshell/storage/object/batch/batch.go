@@ -137,7 +137,7 @@ func (h *handler) Start() {
 				}
 
 				for i, r := range resultList {
-					operationResult := &OperationResult{
+					recordList[i].Result = &OperationResult{
 						Code:     r.Code,
 						Hash:     r.Data.Hash,
 						FSize:    r.Data.Fsize,
@@ -146,7 +146,6 @@ func (h *handler) Start() {
 						Type:     r.Data.Type,
 						Error:    r.Data.Error,
 					}
-					recordList[i].Result = operationResult
 				}
 				return recordList, nil
 			}), nil
