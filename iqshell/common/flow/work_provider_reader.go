@@ -43,7 +43,7 @@ func (p *readerWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.
 	success := p.scanner.Scan()
 	if success {
 		line := p.scanner.Text()
-		if items := strings.Split(line, ErrorSeparate); len(items) == 0 {
+		if items := strings.Split(line, ErrorSeparate); len(items) > 0 {
 			line = items[0]
 		}
 		w, e := p.creator.Create(line)
