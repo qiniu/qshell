@@ -3,7 +3,7 @@
 
 # 格式
 ```
-qshell batchchgm [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> [-i <KeyMimeMapFile>] 
+qshell batchchgm [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> [-i <KeyMimeMapFile>] 
 ```
 
 # 帮助

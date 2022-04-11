@@ -8,7 +8,7 @@
 
 # 格式
 ```
-qshell batchmove [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
+qshell batchmove [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
 ```
 
 # 帮助

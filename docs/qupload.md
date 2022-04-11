@@ -3,7 +3,7 @@
 
 # 格式
 ```
-qshell qupload [-c <ThreadCount>] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--overwrite-list <OverFileName>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>]
+qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--overwrite-list <OverFileName>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>]
 <LocalUploadConfig>
 ```
 

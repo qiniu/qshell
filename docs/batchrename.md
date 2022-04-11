@@ -5,7 +5,7 @@
 
 # 格式
 ```
-qshell batchrename [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> [-i <OldNewKeyMapFile>]
+qshell batchrename [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> [-i <OldNewKeyMapFile>]
 ```
 
 # 鉴权

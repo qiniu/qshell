@@ -3,7 +3,7 @@
 
 # 格式
 ```
-qshell batchexpire [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> <-i KeyDeleteAfterDaysMapFile>
+qshell batchexpire [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> <-i KeyDeleteAfterDaysMapFile>
 ```
 
 # 帮助 

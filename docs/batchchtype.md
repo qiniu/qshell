@@ -3,7 +3,7 @@
 
 # 格式
 ```
-qshell batchchtype  [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> [-i <KeyFileTypeMapFile>]
+qshell batchchtype  [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> [-i <KeyFileTypeMapFile>]
 ```
 
 # 鉴权

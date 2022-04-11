@@ -6,7 +6,7 @@
 
 # 格式
 ```
-qshell batchcopy [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
+qshell batchcopy [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]
 ```
 
 # 帮助

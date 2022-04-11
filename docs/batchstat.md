@@ -3,7 +3,7 @@
 
 # 格式
 ```
-qshell batchstat [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> <-i KeyListFile>
+qshell batchstat [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> <-i KeyListFile>
 ```
 
 # 鉴权

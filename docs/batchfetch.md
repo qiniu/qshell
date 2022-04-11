@@ -3,7 +3,7 @@
 
 # 格式
 ```
-qshell batchfetch [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket>
+qshell batchfetch [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket>
 ```
 
 # 帮助

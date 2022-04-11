@@ -3,7 +3,7 @@
 
 # 格式
 ```
-qshell batchdelete [--force] [--sucess-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> [-i <KeyListFile>]
+qshell batchdelete [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> [-i <KeyListFile>]
 ```
 
 # 帮助
