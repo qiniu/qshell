@@ -90,14 +90,11 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.InfoF("record root: %s", info.RecordRoot)
 
 	info.BatchInfo.InputFile = info.KeyFile
-	downloadDomain, downloadHost := getDownloadDomainAndHost(workspace.GetConfig(), &info.DownloadCfg)
-	if len(downloadDomain) == 0 {
-		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or bind domain to bucket", info.Bucket)
+	hostProvider := getDownloadHostProvider(workspace.GetConfig(), &info.DownloadCfg)
+	if available, e := hostProvider.Available(); !available {
+		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or bind domain to bucket; %v", info.Bucket, e)
 		return
 	}
-
-	log.InfoF("Download Domain:%s", downloadDomain)
-	log.InfoF("Download Host  :%s", downloadHost)
 
 	dbPath := filepath.Join(info.RecordRoot, ".ldb")
 	log.InfoF("download db dir:%s", dbPath)
@@ -142,8 +139,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
-				apiInfo.Domain = downloadDomain
-				apiInfo.Host = downloadHost
+				apiInfo.HostProvider = hostProvider
 				apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
 				apiInfo.StatusDBPath = dbPath
 				apiInfo.Referer = info.Referer

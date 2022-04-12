@@ -42,7 +42,7 @@ func ShowCmdDocument(name string) {
 		return
 	}
 
-	if showMethod == ShowMethodStdOut || !utils.IsCmdExist("less") {
+	if showMethod == ShowMethodStdOut || !utils.IsCmdExist("echo") || !utils.IsCmdExist("less") {
 		fmt.Fprintln(sdtout, document)
 	} else {
 		showDocumentByLessCmd(name, document)

@@ -14,29 +14,36 @@ type getDownloader struct {
 }
 
 func (g *getDownloader) Download(info *ApiInfo) (*http.Response, *data.CodeError) {
+	host, hErr := info.HostProvider.Provide()
+	if hErr != nil {
+		return nil, hErr.HeaderInsertDesc("[provide host]")
+	}
+
 	url := ""
 	// 构造下载 url
 	if info.IsPublic {
 		url = PublicUrl(UrlApiInfo{
-			BucketDomain: info.Domain,
+			BucketDomain: host.GetServer(),
 			Key:          info.Key,
 			UseHttps:     g.useHttps,
 		})
 	} else {
 		url = PrivateUrl(UrlApiInfo{
-			BucketDomain: info.Domain,
+			BucketDomain: host.GetServer(),
 			Key:          info.Key,
 			UseHttps:     g.useHttps,
 		})
 	}
 
 	log.DebugF("get download, url:%s", url)
+	log.DebugF("get download, host:%s", host.GetHost())
 
 	headers := http.Header{}
 	// set host
-	if len(info.Host) > 0 {
-		headers.Add("Host", info.Host)
+	if len(host.GetHost()) > 0 {
+		headers.Add("Host", host.GetHost())
 	}
+
 	// 设置断点续传
 	if info.FromBytes > 0 {
 		headers.Add("Range", fmt.Sprintf("bytes=%d-", info.FromBytes))

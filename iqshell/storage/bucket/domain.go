@@ -24,25 +24,7 @@ func DomainOfBucket(bucket string) (domain string, err *data.CodeError) {
 		err = data.NewEmptyError().AppendDescF("No domains found for bucket: %s", bucket)
 		return
 	}
-
-	cdnDomain := ""
-	sourceDomain := ""
-	for _, d := range domainsOfBucket {
-		if d.Domain != nil && !strings.HasPrefix(d.Domain.Value(), ".") {
-			if d.DomainType.Value() == 0 {
-				cdnDomain = d.Domain.Value()
-			} else if d.DomainType.Value() == 1 {
-				sourceDomain = d.Domain.Value()
-			}
-		}
-	}
-
-	if len(cdnDomain) > 0 {
-		domain = cdnDomain
-	} else {
-		domain = sourceDomain
-	}
-	return
+	return domainsOfBucket[0].Domain.Value(), nil
 }
 
 var (
@@ -90,7 +72,24 @@ func (i *DomainInfo) DetailDescriptionString() string {
 
 // AllDomainsOfBucket 获取一个存储空间绑定的CDN域名
 func AllDomainsOfBucket(bucket string) (domains []DomainInfo, err *data.CodeError) {
-	return allDomainsOfBucket(workspace.GetConfig(), bucket)
+	domains, err = allDomainsOfBucket(workspace.GetConfig(), bucket)
+	if len(domains) == 0 {
+		return domains, err
+	}
+
+	cdnDomains := make([]DomainInfo, 0)
+	sourceDomains := make([]DomainInfo, 0)
+	for _, d := range domains {
+		if d.Domain != nil && !strings.HasPrefix(d.Domain.Value(), ".") {
+			if d.DomainType.Value() == 0 {
+				cdnDomains = append(cdnDomains, d)
+			} else if d.DomainType.Value() == 1 {
+				sourceDomains = append(sourceDomains, d)
+			}
+		}
+	}
+	domains = append(cdnDomains, sourceDomains...)
+	return domains, err
 }
 
 func allDomainsOfBucket(cfg *config.Config, bucket string) ([]DomainInfo, *data.CodeError) {

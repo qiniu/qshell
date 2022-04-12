@@ -41,36 +41,51 @@ func NewEmptyError() *CodeError {
 	return &CodeError{}
 }
 
-func (e *CodeError) SetCode(code int) *CodeError {
-	e.Code = code
-	return e
+func (c *CodeError) SetCode(code int) *CodeError {
+	c.Code = code
+	return c
 }
 
-func (e *CodeError) AppendDesc(desc string) *CodeError {
-	if len(e.Desc) > 0 {
-		e.Desc += " "
+func (c *CodeError) HeaderInsertDesc(desc string) *CodeError {
+	if len(desc) == 0 {
+		return c
 	}
-	e.Desc += desc
-	return e
+	c.Desc = desc + " " + c.Desc
+	return c
 }
 
-func (e *CodeError) AppendDescF(f string, a ...interface{}) *CodeError {
-	if len(e.Desc) > 0 {
-		e.Desc += " "
+func (c *CodeError) AppendDesc(desc string) *CodeError {
+	if len(c.Desc) > 0 {
+		c.Desc += " "
 	}
-	e.Desc += fmt.Sprintf(f, a...)
-	return e
+	c.Desc += desc
+	return c
 }
 
-func (e *CodeError) AppendError(err error) *CodeError {
+func (c *CodeError) HeaderInsertDescF(f string, a ...interface{}) *CodeError {
+	c.Desc = fmt.Sprintf(f, a...) + " " + c.Desc
+	return c
+}
+
+func (c *CodeError) AppendDescF(f string, a ...interface{}) *CodeError {
+	if len(c.Desc) > 0 {
+		c.Desc += " "
+	}
+	c.Desc += fmt.Sprintf(f, a...)
+	return c
+}
+
+func (c *CodeError) AppendError(err error) *CodeError {
 	if err != nil {
-		if len(e.Desc) > 0 {
-			e.Desc += " "
+		if len(c.Desc) > 0 {
+			c.Desc += " "
 		}
-		e.Desc += "error:" + err.Error()
+		c.Desc += "error:" + err.Error()
 	}
-	return e
+	return c
 }
+
+
 
 func NewErrorWithError(code int, desc string, err error) *CodeError {
 	e := &CodeError{}

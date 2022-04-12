@@ -25,8 +25,13 @@ func (g *getFileApiDownloader) Download(info *ApiInfo) (response *http.Response,
 }
 
 func (g *getFileApiDownloader) download(info *ApiInfo) (*http.Response, *data.CodeError) {
+	host, hErr := info.HostProvider.Provide()
+	if hErr != nil {
+		return nil, hErr.HeaderInsertDesc("[provide host]")
+	}
+
 	// /getfile/<ak>/<bucket>/<UrlEncodedKey>[?e=<Deadline>&token=<DownloadToken>
-	url := utils.Endpoint(g.useHttps, info.Domain)
+	url := utils.Endpoint(g.useHttps, host.GetServer())
 	url = strings.Join([]string{url, "getfile", g.mac.AccessKey, info.Bucket, info.Key}, "/")
 	url, err := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
 		PublicUrl: url,
@@ -37,11 +42,12 @@ func (g *getFileApiDownloader) download(info *ApiInfo) (*http.Response, *data.Co
 	}
 
 	log.DebugF("get file api download, url:%s", url)
+	log.DebugF("get download, host:%s", host.GetHost())
 
 	headers := http.Header{}
 	// set host
-	if len(info.Host) > 0 {
-		headers.Add("Host", info.Host)
+	if len(host.GetHost()) > 0 {
+		headers.Add("Host", host.GetHost())
 	}
 
 	// 设置断点续传
