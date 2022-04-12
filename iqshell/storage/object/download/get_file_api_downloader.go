@@ -61,5 +61,9 @@ func (g *getFileApiDownloader) download(info *ApiInfo) (*http.Response, *data.Co
 	}
 
 	response, rErr := storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+	if utils.IsHostUnavailableError(rErr) {
+		log.DebugF("download freeze host:%s because: %v", host.GetServer(), rErr)
+		info.HostProvider.Freeze(host)
+	}
 	return response, data.ConvertError(rErr)
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"net/http"
 )
@@ -52,6 +53,10 @@ func (g *getDownloader) Download(info *ApiInfo) (*http.Response, *data.CodeError
 	if len(info.Referer) > 0 {
 		headers.Add("Referer", info.Referer)
 	}
-	response, err := storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
-	return response, data.ConvertError(err)
+	response, rErr := storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+	if utils.IsHostUnavailableError(rErr) {
+		log.DebugF("download freeze host:%s because: %v", host.GetServer(), rErr)
+		info.HostProvider.Freeze(host)
+	}
+	return response, data.ConvertError(rErr)
 }

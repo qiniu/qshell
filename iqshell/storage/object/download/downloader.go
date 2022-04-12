@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
@@ -158,7 +159,13 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 		return data.NewEmptyError().AppendDesc(" Download create downloader error:" + err.Error())
 	}
 
-	response, err := dl.Download(info)
+	var response *http.Response
+	for i := 0; i < 6; i++ {
+		response, err = dl.Download(info)
+		if err == nil || !utils.IsHostUnavailableError(err) {
+			break
+		}
+	}
 
 	if response != nil && response.Body != nil {
 		if info.Progress != nil {

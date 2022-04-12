@@ -85,8 +85,6 @@ func (c *CodeError) AppendError(err error) *CodeError {
 	return c
 }
 
-
-
 func NewErrorWithError(code int, desc string, err error) *CodeError {
 	e := &CodeError{}
 	e.Code = code

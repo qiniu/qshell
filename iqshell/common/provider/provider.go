@@ -12,23 +12,6 @@ type Provider interface {
 	Freeze(item Item)
 }
 
-//func NewListProviderWithHostStrings(item []string) Provider {
-//	items := make([]*freezeItem, 0, len(item))
-//	for _, h := range item {
-//		items = append(items, &freezeItem{
-//			item: &Host{
-//				Host: h,
-//				IP:   "",
-//			},
-//			availableTime: nil,
-//		})
-//	}
-//	return &listProvider{
-//		mu:    sync.Mutex{},
-//		items: items,
-//	}
-//}
-
 func NewListProvider(items []Item) Provider {
 	freezeItems := make([]*freezeItem, 0, len(items))
 	for _, i := range items {
@@ -93,7 +76,7 @@ type freezeItem struct {
 }
 
 func (i *freezeItem) Available() bool {
-	if i.availableTime != nil {
+	if i.availableTime == nil {
 		return true
 	}
 	return time.Now().After(*i.availableTime)
