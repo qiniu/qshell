@@ -18,11 +18,11 @@ const (
 	ShowMethodStdOut ShowMethod = 2
 )
 
-var sdtout io.Writer = os.Stdout
+var stdout io.Writer = os.Stdout
 var showMethod = ShowMethodLess
 
 func SetStdout(o io.Writer) {
-	sdtout = o
+	stdout = o
 }
 
 func SetShowMethod(method ShowMethod) {
@@ -38,12 +38,12 @@ func addCmdDocumentInfo(cmdName string, document string) {
 func ShowCmdDocument(name string) {
 	document := documentInfo[name]
 	if len(document) == 0 {
-		fmt.Printf("doesn't found document for cmd:%s \n", name)
+		fmt.Printf("didn't find document for cmd:%s \n", name)
 		return
 	}
 
 	if showMethod == ShowMethodStdOut || !utils.IsCmdExist("echo") || !utils.IsCmdExist("less") {
-		fmt.Fprintln(sdtout, document)
+		fmt.Fprintln(stdout, document)
 	} else {
 		showDocumentByLessCmd(name, document)
 	}

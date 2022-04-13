@@ -5,21 +5,21 @@ import (
 	"os"
 )
 
-var sdtout io.WriteCloser = os.Stdout
-var sdterr io.WriteCloser = os.Stderr
+var stdout io.WriteCloser = os.Stdout
+var stderr io.WriteCloser = os.Stderr
 
 func Stdout() io.WriteCloser {
-	return sdtout
+	return stdout
 }
 
 func Stderr() io.WriteCloser {
-	return sdterr
+	return stderr
 }
 
 func SetStdout(o io.WriteCloser) {
-	sdtout = o
+	stdout = o
 }
 
 func SetStderr(e io.WriteCloser) {
-	sdterr = e
+	stderr = e
 }

@@ -69,7 +69,7 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
 - log_file：上传日志的输出文件，默认为输出到 `record_root` 指定的文件中，具体文件路径可以在终端输出看到。 【可选】
 - log_rotate：上传日志文件的切换周期，单位为天，默认为 7 天即切换到新的上传日志文件。 【可选】
 - log_stdout：上传日志是否同时输出一份到标准终端，默认为 `false`，主要在调试上传功能时可以指定为 `true`。 【可选】
-- file_type：文件存储类型，默认为 `0`(标准存储） `1`为低频存储。 【可选】
+- file_type：文件存储类型；`0`：标准存储，`1`：低频存储，`2`：归档存储，`3`：深度归档存储；默认为 `0`(标准存储）。 【可选】
 - delete_on_success：上传成功的文件，同时删除本地文件，以达到节约磁盘的目的，比如日志归档的场景，默认为 `false`，如果需要开启功能，设置为 `true`即可。【可选】
 - resumable_api_v2：使用分片 V2 进行上传，默认为 `false`使用分片 V1 。【可选】
 - resumable_api_v2_part_size：使用分片 V2 进行上传时定制分片大小，默认 4194304（4M） 。【可选】
