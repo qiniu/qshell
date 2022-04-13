@@ -58,29 +58,26 @@ func showDocumentByLessCmd(name string, document string) {
 	defer reader.Close()
 	defer writer.Close()
 
-	echoCmd := exec.Command("echo", document)
-	echoCmd.Stdout = writer
-	echoCmd.Stderr = os.Stderr
 	lessCmd := exec.Command("less")
-	lessCmd.Stdout = os.Stdout
+	lessCmd.Stdout = stdout
 	lessCmd.Stdin = reader
 	lessCmd.Stderr = os.Stderr
-	if err := echoCmd.Start(); err != nil {
-		errorAlerter(data.NewEmptyError().AppendDescF("echo start:%v", err))
-		return
-	}
+
 	if err := lessCmd.Start(); err != nil {
 		errorAlerter(data.NewEmptyError().AppendDescF("less start:%v", err))
 		return
 	}
-	if err := echoCmd.Wait(); err != nil {
-		errorAlerter(data.NewEmptyError().AppendDescF("echo wait:%v", err))
+
+	if _, err := writer.Write([]byte(document)); err != nil {
+		errorAlerter(data.NewEmptyError().AppendDescF("document info write error:%v\n", err))
 		return
 	}
+
 	if err := reader.Close(); err != nil {
 		errorAlerter(data.NewEmptyError().AppendDescF("less reader close:%v", err))
 		return
 	}
+
 	if err := lessCmd.Wait(); err != nil && !strings.Contains(err.Error(), "read/write on closed pipe") {
 		errorAlerter(data.NewEmptyError().AppendDescF("less wait error%v", err))
 		return
