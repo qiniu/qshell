@@ -1,12 +1,12 @@
 # 简介
 `move` 命令可以将一个空间中的文件移动到另外一个空间中，也可以对同一空间中的文件重命名。注意：移动文件仅支持在同一个帐号下面的空间中移动。
-注意如果目标文件已存在空间中的时候，默认情况下，`move` 会失败，报错 `614 file exists`，如果一定要强制覆盖目标文件，可以使用选项 `-overwrite` 。
+注意如果目标文件已存在空间中的时候，默认情况下，`move` 会失败，报错 `614 file exists`，如果一定要强制覆盖目标文件，可以使用选项 `--overwrite` 。
 
 参考文档：[资源移动／重命名 (move)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/move.html)
 
 # 格式
 ```
-qshell move [-overwrite] <SrcBucket> <SrcKey> <DestBucket> <DestKey>
+qshell move [--overwrite] <SrcBucket> <SrcKey> <DestBucket> <DestKey>
 ```
 
 # 鉴权
@@ -36,6 +36,6 @@ qshell move if-pbl qiniu.jpg if-pri 2015/01/19/qiniu.jpg
 
 4 强制覆盖 `if-pbl` 中的已有文件 `2015/01/19/qiniu.jpg`
 ```
-qshell move -overwrite if-pbl qiniu.jpg if-pbl 2015/01/19/qiniu.jpg
+qshell move --overwrite if-pbl qiniu.jpg if-pbl 2015/01/19/qiniu.jpg
 ```
 执行命令之后，此时空间 `if-pbl` 里面的 `qiniu.jpg` 文件内容覆盖空间 `if-pbl` 里面的 `2015/01/19/qiniu.jpg`，`2015/01/19/qiniu.jpg` 文件原有内容完全被`qiniu.jpg` 文件覆盖，即空间 `if-pbl` 里面的 `qiniu.jpg` 文件此后已不存在，最后剩下 `2015/01/19/qiniu.jpg` 文件，文件内容是 `qiniu.jpg` 文件的内容。可以简单理解为鸠占鹊巢。
