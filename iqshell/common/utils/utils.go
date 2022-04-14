@@ -242,29 +242,6 @@ func KeyFromUrl(uri string) (key string, err *data.CodeError) {
 	return
 }
 
-// 表示大小
-//type ByteSize int64
-//
-//func (b ByteSize) String() string {
-//	if b < KB {
-//		return strconv.FormatInt(int64(b), 10) + "B"
-//	}
-//	if b >= KB && b < MB {
-//		size := float64(b) / float64(KB)
-//		return strconv.FormatFloat(size, 'f', 2, 64) + "KB"
-//	}
-//	if b >= MB && b < GB {
-//		size := float64(b) / float64(MB)
-//		return strconv.FormatFloat(size, 'f', 2, 64) + "MB"
-//	}
-//	if b >= GB && b < TB {
-//		size := float64(b) / float64(GB)
-//		return strconv.FormatFloat(size, 'f', 2, 64) + "GB"
-//	}
-//	size := float64(b) / float64(TB)
-//	return strconv.FormatFloat(size, 'f', 2, 64) + "TB"
-//}
-
 // BytesToReadable 将字节转化为人工可读的字符串
 // b - 表示文件大小，单位字节, readable - 可读字符串
 // 比如1304 ==》1304/1024 ==> 1.27KB
