@@ -11,7 +11,7 @@ import (
 func uploadCachePath(cfg *config.Config, uploadCfg *UploadConfig) string {
 	recordRoot := uploadCfg.RecordRoot
 	if len(recordRoot) == 0 {
-		recordRoot = workspace.GetUserPath()
+		recordRoot = workspace.GetUserDir()
 	}
 
 	if len(recordRoot) == 0 {
