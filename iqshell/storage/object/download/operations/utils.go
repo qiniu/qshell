@@ -9,17 +9,17 @@ import (
 )
 
 func downloadCachePath(cfg *config.Config, downloadCfg *DownloadCfg) string {
-	recordRoot := downloadCfg.RecordRoot
-	if len(recordRoot) == 0 {
-		recordRoot = workspace.GetUserPath()
+	if len(downloadCfg.RecordRoot) > 0 {
+		return downloadCfg.RecordRoot
 	}
 
-	if len(recordRoot) == 0 {
-		log.Debug("download can't get record root")
+	userPath := workspace.GetUserPath()
+	if len(userPath) == 0 {
+		log.Debug("download can't get user dir")
 		return ""
 	}
 
-	cachePath := filepath.Join(recordRoot, "qdownload", downloadCfg.JobId())
+	cachePath := filepath.Join(userPath, "qdownload", downloadCfg.JobId())
 	if cErr := os.MkdirAll(cachePath, os.ModePerm); cErr != nil {
 		log.WarningF("download create cache dir error:%v", cErr)
 		return ""

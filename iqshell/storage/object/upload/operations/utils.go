@@ -9,17 +9,17 @@ import (
 )
 
 func uploadCachePath(cfg *config.Config, uploadCfg *UploadConfig) string {
-	recordRoot := uploadCfg.RecordRoot
-	if len(recordRoot) == 0 {
-		recordRoot = workspace.GetUserPath()
+	if len(uploadCfg.RecordRoot) > 0 {
+		return uploadCfg.RecordRoot
 	}
 
-	if len(recordRoot) == 0 {
-		log.Debug("upload can't get record root")
+	userPath := workspace.GetUserPath()
+	if len(userPath) == 0 {
+		log.Debug("upload can't get user dir")
 		return ""
 	}
 
-	cachePath := filepath.Join(recordRoot, "qupload", uploadCfg.JobId())
+	cachePath := filepath.Join(userPath, "qupload", uploadCfg.JobId())
 	if cErr := os.MkdirAll(cachePath, os.ModePerm); cErr != nil {
 		log.WarningF("upload create cache dir error:%v", cErr)
 		return ""
