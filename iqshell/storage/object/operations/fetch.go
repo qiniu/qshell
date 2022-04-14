@@ -110,11 +110,10 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 			log.InfoF("Fetch Success, '%s' => [%s:%s]", in.FromUrl, info.Bucket, in.Key)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+			exporter.Fail().ExportF("%s%s%v", workInfo.Data, flow.ErrorSeparate, err)
 			if in, ok := workInfo.Work.(*object.FetchApiInfo); ok {
-				exporter.Fail().ExportF("%s\t%s\t%v", in.FromUrl, in.Key, err)
 				log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.FromUrl, in.Bucket, in.Key, err)
 			} else {
-				exporter.Fail().ExportF("%s%s%v", workInfo.Data, flow.ErrorSeparate, err)
 				log.ErrorF("Fetch Failed, %s, Error: %s", workInfo.Data, err)
 			}
 		}).Build().Start()
