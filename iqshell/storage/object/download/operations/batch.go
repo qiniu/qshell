@@ -180,7 +180,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			totalFileCount = flow.WorkProvider.WorkTotalCount()
 			return nil
 		}).
-		OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			locker.Lock()
 			skipBySuffixes += 1
 			locker.Unlock()
@@ -189,7 +189,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			exporter.Skip().Export(workInfo.Data)
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-			res := result.(download.ApiResult)
+			res := result.(*download.ApiResult)
 			locker.Lock()
 			if res.IsExist {
 				existsFileCount += 1

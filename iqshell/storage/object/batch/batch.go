@@ -6,7 +6,9 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"path/filepath"
 )
 
 type Info struct {
@@ -22,6 +24,7 @@ type Info struct {
 	MinItemsCount int         // 工作数据源：每行元素最小数量
 	EnableStdin   bool        // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
 
+	EnableRecord                bool // 是否开启 record
 	MaxOperationCountPerRequest int
 }
 
@@ -107,6 +110,29 @@ func (h *handler) Start() {
 			flow.NewItemsWorkCreator(h.info.ItemSeparate, h.info.MinItemsCount, func(items []string) (work flow.Work, err *data.CodeError) {
 				return h.operationItemsCreator(items)
 			}))
+
+
+	}
+
+	// overseer， 数组源 不类型不记录中间状态
+	var overseer flow.Overseer
+	if h.info.EnableRecord {
+		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
+		log.DebugF("batch recorder:%s", dbPath)
+		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: nil,
+				},
+				Result: &OperationResult{
+				},
+				Err: nil,
+			}
+		}); err != nil {
+			log.ErrorF("create overseer error:%v", err)
+			return
+		}
 	}
 
 	workerBuilder.
@@ -151,8 +177,18 @@ func (h *handler) Start() {
 			}), nil
 		})).
 		DoWorkListMaxCount(h.info.MaxOperationCountPerRequest).
-		OnWorkSkip(func(work *flow.WorkInfo, err *data.CodeError) {
-			log.WarningF("Skip line:%s error:%v", work.Data, err)
+		SetOverseer(overseer).
+		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
+			operationResult, _ := result.(*OperationResult)
+			if err != nil && err.Code == data.ErrorCodeAlreadyDone && operationResult != nil {
+				if operationResult.Invalid() {
+					log.DebugF("Skip line:%s because have done and success", work.Data)
+				} else {
+					log.DebugF("Skip line:%s because have done and failure, %v%v", work.Data, err, operationResult.ErrorDescription())
+				}
+			} else {
+				log.DebugF("Skip line:%s because:%v", work.Data, err)
+			}
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			operation, _ := work.Work.(Operation)

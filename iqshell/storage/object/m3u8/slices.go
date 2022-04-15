@@ -32,12 +32,13 @@ func Slices(info SliceListApiInfo) ([]Slice, *data.CodeError) {
 		return nil, err
 	}
 
-	dnLink, err = download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
+	if urlResult, e := download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
 		PublicUrl: dnLink,
 		Deadline:  time.Now().Add(time.Second * 3600).Unix(),
-	})
-	if err != nil {
-		return nil, err
+	}); e != nil || urlResult == nil {
+		return nil, data.NewEmptyError().AppendDesc("public url to private").AppendError(err)
+	} else {
+		dnLink = urlResult.Url
 	}
 
 	//get m3u8 file content

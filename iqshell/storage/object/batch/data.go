@@ -61,10 +61,23 @@ type OperationResult struct {
 	Parts    []int64 `json:"parts"`
 }
 
+var _ flow.Result = (*OperationResult)(nil)
+
+func (r *OperationResult) Invalid() bool {
+	return r.IsSuccess()
+}
+
 func (r *OperationResult) IsSuccess() bool {
 	if r == nil {
 		return false
 	}
 
 	return r.Code == 0 || r.Code == 200
+}
+
+func (r *OperationResult) ErrorDescription() string {
+	if r == nil || r.IsSuccess() {
+		return ""
+	}
+	return fmt.Sprintf("Code:%d Error:%s", r.Code, r.Error)
 }

@@ -3,6 +3,7 @@ package download
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
@@ -43,8 +44,14 @@ type ApiResult struct {
 	IsExist     bool   // 是否为已存在
 }
 
+var _ flow.Result = (*ApiResult)(nil)
+
+func (a *ApiResult) Invalid() bool {
+	return len(a.FileAbsPath) > 0
+}
+
 // Download 下载一个文件，从 Url 下载保存至 ToFile
-func Download(info *ApiInfo) (res ApiResult, err *data.CodeError) {
+func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	if len(info.ToFile) == 0 {
 		err = data.NewEmptyError().AppendDesc("the filename saved after downloading is empty")
 		return
@@ -68,8 +75,8 @@ func Download(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 		return
 	}
 
+	res = &ApiResult{}
 	shouldDownload := true
-
 	// 文件存在则检查文件状态
 	fileStatus, sErr := os.Stat(f.toAbsFile)
 	tempFileStatus, tempErr := os.Stat(f.tempFile)

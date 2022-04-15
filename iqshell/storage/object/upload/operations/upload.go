@@ -64,7 +64,7 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 	}
 }
 
-func uploadFile(info *UploadInfo) (res upload.ApiResult, err *data.CodeError) {
+func uploadFile(info *UploadInfo) (res *upload.ApiResult, err *data.CodeError) {
 	startTime := time.Now().UnixNano() / 1e6
 	if info.TokenProvider == nil {
 		info.TokenProvider, err = createTokenProvider(info)

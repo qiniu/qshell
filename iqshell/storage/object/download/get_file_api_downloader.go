@@ -33,13 +33,15 @@ func (g *getFileApiDownloader) download(info *ApiInfo) (*http.Response, *data.Co
 	// /getfile/<ak>/<bucket>/<UrlEncodedKey>[?e=<Deadline>&token=<DownloadToken>
 	url := utils.Endpoint(g.useHttps, host.GetServer())
 	url = strings.Join([]string{url, "getfile", g.mac.AccessKey, info.Bucket, info.Key}, "/")
-	url, err := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
+	result, err := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
 		PublicUrl: url,
 		Deadline:  7 * 24 * 3600,
 	})
-	if err != nil {
+
+	if result == nil || err != nil {
 		return nil, data.NewEmptyError().AppendDescF("PublicUrlToPrivate error:%v", err)
 	}
+	url = result.Url
 
 	log.DebugF("get file api download, url:%s", url)
 	log.DebugF("get download, host:%s", host.GetHost())

@@ -236,7 +236,7 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 			})).
 			OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 				in := workInfo.Work.(fetchItem)
-				res := result.(object.AsyncFetchApiResult)
+				res := result.(*object.AsyncFetchApiResult)
 				fetchResultChan <- fetchResult{
 					bucket:   in.info.Bucket,
 					key:      in.info.Key,
@@ -324,5 +324,5 @@ type fetchResult struct {
 	key      string
 	url      string
 	fileSize uint64
-	info     object.AsyncFetchApiResult
+	info     *object.AsyncFetchApiResult
 }

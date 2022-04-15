@@ -81,7 +81,7 @@ func (f *Flow) Start() {
 			hasMore, workInfo, err := f.WorkProvider.Provide()
 			if err != nil {
 				if err.Code == data.ErrorCodeParamMissing {
-					f.EventListener.OnWorkSkip(workInfo, err)
+					f.EventListener.OnWorkSkip(workInfo, nil, err)
 				} else {
 					f.EventListener.OnWorkFail(workInfo, err)
 				}
@@ -99,18 +99,24 @@ func (f *Flow) Start() {
 			// 检测 work 是否需要过
 			if f.Skipper != nil {
 				if skip, cause := f.Skipper.ShouldSkip(workInfo); skip {
-					f.EventListener.OnWorkSkip(workInfo, cause)
+					f.EventListener.OnWorkSkip(workInfo, nil, cause)
 					continue
 				}
 			}
 
 			// 检测 work 是否已经做过
 			if f.Overseer != nil {
-				hasDone, workRecord := f.Overseer.GetWorkRecordIfHasDone(workInfo)
-				if hasDone && f.Redo == nil {
-					shouldRedo, cause := f.Redo.ShouldRedo(workInfo, workRecord)
-					if !shouldRedo {
-						f.EventListener.OnWorkSkip(workInfo, cause)
+				if hasDone, workRecord := f.Overseer.GetWorkRecordIfHasDone(workInfo); hasDone {
+					if f.Redo == nil {
+						f.EventListener.OnWorkSkip(workInfo, workRecord.Result, data.NewError(data.ErrorCodeAlreadyDone, workRecord.Err.Error()))
+						continue
+					}
+
+					if shouldRedo, cause := f.Redo.ShouldRedo(workInfo, workRecord); !shouldRedo {
+						if cause != nil {
+							cause.Code = data.ErrorCodeAlreadyDone
+						}
+						f.EventListener.OnWorkSkip(workInfo, workRecord.Result, cause)
 						continue
 					}
 				}
@@ -118,7 +124,7 @@ func (f *Flow) Start() {
 
 			// 通知 work 将要执行
 			if shouldContinue, e := f.EventListener.WillWork(workInfo); !shouldContinue {
-				f.EventListener.OnWorkSkip(workInfo, e)
+				f.EventListener.OnWorkSkip(workInfo, nil, e)
 				continue
 			}
 

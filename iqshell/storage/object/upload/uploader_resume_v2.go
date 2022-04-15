@@ -18,18 +18,18 @@ func newResumeV2Uploader(cfg *storage.Config) Uploader {
 	}
 }
 
-func (r *resumeV2Uploader) upload(info *ApiInfo) (ApiResult, *data.CodeError) {
+func (r *resumeV2Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	log.DebugF("resume v2 upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 
-	var ret ApiResult
+
 	file, err := os.Open(info.FilePath)
 	if err != nil {
-		return ret, data.NewEmptyError().AppendDesc("resume v2 upload: open file error:" + err.Error())
+		return nil, data.NewEmptyError().AppendDesc("resume v2 upload: open file error:" + err.Error())
 	}
 
 	fileStatus, err := file.Stat()
 	if err != nil {
-		return ret, data.NewEmptyError().AppendDesc("resume v2 upload: ger file status error:" + err.Error())
+		return nil, data.NewEmptyError().AppendDesc("resume v2 upload: ger file status error:" + err.Error())
 	}
 
 	token := info.TokenProvider()
@@ -40,8 +40,9 @@ func (r *resumeV2Uploader) upload(info *ApiInfo) (ApiResult, *data.CodeError) {
 		info.Progress.Start()
 	}
 
+	ret := &ApiResult{}
 	up := storage.NewResumeUploaderV2(r.cfg)
-	err = up.Put(workspace.GetContext(), &ret, token, info.SaveKey, file, fileStatus.Size(), &storage.RputV2Extra{
+	err = up.Put(workspace.GetContext(), ret, token, info.SaveKey, file, fileStatus.Size(), &storage.RputV2Extra{
 		Recorder:   nil,
 		Metadata:   nil,
 		CustomVars: nil,

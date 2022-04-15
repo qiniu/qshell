@@ -31,12 +31,13 @@ func ReplaceDomain(info ReplaceDomainApiInfo) *data.CodeError {
 	})
 
 	//create download link
-	dnLink, err = download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
+	if urlResult, e := download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
 		PublicUrl: dnLink,
 		Deadline:  time.Now().Add(time.Second * 3600).Unix(),
-	})
-	if err != nil {
-		return err
+	}); e != nil || urlResult == nil {
+		return data.NewEmptyError().AppendDesc("public url to private").AppendError(err)
+	} else {
+		dnLink = urlResult.Url
 	}
 
 	//get m3u8 file content

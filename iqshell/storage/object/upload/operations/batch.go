@@ -289,7 +289,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			}
 			return
 		}).
-		OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			syncLocker.Do(func() {
 				skippedFileCount += 1
 			})
@@ -297,7 +297,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			exporter.Skip().Export(workInfo.Data)
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-			res := result.(upload.ApiResult)
+			res, _ := result.(*upload.ApiResult)
 
 			syncLocker.Do(func() {
 				if res.IsNotOverwrite {

@@ -20,7 +20,7 @@ func newFromUploader(cfg *storage.Config, ext *storage.PutExtra) Uploader {
 	}
 }
 
-func (f *formUploader) upload(info *ApiInfo) (ret ApiResult, err *data.CodeError) {
+func (f *formUploader) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeError) {
 	log.DebugF("form upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 
 	file, oErr := os.Open(info.FilePath)

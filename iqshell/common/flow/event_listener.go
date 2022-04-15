@@ -6,7 +6,7 @@ type EventListener struct {
 	FlowWillStartFunc func(flow *Flow) (err *data.CodeError)
 	FlowWillEndFunc   func(flow *Flow) (err *data.CodeError)
 	WillWorkFunc      func(work *WorkInfo) (shouldContinue bool, err *data.CodeError)
-	OnWorkSkipFunc    func(work *WorkInfo, err *data.CodeError)
+	OnWorkSkipFunc    func(work *WorkInfo, result Result, err *data.CodeError)
 	OnWorkSuccessFunc func(work *WorkInfo, result Result)
 	OnWorkFailFunc    func(work *WorkInfo, err *data.CodeError)
 }
@@ -32,11 +32,11 @@ func (e *EventListener) WillWork(work *WorkInfo) (shouldContinue bool, err *data
 	return e.WillWorkFunc(work)
 }
 
-func (e *EventListener) OnWorkSkip(work *WorkInfo, err *data.CodeError) {
+func (e *EventListener) OnWorkSkip(work *WorkInfo, result Result, err *data.CodeError) {
 	if e.OnWorkSkipFunc == nil {
 		return
 	}
-	e.OnWorkSkipFunc(work, err)
+	e.OnWorkSkipFunc(work, result, err)
 }
 
 func (e *EventListener) OnWorkSuccess(work *WorkInfo, result Result) {

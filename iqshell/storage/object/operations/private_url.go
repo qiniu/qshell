@@ -119,8 +119,8 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 			}), nil
 		})).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
-			url, _ := result.(string)
-			log.Alert(url)
+			r, _ := result.(*download.PublicUrlToPrivateApiResult)
+			log.Alert(r.Url)
 		}).
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
 			log.Error(err)
