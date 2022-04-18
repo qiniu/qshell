@@ -6,8 +6,8 @@ import (
 )
 
 type Metric struct {
-	mu    sync.Mutex `json:"-"`
-	start time.Time  `json:"-"`
+	mu    sync.Mutex
+	start time.Time
 
 	Duration     int64 `json:"duration"`
 	TotalCount   int64 `json:"total_count"`

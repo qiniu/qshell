@@ -120,7 +120,14 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 			log.ErrorF("Delete Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
-		if result.Code != 200 || result.Error != "" {
+		if result.IsSuccess() {
+			exporter.Success().Export(operationInfo)
+			if len(apiInfo.Condition.PutTime) == 0 {
+				log.InfoF("Delete Success, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
+			} else {
+				log.InfoF("Delete Success, [%s:%s], PutTime:'%s'", apiInfo.Bucket, apiInfo.Key, apiInfo.Condition.PutTime)
+			}
+		} else {
 			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			if len(apiInfo.Condition.PutTime) == 0 {
 				log.ErrorF("Delete Failed, [%s:%s], Code: %d, Error: %s",
@@ -128,13 +135,6 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 			} else {
 				log.ErrorF("Delete Failed, [%s:%s], PutTime:'%s', Code: %d, Error: %s",
 					apiInfo.Bucket, apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
-			}
-		} else {
-			exporter.Success().Export(operationInfo)
-			if len(apiInfo.Condition.PutTime) == 0 {
-				log.InfoF("Delete Success, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
-			} else {
-				log.InfoF("Delete Success, [%s:%s], PutTime:'%s'", apiInfo.Bucket, apiInfo.Key, apiInfo.Condition.PutTime)
 			}
 		}
 	}).OnError(func(err *data.CodeError) {
@@ -250,12 +250,12 @@ func BatchDeleteAfter(cfg *iqshell.Config, info BatchDeleteInfo) {
 			log.ErrorF("Delete Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
-		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Expire Failed, [%s:%s], '%d'天后删除, Code: %d, Error: %s", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays, result.Code, result.Error)
-		} else {
+		if result.IsSuccess() {
 			exporter.Success().Export(operationInfo)
 			log.InfoF("Expire Success, [%s:%s], '%d'天后删除", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays)
+		} else {
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			log.ErrorF("Expire Failed, [%s:%s], '%d'天后删除, Code: %d, Error: %s", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays, result.Code, result.Error)
 		}
 	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch expire error:%v:", err)

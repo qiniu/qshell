@@ -125,17 +125,17 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 			return
 		}
 
-		if result.Code != 200 || result.Error != "" {
+		if result.IsSuccess() {
+			exporter.Success().Export(operationInfo)
+			log.InfoF("Move Success, [%s:%s] => [%s:%s]",
+				apiInfo.SourceBucket, apiInfo.SourceKey,
+				apiInfo.DestBucket, apiInfo.DestKey)
+		} else {
 			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 				apiInfo.SourceBucket, apiInfo.SourceKey,
 				apiInfo.DestBucket, apiInfo.DestKey,
 				result.Code, result.Error)
-		} else {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Move Success, [%s:%s] => [%s:%s]",
-				apiInfo.SourceBucket, apiInfo.SourceKey,
-				apiInfo.DestBucket, apiInfo.DestKey)
 		}
 	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch move error:%v:", err)

@@ -140,14 +140,14 @@ func BatchChangeType(cfg *iqshell.Config, info BatchChangeTypeInfo) {
 			log.ErrorF("Change status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
-		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Code: %d, Error: %s",
-				info.Bucket, in.Key, in.Type, getStorageTypeDescription(in.Type), result.Code, result.Error)
-		} else {
+		if result.IsSuccess() {
 			exporter.Success().Export(operationInfo)
 			log.InfoF("Change Type Success, [%s:%s] => '%d'(%s) ",
 				info.Bucket, in.Key, in.Type, getStorageTypeDescription(in.Type))
+		} else {
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Code: %d, Error: %s",
+				info.Bucket, in.Key, in.Type, getStorageTypeDescription(in.Type), result.Code, result.Error)
 		}
 	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch change Type error:%v:", err)

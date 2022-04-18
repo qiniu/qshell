@@ -97,13 +97,13 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 			return
 		}
 		in := (*StatusInfo)(apiInfo)
-		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Status Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)
-		} else {
+		if result.IsSuccess() {
 			exporter.Success().Export(operationInfo)
 			log.AlertF("%s\t%d\t%s\t%s\t%d\t%d",
 				in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
+		} else {
+			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			log.ErrorF("Status Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)
 		}
 	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch Status error:%v:", err)

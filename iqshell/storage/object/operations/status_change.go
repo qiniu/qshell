@@ -132,13 +132,13 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 			log.ErrorF("Change status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
-		if result.Code != 200 || result.Error != "" {
+		if result.IsSuccess() {
+			exporter.Success().Export(operationInfo)
+			log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
+		} else {
 			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Change status Failed, [%s:%s] => %d, Code: %d, Error: %s",
 				in.Bucket, in.Key, in.Status, result.Code, result.Error)
-		} else {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
 		}
 	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("batch change status error:%v:", err)

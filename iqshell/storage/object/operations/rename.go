@@ -122,17 +122,17 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 			return
 		}
 		in := (*RenameInfo)(apiInfo)
-		if result.Code != 200 || result.Error != "" {
+		if result.IsSuccess() {
+			exporter.Success().Export(operationInfo)
+			log.InfoF("Rename Success, [%s:%s] => [%s:%s]",
+				in.SourceBucket, in.SourceKey,
+				in.DestBucket, in.DestKey)
+		} else {
 			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey,
 				result.Code, result.Error)
-		} else {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Rename Success, [%s:%s] => [%s:%s]",
-				in.SourceBucket, in.SourceKey,
-				in.DestBucket, in.DestKey)
 		}
 	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch rename error:%v:", err)

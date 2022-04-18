@@ -148,15 +148,15 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 			return
 		}
 
-		if result.Code != 200 || result.Error != "" {
+		if result.IsSuccess() {
+			exporter.Success().Export(operationInfo)
+			log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%d",
+				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
+		} else {
 			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%d, Code: %d, Error: %s",
 				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays,
 				result.Code, result.Error)
-		} else {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%d",
-				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
 		}
 	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch restore archive error:%v:", err)

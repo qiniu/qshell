@@ -129,17 +129,17 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 		}
 
 		in := (*CopyInfo)(apiInfo)
-		if result.Code != 200 || result.Error != "" {
+		if result.IsSuccess() {
+			exporter.Success().Export(operationInfo)
+			log.InfoF("Copy Success, '%s:%s' => '%s:%s'",
+				in.SourceBucket, in.SourceKey,
+				in.DestBucket, in.DestKey)
+		} else {
 			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey,
 				result.Code, result.Error)
-		} else {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Copy Success, '%s:%s' => '%s:%s'",
-				in.SourceBucket, in.SourceKey,
-				in.DestBucket, in.DestKey)
 		}
 	}).OnError(func(err *data.CodeError) {
 		log.ErrorF("Batch copy error:%v:", err)
