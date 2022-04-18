@@ -218,6 +218,7 @@ var batchFetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 func setBatchCmdDefaultFlags(cmd *cobra.Command, info *batch.Info) {
 	setBatchCmdInputFileFlags(cmd, info)
 	setBatchCmdWorkCountFlags(cmd, info)
+	setBatchCmdEnableRecordFlags(cmd, info)
 	setBatchCmdSuccessExportFileFlags(cmd, info)
 	setBatchCmdFailExportFileFlags(cmd, info)
 	setBatchCmdItemSeparateFlags(cmd, info)
@@ -226,20 +227,23 @@ func setBatchCmdDefaultFlags(cmd *cobra.Command, info *batch.Info) {
 func setBatchCmdInputFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.InputFile, "input-file", "i", "", "input file, read from stdin if not set")
 }
+func setBatchCmdForceFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force mode, default false")
+}
 func setBatchCmdWorkCountFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 1, "worker count")
+}
+func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default is \\t (tab)")
+}
+func setBatchCmdEnableRecordFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "record work progress, and retry from last progress")
 }
 func setBatchCmdSuccessExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "rename success list")
 }
 func setBatchCmdFailExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "e", "", "rename failure list")
-}
-func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default is \\t (tab)")
-}
-func setBatchCmdForceFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force mode, default false")
 }
 func setBatchCmdOverwriteFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "w", false, "overwrite mode")

@@ -88,7 +88,7 @@ func (info *BatchCopyInfo) Check() *data.CodeError {
 
 func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 	cfg.JobPathBuilder = func(cmdPath string) string {
-		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", info.SourceBucket, info.DestBucket, info.BatchInfo.InputFile))
+		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s:%s", cfg.CmdCfg.CmdId, info.SourceBucket, info.DestBucket, info.BatchInfo.InputFile))
 		return filepath.Join(cmdPath, jobId)
 	}
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{

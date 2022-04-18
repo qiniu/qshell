@@ -110,8 +110,6 @@ func (h *handler) Start() {
 			flow.NewItemsWorkCreator(h.info.ItemSeparate, h.info.MinItemsCount, func(items []string) (work flow.Work, err *data.CodeError) {
 				return h.operationItemsCreator(items)
 			}))
-
-
 	}
 
 	// overseer， 数组源 不类型不记录中间状态
@@ -133,6 +131,8 @@ func (h *handler) Start() {
 			log.ErrorF("create overseer error:%v", err)
 			return
 		}
+	} else {
+		log.Debug("batch recorder:Not Enable")
 	}
 
 	workerBuilder.
