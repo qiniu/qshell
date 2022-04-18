@@ -94,7 +94,7 @@ func (h *handler) Start() {
 	if h.info.WorkList != nil && len(h.info.WorkList) > 0 {
 		workerBuilder = workBuilder.WorkProviderWithArray(h.info.WorkList)
 	} else {
-		log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, bsuccessFname: %q, bfailureFname: %q, sep: %q",
+		log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, successFilePath: %q, failureFilePath: %q, sep: %q",
 			h.info.Force, h.info.Overwrite, h.info.WorkerCount, h.info.InputFile, h.info.SuccessExportFilePath, h.info.FailExportFilePath, h.info.ItemSeparate)
 
 		if h.operationItemsCreator == nil {
