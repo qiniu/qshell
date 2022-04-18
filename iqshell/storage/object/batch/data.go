@@ -72,7 +72,7 @@ func (r *OperationResult) IsSuccess() bool {
 		return false
 	}
 
-	return r.Code == 0 || r.Code == 200
+	return (r.Code == 0 || r.Code == 200) && len(r.Error) == 0
 }
 
 func (r *OperationResult) ErrorDescription() string {

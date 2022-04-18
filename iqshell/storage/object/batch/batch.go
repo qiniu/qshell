@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"path/filepath"
@@ -135,6 +136,8 @@ func (h *handler) Start() {
 		log.Debug("batch recorder:Not Enable")
 	}
 
+	metric := &Metric{}
+	metric.Start()
 	workerBuilder.
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewWorker(func(workInfoList []*flow.WorkInfo) ([]*flow.WorkRecord, *data.CodeError) {
@@ -178,28 +181,49 @@ func (h *handler) Start() {
 		})).
 		DoWorkListMaxCount(h.info.MaxOperationCountPerRequest).
 		SetOverseer(overseer).
+		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
+			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
+			return nil
+		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			operationResult, _ := result.(*OperationResult)
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone && operationResult != nil {
 				if operationResult.Invalid() {
+					metric.AddSuccessCount(1)
 					log.DebugF("Skip line:%s because have done and success", work.Data)
 				} else {
+					metric.AddFailureCount(1)
 					log.DebugF("Skip line:%s because have done and failure, %v%v", work.Data, err, operationResult.ErrorDescription())
 				}
 			} else {
+				metric.AddSkippedCount(1)
 				log.DebugF("Skip line:%s because:%v", work.Data, err)
 			}
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			operation, _ := work.Work.(Operation)
 			operationResult, _ := result.(*OperationResult)
+			if operationResult != nil && operationResult.IsSuccess() {
+				metric.AddSuccessCount(1)
+			} else {
+				metric.AddFailureCount(1)
+			}
 			h.onResult(work.Data, operation, operationResult)
 		}).
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
 			operation, _ := work.Work.(Operation)
+			metric.AddFailureCount(1)
 			h.onResult(work.Data, operation, &OperationResult{
 				Code:  data.ErrorCodeUnknown,
 				Error: err.Error(),
 			})
 		}).Build().Start()
+
+	metric.End()
+	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
+	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		log.ErrorF("save batch result to path:%s error:%v", resultPath, e)
+	} else {
+		log.DebugF("save batch result to path:%s", resultPath)
+	}
 }

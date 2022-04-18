@@ -184,7 +184,7 @@ func (f *Flow) Start() {
 				}
 
 				for _, record := range workRecordList {
-					if record.Result == nil && record.Err == nil {
+					if (record.Result == nil || !record.Result.Invalid()) && record.Err == nil {
 						record.Err = workErr
 					}
 					resultHandler(record)

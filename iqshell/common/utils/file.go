@@ -36,6 +36,20 @@ func FormatFileSize(size int64) (result string) {
 	return
 }
 
+func MarshalToFile(filePath string, v interface{}) *data.CodeError {
+	if err := os.Remove(filePath); err != nil && os.IsExist(err) {
+		return data.NewEmptyError().AppendDesc("marshal: delete origin file").AppendError(err)
+	}
+
+	if d, mErr := json.Marshal(v); mErr != nil {
+		return data.NewEmptyError().AppendDesc("marshal: marshal").AppendError(mErr)
+	} else if wErr := os.WriteFile(filePath, d, os.ModePerm); wErr != nil {
+		return data.NewEmptyError().AppendDesc("marshal: write file").AppendError(mErr)
+	} else {
+		return nil
+	}
+}
+
 func UnMarshalFromFile(filePath string, v interface{}) *data.CodeError {
 	file, err := os.Open(filePath)
 	if err != nil {
