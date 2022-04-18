@@ -237,7 +237,7 @@ func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default is \\t (tab)")
 }
 func setBatchCmdEnableRecordFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "record work progress, and retry from last progress")
+	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "record work progress, and do from last progress while retry")
 }
 func setBatchCmdSuccessExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "rename success list")
