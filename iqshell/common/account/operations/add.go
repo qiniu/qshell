@@ -6,7 +6,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"os"
 )
 
 type AddInfo struct {
@@ -43,15 +42,13 @@ func Add(cfg *iqshell.Config, info AddInfo) {
 		SecretKey: info.SecretKey,
 	}
 
-	if err := account.SetAccountToLocalFile(acc); err != nil {
-		log.ErrorF("user add: set current error:%v", err)
-		os.Exit(data.StatusError)
+	if err := account.SaveToDB(acc, info.Over); err != nil {
+		log.ErrorF("user add: save user to db error:%v", err)
 		return
 	}
 
-	if err := account.SaveToDB(acc, info.Over); err != nil {
-		log.ErrorF("user add: save user to db error:%v", err)
-		os.Exit(data.StatusError)
+	if err := account.SetAccountToLocalFile(acc); err != nil {
+		log.ErrorF("user add: set current error:%v", err)
 		return
 	}
 }
