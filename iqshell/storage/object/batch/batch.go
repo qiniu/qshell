@@ -220,10 +220,14 @@ func (h *handler) Start() {
 		}).Build().Start()
 
 	metric.End()
-	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
-	if e := utils.MarshalToFile(resultPath, metric); e != nil {
-		log.ErrorF("save batch result to path:%s error:%v", resultPath, e)
-	} else {
-		log.DebugF("save batch result to path:%s", resultPath)
+
+	// 数组源不输出结果
+	if h.info.WorkList != nil && len(h.info.WorkList) > 0 {
+		resultPath := filepath.Join(workspace.GetJobDir(), ".result")
+		if e := utils.MarshalToFile(resultPath, metric); e != nil {
+			log.ErrorF("save batch result to path:%s error:%v", resultPath, e)
+		} else {
+			log.DebugF("save batch result to path:%s", resultPath)
+		}
 	}
 }

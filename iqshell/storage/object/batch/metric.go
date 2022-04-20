@@ -17,16 +17,25 @@ type Metric struct {
 }
 
 func (m *Metric) Start() {
+	if m == nil {
+		return
+	}
 	m.start = time.Now()
 }
 
 func (m *Metric) End() {
+	if m == nil {
+		return
+	}
 	sUnix :=  m.start.Unix()
 	eUnix := time.Now().Unix()
 	m.Duration = eUnix - sUnix
 }
 
 func (m *Metric) AddTotalCount(count int64) {
+	if m == nil {
+		return
+	}
 	m.mu.Lock()
 	m.TotalCount += count
 	m.mu.Unlock()
@@ -39,12 +48,18 @@ func (m *Metric) AddSuccessCount(count int64) {
 }
 
 func (m *Metric) AddSkippedCount(count int64) {
+	if m == nil {
+		return
+	}
 	m.mu.Lock()
 	m.SkippedCount += count
 	m.mu.Unlock()
 }
 
 func (m *Metric) AddFailureCount(count int64) {
+	if m == nil {
+		return
+	}
 	m.mu.Lock()
 	m.FailureCount += count
 	m.mu.Unlock()

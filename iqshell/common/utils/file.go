@@ -37,6 +37,10 @@ func FormatFileSize(size int64) (result string) {
 }
 
 func MarshalToFile(filePath string, v interface{}) *data.CodeError {
+	if v == nil {
+		return nil
+	}
+
 	if err := os.Remove(filePath); err != nil && os.IsExist(err) {
 		return data.NewEmptyError().AppendDesc("marshal: delete origin file").AppendError(err)
 	}
@@ -51,6 +55,10 @@ func MarshalToFile(filePath string, v interface{}) *data.CodeError {
 }
 
 func UnMarshalFromFile(filePath string, v interface{}) *data.CodeError {
+	if v == nil {
+		return nil
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		return data.NewEmptyError().AppendDesc("unmarshal: open file").AppendError(err)
