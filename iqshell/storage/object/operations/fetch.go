@@ -205,8 +205,8 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 						saveKey = items[2]
 					} else {
 						key, pErr := utils.KeyFromUrl(fromUrl)
-						if pErr != nil {
-							return nil, alert.Error("get key form url error:"+pErr.Error(), "")
+						if pErr != nil || len(key) == 0 {
+							return nil, alert.Error("get key form url error:"+pErr.Error() + " check url style", "")
 						}
 						saveKey = key
 					}
