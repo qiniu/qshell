@@ -73,19 +73,20 @@ func DirCache(cacheRootPath string, cacheResultFile string) (int64, *data.CodeEr
 			if fi.IsDir() {
 				log.DebugF("Walking through `%s`", path)
 			} else {
-				var relPath string
-				if cacheRootPath == "." {
-					relPath = path
-				} else {
-					relPath = strings.TrimPrefix(strings.TrimPrefix(path, cacheRootPath), string(os.PathSeparator))
+				var relativePath string
+				trimPrefix := cacheRootPath
+				if strings.HasPrefix(trimPrefix, ".") {
+					trimPrefix = strings.TrimPrefix(strings.TrimPrefix(trimPrefix, "."), string(os.PathSeparator))
 				}
+				relativePath = strings.TrimPrefix(strings.TrimPrefix(path, trimPrefix), string(os.PathSeparator))
+				log.DebugF("cacheRootPath:`%s` path:`%s` relativePath:`%s`", cacheRootPath, path, relativePath)
 
 				fsize := fi.Size()
 				//Unit is 100ns
 				flmd := fi.ModTime().UnixNano() / 100
 
-				log.DebugF("Meet file `%s`, size: %d, modtime: %d", relPath, fsize, flmd)
-				fmeta := fmt.Sprintf("%s\t%d\t%d\n", relPath, fsize, flmd)
+				log.DebugF("Meet file `%s`, size: %d, modtime: %d", relativePath, fsize, flmd)
+				fmeta := fmt.Sprintf("%s\t%d\t%d\n", relativePath, fsize, flmd)
 				if _, err := bWriter.WriteString(fmeta); err != nil {
 					log.ErrorF("Failed to write data `%s` to cache file `%s`", fmeta, cacheResultFile)
 				} else {
