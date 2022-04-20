@@ -42,6 +42,7 @@ func (l *LogSetting) merge(from *LogSetting) {
 }
 
 const (
+	NoneKey  = "none"
 	DebugKey = "debug"
 	InfoKey  = "info"
 	WarnKey  = "warn"
@@ -49,8 +50,8 @@ const (
 )
 
 func (l *LogSetting) GetLogLevel() (logLevel int) {
-	if l.LogLevel != nil {
-		return log.LevelDebug
+	if l.LogLevel == nil {
+		return log.LevelNone
 	}
 
 	switch l.LogLevel.Value() {

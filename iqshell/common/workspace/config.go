@@ -17,7 +17,7 @@ func defaultConfig() *config.Config {
 			UC: []string{"uc.qbox.me"},
 		},
 		Log: &config.LogSetting{
-			LogLevel:  data.NewString(config.InfoKey),
+			LogLevel:  data.NewString(config.NoneKey),
 			LogFile:   nil,
 			LogRotate: data.NewInt(7),
 			LogStdout: data.NewBool(true),
