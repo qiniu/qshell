@@ -100,28 +100,25 @@ func (info *BatchUpload2Info) Check() *data.CodeError {
 }
 
 func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		if len(info.RecordRoot) > 0 {
+			return info.RecordRoot
+		}
+		return filepath.Join(cmdPath, info.JobId())
+	}
+
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
-		BeforeLoadFileLog: func() {
-			if len(info.RecordRoot) == 0 {
-				info.RecordRoot = uploadCachePath(workspace.GetConfig(), &info.UploadConfig)
-			}
-			if data.Empty(cfg.CmdCfg.Log.LogFile) {
-				workspace.GetConfig().Log.LogFile = data.NewString(filepath.Join(info.RecordRoot, "log.txt"))
-			}
-		},
 	}); !shouldContinue {
 		return
 	}
-
-	log.DebugF("record root: %s", info.RecordRoot)
 
 	batchUpload(info)
 }
 
 func batchUpload(info BatchUpload2Info) {
 
-	dbPath := filepath.Join(info.RecordRoot, ".ldb")
+	dbPath := filepath.Join(workspace.GetJobDir(), ".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
 
 	// 扫描本地文件
@@ -134,7 +131,7 @@ func batchUpload(info BatchUpload2Info) {
 			needScanLocal = false
 			info.BatchInfo.InputFile = info.FileList
 		} else {
-			info.BatchInfo.InputFile = filepath.Join(info.RecordRoot, ".cache")
+			info.BatchInfo.InputFile = filepath.Join(workspace.GetJobDir(), ".cache")
 			if _, statErr := os.Stat(info.BatchInfo.InputFile); statErr == nil {
 				//file exists
 				needScanLocal = info.IsRescanLocal()
@@ -151,7 +148,7 @@ func batchUpload(info BatchUpload2Info) {
 		}
 
 		if len(info.BatchInfo.InputFile) == 0 {
-			info.BatchInfo.InputFile = filepath.Join(info.RecordRoot, ".cache")
+			info.BatchInfo.InputFile = filepath.Join(workspace.GetJobDir(), ".cache")
 		}
 
 		_, err := utils.DirCache(info.SrcDir, info.BatchInfo.InputFile)

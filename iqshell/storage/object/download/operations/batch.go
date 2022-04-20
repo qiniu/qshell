@@ -80,16 +80,9 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
-		BeforeLoadFileLog: func() {
-			if data.Empty(cfg.CmdCfg.Log.LogFile) {
-				workspace.GetConfig().Log.LogFile = data.NewString(filepath.Join(info.RecordRoot, "log.txt"))
-			}
-		},
 	}); !shouldContinue {
 		return
 	}
-
-	log.InfoF("record root: %s", info.RecordRoot)
 
 	// 配置 locker
 	if e := locker.TryLock(); e != nil {
@@ -104,7 +97,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	dbPath := filepath.Join(info.RecordRoot, ".ldb")
+	dbPath := filepath.Join(workspace.GetJobDir(), ".ldb")
 	log.InfoF("download db dir:%s", dbPath)
 
 	exporter, err := export.NewFileExport(export.FileExporterConfig{
