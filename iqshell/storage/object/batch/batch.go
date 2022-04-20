@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
+	"github.com/qiniu/qshell/v2/iqshell/common/locker"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -87,6 +88,19 @@ func (h *handler) OnError(handler func(err *data.CodeError)) Handler {
 }
 
 func (h *handler) Start() {
+	isArraySource := h.info.WorkList != nil && len(h.info.WorkList) > 0
+	if !isArraySource {
+		locker.SetLockerPath(workspace.GetJobDir())
+		if locker.IsLock() {
+			log.ErrorF("job doing by process:%s, If it is confirmed that this process doesn't exist or is not a qshell process, you can delete the .lock file in this folder:%s and try again", locker.LockProcess(), workspace.GetJobDir())
+			return
+		}
+		if e := locker.Lock(); e != nil {
+			log.ErrorF("batch job lock error:%v", e)
+			return
+		}
+	}
+
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {
 		h.onError(err)
@@ -95,7 +109,7 @@ func (h *handler) Start() {
 
 	workBuilder := flow.New(h.info.Info)
 	var workerBuilder *flow.WorkerProvideBuilder
-	if h.info.WorkList != nil && len(h.info.WorkList) > 0 {
+	if isArraySource {
 		workerBuilder = workBuilder.WorkProviderWithArray(h.info.WorkList)
 	} else {
 		log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, successFilePath: %q, failureFilePath: %q, sep: %q",
@@ -221,13 +235,19 @@ func (h *handler) Start() {
 
 	metric.End()
 
-	// 数组源不输出结果
-	if h.info.WorkList != nil && len(h.info.WorkList) > 0 {
+
+	if !isArraySource {
+		// 数组源不输出结果
 		resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 		if e := utils.MarshalToFile(resultPath, metric); e != nil {
 			log.ErrorF("save batch result to path:%s error:%v", resultPath, e)
 		} else {
 			log.DebugF("save batch result to path:%s", resultPath)
+		}
+
+		if e := locker.UnLock(); e != nil {
+			log.ErrorF("batch job unlock error:%v", e)
+			return
 		}
 	}
 }

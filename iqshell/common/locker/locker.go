@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
+	"path/filepath"
 	"sync"
 )
 
@@ -20,7 +21,7 @@ func SetLockerPath(path string)  {
 	locker.Lock()
 	defer locker.Unlock()
 
-	lockerPath = path
+	lockerPath = filepath.Join(path, ".lock")
 }
 
 func IsLock() bool {
@@ -48,6 +49,7 @@ func Lock() *data.CodeError {
 
 	process := fmt.Sprintf("%d", os.Getpid())
 	err := os.WriteFile(lockerPath, []byte(process), os.ModePerm)
+	log.DebugF("job lock, process:%s path:%s err:%v", process, lockerPath, err)
 	return data.ConvertError(err)
 }
 
@@ -60,6 +62,7 @@ func UnLock() *data.CodeError {
 	}
 
 	err := os.Remove(lockerPath)
+	log.DebugF("job unlock, path:%s err:%v", lockerPath, err)
 	return data.ConvertError(err)
 }
 
