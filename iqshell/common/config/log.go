@@ -49,7 +49,7 @@ const (
 )
 
 func (l *LogSetting) GetLogLevel() (logLevel int) {
-	if l.LogLevel != nil {
+	if l.LogLevel == nil {
 		return log.LevelDebug
 	}
 
