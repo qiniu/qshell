@@ -3,6 +3,8 @@ package cmd
 import (
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +19,7 @@ And qdownload will use batch stat api or list api to get files info so that it h
 have already in local disk and need to skip download or not.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QDownloadType
+			cfg.CmdCfg.Log.LogLevel = data.NewString(config.DebugKey)
 			if len(args) > 0 {
 				info.LocalDownloadConfig = args[0]
 			}

@@ -17,6 +17,9 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QUploadType
+			cfg.CmdCfg.Log.LogLevel = data.NewString(config.DebugKey)
+			cfg.CmdCfg.Log.LogStdout = data.NewBool(true)
+			cfg.CmdCfg.Log.LogRotate = data.NewInt(7)
 			if len(args) > 0 {
 				info.UploadConfigFile = args[0]
 			}
