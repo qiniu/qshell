@@ -72,12 +72,15 @@ func (info *BatchDownloadInfo) Check() *data.CodeError {
 }
 
 func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		if len(info.RecordRoot) > 0 {
+			return info.RecordRoot
+		}
+		return filepath.Join(cmdPath, info.JobId())
+	}
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 		BeforeLoadFileLog: func() {
-			if len(info.RecordRoot) == 0 {
-				info.RecordRoot = downloadCachePath(workspace.GetConfig(), &info.DownloadCfg)
-			}
 			if data.Empty(cfg.CmdCfg.Log.LogFile) {
 				workspace.GetConfig().Log.LogFile = data.NewString(filepath.Join(info.RecordRoot, "log.txt"))
 			}

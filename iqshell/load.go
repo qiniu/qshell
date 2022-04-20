@@ -11,6 +11,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
+	"path/filepath"
 	"runtime"
 )
 
@@ -132,7 +133,10 @@ func LoadWorkspace(cfg *Config) (shouldContinue bool) {
 
 func LoadFileLog(cfg *Config) (shouldContinue bool) {
 	// 配置日志文件输出
-	if ls := workspace.GetLogConfig(); ls != nil && ls.Enable() && data.NotEmpty(ls.LogFile) {
+	if ls := workspace.GetLogConfig(); ls != nil && ls.Enable() {
+		if data.Empty(ls.LogFile) {
+			ls.LogFile = data.NewString(filepath.Join(workspace.GetJobDir(), "log.txt"))
+		}
 		err := utils.CreateFileDirIfNotExist(ls.LogFile.Value())
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "load file log, create log file error: %v\n", err)
@@ -146,7 +150,7 @@ func LoadFileLog(cfg *Config) (shouldContinue bool) {
 			EnableStdout:   ls.IsLogStdout(),
 			MaxDays:        ls.LogRotate.Value(),
 		})
-		log.AlertF("Writing log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+		log.AlertF("Writing log to file:%s \n\n", ls.LogFile.Value())
 	} else {
 		log.DebugF("log file not enable, log level:%s \n\n", workspace.GetConfig().Log.LogLevel.Value())
 	}
