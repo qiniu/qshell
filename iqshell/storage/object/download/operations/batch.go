@@ -212,7 +212,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.AlertF("%10s%10d", "Success:", metric.SuccessCount)
 	log.AlertF("%10s%10d", "Update:", metric.UpdateCount)
 	log.AlertF("%10s%10d", "Failure:", metric.FailureCount)
-	log.AlertF("%10s%10d", "Duration:", metric.Duration)
+	log.AlertF("%10s%10ds", "Duration:", metric.Duration)
 	log.AlertF("-----------------------------")
 
 	if workspace.GetConfig().Log.Enable() {

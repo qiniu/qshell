@@ -6,8 +6,8 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
+	"github.com/qiniu/qshell/v2/iqshell/common/locker"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/synchronized"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -120,6 +120,7 @@ func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 }
 
 func batchUpload(info BatchUpload2Info) {
+
 	dbPath := filepath.Join(info.RecordRoot, ".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
 
@@ -161,6 +162,11 @@ func batchUpload(info BatchUpload2Info) {
 	}
 
 	batchUploadFlow(info, info.UploadConfig, dbPath)
+
+	if e := locker.TryUnlock(); e != nil {
+		log.ErrorF("Download, %v", e)
+		return
+	}
 }
 
 func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath string) {
@@ -176,15 +182,8 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 		return
 	}
 
-	timeStart := time.Now()
-	syncLocker := synchronized.NewSynchronized(nil)
-	var totalFileCount int64
-	var currentFileCount int64
-	var successFileCount int64
-	var failureFileCount int64
-	var overwriteCount int64
-	var notOverwriteCount int64
-	var skippedFileCount int64
+	metric := &Metric{}
+	metric.Start()
 
 	flow.New(info.BatchInfo.Info).
 		WorkProviderWithFile(info.BatchInfo.InputFile,
@@ -250,13 +249,11 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
-				syncLocker.Do(func() {
-					currentFileCount += 1
-				})
+				metric.AddCurrentCount(1)
 				apiInfo := workInfo.Work.(*UploadInfo)
 
-				log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
-					float32(currentFileCount)*100/float32(totalFileCount))
+				log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, metric.CurrentCount, metric.TotalCount,
+					float32(metric.CurrentCount)*100/float32(metric.TotalCount))
 
 				res, err := uploadFile(apiInfo)
 
@@ -267,7 +264,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			}), nil
 		})).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
-			totalFileCount = flow.WorkProvider.WorkTotalCount()
+			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
 		}).
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
@@ -290,50 +287,51 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			return
 		}).
 		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
-			syncLocker.Do(func() {
-				skippedFileCount += 1
-			})
+			metric.AddSkippedCount(1)
 			log.Info(err.Error())
 			exporter.Skip().Export(workInfo.Data)
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			res, _ := result.(*upload.ApiResult)
-
-			syncLocker.Do(func() {
-				if res.IsNotOverwrite {
-					notOverwriteCount += 1
-				} else if res.IsOverwrite {
-					overwriteCount += 1
-					exporter.Overwrite().Export(workInfo.Data)
-				} else if res.IsSkip {
-					skippedFileCount += 1
-					exporter.Skip().Export(workInfo.Data)
-				} else {
-					successFileCount += 1
-					exporter.Success().Export(workInfo.Data)
-				}
-			})
+			if res.IsNotOverwrite {
+				metric.AddNotOverwriteCount(1)
+			} else if res.IsOverwrite {
+				metric.AddOverwriteCount(1)
+				exporter.Overwrite().Export(workInfo.Data)
+			} else if res.IsSkip {
+				metric.AddSkippedCount(1)
+				exporter.Skip().Export(workInfo.Data)
+			} else {
+				metric.AddSuccessCount(1)
+				exporter.Success().Export(workInfo.Data)
+			}
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
-			syncLocker.Do(func() {
-				failureFileCount += 1
-			})
+			metric.AddFailureCount(1)
 			exporter.Fail().ExportF("%s%s%%s", workInfo.Data, flow.ErrorSeparate, err)
 			log.ErrorF("Upload Failed, %s error:%s", workInfo.Data, err)
 		}).Build().Start()
 
 	log.Alert("--------------- Upload Result ---------------")
-	log.AlertF("%20s%10d", "Total:", totalFileCount)
-	log.AlertF("%20s%10d", "Success:", successFileCount)
-	log.AlertF("%20s%10d", "Failure:", failureFileCount)
-	log.AlertF("%20s%10d", "Overwrite:", overwriteCount)
-	log.AlertF("%20s%10d", "NotOverwrite:", notOverwriteCount)
-	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
-	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
+	log.AlertF("%20s%10d", "Total:", metric.TotalCount)
+	log.AlertF("%20s%10d", "Success:", metric.SuccessCount)
+	log.AlertF("%20s%10d", "Failure:", metric.FailureCount)
+	log.AlertF("%20s%10d", "Overwrite:", metric.OverwriteCount)
+	log.AlertF("%20s%10d", "NotOverwrite:", metric.NotOverwriteCount)
+	log.AlertF("%20s%10d", "Skipped:", metric.SkippedCount)
+	log.AlertF("%20s%10ds", "Duration:", metric.Duration)
 	log.AlertF("---------------------------------------------")
 	if workspace.GetConfig().Log.Enable() {
 		log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
 	}
+
+	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
+	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		log.ErrorF("save download result to path:%s error:%v", resultPath, e)
+	} else {
+		log.DebugF("save download result to path:%s", resultPath)
+	}
+
 }
 
 type BatchUploadConfigMouldInfo struct {
