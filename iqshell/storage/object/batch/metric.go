@@ -11,6 +11,7 @@ type Metric struct {
 
 	Duration     int64 `json:"duration"`
 	TotalCount   int64 `json:"total_count"`
+	CurrentCount int64 `json:"-"`
 	SuccessCount int64 `json:"success_count"`
 	FailureCount int64 `json:"failure_count"`
 	SkippedCount int64 `json:"skipped_count"`
@@ -41,9 +42,28 @@ func (m *Metric) AddTotalCount(count int64) {
 	m.mu.Unlock()
 }
 
+func (m *Metric) AddCurrentCount(count int64) {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	m.CurrentCount += count
+	m.mu.Unlock()
+}
+
+
 func (m *Metric) AddSuccessCount(count int64) {
 	m.mu.Lock()
 	m.SuccessCount += count
+	m.mu.Unlock()
+}
+
+func (m *Metric) AddFailureCount(count int64) {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	m.FailureCount += count
 	m.mu.Unlock()
 }
 
@@ -56,11 +76,16 @@ func (m *Metric) AddSkippedCount(count int64) {
 	m.mu.Unlock()
 }
 
-func (m *Metric) AddFailureCount(count int64) {
+func (m *Metric) Lock() {
 	if m == nil {
 		return
 	}
 	m.mu.Lock()
-	m.FailureCount += count
+}
+
+func (m *Metric) Unlock() {
+	if m == nil {
+		return
+	}
 	m.mu.Unlock()
 }

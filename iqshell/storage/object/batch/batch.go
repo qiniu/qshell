@@ -90,13 +90,8 @@ func (h *handler) OnError(handler func(err *data.CodeError)) Handler {
 func (h *handler) Start() {
 	isArraySource := h.info.WorkList != nil && len(h.info.WorkList) > 0
 	if !isArraySource {
-		locker.SetLockerPath(workspace.GetJobDir())
-		if locker.IsLock() {
-			log.ErrorF("job doing by process:%s, If it is confirmed that this process doesn't exist or is not a qshell process, you can delete the .lock file in this folder:%s and try again", locker.LockProcess(), workspace.GetJobDir())
-			return
-		}
-		if e := locker.Lock(); e != nil {
-			log.ErrorF("batch job lock error:%v", e)
+		if e := locker.TryLock(); e != nil {
+			log.ErrorF("batch job, %v", e)
 			return
 		}
 	}
@@ -245,8 +240,8 @@ func (h *handler) Start() {
 			log.DebugF("save batch result to path:%s", resultPath)
 		}
 
-		if e := locker.UnLock(); e != nil {
-			log.ErrorF("batch job unlock error:%v", e)
+		if e := locker.TryUnlock(); e != nil {
+			log.ErrorF("batch job, %v", e)
 			return
 		}
 	}

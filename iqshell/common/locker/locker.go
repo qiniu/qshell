@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
 	"path/filepath"
 	"sync"
@@ -39,6 +40,19 @@ func IsLock() bool {
 	}
 }
 
+func TryLock() *data.CodeError {
+	SetLockerPath(workspace.GetJobDir())
+	if IsLock() {
+		return data.NewEmptyError().AppendDescF("job doing by process:%s, If it is confirmed that this process doesn't exist or is not a qshell process, you can delete the .lock file in this folder:%s and try again",
+			LockProcess(), workspace.GetJobDir())
+	}
+
+	if e := Lock(); e != nil {
+		return data.NewEmptyError().AppendDescF("job lock error:%v", e)
+	}
+	return nil
+}
+
 func Lock() *data.CodeError {
 	locker.Lock()
 	defer locker.Unlock()
@@ -53,7 +67,14 @@ func Lock() *data.CodeError {
 	return data.ConvertError(err)
 }
 
-func UnLock() *data.CodeError {
+func TryUnlock() *data.CodeError {
+	if e := Unlock(); e != nil {
+		return data.NewEmptyError().AppendDescF("job unlock error:%v", e)
+	}
+	return nil
+}
+
+func Unlock() *data.CodeError {
 	locker.Lock()
 	defer locker.Unlock()
 
