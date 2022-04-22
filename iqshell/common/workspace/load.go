@@ -73,7 +73,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 	} else {
 		userDir = filepath.Join(workspaceDir, usersDirName, defaultUserDirName)
 	}
-	log.DebugF("user dir:%s",userDir)
+	log.DebugF("user dir:%s", userDir)
 
 	// 配置 Job path
 	jobDir = filepath.Join(userDir, info.CmdConfig.CmdId)
@@ -84,7 +84,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 	if err != nil {
 		return data.NewEmptyError().AppendDescF("create job dir error:%v", err)
 	}
-	log.DebugF("job dir:%s",userDir)
+	log.DebugF("job dir:%s", userDir)
 
 	// 检查用户配置，用户配置可能被指定，如果未指定则使用用户目录下配置
 	if len(info.UserConfigPath) == 0 && len(userDir) > 0 {

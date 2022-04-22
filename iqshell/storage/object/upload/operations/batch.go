@@ -10,7 +10,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
 	"os"
 	"path/filepath"
@@ -20,22 +19,31 @@ import (
 )
 
 type BatchUploadInfo struct {
-	BatchInfo        batch.Info
+	flow.Info
+	export.FileExporterConfig
+
+	Overwrite bool // 是否覆盖
+
+	// 工作数据源
+	InputFile    string // 工作数据源：文件
+	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
+	EnableStdin  bool   // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
+
 	UploadConfigFile string
 	CallbackHost     string
 	CallbackUrl      string
 }
 
 func (info *BatchUploadInfo) Check() *data.CodeError {
-	if info.BatchInfo.WorkerCount < 1 || info.BatchInfo.WorkerCount > 2000 {
-		info.BatchInfo.WorkerCount = 5
+	if info.WorkerCount < 1 || info.WorkerCount > 2000 {
+		info.WorkerCount = 5
 		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
-			info.BatchInfo.Info.WorkerCount)
+			info.Info.WorkerCount)
 	}
-	if err := info.BatchInfo.Check(); err != nil {
+	if err := info.Info.Check(); err != nil {
 		return err
 	}
-	info.BatchInfo.Force = true
+	info.Force = true
 	return nil
 }
 
@@ -58,8 +66,13 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 	}
 
 	upload2Info := BatchUpload2Info{
-		BatchInfo:    info.BatchInfo,
-		UploadConfig: DefaultUploadConfig(),
+		Info:               info.Info,
+		FileExporterConfig: info.FileExporterConfig,
+		Overwrite:          info.Overwrite,
+		InputFile:          info.InputFile,
+		ItemSeparate:       info.ItemSeparate,
+		EnableStdin:        info.EnableStdin,
+		UploadConfig:       DefaultUploadConfig(),
 	}
 	upload2Info.UploadConfig.Policy = &storage.PutPolicy{
 		CallbackURL:  info.CallbackUrl,
@@ -79,18 +92,26 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 }
 
 type BatchUpload2Info struct {
-	// 输入文件通过 upload config 输入
-	BatchInfo batch.Info
+	flow.Info
+	export.FileExporterConfig
+
+	Overwrite bool // 是否覆盖
+
+	// 工作数据源
+	InputFile    string // 工作数据源：文件
+	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
+	EnableStdin  bool   // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
+
 	UploadConfig
 }
 
 func (info *BatchUpload2Info) Check() *data.CodeError {
-	if info.BatchInfo.WorkerCount < 1 || info.BatchInfo.WorkerCount > 2000 {
-		info.BatchInfo.WorkerCount = 5
+	if info.Info.WorkerCount < 1 || info.Info.WorkerCount > 2000 {
+		info.Info.WorkerCount = 5
 		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
-			info.BatchInfo.Info.WorkerCount)
+			info.Info.WorkerCount)
 	}
-	if err := info.BatchInfo.Check(); err != nil {
+	if err := info.Info.Check(); err != nil {
 		return err
 	}
 	if err := info.UploadConfig.Check(); err != nil {
@@ -129,10 +150,10 @@ func batchUpload(info BatchUpload2Info) {
 		if _, err := os.Stat(info.FileList); err == nil {
 			// 存在 file list 无需再重新扫描
 			needScanLocal = false
-			info.BatchInfo.InputFile = info.FileList
+			info.InputFile = info.FileList
 		} else {
-			info.BatchInfo.InputFile = filepath.Join(workspace.GetJobDir(), ".cache")
-			if _, statErr := os.Stat(info.BatchInfo.InputFile); statErr == nil {
+			info.InputFile = filepath.Join(workspace.GetJobDir(), ".cache")
+			if _, statErr := os.Stat(info.InputFile); statErr == nil {
 				//file exists
 				needScanLocal = info.IsRescanLocal()
 			} else {
@@ -147,11 +168,11 @@ func batchUpload(info BatchUpload2Info) {
 			return
 		}
 
-		if len(info.BatchInfo.InputFile) == 0 {
-			info.BatchInfo.InputFile = filepath.Join(workspace.GetJobDir(), ".cache")
+		if len(info.InputFile) == 0 {
+			info.InputFile = filepath.Join(workspace.GetJobDir(), ".cache")
 		}
 
-		_, err := utils.DirCache(info.SrcDir, info.BatchInfo.InputFile)
+		_, err := utils.DirCache(info.SrcDir, info.InputFile)
 		if err != nil {
 			log.ErrorF("create dir files cache error:%v", err)
 			return
@@ -167,7 +188,7 @@ func batchUpload(info BatchUpload2Info) {
 }
 
 func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath string) {
-	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
+	exporter, err := export.NewFileExport(info.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
 		return
@@ -182,10 +203,10 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	metric := &Metric{}
 	metric.Start()
 
-	flow.New(info.BatchInfo.Info).
-		WorkProviderWithFile(info.BatchInfo.InputFile,
+	flow.New(info.Info).
+		WorkProviderWithFile(info.InputFile,
 			false,
-			flow.NewItemsWorkCreator(info.BatchInfo.ItemSeparate,
+			flow.NewItemsWorkCreator(info.ItemSeparate,
 				3,
 				func(items []string) (work flow.Work, err *data.CodeError) {
 					fileRelativePath := items[0]

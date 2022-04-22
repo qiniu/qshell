@@ -91,10 +91,8 @@ type ApiResult struct {
 var _ flow.Result = (*ApiResult)(nil)
 
 func (a *ApiResult) Invalid() bool {
-	return len(a.Key) > 0 &&  len(a.MimeType) > 0 && len(a.Hash) > 0
+	return len(a.Key) > 0 && len(a.MimeType) > 0 && len(a.Hash) > 0
 }
-
-
 
 func ApiResultFormat() string {
 	return `{"key":"$(key)","hash":"$(etag)","file_size":$(fsize),"mime_type":"$(mimeType)"}`

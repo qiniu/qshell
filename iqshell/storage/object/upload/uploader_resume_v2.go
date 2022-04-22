@@ -21,7 +21,6 @@ func newResumeV2Uploader(cfg *storage.Config) Uploader {
 func (r *resumeV2Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	log.DebugF("resume v2 upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 
-
 	file, err := os.Open(info.FilePath)
 	if err != nil {
 		return nil, data.NewEmptyError().AppendDesc("resume v2 upload: open file error:" + err.Error())

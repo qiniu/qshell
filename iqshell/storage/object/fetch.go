@@ -28,7 +28,7 @@ type FetchResult storage.FetchRet
 var _ flow.Result = (*FetchResult)(nil)
 
 func (a *FetchResult) Invalid() bool {
-	return len(a.Key) > 0 &&  len(a.MimeType) > 0 && len(a.Hash) > 0
+	return len(a.Key) > 0 && len(a.MimeType) > 0 && len(a.Hash) > 0
 }
 
 func Fetch(info FetchApiInfo) (*FetchResult, *data.CodeError) {

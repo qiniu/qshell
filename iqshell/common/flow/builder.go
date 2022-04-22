@@ -77,8 +77,6 @@ func (b *FlowBuilder) DoWorkListMaxCount(count int) *FlowBuilder {
 	}
 }
 
-
-
 func (b *FlowBuilder) SetOverseer(overseer Overseer) *FlowBuilder {
 	b.flow.Overseer = overseer
 	return &FlowBuilder{

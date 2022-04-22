@@ -23,14 +23,14 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if len(args) > 0 {
 				info.UploadConfigFile = args[0]
 			}
-			info.BatchInfo.Force = true
+			info.Force = true
 			operations.BatchUpload(cfg, info)
 		},
 	}
-	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
-	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
-	cmd.Flags().StringVarP(&info.BatchInfo.OverwriteExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
-	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
+	cmd.Flags().StringVarP(&info.OverwriteExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
+	cmd.Flags().IntVarP(&info.Info.WorkerCount, "worker", "c", 1, "worker count")
 	cmd.Flags().StringVarP(&info.CallbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "upload callback host")
 	return cmd
@@ -52,7 +52,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QUpload2Type
-			info.BatchInfo.Force = true
+			info.Force = true
 			cfg.CmdCfg.Log = &config.LogSetting{
 				LogLevel:  data.NewString(LogLevel),
 				LogFile:   data.NewString(LogFile),
@@ -62,10 +62,10 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.BatchUpload2(cfg, info)
 		},
 	}
-	cmd.Flags().StringVar(&info.BatchInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
-	cmd.Flags().StringVar(&info.BatchInfo.FailExportFilePath, "failure-list", "", "upload failure file list")
-	cmd.Flags().StringVar(&info.BatchInfo.OverwriteExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
-	cmd.Flags().IntVar(&info.BatchInfo.WorkerCount, "thread-count", 1, "multiple thread count")
+	cmd.Flags().StringVar(&info.SuccessExportFilePath, "success-list", "", "upload success file list")
+	cmd.Flags().StringVar(&info.FailExportFilePath, "failure-list", "", "upload failure file list")
+	cmd.Flags().StringVar(&info.OverwriteExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
+	cmd.Flags().IntVar(&info.Info.WorkerCount, "thread-count", 1, "multiple thread count")
 
 	cmd.Flags().BoolVarP(&info.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&info.IgnoreDir, "ignore-dir", false, "ignore the dir in the dest file key")

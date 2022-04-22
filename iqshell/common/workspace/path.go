@@ -22,4 +22,3 @@ func GetUserDir() string {
 func GetJobDir() string {
 	return jobDir
 }
-

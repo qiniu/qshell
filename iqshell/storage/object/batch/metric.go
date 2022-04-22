@@ -28,7 +28,7 @@ func (m *Metric) End() {
 	if m == nil {
 		return
 	}
-	sUnix :=  m.start.Unix()
+	sUnix := m.start.Unix()
 	eUnix := time.Now().Unix()
 	m.Duration = eUnix - sUnix
 }
@@ -50,7 +50,6 @@ func (m *Metric) AddCurrentCount(count int64) {
 	m.CurrentCount += count
 	m.mu.Unlock()
 }
-
 
 func (m *Metric) AddSuccessCount(count int64) {
 	m.mu.Lock()

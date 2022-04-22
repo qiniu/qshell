@@ -14,7 +14,7 @@ import (
 var lockerPath string
 var locker sync.Mutex
 
-func SetLockerPath(path string)  {
+func SetLockerPath(path string) {
 	if len(path) == 0 {
 		return
 	}

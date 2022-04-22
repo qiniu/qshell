@@ -133,9 +133,8 @@ func (h *handler) Start() {
 					Data: "",
 					Work: nil,
 				},
-				Result: &OperationResult{
-				},
-				Err: nil,
+				Result: &OperationResult{},
+				Err:    nil,
 			}
 		}); err != nil {
 			log.ErrorF("create overseer error:%v", err)
@@ -229,7 +228,6 @@ func (h *handler) Start() {
 		}).Build().Start()
 
 	metric.End()
-
 
 	if !isArraySource {
 		// 数组源不输出结果
