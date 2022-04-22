@@ -94,6 +94,7 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 type BatchUpload2Info struct {
 	flow.Info
 	export.FileExporterConfig
+	UploadConfig
 
 	Overwrite bool // 是否覆盖
 
@@ -101,8 +102,6 @@ type BatchUpload2Info struct {
 	InputFile    string // 工作数据源：文件
 	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
 	EnableStdin  bool   // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
-
-	UploadConfig
 }
 
 func (info *BatchUpload2Info) Check() *data.CodeError {

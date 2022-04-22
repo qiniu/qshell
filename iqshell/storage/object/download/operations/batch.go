@@ -9,19 +9,26 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"path/filepath"
 	"strings"
 )
 
 type BatchDownloadWithConfigInfo struct {
-	BatchInfo           batch.Info
+	flow.Info
+	export.FileExporterConfig
+
+	Overwrite bool // 是否覆盖
+
+	// 工作数据源
+	InputFile    string // 工作数据源：文件
+	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
+
 	LocalDownloadConfig string
 }
 
 func (info *BatchDownloadWithConfigInfo) Check() *data.CodeError {
-	if err := info.BatchInfo.Check(); err != nil {
+	if err := info.Info.Check(); err != nil {
 		return err
 	}
 	return nil
@@ -39,8 +46,11 @@ func BatchDownloadWithConfig(cfg *iqshell.Config, info BatchDownloadWithConfigIn
 	}
 
 	downloadInfo := BatchDownloadInfo{
-		BatchInfo:   info.BatchInfo,
-		DownloadCfg: DefaultDownloadCfg(),
+		Info:               info.Info,
+		FileExporterConfig: info.FileExporterConfig,
+		InputFile:          info.InputFile,
+		ItemSeparate:       info.ItemSeparate,
+		DownloadCfg:        DefaultDownloadCfg(),
 	}
 	if err := utils.UnMarshalFromFile(info.LocalDownloadConfig, &downloadInfo.DownloadCfg); err != nil {
 		log.ErrorF("UnMarshal: read download config error:%v config file:%s", info.LocalDownloadConfig, err)
@@ -54,15 +64,20 @@ func BatchDownloadWithConfig(cfg *iqshell.Config, info BatchDownloadWithConfigIn
 }
 
 type BatchDownloadInfo struct {
-	BatchInfo batch.Info
+	flow.Info
+	export.FileExporterConfig
 	DownloadCfg
+
+	// 工作数据源
+	InputFile    string // 工作数据源：文件
+	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
 }
 
 func (info *BatchDownloadInfo) Check() *data.CodeError {
-	if info.BatchInfo.WorkerCount < 1 || info.BatchInfo.WorkerCount > 2000 {
-		info.BatchInfo.WorkerCount = 5
+	if info.WorkerCount < 1 || info.WorkerCount > 2000 {
+		info.WorkerCount = 5
 	}
-	if err := info.BatchInfo.Check(); err != nil {
+	if err := info.Info.Check(); err != nil {
 		return err
 	}
 	if err := info.DownloadCfg.Check(); err != nil {
@@ -90,7 +105,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	info.BatchInfo.InputFile = info.KeyFile
+	info.InputFile = info.KeyFile
 	hostProvider := getDownloadHostProvider(workspace.GetConfig(), &info.DownloadCfg)
 	if available, e := hostProvider.Available(); !available {
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or bind domain to bucket; %v", info.Bucket, e)
@@ -101,9 +116,9 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.InfoF("download db dir:%s", dbPath)
 
 	exporter, err := export.NewFileExport(export.FileExporterConfig{
-		SuccessExportFilePath:   info.BatchInfo.SuccessExportFilePath,
-		FailExportFilePath:      info.BatchInfo.FailExportFilePath,
-		OverwriteExportFilePath: info.BatchInfo.OverwriteExportFilePath,
+		SuccessExportFilePath:   info.SuccessExportFilePath,
+		FailExportFilePath:      info.FailExportFilePath,
+		OverwriteExportFilePath: info.OverwriteExportFilePath,
 	})
 	if err != nil {
 		log.Error(err)
@@ -127,8 +142,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return true
 	}
 
-	flow.New(info.BatchInfo.Info).
-		WorkProvider(NewWorkProvider(info.Bucket, info.BatchInfo.InputFile, info.BatchInfo.ItemSeparate)).
+	flow.New(info.Info).
+		WorkProvider(NewWorkProvider(info.Bucket, info.InputFile, info.ItemSeparate)).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
