@@ -18,8 +18,6 @@ type BatchDownloadWithConfigInfo struct {
 	flow.Info
 	export.FileExporterConfig
 
-	Overwrite bool // 是否覆盖
-
 	// 工作数据源
 	InputFile    string // 工作数据源：文件
 	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
