@@ -8,6 +8,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"path/filepath"
@@ -90,6 +91,29 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 		return
 	}
 
+	// overseer， 数组源 不类型不记录中间状态
+	var overseer flow.Overseer
+	if info.BatchInfo.EnableRecord {
+		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
+		log.DebugF("batch fetch recorder:%s", dbPath)
+		var err *data.CodeError
+		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: nil,
+				},
+				Result: &download.PublicUrlToPrivateApiResult{},
+				Err:    nil,
+			}
+		}); err != nil {
+			log.ErrorF("batch fetch create overseer error:%v", err)
+			return
+		}
+	} else {
+		log.Debug("batch fetch recorder:Not Enable")
+	}
+
 	flow.New(info.BatchInfo.Info).
 		WorkProviderWithFile(info.BatchInfo.InputFile,
 			info.BatchInfo.EnableStdin,
@@ -125,7 +149,24 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 				}
 			}), nil
 		})).
-		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
+		SetOverseer(overseer).
+		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+			if !info.BatchInfo.RecordRedoWhileError {
+				return false, nil
+			}
+
+			if workRecord.Err != nil {
+				return true, workRecord.Err
+			}
+			result, _ := workRecord.Result.(*download.PublicUrlToPrivateApiResult)
+			if result == nil {
+				return true, data.NewEmptyError().AppendDesc("no result found")
+			}
+			if result.Invalid() {
+				return true, data.NewEmptyError().AppendDesc("result is invalid")
+			}
+			return false, nil
+		}).OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			r, _ := result.(*download.PublicUrlToPrivateApiResult)
 			log.Alert(r.Url)
 		}).

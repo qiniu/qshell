@@ -21,6 +21,8 @@ qshell batchstat [--force] [--success-list <SuccessFileName>] [--failure-list <F
 - -s/--success-list：该选项指定一个文件，qshell 会把操作成功的文件行导入到该文件；默认不导出。【可选】
 - -e/--failure-list：该选项指定一个文件， qshell 会把操作失败的文件行加上错误状态码，错误的原因导入该文件；默认不导出。【可选】
 - -c/--worker：该选项可以定义 Batch 任务并发数；默认为 1。【可选】
+- --enable-record：记录任务执行状态，当下次执行时会跳过已执行的任务。 【可选】
+- --record-redo-while-error：依赖于 --enable-record，当检测任务状态时，如果任务已执行切失败，则再执行一次；默认为 false，当任务执行失败不重新执行。 【可选】
 
 # 示例
 - 我们将查询空间`7qiniu`中的一些文件的基本信息，待查询文件列表`listFile` 的内容为：

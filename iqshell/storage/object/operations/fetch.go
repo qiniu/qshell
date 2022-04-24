@@ -9,6 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"path/filepath"
@@ -78,6 +79,28 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		return
 	}
 
+	// overseer， 数组源 不类型不记录中间状态
+	var overseer flow.Overseer
+	if info.BatchInfo.EnableRecord {
+		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
+		log.DebugF("batch fetch recorder:%s", dbPath)
+		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: nil,
+				},
+				Result: &object.FetchResult{},
+				Err:    nil,
+			}
+		}); err != nil {
+			log.ErrorF("batch fetch create overseer error:%v", err)
+			return
+		}
+	} else {
+		log.Debug("batch fetch recorder:Not Enable")
+	}
+
 	flow.New(info.BatchInfo.Info).
 		WorkProviderWithFile(info.BatchInfo.InputFile,
 			info.BatchInfo.EnableStdin,
@@ -105,6 +128,24 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 				return object.Fetch(*in)
 			}), nil
 		})).
+		SetOverseer(overseer).
+		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+			if !info.BatchInfo.RecordRedoWhileError {
+				return false, nil
+			}
+
+			if workRecord.Err != nil {
+				return true, workRecord.Err
+			}
+			result, _ := workRecord.Result.(*object.FetchResult)
+			if result == nil {
+				return true, data.NewEmptyError().AppendDesc("no result found")
+			}
+			if result.Invalid() {
+				return true, data.NewEmptyError().AppendDesc("result is invalid")
+			}
+			return false, nil
+		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			in, _ := workInfo.Work.(*object.FetchApiInfo)
 			exporter.Success().ExportF("%s\t%s", in.FromUrl, in.Bucket)

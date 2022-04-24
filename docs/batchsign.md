@@ -15,6 +15,8 @@ qshell batchsign [<-i UrlListFile>] [-e <Deadline>]
 <PublicUrl>   // 资源外链
 ```
 - -e/--deadline：接受一个过时的 deadline 参数，如果没有指定该参数，默认为 3600s 。【必选】 
+- --enable-record：记录任务执行状态，当下次执行时会跳过已执行的任务。 【可选】
+- --record-redo-while-error：依赖于 --enable-record，当检测任务状态时，如果任务已执行切失败，则再执行一次；默认为 false，当任务执行失败不重新执行。 【可选】
 
 # 示例
 比如我们对文件`tosign.txt`里面的公开访问外链做签名。`tosign.txt`内容如下：
