@@ -26,6 +26,8 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdForceFlags(cmd, &info.BatchInfo)
+	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
 	return cmd
 }
 
@@ -189,6 +191,8 @@ var batchSignCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
 	cmd.Flags().StringVarP(&info.Deadline, "deadline", "e", "3600", "deadline in seconds, default 3600")
 	return cmd
 }
@@ -219,6 +223,7 @@ func setBatchCmdDefaultFlags(cmd *cobra.Command, info *batch.Info) {
 	setBatchCmdInputFileFlags(cmd, info)
 	setBatchCmdWorkCountFlags(cmd, info)
 	setBatchCmdEnableRecordFlags(cmd, info)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, info)
 	setBatchCmdSuccessExportFileFlags(cmd, info)
 	setBatchCmdFailExportFileFlags(cmd, info)
 	setBatchCmdItemSeparateFlags(cmd, info)
@@ -238,6 +243,9 @@ func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
 }
 func setBatchCmdEnableRecordFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "record work progress, and do from last progress while retry")
+}
+func setBatchCmdRecordRedoWhileErrorFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().BoolVarP(&info.RecordRedoWhileError, "record-redo-while-error", "", false, "when re-executing the command and checking the command task progress record, if a task has already been done and failed, the task will be re-executed. The default is false, and the task will not be re-executed when it detects that the task fails")
 }
 func setBatchCmdSuccessExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "rename success list")

@@ -27,6 +27,7 @@ type Info struct {
 	EnableStdin   bool        // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
 
 	EnableRecord                bool // 是否开启 record
+	RecordRedoWhileError        bool // 重新执行任务时，如果任务已执行但是失败，则再重新执行一次。
 	MaxOperationCountPerRequest int
 }
 
@@ -192,6 +193,23 @@ func (h *handler) Start() {
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
+		}).
+		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+			if !h.info.RecordRedoWhileError {
+				return false, nil
+			}
+
+			if workRecord.Err != nil {
+				return true, workRecord.Err
+			}
+			result, _ := workRecord.Result.(*OperationResult)
+			if result == nil {
+				return true, data.NewEmptyError().AppendDesc("no result found")
+			}
+			if result.Invalid() {
+				return true, data.NewEmptyError().AppendDescF("result is invalid, %s", result.ErrorDescription())
+			}
+			return false, nil
 		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			operationResult, _ := result.(*OperationResult)
