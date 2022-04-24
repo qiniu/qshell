@@ -3,6 +3,7 @@ package flow
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
 )
 
@@ -19,6 +20,7 @@ func NewWorkProviderOfFile(filepath string, enableStdin bool, creator WorkCreato
 	}
 
 	if enableStdin {
+		log.InfoF("input info with stdin, you can end the input with Ctrl-D or cancel the task with Ctrl-C")
 		return NewReaderWorkProvider(os.Stdin, creator)
 	}
 
