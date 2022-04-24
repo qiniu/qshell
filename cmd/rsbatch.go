@@ -15,6 +15,7 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch stat files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchStatType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -38,6 +39,7 @@ var batchDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch delete files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchDeleteType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -55,6 +57,7 @@ var batchChangeMimeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch change the mime type of files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchChangeMimeType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -72,6 +75,7 @@ var batchChangeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch change the file type of files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchChangeType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -89,6 +93,7 @@ var batchRestoreArCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: `Batch unfreeze archive file and file freeze after <FreezeAfterDays> days, <FreezeAfterDays> value should be between 1 and 7, include 1 and 7`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchRestoreArchiveType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -109,6 +114,7 @@ var batchDeleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch set the deleteAfterDays of the files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchExpireType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -126,6 +132,7 @@ var batchMoveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch move files from bucket to bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchMoveType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.SourceBucket = args[0]
 			}
@@ -147,6 +154,7 @@ var batchRenameCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch rename files in the bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchRenameType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
@@ -165,6 +173,7 @@ var batchCopyCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch copy files from bucket to bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchCopyType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.SourceBucket = args[0]
 			}
@@ -186,6 +195,7 @@ var batchSignCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch create the private url from the public url list file",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchSignType
+			info.BatchInfo.EnableStdin = true
 			info.BatchInfo.Force = true
 			operations.BatchPrivateUrl(cfg, info)
 		},
@@ -205,6 +215,7 @@ var batchFetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchFetchType
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
