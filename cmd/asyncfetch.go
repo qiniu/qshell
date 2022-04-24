@@ -15,6 +15,7 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ABFetch
 			info.BatchInfo.ItemSeparate = "\t" // 此处用户不可定义
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
