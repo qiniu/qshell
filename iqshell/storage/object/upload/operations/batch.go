@@ -133,6 +133,21 @@ func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 		return
 	}
 
+	if e := locker.Lock(); e != nil {
+		log.ErrorF("Upload, %v", e)
+		return
+	}
+
+	unlockHandler := func() {
+		if e := locker.TryUnlock(); e != nil {
+			log.ErrorF("Upload, %v", e)
+		}
+	}
+	workspace.AddCancelObserver(func(s os.Signal) {
+		unlockHandler()
+	})
+	defer unlockHandler()
+
 	batchUpload(info)
 }
 
@@ -179,11 +194,6 @@ func batchUpload(info BatchUpload2Info) {
 	}
 
 	batchUploadFlow(info, info.UploadConfig, dbPath)
-
-	if e := locker.TryUnlock(); e != nil {
-		log.ErrorF("Download, %v", e)
-		return
-	}
 }
 
 func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath string) {
@@ -266,18 +276,16 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
+				apiInfo, _ := workInfo.Work.(*UploadInfo)
+
 				metric.AddCurrentCount(1)
-				apiInfo := workInfo.Work.(*UploadInfo)
+				metric.PrintProgress("Uploading " + apiInfo.FilePath)
 
-				log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, metric.CurrentCount, metric.TotalCount,
-					float32(metric.CurrentCount)*100/float32(metric.TotalCount))
-
-				res, err := uploadFile(apiInfo)
-
-				if err != nil {
-					return nil, err
+				if res, e := uploadFile(apiInfo); e != nil {
+					return nil, e
+				} else {
+					return res, nil
 				}
-				return res, nil
 			}), nil
 		})).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
@@ -329,6 +337,13 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			log.ErrorF("Upload Failed, %s error:%s", workInfo.Data, err)
 		}).Build().Start()
 
+	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
+	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		log.ErrorF("save download result to path:%s error:%v", resultPath, e)
+	} else {
+		log.DebugF("save download result to path:%s", resultPath)
+	}
+
 	log.Alert("--------------- Upload Result ---------------")
 	log.AlertF("%20s%10d", "Total:", metric.TotalCount)
 	log.AlertF("%20s%10d", "Success:", metric.SuccessCount)
@@ -341,14 +356,6 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	if workspace.GetConfig().Log.Enable() {
 		log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
 	}
-
-	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
-	if e := utils.MarshalToFile(resultPath, metric); e != nil {
-		log.ErrorF("save download result to path:%s error:%v", resultPath, e)
-	} else {
-		log.DebugF("save download result to path:%s", resultPath)
-	}
-
 }
 
 type BatchUploadConfigMouldInfo struct {

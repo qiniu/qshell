@@ -1,6 +1,7 @@
 package batch
 
 import (
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"sync"
 	"time"
 )
@@ -73,6 +74,20 @@ func (m *Metric) AddSkippedCount(count int64) {
 	m.mu.Lock()
 	m.SkippedCount += count
 	m.mu.Unlock()
+}
+
+func (m *Metric) PrintProgress(tag string) {
+	if m == nil {
+		return
+	}
+
+	if m.TotalCount <= 0 {
+		log.InfoF("%s [%d/-, -] ...", tag, m.CurrentCount)
+		return
+	}
+
+	log.InfoF("%s [%d/%d, %.1f%%] ...", tag, m.CurrentCount, m.TotalCount,
+		float32(m.CurrentCount)*100/float32(m.TotalCount))
 }
 
 func (m *Metric) Lock() {

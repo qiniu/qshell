@@ -10,6 +10,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"os"
 	"path/filepath"
 )
 
@@ -95,6 +96,16 @@ func (h *handler) Start() {
 			log.ErrorF("batch job, %v", e)
 			return
 		}
+
+		unlockHandler := func() {
+			if e := locker.TryUnlock(); e != nil {
+				log.ErrorF("batch job, %v", e)
+			}
+		}
+		workspace.AddCancelObserver(func(s os.Signal) {
+			unlockHandler()
+		})
+		defer unlockHandler()
 	}
 
 	bucketManager, err := bucket.GetBucketManager()
@@ -212,6 +223,9 @@ func (h *handler) Start() {
 			return false, nil
 		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
+			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching")
+
 			operationResult, _ := result.(*OperationResult)
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone && operationResult != nil {
 				if operationResult.Invalid() {
@@ -225,8 +239,12 @@ func (h *handler) Start() {
 				metric.AddSkippedCount(1)
 				log.DebugF("Skip line:%s because:%v", work.Data, err)
 			}
+
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
+			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching")
+
 			operation, _ := work.Work.(Operation)
 			operationResult, _ := result.(*OperationResult)
 			if operationResult != nil && operationResult.IsSuccess() {
@@ -237,6 +255,9 @@ func (h *handler) Start() {
 			h.onResult(work.Data, operation, operationResult)
 		}).
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
+			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching")
+
 			operation, _ := work.Work.(Operation)
 			metric.AddFailureCount(1)
 			h.onResult(work.Data, operation, &OperationResult{
@@ -246,6 +267,9 @@ func (h *handler) Start() {
 		}).Build().Start()
 
 	metric.End()
+	if metric.TotalCount <= 0 {
+		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.SkippedCount
+	}
 
 	if !isArraySource {
 		// 数组源不输出结果
@@ -256,9 +280,12 @@ func (h *handler) Start() {
 			log.DebugF("save batch result to path:%s", resultPath)
 		}
 
-		if e := locker.TryUnlock(); e != nil {
-			log.ErrorF("batch job, %v", e)
-			return
-		}
+		log.Alert("--------------- Batch Result ---------------")
+		log.AlertF("%20s%10d", "Total:", metric.TotalCount)
+		log.AlertF("%20s%10d", "Success:", metric.SuccessCount)
+		log.AlertF("%20s%10d", "Failure:", metric.FailureCount)
+		log.AlertF("%20s%10d", "Skipped:", metric.SkippedCount)
+		log.AlertF("%20s%10ds", "Duration:", metric.Duration)
+		log.AlertF("--------------------------------------------")
 	}
 }

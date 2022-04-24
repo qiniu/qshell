@@ -10,6 +10,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -99,9 +100,19 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 	// 配置 locker
 	if e := locker.TryLock(); e != nil {
-		log.ErrorF("batch job, %v", e)
+		log.ErrorF("Download, %v", e)
 		return
 	}
+
+	unlockHandler := func() {
+		if e := locker.TryUnlock(); e != nil {
+			log.ErrorF("Download, %v", e)
+		}
+	}
+	workspace.AddCancelObserver(func(s os.Signal) {
+		unlockHandler()
+	})
+	defer unlockHandler()
 
 	info.InputFile = info.KeyFile
 	hostProvider := getDownloadHostProvider(workspace.GetConfig(), &info.DownloadCfg)
@@ -158,13 +169,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				}
 
 				metric.AddCurrentCount(1)
-
-				if metric.TotalCount > 0 {
-					log.AlertF("Downloading %s [%d/%d, %.1f%%] ...", apiInfo.Key, metric.CurrentCount, metric.TotalCount,
-						float32(metric.CurrentCount)*100/float32(metric.TotalCount))
-				} else {
-					log.AlertF("Downloading %s [%d/-, -] ...", apiInfo.Key, metric.CurrentCount)
-				}
+				metric.PrintProgress("Downloading " + apiInfo.Key)
 
 				if file, e := downloadFile(apiInfo); e != nil {
 					return nil, e
@@ -210,8 +215,15 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		}).Build().Start()
 
 	metric.End()
-	if metric.TotalCount == 0 {
+	if metric.TotalCount <= 0 {
 		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.UpdateCount + metric.ExistCount + metric.SkippedCount
+	}
+
+	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
+	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		log.ErrorF("save download result to path:%s error:%v", resultPath, e)
+	} else {
+		log.DebugF("save download result to path:%s", resultPath)
 	}
 
 	log.Alert("-------Download Result-------")
@@ -223,20 +235,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.AlertF("%10s%10d", "Failure:", metric.FailureCount)
 	log.AlertF("%10s%10ds", "Duration:", metric.Duration)
 	log.AlertF("-----------------------------")
-
 	if workspace.GetConfig().Log.Enable() {
 		log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
-	}
-
-	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
-	if e := utils.MarshalToFile(resultPath, metric); e != nil {
-		log.ErrorF("save download result to path:%s error:%v", resultPath, e)
-	} else {
-		log.DebugF("save download result to path:%s", resultPath)
-	}
-
-	if e := locker.TryUnlock(); e != nil {
-		log.ErrorF("Download, %v", e)
-		return
 	}
 }
