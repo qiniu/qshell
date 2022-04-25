@@ -25,8 +25,8 @@ qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <Callback
 - -c/--thread-count：抓取指定的线程数目，默认：20。 【可选】
 - -s/--success-list：抓取成功后导出到的文件。 【可选】
 - -e/--failure-list：抓取失败后导出到的文件。 【可选】
-- --enable-record：记录任务执行状态，当下次执行时会跳过已执行的任务。 【可选】
-- --record-redo-while-error：依赖于 --enable-record，当检测任务状态时，如果任务已执行切失败，则再执行一次；默认为 false，当任务执行失败不重新执行。 【可选】
+- --enable-record：记录任务执行状态，当下次执行命令时会跳过已执行的任务。 【可选】
+- --record-redo-while-error：依赖于 --enable-record，当检测任务状态时（命令重新执行时，所有任务会从头到尾重新执行；任务执行前会先检测当前任务是否已经执行），如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败不重新执行。 【可选】
 
 详细的选项介绍，请参考：[异步抓取 (async fetch)](https://developer.qiniu.com/kodo/api/4097/asynch-fetch)
 
