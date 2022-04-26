@@ -113,9 +113,10 @@ func (f *Flow) Start() {
 					}
 
 					if shouldRedo, cause := f.Redo.ShouldRedo(workInfo, workRecord); !shouldRedo {
-						if cause != nil {
-							cause.Code = data.ErrorCodeAlreadyDone
+						if cause == nil {
+							cause = data.NewError(data.ErrorCodeAlreadyDone, "already done")
 						}
+						cause.Code = data.ErrorCodeAlreadyDone
 						f.EventListener.OnWorkSkip(workInfo, workRecord.Result, cause)
 						continue
 					}

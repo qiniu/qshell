@@ -206,13 +206,14 @@ func (h *handler) Start() {
 			return nil
 		}).
 		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
-			if !h.info.RecordRedoWhileError {
+			if workRecord.Err == nil {
 				return false, nil
 			}
 
-			if workRecord.Err != nil {
-				return true, workRecord.Err
+			if !h.info.RecordRedoWhileError {
+				return false, workRecord.Err
 			}
+
 			result, _ := workRecord.Result.(*OperationResult)
 			if result == nil {
 				return true, data.NewEmptyError().AppendDesc("no result found")
@@ -256,10 +257,10 @@ func (h *handler) Start() {
 		}).
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
 			metric.AddCurrentCount(1)
+			metric.AddFailureCount(1)
 			metric.PrintProgress("Batching")
 
 			operation, _ := work.Work.(Operation)
-			metric.AddFailureCount(1)
 			h.onResult(work.Data, operation, &OperationResult{
 				Code:  data.ErrorCodeUnknown,
 				Error: err.Error(),
