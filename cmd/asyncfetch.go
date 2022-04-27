@@ -33,6 +33,7 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "thread-count", "c", 20, "thread count")
 	cmd.Flags().BoolVarP(&info.BatchInfo.EnableRecord, "enable-record", "", false, "record work progress, and do from last progress while retry")
 	cmd.Flags().BoolVarP(&info.BatchInfo.RecordRedoWhileError, "record-redo-while-error", "", false, "when re-executing the command and checking the command task progress record, if a task has already been done and failed, the task will be re-executed. The default is false, and the task will not be re-executed when it detects that the task fails")
+	cmd.Flags().BoolVarP(&info.DisableCheckFetchResult, "disable-check-fetch-result", "", false, "not check async result after fetch")
 	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "success fetch list")
 	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "error fetch list")
 

@@ -26,6 +26,21 @@ func (b *WorkProvideBuilder) WorkProvider(provider WorkProvider) *WorkerProvideB
 	}
 }
 
+func (b *WorkProvideBuilder) WorkProviderWithChan(works <-chan Work) *WorkerProvideBuilder {
+	if provider, err := NewChanWorkProvider(works); err != nil {
+		return &WorkerProvideBuilder{
+			flow: b.flow,
+			err:  err,
+		}
+	} else {
+		b.flow.WorkProvider = provider
+		return &WorkerProvideBuilder{
+			flow: b.flow,
+			err:  b.err,
+		}
+	}
+}
+
 func (b *WorkProvideBuilder) WorkProviderWithArray(workList []Work) *WorkerProvideBuilder {
 	if provider, err := NewArrayWorkProvider(workList); err != nil {
 		return &WorkerProvideBuilder{

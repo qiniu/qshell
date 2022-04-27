@@ -122,7 +122,7 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 		}
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.CopyApiInfo)
-		if !ok {
+		if apiInfo == nil || !ok {
 			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Copy Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return

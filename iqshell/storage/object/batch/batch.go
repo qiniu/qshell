@@ -1,6 +1,7 @@
 package batch
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
@@ -228,16 +229,25 @@ func (h *handler) Start() {
 			metric.PrintProgress("Batching")
 
 			operationResult, _ := result.(*OperationResult)
-			if err != nil && err.Code == data.ErrorCodeAlreadyDone && operationResult != nil {
-				if operationResult.Invalid() {
+			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
+				if operationResult != nil && operationResult.Invalid() {
 					metric.AddSuccessCount(1)
 					log.DebugF("Skip line:%s because have done and success", work.Data)
 				} else {
 					metric.AddFailureCount(1)
-					log.DebugF("Skip line:%s because have done and failure, %v%v", work.Data, err, operationResult.ErrorDescription())
+					errDesc := ""
+					if operationResult != nil {
+						errDesc = operationResult.ErrorDescription()
+					}
+					log.DebugF("Skip line:%s because have done and failure, %v%s", work.Data, err, errDesc)
 				}
 			} else {
 				metric.AddSkippedCount(1)
+				operation, _ := work.Work.(Operation)
+				h.onResult(work.Data, operation, &OperationResult{
+					Code:  data.ErrorCodeUnknown,
+					Error: fmt.Sprintf("%v", err),
+				})
 				log.DebugF("Skip line:%s because:%v", work.Data, err)
 			}
 

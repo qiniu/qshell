@@ -160,8 +160,8 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 			metric.PrintProgress("Batching")
 
 			operationResult, _ := result.(*object.FetchResult)
-			if err != nil && err.Code == data.ErrorCodeAlreadyDone && operationResult != nil {
-				if operationResult.Invalid() {
+			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
+				if operationResult != nil && operationResult.Invalid() {
 					metric.AddSuccessCount(1)
 					log.DebugF("Skip line:%s because have done and success", work.Data)
 				} else {
@@ -170,6 +170,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 				}
 			} else {
 				metric.AddSkippedCount(1)
+				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 				log.DebugF("Skip line:%s because:%v", work.Data, err)
 			}
 
@@ -204,9 +205,9 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 	// 数组源不输出结果
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
-		log.ErrorF("save batch result to path:%s error:%v", resultPath, e)
+		log.ErrorF("save batch fetch result to path:%s error:%v", resultPath, e)
 	} else {
-		log.DebugF("save batch result to path:%s", resultPath)
+		log.DebugF("save batch fetch result to path:%s", resultPath)
 	}
 
 	log.Alert("--------------- Batch Result ---------------")
