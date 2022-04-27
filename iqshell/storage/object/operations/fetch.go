@@ -202,7 +202,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.SkippedCount
 	}
 
-	// 数组源不输出结果
+	// 输出结果
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
 		log.ErrorF("save batch fetch result to path:%s error:%v", resultPath, e)

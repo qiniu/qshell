@@ -257,6 +257,15 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 	if metric.TotalCount <= 0 {
 		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.SkippedCount
 	}
+
+	// 输出结果
+	resultPath := filepath.Join(workspace.GetJobDir(), "fetch.result")
+	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		log.ErrorF("save batch async fetch result to path:%s error:%v", resultPath, e)
+	} else {
+		log.DebugF("save batch async fetch result to path:%s", resultPath)
+	}
+
 	log.Alert("--------------- Batch Fetch Result ---------------")
 	log.AlertF("%20s%10d", "Total:", metric.TotalCount)
 	log.AlertF("%20s%10d", "Success:", metric.SuccessCount)
@@ -392,6 +401,14 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 	metric.End()
 	if metric.TotalCount <= 0 {
 		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.SkippedCount
+	}
+
+	// 输出结果
+	resultPath := filepath.Join(workspace.GetJobDir(), "check.result")
+	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		log.ErrorF("save batch async fetch check result to path:%s error:%v", resultPath, e)
+	} else {
+		log.DebugF("save batch async fetch check result to path:%s", resultPath)
 	}
 
 	log.Alert("--------------- Batch Fetch Check Result ---------------")
