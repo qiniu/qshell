@@ -181,7 +181,6 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				in := workInfo.Work.(asyncFetchItem)
 
-				metric.AddCurrentCount(1)
 				metric.PrintProgress(fmt.Sprintf("Fetching, %s => [%s:%s]", in.info.Url, in.info.Bucket, in.info.Key))
 
 				result, e := object.AsyncFetch(in.info)
@@ -217,6 +216,8 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			return nil
 		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
+			metric.AddCurrentCount(1)
+
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if result != nil && result.IsValid() {
 					metric.AddSuccessCount(1)
@@ -236,14 +237,17 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			metric.AddSuccessCount(1)
+			metric.AddCurrentCount(1)
 
 			in := workInfo.Work.(asyncFetchItem)
 			res := result.(*asyncFetchResult)
 			fetchResultChan <- res
-			log.InfoF("Fetch Response, '%s' => [%s:%s] id:%s wait:%d", in.info.Url, in.info.Bucket, in.info.Key, res.Info.Id, res.Info.Wait)
+			log.InfoF("Fetch Response, '%s' => [%s:%s] id:%s wait:%d",
+				in.info.Url, in.info.Bucket, in.info.Key, res.Info.Id, res.Info.Wait)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			metric.AddFailureCount(1)
+			metric.AddCurrentCount(1)
 
 			if in, ok := workInfo.Work.(asyncFetchItem); ok {
 				exporter.Fail().ExportF("%s%s%v", in.info.Url, flow.ErrorSeparate, err)
@@ -369,6 +373,8 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			return false, nil
 		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
+			metric.AddCurrentCount(1)
+
 			operationResult, _ := result.(*asyncFetchResult)
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if operationResult != nil && operationResult.IsValid() {
