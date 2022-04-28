@@ -239,7 +239,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			in := workInfo.Work.(asyncFetchItem)
 			res := result.(*asyncFetchResult)
 			fetchResultChan <- res
-			log.DebugF("Fetch Response, '%s' => [%s:%s] id:%s wait:%d", in.info.Url, in.info.Bucket, in.info.Key, res.info.Id, res.info.Wait)
+			log.InfoF("Fetch Response, '%s' => [%s:%s] id:%s wait:%d", in.info.Url, in.info.Bucket, in.info.Key, res.info.Id, res.info.Wait)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			metric.AddFailureCount(1)
@@ -315,10 +315,11 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 				counter := 0
 				maxDuration := asyncFetchCheckMaxDuration(in.fileSize)
 				checkTime := time.Now().Add(maxDuration)
-				for counter < 3 {
+				for {
 					current := time.Now()
 					if counter == 0 || current.After(checkTime) {
 						ret, cErr := object.CheckAsyncFetchStatus(in.bucket, in.info.Id)
+						log.DebugF("batch async fetch check, bucket:%s key:%s id:%s wait:%d", in.bucket, in.key, in.key, ret.Wait)
 						if cErr != nil {
 							log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
 						} else if ret.Wait == -1 { // 视频抓取过一次，有可能成功了，有可能失败了
@@ -333,7 +334,12 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 							}
 						}
 					}
-					time.Sleep(3 * time.Second)
+
+					if counter < 3 {
+						time.Sleep(3 * time.Second)
+					} else {
+						break
+					}
 				}
 				return nil, data.NewEmptyError().AppendDesc("can't find object in bucket")
 			}), nil
@@ -382,7 +388,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 
 			in := workInfo.Work.(*asyncFetchResult)
 			exporter.Success().ExportF("%s\t%s", in.url, in.key)
-			log.AlertF("Fetch Success, %s => [%s:%s]", in.url, in.bucket, in.key)
+			log.InfoF("Fetch Success, %s => [%s:%s]", in.url, in.bucket, in.key)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			metric.AddCurrentCount(1)
