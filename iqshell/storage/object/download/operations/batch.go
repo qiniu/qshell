@@ -226,16 +226,16 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		log.DebugF("save download result to path:%s", resultPath)
 	}
 
-	log.Alert("-------Download Result-------")
-	log.AlertF("%10s%10d", "Total:", metric.TotalCount)
-	log.AlertF("%10s%10d", "Skipped:", metric.SkippedCount)
-	log.AlertF("%10s%10d", "Exists:", metric.ExistCount)
-	log.AlertF("%10s%10d", "Success:", metric.SuccessCount)
-	log.AlertF("%10s%10d", "Update:", metric.UpdateCount)
-	log.AlertF("%10s%10d", "Failure:", metric.FailureCount)
-	log.AlertF("%10s%10ds", "Duration:", metric.Duration)
-	log.AlertF("-----------------------------")
+	log.Info("-------Download Result-------")
+	log.InfoF("%10s%10d", "Total:", metric.TotalCount)
+	log.InfoF("%10s%10d", "Skipped:", metric.SkippedCount)
+	log.InfoF("%10s%10d", "Exists:", metric.ExistCount)
+	log.InfoF("%10s%10d", "Success:", metric.SuccessCount)
+	log.InfoF("%10s%10d", "Update:", metric.UpdateCount)
+	log.InfoF("%10s%10d", "Failure:", metric.FailureCount)
+	log.InfoF("%10s%10ds", "Duration:", metric.Duration)
+	log.InfoF("-----------------------------")
 	if workspace.GetConfig().Log.Enable() {
-		log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
+		log.InfoF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
 	}
 }

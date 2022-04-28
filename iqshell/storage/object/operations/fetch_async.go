@@ -271,13 +271,13 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		log.DebugF("save batch async fetch result to path:%s", resultPath)
 	}
 
-	log.Alert("\n--------------- Batch Fetch Result ---------------")
-	log.AlertF("%20s%10d", "Total:", metric.TotalCount)
-	log.AlertF("%20s%10d", "Success:", metric.SuccessCount)
-	log.AlertF("%20s%10d", "Failure:", metric.FailureCount)
-	log.AlertF("%20s%10d", "Skipped:", metric.SkippedCount)
-	log.AlertF("%20s%10ds", "Duration:", metric.Duration)
-	log.AlertF("--------------------------------------------------")
+	log.Info("\n--------------- Batch Fetch Result ---------------")
+	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
+	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
+	log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
+	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
+	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
+	log.InfoF("--------------------------------------------------")
 }
 
 func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
@@ -421,13 +421,13 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		log.DebugF("save batch async fetch check result to path:%s", resultPath)
 	}
 
-	log.Alert("\n------------ Batch Fetch Check Result ------------")
-	log.AlertF("%20s%10d", "Total:", metric.TotalCount)
-	log.AlertF("%20s%10d", "Success:", metric.SuccessCount)
-	log.AlertF("%20s%10d", "Failure:", metric.FailureCount)
-	log.AlertF("%20s%10d", "Skipped:", metric.SkippedCount)
-	log.AlertF("%20s%10ds", "Duration:", metric.Duration)
-	log.AlertF("--------------------------------------------------")
+	log.Info("\n------------ Batch Fetch Check Result ------------")
+	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
+	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
+	log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
+	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
+	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
+	log.InfoF("--------------------------------------------------")
 }
 
 func asyncFetchCheckMaxDuration(size uint64) time.Duration {

@@ -344,17 +344,17 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 		log.DebugF("save download result to path:%s", resultPath)
 	}
 
-	log.Alert("--------------- Upload Result ---------------")
-	log.AlertF("%20s%10d", "Total:", metric.TotalCount)
-	log.AlertF("%20s%10d", "Success:", metric.SuccessCount)
-	log.AlertF("%20s%10d", "Failure:", metric.FailureCount)
-	log.AlertF("%20s%10d", "Overwrite:", metric.OverwriteCount)
-	log.AlertF("%20s%10d", "NotOverwrite:", metric.NotOverwriteCount)
-	log.AlertF("%20s%10d", "Skipped:", metric.SkippedCount)
-	log.AlertF("%20s%10ds", "Duration:", metric.Duration)
-	log.AlertF("---------------------------------------------")
+	log.Info("--------------- Upload Result ---------------")
+	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
+	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
+	log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
+	log.InfoF("%20s%10d", "Overwrite:", metric.OverwriteCount)
+	log.InfoF("%20s%10d", "NotOverwrite:", metric.NotOverwriteCount)
+	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
+	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
+	log.InfoF("---------------------------------------------")
 	if workspace.GetConfig().Log.Enable() {
-		log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+		log.InfoF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
 	}
 }
 
