@@ -90,7 +90,7 @@ type ApiResult struct {
 
 var _ flow.Result = (*ApiResult)(nil)
 
-func (a *ApiResult) Invalid() bool {
+func (a *ApiResult) IsValid() bool {
 	return len(a.Key) > 0 && len(a.MimeType) > 0 && len(a.Hash) > 0
 }
 

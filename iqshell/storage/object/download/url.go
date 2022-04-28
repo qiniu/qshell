@@ -44,7 +44,7 @@ type PublicUrlToPrivateApiResult struct {
 
 var _ flow.Result = (*PublicUrlToPrivateApiResult)(nil)
 
-func (p *PublicUrlToPrivateApiResult) Invalid() bool {
+func (p *PublicUrlToPrivateApiResult) IsValid() bool {
 	return len(p.Url) > 0
 }
 

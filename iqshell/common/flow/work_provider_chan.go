@@ -27,7 +27,7 @@ func (p *chanWorkProvider) WorkTotalCount() int64 {
 func (p *chanWorkProvider) Provide() (hasMore bool, work *WorkInfo, err *data.CodeError) {
 	for w := range p.works {
 		return true, &WorkInfo{
-			Data: fmt.Sprintf("%v", w),
+			Data: fmt.Sprintf("%+v", w),
 			Work: w,
 		}, nil
 	}

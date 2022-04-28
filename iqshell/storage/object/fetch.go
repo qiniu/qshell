@@ -27,7 +27,7 @@ type FetchResult storage.FetchRet
 
 var _ flow.Result = (*FetchResult)(nil)
 
-func (a *FetchResult) Invalid() bool {
+func (a *FetchResult) IsValid() bool {
 	return len(a.Key) > 0 && len(a.MimeType) > 0 && len(a.Hash) > 0
 }
 
@@ -77,7 +77,7 @@ type AsyncFetchApiResult struct {
 	Wait int    `json:"wait"`
 }
 
-func (result *AsyncFetchApiResult) Invalid() bool {
+func (result *AsyncFetchApiResult) IsValid() bool {
 	return len(result.Id) > 0
 }
 

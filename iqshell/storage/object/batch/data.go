@@ -63,7 +63,7 @@ type OperationResult struct {
 
 var _ flow.Result = (*OperationResult)(nil)
 
-func (r *OperationResult) Invalid() bool {
+func (r *OperationResult) IsValid() bool {
 	return r.IsSuccess()
 }
 

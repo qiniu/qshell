@@ -162,7 +162,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 			if result == nil {
 				return true, data.NewEmptyError().AppendDesc("no result found")
 			}
-			if result.Invalid() {
+			if !result.IsValid() {
 				return true, data.NewEmptyError().AppendDesc("result is invalid")
 			}
 			return false, nil

@@ -150,7 +150,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 			if result == nil {
 				return true, data.NewEmptyError().AppendDesc("no result found")
 			}
-			if result.Invalid() {
+			if !result.IsValid() {
 				return true, data.NewEmptyError().AppendDesc("result is invalid")
 			}
 			return false, nil
@@ -161,7 +161,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 
 			operationResult, _ := result.(*object.FetchResult)
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
-				if operationResult != nil && operationResult.Invalid() {
+				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
 					log.DebugF("Skip line:%s because have done and success", work.Data)
 				} else {

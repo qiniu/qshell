@@ -46,7 +46,7 @@ type ApiResult struct {
 
 var _ flow.Result = (*ApiResult)(nil)
 
-func (a *ApiResult) Invalid() bool {
+func (a *ApiResult) IsValid() bool {
 	return len(a.FileAbsPath) > 0
 }
 
