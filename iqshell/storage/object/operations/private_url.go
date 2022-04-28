@@ -181,7 +181,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			metric.AddCurrentCount(1)
-			metric.PrintProgress("Batching")
+			metric.PrintProgress("Batching:" + work.Data)
 
 			operationResult, _ := result.(*download.PublicUrlToPrivateApiResult)
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
@@ -202,6 +202,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)
 			metric.AddSuccessCount(1)
+			metric.PrintProgress("Batching:" + work.Data)
 
 			r, _ := result.(*download.PublicUrlToPrivateApiResult)
 			exporter.Success().Export(work.Data)
@@ -210,6 +211,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
 			metric.AddCurrentCount(1)
 			metric.AddFailureCount(1)
+			metric.PrintProgress("Batching:" + work.Data)
 
 			exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 			log.Error(err)

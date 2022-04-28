@@ -226,7 +226,7 @@ func (h *handler) Start() {
 		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			metric.AddCurrentCount(1)
-			metric.PrintProgress("Batching")
+			metric.PrintProgress("Batching:" + work.Data)
 
 			operationResult, _ := result.(*OperationResult)
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
@@ -254,7 +254,7 @@ func (h *handler) Start() {
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)
-			metric.PrintProgress("Batching")
+			metric.PrintProgress("Batching:" + work.Data)
 
 			operation, _ := work.Work.(Operation)
 			operationResult, _ := result.(*OperationResult)
@@ -268,7 +268,7 @@ func (h *handler) Start() {
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
 			metric.AddCurrentCount(1)
 			metric.AddFailureCount(1)
-			metric.PrintProgress("Batching")
+			metric.PrintProgress("Batching:" + work.Data)
 
 			operation, _ := work.Work.(Operation)
 			h.onResult(work.Data, operation, &OperationResult{

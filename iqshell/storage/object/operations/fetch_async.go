@@ -217,6 +217,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching:" + work.Data)
 
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if result != nil && result.IsValid() {
@@ -238,6 +239,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			metric.AddSuccessCount(1)
 			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			in := workInfo.Work.(asyncFetchItem)
 			res := result.(*asyncFetchResult)
@@ -248,6 +250,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			metric.AddFailureCount(1)
 			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			if in, ok := workInfo.Work.(asyncFetchItem); ok {
 				exporter.Fail().ExportF("%s%s%v", in.info.Url, flow.ErrorSeparate, err)
@@ -374,6 +377,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching:" + work.Data)
 
 			operationResult, _ := result.(*asyncFetchResult)
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
@@ -391,6 +395,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			metric.AddSuccessCount(1)
+			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			in := workInfo.Work.(*asyncFetchResult)
 			exporter.Success().ExportF("%s\t%s", in.Url, in.Key)
@@ -398,6 +403,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			metric.AddFailureCount(1)
+			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			if in, ok := workInfo.Work.(*asyncFetchResult); ok {
 				exporter.Fail().ExportF("%s%s%v", in.Url, flow.ErrorSeparate, err)

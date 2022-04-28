@@ -157,7 +157,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		}).
 		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			metric.AddCurrentCount(1)
-			metric.PrintProgress("Batching")
+			metric.PrintProgress("Batching:" + work.Data)
 
 			operationResult, _ := result.(*object.FetchResult)
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
@@ -178,7 +178,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)
 			metric.AddSuccessCount(1)
-			metric.PrintProgress("Batching")
+			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			in, _ := workInfo.Work.(*object.FetchApiInfo)
 			exporter.Success().ExportF("%s\t%s", in.FromUrl, in.Bucket)
@@ -187,7 +187,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
 			metric.AddCurrentCount(1)
 			metric.AddFailureCount(1)
-			metric.PrintProgress("Batching")
+			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			exporter.Fail().ExportF("%s%s%v", workInfo.Data, flow.ErrorSeparate, err)
 			if in, ok := workInfo.Work.(*object.FetchApiInfo); ok {
