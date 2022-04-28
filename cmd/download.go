@@ -17,6 +17,7 @@ And qdownload will use batch stat api or list api to get files info so that it h
 have already in local disk and need to skip download or not.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QDownloadType
+			info.BatchInfo.Force = true
 			if len(args) > 0 {
 				info.LocalDownloadConfig = args[0]
 			}
