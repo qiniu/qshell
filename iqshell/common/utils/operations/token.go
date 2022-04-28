@@ -160,7 +160,7 @@ func getMacAndRequest(info TokenInfo) (mac *qbox.Mac, req *http.Request, err *da
 	if info.AccessKey != "" && info.SecretKey != "" {
 		mac = qbox.NewMac(info.AccessKey, info.SecretKey)
 	} else {
-		var mErr error
+		var mErr *data.CodeError
 		mac, mErr = account.GetMac()
 		if mErr != nil {
 			err = data.NewEmptyError().AppendDescF("get mac: %v\n", mErr)
