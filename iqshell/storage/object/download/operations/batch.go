@@ -136,6 +136,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 	metric := &Metric{}
 	metric.Start()
+
 	hasPrefixes := len(info.Prefix) > 0
 	prefixes := strings.Split(info.Prefix, ",")
 	filterPrefix := func(name string) bool {
@@ -145,6 +146,21 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(name, prefix) {
+				return false
+			}
+		}
+		return true
+	}
+
+	hasSuffixes := len(info.Suffixes) > 0
+	suffixes := strings.Split(info.Suffixes, ",")
+	filterSuffixes := func(name string) bool {
+		if !hasSuffixes {
+			return false
+		}
+
+		for _, suffix := range suffixes {
+			if strings.HasSuffix(name, suffix) {
 				return false
 			}
 		}
@@ -181,6 +197,9 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
 			apiInfo := workInfo.Work.(*download.ApiInfo)
 			if filterPrefix(apiInfo.Key) {
+				return true, data.NewEmptyError().AppendDescF("Skip download `%s`, prefix filter not match", apiInfo.Key)
+			}
+			if filterSuffixes(apiInfo.Key) {
 				return true, data.NewEmptyError().AppendDescF("Skip download `%s`, suffix filter not match", apiInfo.Key)
 			}
 			return false, nil

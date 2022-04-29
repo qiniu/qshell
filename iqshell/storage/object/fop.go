@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 )
 
 func PreFopStatus(persistentId string) (storage.PrefopRet, *data.CodeError) {
@@ -12,12 +13,10 @@ func PreFopStatus(persistentId string) (storage.PrefopRet, *data.CodeError) {
 		return storage.PrefopRet{}, alert.CannotEmptyError("persistent id", "")
 	}
 
-	mac, err := account.GetMac()
+	opManager, err := getOperationManager()
 	if err != nil {
 		return storage.PrefopRet{}, err
 	}
-
-	opManager := storage.NewOperationManager(mac, nil)
 	ret, e := opManager.Prefop(persistentId)
 	return ret, data.ConvertError(e)
 }
@@ -44,11 +43,20 @@ func PreFop(info PreFopApiInfo) (string, *data.CodeError) {
 		return "", alert.CannotEmptyError("fops", "")
 	}
 
-	mac, err := account.GetMac()
+	opManager, err := getOperationManager()
 	if err != nil {
 		return "", err
 	}
-	opManager := storage.NewOperationManager(mac, nil)
 	persistentId, e := opManager.Pfop(info.Bucket, info.Key, info.Fops, info.Pipeline, info.NotifyURL, info.NotifyForce)
 	return persistentId, data.ConvertError(e)
+}
+
+func getOperationManager() (*storage.OperationManager, *data.CodeError) {
+	mac, err := account.GetMac()
+	if err != nil {
+		return nil, err
+	}
+	cfg := workspace.GetStorageConfig()
+	opManager := storage.NewOperationManager(mac, cfg)
+	return opManager, nil
 }

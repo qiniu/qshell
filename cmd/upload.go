@@ -20,10 +20,10 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			cfg.CmdCfg.Log.LogLevel = data.NewString(config.DebugKey)
 			cfg.CmdCfg.Log.LogStdout = data.NewBool(true)
 			cfg.CmdCfg.Log.LogRotate = data.NewInt(7)
+			info.Force = true
 			if len(args) > 0 {
 				info.UploadConfigFile = args[0]
 			}
-			info.Force = true
 			operations.BatchUpload(cfg, info)
 		},
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"io"
 	"net/http"
 	"time"
 )
@@ -59,15 +60,20 @@ func IpQuery(cfg *iqshell.Config, info IpQueryInfo) {
 				return
 			}
 			defer gResp.Body.Close()
-			//fmt.Println(fmt.Sprintf("Ip: %-20s => %s", ip, ipInfo))
-			decoder := json.NewDecoder(gResp.Body)
-			decodeErr := decoder.Decode(&ipInfo)
+			responseBody, rErr := io.ReadAll(gResp.Body)
+			if rErr != nil {
+				log.ErrorF("read body failed for %s, %s", ip, rErr)
+				return
+			}
+			log.DebugF("IP:%s Response:%s", ip, responseBody)
+
+			decodeErr := json.Unmarshal(responseBody, &info)
 			if decodeErr != nil {
 				log.ErrorF("Parse ip info body failed for %s, %s", ip, decodeErr)
 				return
 			}
 
-			fmt.Println(fmt.Sprintf("%s\t%s", ip, ipInfo.String()))
+			log.AlertF("%s\t%s", ip, ipInfo.String())
 		}()
 		<-time.After(time.Millisecond * 500)
 	}
