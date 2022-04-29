@@ -68,7 +68,7 @@ func List(info ListApiInfo,
 		if lErr != nil {
 			errorHandler(info.Marker, data.ConvertError(lErr))
 			// 空间不存在，直接结束
-			if strings.Contains(lErr.Error(), "query region error, no such bucket") ||
+			if strings.Contains(lErr.Error(), "query region error") ||
 				strings.Contains(lErr.Error(), "incorrect zone") {
 				break
 			}
