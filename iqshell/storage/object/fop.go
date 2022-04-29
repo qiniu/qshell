@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 )
 
 func PreFopStatus(persistentId string) (storage.PrefopRet, *data.CodeError) {
@@ -17,7 +18,8 @@ func PreFopStatus(persistentId string) (storage.PrefopRet, *data.CodeError) {
 		return storage.PrefopRet{}, err
 	}
 
-	opManager := storage.NewOperationManager(mac, nil)
+	cfg := workspace.GetStorageConfig()
+	opManager := storage.NewOperationManager(mac, cfg)
 	ret, e := opManager.Prefop(persistentId)
 	return ret, data.ConvertError(e)
 }
@@ -48,7 +50,8 @@ func PreFop(info PreFopApiInfo) (string, *data.CodeError) {
 	if err != nil {
 		return "", err
 	}
-	opManager := storage.NewOperationManager(mac, nil)
+	cfg := workspace.GetStorageConfig()
+	opManager := storage.NewOperationManager(mac, cfg)
 	persistentId, e := opManager.Pfop(info.Bucket, info.Key, info.Fops, info.Pipeline, info.NotifyURL, info.NotifyForce)
 	return persistentId, data.ConvertError(e)
 }
