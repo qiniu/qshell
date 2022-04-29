@@ -69,8 +69,6 @@ func (a *aliParser) parse(ip string, fromUrl string) (ParserResult, *data.CodeEr
 	return info, nil
 }
 
-
-
 type aliIpInfo struct {
 	Code int       `json:"code"`
 	Data aliIpData `json:"data"`
