@@ -102,12 +102,13 @@ func (info ListInfo) getEndDate() (time.Time, *data.CodeError) {
 }
 
 func (info ListInfo) getSuffixes() []string {
-	sf := make([]string, 0)
-	for _, s := range strings.Split(info.Suffixes, ",") {
+	ret := make([]string, 0)
+	suffixes := strings.Split(info.Suffixes, ",")
+	for _, s := range suffixes {
 		s = strings.TrimSpace(s)
 		if len(s) > 0 {
-			sf = append(sf, strings.TrimSpace(s))
+			ret = append(ret, strings.TrimSpace(s))
 		}
 	}
-	return nil
+	return ret
 }
