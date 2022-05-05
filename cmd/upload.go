@@ -91,7 +91,8 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&LogLevel, "log-level", "debug", "log level")
 	cmd.Flags().IntVar(&LogRotate, "log-rotate", 7, "log rotate days")
 
-	cmd.Flags().IntVar(&info.FileType, "file-type", 0, "set storage file type")
+	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
+	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
 	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindUpIp, "bind-up-ip", "", "upload host ip to bind")
@@ -122,7 +123,8 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.SaveKey, "key", "k", "", "save as <key> in bucket")
 	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "upload host")
-	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
+	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
+	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "", false, "overwrite the file of same key in bucket")
 
 	return cmd
 }
@@ -151,7 +153,7 @@ var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
-	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "storage type")
+	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "uphost")
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
@@ -187,7 +189,7 @@ var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().Int64VarP(&info.ChunkSize, "v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
-	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "storage type")
+	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
 	cmd.Flags().IntVarP(&info.ResumeWorkerCount, "worker", "c", 16, "worker count")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "uphost")
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
