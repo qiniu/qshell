@@ -24,7 +24,7 @@ type ListApiInfo struct {
 	Limit     int       //  最大输出条数，默认：-1, 无限输出
 	StartTime time.Time // list item 的 put time 区间的开始时间 【闭区间】
 	EndTime   time.Time // list item 的 put time 区间的终止时间 【闭区间】
-	Suffixes  []string  // list item 必须包含前缀
+	Suffixes  []string  // list item 必须包含后缀
 	MaxRetry  int       // -1: 无限重试
 }
 
@@ -54,6 +54,7 @@ func List(info ListApiInfo,
 	}
 
 	log.Debug("will list bucket")
+	log.DebugF("Suffixes:%s", info.Suffixes)
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	retryCount := 0
@@ -222,9 +223,5 @@ func filterBySuffixes(key string, suffixes []string) bool {
 			break
 		}
 	}
-	if hasSuffix {
-		return true
-	} else {
-		return false
-	}
+	return hasSuffix
 }
