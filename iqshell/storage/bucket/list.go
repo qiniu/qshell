@@ -11,21 +11,26 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"io"
+	"math"
 	"os"
 	"strings"
 	"time"
 )
 
 type ListApiInfo struct {
-	Bucket    string
-	Prefix    string
-	Marker    string
-	Delimiter string
-	Limit     int       //  最大输出条数，默认：-1, 无限输出
-	StartTime time.Time // list item 的 put time 区间的开始时间 【闭区间】
-	EndTime   time.Time // list item 的 put time 区间的终止时间 【闭区间】
-	Suffixes  []string  // list item 必须包含后缀
-	MaxRetry  int       // -1: 无限重试
+	Bucket       string
+	Prefix       string
+	Marker       string
+	Delimiter    string
+	Limit        int       //  最大输出条数，默认：-1, 无限输出
+	StartTime    time.Time // list item 的 put time 区间的开始时间 【闭区间】
+	EndTime      time.Time // list item 的 put time 区间的终止时间 【闭区间】
+	Suffixes     []string  // list item 必须包含后缀
+	StorageTypes []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
+	MimeTypes    []string  // list item Mimetype类型，多个使用逗号隔开
+	MinFileSize  int64     // 文件最小值，单位: B
+	MaxFileSize  int64     // 文件最大值，单位: B
+	MaxRetry     int       // -1: 无限重试
 }
 
 type ListObject storage.ListItem
@@ -57,6 +62,9 @@ func List(info ListApiInfo,
 	log.DebugF("Suffixes:%s", info.Suffixes)
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
+	shouldCheckStorageTypes := len(info.StorageTypes) > 0
+	shouldCheckMimeTypes := len(info.MimeTypes) > 0
+	shouldCheckFileSize := info.MinFileSize > 0 || info.MaxFileSize > 0
 	retryCount := 0
 	outputCount := 0
 	complete := false
@@ -99,6 +107,21 @@ func List(info ListApiInfo,
 
 			if shouldCheckSuffixes && !filterBySuffixes(listItem.Item.Key, info.Suffixes) {
 				log.DebugF("filter %s: key not match, key:%s suffixes:%s ", listItem.Item.Key, listItem.Item.Key, info.Suffixes)
+				continue
+			}
+
+			if shouldCheckStorageTypes && !filterByStorageType(listItem.Item.Type, info.StorageTypes) {
+				log.DebugF("filter %s: key not match, storageType:%d StorageTypes:%s ", listItem.Item.Key, listItem.Item.Type, info.Suffixes)
+				continue
+			}
+
+			if shouldCheckMimeTypes && !filterByMimeType(listItem.Item.MimeType, info.MimeTypes) {
+				log.DebugF("filter %s: key not match, mimeType:%s mimeTypes:%s ", listItem.Item.Key, listItem.Item.MimeType, info.MimeTypes)
+				continue
+			}
+
+			if shouldCheckFileSize && !filterByFileSize(listItem.Item.Fsize, info.MinFileSize, info.MaxFileSize) {
+				log.DebugF("filter %s: key not match, fileSize:%d minSize:%d maxSize:%d", listItem.Item.Key, listItem.Item.Fsize, info.MinFileSize, info.MaxFileSize)
 				continue
 			}
 
@@ -224,4 +247,45 @@ func filterBySuffixes(key string, suffixes []string) bool {
 		}
 	}
 	return hasSuffix
+}
+
+func filterByStorageType(storageType int, storageTypes []int) bool {
+	hasStorageType := false
+	if len(storageTypes) == 0 {
+		hasStorageType = true
+	}
+	for _, s := range storageTypes {
+		if storageType == s {
+			hasStorageType = true
+			break
+		}
+	}
+	return hasStorageType
+}
+
+func filterByMimeType(mimeType string, mimeTypes []string) bool {
+	hasMimeType := false
+	if len(mimeTypes) == 0 {
+		hasMimeType = true
+	}
+	for _, s := range mimeTypes {
+		if strings.Contains(s, "*") {
+			sp := strings.ReplaceAll(s, "*", "")
+			if strings.Contains(mimeType, sp) {
+				hasMimeType = true
+				break
+			}
+		} else if mimeType == s {
+			hasMimeType = true
+			break
+		}
+	}
+	return hasMimeType
+}
+
+func filterByFileSize(fileSize, minSize, maxSize int64) bool {
+	if maxSize < 0 {
+		maxSize = math.MaxInt64
+	}
+	return fileSize >= minSize && fileSize <= maxSize
 }

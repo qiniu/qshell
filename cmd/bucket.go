@@ -73,6 +73,12 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
 	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
+
+	cmd.Flags().StringVarP(&info.StorageTypes, "storages", "", "", "Specify storage type, separated by comma. 0:STANDARD storage, 1:IA storage, 2 means ARCHIVE storage. 3:DEEP_ARCHIVE storage")
+	cmd.Flags().StringVarP(&info.MimeTypes, "mimetypes", "", "", "Specify mimetype, separated by comma.")
+	cmd.Flags().StringVarP(&info.MinFileSize, "min-file-size", "", "", "Specify min file size")
+	cmd.Flags().StringVarP(&info.MaxFileSize, "max-file-size", "", "", "Specify max file size")
+
 	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "result append to file instead of overwriting")
 	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
 	cmd.Flags().IntVarP(&info.Limit, "limit", "", -1, "max count of items to output")
