@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -16,6 +15,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"strings"
 	"sync"
+	"time"
 )
 
 type FetchInfo struct {
@@ -74,8 +74,12 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 	// 生产者
 	go func() {
 		// AWS related code
-		s3session := session.New()
-		s3session.Config.WithRegion(info.AwsBucketInfo.Bucket)
+		s3session, nErr := session.NewSession()
+		if nErr != nil {
+			log.ErrorF("create AWS session error:%v", nErr)
+			return
+		}
+		s3session.Config.WithRegion(info.AwsBucketInfo.Region)
 		s3session.Config.WithCredentials(credentials.NewStaticCredentials(info.AwsBucketInfo.Id, info.AwsBucketInfo.SecretKey, ""))
 
 		svc := s3.New(s3session)
@@ -110,10 +114,18 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 				if strings.HasSuffix(*obj.Key, "/") && *obj.Size == 0 { // 跳过目录
 					continue
 				}
-				fetchInfoChan <- object.FetchApiInfo{
-					Bucket:  info.QiniuBucket,
-					Key:     *obj.Key,
-					FromUrl: awsUrl(info.AwsBucketInfo.Bucket, info.AwsBucketInfo.Region, *obj.Key),
+				req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+					Bucket: aws.String(info.AwsBucketInfo.Bucket),
+					Key:    obj.Key,
+				})
+				if downloadUrl, e := req.Presign(5 * 3600 * time.Second); e == nil {
+					fetchInfoChan <- object.FetchApiInfo{
+						Bucket:  info.QiniuBucket,
+						Key:     *obj.Key,
+						FromUrl: downloadUrl,
+					}
+				} else {
+					log.ErrorF("fetch([%s:%s]) create download url error: %v", info.AwsBucketInfo.Bucket, *obj.Key, e)
 				}
 			}
 
@@ -131,22 +143,17 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 	waiter.Add(info.BatchInfo.WorkerCount)
 	for i := 0; i < info.BatchInfo.WorkerCount; i++ {
 		go func() {
-			for info := range fetchInfoChan {
-				_, err := object.Fetch(info)
-				if err != nil {
-					log.ErrorF("fetch %s => %s:%s failed", info.FromUrl, info.Bucket, info.Key)
-					resultExport.Fail().ExportF("%s\t%s\t%v", info.FromUrl, info.Key, err)
+			for fetchInfo := range fetchInfoChan {
+				if _, e := object.Fetch(fetchInfo); e != nil {
+					log.ErrorF("fetch %s => [%s:%s] failed, error:%v", fetchInfo.FromUrl, fetchInfo.Bucket, fetchInfo.Key, e)
+					resultExport.Fail().ExportF("%s\t%s\t%v", fetchInfo.FromUrl, fetchInfo.Key, e)
 				} else {
-					log.AlertF("fetch %s => %s:%s success", info.FromUrl, info.Bucket, info.Key)
-					resultExport.Success().ExportF("%s\t%s", info.FromUrl, info.Key)
+					log.AlertF("fetch %s => [%s:%s] success", fetchInfo.FromUrl, fetchInfo.Bucket, fetchInfo.Key)
+					resultExport.Success().ExportF("%s\t%s", fetchInfo.FromUrl, fetchInfo.Key)
 				}
 			}
 			waiter.Done()
 		}()
 	}
 	waiter.Wait()
-}
-
-func awsUrl(awsBucket, region, key string) string {
-	return fmt.Sprintf("https://%s.s3-%s.amazonaws.com/%s", awsBucket, region, key)
 }
