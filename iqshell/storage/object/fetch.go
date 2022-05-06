@@ -41,7 +41,7 @@ func Fetch(info FetchApiInfo) (*FetchResult, *data.CodeError) {
 		return nil, alert.CannotEmptyError("from url", "")
 	}
 
-	log.DebugF("fetch start: %s => [%s|%s]", info.FromUrl, info.Bucket, info.Key)
+	log.DebugF("fetch start: %s => [%s:%s]", info.FromUrl, info.Bucket, info.Key)
 	bucketManager, e := bucket.GetBucketManager()
 	if e != nil {
 		return nil, e
@@ -54,7 +54,7 @@ func Fetch(info FetchApiInfo) (*FetchResult, *data.CodeError) {
 	} else {
 		result, err = bucketManager.Fetch(info.FromUrl, info.Bucket, info.Key)
 	}
-	log.DebugF("fetch   end: %s => [%s|%s]", info.FromUrl, info.Bucket, info.Key)
+	log.DebugF("fetch   end: %s => [%s:%s]", info.FromUrl, info.Bucket, info.Key)
 	return (*FetchResult)(&result), data.ConvertError(err)
 }
 
