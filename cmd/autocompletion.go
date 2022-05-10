@@ -2,14 +2,16 @@ package cmd
 
 import (
 	"bytes"
+	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
 	"os"
 )
 
-var compCmd = cobra.Command{
-	Use:   "completion bash",
-	Short: "generate autocompletion script for bash",
-	Long: `To load completion run
+func completeCmdBuilder(superCmd *cobra.Command, cfg *iqshell.Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "completion bash",
+		Short: "Generate autocompletion script for bash",
+		Long: `To load completion run
 
 . <(qshell completion <bash|zsh>)
 
@@ -18,19 +20,19 @@ To configure your bash shell to load completions for each session add to your ba
 # ~/.bashrc or ~/.profile or ~/.zshrc
 . <(qshell completion <bash|zsh>)
 `,
-	Args: cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, params []string) {
-		shName := params[0]
+		Args: cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, params []string) {
+			shName := params[0]
 
-		switch shName {
-		case "bash":
-			RootCmd.GenBashCompletion(os.Stdout)
-		case "zsh":
-			zsh_head := "#compdef qshell\n"
+			switch shName {
+			case "bash":
+				superCmd.GenBashCompletion(os.Stdout)
+			case "zsh":
+				zsh_head := "#compdef qshell\n"
 
-			os.Stdout.Write([]byte(zsh_head))
+				os.Stdout.Write([]byte(zsh_head))
 
-			zsh_initialization := `
+				zsh_initialization := `
 __qshell_bash_source() {
 	alias shopt=':'
 	alias _expand=_bash_expand
@@ -155,23 +157,31 @@ __qshell_convert_bash_to_zsh() {
 	-e "s/\\\$(type${RWORD}/\$(__qshell_type/g" \
 	<<'BASH_COMPLETION_EOF'
 `
-			os.Stdout.Write([]byte(zsh_initialization))
+				os.Stdout.Write([]byte(zsh_initialization))
 
-			buf := new(bytes.Buffer)
-			RootCmd.GenBashCompletion(buf)
-			os.Stdout.Write(buf.Bytes())
+				buf := new(bytes.Buffer)
+				superCmd.GenBashCompletion(buf)
+				os.Stdout.Write(buf.Bytes())
 
-			zsh_tail := `
+				zsh_tail := `
 BASH_COMPLETION_EOF
 }
 __qshell_bash_source <(__qshell_convert_bash_to_zsh)
 _complete qshell 2>/dev/null
 `
-			os.Stdout.Write([]byte(zsh_tail))
-		}
-	},
+				os.Stdout.Write([]byte(zsh_tail))
+			}
+		},
+	}
+	return cmd
 }
 
 func init() {
-	RootCmd.AddCommand(&compCmd)
+	registerLoader(completeCmdLoader)
+}
+
+func completeCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
+	superCmd.AddCommand(
+		completeCmdBuilder(superCmd, cfg),
+	)
 }
