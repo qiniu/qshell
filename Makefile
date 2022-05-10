@@ -6,7 +6,7 @@ DARWIN=qshell-$(VERSION)-darwin-x64
 LINUX86=qshell-$(VERSION)-linux-x86
 LINUX64=qshell-$(VERSION)-linux-x64
 LINUXARM=qshell-$(VERSION)-linux-arm
-LDFLAGS='-X 'github.com/qiniu/qshell/v2/iqshell/common/version.Version=$(VERSION)' -extldflags '-static''
+LDFLAGS='-X 'github.com/qiniu/qshell/v2/cmd.version=$(VERSION)' -extldflags '-static''
 GO=GO111MODULE=on go
 
 all: linux windows arm darwin

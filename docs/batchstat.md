@@ -1,29 +1,31 @@
 # 简介
-`batchstat` 命令用来批量查询七牛空间中文件的基本信息。
+
+`batchstat`命令用来批量查询七牛空间中文件的基本信息。
 
 # 格式
+
 ```
-qshell batchstat [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> <-i KeyListFile>
+qshell batchstat <Bucket> <-i KeyListFile>
 ```
 
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey`, `SecretKey` 和 `Name` 的情况下使用。
+
+需要在使用了`account`设置了`AccessKey`, `SecretKey`和`Name`的情况下使用。
 
 # 参数
-- Bucket：空间名，可以为公开空间或私有空间。【必选】
 
-# 选项
-- -i/--input-file：接受一个文件参数，文件为要 stat 的文件列表, 每行包含一个文件 Key。如果没有通过该选项指定该文件参数， 从标准输入读取内容。每行具体格式如下：（【可选】）
-```
-<Key> // <Key>：文件名
-```
-- -y/--force：该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程，可以使用 `--force` 选项。【可选】
-- -s/--success-list：该选项指定一个文件，qshell 会把操作成功的文件行导入到该文件；默认不导出。【可选】
-- -e/--failure-list：该选项指定一个文件， qshell 会把操作失败的文件行加上错误状态码，错误的原因导入该文件；默认不导出。【可选】
-- -c/--worker：该选项可以定义 Batch 任务并发数；默认为 1。【可选】
+|参数名|描述|
+|---------|-----------|
+|Bucket|空间名，可以为公开空间或私有空间|
+
+**i短选项**
+接受一个文件参数，内容为要stat的文件列表, 按行分隔。如果没有指定，从标准输入读取内容。
+
 
 # 示例
+
 - 我们将查询空间`7qiniu`中的一些文件的基本信息，待查询文件列表`listFile` 的内容为：
+
 ```
 RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000000.ts
 RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000001.ts
@@ -35,11 +37,13 @@ RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts
 ```
 
 - 使用如下命令进行批量查询
+
 ```
 $ qshell batchstat 7qiniu -i listFile
 ```
 
 - 输出 Key、Fsize、Hash、MimeType、PutTime 以`\t`分隔：
+
 ```
 RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000000.ts 92308   Fk8Uf2SHbQ4S2-cXHINuRc_rooNA    video/mp2t  15003760414606314
 RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000001.ts 91556   FpJP2nfipuLVc6QGvvcb868Rd0pO    video/mp2t  15003760414789673
@@ -50,4 +54,5 @@ RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts 92120   Fh4F
 ```
 
 # 注意
+
 如果没有指定输入文件， 默认从标准输入读取内容

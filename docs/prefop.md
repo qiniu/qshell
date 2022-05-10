@@ -1,9 +1,11 @@
 # 简介
-`prefop` 命令用来使用 [pfop请求](http://developer.qiniu.com/code/v6/api/dora-api/pfop/pfop.html) 得到的 `PersistentId` 来查询七牛数据处理的状态或结果。
+
+`prefop` 命令用来根[pfop请求](http://developer.qiniu.com/code/v6/api/dora-api/pfop/pfop.html)得到的 `PersistentId` 来查询七牛数据处理的状态或结果。
 
 参考文档：[持久化处理状态查询 (prefop)](http://developer.qiniu.com/code/v6/api/dora-api/pfop/prefop.html)
 
 # 格式
+
 ```
 qshell prefop <PersistentId>
 ```
@@ -12,15 +14,21 @@ qshell prefop <PersistentId>
 无
 
 # 参数
-- PersistentId：持久化处理的 Id【必选】
+
+|参数名|描述|
+|------|---------|
+|PersistentId|持久化处理的Id|
 
 # 示例
+
 查询 `z0.58632a1945a2650cfd5fc8b1` 对应的持久化处理结果：
+
 ```
 qshell prefop z0.58632a1945a2650cfd5fc8b1
 ```
 
 输出
+
 ```
 Id: z0.58632a1945a2650cfd5fc8b1
 Code: 0

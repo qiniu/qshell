@@ -1,93 +1,72 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/docs"
+	"fmt"
+	"os"
+
+	"github.com/astaxie/beego/logs"
 	"github.com/qiniu/qshell/v2/iqshell"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/operations"
 	"github.com/spf13/cobra"
 )
 
-var domainsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ListDomainInfo{}
-	var cmd = &cobra.Command{
-		Use:   "domains <Bucket>",
-		Short: "Get all domains of the bucket",
-		Run: func(cmd *cobra.Command, args []string) {
-			cfg.CmdCfg.CmdId = docs.DomainsType
-			if len(args) > 0 {
-				info.Bucket = args[0]
-			}
-			operations.ListDomains(cfg, info)
-		},
-	}
-	cmd.Flags().BoolVarP(&info.Detail, "detail", "", false, "print detail info for domain")
-	return cmd
+var bucketsCmd = &cobra.Command{
+	Use:   "buckets",
+	Short: "Get all buckets of the account",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) > 0 {
+			return fmt.Errorf("%q accepts no args", cmd.CommandPath())
+		}
+		return nil
+	},
+	Run: GetBuckets,
 }
 
-var listBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ListInfo{
-		Marker:     "",
-		StartDate:  "",
-		EndDate:    "",
-		AppendMode: false,
-		Readable:   false,
-		Delimiter:  "",
-		MaxRetry:   20,
-	}
-	var cmd = &cobra.Command{
-		Use:   "listbucket <Bucket>",
-		Short: "List all the files in the bucket",
-		Long:  "List all the files in the bucket to stdout if output file not specified. Each row of data information is displayed in the following order:\n Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser",
-		Run: func(cmd *cobra.Command, args []string) {
-			cfg.CmdCfg.CmdId = docs.ListBucketType
-			if len(args) > 0 {
-				info.Bucket = args[0]
-			}
-			operations.List(cfg, info)
-		},
-	}
-	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
-	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
-	return cmd
-}
-
-var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ListInfo{}
-	var cmd = &cobra.Command{
-		Use:   "listbucket2 <Bucket>",
-		Short: "List all the files in the bucket using v2/list interface",
-		Long:  "List all the files in the bucket using v2/list interface to stdout if output file not specified. Each row of data information is displayed in the following order:\n Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser",
-		Run: func(cmd *cobra.Command, args []string) {
-			cfg.CmdCfg.CmdId = docs.ListBucket2Type
-			if len(args) > 0 {
-				info.Bucket = args[0]
-			}
-			operations.List(cfg, info)
-		},
-	}
-
-	cmd.Flags().StringVarP(&info.Marker, "marker", "m", "", "list marker")
-	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
-	cmd.Flags().StringVarP(&info.Suffixes, "suffixes", "q", "", "list by key suffixes, separated by comma")
-	cmd.Flags().IntVarP(&info.MaxRetry, "max-retry", "x", -1, "max retries when error occurred")
-	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
-	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
-	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
-	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "result append to file instead of overwriting")
-	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
-	cmd.Flags().IntVarP(&info.Limit, "limit", "", -1, "max count of items to output")
-
-	return cmd
+var domainsCmd = &cobra.Command{
+	Use:   "domains <Bucket>",
+	Short: "Get all domains of the bucket",
+	Args:  cobra.ExactArgs(1),
+	Run:   GetDomainsOfBucket,
 }
 
 func init() {
-	registerLoader(bucketCmdLoader)
+	RootCmd.AddCommand(bucketsCmd, domainsCmd)
 }
 
-func bucketCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
-	superCmd.AddCommand(
-		listBucketCmdBuilder(cfg),
-		listBucketCmd2Builder(cfg),
-		domainsCmdBuilder(cfg),
-	)
+// 【buckets】获取一个用户的所有的存储空间
+func GetBuckets(cmd *cobra.Command, params []string) {
+
+	bm := iqshell.GetBucketManager()
+	buckets, err := bm.Buckets(false)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Get buckets error: %v\n", err)
+		os.Exit(1)
+	} else {
+		if len(buckets) == 0 {
+			fmt.Println("No buckets found")
+		} else {
+			for _, bucket := range buckets {
+				fmt.Println(bucket)
+			}
+		}
+	}
+}
+
+// 【domains】获取一个空间绑定的CDN域名
+func GetDomainsOfBucket(cmd *cobra.Command, params []string) {
+	bucket := params[0]
+	bm := iqshell.GetBucketManager()
+	domains, err := bm.DomainsOfBucket(bucket)
+
+	if err != nil {
+		logs.Error("Get domains error: ", err)
+		os.Exit(iqshell.STATUS_ERROR)
+	} else {
+		if len(domains) == 0 {
+			fmt.Printf("No domains found for bucket `%s`\n", bucket)
+		} else {
+			for _, domain := range domains {
+				fmt.Println(domain)
+			}
+		}
+	}
 }

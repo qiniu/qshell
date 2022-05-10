@@ -1,30 +1,28 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/docs"
-	"github.com/qiniu/qshell/v2/iqshell"
-	"github.com/qiniu/qshell/v2/iqshell/common/version/operations"
+	"fmt"
+	"runtime"
+
 	"github.com/spf13/cobra"
 )
 
-func versionCmdBuilder(cfg *iqshell.Config) *cobra.Command {
-	var cmd = &cobra.Command{
-		Use:   "version",
-		Short: "Show version",
-		Run: func(cmd *cobra.Command, params []string) {
-			cfg.CmdCfg.CmdId = docs.VersionType
-			operations.Version(cfg, operations.VersionInfo{})
-		},
-	}
-	return cmd
+// the version will be injected when publishing
+var version = "UNSTABLE"
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "show version",
+	Run: func(cmd *cobra.Command, params []string) {
+		fmt.Println(version)
+	},
 }
 
 func init() {
-	registerLoader(versionCmdLoader)
+	RootCmd.AddCommand(versionCmd)
 }
 
-func versionCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
-	superCmd.AddCommand(
-		versionCmdBuilder(cfg),
-	)
+// 生成客户端代理名称
+func UserAgent() string {
+	return fmt.Sprintf("QShell/%s (%s; %s; %s)", version, runtime.GOOS, runtime.GOARCH, runtime.Version())
 }

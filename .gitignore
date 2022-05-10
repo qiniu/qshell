@@ -2,53 +2,31 @@
 *.o
 *.a
 *.so
-*.exe
-*.exe~
-*.dll
-*.dylib
 src/test/
 src/.qshell
-
 # Folders
 _obj
 _test
 bin
-.DS_Store
-.idea
-.vscode
-
 # Architecture specific extensions/prefixes
-*.cgo1.go
-*.cgo2.c
-*.prof
-_cgo_defun.c
-_cgo_gotypes.go
-_cgo_export.*
-
 *.[568vq]
 [568vq].out
 report.xml
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
 .qshell
 qshell_*
 qshell-*
 _testmain.go
+*.exe
+*.test
+*.prof
+.idea
+
+.vscode
 
 # go test coverage file
 coverage.txt
-
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
-go.work
-
-### Go Patch ###
-/vendor/
-/Godeps/
-

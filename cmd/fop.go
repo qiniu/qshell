@@ -1,60 +1,63 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/docs"
+	"fmt"
+	"os"
+
 	"github.com/qiniu/qshell/v2/iqshell"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
 	"github.com/spf13/cobra"
 )
 
-var preFopStatusCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.PreFopStatusInfo{}
-	var cmd = &cobra.Command{
+var (
+	prefopCmd = &cobra.Command{
 		Use:   "prefop <PersistentId>",
 		Short: "Query the pfop status",
-		Run: func(cmd *cobra.Command, args []string) {
-			cfg.CmdCfg.CmdId = docs.PreFopType
-			if len(args) > 0 {
-				info.Id = args[0]
-			}
-			operations.PreFopStatus(cfg, info)
-		},
+		Args:  cobra.ExactArgs(1),
+		Run:   Prefop,
 	}
-	return cmd
-}
 
-var preFopCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.PreFopInfo{}
-	var cmd = &cobra.Command{
+	fopCmd = &cobra.Command{
 		Use:   "pfop <Bucket> <Key> <fopCommand>",
-		Short: "Issue a request to process file in bucket",
-		Run: func(cmd *cobra.Command, args []string) {
-			cfg.CmdCfg.CmdId = docs.PFopType
-			if len(args) > 0 {
-				info.Bucket = args[0]
-			}
-			if len(args) > 1 {
-				info.Key = args[1]
-			}
-			if len(args) > 2 {
-				info.Fops = args[2]
-			}
-			operations.PreFop(cfg, info)
-		},
+		Short: "issue a request to process file in bucket",
+		Args:  cobra.ExactArgs(3),
+		Run:   Fop,
 	}
-	cmd.Flags().StringVarP(&info.Pipeline, "pipeline", "p", "", "task pipeline")
-	cmd.Flags().StringVarP(&info.NotifyURL, "notify-url", "u", "", "notfiy url")
-	cmd.Flags().BoolVarP(&info.NotifyForce, "force", "f", false, "force execute")
-	return cmd
-}
+)
+
+var (
+	pipeline    string
+	notifyURL   string
+	notifyForce bool
+)
 
 func init() {
-	registerLoader(fopCmdLoader)
+	fopCmd.Flags().StringVarP(&pipeline, "pipeline", "p", "", "task pipeline")
+	fopCmd.Flags().StringVarP(&notifyURL, "notify-url", "u", "", "notfiy url")
+	fopCmd.Flags().BoolVarP(&notifyForce, "force", "f", false, "force execute")
+	RootCmd.AddCommand(prefopCmd, fopCmd)
 }
 
-func fopCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
-	superCmd.AddCommand(
-		preFopCmdBuilder(cfg),
-		preFopStatusCmdBuilder(cfg),
-	)
+// 【prefop】根据persistentId查询异步处理的进度, 处理结果
+func Prefop(cmd *cobra.Command, params []string) {
+	persistentId := params[0]
+
+	fopRet, err := iqshell.Prefop(persistentId)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Prefop error: %v\n", err)
+		os.Exit(iqshell.STATUS_ERROR)
+	} else {
+		fmt.Println(fopRet.String())
+	}
+}
+
+// 【pfop】 提交异步处理请求
+func Fop(cmd *cobra.Command, params []string) {
+	bucket, key, fops := params[0], params[1], params[2]
+
+	persistengId, err := iqshell.Pfop(bucket, key, fops, pipeline, notifyURL, notifyForce)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Prefop error: %v\n", err)
+		os.Exit(iqshell.STATUS_ERROR)
+	}
+	fmt.Println(persistengId)
 }
