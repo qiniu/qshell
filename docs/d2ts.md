@@ -1,15 +1,21 @@
 # 简介
-`d2ts` 命令用来生成一个 SecondsToNow 秒后的 Unix 时间戳（单位秒）。
+
+该命令用来生成一个Unix时间戳（单位秒），值是当前时间加上指定的秒数的和。
 
 # 格式
+
 ```
 qshell d2ts <SecondsToNow>
 ```
 
 # 参数
-- SecondsToNow: 指定的秒数
+
+|参数名|描述|
+|-----------|---------------|
+|SecondsToNow|指定的秒数|
 
 # 示例
+
 ```
 $ qshell d2ts 3600
 1427252311
