@@ -1,117 +1,206 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/account/operations"
 	"github.com/spf13/cobra"
 )
 
-var userCmd = &cobra.Command{
-	Use:   "user",
-	Short: "Manage users",
-}
+var accountCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
-var userChCmd = &cobra.Command{
-	Use:   "cu [<AccountName>]",
-	Short: "Change user to AccountName",
-	Args:  cobra.RangeArgs(0, 1),
-	Run:   ChUser,
-}
+	var accountOver bool
+	var cmd = &cobra.Command{
+		Use:   "account [<AccessKey> <SecretKey> <UserName>]",
+		Short: "Get/Set current user's AccessKey and SecretKey from local",
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.Account
+			if len(args) == 0 {
+				operations.Current(cfg)
+				return
+			}
 
-var userLsCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "List all accounts registered",
-	Run:   ListUser,
-}
-
-var userCleanCmd = &cobra.Command{
-	Use:   "clean",
-	Short: "clean account db",
-	Long:  "Remove all users from inner dbs.",
-	Run:   CleanUser,
-}
-
-var userRmCmd = &cobra.Command{
-	Use:   "remove <UserName>",
-	Short: "Remove user UID from inner db",
-	Args:  cobra.ExactArgs(1),
-	Run:   RmUser,
-}
-
-var userLookupCmd = &cobra.Command{
-	Use:   "lookup <UserName>",
-	Short: "Lookup user info by user name",
-	Args:  cobra.ExactArgs(1),
-	Run:   LookUp,
-}
-
-var (
-	userLsName bool
-)
-
-func init() {
-	userLsCmd.Flags().BoolVarP(&userLsName, "name", "n", false, "only list user names")
-	userCmd.AddCommand(userChCmd, userLsCmd, userCleanCmd, userRmCmd, userLookupCmd)
-	RootCmd.AddCommand(userCmd)
-}
-
-// 切换用户
-// qshell user cu <Name>
-func ChUser(cmd *cobra.Command, params []string) {
-	var err error
-	var userName string
-	if len(params) == 0 {
-		userName = ""
-	} else {
-		userName = params[0]
+			info := operations.AddInfo{
+				Over: accountOver,
+			}
+			if len(args) > 0 {
+				info.AccessKey = args[0]
+			}
+			if len(args) > 1 {
+				info.SecretKey = args[1]
+			}
+			if len(args) > 2 {
+				info.Name = args[2]
+			}
+			operations.Add(cfg, info)
+		},
 	}
-	err = iqshell.ChUser(userName)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "chuser: %v\n", err)
-		os.Exit(1)
+
+	cmd.Flags().BoolVarP(&accountOver, "overwrite", "w", false, "overwrite account or not when account exists in local db, by default not overwrite")
+
+	return cmd
+}
+
+var userCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "user",
+		Short: "Manage local users",
+		Args:  cobra.MaximumNArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.User
+			operations.User(cfg, operations.UserInfo{})
+		},
 	}
+	return cmd
 }
 
 // 列举本地数据库记录的账户
-// qshell user ls
-func ListUser(cmd *cobra.Command, params []string) {
-	err := iqshell.ListUser(userLsName)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "lsuser: %v\n", err)
-		os.Exit(1)
+var userLsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.ListInfo{}
+	var cmd = &cobra.Command{
+		Use:     "ls",
+		Short:   "List all users registered of local",
+		Example: `qshell user ls`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.User
+			operations.List(cfg, info)
+		},
 	}
+
+	cmd.Flags().BoolVarP(&info.OnlyListName, "name", "n", false, "only list user names")
+
+	return cmd
 }
 
-// 删除本地记录的数据库
-// qshell user clean
-func CleanUser(cmd *cobra.Command, params []string) {
-	err := iqshell.CleanUser()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "CleanUser: %v\n", err)
-		os.Exit(1)
+// 获取当前账户信息
+var userCurrentCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:     "current",
+		Short:   "Get current user info from local",
+		Example: `qshell user current`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.User
+			operations.Current(cfg)
+		},
 	}
-}
-
-// 删除用户
-// qshell user remove <UserName>
-func RmUser(cmd *cobra.Command, params []string) {
-	userName := params[0]
-	err := iqshell.RmUser(userName)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "RmUser: %v\n", err)
-		os.Exit(1)
-	}
+	return cmd
 }
 
 // 查询用用户是否存在本地数据库中
-// qshell user lookup <UserName>
-func LookUp(cmd *cobra.Command, params []string) {
-	userName := params[0]
-	err := iqshell.LookUp(userName)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "LookUp: %v\n", err)
-		os.Exit(1)
+var userLookupCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.LookUpInfo{}
+	var cmd = &cobra.Command{
+		Use:     "lookup <UserName>",
+		Short:   "Lookup user info by user name of local",
+		Example: `qshell user lookup <UserName>`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.User
+			if len(args) > 0 {
+				info.Name = args[0]
+			}
+			operations.LookUp(cfg, info)
+		},
 	}
+	return cmd
+}
+
+// 添加用户
+var userAddCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.AddInfo{}
+	var cmd = &cobra.Command{
+		Use:   "add",
+		Short: "Add user info to local",
+		Example: `qshell user add <AK> <SK> <UserName>
+ or
+ qshell user add --ak <AK> --sk <SK> --name <UserName>`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.User
+			if len(args) == 3 {
+				info.AccessKey = args[0]
+				info.SecretKey = args[1]
+				info.Name = args[2]
+			}
+			operations.Add(cfg, info)
+		},
+	}
+
+	cmd.Flags().StringVarP(&info.AccessKey, "ak", "", "", "user's access key of Qiniu")
+	cmd.Flags().StringVarP(&info.SecretKey, "sk", "", "", "user's secret key of Qiniu")
+	cmd.Flags().StringVarP(&info.Name, "name", "", "", "user id of local")
+	cmd.Flags().BoolVarP(&info.Over, "overwrite", "w", false, "overwrite user or not when account exists in local db, by default not overwrite")
+
+	return cmd
+}
+
+// 切换用户
+var userChCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.ChangeInfo{}
+	var cmd = &cobra.Command{
+		Use:     "cu [<UserName>]",
+		Short:   "Change current user with UserName",
+		Example: `qshell user cu <UserName>`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.User
+			if len(args) > 0 {
+				info.Name = args[0]
+			}
+			operations.Change(cfg, info)
+		},
+	}
+	return cmd
+}
+
+// 删除本地记录的数据库
+var userCleanCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:     "clean",
+		Short:   "Clean account db",
+		Long:    "Remove all users of local, just remove db, current user will not remove.",
+		Example: `qshell user clean`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.User
+			operations.Clean(cfg, operations.CleanInfo{})
+		},
+	}
+	return cmd
+}
+
+// 删除用户
+var userRmCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.RemoveInfo{}
+	var cmd = &cobra.Command{
+		Use:     "remove <UserName>",
+		Short:   "Remove user info with user name, just remove db, not influence current user.",
+		Example: `qshell user remove <UserName>`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.User
+			if len(args) > 0 {
+				info.Name = args[0]
+			}
+			operations.Remove(cfg, info)
+		},
+	}
+	return cmd
+}
+
+func init() {
+	registerLoader(userCmdLoader)
+}
+
+func userCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
+	userCmd := userCmdBuilder(cfg)
+	userCmd.AddCommand(
+		userAddCmdBuilder(cfg),     // 添加用户
+		userRmCmdBuilder(cfg),      // 删除某个用户
+		userCleanCmdBuilder(cfg),   // 清除所有用户
+		userChCmdBuilder(cfg),      // 切换当前账户
+		userLsCmdBuilder(cfg),      // 列举所有用户信息
+		userLookupCmdBuilder(cfg),  // 查看某个用户的信息
+		userCurrentCmdBuilder(cfg), // 查看当前用户信息
+	)
+
+	superCmd.AddCommand(
+		accountCmdBuilder(cfg),
+		userCmd,
+	)
 }
