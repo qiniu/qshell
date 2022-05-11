@@ -54,8 +54,9 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 		return
 	}
 
+	log.Alert("Key\tSize\tETag\tLastModified")
 	if err := listBucket(info, func(s3 *s3.S3, object *s3.Object) {
-		log.AlertF("%s\t%d\t%s\t%s\n", *object.Key, *object.Size, *object.ETag, *object.LastModified)
+		log.AlertF("%s\t%d\t%s\t%s", *object.Key, *object.Size, *object.ETag, *object.LastModified)
 	}); err != nil {
 		log.Error(err)
 	}

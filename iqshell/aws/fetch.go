@@ -88,7 +88,7 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 					Key:     *obj.Key,
 					FromUrl: downloadUrl,
 				}
-				log.DebugF("%s\t%d\t%s\t%s\n%s", *obj.Key, *obj.Size, *obj.ETag, *obj.LastModified, downloadUrl)
+				log.DebugF("get object:%s\t%d\t%s\t%s\n%s", *obj.Key, *obj.Size, *obj.ETag, *obj.LastModified, downloadUrl)
 			} else {
 				log.ErrorF("fetch([%s:%s]) create download url error: %v", info.AwsBucketInfo.Bucket, *obj.Key, e)
 			}

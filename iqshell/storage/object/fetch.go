@@ -11,6 +11,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"strings"
 )
 
 type FetchApiInfo struct {
@@ -20,7 +21,12 @@ type FetchApiInfo struct {
 }
 
 func (i *FetchApiInfo) WorkId() string {
-	return fmt.Sprintf("%s:%s:%s", i.Bucket, i.Key, i.FromUrl)
+	urls := strings.Split(i.FromUrl, "?")
+	if len(urls) > 0 {
+		return fmt.Sprintf("%s:%s:%s", i.Bucket, i.Key, urls[0])
+	} else {
+		return fmt.Sprintf("%s:%s:%s", i.Bucket, i.Key, i.FromUrl)
+	}
 }
 
 type FetchResult storage.FetchRet
