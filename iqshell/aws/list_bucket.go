@@ -10,7 +10,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"os"
 	"strings"
 )
 
@@ -55,11 +54,23 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 		return
 	}
 
+	if err := listBucket(info, func(s3 *s3.S3, object *s3.Object) {
+		log.AlertF("%s\t%d\t%s\t%s\n", *object.Key, *object.Size, *object.ETag, *object.LastModified)
+	}); err != nil {
+		log.Error(err)
+	}
+}
+
+
+func listBucket(info ListBucketInfo, objectHandler func(s3 *s3.S3, object *s3.Object)) *data.CodeError {
+	if objectHandler == nil {
+		return nil
+	}
+
 	// AWS related code
 	s3session, err := session.NewSession()
 	if err != nil {
-		log.ErrorF("create AWS session error:%v", err)
-		os.Exit(data.StatusError)
+		return data.NewEmptyError().AppendDescF("create AWS session error:%v", err)
 	}
 	s3session.Config.WithRegion(info.Region)
 	s3session.Config.WithCredentials(credentials.NewStaticCredentials(info.Id, info.SecretKey, ""))
@@ -76,30 +87,26 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 	}
 
 	for {
-		result, err := svc.ListObjectsV2(input)
+		result, lErr := svc.ListObjectsV2(input)
 
-		if err != nil {
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
+		if lErr != nil {
+			if aErr, ok := lErr.(awserr.Error); ok {
+				switch aErr.Code() {
 				case s3.ErrCodeNoSuchBucket:
-					log.ErrorF("list error:%s error:%v", s3.ErrCodeNoSuchBucket, aerr.Error())
+					return data.NewEmptyError().AppendDescF("list error:%s %v ContinuationToken:", s3.ErrCodeNoSuchBucket, aErr.Error(), input.ContinuationToken)
 				default:
-					log.ErrorF("list error:%v", aerr.Error())
+					return data.NewEmptyError().AppendDescF("list error:%v ContinuationToken:", aErr.Error(), input.ContinuationToken)
 				}
 			} else {
-				// Print the error, cast err to awserr.Error to get the Code and
-				// Message from an error.
-				log.ErrorF("list error:%v", aerr.Error())
+				return data.NewEmptyError().AppendDescF("list error:%v ContinuationToken:", aErr.Error(), input.ContinuationToken)
 			}
-			log.ErrorF("ContinuationToken: %v", input.ContinuationToken)
-			os.Exit(data.StatusError)
 		}
 
 		for _, obj := range result.Contents {
 			if strings.HasSuffix(*obj.Key, "/") && *obj.Size == 0 { // 跳过目录
 				continue
 			}
-			log.AlertF("%s\t%d\t%s\t%s\n", *obj.Key, *obj.Size, *obj.ETag, *obj.LastModified)
+			objectHandler(svc, obj)
 		}
 
 		if *result.IsTruncated {
@@ -108,4 +115,5 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 			break
 		}
 	}
+	return nil
 }
