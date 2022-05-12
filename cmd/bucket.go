@@ -24,6 +24,44 @@ var domainsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var bucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.GetBucketInfo{}
+	var cmd = &cobra.Command{
+		Use:   "bucket <Bucket>",
+		Short: "Get bucket info",
+		Long:  `Get bucket info`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.ListBucketType
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.GetBucket(cfg, info)
+		},
+	}
+	return cmd
+}
+
+var mkBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.CreateInfo{}
+	var cmd = &cobra.Command{
+		Use:   "mkbucket <Bucket>",
+		Short: "Create a bucket in region",
+		Long:  `Create a bucket in region; 
+
+The Bucket name is required to be unique within the scope of the object storage system, consists of 3 to 63 characters, supports lowercase letters, dashes(-) and numbers, and must start and end with lowercase letters or numbers.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.MkBucketDocument
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.Create(cfg, info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.RegionId, "region", "", "z0", "z0:huadong; z1:huabei; z2:huanan; na0:North America; as0:Southeast Asia;for more:https://developer.qiniu.com/kodo/1671/region-endpoint-fq")
+	cmd.Flags().BoolVarP(&info.Private, "private", "", false, "create private bucket")
+	return cmd
+}
+
 var listBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ListInfo{
 		Marker:     "",
@@ -92,6 +130,8 @@ func init() {
 
 func bucketCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
+		bucketCmdBuilder(cfg),
+		mkBucketCmdBuilder(cfg),
 		listBucketCmdBuilder(cfg),
 		listBucketCmd2Builder(cfg),
 		domainsCmdBuilder(cfg),
