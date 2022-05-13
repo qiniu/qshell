@@ -5,8 +5,8 @@ import _ "embed"
 //go:embed mkbucket.md
 var mkBucketDocument string
 
-const MkBucketDocument = "mkBucketDocument"
+const MkBucketType = "mkBucketDocument"
 
 func init() {
-	addCmdDocumentInfo(MkBucketDocument, mkBucketDocument)
+	addCmdDocumentInfo(MkBucketType, mkBucketDocument)
 }
