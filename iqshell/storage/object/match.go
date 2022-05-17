@@ -57,7 +57,7 @@ func Match(info MatchApiInfo) (match *MatchResult, err *data.CodeError) {
 	// 计算本地文件 hash
 	var hash string
 	if utils.IsSignByEtagV2(info.FileHash) {
-		log.Debug("Match Check: get etag by v2 for key:" + info.Key)
+		log.Debug("Match Check: get etag by v2 for key:%s", info.Key)
 		if serverObjectStat == nil {
 			if stat, sErr := Status(StatusApiInfo{
 				Bucket:   info.Bucket,
@@ -74,16 +74,17 @@ func Match(info MatchApiInfo) (match *MatchResult, err *data.CodeError) {
 		} else {
 			hash = h
 		}
-
+		log.DebugF("Match Check: get etag by v2 for key:%s hash:%s", info.Key, hash)
 	} else {
-		log.Debug("Match Check: get etag by v1 for key:" + info.Key)
+		log.DebugF("Match Check: get etag by v1 for key:%s", info.Key)
 		if h, eErr := utils.EtagV1(hashFile); eErr != nil {
 			return nil, data.NewEmptyError().AppendDesc("Match Check: get file etag v1 error:" + eErr.Error())
 		} else {
 			hash = h
 		}
+		log.DebugF("Match Check: get etag by v1 for key:%s hash:%s", info.Key, hash)
 	}
-
+	log.DebugF("Match Check:       server hash, key:%s hash:%s", info.Key, hash)
 	if hash != info.FileHash {
 		return nil, data.NewEmptyError().AppendDesc("Match Check: file hash doesn't match for key:" + info.Key + "download file hash:" + hash + " excepted:" + info.FileHash)
 	}
