@@ -50,6 +50,10 @@ func etagV1WithoutBase64Encoded(reader io.Reader) ([]byte, *data.CodeError) {
 var ErrPartSizeMismatch = data.NewEmptyError().AppendDesc("part size mismatch with data from reader")
 
 func EtagV2(reader io.Reader, parts []int64) (string, *data.CodeError) {
+	if len(parts) == 0 {
+		return "", data.NewEmptyError().AppendDesc("object part info is empty")
+	}
+
 	if is4MbParts(parts) {
 		return EtagV1(reader)
 	}

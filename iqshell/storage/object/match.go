@@ -43,8 +43,9 @@ func Match(info MatchApiInfo) (match *MatchResult, err *data.CodeError) {
 	var serverObjectStat *StatusResult
 	if len(info.FileHash) == 0 {
 		if stat, sErr := Status(StatusApiInfo{
-			Bucket: info.Bucket,
-			Key:    info.Key,
+			Bucket:   info.Bucket,
+			Key:      info.Key,
+			NeedPart: true,
 		}); sErr != nil {
 			return nil, data.NewEmptyError().AppendDesc("Match Check: get file status error:" + sErr.Error())
 		} else {
@@ -59,8 +60,9 @@ func Match(info MatchApiInfo) (match *MatchResult, err *data.CodeError) {
 		log.Debug("Match Check: get etag by v2 for key:" + info.Key)
 		if serverObjectStat == nil {
 			if stat, sErr := Status(StatusApiInfo{
-				Bucket: info.Bucket,
-				Key:    info.Key,
+				Bucket:   info.Bucket,
+				Key:      info.Key,
+				NeedPart: true,
 			}); sErr != nil {
 				return nil, data.NewEmptyError().AppendDesc("Match Check: etag v2, get file status error:" + sErr.Error())
 			} else {

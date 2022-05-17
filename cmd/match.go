@@ -37,6 +37,7 @@ var batchMatchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchMatchType
 			info.BatchInfo.Force = true
+			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]
 			}
