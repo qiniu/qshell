@@ -34,7 +34,7 @@ $LocalFilePath = ${LocalFileDir} + ${文件分隔符} + ${七牛存储 Key}
 检查 if-pbl 存储空间的文件和文件夹 /Users/lala/Desktop/qiniu 下的文件是否匹配。
 
 1. 列举 if-pbl 下所有文件并保存到文件： /Users/lala/Desktop/Match.conf
-￥qshell listbucket2 if-pbl -o /Users/lala/Desktop/Match.conf
+$ qshell listbucket2 if-pbl -o /Users/lala/Desktop/Match.conf
 
 2. 验证文件夹 /Users/lala/Desktop/qiniu 下文件是否和 /Users/lala/Desktop/Match.conf 中的信息是否匹配。
 $ qshell batchmatch if-pbl /Users/lala/Desktop/qiniu -i /Users/lala/Desktop/Match.conf
