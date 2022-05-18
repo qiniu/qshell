@@ -84,7 +84,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 	if err != nil {
 		return data.NewEmptyError().AppendDescF("create job dir error:%v", err)
 	}
-	log.DebugF("job dir:%s", userDir)
+	log.DebugF("job dir:%s", jobDir)
 
 	// 检查用户配置，用户配置可能被指定，如果未指定则使用用户目录下配置
 	if len(info.UserConfigPath) == 0 && len(userDir) > 0 {
