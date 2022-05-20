@@ -85,9 +85,10 @@ func (m *Metric) PrintProgress(tag string) {
 		log.InfoF("%s [%d/-, -] ...", tag, m.CurrentCount)
 		return
 	}
-
+	m.mu.Lock()
 	log.InfoF("%s [%d/%d, %.1f%%] ...", tag, m.CurrentCount, m.TotalCount,
 		float32(m.CurrentCount)*100/float32(m.TotalCount))
+	m.mu.Unlock()
 }
 
 func (m *Metric) Lock() {
