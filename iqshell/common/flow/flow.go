@@ -119,6 +119,12 @@ func (f *Flow) Start() {
 						cause.Code = data.ErrorCodeAlreadyDone
 						f.EventListener.OnWorkSkip(workInfo, workRecord.Result, cause)
 						continue
+					} else {
+						if cause == nil {
+							log.DebugF("work redo, %s", workInfo.Data)
+						} else {
+							log.DebugF("work redo, %s because:%v", workInfo.Data, cause.Desc)
+						}
 					}
 				}
 			}

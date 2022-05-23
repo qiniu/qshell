@@ -207,15 +207,20 @@ func (h *handler) Start() {
 			return nil
 		}).
 		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
-			if workRecord.Err == nil {
+			result, _ := workRecord.Result.(*OperationResult)
+
+			if workRecord.Err == nil && result != nil && result.IsValid() {
 				return false, nil
 			}
 
 			if !h.info.RecordRedoWhileError {
-				return false, workRecord.Err
+				if result == nil {
+					return false, data.NewEmptyError().AppendDescF("result:nil error:%s", workRecord.Err)
+				} else {
+					return false, data.NewEmptyError().AppendDescF("result:%s error:%s", result.ErrorDescription(), workRecord.Err)
+				}
 			}
 
-			result, _ := workRecord.Result.(*OperationResult)
 			if result == nil {
 				return true, data.NewEmptyError().AppendDesc("no result found")
 			}

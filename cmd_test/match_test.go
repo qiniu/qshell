@@ -88,6 +88,7 @@ func TestMatchDocument(t *testing.T) {
 }
 
 func TestBatchMatch(t *testing.T) {
+	TestBatchCopy(t)
 
 	resultDir, err := test.ResultPath()
 	if err != nil {
@@ -123,6 +124,52 @@ func TestBatchMatch(t *testing.T) {
 
 	if !test.IsFileHasContent(failLogPath) {
 		t.Fatal("batch result: fail log  to file error: file empty")
+	}
+}
+
+func TestBatchMatchWithRecord(t *testing.T) {
+	resultDir, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result dir error:", err)
+	}
+
+	objectPath := filepath.Join(resultDir, test.Key)
+	_, _ = test.RunCmdWithError("get", test.Bucket, test.Key,
+		"-o", objectPath)
+	defer test.RemoveFile(objectPath)
+
+	path, err := test.CreateFileWithContent("batch_match.txt", test.KeysString)
+	if err != nil {
+		t.Fatal("create batch match config file error:", err)
+	}
+
+	test.RunCmdWithError("batchmatch", test.Bucket, resultDir,
+		"-i", path,
+		"--worker", "4")
+
+	result, _ := test.RunCmdWithError("batchmatch", test.Bucket, resultDir,
+		"-i", path,
+		"--worker", "4",
+		"--enable-record",
+		"-d")
+	if !strings.Contains(result, "because have done and success") {
+		t.Fatal("batch result: should skip success work")
+	}
+	if strings.Contains(result, "work redo") {
+		t.Fatal("batch result: shouldn't redo because not set --record-redo-while-error")
+	}
+
+	result, _ = test.RunCmdWithError("batchmatch", test.Bucket, resultDir,
+		"-i", path,
+		"--worker", "4",
+		"--enable-record",
+		"--record-redo-while-error",
+		"-d")
+	if !strings.Contains(result, "because have done and success") {
+		t.Fatal("batch result: should skip success work")
+	}
+	if !strings.Contains(result, "work redo") {
+		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
 	}
 }
 
