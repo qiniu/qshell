@@ -13,6 +13,8 @@ qshell get <Bucket> <Key> [-o <OutFile>]
 # 选项
 - -o/--outfile：保存在本地的文件路径；不指定，保存在当前文件夹，文件名使用存储空间中的名字【可选】
 - --domain：下载请求的 domain 信息。【可选】
+- --get-file-api: 公有云无效，当私有云支持 getfile 接口时有效。【可选】
+- --check-hash: 下载后检测本地文件和服务端文件 hash 的一致性。【可选】
 - --remove-temp-while-error: 当下载遇到错误时删除之前下载的部分文件缓存，默认为 `false` (不删除)【可选】
 
 # 示例

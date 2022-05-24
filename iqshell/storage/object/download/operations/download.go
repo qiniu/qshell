@@ -20,6 +20,7 @@ type DownloadInfo struct {
 	ToFile               string // 文件保存的路径
 	UseGetFileApi        bool   //
 	IsPublic             bool   //
+	CheckHash            bool   // 是否检测文件 hash
 	Domain               string // 下载的 domain
 	RemoveTempWhileError bool   //
 }
@@ -67,7 +68,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		return
 	}
 
-	_, _ = downloadFile(&download.ApiInfo{
+	apiInfo := &download.ApiInfo{
 		IsPublic:             info.IsPublic,
 		HostProvider:         hostProvider,
 		ToFile:               info.ToFile,
@@ -78,12 +79,16 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		Key:                  info.Key,
 		FileModifyTime:       fileStatus.PutTime,
 		FileSize:             fileStatus.FSize,
-		FileHash:             fileStatus.Hash,
+		FileHash:             "",
 		FromBytes:            0,
 		RemoveTempWhileError: info.RemoveTempWhileError,
 		UseGetFileApi:        info.UseGetFileApi,
 		Progress:             progress.NewPrintProgress(" 进度"),
-	})
+	}
+	if info.CheckHash {
+		apiInfo.FileHash = fileStatus.Hash
+	}
+	_, _ = downloadFile(apiInfo)
 }
 
 func downloadFile(info *download.ApiInfo) (download.ApiResult, *data.CodeError) {
