@@ -79,6 +79,7 @@ func (d *fileInfo) prepare() *data.CodeError {
 }
 
 func (d *fileInfo) clean() *data.CodeError {
+	d.fromBytes = 0
 	err := os.Remove(d.toAbsFile)
 	if e := os.Remove(d.tempFile); err == nil {
 		err = e
