@@ -108,7 +108,6 @@ func TestBatchCopy(t *testing.T) {
 	}
 }
 
-
 func TestBatchCopyRecord(t *testing.T) {
 	batchConfig := ""
 	keys := test.OriginKeys

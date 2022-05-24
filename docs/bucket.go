@@ -10,4 +10,3 @@ const BucketType = "bucket"
 func init() {
 	addCmdDocumentInfo(BucketType, bucketDocument)
 }
-

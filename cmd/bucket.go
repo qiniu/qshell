@@ -46,7 +46,7 @@ var mkBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "mkbucket <Bucket>",
 		Short: "Create a bucket in region",
-		Long:  `Create a bucket in region; 
+		Long: `Create a bucket in region; 
 
 The Bucket name is required to be unique within the scope of the object storage system, consists of 3 to 63 characters, supports lowercase letters, dashes(-) and numbers, and must start and end with lowercase letters or numbers.`,
 		Run: func(cmd *cobra.Command, args []string) {

@@ -131,9 +131,9 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 				}
 
 				return &object.MatchApiInfo{
-					Bucket:  info.Bucket,
-					Key:     key,
-					FileHash: fileHash,
+					Bucket:    info.Bucket,
+					Key:       key,
+					FileHash:  fileHash,
 					LocalFile: filepath.Join(info.LocalFileDir, key),
 				}, nil
 			})).

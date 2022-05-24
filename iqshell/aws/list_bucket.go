@@ -62,7 +62,6 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 	}
 }
 
-
 func listBucket(info ListBucketInfo, objectHandler func(s3 *s3.S3, object *s3.Object)) *data.CodeError {
 	if objectHandler == nil {
 		return nil
