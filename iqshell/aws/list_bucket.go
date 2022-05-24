@@ -93,12 +93,12 @@ func listBucket(info ListBucketInfo, objectHandler func(s3 *s3.S3, object *s3.Ob
 			if aErr, ok := lErr.(awserr.Error); ok {
 				switch aErr.Code() {
 				case s3.ErrCodeNoSuchBucket:
-					return data.NewEmptyError().AppendDescF("list error:%s %v ContinuationToken:%s", s3.ErrCodeNoSuchBucket, aErr.Error(), input.ContinuationToken)
+					return data.NewEmptyError().AppendDescF("list error:%s %v ContinuationToken:%s", s3.ErrCodeNoSuchBucket, aErr.Error(), *input.ContinuationToken)
 				default:
-					return data.NewEmptyError().AppendDescF("list error:%v ContinuationToken:%s", aErr.Error(), input.ContinuationToken)
+					return data.NewEmptyError().AppendDescF("list error:%v ContinuationToken:%s", aErr.Error(), *input.ContinuationToken)
 				}
 			} else {
-				return data.NewEmptyError().AppendDescF("list error:%v ContinuationToken:%s", aErr.Error(), input.ContinuationToken)
+				return data.NewEmptyError().AppendDescF("list error:%v ContinuationToken:%s", aErr.Error(), *input.ContinuationToken)
 			}
 		}
 
