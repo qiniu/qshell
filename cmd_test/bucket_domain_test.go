@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestBucketDomain(t *testing.T) {
+func aTestBucketDomain(t *testing.T) {
 	result, errs := test.RunCmdWithError("domains", test.Bucket)
 	if len(errs) > 0 {
 		t.Fatal("error:", errs)

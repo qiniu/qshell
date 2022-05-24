@@ -105,6 +105,56 @@ func TestBatchRestoreArchive(t *testing.T) {
 	}
 }
 
+func TestBatchRestoreArchiveRecord(t *testing.T) {
+	copyFile(t, test.OriginKeys[0], restoreKey)
+	changeType(t, restoreKey, "2")
+
+	batchConfig := ""
+	keys := []string{restoreKey}
+	keys = append(keys, "hello10.json")
+	for _, key := range keys {
+		batchConfig += key + "\n"
+	}
+
+	path, err := test.CreateFileWithContent("batch_restorear.txt", batchConfig)
+	if err != nil {
+		t.Fatal("create cdn config file error:", err)
+	}
+
+	test.RunCmdWithError("batchrestorear", test.Bucket, "1",
+		"-i", path,
+		"--enable-record",
+		"--worker", "4",
+		"-y")
+
+	result, _ := test.RunCmdWithError("batchrestorear", test.Bucket, "1",
+		"-i", path,
+		"--enable-record",
+		"--worker", "4",
+		"-y",
+		"-d")
+	if !strings.Contains(result, "because have done and success") {
+		t.Fatal("batch result: should skip success work")
+	}
+	if strings.Contains(result, "work redo") {
+		t.Fatal("batch result: shouldn't redo because not set --record-redo-while-error")
+	}
+
+	result, _ = test.RunCmdWithError("batchrestorear", test.Bucket, "1",
+		"-i", path,
+		"--enable-record",
+		"--record-redo-while-error",
+		"--worker", "4",
+		"-y",
+		"-d")
+	if !strings.Contains(result, "because have done and success") {
+		t.Fatal("batch result: should skip success work")
+	}
+	if !strings.Contains(result, "work redo") {
+		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
+	}
+}
+
 func TestBatchRestoreArchiveDocument(t *testing.T) {
 	test.TestDocument("batchrestorear", t)
 }

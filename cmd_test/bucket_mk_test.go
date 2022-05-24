@@ -15,7 +15,7 @@ func TestMkBucket(t *testing.T) {
 		t.Fatal("should return bucket exists")
 	}
 
-	if !strings.Contains(errs, "error:bucket exists") {
+	if !strings.Contains(errs, "error:the bucket already exists") {
 		t.Fatal("expected error:bucket exists, but:" + errs)
 	}
 

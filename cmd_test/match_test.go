@@ -1,3 +1,5 @@
+//go:build integration
+
 package cmd
 
 import (
@@ -96,8 +98,8 @@ func TestBatchMatch(t *testing.T) {
 	}
 
 	objectPath := filepath.Join(resultDir, test.Key)
-	_, _ = test.RunCmdWithError("get", test.Bucket, test.Key,
-		"-o", objectPath)
+	_, _ = test.RunCmdWithError("get", test.Bucket, test.Key, "--domain", test.BucketDomain,
+		"-o", objectPath, "")
 	defer test.RemoveFile(objectPath)
 
 	successLogPath := filepath.Join(resultDir, "batch_success.txt")
@@ -128,13 +130,15 @@ func TestBatchMatch(t *testing.T) {
 }
 
 func TestBatchMatchWithRecord(t *testing.T) {
+	TestBatchCopy(t)
+
 	resultDir, err := test.ResultPath()
 	if err != nil {
 		t.Fatal("get result dir error:", err)
 	}
 
 	objectPath := filepath.Join(resultDir, test.Key)
-	_, _ = test.RunCmdWithError("get", test.Bucket, test.Key,
+	_, _ = test.RunCmdWithError("get", test.Bucket, test.Key, "--domain", test.BucketDomain,
 		"-o", objectPath)
 	defer test.RemoveFile(objectPath)
 
@@ -145,7 +149,9 @@ func TestBatchMatchWithRecord(t *testing.T) {
 
 	test.RunCmdWithError("batchmatch", test.Bucket, resultDir,
 		"-i", path,
-		"--worker", "4")
+		"--worker", "4",
+		"--enable-record",
+		"-d")
 
 	result, _ := test.RunCmdWithError("batchmatch", test.Bucket, resultDir,
 		"-i", path,

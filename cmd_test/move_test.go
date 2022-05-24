@@ -113,7 +113,7 @@ func TestBatchMove(t *testing.T) {
 	}
 }
 
-func TestBatchMoveRecord(t *testing.T) {
+func TestBatchMoveWithRecord(t *testing.T) {
 	TestBatchCopy(t)
 
 	batchConfig := ""
