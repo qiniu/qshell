@@ -75,7 +75,7 @@ type aliIpInfo struct {
 }
 
 func (i *aliIpInfo) String() string {
-	return fmt.Sprintf("%v", i.Data)
+	return fmt.Sprintf("%v", i.Data.String())
 }
 
 // IpData ip 具体的信息

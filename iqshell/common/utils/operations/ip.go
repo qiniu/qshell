@@ -9,11 +9,6 @@ import (
 	"time"
 )
 
-const (
-	// IP信息查询接口地址
-	ipQueryUrl = "http://ip.taobao.com/service/getIpInfo.php"
-)
-
 type IpQueryInfo struct {
 	Ips []string
 }
