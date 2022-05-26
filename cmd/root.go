@@ -44,7 +44,7 @@ var rootCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                    "qshell",
 		Short:                  "Qiniu commandline tool for managing your bucket and CDN",
-		Version:                version.Version,
+		Version:                version.Version(),
 		BashCompletionFunction: bash_completion_func,
 	}
 	cmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")

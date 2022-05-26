@@ -21,5 +21,5 @@ func Version(cfg *iqshell.Config, info VersionInfo) {
 		return
 	}
 
-	log.Alert(version.Version)
+	log.Alert(version.Version())
 }
