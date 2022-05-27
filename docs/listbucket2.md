@@ -3,7 +3,7 @@
 
 获取的文件列表组织格式如下（每个字段用 Tab 分隔）：
 ```
-Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
+Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser
 ```
 
 参考文档：[资源列举 (list)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/list.html)
@@ -34,6 +34,8 @@ qshell listbucket2 [-m|--marker <Marker>] [--limit <Limit>] [--prefix <Prefix> |
 - --append： 开启选项 --out 的 append 模式， 如果本地保存文件列表的文件已经存在，如果希望像该文件添加内容，使用该选项, 必须和 --out 选项一起使用 【可选】
 - --readable： 开启文件大小的可读性选项， 会以合适的 KB, MB, GB 等显示 【可选】
 - --marker： marker 标记列举过程中的位置， 如果列举的过程中网络断开，会返回一个 marker, 可以指定该 marker 参数继续列举 【可选】
+- --show-fields：每个文件需要展示的字段，多个使用逗号(,)隔开，可选范围：Key,FileSize,Hash,PutTime,MimeType,StorageType,EndUser  【可选】
+- --output-fields-sep：输出的文件信息中，每行文件属性之间的分割符，默认 Tab 键（\t） 【可选】
 
 
 # 常用场景

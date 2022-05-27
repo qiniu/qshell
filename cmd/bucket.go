@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/operations"
 	"github.com/spf13/cobra"
 )
@@ -94,7 +95,7 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "listbucket2 <Bucket>",
 		Short: "List all the files in the bucket using v2/list interface",
-		Long:  "List all the files in the bucket using v2/list interface to stdout if output file not specified. Each row of data information is displayed in the following order:\n Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser",
+		Long:  "List all the files in the bucket using v2/list interface to stdout if output file not specified. Each row of data information is displayed in the following order by default:\n Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ListBucket2Type
 			if len(args) > 0 {
@@ -120,6 +121,9 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "result append to file instead of overwriting")
 	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
 	cmd.Flags().IntVarP(&info.Limit, "limit", "", -1, "max count of items to output")
+
+	cmd.Flags().StringVarP(&info.ShowFields, "show-fields", "", "", "The file attributes to be displayed on each line, separated by commas. Optional range: Key, Hash, FileSize, PutTime, MimeType, StorageType, EndUser.")
+	cmd.Flags().StringVarP(&info.OutputFieldsSep, "output-fields-sep", "", data.DefaultLineSeparate, "Each line needs to display the delimiter of the file information.")
 
 	return cmd
 }
