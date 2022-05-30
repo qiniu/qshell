@@ -97,7 +97,7 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 		}
 		close(fetchInfoChan)
 	}()
-	
+
 	var overseer flow.Overseer
 	if info.BatchInfo.EnableRecord {
 		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
