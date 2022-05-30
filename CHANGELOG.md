@@ -1,5 +1,12 @@
+# 2.7.0
+1. 存储相关命令（比如上传、管理等）支持 [深度归档](https://developer.qiniu.com/kodo/3956/kodo-category) 存储类型
+2. 存储 [buckets](docs/buckets.md)、[domains](docs/domains.md) 等命令支持 --detail 参数可以输出更多详细信息
+3. 所有命令支持 --doc 直接查看命令说明文档
+4. 部分命令错误提示优化
+
+
 # 2.6.3
-1. qdownload 命令支持检测七牛云 Etag，在下载配置的 json 文件中增加选项："check_hash" : true即可，详情见 [文档](https://github.com/qiniu/qshell/blob/master/docs/qdownload.md)
+1. qdownload 命令支持检测七牛云 Etag，在下载配置的 json 文件中增加选项："check_hash" : true 即可，详情见 [文档](docs/qdownload.md)
 2. 更新依赖 go-sdk 版本至 [v7.10.1](https://github.com/qiniu/go-sdk/releases/tag/v7.10.1)，解决分片上传内存占用超大问题
 
 # 2.6.2

@@ -46,4 +46,4 @@ SecretKey: LVzZY2SqOQ_I_kM1n00ygACVBArDvOWtiLkDtKiw
 ```
 qshell account ELUs327kxVPJrGCXqWae9yioc0xYZyrIpbM6abc LVzZY2SqOQ_I_kM1n00ygACVBArDvOWtiLkDthaha name_test2
 ```
-qshell 可以记录多个设置的账户信息，账户的管理，切换，删除等，可以参考 qshell user 自命令[文档](docs/user.md)
+qshell 可以记录多个设置的账户信息，账户的管理，切换，删除等，可以参考 qshell user 自命令[文档](user.md)

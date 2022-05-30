@@ -9,7 +9,7 @@
 
 ## 简介
 
-qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现的一个方便开发者测试和使用七牛API服务的命令行工具。该工具设计和开发的主要目的就是帮助开发者快速解决问题。目前该工具融合了七牛存储，CDN，以及其他的一些七牛服务中经常使用到的方法对应的便捷命令，比如b64decode，就是用来解码七牛的URL安全的Base64编码用的，所以这是一个面向开发者的工具，任何新的被认为适合加到该工具中的命令需求，都可以在[ISSUE列表](https://github.com/qiniu/qshell/issues)里面提出来，我们会尽快评估实现，以帮助大家更好地使用七牛服务。
+qshell是利用 [七牛文档上公开的API](http://developer.qiniu.com) 实现的一个方便开发者测试和使用七牛API服务的命令行工具。该工具设计和开发的主要目的就是帮助开发者快速解决问题。目前该工具融合了七牛存储，CDN，以及其他的一些七牛服务中经常使用到的方法对应的便捷命令，比如b64decode，就是用来解码七牛的URL安全的Base64编码用的，所以这是一个面向开发者的工具，任何新的被认为适合加到该工具中的命令需求，都可以在 [ISSUE列表](https://github.com/qiniu/qshell/issues) 里面提出来，我们会尽快评估实现，以帮助大家更好地使用七牛服务。
 
 ## 下载
 
@@ -19,15 +19,15 @@ qshell是利用[七牛文档上公开的API](http://developer.qiniu.com)实现�
 
 | 支持平台                | 链接                                                                                               |
 | ----------------------- | -------------------------------------------------------------------------------------------------- |
-| Windows X86             | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.3/qshell-v2.6.3-windows-386.zip)     |
-| Windows amd64           | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.3/qshell-v2.6.3-windows-amd64.zip)   |
-| Windows arm             | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.3/qshell-v2.6.3-windows-arm.zip)     |
-| Linux X86               | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.3/qshell-v2.6.3-linux-386.tar.gz)    |
-| Linux amd64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.3/qshell-v2.6.3-linux-amd64.tar.gz)  |
-| Linux arm               | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.3/qshell-v2.6.3-linux-arm.tar.gz)    |
-| Linux arm64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.3/qshell-v2.6.3-linux-arm64.tar.gz)  |
-| Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.3/qshell-v2.6.3-darwin-amd64.tar.gz) |
-| Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.6.3/qshell-v2.6.3-darwin-arm64.tar.gz) |
+| Windows X86             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-windows-386.zip)     |
+| Windows amd64           | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-windows-amd64.zip)   |
+| Windows arm             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-windows-arm.zip)     |
+| Linux X86               | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-386.tar.gz)    |
+| Linux amd64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-amd64.tar.gz)  |
+| Linux arm               | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-arm.tar.gz)    |
+| Linux arm64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-arm64.tar.gz)  |
+| Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-darwin-amd64.tar.gz) |
+| Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-darwin-arm64.tar.gz) |
 
 
 ## 安装
@@ -144,7 +144,9 @@ fi
 
 | 参数 | 描述                                                           |
 | ---- | -------------------------------------------------------------- |
-| -d   | 设置是否输出DEBUG日志，如果指定这个选项，则输出DEBUG级别的日志 |
+| --doc   | 查看命令使用手册 |
+| -d   | 设置是否输出 DEBUG 日志，如果指定这个选项，则输出 DEBUG 级别的日志 |
+| -D  |  设置是否输出更加详细的 DEBUG 日志，如果指定这个选项，则输出详细的 DEBUG 级别的日志 |                 
 | -h   | 打印命令列表帮助信息，遇到参数忘记的情况下，可以使用该命令     |
 | -v   | 打印工具版本，反馈问题的时候，请提前告知工具对应版本号         |
 | -C   | qshell配置文件, 其配置格式请看下一节                           |
@@ -209,10 +211,15 @@ fi
 
 ## 命令列表
 
-### 存储相关命令
+### 账号设置命令
 | 命令        | 类别   | 描述                                                                 | 详细                        |
 | ----------- | ------ | -------------------------------------------------------------------- | --------------------------- |
 | account     | 账号   | 设置或显示当前用户的`AccessKey`和`SecretKey`                         | [文档](docs/account.md)     |
+| user     | 账号   | 列举账号信息，在各个账号之间切换, 删除账号                         | [文档](docs/user.md)     |                
+
+### 存储相关命令
+| 命令        | 类别   | 描述                                                                 | 详细                        |
+| ----------- | ------ | -------------------------------------------------------------------- | --------------------------- |
 | batchdelete | 删除   | 批量删除七牛空间中的文件，可以直接根据`listbucket`的结果来删除       | [文档](docs/batchdelete.md) |
 | delete      | 删除   | 删除七牛空间中的一个文件                                             | [文档](docs/delete.md)      |
 | batchchgm   | 修改   | 批量修改七牛空间中文件的MimeType                                     | [文档](docs/batchchgm.md)   |
@@ -226,6 +233,8 @@ fi
 | batchmove   | 移动   | 批量移动七牛空间中的文件到另一个空间                                 | [文档](docs/batchmove.md)   |
 | move        | 移动   | 移动或重命名七牛空间中的一个文件                                     | [文档](docs/move.md)        |
 | batchrename | 重命名 | 批量重命名七牛空间中的文件                                           | [文档](docs/batchrename.md) |
+| batchrestorear | 解冻 | 批量解冻七牛空间中的归档/深度归档存储类型文件                         | [文档](docs/batchrestorear.md) |  
+| restorear | 解冻 | 解冻七牛空间中的归档/深度归档存储类型文件                                | [文档](docs/restorear.md) |               
 | batchstat   | 查询   | 批量查询七牛空间中文件的基本信息                                     | [文档](docs/batchstat.md)   |
 | stat        | 查询   | 查询七牛空间中一个文件的基本信息                                     | [文档](docs/stat.md)        |
 | buckets     | 查询   | 获取当前账号下所有的空间名称                                         | [文档](docs/buckets.md)     |
