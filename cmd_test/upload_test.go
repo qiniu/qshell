@@ -192,7 +192,7 @@ mock02.jpg	10485760	16455233472998522
 		"--file-type", "1",
 		"--rescan-local", "false",
 		"--ignore-dir", "",
-		"--key-prefix", "",
+		"--key-prefix", "test/",
 		"--skip-file-prefixes", "",
 		"--skip-fixed-strings", "",
 		"--skip-path-prefixes", "",
