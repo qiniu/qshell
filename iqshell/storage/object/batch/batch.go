@@ -135,7 +135,7 @@ func (h *handler) Start() {
 			}))
 	}
 
-	// overseer， EnableRecord 为 False 时不记录中间状态
+	// overseer， EnableRecord 未开启不记录中间状态（数组类型的数据源默认关闭）
 	var overseer flow.Overseer
 	if h.info.EnableRecord {
 		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")

@@ -81,7 +81,6 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		return
 	}
 
-	// overseer， 数组源 不类型不记录中间状态
 	var overseer flow.Overseer
 	if info.BatchInfo.EnableRecord {
 		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
