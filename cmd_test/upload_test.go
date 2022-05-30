@@ -48,6 +48,7 @@ func TestQUpload(t *testing.T) {
 	"check_exists": true,
 	"check_size": true,
 	"work_count": 4,
+	"key_prefix": "test/",
 	"log_file": "%s",
 	"record_root": "%s"
 }`, test.Bucket, fileDir, logPath, recordPath)
