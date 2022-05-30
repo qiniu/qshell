@@ -75,7 +75,6 @@ func (info *BatchMatchInfo) Check() *data.CodeError {
 	return nil
 }
 
-// BatchMatch 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
 func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 	cfg.JobPathBuilder = func(cmdPath string) string {
 		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s:%s", cfg.CmdCfg.CmdId, info.Bucket, info.LocalFileDir, info.BatchInfo.InputFile))
