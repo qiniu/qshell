@@ -80,7 +80,6 @@ func (info *BatchPrivateUrlInfo) Check() *data.CodeError {
 	return nil
 }
 
-// BatchPrivateUrl 批量删除，由于和批量删除的输入读取逻辑不同，所以分开
 func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 	cfg.JobPathBuilder = func(cmdPath string) string {
 		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", cfg.CmdCfg.CmdId, info.Deadline, info.BatchInfo.InputFile))

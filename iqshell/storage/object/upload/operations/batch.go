@@ -68,7 +68,6 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 	upload2Info := BatchUpload2Info{
 		Info:               info.Info,
 		FileExporterConfig: info.FileExporterConfig,
-		Overwrite:          info.Overwrite,
 		InputFile:          info.InputFile,
 		ItemSeparate:       info.ItemSeparate,
 		EnableStdin:        info.EnableStdin,
@@ -95,8 +94,6 @@ type BatchUpload2Info struct {
 	flow.Info
 	export.FileExporterConfig
 	UploadConfig
-
-	Overwrite bool // 是否覆盖
 
 	// 工作数据源
 	InputFile    string // 工作数据源：文件
