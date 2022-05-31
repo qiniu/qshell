@@ -1,7 +1,6 @@
 package batch
 
 import (
-	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
@@ -248,11 +247,6 @@ func (h *handler) Start() {
 				}
 			} else {
 				metric.AddSkippedCount(1)
-				operation, _ := work.Work.(Operation)
-				h.onResult(work.Data, operation, &OperationResult{
-					Code:  data.ErrorCodeUnknown,
-					Error: fmt.Sprintf("%v", err),
-				})
 				log.DebugF("Skip line:%s because:%v", work.Data, err)
 			}
 

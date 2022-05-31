@@ -10,6 +10,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"path/filepath"
@@ -115,24 +116,25 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 
 	metric := &batch.Metric{}
 	metric.Start()
+	lineParser := bucket.NewListLineParser()
 	flow.New(info.BatchInfo.Info).
 		WorkProviderWithFile(info.BatchInfo.InputFile,
 			info.BatchInfo.EnableStdin,
 			flow.NewItemsWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
-				key := items[0]
-				fileHash := ""
-				if len(items) > 2 {
-					fileHash = items[2]
+				listObject, e := lineParser.Parse(items)
+				if e != nil {
+					return nil, e
 				}
-				if len(key) == 0 {
-					return nil, alert.Error("key is invalid", "")
+
+				if len(listObject.Key) == 0 {
+					return nil, alert.Error("key invalid", "")
 				}
 
 				return &object.MatchApiInfo{
 					Bucket:    info.Bucket,
-					Key:       key,
-					FileHash:  fileHash,
-					LocalFile: filepath.Join(info.LocalFileDir, key),
+					Key:       listObject.Key,
+					FileHash:  listObject.Hash,
+					LocalFile: filepath.Join(info.LocalFileDir, listObject.Key),
 				}, nil
 			})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {

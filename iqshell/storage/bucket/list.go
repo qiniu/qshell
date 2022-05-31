@@ -7,7 +7,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"io"
@@ -35,26 +34,6 @@ type ListApiInfo struct {
 	OutputFieldsSep string    // 输出信息，每行的分隔符 【必选】
 }
 
-const (
-	listObjectFieldsKey         = "Key"
-	listObjectFieldsHash        = "Hash"
-	listObjectFieldsFileSize    = "FileSize"
-	listObjectFieldsPutTime     = "PutTime"
-	listObjectFieldsMimeType    = "MimeType"
-	listObjectFieldsStorageType = "StorageType"
-	listObjectFieldsEndUser     = "EndUser"
-)
-
-var listObjectFields = []string{
-	listObjectFieldsKey,
-	listObjectFieldsFileSize,
-	listObjectFieldsHash,
-	listObjectFieldsPutTime,
-	listObjectFieldsMimeType,
-	listObjectFieldsStorageType,
-	listObjectFieldsEndUser,
-}
-
 func ListObjectField(field string) string {
 	for _, f := range listObjectFields {
 		if strings.EqualFold(field, f) {
@@ -66,49 +45,25 @@ func ListObjectField(field string) string {
 
 type ListObject storage.ListItem
 
-func (l *ListObject) infoWithFields(fields []string, outputFieldsSep string, readable bool) string {
-	var values []string
-	for _, field := range fields {
-		values = append(values, l.fieldStringValue(field, readable))
-	}
-	return strings.Join(values, outputFieldsSep)
-}
-
-func (l *ListObject) fieldStringValue(field string, readable bool) string {
-	if l == nil {
+func (l *ListObject) PutTimeString() string {
+	if l.PutTime < 1 {
 		return ""
 	}
+	return fmt.Sprintf("%d", l.PutTime)
+}
 
-	var value interface{}
-	switch field {
-	case listObjectFieldsKey:
-		value = l.Key
-		break
-	case listObjectFieldsFileSize:
-		if readable {
-			value = utils.BytesToReadable(l.Fsize)
-		} else {
-			value = l.Fsize
-		}
-		break
-	case listObjectFieldsHash:
-		value = l.Hash
-		break
-	case listObjectFieldsPutTime:
-		value = l.PutTime
-		break
-	case listObjectFieldsMimeType:
-		value = l.MimeType
-		break
-	case listObjectFieldsStorageType:
-		value = l.Type
-		break
-	case listObjectFieldsEndUser:
-		value = l.EndUser
-		break
-	default:
+func (l *ListObject) FileSizeString() string {
+	if l.Fsize < 1 {
+		return ""
 	}
-	return fmt.Sprintf("%v", value)
+	return fmt.Sprintf("%d", l.Fsize)
+}
+
+func (l *ListObject) StorageTypeString() string {
+	if l.Type < 1 {
+		return ""
+	}
+	return fmt.Sprintf("%d", l.Type)
 }
 
 // List list 某个 bucket 所有的文件
@@ -278,13 +233,16 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *da
 	}
 
 	bWriter := bufio.NewWriter(listResultFh)
-	if len(info.FilePath) == 0 {
-		title := strings.Join(info.ShowFields, info.OutputFieldsSep)
-		_, _ = bWriter.WriteString(title + "\n")
-		_ = bWriter.Flush()
+	title := strings.Join(info.ShowFields, info.OutputFieldsSep)
+	_, _ = bWriter.WriteString(title + "\n")
+	_ = bWriter.Flush()
+	lineCreator := &ListLineCreator{
+		Fields:   info.ShowFields,
+		Sep:      info.OutputFieldsSep,
+		Readable: info.Readable,
 	}
 	List(info.ListApiInfo, func(marker string, object ListObject) (bool, *data.CodeError) {
-		lineData := object.infoWithFields(info.ShowFields, info.OutputFieldsSep, info.Readable)
+		lineData := lineCreator.Create(&object)
 		if _, wErr := bWriter.WriteString(lineData + "\n"); wErr != nil {
 			return false, data.NewEmptyError().AppendDesc("write error:" + wErr.Error())
 		}

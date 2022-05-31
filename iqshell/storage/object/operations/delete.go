@@ -9,6 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"path/filepath"
@@ -92,25 +93,22 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 		return
 	}
 
+	lineParser := bucket.NewListLineParser()
 	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		putTime := ""
-		key := items[0]
-		if len(key) == 0 {
+		listObject, e := lineParser.Parse(items)
+		if e != nil {
+			return nil, e
+		}
+
+		if len(listObject.Key) == 0 {
 			return nil, alert.Error("key invalid", "")
 		}
 
-		if len(items) > 1 {
-			putTime = items[1]
-		}
-		// list 结果格式 14902611578248790
-		if len(putTime) != 17 && len(items) > 3 && len(items[3]) == 17 {
-			putTime = items[3]
-		}
 		return &object.DeleteApiInfo{
 			Bucket: info.Bucket,
-			Key:    key,
+			Key:    listObject.Key,
 			Condition: batch.OperationCondition{
-				PutTime: putTime,
+				PutTime: listObject.PutTimeString(),
 			},
 		}, nil
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
