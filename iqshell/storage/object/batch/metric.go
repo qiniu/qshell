@@ -10,12 +10,13 @@ type Metric struct {
 	mu    sync.Mutex
 	start time.Time
 
-	Duration     int64 `json:"duration"`
-	TotalCount   int64 `json:"total_count"`
-	CurrentCount int64 `json:"-"`
-	SuccessCount int64 `json:"success_count"`
-	FailureCount int64 `json:"failure_count"`
-	SkippedCount int64 `json:"skipped_count"`
+	DisablePrintProgress bool  `json:"-"`
+	Duration             int64 `json:"duration"`
+	TotalCount           int64 `json:"total_count"`
+	CurrentCount         int64 `json:"-"`
+	SuccessCount         int64 `json:"success_count"`
+	FailureCount         int64 `json:"failure_count"`
+	SkippedCount         int64 `json:"skipped_count"`
 }
 
 func (m *Metric) Start() {
@@ -77,7 +78,7 @@ func (m *Metric) AddSkippedCount(count int64) {
 }
 
 func (m *Metric) PrintProgress(tag string) {
-	if m == nil {
+	if m == nil || m.DisablePrintProgress {
 		return
 	}
 

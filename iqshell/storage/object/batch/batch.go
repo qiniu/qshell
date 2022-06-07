@@ -135,28 +135,18 @@ func (h *handler) Start() {
 	}
 
 	// overseer， EnableRecord 未开启不记录中间状态（数组类型的数据源默认关闭）
-	var overseer flow.Overseer
-	if h.info.EnableRecord {
-		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
-		log.DebugF("batch recorder:%s", dbPath)
-		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
-			return &flow.WorkRecord{
-				WorkInfo: &flow.WorkInfo{
-					Data: "",
-					Work: nil,
-				},
-				Result: &OperationResult{},
-				Err:    nil,
-			}
-		}); err != nil {
-			log.ErrorF("create overseer error:%v", err)
-			return
+	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
+	if !isArraySource {
+		if h.info.EnableRecord {
+			log.DebugF("batch recorder:%s", dbPath)
+		} else {
+			log.Debug("batch recorder:Not Enable")
 		}
-	} else {
-		log.Debug("batch recorder:Not Enable")
 	}
 
-	metric := &Metric{}
+	metric := &Metric{
+		DisablePrintProgress: isArraySource,
+	}
 	metric.Start()
 	workerBuilder.
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
@@ -200,7 +190,17 @@ func (h *handler) Start() {
 			}), nil
 		})).
 		DoWorkListMaxCount(h.info.MaxOperationCountPerRequest).
-		SetOverseer(overseer).
+		SetOverseerEnable(h.info.EnableRecord).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: nil,
+				},
+				Result: &OperationResult{},
+				Err:    nil,
+			}
+		}).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
