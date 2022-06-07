@@ -9,7 +9,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"os"
 	"path/filepath"
@@ -231,17 +230,6 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			if _, cause = utils.IsFileMatchFileSize(apiInfo.ToFile, apiInfo.FileSize); err != nil ||
 				apiInfo.FileSize != recordApiInfo.FileSize{
 				return true, cause
-			}
-
-			if info.CheckHash {
-				if _, mErr := object.Match(object.MatchApiInfo{
-					Bucket:    apiInfo.Bucket,
-					Key:       apiInfo.Key,
-					FileHash:  apiInfo.FileHash,
-					LocalFile: apiInfo.ToFile,
-				}); mErr != nil {
-					return true, mErr
-				}
 			}
 
 			return false, nil

@@ -9,6 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"net/http"
@@ -67,6 +68,10 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	}
 
 	// 文件存在则检查文件状态
+	checkMode := object.MatchCheckModeFileSize
+	if len(info.FileHash) > 0 {
+		checkMode = object.MatchCheckModeFileHash
+	}
 	fileStatus, sErr := os.Stat(f.toAbsFile)
 	tempFileStatus, tempErr := os.Stat(f.tempFile)
 	if sErr == nil || os.IsExist(err) || tempErr == nil || os.IsExist(tempErr) {
@@ -77,20 +82,23 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 
 		if fileStatus != nil {
 			// 文件已下载，检测文件内容
-			if checkErr := (&FileChecker{
-				File:                f.toAbsFile,
-				Bucket:              info.Bucket,
-				Key:                 info.Key,
-				FileHash:            info.FileHash,
-				FileSize:            info.FileSize,
-				RemoveFileWhenError: true,
-			}).IsFileMatch(); checkErr == nil {
-				// 文件是否已下载完成，如果完成跳过下载阶段，直接验证
-				res.IsExist = true
-				return
-			} else {
+			checkResult, mErr := object.Match(object.MatchApiInfo{
+				Bucket:    info.Bucket,
+				Key:       info.Key,
+				LocalFile: f.toAbsFile,
+				CheckMode: checkMode,
+				FileHash:  info.FileHash,
+				FileSize:  info.FileSize,
+			})
+			if mErr != nil {
 				f.fromBytes = 0
-				log.DebugF("check error before download:%v", checkErr)
+				log.DebugF("check error before download:%v", mErr)
+			}
+			if checkResult != nil {
+				res.IsExist = checkResult.Exist
+			}
+			if mErr == nil && checkResult.Match {
+				return
 			}
 		}
 	}
@@ -107,17 +115,19 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	}
 
 	// 检查下载后的数据是否符合预期
-	if checkErr := (&FileChecker{
-		File:                f.toAbsFile,
-		Bucket:              info.Bucket,
-		Key:                 info.Key,
-		FileHash:            info.FileHash,
-		FileSize:            info.FileSize,
-		RemoveFileWhenError: true,
-	}).IsFileMatch(); checkErr != nil {
-		log.DebugF("check error after download:%v", checkErr)
+	checkResult, mErr := object.Match(object.MatchApiInfo{
+		Bucket:    info.Bucket,
+		Key:       info.Key,
+		LocalFile: f.toAbsFile,
+		CheckMode: checkMode,
+		FileHash:  info.FileHash,
+		FileSize:  info.FileSize,
+	})
+	if mErr != nil || (checkResult != nil && !checkResult.Match) {
+		return res, data.NewEmptyError().AppendDesc("check error after download").AppendError(mErr)
 	}
-	return
+
+	return res, nil
 }
 
 func download(fInfo *fileInfo, info *ApiInfo) (err *data.CodeError) {

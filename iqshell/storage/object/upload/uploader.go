@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -9,6 +10,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"os"
 	"path"
 	"sync"
@@ -26,12 +28,11 @@ type ApiInfo struct {
 	CheckSize         bool              // 是否检查文件大小，检查是会对比服务端文件大小
 	Overwrite         bool              // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
 	UpHost            string            // 上传使用的域名
-	FileStatusDBPath  string            // 文件上传状态信息保存的 db 路径
 	TokenProvider     func() string     // token provider
 	TryTimes          int               // 失败时，最多重试次数【可选】
 	TryInterval       time.Duration     // 重试间隔时间 【可选】
 	FileSize          int64             // 待上传文件的大小, 如果不配置会动态读取 【可选】
-	FileModifyTime    int64             // 本地文件修改时间, 如果不配置会动态读取 【可选】
+	FileModifyTime    int64             // 待上传文件修改时间, 如果不配置会动态读取 【可选】
 	DisableForm       bool              // 不使用 form 上传 【可选】
 	DisableResume     bool              // 不使用分片上传 【可选】
 	UseResumeV2       bool              // 分片上传时是否使用分片 v2 上传 【可选】
@@ -39,6 +40,10 @@ type ApiInfo struct {
 	ChunkSize         int64             // 分片上传时的分片大小
 	PutThreshold      int64             // 分片上传时上传阈值
 	Progress          progress.Progress // 上传进度回调
+}
+
+func (a *ApiInfo) WorkId() string {
+	return fmt.Sprintf("%s:%s:%s", a.ToBucket, a.SaveKey, a.FilePath)
 }
 
 func (a *ApiInfo) Check() (err *data.CodeError) {
@@ -108,68 +113,45 @@ func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		log.WarningF("upload: info init error:%v", err)
 	}
 
-	d := &dbHandler{
-		DBFilePath:     info.FileStatusDBPath,
-		FilePath:       info.FilePath,
-		FileUpdateTime: info.FileModifyTime,
-	}
-	err = d.init()
-	if err != nil {
-		log.WarningF("upload: db init error:%v", err)
-	}
-
 	exist := false
 	match := false
 	if info.CheckExist {
-		checker := &serverChecker{
-			Bucket:     info.ToBucket,
-			Key:        info.SaveKey,
-			FilePath:   info.FilePath,
-			FileSize:   info.FileSize,
-			CheckExist: info.CheckExist,
-			CheckHash:  info.CheckHash,
-			CheckSize:  info.CheckSize,
+		checkMode := object.MatchCheckModeFileSize
+		if info.CheckHash {
+			checkMode = object.MatchCheckModeFileHash
 		}
-
-		// 检查服务端的数据
-		exist, match, err = checker.check()
-		if err != nil {
-			log.WarningF("upload server check error:%v", err.Error())
+		checkResult, mErr := object.Match(object.MatchApiInfo{
+			Bucket:    info.ToBucket,
+			Key:       info.SaveKey,
+			LocalFile: info.FilePath,
+			CheckMode: checkMode,
+			FileSize:  info.FileSize,
+		})
+		if checkResult != nil {
+			exist = checkResult.Exist
+			match = checkResult.Match
 		}
-	} else {
-		// 检查本地数据
-		exist, match, err = d.checkInfoOfDB()
-		if err != nil {
-			log.WarningF("upload db check error:%v", err.Error())
+		if mErr != nil {
+			log.DebugF("check before upload error:%v", mErr)
 		}
 	}
 
 	res = &ApiResult{}
-	isSkip := false
-	isOverWrite := false
-	isNotOverWrite := false
 	if exist {
 		if match {
 			log.InfoF("File `%s` exists in bucket:[%s:%s], and match, ignore this upload",
 				info.FilePath, info.ToBucket, info.SaveKey)
 			res.IsSkip = true
-			res.IsOverwrite = false
-			res.IsNotOverwrite = false
 			return
 		}
 
 		if !info.Overwrite {
 			log.WarningF("Skip upload of file `%s` => [%s:%s] because `overwrite` is false",
 				info.FilePath, info.ToBucket, info.SaveKey)
-			res.IsSkip = false
-			res.IsOverwrite = false
 			res.IsNotOverwrite = true
 			return
 		}
-
-		isSkip = false
-		isOverWrite = true
-		isNotOverWrite = false
+		res.IsOverwrite = true
 	}
 
 	log.DebugF("upload: start upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
@@ -177,19 +159,22 @@ func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	if res == nil {
 		res = &ApiResult{}
 	}
-	res.IsSkip = isSkip
-	res.IsOverwrite = isOverWrite
-	res.IsNotOverwrite = isNotOverWrite
 	log.DebugF("upload:   end upload:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
-
 	if err != nil {
 		err = data.NewEmptyError().AppendDesc("upload error:" + err.Error())
 		return
 	}
 
-	err = d.saveInfoToDB()
-	if err != nil {
-		log.WarningF("upload: save upload info to db error:%v", err)
+	if info.CheckHash {
+		_, mErr := object.Match(object.MatchApiInfo{
+			Bucket:    info.ToBucket,
+			Key:       info.SaveKey,
+			LocalFile: info.FilePath,
+			CheckMode: object.MatchCheckModeFileHash,
+			FileHash:  res.Hash,
+			FileSize:  info.FileSize,
+		})
+		return res, data.NewEmptyError().AppendDesc("check after upload ").AppendError(mErr)
 	}
 
 	return res, nil

@@ -241,28 +241,27 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 					localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
 					apiInfo := &UploadInfo{
 						ApiInfo: upload.ApiInfo{
-							FilePath:         localFilePath,
-							ToBucket:         uploadConfig.Bucket,
-							SaveKey:          key,
-							MimeType:         "",
-							FileType:         uploadConfig.FileType,
-							CheckExist:       uploadConfig.CheckExists,
-							CheckHash:        uploadConfig.CheckHash,
-							CheckSize:        uploadConfig.CheckSize,
-							Overwrite:        uploadConfig.Overwrite,
-							UpHost:           uploadConfig.UpHost,
-							FileStatusDBPath: dbPath,
-							TokenProvider:    nil,
-							TryTimes:         3,
-							TryInterval:      500 * time.Millisecond,
-							FileSize:         fileSize,
-							FileModifyTime:   modifyTime,
-							DisableForm:      uploadConfig.DisableForm,
-							DisableResume:    uploadConfig.DisableResume,
-							UseResumeV2:      uploadConfig.ResumableAPIV2,
-							ChunkSize:        uploadConfig.ResumableAPIV2PartSize,
-							PutThreshold:     uploadConfig.PutThreshold,
-							Progress:         nil,
+							FilePath:       localFilePath,
+							ToBucket:       uploadConfig.Bucket,
+							SaveKey:        key,
+							MimeType:       "",
+							FileType:       uploadConfig.FileType,
+							CheckExist:     uploadConfig.CheckExists,
+							CheckHash:      uploadConfig.CheckHash,
+							CheckSize:      uploadConfig.CheckSize,
+							Overwrite:      uploadConfig.Overwrite,
+							UpHost:         uploadConfig.UpHost,
+							TokenProvider:  nil,
+							TryTimes:       3,
+							TryInterval:    500 * time.Millisecond,
+							FileSize:       fileSize,
+							FileModifyTime: modifyTime,
+							DisableForm:    uploadConfig.DisableForm,
+							DisableResume:  uploadConfig.DisableResume,
+							UseResumeV2:    uploadConfig.ResumableAPIV2,
+							ChunkSize:      uploadConfig.ResumableAPIV2PartSize,
+							PutThreshold:   uploadConfig.PutThreshold,
+							Progress:       nil,
 						},
 						RelativePathToSrcPath: fileRelativePath,
 						Policy:                uploadConfig.Policy,
@@ -285,6 +284,47 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				}
 			}), nil
 		})).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &upload.ApiInfo{},
+				},
+				Result: &upload.ApiResult{},
+				Err:    nil,
+			}
+		}).
+		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+			if workRecord.Err != nil {
+				return true, workRecord.Err
+			}
+
+			apiInfo, _ := workInfo.Work.(*upload.ApiInfo)
+			recordApiInfo, _ := workRecord.Work.(*upload.ApiInfo)
+
+			result, _ := workRecord.Result.(*upload.ApiResult)
+			if result == nil {
+				return true, data.NewEmptyError().AppendDesc("no result found")
+			}
+			if !result.IsValid() {
+				return true, data.NewEmptyError().AppendDesc("result is invalid")
+			}
+
+			// 本地文件和服务端文件均没有变化，则不需要重新下载
+			if match, _ := utils.IsFileMatchFileModifyTime(apiInfo.FilePath, apiInfo.FileModifyTime);
+				match && apiInfo.FileModifyTime == recordApiInfo.FileModifyTime {
+				return false, nil
+			}
+
+			// 本地或服务端文件有变动，则先查 size，size 不同则需要重新下载， 相同再尝试检查 hash
+			// 检测文件大小
+			if _, cause = utils.IsFileMatchFileSize(apiInfo.FilePath, apiInfo.FileSize); err != nil ||
+				apiInfo.FileSize != recordApiInfo.FileSize {
+				return true, cause
+			}
+
+			return false, nil
+		}).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
