@@ -13,7 +13,7 @@ func Some(operations []Operation) ([]*OperationResult, *data.CodeError) {
 		err:        nil,
 	}
 
-	works := make([]flow.Work, len(operations))
+	works := make([]flow.Work, 0, len(operations))
 	for _, operation := range operations {
 		works = append(works, operation)
 	}
