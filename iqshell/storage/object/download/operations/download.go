@@ -72,7 +72,6 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		IsPublic:             info.IsPublic,
 		HostProvider:         hostProvider,
 		ToFile:               info.ToFile,
-		StatusDBPath:         "",
 		Referer:              "",
 		FileEncoding:         "",
 		Bucket:               info.Bucket,

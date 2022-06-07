@@ -9,6 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"os"
 	"path/filepath"
@@ -121,7 +122,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	dbPath := filepath.Join(workspace.GetJobDir(), ".ldb")
+	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 	log.InfoF("download db dir:%s", dbPath)
 
 	exporter, err := export.NewFileExport(export.FileExporterConfig{
@@ -174,7 +175,6 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
 				apiInfo.HostProvider = hostProvider
 				apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
-				apiInfo.StatusDBPath = dbPath
 				apiInfo.Referer = info.Referer
 				apiInfo.FileEncoding = info.FileEncoding
 				apiInfo.Bucket = info.Bucket
@@ -194,8 +194,60 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				}
 			}), nil
 		})).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &download.ApiInfo{},
+				},
+				Result: &download.ApiResult{},
+				Err:    nil,
+			}
+		}).
+		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+			if workRecord.Err != nil {
+				return true, workRecord.Err
+			}
+
+			apiInfo, _ := workInfo.Work.(*download.ApiInfo)
+			recordApiInfo, _ := workRecord.Work.(*download.ApiInfo)
+
+			result, _ := workRecord.Result.(*download.ApiResult)
+			if result == nil {
+				return true, data.NewEmptyError().AppendDesc("no result found")
+			}
+			if !result.IsValid() {
+				return true, data.NewEmptyError().AppendDesc("result is invalid")
+			}
+
+			// 本地文件和服务端文件均没有变化，则不需要重新下载
+			if match, _ := utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime);
+				match && apiInfo.FileModifyTime == recordApiInfo.FileModifyTime {
+				return false, nil
+			}
+
+			// 本地或服务端文件有变动，则先查 size，size 不同则需要重新下载， 相同再尝试检查 hash
+			// 检测文件大小
+			if _, cause = utils.IsFileMatchFileSize(apiInfo.ToFile, apiInfo.FileSize); err != nil ||
+				apiInfo.FileSize != recordApiInfo.FileSize{
+				return true, cause
+			}
+
+			if info.CheckHash {
+				if _, mErr := object.Match(object.MatchApiInfo{
+					Bucket:    apiInfo.Bucket,
+					Key:       apiInfo.Key,
+					FileHash:  apiInfo.FileHash,
+					LocalFile: apiInfo.ToFile,
+				}); mErr != nil {
+					return true, mErr
+				}
+			}
+
+			return false, nil
+		}).
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
-			apiInfo := workInfo.Work.(*download.ApiInfo)
+			apiInfo, _ := workInfo.Work.(*download.ApiInfo)
 			if filterPrefix(apiInfo.Key) {
 				return true, data.NewEmptyError().AppendDescF("Skip download `%s`, prefix filter not match", apiInfo.Key)
 			}
@@ -215,7 +267,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			exporter.Skip().Export(workInfo.Data)
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-			res := result.(*download.ApiResult)
+			res, _ := result.(*download.ApiResult)
 			if res.IsExist {
 				metric.AddExistCount(1)
 			} else if res.IsUpdate {
