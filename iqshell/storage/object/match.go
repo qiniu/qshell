@@ -39,7 +39,7 @@ type MatchResult struct {
 var _ flow.Result = (*MatchResult)(nil)
 
 func (m *MatchResult) IsValid() bool {
-	return m != nil
+	return m != nil && m.Match
 }
 
 func Match(info MatchApiInfo) (match *MatchResult, err *data.CodeError) {
