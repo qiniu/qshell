@@ -117,10 +117,10 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 				}
 
 				return &object.MatchApiInfo{
-					Bucket:    info.Bucket,
-					Key:       listObject.Key,
-					FileHash:  listObject.Hash,
-					LocalFile: filepath.Join(info.LocalFileDir, listObject.Key),
+					Bucket:         info.Bucket,
+					Key:            listObject.Key,
+					ServerFileHash: listObject.Hash,
+					LocalFile:      filepath.Join(info.LocalFileDir, listObject.Key),
 				}, nil
 			})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
@@ -180,7 +180,6 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 				log.DebugF("Skip line:%s because:%v", work.Data, err)
 			}
-
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)
@@ -188,7 +187,7 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			in, _ := workInfo.Work.(*object.MatchApiInfo)
-			exporter.Success().ExportF("%s\t \t%s", in.Key, in.FileHash)
+			exporter.Success().ExportF("%s\t \t%s", in.Key, in.ServerFileHash)
 			log.InfoF("Match Success, [%s:%s] => '%s'", info.Bucket, in.Key, in.LocalFile)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {

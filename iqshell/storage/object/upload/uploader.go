@@ -127,7 +127,6 @@ func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 			Key:       info.SaveKey,
 			LocalFile: info.FilePath,
 			CheckMode: checkMode,
-			FileSize:  info.LocalFileSize,
 		})
 		if checkResult != nil {
 			exist = checkResult.Exist
@@ -180,12 +179,12 @@ func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 
 	if info.CheckHash {
 		_, mErr := object.Match(object.MatchApiInfo{
-			Bucket:    info.ToBucket,
-			Key:       info.SaveKey,
-			LocalFile: info.FilePath,
-			CheckMode: object.MatchCheckModeFileHash,
-			FileHash:  res.ServerFileHash,
-			FileSize:  res.ServerFileSize,
+			Bucket:         info.ToBucket,
+			Key:            info.SaveKey,
+			LocalFile:      info.FilePath,
+			CheckMode:      object.MatchCheckModeFileHash,
+			ServerFileHash: res.ServerFileHash,
+			ServerFileSize: res.ServerFileSize,
 		})
 		return res, data.NewEmptyError().AppendDesc("check after upload ").AppendError(mErr)
 	}

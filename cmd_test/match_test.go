@@ -59,7 +59,7 @@ func TestMatchNoExistSrcKey(t *testing.T) {
 
 func TestMatchNoExistLocalFile(t *testing.T) {
 	_, errs := test.RunCmdWithError("match", test.Bucket, test.KeyNotExist, "/user/desktop/a.txt")
-	if !strings.Contains(errs, "open /user/desktop/a.txt: no such file or directory") {
+	if !strings.Contains(errs, "no such file or directory") {
 		t.Fail()
 	}
 }
@@ -142,7 +142,8 @@ func TestBatchMatchWithRecord(t *testing.T) {
 		"-o", objectPath)
 	defer test.RemoveFile(objectPath)
 
-	path, err := test.CreateFileWithContent("batch_match.txt", test.KeysString)
+	keys := test.KeysString + "\nhello10_test.json"
+	path, err := test.CreateFileWithContent("batch_match.txt", keys)
 	if err != nil {
 		t.Fatal("create batch match config file error:", err)
 	}

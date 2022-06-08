@@ -304,18 +304,19 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 				metric.AddCurrentCount(1)
 				metric.PrintProgress(fmt.Sprintf("Checking, %s => [%s:%s]", in.Url, in.Bucket, in.Key))
 
-				counter := 0
+				checkTimesAfterFetch := 0
 				maxDuration := asyncFetchCheckMaxDuration(in.FileSize)
-				checkTime := time.Now().Add(maxDuration)
+				checkStartTime := time.Now().Add(maxDuration)
+				lastCheckTime := time.Now().Add(-4 * time.Second)
 				for {
 					current := time.Now()
-					if counter == 0 || current.After(checkTime) {
+					if current.After(checkStartTime) && (current.Unix()-lastCheckTime.Unix() > 3) {
 						ret, cErr := object.CheckAsyncFetchStatus(in.Bucket, in.Info.Id)
 						log.DebugF("batch async fetch check, bucket:%s key:%s id:%s wait:%d", in.Bucket, in.Key, in.Key, ret.Wait)
 						if cErr != nil {
 							log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
 						} else if ret.Wait == -1 { // 视频抓取过一次，有可能成功了，有可能失败了
-							counter += 1
+							checkTimesAfterFetch += 1
 							if exist, err := object.Exist(object.ExistApiInfo{
 								Bucket: in.Bucket,
 								Key:    in.Key,
@@ -327,8 +328,9 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 						}
 					}
 
-					if counter < 3 {
-						time.Sleep(3 * time.Second)
+					// fetch 之后最多检测三次, 每 1s 检查一次
+					if checkTimesAfterFetch < 3 {
+						time.Sleep(time.Second)
 					} else {
 						break
 					}
@@ -427,17 +429,17 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 }
 
 func asyncFetchCheckMaxDuration(size uint64) time.Duration {
-	duration := 3
+	duration := 1
 	if size >= 500*utils.MB {
-		duration = 40
+		duration = 35
 	} else if size >= 200*utils.MB {
-		duration = 30
-	} else if size >= 100*utils.MB {
 		duration = 20
-	} else if size >= 50*utils.MB {
+	} else if size >= 100*utils.MB {
 		duration = 10
-	} else if size >= 10*utils.MB {
+	} else if size >= 50*utils.MB {
 		duration = 6
+	} else if size >= 10*utils.MB {
+		duration = 3
 	}
 	return time.Duration(duration) * time.Second
 }

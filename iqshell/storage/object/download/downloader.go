@@ -83,12 +83,12 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		if fileStatus != nil {
 			// 文件已下载，检测文件内容
 			checkResult, mErr := object.Match(object.MatchApiInfo{
-				Bucket:    info.Bucket,
-				Key:       info.Key,
-				LocalFile: f.toAbsFile,
-				CheckMode: checkMode,
-				FileHash:  info.ServerFileHash,
-				FileSize:  info.ServerFileSize,
+				Bucket:         info.Bucket,
+				Key:            info.Key,
+				LocalFile:      f.toAbsFile,
+				CheckMode:      checkMode,
+				ServerFileHash: info.ServerFileHash,
+				ServerFileSize: info.ServerFileSize,
 			})
 			if mErr != nil {
 				f.fromBytes = 0
@@ -116,12 +116,12 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 
 	// 检查下载后的数据是否符合预期
 	checkResult, mErr := object.Match(object.MatchApiInfo{
-		Bucket:    info.Bucket,
-		Key:       info.Key,
-		LocalFile: f.toAbsFile,
-		CheckMode: checkMode,
-		FileHash:  info.ServerFileHash,
-		FileSize:  info.ServerFileSize,
+		Bucket:         info.Bucket,
+		Key:            info.Key,
+		LocalFile:      f.toAbsFile,
+		CheckMode:      checkMode,
+		ServerFileHash: info.ServerFileHash,
+		ServerFileSize: info.ServerFileSize,
 	})
 	if mErr != nil || (checkResult != nil && !checkResult.Match) {
 		return res, data.NewEmptyError().AppendDesc("check error after download").AppendError(mErr)
