@@ -125,7 +125,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 			return &flow.WorkRecord{
 				WorkInfo: &flow.WorkInfo{
 					Data: "",
-					Work: nil,
+					Work: &object.FetchApiInfo{},
 				},
 				Result: &object.FetchResult{},
 				Err:    nil,

@@ -138,7 +138,7 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 			return &flow.WorkRecord{
 				WorkInfo: &flow.WorkInfo{
 					Data: "",
-					Work: nil,
+					Work: &object.MatchApiInfo{},
 				},
 				Result: &object.MatchResult{},
 				Err:    nil,

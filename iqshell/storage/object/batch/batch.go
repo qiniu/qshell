@@ -55,6 +55,7 @@ func (info *Info) Check() *data.CodeError {
 }
 
 type Handler interface {
+	EmptyOperation(emptyOperation func() flow.Work) Handler
 	ItemsToOperation(func(items []string) (operation Operation, err *data.CodeError)) Handler
 	OnResult(func(operationInfo string, operation Operation, result *OperationResult)) Handler
 	OnError(func(err *data.CodeError)) Handler
@@ -69,9 +70,15 @@ func NewHandler(info Info) Handler {
 
 type handler struct {
 	info                  *Info
+	emptyOperation        func() flow.Work
 	operationItemsCreator func(items []string) (operation Operation, err *data.CodeError)
 	onError               func(err *data.CodeError)
 	onResult              func(operationInfo string, operation Operation, result *OperationResult)
+}
+
+func (h *handler) EmptyOperation(emptyOperation func() flow.Work) Handler {
+	h.emptyOperation = emptyOperation
+	return h
 }
 
 func (h *handler) ItemsToOperation(reader func(items []string) (operation Operation, err *data.CodeError)) Handler {
@@ -195,7 +202,7 @@ func (h *handler) Start() {
 			return &flow.WorkRecord{
 				WorkInfo: &flow.WorkInfo{
 					Data: "",
-					Work: nil,
+					Work: h.emptyOperation(),
 				},
 				Result: &OperationResult{},
 				Err:    nil,

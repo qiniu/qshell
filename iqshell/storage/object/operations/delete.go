@@ -94,7 +94,9 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 	}
 
 	lineParser := bucket.NewListLineParser()
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.DeleteApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		listObject, e := lineParser.Parse(items)
 		if e != nil {
 			return nil, e
@@ -220,7 +222,9 @@ func BatchDeleteAfter(cfg *iqshell.Config, info BatchDeleteInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.DeleteApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		after := ""
 		key := items[0]
 		if len(key) == 0 {

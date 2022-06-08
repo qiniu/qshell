@@ -130,7 +130,9 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.RestoreArchiveApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		key := items[0]
 		if len(key) > 0 {
 			return &object.RestoreArchiveApiInfo{

@@ -80,7 +80,9 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.StatusApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		key := items[0]
 		if key != "" {
 			return &object.StatusApiInfo{

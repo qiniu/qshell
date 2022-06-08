@@ -110,7 +110,9 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.ChangeStatusApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		if len(items) > 1 {
 			key, status := items[0], items[1]
 			statusInt, e := strconv.Atoi(status)

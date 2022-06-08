@@ -98,7 +98,9 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.MoveApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		if len(items) > 1 {
 			sourceKey, destKey := items[0], items[1]
 			if sourceKey != "" && destKey != "" {

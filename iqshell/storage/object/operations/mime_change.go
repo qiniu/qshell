@@ -84,7 +84,9 @@ func BatchChangeMime(cfg *iqshell.Config, info BatchChangeMimeInfo) {
 		log.Error(err)
 		return
 	}
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.ChangeMimeApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		if len(items) > 1 {
 			key, mime := items[0], items[1]
 			if key != "" && mime != "" {

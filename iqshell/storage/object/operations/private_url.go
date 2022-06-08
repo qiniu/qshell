@@ -150,7 +150,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 			return &flow.WorkRecord{
 				WorkInfo: &flow.WorkInfo{
 					Data: "",
-					Work: nil,
+					Work: &PrivateUrlInfo{},
 				},
 				Result: &download.PublicUrlToPrivateApiResult{},
 				Err:    nil,

@@ -103,7 +103,9 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.CopyApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		// 如果只有一个参数，源 key 即为目标 key
 		srcKey, destKey := items[0], items[0]
 		if len(items) > 1 {

@@ -102,7 +102,9 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.MoveApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		srcKey, destKey := items[0], items[0]
 		if len(items) > 1 {
 			destKey = items[1]

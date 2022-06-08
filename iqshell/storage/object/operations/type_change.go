@@ -119,7 +119,9 @@ func BatchChangeType(cfg *iqshell.Config, info BatchChangeTypeInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
+		return &object.ChangeTypeApiInfo{}
+	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 		if len(items) > 1 {
 			key, t := items[0], items[1]
 			if tInt, e := strconv.Atoi(t); e != nil {
