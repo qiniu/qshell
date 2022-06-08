@@ -249,7 +249,6 @@ func (h *handler) Start() {
 				metric.AddSkippedCount(1)
 				log.DebugF("Skip line:%s because:%v", work.Data, err)
 			}
-
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)

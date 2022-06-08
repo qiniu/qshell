@@ -57,8 +57,8 @@ func Match(info MatchApiInfo) (match *MatchResult, err *data.CodeError) {
 	}
 }
 
-func matchSize(info MatchApiInfo) (match *MatchResult, err *data.CodeError) {
-	match = &MatchResult{
+func matchSize(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
+	result = &MatchResult{
 		Exist: false,
 		Match: false,
 	}
@@ -69,23 +69,25 @@ func matchSize(info MatchApiInfo) (match *MatchResult, err *data.CodeError) {
 			Key:      info.Key,
 			NeedPart: false,
 		}); sErr != nil {
-			return match, data.NewEmptyError().AppendDescF("Match check size, get file status error:%v", sErr)
+			return result, data.NewEmptyError().AppendDescF("Match check size, get file status").AppendError(sErr)
 		} else {
 			info.FileSize = stat.FSize
-			match.Exist = true
+			result.Exist = true
 		}
+	} else {
+		result.Exist = true
 	}
 
 	stat, sErr := os.Stat(info.LocalFile)
 	if sErr != nil {
-		return match, data.NewEmptyError().AppendDescF("Match check size, get local file stat error:%v", sErr)
+		return result, data.NewEmptyError().AppendDescF("Match check size, get local file status").AppendError(sErr)
 	}
 	if info.FileSize == stat.Size() {
-		match.Match = true
-		return match, nil
+		result.Match = true
+		return result, nil
 	} else {
-		match.Match = false
-		return match, data.NewEmptyError().AppendDescF("Match check size, size don't match, file:%s except:%d but:%d")
+		result.Match = false
+		return result, data.NewEmptyError().AppendDescF("Match check size, size don't match, file:%s except:%d but:%d")
 	}
 }
 
@@ -102,7 +104,7 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 			Key:      info.Key,
 			NeedPart: true,
 		}); sErr != nil {
-			return result, data.NewEmptyError().AppendDescF("Match Check, get file status error:%v", sErr)
+			return result, data.NewEmptyError().AppendDescF("Match Check, get file status").AppendError(sErr)
 		} else {
 			info.FileHash = stat.Hash
 			serverObjectStat = &stat
@@ -125,13 +127,13 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 				Key:      info.Key,
 				NeedPart: true,
 			}); sErr != nil {
-				return result, data.NewEmptyError().AppendDescF("Match check hash, etag v2, get file status error:%v", sErr)
+				return result, data.NewEmptyError().AppendDescF("Match check hash, etag v2, get file status").AppendError(sErr)
 			} else {
 				serverObjectStat = &stat
 			}
 		}
 		if h, eErr := utils.EtagV2(hashFile, serverObjectStat.Parts); eErr != nil {
-			return result, data.NewEmptyError().AppendDescF("Match check hash, get file etag v2 error:%v", eErr)
+			return result, data.NewEmptyError().AppendDescF("Match check hash, get file etag v2").AppendError(eErr)
 		} else {
 			hash = h
 		}
@@ -139,7 +141,7 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 	} else {
 		log.DebugF("Match check hash, get etag by v1 for key:%s", info.Key)
 		if h, eErr := utils.EtagV1(hashFile); eErr != nil {
-			return result, data.NewEmptyError().AppendDescF("Match check hash, get file etag v1 error:%v", eErr)
+			return result, data.NewEmptyError().AppendDescF("Match check hash, get file etag v1").AppendError(eErr)
 		} else {
 			hash = h
 		}

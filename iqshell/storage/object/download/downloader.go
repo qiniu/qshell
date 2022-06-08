@@ -18,20 +18,20 @@ import (
 )
 
 type ApiInfo struct {
-	Bucket               string            // 文件所在 bucket 【必填】
-	Key                  string            // 文件被保存的 key 【必填】
-	IsPublic             bool              // 是否使用共有链接 【必填】
-	HostProvider         host.Provider     // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
-	ToFile               string            // 文件保存的路径 【必填】
-	Referer              string            // 请求 header 中的 Referer 【选填】
-	FileEncoding         string            // 文件编码方式 【选填】
-	ServerFilePutTime    int64             // 文件修改时间 【选填】
-	ServerFileSize       int64             // 文件大小，有值则会检测文件大小 【选填】
-	ServerFileHash       string            // 文件 hash，有值则会检测 hash 【选填】
-	FromBytes            int64             // 下载开始的位置，内部会缓存 【内部使用】
-	RemoveTempWhileError bool              // 当遇到错误时删除临时文件 【选填】
-	UseGetFileApi        bool              // 是否使用 get file api(私有云会使用)【选填】
-	Progress             progress.Progress // 下载进度回调【选填】
+	Bucket               string            `json:"bucket"`               // 文件所在 bucket 【必填】
+	Key                  string            `json:"key"`                  // 文件被保存的 key 【必填】
+	IsPublic             bool              `json:"-"`                    // 是否使用共有链接 【必填】
+	HostProvider         host.Provider     `json:"-"`                    // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
+	ToFile               string            `json:"to_file"`              // 文件保存的路径 【必填】
+	Referer              string            `json:"referer"`              // 请求 header 中的 Referer 【选填】
+	FileEncoding         string            `json:"-"`                    // 文件编码方式 【选填】
+	ServerFilePutTime    int64             `json:"server_file_put_time"` // 文件修改时间 【选填】
+	ServerFileSize       int64             `json:"server_file_size"`     // 文件大小，有值则会检测文件大小 【选填】
+	ServerFileHash       string            `json:"server_file_hash"`     // 文件 hash，有值则会检测 hash 【选填】
+	FromBytes            int64             `json:"-"`                    // 下载开始的位置，内部会缓存 【内部使用】
+	RemoveTempWhileError bool              `json:"-"`                    // 当遇到错误时删除临时文件 【选填】
+	UseGetFileApi        bool              `json:"-"`                    // 是否使用 get file api(私有云会使用)【选填】
+	Progress             progress.Progress `json:"-"`                    // 下载进度回调【选填】
 }
 
 func (i *ApiInfo) WorkId() string {

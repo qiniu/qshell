@@ -58,7 +58,7 @@ func (r *resumeV2Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 		NotifyErr: nil,
 	})
 	if err != nil {
-		err = data.NewEmptyError().AppendDesc("resume v2 upload: upload error:" + err.Error())
+		err = data.NewEmptyError().AppendDesc("resume v2 upload").AppendError(err)
 	} else {
 		if info.Progress != nil {
 			info.Progress.End()

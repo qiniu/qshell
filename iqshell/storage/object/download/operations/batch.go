@@ -184,7 +184,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				}
 
 				metric.AddCurrentCount(1)
-				metric.PrintProgress("Downloading " + apiInfo.Key)
+				metric.PrintProgress("Downloading: " + workInfo.Data)
 
 				if file, e := downloadFile(apiInfo); e != nil {
 					return nil, e
@@ -193,6 +193,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				}
 			}), nil
 		})).
+		SetOverseerEnable(true).
 		SetDBOverseer(dbPath, func() *flow.WorkRecord {
 			return &flow.WorkRecord{
 				WorkInfo: &flow.WorkInfo{
@@ -248,10 +249,23 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			return nil
 		}).
 		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
-			metric.AddSkippedCount(1)
+			metric.AddCurrentCount(1)
+			metric.PrintProgress("Downloading: " + workInfo.Data)
 
-			log.Info(err.Error())
-			exporter.Skip().Export(workInfo.Data)
+			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
+				operationResult, _ := result.(*download.ApiResult)
+				if operationResult != nil && operationResult.IsValid() {
+					metric.AddSuccessCount(1)
+					log.InfoF("Skip line:%s because have done and success", workInfo.Data)
+				} else {
+					metric.AddFailureCount(1)
+					log.InfoF("Skip line:%s because have done and failure, %v", workInfo.Data, err)
+				}
+			} else {
+				metric.AddSkippedCount(1)
+				log.DebugF("Skip line:%s because:%v", workInfo.Data, err)
+				exporter.Skip().Export(workInfo.Data)
+			}
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			res, _ := result.(*download.ApiResult)
