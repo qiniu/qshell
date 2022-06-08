@@ -9,9 +9,9 @@ import (
 )
 
 type RestoreArchiveApiInfo struct {
-	Bucket          string
-	Key             string
-	FreezeAfterDays int
+	Bucket          string `json:"bucket"`
+	Key             string `json:"key"`
+	FreezeAfterDays int    `json:"freeze_after_days"`
 }
 
 func (r *RestoreArchiveApiInfo) ToOperation() (string, *data.CodeError) {

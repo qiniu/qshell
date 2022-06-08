@@ -9,9 +9,9 @@ import (
 )
 
 type ChangeMimeApiInfo struct {
-	Bucket string
-	Key    string
-	Mime   string
+	Bucket string `json:"bucket"`
+	Key    string `json:"key"`
+	Mime   string `json:"mime"`
 }
 
 func (c *ChangeMimeApiInfo) ToOperation() (string, *data.CodeError) {

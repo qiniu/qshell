@@ -145,7 +145,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 					saveKey = key
 				}
 
-				return asyncFetchItem{
+				return &asyncFetchItem{
 					fileSize: size,
 					info: object.AsyncFetchApiInfo{
 						Url:              fromUrl,
@@ -164,7 +164,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
-				in := workInfo.Work.(asyncFetchItem)
+				in, _ := workInfo.Work.(*asyncFetchItem)
 
 				metric.PrintProgress(fmt.Sprintf("Fetching, %s => [%s:%s]", in.info.Url, in.info.Bucket, in.info.Key))
 
@@ -183,7 +183,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			return &flow.WorkRecord{
 				WorkInfo: &flow.WorkInfo{
 					Data: "",
-					Work: nil,
+					Work: &asyncFetchItem{},
 				},
 				Result: &asyncFetchResult{},
 				Err:    nil,
@@ -236,7 +236,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			metric.AddCurrentCount(1)
 			metric.PrintProgress("Batching:" + workInfo.Data)
 
-			in := workInfo.Work.(asyncFetchItem)
+			in := workInfo.Work.(*asyncFetchItem)
 			res := result.(*asyncFetchResult)
 			fetchResultChan <- res
 			log.InfoF("Fetch Response, '%s' => [%s:%s] id:%s wait:%d",
@@ -247,7 +247,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			metric.AddCurrentCount(1)
 			metric.PrintProgress("Batching:" + workInfo.Data)
 
-			if in, ok := workInfo.Work.(asyncFetchItem); ok {
+			if in, ok := workInfo.Work.(*asyncFetchItem); ok {
 				exporter.Fail().ExportF("%s%s%v", in.info.Url, flow.ErrorSeparate, err)
 				log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
 			} else {
@@ -341,7 +341,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			return &flow.WorkRecord{
 				WorkInfo: &flow.WorkInfo{
 					Data: "",
-					Work: nil,
+					Work: &asyncFetchResult{},
 				},
 				Result: &asyncFetchResult{},
 				Err:    nil,
@@ -447,7 +447,7 @@ type asyncFetchItem struct {
 	info     object.AsyncFetchApiInfo
 }
 
-func (f asyncFetchItem) WorkId() string {
+func (f *asyncFetchItem) WorkId() string {
 	return fmt.Sprintf("%s:%s:%s", f.info.Url, f.info.Bucket, f.info.Key)
 }
 

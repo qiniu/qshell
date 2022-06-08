@@ -156,7 +156,7 @@ type FlowBuilder struct {
 }
 
 func (b *FlowBuilder) Build() *Flow {
-	if !b.enableOverseer  {
+	if !b.enableOverseer {
 		b.flow.Overseer = nil
 	}
 

@@ -15,9 +15,9 @@ import (
 )
 
 type FetchApiInfo struct {
-	Bucket  string
-	Key     string
-	FromUrl string
+	Bucket  string `json:"bucket"`
+	Key     string `json:"key"`
+	FromUrl string `json:"from_url"`
 }
 
 func (i *FetchApiInfo) WorkId() string {

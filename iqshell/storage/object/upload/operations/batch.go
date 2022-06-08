@@ -321,8 +321,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				return true, data.NewEmptyError().AppendDesc("get stat from server").AppendError(sErr)
 			}
 
-			if match, _ := utils.IsFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime);
-				match && stat.PutTime == result.ServerPutTime {
+			if match, _ := utils.IsFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime); match && stat.PutTime == result.ServerPutTime {
 				return false, nil
 			}
 

@@ -221,8 +221,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			}
 
 			// 本地文件和服务端文件均没有变化，则不需要重新下载
-			if match, _ := utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime);
-				match && apiInfo.ServerFilePutTime == recordApiInfo.ServerFilePutTime {
+			if match, _ := utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime); match && apiInfo.ServerFilePutTime == recordApiInfo.ServerFilePutTime {
 				return false, nil
 			}
 

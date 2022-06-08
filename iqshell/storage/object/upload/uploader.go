@@ -23,22 +23,22 @@ type ApiInfo struct {
 	SaveKey             string            `json:"save_key"`               // 文件保存的名称
 	MimeType            string            `json:"mime_type"`              // 文件类型
 	FileType            int               `json:"file_type"`              // 存储状态
-	CheckExist          bool              `json:"-"`            // 检查服务端是否已存在此文件
-	CheckHash           bool              `json:"-"`             // 是否检查 hash, 检查是会对比服务端文件 hash
-	CheckSize           bool              `json:"-"`             // 是否检查文件大小，检查是会对比服务端文件大小
-	Overwrite           bool              `json:"-"`              // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
+	CheckExist          bool              `json:"-"`                      // 检查服务端是否已存在此文件
+	CheckHash           bool              `json:"-"`                      // 是否检查 hash, 检查是会对比服务端文件 hash
+	CheckSize           bool              `json:"-"`                      // 是否检查文件大小，检查是会对比服务端文件大小
+	Overwrite           bool              `json:"-"`                      // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
 	UpHost              string            `json:"up_host"`                // 上传使用的域名
 	TokenProvider       func() string     `json:"-"`                      // token provider
-	TryTimes            int               `json:"-"`              // 失败时，最多重试次数【可选】
-	TryInterval         time.Duration     `json:"-"`           // 重试间隔时间 【可选】
+	TryTimes            int               `json:"-"`                      // 失败时，最多重试次数【可选】
+	TryInterval         time.Duration     `json:"-"`                      // 重试间隔时间 【可选】
 	LocalFileSize       int64             `json:"local_file_size"`        // 待上传文件的大小, 如果不配置会动态读取 【可选】
 	LocalFileModifyTime int64             `json:"local_file_modify_time"` // 待上传文件修改时间, 如果不配置会动态读取 【可选】
-	DisableForm         bool              `json:"-"`           // 不使用 form 上传 【可选】
-	DisableResume       bool              `json:"-"`         // 不使用分片上传 【可选】
-	UseResumeV2         bool              `json:"-"`         // 分片上传时是否使用分片 v2 上传 【可选】
-	ResumeWorkerCount   int               `json:"-"`    // 分片上传 worker 数量
-	ChunkSize           int64             `json:"-"`             // 分片上传时的分片大小
-	PutThreshold        int64             `json:"-"`          // 分片上传时上传阈值
+	DisableForm         bool              `json:"-"`                      // 不使用 form 上传 【可选】
+	DisableResume       bool              `json:"-"`                      // 不使用分片上传 【可选】
+	UseResumeV2         bool              `json:"-"`                      // 分片上传时是否使用分片 v2 上传 【可选】
+	ResumeWorkerCount   int               `json:"-"`                      // 分片上传 worker 数量
+	ChunkSize           int64             `json:"-"`                      // 分片上传时的分片大小
+	PutThreshold        int64             `json:"-"`                      // 分片上传时上传阈值
 	Progress            progress.Progress `json:"-"`                      // 上传进度回调
 }
 

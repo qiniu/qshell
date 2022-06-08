@@ -12,9 +12,9 @@ import (
 )
 
 type StatusApiInfo struct {
-	Bucket   string
-	Key      string
-	NeedPart bool
+	Bucket   string `json:"bucket"`
+	Key      string `json:"key"`
+	NeedPart bool   `json:"need_part"`
 }
 
 func (s StatusApiInfo) WorkId() string {

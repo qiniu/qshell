@@ -14,10 +14,10 @@ var (
 // OperationCondition
 // 参考链接：https://github.com/qbox/product/blob/eb21b8c26f20e967fa51b210d267c5a4d5ca2af7/kodo/rs.md#delete-%E5%88%A0%E9%99%A4%E8%B5%84%E6%BA%90
 type OperationCondition struct {
-	FileHash string
-	FileMime string
-	FileSize string
-	PutTime  string
+	FileHash string `json:"file_hash"`
+	FileMime string `json:"file_mime"`
+	FileSize string `json:"file_size"`
+	PutTime  string `json:"put_time"`
 }
 
 func OperationConditionURI(condition OperationCondition) string {

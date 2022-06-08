@@ -15,12 +15,12 @@ const (
 )
 
 type MatchApiInfo struct {
-	Bucket    string // 文件所在七牛云的空间名，【必选】
-	Key       string // 文件所在七牛云的 Key， 【必选】
-	LocalFile string // 本地文件路径；【必选】
-	CheckMode int    // 检测模式， 0: 检测 hash，其他检测 size 【可选】
-	FileHash  string // 文件 Etag，可以是 etagV1, 也可以是 etagV2；【可选】没有会从服务获取
-	FileSize  int64  // 文件大小；【可选】没有会从服务获取
+	Bucket    string `json:"bucket"`     // 文件所在七牛云的空间名，【必选】
+	Key       string `json:"key"`        // 文件所在七牛云的 Key， 【必选】
+	LocalFile string `json:"local_file"` // 本地文件路径；【必选】
+	CheckMode int    `json:"-"`          // 检测模式， 0: 检测 hash，其他检测 size 【可选】
+	FileHash  string `json:"file_hash"`  // 文件 Etag，可以是 etagV1, 也可以是 etagV2；【可选】没有会从服务获取
+	FileSize  int64  `json:"file_size"`  // 文件大小；【可选】没有会从服务获取
 }
 
 func (m *MatchApiInfo) WorkId() string {

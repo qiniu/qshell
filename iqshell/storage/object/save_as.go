@@ -11,9 +11,9 @@ import (
 )
 
 type SaveAsApiInfo struct {
-	PublicUrl  string
-	SaveBucket string
-	SaveKey    string
+	PublicUrl  string `json:"public_url"`
+	SaveBucket string `json:"save_bucket"`
+	SaveKey    string `json:"save_key"`
 }
 
 func SaveAs(info SaveAsApiInfo) (string, *data.CodeError) {
