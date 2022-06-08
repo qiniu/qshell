@@ -180,7 +180,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				apiInfo.RemoveTempWhileError = info.RemoveTempWhileError
 				apiInfo.UseGetFileApi = info.GetFileApi
 				if !info.CheckHash {
-					apiInfo.FileHash = ""
+					apiInfo.ServerFileHash = ""
 				}
 
 				metric.AddCurrentCount(1)
@@ -221,14 +221,13 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 			// 本地文件和服务端文件均没有变化，则不需要重新下载
 			if match, _ := utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime);
-				match && apiInfo.FileModifyTime == recordApiInfo.FileModifyTime {
+				match && apiInfo.ServerFilePutTime == recordApiInfo.ServerFilePutTime {
 				return false, nil
 			}
 
-			// 本地或服务端文件有变动，则先查 size，size 不同则需要重新下载， 相同再尝试检查 hash
-			// 检测文件大小
-			if _, cause = utils.IsFileMatchFileSize(apiInfo.ToFile, apiInfo.FileSize); err != nil ||
-				apiInfo.FileSize != recordApiInfo.FileSize{
+			// 本地或服务端文件有变动，则先查 size，size 不同则需要重新下载， 相同再尝试检查 hash，hash 统一由单文件下载之前检查
+			if _, cause = utils.IsFileMatchFileSize(apiInfo.ToFile, apiInfo.ServerFileSize); err != nil ||
+				apiInfo.ServerFileSize != recordApiInfo.ServerFileSize {
 				return true, cause
 			}
 

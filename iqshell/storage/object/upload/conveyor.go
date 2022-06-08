@@ -62,11 +62,11 @@ func (c *conveyor) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeError) {
 	if rErr := recorder.Recover(); rErr != nil {
 		log.WarningF("sync progress recover error:%v", rErr)
 	}
-	recorder.CheckValid(info.FileSize, 0, info.UseResumeV2)
-	recorder.TotalSize = info.FileSize
+	recorder.CheckValid(info.LocalFileSize, 0, info.UseResumeV2)
+	recorder.TotalSize = info.LocalFileSize
 
 	if info.Progress != nil {
-		info.Progress.SetFileSize(info.FileSize)
+		info.Progress.SetFileSize(info.LocalFileSize)
 		info.Progress.Start()
 	}
 
@@ -91,13 +91,13 @@ func (c *conveyor) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeError) {
 	if info.UseResumeV2 {
 		// 检查块大小是否满足实际需求
 		maxParts := int64(resumeV2MaxPart)
-		if blockSize*maxParts < info.FileSize {
-			blockSize = (info.FileSize + maxParts - 1) / maxParts
+		if blockSize*maxParts < info.LocalFileSize {
+			blockSize = (info.LocalFileSize + maxParts - 1) / maxParts
 		}
 	}
 
-	totalBlkCnt := storage.BlockCount(info.FileSize) //range get and mkblk upload
-	rangeStartOffset := recorder.Offset              //init the range offset
+	totalBlkCnt := storage.BlockCount(info.LocalFileSize) //range get and mkblk upload
+	rangeStartOffset := recorder.Offset                   //init the range offset
 	fromBlkIndex := int(rangeStartOffset / data.BLOCK_SIZE)
 
 	if info.Progress != nil {
@@ -112,7 +112,7 @@ func (c *conveyor) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeError) {
 		// 2.1 获取上传数据
 		var retryTimes int
 		for {
-			bf, err = getRange(info.FilePath, info.FileSize, rangeStartOffset, blockSize)
+			bf, err = getRange(info.FilePath, info.LocalFileSize, rangeStartOffset, blockSize)
 			if err != nil && retryTimes >= info.TryTimes {
 				err = data.NewEmptyError().AppendDesc(strings.Join([]string{"sync Get range block data failed: ", err.Error()}, ""))
 				return

@@ -35,7 +35,7 @@ func (r *resumeV1Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	log.DebugF("upload token:%s", token)
 
 	if info.Progress != nil {
-		info.Progress.SetFileSize(info.FileSize)
+		info.Progress.SetFileSize(info.LocalFileSize)
 		info.Progress.Start()
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
 	"os"
 	"path/filepath"
@@ -245,23 +246,23 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 							ToBucket:       uploadConfig.Bucket,
 							SaveKey:        key,
 							MimeType:       "",
-							FileType:       uploadConfig.FileType,
-							CheckExist:     uploadConfig.CheckExists,
-							CheckHash:      uploadConfig.CheckHash,
-							CheckSize:      uploadConfig.CheckSize,
-							Overwrite:      uploadConfig.Overwrite,
-							UpHost:         uploadConfig.UpHost,
-							TokenProvider:  nil,
-							TryTimes:       3,
-							TryInterval:    500 * time.Millisecond,
-							FileSize:       fileSize,
-							FileModifyTime: modifyTime,
-							DisableForm:    uploadConfig.DisableForm,
-							DisableResume:  uploadConfig.DisableResume,
-							UseResumeV2:    uploadConfig.ResumableAPIV2,
-							ChunkSize:      uploadConfig.ResumableAPIV2PartSize,
-							PutThreshold:   uploadConfig.PutThreshold,
-							Progress:       nil,
+							FileType:            uploadConfig.FileType,
+							CheckExist:          uploadConfig.CheckExists,
+							CheckHash:           uploadConfig.CheckHash,
+							CheckSize:           uploadConfig.CheckSize,
+							Overwrite:           uploadConfig.Overwrite,
+							UpHost:              uploadConfig.UpHost,
+							TokenProvider:       nil,
+							TryTimes:            3,
+							TryInterval:         500 * time.Millisecond,
+							LocalFileSize:       fileSize,
+							LocalFileModifyTime: modifyTime,
+							DisableForm:         uploadConfig.DisableForm,
+							DisableResume:       uploadConfig.DisableResume,
+							UseResumeV2:         uploadConfig.ResumableAPIV2,
+							ChunkSize:           uploadConfig.ResumableAPIV2PartSize,
+							PutThreshold:        uploadConfig.PutThreshold,
+							Progress:            nil,
 						},
 						RelativePathToSrcPath: fileRelativePath,
 						Policy:                uploadConfig.Policy,
@@ -310,17 +311,25 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				return true, data.NewEmptyError().AppendDesc("result is invalid")
 			}
 
-			// 本地文件和服务端文件均没有变化，则不需要重新下载
-			if match, _ := utils.IsFileMatchFileModifyTime(apiInfo.FilePath, apiInfo.FileModifyTime);
-				match && apiInfo.FileModifyTime == recordApiInfo.FileModifyTime {
+			// 本地文件和服务端文件均没有变化，则不需要重新上传
+			stat, sErr := object.Status(object.StatusApiInfo{
+				Bucket:   apiInfo.ToBucket,
+				Key:      apiInfo.SaveKey,
+				NeedPart: false,
+			})
+			if sErr != nil {
+				return true, data.NewEmptyError().AppendDesc("get stat from server").AppendError(sErr)
+			}
+
+			if match, _ := utils.IsFileMatchFileModifyTime(apiInfo.FilePath, recordApiInfo.LocalFileModifyTime);
+				match && stat.PutTime == result.ServerPutTime {
 				return false, nil
 			}
 
-			// 本地或服务端文件有变动，则先查 size，size 不同则需要重新下载， 相同再尝试检查 hash
-			// 检测文件大小
-			if _, cause = utils.IsFileMatchFileSize(apiInfo.FilePath, apiInfo.FileSize); err != nil ||
-				apiInfo.FileSize != recordApiInfo.FileSize {
-				return true, cause
+			// 本地或服务端文件有变动，则先查 size，size 不同则需要重新下载， 相同再尝试检查 hash，hash 统一由单文件上传之前检查
+			if _, mErr := utils.IsFileMatchFileSize(apiInfo.FilePath, recordApiInfo.LocalFileSize); mErr != nil ||
+				stat.FSize != result.ServerFileSize {
+				return true, data.NewEmptyError().AppendDesc("size don't match").AppendError(mErr)
 			}
 
 			return false, nil

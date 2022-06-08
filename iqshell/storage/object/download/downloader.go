@@ -25,9 +25,9 @@ type ApiInfo struct {
 	ToFile               string            // 文件保存的路径 【必填】
 	Referer              string            // 请求 header 中的 Referer 【选填】
 	FileEncoding         string            // 文件编码方式 【选填】
-	FileModifyTime       int64             // 文件修改时间 【选填】
-	FileSize             int64             // 文件大小，有值则会检测文件大小 【选填】
-	FileHash             string            // 文件 hash，有值则会检测 hash 【选填】
+	ServerFilePutTime    int64             // 文件修改时间 【选填】
+	ServerFileSize       int64             // 文件大小，有值则会检测文件大小 【选填】
+	ServerFileHash       string            // 文件 hash，有值则会检测 hash 【选填】
 	FromBytes            int64             // 下载开始的位置，内部会缓存 【内部使用】
 	RemoveTempWhileError bool              // 当遇到错误时删除临时文件 【选填】
 	UseGetFileApi        bool              // 是否使用 get file api(私有云会使用)【选填】
@@ -69,7 +69,7 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 
 	// 文件存在则检查文件状态
 	checkMode := object.MatchCheckModeFileSize
-	if len(info.FileHash) > 0 {
+	if len(info.ServerFileHash) > 0 {
 		checkMode = object.MatchCheckModeFileHash
 	}
 	fileStatus, sErr := os.Stat(f.toAbsFile)
@@ -87,8 +87,8 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 				Key:       info.Key,
 				LocalFile: f.toAbsFile,
 				CheckMode: checkMode,
-				FileHash:  info.FileHash,
-				FileSize:  info.FileSize,
+				FileHash:  info.ServerFileHash,
+				FileSize:  info.ServerFileSize,
 			})
 			if mErr != nil {
 				f.fromBytes = 0
@@ -109,7 +109,7 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		return
 	}
 
-	info.FileModifyTime, err = utils.FileModify(f.toAbsFile)
+	info.ServerFilePutTime, err = utils.FileModify(f.toAbsFile)
 	if err != nil {
 		return
 	}
@@ -120,8 +120,8 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		Key:       info.Key,
 		LocalFile: f.toAbsFile,
 		CheckMode: checkMode,
-		FileHash:  info.FileHash,
-		FileSize:  info.FileSize,
+		FileHash:  info.ServerFileHash,
+		FileSize:  info.ServerFileSize,
 	})
 	if mErr != nil || (checkResult != nil && !checkResult.Match) {
 		return res, data.NewEmptyError().AppendDesc("check error after download").AppendError(mErr)

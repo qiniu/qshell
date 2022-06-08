@@ -76,16 +76,16 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		FileEncoding:         "",
 		Bucket:               info.Bucket,
 		Key:                  info.Key,
-		FileModifyTime:       fileStatus.PutTime,
-		FileSize:             fileStatus.FSize,
-		FileHash:             "",
+		ServerFilePutTime:    fileStatus.PutTime,
+		ServerFileSize:       fileStatus.FSize,
+		ServerFileHash:       "",
 		FromBytes:            0,
 		RemoveTempWhileError: info.RemoveTempWhileError,
 		UseGetFileApi:        info.UseGetFileApi,
 		Progress:             progress.NewPrintProgress(" 进度"),
 	}
 	if info.CheckHash {
-		apiInfo.FileHash = fileStatus.Hash
+		apiInfo.ServerFileHash = fileStatus.Hash
 	}
 	_, _ = downloadFile(apiInfo)
 }
