@@ -167,9 +167,12 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	}
 
 	var response *http.Response
-	for i := 0; i < 6; i++ {
+	for {
+		if available, _ := info.HostProvider.Available(); !available {
+			break
+		}
 		response, err = dl.Download(info)
-		if err == nil || !utils.IsHostUnavailableError(err) {
+		if err == nil || utils.IsHttpError401(err) {
 			break
 		}
 	}

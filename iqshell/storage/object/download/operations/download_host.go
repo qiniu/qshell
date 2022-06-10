@@ -15,6 +15,8 @@ func getDownloadHostProvider(cfg *config.Config, downloadCfg *DownloadCfg) host.
 	} else {
 		hosts = defaultDownloadHosts(cfg, downloadCfg)
 	}
+
+	log.DebugF("download Domain:%s", hosts)
 	return host.NewListProvider(hosts)
 }
 

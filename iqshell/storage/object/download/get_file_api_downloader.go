@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -21,14 +22,28 @@ func (g *getFileApiDownloader) Download(info *ApiInfo) (response *http.Response,
 	if len(info.ToFile) == 0 {
 		info.ToFile = info.Key
 	}
-	return g.download(info)
-}
 
-func (g *getFileApiDownloader) download(info *ApiInfo) (*http.Response, *data.CodeError) {
-	host, hErr := info.HostProvider.Provide()
+	h, hErr := info.HostProvider.Provide()
 	if hErr != nil {
 		return nil, hErr.HeaderInsertDesc("[provide host]")
 	}
+
+	for i := 0; i < 3; i++ {
+		response, err = g.download(h, info)
+		if err == nil || utils.IsHttpError401(err) || utils.IsHostUnavailableError(err) {
+			break
+		}
+	}
+
+	if err != nil {
+		log.DebugF("download freeze host:%s because: %v", h.GetServer(), err)
+		info.HostProvider.Freeze(h)
+	}
+
+	return response, err
+}
+
+func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.Response, *data.CodeError) {
 
 	// /getfile/<ak>/<bucket>/<UrlEncodedKey>[?e=<Deadline>&token=<DownloadToken>
 	url := utils.Endpoint(g.useHttps, host.GetServer())
@@ -63,9 +78,5 @@ func (g *getFileApiDownloader) download(info *ApiInfo) (*http.Response, *data.Co
 	}
 
 	response, rErr := storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
-	if utils.IsHostUnavailableError(rErr) {
-		log.DebugF("download freeze host:%s because: %v", host.GetServer(), rErr)
-		info.HostProvider.Freeze(host)
-	}
 	return response, data.ConvertError(rErr)
 }
