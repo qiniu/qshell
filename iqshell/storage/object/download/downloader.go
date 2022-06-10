@@ -7,7 +7,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
@@ -172,7 +171,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 			break
 		}
 		response, err = dl.Download(info)
-		if err == nil || utils.IsHttpError401(err) {
+		if err == nil {
 			break
 		}
 	}

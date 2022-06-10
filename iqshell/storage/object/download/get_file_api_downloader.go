@@ -30,7 +30,7 @@ func (g *getFileApiDownloader) Download(info *ApiInfo) (response *http.Response,
 
 	for i := 0; i < 3; i++ {
 		response, err = g.download(h, info)
-		if err == nil || utils.IsHttpError401(err) || utils.IsHostUnavailableError(err) {
+		if err == nil || utils.IsHostUnavailableError(err) {
 			break
 		}
 	}
