@@ -224,8 +224,8 @@ fi
 | delete      | 删除   | 删除七牛空间中的一个文件                                             | [文档](docs/delete.md)      |
 | batchchgm   | 修改   | 批量修改七牛空间中文件的MimeType                                     | [文档](docs/batchchgm.md)   |
 | chgm        | 修改   | 修改七牛空间中的一个文件的MimeType                                   | [文档](docs/chgm.md)        |
-| batchchtype | 修改   | 批量修改七牛空间中的文件的存储类型，支持普通存储（0）和低频存储（1） | [文档](docs/batchchtype.md) |
-| chtype      | 修改   | 修改七牛空间中的一个文件的存储类型，支持普通存储（0）和低频存储（1） | [文档](docs/chtype.md)      |
+| batchchtype | 修改   | 批量修改七牛空间中的文件的存储类型                                     | [文档](docs/batchchtype.md) |
+| chtype      | 修改   | 修改七牛空间中的一个文件的存储类型                                     | [文档](docs/chtype.md)      |
 | batchexpire | 修改   | 批量修改七牛空间中的文件的生存时间                                   | [文档](docs/batchexpire.md) |
 | expire      | 修改   | 修改七牛空间中的一个文件的生存时间                                   | [文档](docs/expire.md)      |
 | batchcopy   | 拷贝   | 批量复制七牛空间中的文件到另一个空间                                 | [文档](docs/batchcopy.md)   |
