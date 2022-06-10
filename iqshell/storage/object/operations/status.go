@@ -42,7 +42,6 @@ func Status(cfg *iqshell.Config, info StatusInfo) {
 	}
 
 	if result.IsSuccess() {
-		log.InfoF("Status Success, [%s:%s]", info.Bucket, info.Key)
 		log.Alert(getResultInfo(info.Bucket, info.Key, result))
 	}
 }
