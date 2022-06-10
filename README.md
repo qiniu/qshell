@@ -241,6 +241,7 @@ fi
 | domains     | 查询   | 获取指定空间的所有关联域名                                           | [文档](docs/domains.md)     |
 | listbucket  | 列举   | 列举七牛空间里面的所有文件                                           | [文档](docs/listbucket.md)  |
 | listbucket2 | 列举   | 列举七牛空间里面的所有文件                                           | [文档](docs/listbucket2.md) |
+| forbidden   | 禁用   |修改文件可访问状态                                                   | [文档](docs/forbidden.md)  |
 | fput        | 上传   | 以文件表单的方式上传一个文件                                         | [文档](docs/fput.md)        |
 | rput        | 上传   | 以分片上传的方式上传一个文件                                         | [文档](docs/rput.md)        |
 | qupload     | 上传   | 同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（配置式）  | [文档](docs/qupload.md)     |
