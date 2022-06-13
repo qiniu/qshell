@@ -21,7 +21,7 @@ func TestSyncV1(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	if !strings.Contains(result, "Key: 10240K.tmp") {
+	if !strings.Contains(result, "Key: 1024K.tmp") {
 		t.Fatal(result)
 	}
 }
