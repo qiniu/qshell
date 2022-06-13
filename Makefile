@@ -9,6 +9,7 @@ LINUXARM=qshell-$(VERSION)-linux-arm
 LDFLAGS='-X 'github.com/qiniu/qshell/v2/iqshell/common/version.version=$(VERSION)' -extldflags '-static''
 GO=GO111MODULE=on go
 
+
 all: linux windows arm darwin
 
 darwin:
