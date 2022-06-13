@@ -1,6 +1,7 @@
 VERSION=$(if $(RELEASE_VERSION),$(RELEASE_VERSION),"UNSTABLE")
 $(info VERSION: $(VERSION))
 WIN86=qshell-$(VERSION)-windows-x86.exe
+
 WIN64=qshell-$(VERSION)-windows-x64.exe
 DARWIN=qshell-$(VERSION)-darwin-x64
 LINUX86=qshell-$(VERSION)-linux-x86
