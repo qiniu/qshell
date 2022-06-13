@@ -12,7 +12,7 @@ import (
 func TestResumeV1Upload(t *testing.T) {
 	test.RunCmdWithError("delete", test.Bucket, "qshell_rput_5M")
 
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -33,7 +33,7 @@ func TestResumeV1Upload(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5*1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -64,7 +64,7 @@ func TestResumeV1Upload(t *testing.T) {
 }
 
 func TestResumeV1UploadWithUploadHost(t *testing.T) {
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -87,7 +87,7 @@ func TestResumeV1UploadWithUploadHost(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5*1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -97,7 +97,7 @@ func TestResumeV1UploadWithUploadHost(t *testing.T) {
 func TestResumeV2Upload(t *testing.T) {
 	test.RunCmdWithError("delete", test.Bucket, "qshell_rput_5M")
 
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -119,7 +119,7 @@ func TestResumeV2Upload(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5*1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -151,7 +151,7 @@ func TestResumeV2Upload(t *testing.T) {
 }
 
 func TestResumeV2UploadWithUploadHost(t *testing.T) {
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -175,14 +175,14 @@ func TestResumeV2UploadWithUploadHost(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5*1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
 }
 
 func TestResumeUploadWithWrongUploadHost(t *testing.T) {
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -199,7 +199,7 @@ func TestResumeUploadWithWrongUploadHost(t *testing.T) {
 }
 
 func TestResumeUploadNoExistBucket(t *testing.T) {
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}

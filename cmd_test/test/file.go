@@ -73,10 +73,11 @@ func CreateFileWithContent(fileName, content string) (string, error) {
 
 	filePath = filepath.Join(filePath, fileName)
 	_ = RemoveFile(filePath)
-	if f, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0600); err != nil {
-		return "", err
+	if f, OErr := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0600); OErr != nil {
+		return "", OErr
 	} else {
 		_, err = f.Write([]byte(content))
+		_ = f.Close()
 		return filePath, err
 	}
 }
