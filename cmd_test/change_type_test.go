@@ -120,10 +120,7 @@ func TestBatchChangeType(t *testing.T) {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	_, errs := test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
-	if len(errs) > 0 {
-		t.Fail()
-	}
+	test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
 }
 
 func TestBatchChangeTypeRecord(t *testing.T) {
