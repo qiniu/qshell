@@ -17,12 +17,28 @@ func RootPath() (string, error) {
 	}
 }
 
+func RemoveRootPath() error {
+	path, err := RootPath()
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(path)
+}
+
 func TempPath() (string, error) {
 	rootPath, err := RootPath()
 	if err != nil {
 		return "", err
 	}
 	return filepath.Join(rootPath, "temp"), nil
+}
+
+func RemoveTempPath() error {
+	path, err := TempPath()
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(path)
 }
 
 func ResultPath() (string, error) {
@@ -33,6 +49,14 @@ func ResultPath() (string, error) {
 	path := filepath.Join(rootPath, "result")
 	err = os.MkdirAll(path, os.ModePerm)
 	return path, err
+}
+
+func RemoveResultPath() error {
+	path, err := ResultPath()
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(path)
 }
 
 func CreateFileWithContent(fileName, content string) (string, error) {
