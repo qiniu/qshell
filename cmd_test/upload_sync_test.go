@@ -99,7 +99,7 @@ func TestSyncWithWrongUploadHost(t *testing.T) {
 	_, errs := test.RunCmdWithError("sync", url, test.Bucket,
 		"--up-host", "up-mock.qiniup.com")
 	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") &&
-		!strings.Contains(errs, "Upload file error") {
+		!strings.Contains(errs, "Sync file error") {
 		t.Fail()
 	}
 }
