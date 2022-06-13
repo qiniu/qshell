@@ -92,7 +92,8 @@ func TestSyncWithWrongUploadHost(t *testing.T) {
 	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
 	_, errs := test.RunCmdWithError("sync", url, test.Bucket,
 		"--up-host", "up-mock.qiniup.com")
-	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") {
+	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") ||
+		strings.Contains(errs, "Upload file error") {
 		t.Fail()
 	}
 }
