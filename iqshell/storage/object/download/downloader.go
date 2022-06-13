@@ -171,7 +171,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 			break
 		}
 		response, err = dl.Download(info)
-		if err == nil {
+		if err == nil && response != nil && response.StatusCode/100 == 2 {
 			break
 		}
 	}

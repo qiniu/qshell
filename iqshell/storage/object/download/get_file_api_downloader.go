@@ -36,7 +36,11 @@ func (g *getFileApiDownloader) Download(info *ApiInfo) (response *http.Response,
 	}
 
 	if err != nil || (response != nil && response.StatusCode/100 != 2) {
-		log.DebugF("download freeze host:%s because: %v", h.GetServer(), err)
+		if response == nil {
+			log.DebugF("download freeze host:%s because:%v", h.GetServer(), err)
+		} else {
+			log.DebugF("download freeze host:%s because:[%d] %v", h.GetServer(), response.Status, err)
+		}
 		info.HostProvider.Freeze(h)
 	}
 
