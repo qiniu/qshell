@@ -59,7 +59,7 @@ func TestMatchNoExistSrcKey(t *testing.T) {
 
 func TestMatchNoExistLocalFile(t *testing.T) {
 	_, errs := test.RunCmdWithError("match", test.Bucket, test.KeyNotExist, "/user/desktop/a.txt")
-	if !strings.Contains(errs, "open /user/desktop/a.txt: no such file or directory") {
+	if !strings.Contains(errs, "error:open /user/desktop/a.txt") {
 		t.Fail()
 	}
 }
