@@ -74,7 +74,7 @@ func TestBatchChangeType(t *testing.T) {
 	keys := test.Keys
 	keys = append(keys, "hello10.json")
 	for _, key := range keys {
-		batchConfig += key + "\t" + "1" + "\n"
+		batchConfig += key + "\t" + "0" + "\n"
 	}
 
 	resultDir, err := test.ResultPath()
@@ -130,7 +130,7 @@ func TestBatchChangeTypeRecord(t *testing.T) {
 	keys := test.Keys
 	keys = append(keys, "hello10.json")
 	for _, key := range keys {
-		batchConfig += key + "\t" + "1" + "\n"
+		batchConfig += key + "\t" + "0" + "\n"
 	}
 
 	path, err := test.CreateFileWithContent("batch_chtype.txt", batchConfig)

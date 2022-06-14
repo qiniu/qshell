@@ -91,6 +91,7 @@ func TestBatchCopy(t *testing.T) {
 		"-i", path,
 		"--success-list", successLogPath,
 		"--failure-list", failLogPath,
+		"--overwrite",
 		"--worker", "4",
 		"-w",
 		"-y")
