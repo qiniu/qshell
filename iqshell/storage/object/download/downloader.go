@@ -166,7 +166,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	}
 
 	var response *http.Response
-	for {
+	for times := 0; times < 6; times++ {
 		if available, _ := info.HostProvider.Available(); !available {
 			break
 		}
