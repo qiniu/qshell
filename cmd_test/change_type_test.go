@@ -170,6 +170,19 @@ func TestBatchChangeTypeRecord(t *testing.T) {
 	if !strings.Contains(result, "work redo") {
 		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
 	}
+
+	//back
+	batchConfig = ""
+	for _, key := range test.Keys {
+		batchConfig += key + "\t" + "1" + "\n"
+	}
+
+	path, err = test.CreateFileWithContent("batch_chtype.txt", batchConfig)
+	if err != nil {
+		t.Fatal("create chtype config file error:", err)
+	}
+
+	test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
 }
 
 func TestBatchChangeTypeDocument(t *testing.T) {
