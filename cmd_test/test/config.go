@@ -34,7 +34,7 @@ func testBucketDomain() string {
 }
 
 func testUploadDomain() string {
-	if b := os.Getenv("bucketDomain"); len(b) > 0 {
+	if b := os.Getenv("uploadDomain"); len(b) > 0 {
 		return b
 	} else {
 		return "up-na0.qiniup.com"
