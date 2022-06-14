@@ -113,6 +113,9 @@ func (info *BatchUpload2Info) Check() *data.CodeError {
 	if err := info.UploadConfig.Check(); err != nil {
 		return err
 	}
+	if info.UploadConfig.Policy == nil {
+		info.UploadConfig.Policy = &storage.PutPolicy{}
+	}
 	return nil
 }
 

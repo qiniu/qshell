@@ -3,8 +3,9 @@
 package cmd
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -19,7 +20,6 @@ func TestQUpload(t *testing.T) {
 	copyFile(t, test.Key, "test/1024K.tmp")
 
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
-	fileSizeList = []int{1, 2}
 	for _, size := range fileSizeList {
 		test.CreateTempFile(size)
 	}
@@ -40,19 +40,44 @@ func TestQUpload(t *testing.T) {
 	logPath := filepath.Join(resultPath, "qupload2_log.txt")
 	recordPath := filepath.Join(resultPath, "record")
 
-	cfgContent := fmt.Sprintf(`{
-	"bucket": "%s",
-	"src_dir": "%s",
-	"log_stdout": true,
-	"overwrite": true,
-	"check_exists": true,
-	"check_size": true,
-	"work_count": 4,
-	"key_prefix": "test/",
-	"log_file": "%s",
-	"record_root": "%s"
-}`, test.Bucket, fileDir, logPath, recordPath)
-	cfgFile, err := test.CreateFileWithContent("upload_cfg.json", cfgContent)
+	cfg := struct {
+		operations.UploadConfig
+		LogFile    string `json:"log_file"`
+		RecordRoot string `json:"record_root"`
+	}{
+		UploadConfig: operations.UploadConfig{
+			UpHost:                 "",
+			SrcDir:                 fileDir,
+			FileList:               "",
+			IgnoreDir:              false,
+			SkipFilePrefixes:       "",
+			SkipPathPrefixes:       "",
+			SkipFixedStrings:       "",
+			SkipSuffixes:           "",
+			FileEncoding:           "",
+			Bucket:                 test.Bucket,
+			ResumableAPIV2:         false,
+			ResumableAPIV2PartSize: 0,
+			PutThreshold:           0,
+			KeyPrefix:              "test/",
+			Overwrite:              true,
+			CheckExists:            false,
+			CheckHash:              true,
+			CheckSize:              true,
+			RescanLocal:            false,
+			FileType:               0,
+			DeleteOnSuccess:        false,
+			DisableResume:          false,
+			DisableForm:            false,
+			WorkerCount:            4,
+			RecordRoot:             "",
+			Policy:                 nil,
+		},
+		LogFile:    logPath,
+		RecordRoot: recordPath,
+	}
+	cfgContent, _ := json.Marshal(cfg)
+	cfgFile, err := test.CreateFileWithContent("upload_cfg.json", string(cfgContent))
 	defer test.RemoveFile(cfgFile)
 
 	if err != nil {
