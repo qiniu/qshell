@@ -12,7 +12,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0
-	golang.org/x/text v0.3.6
+	golang.org/x/text v0.3.7
 )
 
 require (
