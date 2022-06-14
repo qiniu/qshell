@@ -30,11 +30,14 @@ func (g *getDownloader) Download(info *ApiInfo) (response *http.Response, err *d
 
 	if err != nil || (response != nil && response.StatusCode/100 != 2) {
 		if response == nil {
+			info.HostProvider.Freeze(h)
 			log.DebugF("download freeze host:%s because:%v", h.GetServer(), err)
-		} else {
+		} else if response.StatusCode == 400 || response.StatusCode == 401 ||
+			response.StatusCode == 405 || response.StatusCode == 419 ||
+			response.StatusCode == 503 || response.StatusCode == 631 {
+			info.HostProvider.Freeze(h)
 			log.DebugF("download freeze host:%s because:[%s] %v", h.GetServer(), response.Status, err)
 		}
-		info.HostProvider.Freeze(h)
 	}
 
 	return response, err
