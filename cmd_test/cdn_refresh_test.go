@@ -8,14 +8,15 @@ import (
 	"testing"
 )
 
-func aTestCdnRefreshFile(t *testing.T) {
+func TestCdnRefreshFile(t *testing.T) {
 	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectDomainsString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	result, _ := test.RunCmdWithError("cdnrefresh", "-i", path, "--qps", "1", "--size", "2")
-	if !strings.Contains(result, "CDN refresh Code: 200, FlowInfo: success") {
+	result, errString := test.RunCmdWithError("cdnrefresh", "-i", path, "--qps", "1", "--size", "2")
+	if !strings.Contains(result, "CDN refresh Code: 200, FlowInfo: success") &&
+		!strings.Contains(errString, "count limit error") {
 		t.Fail()
 	}
 
@@ -24,14 +25,14 @@ func aTestCdnRefreshFile(t *testing.T) {
 	return
 }
 
-func aTestCdnRefreshDirs(t *testing.T) {
+func TestCdnRefreshDirs(t *testing.T) {
 	path, err := test.CreateFileWithContent("cdn_refresh.txt", test.BucketObjectDomainsString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	_, errs := test.RunCmdWithError("cdnrefresh", "--dirs", "-i", path, "--qps", "1", "--size", "2")
-	if len(errs) > 0 {
+	_, errString := test.RunCmdWithError("cdnrefresh", "--dirs", "-i", path, "--qps", "1", "--size", "2")
+	if len(errString) > 0 && !strings.Contains(errString, "count limit error") {
 		t.Fail()
 	}
 

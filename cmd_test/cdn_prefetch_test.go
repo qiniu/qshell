@@ -8,14 +8,15 @@ import (
 	"testing"
 )
 
-func aTestCdnPrefetch(t *testing.T) {
+func TestCdnPrefetch(t *testing.T) {
 	path, err := test.CreateFileWithContent("cdn_prefetch.txt", test.BucketObjectDomainsString)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	result := test.RunCmd(t, "cdnprefetch", "-i", path, "--qps", "1", "--size", "2")
-	if !strings.Contains(result, "CDN prefetch Code: 200, FlowInfo: success") {
+	result, errString := test.RunCmdWithError("cdnprefetch", "-i", path, "--qps", "1", "--size", "2")
+	if !strings.Contains(result, "CDN prefetch Code: 200, FlowInfo: success") &&
+		!strings.Contains(errString, "count limit error") {
 		t.Fail()
 	}
 
