@@ -277,7 +277,7 @@ func TestQUpload2NotExistSrcDir(t *testing.T) {
 	_, errs := test.RunCmdWithError("qupload2",
 		"--bucket", test.Bucket,
 		"--src-dir", "/Demo")
-	if !strings.Contains(errs, "no such file or directory") {
+	if !strings.Contains(errs, "invalid SrcDir:") {
 		t.Fatal(errs)
 	}
 }
