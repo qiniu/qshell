@@ -21,7 +21,7 @@ func testBucket() string {
 	if b := os.Getenv("bucket"); len(b) > 0 {
 		return b
 	} else {
-		return "qshell-z0"
+		return "qshell-z1"
 	}
 }
 
@@ -29,7 +29,7 @@ func testBucketDomain() string {
 	if b := os.Getenv("bucketDomain"); len(b) > 0 {
 		return b
 	} else {
-		return "qshell-z0.qiniupkg.com"
+		return "qshell-z1.qiniupkg.com"
 	}
 }
 
@@ -37,7 +37,7 @@ func testUploadDomain() string {
 	if b := os.Getenv("uploadDomain"); len(b) > 0 {
 		return b
 	} else {
-		return "up-z0.qiniup.com"
+		return "up-z1.qiniup.com"
 	}
 }
 

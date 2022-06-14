@@ -138,13 +138,14 @@ func TestBatchChangeTypeRecord(t *testing.T) {
 		t.Fatal("create batch move config file error:", err)
 	}
 
-	test.RunCmdWithError("batchchtype", test.Bucket, test.Bucket,
+	test.RunCmdWithError("batchchtype", test.Bucket,
 		"-i", path,
 		"--enable-record",
 		"--worker", "4",
+		"-d",
 		"-y")
 
-	result, _ := test.RunCmdWithError("batchchtype", test.Bucket, test.Bucket,
+	result, _ := test.RunCmdWithError("batchchtype", test.Bucket,
 		"-i", path,
 		"--enable-record",
 		"--worker", "4",
@@ -157,7 +158,7 @@ func TestBatchChangeTypeRecord(t *testing.T) {
 		t.Fatal("batch result: shouldn't redo because not set --record-redo-while-error")
 	}
 
-	result, _ = test.RunCmdWithError("batchchtype", test.Bucket, test.Bucket,
+	result, _ = test.RunCmdWithError("batchchtype", test.Bucket,
 		"-i", path,
 		"--enable-record",
 		"--record-redo-while-error",
