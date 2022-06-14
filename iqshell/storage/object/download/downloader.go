@@ -228,9 +228,9 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 }
 
 func renameTempFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
-	err := os.Rename(fInfo.tempFile, fInfo.toFile)
+	err := os.Rename(fInfo.tempFile, fInfo.toAbsFile)
 	if err != nil {
-		return data.NewEmptyError().AppendDesc(" Rename temp file to final file error" + err.Error())
+		return data.NewEmptyError().AppendDescF(" Rename temp file to final file error:%v", err.Error())
 	}
 	return nil
 }

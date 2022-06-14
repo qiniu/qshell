@@ -89,7 +89,7 @@ func TestSyncWithUploadHost(t *testing.T) {
 	url := "https://qshell-na0.qiniupkg.com/1024K.tmp"
 	result, errs := test.RunCmdWithError("sync", url, test.Bucket,
 		"-k", "1024K.tmp",
-		"--up-host", "up-na0.qiniup.com",
+		"--up-host", test.UploadDomain,
 		"--overwrite")
 	if len(errs) > 0 {
 		t.Fail()

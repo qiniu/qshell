@@ -9,10 +9,11 @@ import (
 var (
 	Debug = true
 
-	AccessKey = os.Getenv("accessKey")
-	SecretKey = os.Getenv("secretKey")
-	Bucket = testBucket()
-	BucketDomain = testBucketDomain()
+	AccessKey      = os.Getenv("accessKey")
+	SecretKey      = os.Getenv("secretKey")
+	Bucket         = testBucket()
+	BucketDomain   = testBucketDomain()
+	UploadDomain   = testUploadDomain()
 	DocumentOption = "--doc"
 )
 
@@ -29,6 +30,14 @@ func testBucketDomain() string {
 		return b
 	} else {
 		return "qshell-na0.qiniupkg.com"
+	}
+}
+
+func testUploadDomain() string {
+	if b := os.Getenv("bucketDomain"); len(b) > 0 {
+		return b
+	} else {
+		return "up-na0.qiniup.com"
 	}
 }
 
@@ -65,4 +74,3 @@ hello5_test.json
 hello6_test.json
 hello7_test.json`
 )
-

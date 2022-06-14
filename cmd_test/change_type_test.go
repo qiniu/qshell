@@ -11,7 +11,7 @@ import (
 
 func TestChangeType(t *testing.T) {
 	_, errs := test.RunCmdWithError("chtype", test.Bucket, test.Key, "0")
-	if len(errs) > 0 {
+	if len(errs) > 0 && !strings.Contains(errs, "already in normal stat") {
 		t.Fail()
 	}
 
@@ -74,7 +74,7 @@ func TestBatchChangeType(t *testing.T) {
 	keys := test.Keys
 	keys = append(keys, "hello10.json")
 	for _, key := range keys {
-		batchConfig += key + "\t" + "0" + "\n"
+		batchConfig += key + "\t" + "1" + "\n"
 	}
 
 	resultDir, err := test.ResultPath()
@@ -117,7 +117,7 @@ func TestBatchChangeType(t *testing.T) {
 
 	path, err = test.CreateFileWithContent("batch_chtype.txt", batchConfig)
 	if err != nil {
-		t.Fatal("create cdn config file error:", err)
+		t.Fatal("create chtype config file error:", err)
 	}
 
 	test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
@@ -130,7 +130,7 @@ func TestBatchChangeTypeRecord(t *testing.T) {
 	keys := test.Keys
 	keys = append(keys, "hello10.json")
 	for _, key := range keys {
-		batchConfig += key + "\t" + "0" + "\n"
+		batchConfig += key + "\t" + "1" + "\n"
 	}
 
 	path, err := test.CreateFileWithContent("batch_chtype.txt", batchConfig)

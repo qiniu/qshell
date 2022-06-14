@@ -72,7 +72,7 @@ func TestResumeV1UploadWithUploadHost(t *testing.T) {
 	result, errs := test.RunCmdWithError("rput", test.Bucket, "qshell_rput_uploadHost_5M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "0",
-		"--up-host", "up-na0.qiniup.com",
+		"--up-host", test.UploadDomain,
 		"--overwrite")
 	if len(errs) > 0 {
 		t.Fail()
@@ -159,7 +159,7 @@ func TestResumeV2UploadWithUploadHost(t *testing.T) {
 	result, errs := test.RunCmdWithError("rput", test.Bucket, "qshell_rput_v2_uploadHost_5M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "0",
-		"--up-host", "up-na0.qiniup.com",
+		"--up-host", test.UploadDomain,
 		"--overwrite",
 		"--resumable-api-v2")
 	if len(errs) > 0 {

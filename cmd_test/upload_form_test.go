@@ -70,7 +70,7 @@ func TestFormUploadWithUploadHost(t *testing.T) {
 	result, errs := test.RunCmdWithError("fput", test.Bucket, "qshell_fput_uploadHost_1M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "0",
-		"--up-host", "up-na0.qiniup.com",
+		"--up-host", test.UploadDomain,
 		"--overwrite")
 	if len(errs) > 0 {
 		t.Fail()
