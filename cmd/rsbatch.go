@@ -38,7 +38,7 @@ var batchForbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:   "batchforbidden <Bucket> [-i <KeyListFile>] [-r]",
 		Short: "Batch forbidden files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg.CmdCfg.CmdId = docs.BatchStatType
+			cfg.CmdCfg.CmdId = docs.BatchForbiddenType
 			info.BatchInfo.EnableStdin = true
 			if len(args) > 0 {
 				info.Bucket = args[0]

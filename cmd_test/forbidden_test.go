@@ -19,13 +19,6 @@ func TestForbidden(t *testing.T) {
 	}
 }
 
-func Forbidden(t *testing.T, key string, ty string) {
-	_, errs := test.RunCmdWithError("forbidden", test.Bucket, key, ty)
-	if len(errs) > 0 {
-		t.Fail()
-	}
-}
-
 func TestForbiddenNoExistBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("forbidden", test.BucketNotExist, test.Key, "0")
 	if !strings.Contains(errs, "no such bucket") {
@@ -54,13 +47,6 @@ func TestForbiddenNoKey(t *testing.T) {
 	}
 }
 
-func TestForbiddenNoMimeType(t *testing.T) {
-	_, errs := test.RunCmdWithError("forbidden", test.Bucket, test.Key)
-	if !strings.Contains(errs, "Type can't empty") {
-		t.Fail()
-	}
-}
-
 func TestForbiddenDocument(t *testing.T) {
 	test.TestDocument("forbidden", t)
 }
@@ -72,7 +58,7 @@ func TestBatchForbidden(t *testing.T) {
 	keys := test.Keys
 	keys = append(keys, "hello10.json")
 	for _, key := range keys {
-		batchConfig += key + "\t" + "0" + "\n"
+		batchConfig += key + "\n"
 	}
 
 	resultDir, err := test.ResultPath()
@@ -95,6 +81,9 @@ func TestBatchForbidden(t *testing.T) {
 		"--worker", "4",
 		"-y")
 	defer func() {
+		//back
+		test.RunCmdWithError("batchforbidden", test.Bucket, "-i", path, "-y", "-r")
+
 		test.RemoveFile(successLogPath)
 		test.RemoveFile(failLogPath)
 	}()
@@ -106,19 +95,6 @@ func TestBatchForbidden(t *testing.T) {
 	if !test.IsFileHasContent(failLogPath) {
 		t.Fatal("batch result: fail log  to file error: file empty")
 	}
-
-	//back
-	batchConfig = ""
-	for _, key := range test.Keys {
-		batchConfig += key + "\t" + "1" + "\n"
-	}
-
-	path, err = test.CreateFileWithContent("batch_forbidden.txt", batchConfig)
-	if err != nil {
-		t.Fatal("create forbidden config file error:", err)
-	}
-
-	test.RunCmdWithError("batchforbidden", test.Bucket, "-i", path, "-y")
 }
 
 func TestBatchForbiddenRecord(t *testing.T) {
@@ -128,7 +104,7 @@ func TestBatchForbiddenRecord(t *testing.T) {
 	keys := test.Keys
 	keys = append(keys, "hello10.json")
 	for _, key := range keys {
-		batchConfig += key + "\t" + "0" + "\n"
+		batchConfig += key + "\n"
 	}
 
 	path, err := test.CreateFileWithContent("batch_forbidden.txt", batchConfig)
@@ -142,6 +118,10 @@ func TestBatchForbiddenRecord(t *testing.T) {
 		"--worker", "4",
 		"-d",
 		"-y")
+	defer func() {
+		//back
+		test.RunCmdWithError("batchforbidden", test.Bucket, "-i", path, "-y", "-r")
+	}()
 
 	result, _ := test.RunCmdWithError("batchforbidden", test.Bucket,
 		"-i", path,
@@ -169,19 +149,6 @@ func TestBatchForbiddenRecord(t *testing.T) {
 	if !strings.Contains(result, "work redo") {
 		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
 	}
-
-	//back
-	batchConfig = ""
-	for _, key := range test.Keys {
-		batchConfig += key + "\t" + "1" + "\n"
-	}
-
-	path, err = test.CreateFileWithContent("batch_forbidden.txt", batchConfig)
-	if err != nil {
-		t.Fatal("create forbidden config file error:", err)
-	}
-
-	test.RunCmdWithError("batchforbidden", test.Bucket, "-i", path, "-y")
 }
 
 func TestBatchForbiddenDocument(t *testing.T) {
