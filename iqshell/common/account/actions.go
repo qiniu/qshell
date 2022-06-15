@@ -151,7 +151,7 @@ func GetMac() (mac *qbox.Mac, err *data.CodeError) {
 }
 
 // 切换账户
-func ChUser(userName string) (err *data.CodeError) {
+func ChUser(userName string) (name string, err *data.CodeError) {
 	if userName != "" {
 		db, oErr := leveldb.OpenFile(info.AccountDBPath, nil)
 		if oErr != nil {
@@ -171,10 +171,13 @@ func ChUser(userName string) (err *data.CodeError) {
 			return
 		}
 
-		return SetAccountToLocalFile(user)
+		return userName, SetAccountToLocalFile(user)
 	} else {
-		if _, err = GetOldAccount(); err != nil {
-			return data.NewEmptyError().AppendDescF("get last account error:%v", err)
+		if acc, gErr := GetOldAccount(); gErr != nil {
+			err = data.NewEmptyError().AppendDescF("get last account error:%v", gErr)
+			return
+		} else {
+			name = acc.Name
 		}
 
 		rErr := os.Rename(info.OldAccountPath, info.AccountPath+".tmp")

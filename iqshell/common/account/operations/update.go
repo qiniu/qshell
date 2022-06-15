@@ -5,7 +5,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"os"
 )
 
 // ChangeInfo 切换账户
@@ -24,10 +23,11 @@ func Change(cfg *iqshell.Config, info ChangeInfo) {
 		return
 	}
 
-	err := account.ChUser(info.Name)
+	name, err := account.ChUser(info.Name)
 	if err != nil {
-		log.ErrorF("user change error:%v", err)
-		os.Exit(data.StatusError)
+		log.ErrorF("user change to %s failed, error:%v", name, err)
 		return
+	} else {
+		log.InfoF("user change to %s success", name)
 	}
 }
