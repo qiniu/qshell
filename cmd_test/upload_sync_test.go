@@ -9,8 +9,11 @@ import (
 )
 
 func TestSyncV1(t *testing.T) {
-	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
-	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "-d")
+	url := "https://qshell-na0.qiniupkg.com/1024K.tmp"
+	result, errs := test.RunCmdWithError("sync", url, test.Bucket,
+		"-k", "1024K.tmp",
+		"--overwrite",
+		"-d")
 	if len(errs) > 0 {
 		t.Fail()
 	}
@@ -20,18 +23,21 @@ func TestSyncV1(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	if !strings.Contains(result, "Key: 10240K.tmp") {
+	if !strings.Contains(result, "Key: 1024K.tmp") {
 		t.Fatal(result)
 	}
 }
 
 func TestSyncV1WithKey(t *testing.T) {
-	key := "sync_v1_key.mp4"
-	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
-	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "-k", key)
+	key := "sync_v1_1024K.mp4"
+	url := "https://qshell-na0.qiniupkg.com/1024K.tmp"
+	result, errs := test.RunCmdWithError("sync", url, test.Bucket,
+		"-k", key)
 	if len(errs) > 0 {
 		t.Fail()
 	}
+
+	test.RunCmdWithError("delete", test.Bucket, key)
 
 	result = strings.ReplaceAll(result, "\n", "")
 	if !strings.Contains(result, "Upload File success") {
@@ -44,8 +50,10 @@ func TestSyncV1WithKey(t *testing.T) {
 }
 
 func TestSyncV2(t *testing.T) {
-	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
-	result, errs := test.RunCmdWithError("sync", url, test.Bucket)
+	url := "https://qshell-na0.qiniupkg.com/1024K.tmp"
+	result, errs := test.RunCmdWithError("sync", url, test.Bucket,
+		"-k", "1024K.tmp",
+		"--overwrite")
 	if len(errs) > 0 {
 		t.Fail()
 	}
@@ -57,8 +65,11 @@ func TestSyncV2(t *testing.T) {
 }
 
 func TestSyncV2WithKey(t *testing.T) {
-	key := "sync_v1_key.mp4"
-	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
+	key := "sync_v2_key.mp4"
+	url := "https://qshell-na0.qiniupkg.com/1024K.tmp"
+
+	test.RunCmdWithError("delete", test.Bucket, key)
+
 	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "--resumable-api-v2", "--key", key, "-d")
 	if len(errs) > 0 {
 		t.Fail()
@@ -75,9 +86,11 @@ func TestSyncV2WithKey(t *testing.T) {
 }
 
 func TestSyncWithUploadHost(t *testing.T) {
-	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
+	url := "https://qshell-na0.qiniupkg.com/1024K.tmp"
 	result, errs := test.RunCmdWithError("sync", url, test.Bucket,
-		"--up-host", "up-na0.qiniup.com")
+		"-k", "1024K.tmp",
+		"--up-host", test.UploadDomain,
+		"--overwrite")
 	if len(errs) > 0 {
 		t.Fail()
 	}
@@ -89,10 +102,12 @@ func TestSyncWithUploadHost(t *testing.T) {
 }
 
 func TestSyncWithWrongUploadHost(t *testing.T) {
-	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
+	url := "https://qshell-na0.qiniupkg.com/1024K.tmp"
 	_, errs := test.RunCmdWithError("sync", url, test.Bucket,
+		"-k", "1024K.tmp",
 		"--up-host", "up-mock.qiniup.com")
-	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") {
+	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") &&
+		!strings.Contains(errs, "Sync file error") {
 		t.Fail()
 	}
 }
@@ -105,7 +120,7 @@ func TestSyncNoUrl(t *testing.T) {
 }
 
 func TestSyncNoBucket(t *testing.T) {
-	url := "https://qshell-na0.qiniupkg.com/10240K.tmp"
+	url := "https://qshell-na0.qiniupkg.com/1024K.tmp"
 	_, errs := test.RunCmdWithError("sync", url)
 	if !strings.Contains(errs, "Bucket can't empty") {
 		t.Fail()

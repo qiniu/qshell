@@ -82,6 +82,9 @@ func (info *BatchDownloadInfo) Check() *data.CodeError {
 	if err := info.DownloadCfg.Check(); err != nil {
 		return err
 	}
+	if len(info.ItemSeparate) == 0 {
+		info.ItemSeparate = data.DefaultLineSeparate
+	}
 	return nil
 }
 

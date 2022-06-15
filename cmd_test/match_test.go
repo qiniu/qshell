@@ -3,10 +3,11 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestMatch(t *testing.T) {
@@ -59,7 +60,7 @@ func TestMatchNoExistSrcKey(t *testing.T) {
 
 func TestMatchNoExistLocalFile(t *testing.T) {
 	_, errs := test.RunCmdWithError("match", test.Bucket, test.KeyNotExist, "/user/desktop/a.txt")
-	if !strings.Contains(errs, "no such file or directory") {
+	if !strings.Contains(errs, "error:open /user/desktop/a.txt") {
 		t.Fail()
 	}
 }

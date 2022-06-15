@@ -17,12 +17,28 @@ func RootPath() (string, error) {
 	}
 }
 
+func RemoveRootPath() error {
+	path, err := RootPath()
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(path)
+}
+
 func TempPath() (string, error) {
 	rootPath, err := RootPath()
 	if err != nil {
 		return "", err
 	}
 	return filepath.Join(rootPath, "temp"), nil
+}
+
+func RemoveTempPath() error {
+	path, err := TempPath()
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(path)
 }
 
 func ResultPath() (string, error) {
@@ -33,6 +49,14 @@ func ResultPath() (string, error) {
 	path := filepath.Join(rootPath, "result")
 	err = os.MkdirAll(path, os.ModePerm)
 	return path, err
+}
+
+func RemoveResultPath() error {
+	path, err := ResultPath()
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(path)
 }
 
 func CreateFileWithContent(fileName, content string) (string, error) {
@@ -49,10 +73,11 @@ func CreateFileWithContent(fileName, content string) (string, error) {
 
 	filePath = filepath.Join(filePath, fileName)
 	_ = RemoveFile(filePath)
-	if f, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0600); err != nil {
-		return "", err
+	if f, OErr := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600); OErr != nil {
+		return "", OErr
 	} else {
 		_, err = f.Write([]byte(content))
+		_ = f.Close()
 		return filePath, err
 	}
 }
@@ -85,7 +110,7 @@ func CreateTempFile(size int) (string, error) {
 		return "", err
 	}
 
-	f, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR, 0600)
+	f, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600)
 	if err != nil {
 		return "", err
 	}

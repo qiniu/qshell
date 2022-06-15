@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"strings"
 )
 
 func getDownloadHostProvider(cfg *config.Config, downloadCfg *DownloadCfg) host.Provider {
@@ -15,6 +16,12 @@ func getDownloadHostProvider(cfg *config.Config, downloadCfg *DownloadCfg) host.
 	} else {
 		hosts = defaultDownloadHosts(cfg, downloadCfg)
 	}
+
+	hostStrings := make([]string, 0, len(hosts))
+	for _, h := range hosts {
+		hostStrings = append(hostStrings, h.GetServer())
+	}
+	log.DebugF("download Domain:[%s]", strings.Join(hostStrings, ","))
 	return host.NewListProvider(hosts)
 }
 

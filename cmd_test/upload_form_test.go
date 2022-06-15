@@ -70,7 +70,7 @@ func TestFormUploadWithUploadHost(t *testing.T) {
 	result, errs := test.RunCmdWithError("fput", test.Bucket, "qshell_fput_uploadHost_1M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "0",
-		"--up-host", "up-na0.qiniup.com",
+		"--up-host", test.UploadDomain,
 		"--overwrite")
 	if len(errs) > 0 {
 		t.Fail()
@@ -102,7 +102,8 @@ func TestFormUploadWithWrongUploadHost(t *testing.T) {
 		"--storage", "0",
 		"--up-host", "up-mock.qiniup.com",
 		"--overwrite")
-	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") {
+	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") &&
+		!strings.Contains(errs, "Upload file error") {
 		t.Fail()
 	}
 }

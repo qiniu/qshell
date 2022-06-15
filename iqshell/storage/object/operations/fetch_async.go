@@ -2,6 +2,11 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -12,10 +17,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"path/filepath"
-	"strconv"
-	"sync"
-	"time"
 )
 
 type CheckAsyncFetchStatusInfo struct {
@@ -304,19 +305,20 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 				metric.AddCurrentCount(1)
 				metric.PrintProgress(fmt.Sprintf("Checking, %s => [%s:%s]", in.Url, in.Bucket, in.Key))
 
-				checkTimesAfterFetch := 0
+				checkTimes := 0
 				maxDuration := asyncFetchCheckMaxDuration(in.FileSize)
-				checkStartTime := time.Now().Add(maxDuration)
-				lastCheckTime := time.Now().Add(-4 * time.Second)
+				minDuration := float32(maxDuration) * 0.5
+				checkStartTime := time.Now().Add(time.Duration(minDuration) * time.Second)
+				checkEndTime := time.Now().Add(time.Duration(maxDuration) * time.Second)
 				for {
 					current := time.Now()
-					if current.After(checkStartTime) && (current.Unix()-lastCheckTime.Unix() > 3) {
+					if current.After(checkStartTime) {
+						checkTimes += 1
 						ret, cErr := object.CheckAsyncFetchStatus(in.Bucket, in.Info.Id)
 						log.DebugF("batch async fetch check, bucket:%s key:%s id:%s wait:%d", in.Bucket, in.Key, in.Key, ret.Wait)
 						if cErr != nil {
 							log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
 						} else if ret.Wait == -1 { // 视频抓取过一次，有可能成功了，有可能失败了
-							checkTimesAfterFetch += 1
 							if exist, err := object.Exist(object.ExistApiInfo{
 								Bucket: in.Bucket,
 								Key:    in.Key,
@@ -328,9 +330,8 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 						}
 					}
 
-					// fetch 之后最多检测三次, 每 1s 检查一次
-					if checkTimesAfterFetch < 3 {
-						time.Sleep(time.Second)
+					if checkTimes == 0 || current.Before(checkEndTime) {
+						time.Sleep(3 * time.Second)
 					} else {
 						break
 					}
@@ -428,20 +429,22 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 	log.InfoF("--------------------------------------------------")
 }
 
-func asyncFetchCheckMaxDuration(size uint64) time.Duration {
-	duration := 1
+func asyncFetchCheckMaxDuration(size uint64) int {
+	duration := 3
 	if size >= 500*utils.MB {
-		duration = 35
+		duration = 200
 	} else if size >= 200*utils.MB {
-		duration = 20
+		duration = 100
 	} else if size >= 100*utils.MB {
-		duration = 10
+		duration = 60
 	} else if size >= 50*utils.MB {
+		duration = 20
+	} else if size >= 10*utils.MB {
 		duration = 6
 	} else if size >= 10*utils.MB {
 		duration = 3
 	}
-	return time.Duration(duration) * time.Second
+	return duration
 }
 
 type asyncFetchItem struct {
