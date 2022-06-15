@@ -439,17 +439,17 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 }
 
 func asyncFetchCheckMaxDuration(size uint64) int {
-	duration := 3
+	duration := 10
 	if size >= 500*utils.MB {
-		duration = 200
+		duration = 600
 	} else if size >= 200*utils.MB {
-		duration = 100
+		duration = 300
 	} else if size >= 100*utils.MB {
-		duration = 60
+		duration = 150
 	} else if size >= 50*utils.MB {
-		duration = 20
+		duration = 60
 	} else if size >= 10*utils.MB {
-		duration = 6
+		duration = 25
 	}
 	return duration
 }
