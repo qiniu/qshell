@@ -40,7 +40,7 @@ func Move(cfg *iqshell.Config, info MoveInfo) {
 	}
 
 	result, err := object.Move((*object.MoveApiInfo)(&info))
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -48,18 +48,15 @@ func Move(cfg *iqshell.Config, info MoveInfo) {
 		return
 	}
 
-	if len(result.Error) != 0 {
-		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
-			info.SourceBucket, info.SourceKey,
-			info.DestBucket, info.DestKey,
-			result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Move Success, [%s:%s] => [%s:%s]",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
+	} else {
+		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			result.Code, result.Error)
 	}
 }
 

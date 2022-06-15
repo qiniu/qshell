@@ -44,19 +44,18 @@ func Delete(cfg *iqshell.Config, info DeleteInfo) {
 		DeleteAfterDays: 0,
 	})
 
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Delete Failed, [%s:%s], Error:%v",
 			info.Bucket, info.Key, err)
 		return
 	}
 
-	if len(result.Error) > 0 {
+	if result.IsSuccess() {
+		log.InfoF("Delete Success, [%s:%s]", info.Bucket, info.Key)
+	} else {
 		log.ErrorF("Delete Failed, [%s:%s], Code:%d, Error:%s",
 			info.Bucket, info.Key, result.Code, result.Error)
-		return
 	}
-
-	log.InfoF("Delete Success, [%s:%s]", info.Bucket, info.Key)
 }
 
 type BatchDeleteInfo struct {
@@ -188,20 +187,17 @@ func DeleteAfter(cfg *iqshell.Config, info DeleteAfterInfo) {
 		DeleteAfterDays: afterDays,
 	})
 
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Expire Failed, [%s:%s], Error:%v",
 			info.Bucket, info.Key, err)
 		return
 	}
 
-	if len(result.Error) > 0 {
-		log.ErrorF("Expire Failed, [%s:%s], Code:%d, Error:%s",
-			info.Bucket, info.Key, result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Expire Success, [%s:%s], '%s'天后删除", info.Bucket, info.Key, info.AfterDays)
+	} else {
+		log.ErrorF("Expire Failed, [%s:%s], Code:%d, Error:%s",
+			info.Bucket, info.Key, result.Code, result.Error)
 	}
 }
 

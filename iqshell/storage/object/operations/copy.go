@@ -41,7 +41,7 @@ func Copy(cfg *iqshell.Config, info CopyInfo) {
 	}
 
 	result, err := object.Copy((*object.CopyApiInfo)(&info))
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -49,18 +49,15 @@ func Copy(cfg *iqshell.Config, info CopyInfo) {
 		return
 	}
 
-	if len(result.Error) != 0 {
-		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
-			info.SourceBucket, info.SourceKey,
-			info.DestBucket, info.DestKey,
-			result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Copy Success, [%s:%s] => [%s:%s]",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
+	} else {
+		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			result.Code, result.Error)
 	}
 }
 

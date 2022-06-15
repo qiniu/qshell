@@ -69,20 +69,17 @@ func ChangeType(cfg *iqshell.Config, info ChangeTypeInfo) {
 		Type:   t,
 	})
 
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Error: %v",
 			info.Bucket, info.Key, t, getStorageTypeDescription(t), err)
 		return
 	}
 
-	if len(result.Error) != 0 {
-		log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Code: %d, Error: %s",
-			info.Bucket, info.Key, t, getStorageTypeDescription(t), result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Change Type Success, [%s:%s] => '%d'(%s)", info.Bucket, info.Key, t, getStorageTypeDescription(t))
+	} else {
+		log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Code: %d, Error: %s",
+			info.Bucket, info.Key, t, getStorageTypeDescription(t), result.Code, result.Error)
 	}
 }
 

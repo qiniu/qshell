@@ -12,7 +12,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"path/filepath"
-	"strconv"
 )
 
 type ForbiddenInfo struct {
@@ -63,27 +62,25 @@ func ForbiddenObject(cfg *iqshell.Config, info ForbiddenInfo) {
 	})
 
 	statusDesc := info.getStatusDesc()
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Change status Failed, [%s:%s] => %s, Error: %v",
 			info.Bucket, info.Key, statusDesc, err)
-		return
-	}
-
-	if len(result.Error) > 0 {
-		log.ErrorF("Change status Failed, [%s:%s] => %s, Code:%d, Error:%s",
-			info.Bucket, info.Key, statusDesc, result.Code, result.Error)
 		return
 	}
 
 	if result.IsSuccess() {
 		log.InfoF("Change status Success, [%s:%s] => %s",
 			info.Bucket, info.Key, statusDesc)
+	} else {
+		log.ErrorF("Change status Failed, [%s:%s] => %s, Code:%d, Error:%s",
+			info.Bucket, info.Key, statusDesc, result.Code, result.Error)
 	}
 }
 
 type BatchChangeStatusInfo struct {
-	BatchInfo batch.Info
-	Bucket    string
+	BatchInfo   batch.Info
+	Bucket      string
+	UnForbidden bool
 }
 
 func (info *BatchChangeStatusInfo) Check() *data.CodeError {
@@ -91,6 +88,15 @@ func (info *BatchChangeStatusInfo) Check() *data.CodeError {
 		return alert.CannotEmptyError("Bucket", "")
 	}
 	return nil
+}
+
+func (info *BatchChangeStatusInfo) getStatus() int {
+	// 0:启用  1:禁用
+	if info.UnForbidden {
+		return 0
+	} else {
+		return 1
+	}
 }
 
 func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
@@ -110,21 +116,17 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 		return
 	}
 
+	statusInt := info.getStatus()
 	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
 		return &object.ChangeStatusApiInfo{}
 	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		if len(items) > 1 {
-			key, status := items[0], items[1]
-			statusInt, e := strconv.Atoi(status)
-			if e != nil {
-				return nil, data.NewEmptyError().AppendDescF("parse status error:%v", e)
-			} else if key != "" && status != "" {
-				return &object.ChangeStatusApiInfo{
-					Bucket: info.Bucket,
-					Key:    key,
-					Status: statusInt,
-				}, nil
-			}
+		if len(items) > 0 {
+			key := items[0]
+			return &object.ChangeStatusApiInfo{
+				Bucket: info.Bucket,
+				Key:    key,
+				Status: statusInt,
+			}, nil
 		}
 		return nil, alert.Error("need more than one param", "")
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {

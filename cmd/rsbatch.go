@@ -32,6 +32,31 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var batchForbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.BatchChangeStatusInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchforbidden <Bucket> [-i <KeyListFile>] [-r]",
+		Short: "Batch forbidden files in bucket",
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.BatchStatType
+			info.BatchInfo.EnableStdin = true
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.BatchChangeStatus(cfg, info)
+		},
+	}
+	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdWorkCountFlags(cmd, &info.BatchInfo)
+	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdForceFlags(cmd, &info.BatchInfo)
+	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
+	cmd.Flags().BoolVarP(&info.UnForbidden, "reverse", "r", false, "unforbidden object in qiniu bucket")
+	return cmd
+}
+
 var batchDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchDeleteInfo{}
 	var cmd = &cobra.Command{
@@ -275,6 +300,7 @@ func init() {
 func rsBatchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		batchStatCmdBuilder(cfg),
+		batchForbiddenCmdBuilder(cfg),
 		batchCopyCmdBuilder(cfg),
 		batchMoveCmdBuilder(cfg),
 		batchRenameCmdBuilder(cfg),

@@ -69,22 +69,19 @@ func RestoreArchive(cfg *iqshell.Config, info RestoreArchiveInfo) {
 		Key:             info.Key,
 		FreezeAfterDays: info.freezeAfterDaysInt,
 	})
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Error: %v",
 			info.Bucket, info.Key, info.FreezeAfterDays, err)
-		return
-	}
-
-	if len(result.Error) != 0 {
-		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Code: %d, Error: %s",
-			info.Bucket, info.Key, info.FreezeAfterDays,
-			result.Code, result.Error)
 		return
 	}
 
 	if result.IsSuccess() {
 		log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%s",
 			info.Bucket, info.Key, info.FreezeAfterDays)
+	} else {
+		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Code: %d, Error: %s",
+			info.Bucket, info.Key, info.FreezeAfterDays,
+			result.Code, result.Error)
 	}
 }
 

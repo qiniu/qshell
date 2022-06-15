@@ -78,7 +78,7 @@ func (c *ChangeStatusApiInfo) ToOperation() (string, *data.CodeError) {
 	if len(c.Bucket) == 0 || len(c.Key) == 0 {
 		return "", alert.CannotEmptyError("change status operation bucket or key", "")
 	}
-	return fmt.Sprintf("/chstatus/%s/status/%c", storage.EncodedEntry(c.Bucket, c.Key), c.Status), nil
+	return fmt.Sprintf("/chstatus/%s/status/%d", storage.EncodedEntry(c.Bucket, c.Key), c.Status), nil
 }
 
 func (c *ChangeStatusApiInfo) WorkId() string {
