@@ -11,7 +11,7 @@ qshell forbidden <Bucket> <Key> [flags]
 * Key：空间中的文件名。【必须】
 
 # 选项
-* -r/--reverse : 启用指定文件
+* -r/--reverse : 启用指定文件 【可选】
 
 # 示例
 ```
