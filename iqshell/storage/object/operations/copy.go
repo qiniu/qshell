@@ -28,7 +28,7 @@ func (info *CopyInfo) Check() *data.CodeError {
 	}
 	if len(info.DestKey) == 0 {
 		info.DestKey = info.SourceKey
-		log.WarningF("No set DestKey and set DestKey to SourceKey:%s", info.SourceKey)
+		log.WarningF("No DestKey and set SourceKey to DestKey:%s", info.SourceKey)
 	}
 	return nil
 }

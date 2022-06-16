@@ -138,6 +138,21 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Expiration:", status.Expiration, expiration.String())
 	}
 
+	if status.TransitionToIA > 0 {
+		date := time.Unix(status.TransitionToIA, 0)
+		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "TransitionToIA:", status.TransitionToIA, date.String())
+	}
+
+	if status.TransitionToARCHIVE > 0 {
+		date := time.Unix(status.TransitionToARCHIVE, 0)
+		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "TransitionToARCHIVE:", status.TransitionToARCHIVE, date.String())
+	}
+
+	if status.TransitionToDeepArchive > 0 {
+		date := time.Unix(status.TransitionToDeepArchive, 0)
+		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "TransitionToDeepArchive:", status.TransitionToDeepArchive, date.String())
+	}
+
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "FileType:", status.Type, getStorageTypeDescription(status.Type))
 
 	return statInfo
