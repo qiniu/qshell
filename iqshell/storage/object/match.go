@@ -97,6 +97,11 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 		Match: false,
 	}
 
+	hashFile, oErr := os.Open(info.LocalFile)
+	if oErr != nil {
+		return result, data.NewEmptyError().AppendDescF("Match check hash, get local file error:%v", oErr)
+	}
+
 	var serverObjectStat *StatusResult
 	if len(info.ServerFileHash) == 0 {
 		if stat, sErr := Status(StatusApiInfo{
@@ -110,11 +115,6 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 			serverObjectStat = &stat
 			result.Exist = true
 		}
-	}
-
-	hashFile, oErr := os.Open(info.LocalFile)
-	if oErr != nil {
-		return result, data.NewEmptyError().AppendDescF("Match check hash, get local file error:%v", oErr)
 	}
 
 	// 计算本地文件 hash
