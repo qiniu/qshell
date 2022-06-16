@@ -135,7 +135,7 @@ func List(info ListApiInfo,
 			}
 
 			outputCount++
-			if info.Limit > 0 && outputCount > info.Limit {
+			if info.Limit > 0 && outputCount >= info.Limit {
 				complete = true
 				break
 			}
