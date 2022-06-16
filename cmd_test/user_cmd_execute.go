@@ -58,7 +58,7 @@ func changeCurrentUser(userName string) (success bool, errorMsg string) {
 	}).ErrorHandler(func(line string) {
 		errorMsg = "change current error"
 	}).Run()
-	success = len(result) == 0
+	success = strings.Contains(result, "success")
 	return
 }
 
