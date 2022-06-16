@@ -91,7 +91,7 @@ func List(info ListApiInfo,
 
 	log.Debug("will list bucket")
 	log.DebugF("Suffixes:%s", info.Suffixes)
-	shouldCheckPutTime := !info.StartTime.IsZero() || !info.StartTime.IsZero()
+	shouldCheckPutTime := !info.StartTime.IsZero() || !info.EndTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	shouldCheckStorageTypes := len(info.StorageTypes) > 0
 	shouldCheckMimeTypes := len(info.MimeTypes) > 0
@@ -166,7 +166,7 @@ func List(info ListApiInfo,
 			}
 
 			outputCount++
-			if info.Limit > 0 && outputCount > info.Limit {
+			if info.Limit > 0 && outputCount >= info.Limit {
 				complete = true
 				break
 			}
