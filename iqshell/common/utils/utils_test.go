@@ -36,3 +36,24 @@ func TestKeyFromUrl(t *testing.T) {
 		t.Fatalf("got = %s, want = %s\n", key, want)
 	}
 }
+
+func TestRemoveUrlScheme(t *testing.T) {
+	host := "hqiniu.com"
+	url := host
+	result := RemoveUrlScheme(url)
+	if host != result {
+		t.Fatalf("RemoveUrlScheme failed, excpet:%s but:%s\n", host, result)
+	}
+
+	url = "http://" + host
+	result = RemoveUrlScheme(url)
+	if host != result {
+		t.Fatalf("RemoveUrlScheme http:// failed, excpet:%s but:%s\n", host, result)
+	}
+
+	url = "https://" + host
+	result = RemoveUrlScheme(url)
+	if host != result {
+		t.Fatalf("RemoveUrlScheme https:// failed, excpet:%s but:%s\n", host, result)
+	}
+}
