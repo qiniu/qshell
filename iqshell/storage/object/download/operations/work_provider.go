@@ -160,6 +160,7 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) {
 						result.Hash, w.itemSeparate,
 						result.PutTime),
 					Work: &download.ApiInfo{
+						Bucket:            w.bucket,
 						Key:               item.Key,
 						ServerFileHash:    result.Hash,
 						ServerFileSize:    result.FSize,
@@ -203,6 +204,7 @@ func (w *workProvider) getWorkInfoFromBucket() {
 						object.Hash, w.itemSeparate,
 						object.PutTime),
 					Work: &download.ApiInfo{
+						Bucket:            w.bucket,
 						Key:               object.Key,
 						ServerFileHash:    object.Hash,
 						ServerFileSize:    object.Fsize,
