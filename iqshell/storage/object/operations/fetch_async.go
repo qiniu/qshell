@@ -222,6 +222,9 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if result != nil && result.IsValid() {
 					metric.AddSuccessCount(1)
+					if !info.DisableCheckFetchResult {
+						exporter.Success().ExportF("%s", work.Data)
+					}
 					log.InfoF("Fetch skip line:%s because have done and success", work.Data)
 					// 成功的任务需要添加到队列中等待检查（有些任务可能未来得及检查用户取消，有些检查时失败，重新检查可能成功）
 					if res, ok := result.(*asyncFetchResult); ok {
@@ -229,10 +232,16 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 					}
 				} else {
 					metric.AddFailureCount(1)
+					if !info.DisableCheckFetchResult {
+						exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
+					}
 					log.InfoF("Fetch skip line:%s because have done and failure, %v", work.Data, err)
 				}
 			} else {
 				metric.AddSkippedCount(1)
+				if !info.DisableCheckFetchResult {
+					exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
+				}
 				log.InfoF("Fetch skip line:%s because:%v", work.Data, err)
 			}
 		}).
@@ -243,6 +252,9 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 
 			in := workInfo.Work.(asyncFetchItem)
 			res := result.(*asyncFetchResult)
+			if !info.DisableCheckFetchResult {
+				exporter.Success().ExportF("%s", workInfo.Data)
+			}
 			fetchResultChan <- res
 			log.InfoF("Fetch Response, '%s' => [%s:%s] id:%s wait:%d",
 				in.info.Url, in.info.Bucket, in.info.Key, res.Info.Id, res.Info.Wait)
@@ -287,6 +299,9 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 	exporter *export.FileExporter, fetchResultChan <-chan flow.Work) {
 	if info.DisableCheckFetchResult {
 		log.DebugF("batch async fetch check: disable")
+		for r := range fetchResultChan {
+			r.WorkId()
+		}
 		return
 	}
 
@@ -381,17 +396,21 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			metric.AddCurrentCount(1)
 			metric.PrintProgress("Batching:" + work.Data)
 
+			in := work.Work.(*asyncFetchResult)
 			operationResult, _ := result.(*asyncFetchResult)
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
+					exporter.Success().ExportF("%s\t%s", in.Url, in.Key)
 					log.InfoF("Check skip line:%s because have done and success", work.Data)
 				} else {
 					metric.AddFailureCount(1)
+					exporter.Fail().ExportF("%s%s%v", in.Url, flow.ErrorSeparate, err)
 					log.InfoF("Check skip line:%s because have done and failure, %v", work.Data, err)
 				}
 			} else {
 				metric.AddSkippedCount(1)
+				exporter.Fail().ExportF("%s%s%v", in.Url, flow.ErrorSeparate, err)
 				log.InfoF("Check skip line:%s because:%v", work.Data, err)
 			}
 		}).
