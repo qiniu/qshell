@@ -237,14 +237,14 @@ func (h *handler) Start() {
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
-					log.DebugF("Skip line:%s because have done and success", work.Data)
+					log.InfoF("Skip line:%s because have done and success", work.Data)
 				} else {
 					metric.AddFailureCount(1)
 					errDesc := ""
 					if operationResult != nil {
 						errDesc = operationResult.ErrorDescription()
 					}
-					log.DebugF("Skip line:%s because have done and failure, %v%s", work.Data, err, errDesc)
+					log.InfoF("Skip line:%s because have done and failure, %v%s", work.Data, err, errDesc)
 				}
 			} else {
 				metric.AddSkippedCount(1)
@@ -253,9 +253,8 @@ func (h *handler) Start() {
 					Code:  data.ErrorCodeUnknown,
 					Error: fmt.Sprintf("%v", err),
 				})
-				log.DebugF("Skip line:%s because:%v", work.Data, err)
+				log.InfoF("Skip line:%s because:%v", work.Data, err)
 			}
-
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)
@@ -278,7 +277,7 @@ func (h *handler) Start() {
 			operation, _ := work.Work.(Operation)
 			h.onResult(work.Data, operation, &OperationResult{
 				Code:  data.ErrorCodeUnknown,
-				Error: err.Error(),
+				Error: err.Desc,
 			})
 		}).Build().Start()
 

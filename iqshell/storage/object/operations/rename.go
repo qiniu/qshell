@@ -117,7 +117,7 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.MoveApiInfo)
 		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s[%d]%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Rename Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
@@ -128,7 +128,7 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey)
 		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s[%d]%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 				in.SourceBucket, in.SourceKey,
 				in.DestBucket, in.DestKey,

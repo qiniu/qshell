@@ -100,7 +100,7 @@ func BatchChangeMime(cfg *iqshell.Config, info BatchChangeMimeInfo) {
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.ChangeMimeApiInfo)
 		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s[%d]%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Change mimetype Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
@@ -109,7 +109,7 @@ func BatchChangeMime(cfg *iqshell.Config, info BatchChangeMimeInfo) {
 			exporter.Success().Export(operationInfo)
 			log.InfoF("Change mimetype Success, [%s:%s] => '%s'", in.Bucket, in.Key, in.Mime)
 		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s[%d]%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code: %d, Error: %s",
 				in.Bucket, in.Key, in.Mime, result.Code, result.Error)
 		}

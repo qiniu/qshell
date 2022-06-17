@@ -92,7 +92,7 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 		apiInfo, ok := (operation).(*object.StatusApiInfo)
 		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s[%d]%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 			return
 		}
@@ -102,7 +102,7 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 			log.AlertF("%s\t%d\t%s\t%s\t%d\t%d",
 				in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
 		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
+			exporter.Fail().ExportF("%s%s[%d]%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
 			log.ErrorF("Status Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)
 		}
 	}).OnError(func(err *data.CodeError) {
