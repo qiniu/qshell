@@ -450,6 +450,8 @@ func asyncFetchCheckMaxDuration(size uint64) int {
 		duration = 60
 	} else if size >= 10*utils.MB {
 		duration = 25
+	} else if size == 0 {
+		duration = 180
 	}
 	return duration
 }
