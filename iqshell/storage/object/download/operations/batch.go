@@ -175,8 +175,12 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
+				saveKey := apiInfo.Key
+				if len(info.IgnoreKeyPrefixInFilePath) > 0 {
+					saveKey = strings.TrimPrefix(saveKey, info.IgnoreKeyPrefixInFilePath)
+				}
 				apiInfo.HostProvider = hostProvider
-				apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
+				apiInfo.ToFile = filepath.Join(info.DestDir, saveKey)
 				apiInfo.Referer = info.Referer
 				apiInfo.FileEncoding = info.FileEncoding
 				apiInfo.Bucket = info.Bucket
