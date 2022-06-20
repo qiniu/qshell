@@ -222,7 +222,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if result != nil && result.IsValid() {
 					metric.AddSuccessCount(1)
-					if !info.DisableCheckFetchResult {
+					if info.DisableCheckFetchResult {
 						exporter.Success().ExportF("%s", work.Data)
 					}
 					log.InfoF("Fetch skip line:%s because have done and success", work.Data)
@@ -232,16 +232,14 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 					}
 				} else {
 					metric.AddFailureCount(1)
-					if !info.DisableCheckFetchResult {
-						exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
-					}
+					// 不进行检查，需要导出失败条目
+					exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 					log.InfoF("Fetch skip line:%s because have done and failure, %v", work.Data, err)
 				}
 			} else {
 				metric.AddSkippedCount(1)
-				if !info.DisableCheckFetchResult {
-					exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
-				}
+				// 不进行检查，需要导出失败条目
+				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 				log.InfoF("Fetch skip line:%s because:%v", work.Data, err)
 			}
 		}).
@@ -252,7 +250,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 
 			in := workInfo.Work.(asyncFetchItem)
 			res := result.(*asyncFetchResult)
-			if !info.DisableCheckFetchResult {
+			if info.DisableCheckFetchResult {
 				exporter.Success().ExportF("%s", workInfo.Data)
 			}
 			fetchResultChan <- res
@@ -265,9 +263,11 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			if in, ok := workInfo.Work.(asyncFetchItem); ok {
+				// 不进行检查，需要导出失败条目
 				exporter.Fail().ExportF("%s%s%v", in.info.Url, flow.ErrorSeparate, err)
 				log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
 			} else {
+				// 不进行检查，需要导出失败条目
 				exporter.Fail().ExportF("%s%s%v", workInfo.Data, flow.ErrorSeparate, err)
 				log.ErrorF("Fetch Failed, %s, Error: %v", workInfo.Data, err)
 			}
@@ -470,7 +470,7 @@ func asyncFetchCheckMaxDuration(size uint64) int {
 	} else if size >= 10*utils.MB {
 		duration = 25
 	} else if size == 0 {
-		duration = 180
+		duration = 120
 	}
 	return duration
 }
