@@ -45,10 +45,10 @@ func (c *serverChecker) check() (exist, match bool, err *data.CodeError) {
 	}
 }
 
-func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool, bool, *data.CodeError) {
-	file, err := os.Open(c.FilePath)
-	if err != nil {
-		return true, false, data.NewEmptyError().AppendDescF("check hash: open local file:%s error, %s", c.FilePath, err)
+func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (exist bool, match bool, err *data.CodeError) {
+	file, oErr := os.Open(c.FilePath)
+	if oErr != nil {
+		return true, false, data.NewEmptyError().AppendDescF("check hash: open local file:%s error, %s", c.FilePath, oErr)
 	}
 	defer func() {
 		if e := file.Close(); e != nil {
@@ -60,12 +60,13 @@ func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (bool,
 	if utils.IsSignByEtagV2(fileServerStatus.Hash) {
 		localHash, err = utils.EtagV2(file, fileServerStatus.Parts)
 		if err != nil {
-			return true, false, data.NewEmptyError().AppendDescF("check hash: get etag v2:%s error, %s", c.FilePath, err)
+			return true, false, data.NewEmptyError().AppendDescF("check hash: get etag v2:%s error, %v", c.FilePath, err)
 		}
 	} else {
 		localHash, err = utils.EtagV1(file)
 		if err != nil {
-			return true, false, data.NewEmptyError().AppendDescF("check hash: get etag v1:%s error, %s", c.FilePath, err)
+			log.ErrorF("====== %v hash:%+v", err, localHash)
+			return true, false, data.NewEmptyError().AppendDescF("check hash: get etag v1:%s error, %v", c.FilePath, err)
 		}
 	}
 

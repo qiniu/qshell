@@ -37,7 +37,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
     "remove_temp_while_error": false,
     "log_file"               :   "download.log",
     "log_level"              :   "info",
-    "log_rotate"             :   1,
+    "log_rotate"             :   10,
     "log_stdout"             :   false
 }
 ```

@@ -316,6 +316,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 		}).
 		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			metric.AddSkippedCount(1)
+			metric.AddCurrentCount(1)
 			log.Info(err.Error())
 			exporter.Skip().Export(workInfo.Data)
 		}).
