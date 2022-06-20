@@ -327,9 +327,6 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			} else if res.IsOverwrite {
 				metric.AddOverwriteCount(1)
 				exporter.Overwrite().Export(workInfo.Data)
-			} else if res.IsSkip {
-				metric.AddSkippedCount(1)
-				exporter.Skip().Export(workInfo.Data)
 			} else {
 				metric.AddSuccessCount(1)
 				exporter.Success().Export(workInfo.Data)
