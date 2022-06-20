@@ -87,7 +87,7 @@ func matchSize(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 		return result, nil
 	} else {
 		result.Match = false
-		return result, data.NewEmptyError().AppendDescF("Match check size, size don't match, file:%s except:%d but:%d")
+		return result, data.NewEmptyError().AppendDescF("Match check size, size don't match, file:%s except:%d but:%d", info.LocalFile, stat.Size(), info.ServerFileSize)
 	}
 }
 
