@@ -65,7 +65,6 @@ func (c *serverChecker) checkHash(fileServerStatus batch.OperationResult) (exist
 	} else {
 		localHash, err = utils.EtagV1(file)
 		if err != nil {
-			log.ErrorF("====== %v hash:%+v", err, localHash)
 			return true, false, data.NewEmptyError().AppendDescF("check hash: get etag v1:%s error, %v", c.FilePath, err)
 		}
 	}
