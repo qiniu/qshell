@@ -6,7 +6,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
-	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -110,37 +109,37 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		if len(items) > 1 {
-			key, status := items[0], items[1]
-			statusInt, e := strconv.Atoi(status)
-			if e != nil {
-				return nil, data.NewEmptyError().AppendDescF("parse status error:%v", e)
-			} else if key != "" && status != "" {
-				return &object.ChangeStatusApiInfo{
-					Bucket: info.Bucket,
-					Key:    key,
-					Status: statusInt,
-				}, nil
+	batch.NewHandler(info.BatchInfo).
+		SetFileExport(exporter).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			if len(items) > 1 {
+				key, status := items[0], items[1]
+				statusInt, e := strconv.Atoi(status)
+				if e != nil {
+					return nil, data.NewEmptyError().AppendDescF("parse status error:%v", e)
+				} else if key != "" && status != "" {
+					return &object.ChangeStatusApiInfo{
+						Bucket: info.Bucket,
+						Key:    key,
+						Status: statusInt,
+					}, nil
+				}
 			}
-		}
-		return nil, alert.Error("need more than one param", "")
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		in, ok := (operation).(*object.ChangeStatusApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s[%d]%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Change status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
-		if result.IsSuccess() {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
-		} else {
-			exporter.Fail().ExportF("%s%s[%d]%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Change status Failed, [%s:%s] => %d, Code: %d, Error: %s",
-				in.Bucket, in.Key, in.Status, result.Code, result.Error)
-		}
-	}).OnError(func(err *data.CodeError) {
+			return nil, alert.Error("need more than one param", "")
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			in, ok := (operation).(*object.ChangeStatusApiInfo)
+			if !ok {
+				log.ErrorF("Change status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
+			if result.IsSuccess() {
+				log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
+			} else {
+				log.ErrorF("Change status Failed, [%s:%s] => %d, Code: %d, Error: %s",
+					in.Bucket, in.Key, in.Status, result.Code, result.Error)
+			}
+		}).OnError(func(err *data.CodeError) {
 		log.ErrorF("batch change status error:%v:", err)
 	}).Start()
 }
