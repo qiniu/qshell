@@ -286,7 +286,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		log.DebugF("save batch async fetch result to path:%s", resultPath)
 	}
 
-	log.Info("\n--------------- Batch Fetch Result ---------------")
+	log.Info("--------------- Batch Fetch Result ---------------")
 	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
 	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
 	log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
@@ -341,7 +341,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 
 				checkTimes := 0
 				maxDuration := asyncFetchCheckMaxDuration(in.FileSize)
-				minDuration := float32(maxDuration) * 0.5
+				minDuration := 2
 				checkStartTime := time.Now().Add(time.Duration(minDuration) * time.Second)
 				checkEndTime := time.Now().Add(time.Duration(maxDuration) * time.Second)
 				for {
@@ -448,7 +448,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		log.DebugF("save batch async fetch check result to path:%s", resultPath)
 	}
 
-	log.Info("\n------------ Batch Fetch Check Result ------------")
+	log.Info("------------ Batch Fetch Check Result ------------")
 	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
 	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
 	log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
