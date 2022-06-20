@@ -82,38 +82,41 @@ func BatchChangeMime(cfg *iqshell.Config, info BatchChangeMimeInfo) {
 		log.Error(err)
 		return
 	}
-	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
-		return &object.ChangeMimeApiInfo{}
-	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		if len(items) > 1 {
-			key, mime := items[0], items[1]
-			if key != "" && mime != "" {
-				return &object.ChangeMimeApiInfo{
-					Bucket: info.Bucket,
-					Key:    key,
-					Mime:   mime,
-				}, nil
+
+	batch.NewHandler(info.BatchInfo).
+		EmptyOperation(func() flow.Work {
+			return &object.ChangeMimeApiInfo{}
+		}).
+		SetFileExport(exporter).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			if len(items) > 1 {
+				key, mime := items[0], items[1]
+				if key != "" && mime != "" {
+					return &object.ChangeMimeApiInfo{
+						Bucket: info.Bucket,
+						Key:    key,
+						Mime:   mime,
+					}, nil
+				}
+				return nil, alert.Error("key or mime invalid", "")
 			}
-			return nil, alert.Error("key or mime invalid", "")
-		}
-		return nil, alert.Error("need more than one param", "")
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		apiInfo, ok := (operation).(*object.ChangeMimeApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Change mimetype Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
-		in := (*ChangeMimeInfo)(apiInfo)
-		if result.IsSuccess() {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Change mimetype Success, [%s:%s] => '%s'", in.Bucket, in.Key, in.Mime)
-		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code: %d, Error: %s",
-				in.Bucket, in.Key, in.Mime, result.Code, result.Error)
-		}
-	}).OnError(func(err *data.CodeError) {
-		log.ErrorF("Batch change mimetype error:%v:", err)
-	}).Start()
+			return nil, alert.Error("need more than one param", "")
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			apiInfo, ok := (operation).(*object.ChangeMimeApiInfo)
+			if !ok {
+				log.ErrorF("Change mimetype Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
+			in := (*ChangeMimeInfo)(apiInfo)
+			if result.IsSuccess() {
+				log.InfoF("Change mimetype Success, [%s:%s] => '%s'", in.Bucket, in.Key, in.Mime)
+			} else {
+				log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code: %d, Error: %s",
+					in.Bucket, in.Key, in.Mime, result.Code, result.Error)
+			}
+		}).
+		OnError(func(err *data.CodeError) {
+			log.ErrorF("Batch change mimetype error:%v:", err)
+		}).Start()
 }

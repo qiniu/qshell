@@ -1,6 +1,10 @@
 package batch
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
@@ -10,8 +14,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
-	"os"
-	"path/filepath"
 )
 
 type Info struct {
@@ -56,6 +58,7 @@ func (info *Info) Check() *data.CodeError {
 
 type Handler interface {
 	EmptyOperation(emptyOperation func() flow.Work) Handler
+	SetFileExport(exporter *export.FileExporter) Handler
 	ItemsToOperation(func(items []string) (operation Operation, err *data.CodeError)) Handler
 	OnResult(func(operationInfo string, operation Operation, result *OperationResult)) Handler
 	OnError(func(err *data.CodeError)) Handler
@@ -63,14 +66,17 @@ type Handler interface {
 }
 
 func NewHandler(info Info) Handler {
-	return &handler{
+	h := &handler{
 		info: &info,
 	}
+	h.exporter = export.EmptyFileExport()
+	return h
 }
 
 type handler struct {
 	info                  *Info
 	emptyOperation        func() flow.Work
+	exporter              *export.FileExporter
 	operationItemsCreator func(items []string) (operation Operation, err *data.CodeError)
 	onError               func(err *data.CodeError)
 	onResult              func(operationInfo string, operation Operation, result *OperationResult)
@@ -78,6 +84,11 @@ type handler struct {
 
 func (h *handler) EmptyOperation(emptyOperation func() flow.Work) Handler {
 	h.emptyOperation = emptyOperation
+	return h
+}
+
+func (h *handler) SetFileExport(exporter *export.FileExporter) Handler {
+	h.exporter = exporter
 	return h
 }
 
@@ -243,18 +254,27 @@ func (h *handler) Start() {
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
-					log.DebugF("Skip line:%s because have done and success", work.Data)
+					log.InfoF("Skip line:%s because have done and success", work.Data)
+					h.exporter.Success().Export(work.Data)
 				} else {
 					metric.AddFailureCount(1)
 					errDesc := ""
 					if operationResult != nil {
 						errDesc = operationResult.ErrorDescription()
 					}
-					log.DebugF("Skip line:%s because have done and failure, %v%s", work.Data, err, errDesc)
+					log.InfoF("Skip line:%s because have done and failure, %v%s", work.Data, err, errDesc)
+					h.exporter.Fail().ExportF("%s%s-%s", work.Data, flow.ErrorSeparate, errDesc)
 				}
 			} else {
 				metric.AddSkippedCount(1)
-				log.DebugF("Skip line:%s because:%v", work.Data, err)
+
+				operation, _ := work.Work.(Operation)
+				h.onResult(work.Data, operation, &OperationResult{
+					Code:  data.ErrorCodeUnknown,
+					Error: fmt.Sprintf("%v", err),
+				})
+				log.InfoF("Skip line:%s because:%v", work.Data, err)
+				h.exporter.Fail().ExportF("%s%s-%v", work.Data, flow.ErrorSeparate, err)
 			}
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
@@ -265,8 +285,14 @@ func (h *handler) Start() {
 			operationResult, _ := result.(*OperationResult)
 			if operationResult != nil && operationResult.IsSuccess() {
 				metric.AddSuccessCount(1)
+				h.exporter.Success().Export(work.Data)
 			} else {
 				metric.AddFailureCount(1)
+				if operationResult == nil {
+					h.exporter.Fail().ExportF("%s%s-no result", work.Data, flow.ErrorSeparate)
+				} else {
+					h.exporter.Fail().ExportF("%s%s[%d]%s", work.Data, flow.ErrorSeparate, operationResult.Code, operationResult.Error)
+				}
 			}
 			h.onResult(work.Data, operation, operationResult)
 		}).
@@ -274,11 +300,12 @@ func (h *handler) Start() {
 			metric.AddCurrentCount(1)
 			metric.AddFailureCount(1)
 			metric.PrintProgress("Batching:" + work.Data)
+			h.exporter.Fail().ExportF("%s%s[%d]%s", work.Data, flow.ErrorSeparate, data.ErrorCodeUnknown, err.Desc)
 
 			operation, _ := work.Work.(Operation)
 			h.onResult(work.Data, operation, &OperationResult{
 				Code:  data.ErrorCodeUnknown,
-				Error: err.Error(),
+				Error: err.Desc,
 			})
 		}).Build().Start()
 

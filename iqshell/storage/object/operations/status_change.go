@@ -117,34 +117,35 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 	}
 
 	statusInt := info.getStatus()
-	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
-		return &object.ChangeStatusApiInfo{}
-	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		if len(items) > 0 {
-			key := items[0]
-			return &object.ChangeStatusApiInfo{
-				Bucket: info.Bucket,
-				Key:    key,
-				Status: statusInt,
-			}, nil
-		}
-		return nil, alert.Error("need more than one param", "")
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		in, ok := (operation).(*object.ChangeStatusApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Change status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
-		if result.IsSuccess() {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
-		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Change status Failed, [%s:%s] => %d, Code: %d, Error: %s",
-				in.Bucket, in.Key, in.Status, result.Code, result.Error)
-		}
-	}).OnError(func(err *data.CodeError) {
+	batch.NewHandler(info.BatchInfo).
+		EmptyOperation(func() flow.Work {
+			return &object.ChangeStatusApiInfo{}
+		}).
+		SetFileExport(exporter).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			if len(items) > 1 {
+				key := items[0]
+				return &object.ChangeStatusApiInfo{
+					Bucket: info.Bucket,
+					Key:    key,
+					Status: statusInt,
+				}, nil
+			}
+			return nil, alert.Error("need more than one param", "")
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			in, ok := (operation).(*object.ChangeStatusApiInfo)
+			if !ok {
+				log.ErrorF("Change status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
+			if result.IsSuccess() {
+				log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
+			} else {
+				log.ErrorF("Change status Failed, [%s:%s] => %d, Code: %d, Error: %s",
+					in.Bucket, in.Key, in.Status, result.Code, result.Error)
+			}
+		}).OnError(func(err *data.CodeError) {
 		log.ErrorF("batch change status error:%v:", err)
 	}).Start()
 }

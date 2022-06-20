@@ -42,7 +42,7 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
    "skip_suffixes"      :   ".DS_Store,.exe",
    "log_file"           :   "upload.log",
    "log_level"          :   "info",
-   "log_rotate"         :   7,
+   "log_rotate"         :   10,
    "log_stdout"         :   true,
    "file_type"          :   0,
    "resumable_api_v2"   :   false,

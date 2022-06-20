@@ -93,52 +93,54 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 	}
 
 	lineParser := bucket.NewListLineParser()
-	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
-		return &object.DeleteApiInfo{}
-	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		listObject, e := lineParser.Parse(items)
-		if e != nil {
-			return nil, e
-		}
-
-		if len(listObject.Key) == 0 {
-			return nil, alert.Error("key invalid", "")
-		}
-
-		return &object.DeleteApiInfo{
-			Bucket: info.Bucket,
-			Key:    listObject.Key,
-			Condition: batch.OperationCondition{
-				PutTime: listObject.PutTimeString(),
-			},
-		}, nil
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		apiInfo, ok := (operation).(*object.DeleteApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Delete Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
-		if result.IsSuccess() {
-			exporter.Success().Export(operationInfo)
-			if len(apiInfo.Condition.PutTime) == 0 {
-				log.InfoF("Delete Success, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
-			} else {
-				log.InfoF("Delete Success, [%s:%s], PutTime:'%s'", apiInfo.Bucket, apiInfo.Key, apiInfo.Condition.PutTime)
+	batch.NewHandler(info.BatchInfo).
+		SetFileExport(exporter).
+		EmptyOperation(func() flow.Work {
+			return &object.DeleteApiInfo{}
+		}).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			listObject, e := lineParser.Parse(items)
+			if e != nil {
+				return nil, e
 			}
-		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			if len(apiInfo.Condition.PutTime) == 0 {
-				log.ErrorF("Delete Failed, [%s:%s], Code: %d, Error: %s",
-					apiInfo.Bucket, apiInfo.Key, result.Code, result.Error)
-			} else {
-				log.ErrorF("Delete Failed, [%s:%s], PutTime:'%s', Code: %d, Error: %s",
-					apiInfo.Bucket, apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
+
+			if len(listObject.Key) == 0 {
+				return nil, alert.Error("key invalid", "")
 			}
-		}
-	}).OnError(func(err *data.CodeError) {
-		log.ErrorF("Batch delete error:%v:", err)
-	}).Start()
+
+			return &object.DeleteApiInfo{
+				Bucket: info.Bucket,
+				Key:    listObject.Key,
+				Condition: batch.OperationCondition{
+					PutTime: listObject.PutTimeString(),
+				},
+			}, nil
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			apiInfo, ok := (operation).(*object.DeleteApiInfo)
+			if !ok {
+				log.ErrorF("Delete Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
+			if result.IsSuccess() {
+				if len(apiInfo.Condition.PutTime) == 0 {
+					log.InfoF("Delete Success, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
+				} else {
+					log.InfoF("Delete Success, [%s:%s], PutTime:'%s'", apiInfo.Bucket, apiInfo.Key, apiInfo.Condition.PutTime)
+				}
+			} else {
+				if len(apiInfo.Condition.PutTime) == 0 {
+					log.ErrorF("Delete Failed, [%s:%s], Code: %d, Error: %s",
+						apiInfo.Bucket, apiInfo.Key, result.Code, result.Error)
+				} else {
+					log.ErrorF("Delete Failed, [%s:%s], PutTime:'%s', Code: %d, Error: %s",
+						apiInfo.Bucket, apiInfo.Key, apiInfo.Condition.PutTime, result.Code, result.Error)
+				}
+			}
+		}).
+		OnError(func(err *data.CodeError) {
+			log.ErrorF("Batch delete error:%v:", err)
+		}).Start()
 }
 
 type DeleteAfterInfo struct {
@@ -218,43 +220,45 @@ func BatchDeleteAfter(cfg *iqshell.Config, info BatchDeleteInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).EmptyOperation(func() flow.Work {
-		return &object.DeleteApiInfo{}
-	}).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		after := ""
-		key := items[0]
-		if len(key) == 0 {
-			return nil, alert.Error("key invalid", "")
-		}
+	batch.NewHandler(info.BatchInfo).
+		SetFileExport(exporter).
+		EmptyOperation(func() flow.Work {
+			return &object.DeleteApiInfo{}
+		}).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			after := ""
+			key := items[0]
+			if len(key) == 0 {
+				return nil, alert.Error("key invalid", "")
+			}
 
-		if len(items) > 1 {
-			after = items[1]
-		}
-		afterDays, err := getAfterDaysOfInt(after)
-		if err != nil {
-			return nil, data.NewEmptyError().AppendDescF("parse after days error:%v from:%s", err, after)
-		}
+			if len(items) > 1 {
+				after = items[1]
+			}
+			afterDays, err := getAfterDaysOfInt(after)
+			if err != nil {
+				return nil, data.NewEmptyError().AppendDescF("parse after days error:%v from:%s", err, after)
+			}
 
-		return &object.DeleteApiInfo{
-			Bucket:          info.Bucket,
-			Key:             key,
-			DeleteAfterDays: afterDays,
-		}, nil
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		apiInfo, ok := (operation).(*object.DeleteApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Delete Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
-		if result.IsSuccess() {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Expire Success, [%s:%s], '%d'天后删除", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays)
-		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Expire Failed, [%s:%s], '%d'天后删除, Code: %d, Error: %s", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays, result.Code, result.Error)
-		}
-	}).OnError(func(err *data.CodeError) {
-		log.ErrorF("Batch expire error:%v:", err)
-	}).Start()
+			return &object.DeleteApiInfo{
+				Bucket:          info.Bucket,
+				Key:             key,
+				DeleteAfterDays: afterDays,
+			}, nil
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			apiInfo, ok := (operation).(*object.DeleteApiInfo)
+			if !ok {
+				log.ErrorF("Delete Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
+			if result.IsSuccess() {
+				log.InfoF("Expire Success, [%s:%s], '%d'天后删除", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays)
+			} else {
+				log.ErrorF("Expire Failed, [%s:%s], '%d'天后删除, Code: %d, Error: %s", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays, result.Code, result.Error)
+			}
+		}).
+		OnError(func(err *data.CodeError) {
+			log.ErrorF("Batch expire error:%v:", err)
+		}).Start()
 }

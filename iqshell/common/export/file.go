@@ -67,3 +67,12 @@ func NewFileExport(config FileExporterConfig) (export *FileExporter, err *data.C
 	export.overwrite, err = New(config.OverwriteExportFilePath)
 	return
 }
+
+func EmptyFileExport() *FileExporter {
+	export := &FileExporter{}
+	export.success = empty()
+	export.fail = empty()
+	export.skip = empty()
+	export.overwrite = empty()
+	return export
+}

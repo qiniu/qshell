@@ -1,6 +1,12 @@
 package operations
 
 import (
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -12,11 +18,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type BatchUploadInfo struct {
@@ -377,7 +378,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				}
 			} else {
 				metric.AddSkippedCount(1)
-				log.DebugF("Skip line:%s because:%v", workInfo.Data, err)
+				log.InfoF("Skip line:%s because:%v", workInfo.Data, err)
 				exporter.Skip().Export(workInfo.Data)
 			}
 		}).
@@ -388,9 +389,6 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			} else if res.IsOverwrite {
 				metric.AddOverwriteCount(1)
 				exporter.Overwrite().Export(workInfo.Data)
-			} else if res.IsSkip {
-				metric.AddSkippedCount(1)
-				exporter.Skip().Export(workInfo.Data)
 			} else {
 				metric.AddSuccessCount(1)
 				exporter.Success().Export(workInfo.Data)
