@@ -172,15 +172,17 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
-					log.DebugF("Skip line:%s because have done and success", work.Data)
+					exporter.Success().ExportF("%s", work.Data)
+					log.InfoF("Skip line:%s because have done and success", work.Data)
 				} else {
 					metric.AddFailureCount(1)
-					log.DebugF("Skip line:%s because have done and failure, %v", work.Data, err)
+					exporter.Fail().ExportF("%s", work.Data)
+					log.InfoF("Skip line:%s because have done and failure, %v", work.Data, err)
 				}
 			} else {
 				metric.AddSkippedCount(1)
 				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
-				log.DebugF("Skip line:%s because:%v", work.Data, err)
+				log.InfoF("Skip line:%s because:%v", work.Data, err)
 			}
 
 		}).
