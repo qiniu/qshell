@@ -185,9 +185,11 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
+					exporter.Success().Export(work.Data)
 					log.DebugF("Skip line:%s because have done and success", work.Data)
 				} else {
 					metric.AddFailureCount(1)
+					exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 					log.DebugF("Skip line:%s because have done and failure, %v", work.Data, err)
 				}
 			} else {

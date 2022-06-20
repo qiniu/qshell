@@ -184,7 +184,6 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 				log.InfoF("Skip line:%s because:%v", work.Data, err)
 			}
-
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)
