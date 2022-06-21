@@ -123,7 +123,7 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 		}).
 		SetFileExport(exporter).
 		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-			if len(items) > 1 {
+			if len(items) > 0 {
 				key := items[0]
 				return &object.ChangeStatusApiInfo{
 					Bucket: info.Bucket,
