@@ -286,13 +286,13 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		log.DebugF("save batch async fetch result to path:%s", resultPath)
 	}
 
-	log.Info("--------------- Batch Fetch Result ---------------")
+	log.Info("------------- Batch Fetch Request Result ------------")
 	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
 	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
 	log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
 	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
 	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
-	log.InfoF("--------------------------------------------------")
+	log.InfoF("---------------------------------------------------")
 }
 
 func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
