@@ -24,7 +24,7 @@ func Some(operations []Operation) ([]*OperationResult, *data.CodeError) {
 			StopWhenWorkError: true,
 		},
 		WorkList:                    works,
-		MaxOperationCountPerRequest: 1000,
+		MaxOperationCountPerRequest: defaultOperationCountPerRequest,
 	}).OnResult(func(operationInfo string, operation Operation, result *OperationResult) {
 		h.results = append(h.results, result)
 	}).OnError(func(err *data.CodeError) {

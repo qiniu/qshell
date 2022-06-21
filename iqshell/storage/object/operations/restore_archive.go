@@ -146,7 +146,7 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 			apiInfo, ok := (operation).(*object.RestoreArchiveApiInfo)
 			if !ok {
-				log.ErrorF("Rename Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				log.ErrorF("Restore archive Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 				return
 			}
 

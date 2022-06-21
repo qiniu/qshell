@@ -8,6 +8,7 @@ import (
 
 var (
 	Debug = true
+	Local = len(os.Getenv("QSHELL_LOCAL")) > 0
 
 	AccessKey      = os.Getenv("accessKey")
 	SecretKey      = os.Getenv("secretKey")

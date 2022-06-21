@@ -64,7 +64,7 @@ func TestQUpload(t *testing.T) {
 			CheckExists:            false,
 			CheckHash:              true,
 			CheckSize:              true,
-			RescanLocal:            false,
+			RescanLocal:            true,
 			FileType:               0,
 			DeleteOnSuccess:        false,
 			DisableResume:          false,

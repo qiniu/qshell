@@ -137,22 +137,24 @@ func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		}
 	}
 
-	res = &ApiResult{}
+	isOverwrite := false
 	if exist {
 		if match {
 			log.InfoF("File `%s` exists in bucket:[%s:%s], and match, ignore this upload",
 				info.FilePath, info.ToBucket, info.SaveKey)
-			res.IsSkip = true
-			return
+			return &ApiResult{
+				IsSkip: true,
+			}, nil
 		}
 
 		if !info.Overwrite {
 			log.WarningF("Skip upload of file `%s` => [%s:%s] because `overwrite` is false",
 				info.FilePath, info.ToBucket, info.SaveKey)
-			res.IsNotOverwrite = true
-			return
+			return &ApiResult{
+				IsNotOverwrite: true,
+			}, nil
 		}
-		res.IsOverwrite = true
+		isOverwrite = true
 	}
 
 	log.DebugF("upload: start upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
@@ -160,6 +162,7 @@ func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	if res == nil {
 		res = &ApiResult{}
 	}
+	res.IsOverwrite = isOverwrite
 	log.DebugF("upload:   end upload:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
 	if err != nil {
 		err = data.NewEmptyError().AppendDesc("upload source").AppendError(err)
@@ -178,15 +181,16 @@ func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	}
 
 	if info.CheckHash {
-		_, mErr := object.Match(object.MatchApiInfo{
+		if _, mErr := object.Match(object.MatchApiInfo{
 			Bucket:         info.ToBucket,
 			Key:            info.SaveKey,
 			LocalFile:      info.FilePath,
 			CheckMode:      object.MatchCheckModeFileHash,
 			ServerFileHash: res.ServerFileHash,
 			ServerFileSize: res.ServerFileSize,
-		})
-		return res, data.NewEmptyError().AppendDesc("check after upload ").AppendError(mErr)
+		}); mErr != nil {
+			return res, data.NewEmptyError().AppendDesc("check after upload").AppendError(mErr)
+		}
 	}
 
 	return res, nil

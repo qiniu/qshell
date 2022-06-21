@@ -11,6 +11,10 @@ var accessKey = test.AccessKey
 var secretKey = test.SecretKey
 
 func TestUser(t *testing.T) {
+	if test.Local {
+		return
+	}
+
 	TestUserIntegration(t)
 }
 
