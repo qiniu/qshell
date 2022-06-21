@@ -11,7 +11,10 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	info := operations.BatchAsyncFetchInfo{}
 	cmd := &cobra.Command{
 		Use:   "abfetch <Bucket> [-i <urlList>]",
-		Short: "Async Batch fetch network resources to qiniu Bucket",
+		Short: "Batch asynchronous fetch network resources to qiniu Bucket",
+		Long: `Batch asynchronous fetch in two steps:
+1. Initiate an asynchronous fetch request. The success of the request does not mean that the fetch is successful. Step 2 is required to detect whether the fetch is really successful.
+2. Check if the fetch is successful, you can skip this step with the long option: --disable-check-fetch-result`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ABFetch
 			info.BatchInfo.ItemSeparate = "\t" // 此处用户不可定义

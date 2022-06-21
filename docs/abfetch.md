@@ -1,6 +1,10 @@
 # 简介
 `abfetch` 使用批量异步抓取接口抓取网络资源到七牛存储空间。
 
+批量异步 fetch 分两步：
+1. 发起异步 fetch 请求，请求成功并不意味着 fetch 成功，需要 `步骤 2` 来检测是否真的 fetch 成功。
+2. 通过查询文件是否存在于指定的七牛存储空间中来检测 fetch 是否成功；你可以使用长选项 `--disable-check-fetch-result` 跳过此步骤。
+
 参考文档：[异步抓取 (async fetch)](https://developer.qiniu.com/kodo/api/4097/asynch-fetch)
 
 # 格式
