@@ -257,6 +257,7 @@ var batchFetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdItemSeparateFlags(cmd, &info.BatchInfo)
+	setBatchCmdForceFlags(cmd, &info.BatchInfo)
 	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "worker", "c", 1, "worker count")
 	cmd.Flags().StringVarP(&upHost, "up-host", "u", "", "fetch uphost")
 	return cmd
