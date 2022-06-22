@@ -167,6 +167,9 @@ func (h *handler) Start() {
 	}
 
 	metric := &Metric{}
+	if isArraySource {
+		metric.DisablePrintProgress()
+	}
 	metric.Start()
 	workerBuilder.
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
