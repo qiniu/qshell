@@ -11,12 +11,12 @@ type Metric struct {
 	start                time.Time
 	disablePrintProgress bool
 
-	Duration             int64 `json:"duration"`
-	TotalCount           int64 `json:"total_count"`
-	CurrentCount         int64 `json:"-"`
-	SuccessCount         int64 `json:"success_count"`
-	FailureCount         int64 `json:"failure_count"`
-	SkippedCount         int64 `json:"skipped_count"`
+	Duration     int64 `json:"duration"`
+	TotalCount   int64 `json:"total_count"`
+	CurrentCount int64 `json:"-"`
+	SuccessCount int64 `json:"success_count"`
+	FailureCount int64 `json:"failure_count"`
+	SkippedCount int64 `json:"skipped_count"`
 }
 
 func (m *Metric) Start() {

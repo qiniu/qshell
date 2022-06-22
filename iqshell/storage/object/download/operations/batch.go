@@ -227,7 +227,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				return true, data.NewEmptyError().AppendDesc("result is invalid")
 			}
 
-			isLocalFileNotChange, _ :=  utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime)
+			isLocalFileNotChange, _ := utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime)
 			isServerFileNotChange := apiInfo.ServerFilePutTime == recordApiInfo.ServerFilePutTime
 			// 本地文件和服务端文件均没有变化，则不需要重新下载
 			if isLocalFileNotChange && isServerFileNotChange {
