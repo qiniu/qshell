@@ -227,18 +227,18 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				return true, data.NewEmptyError().AppendDesc("result is invalid")
 			}
 
+			isLocalFileNotChange, _ :=  utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime)
+			isServerFileNotChange := apiInfo.ServerFilePutTime == recordApiInfo.ServerFilePutTime
 			// 本地文件和服务端文件均没有变化，则不需要重新下载
-			if match, _ := utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime); match && apiInfo.ServerFilePutTime == recordApiInfo.ServerFilePutTime {
+			if isLocalFileNotChange && isServerFileNotChange {
 				return false, nil
+			} else if !isLocalFileNotChange {
+				// 本地有变动，尝试检查 hash，hash 统一由单文件上传之前检查
+				return true, data.NewEmptyError().AppendDesc("local file has change")
+			} else {
+				// 服务端文件有变动，尝试检查 hash，hash 统一由单文件上传之前检查
+				return true, data.NewEmptyError().AppendDesc("server file has change")
 			}
-
-			// 本地或服务端文件有变动，则先查 size，size 不同则需要重新下载， 相同再尝试检查 hash，hash 统一由单文件下载之前检查
-			if _, cause = utils.IsFileMatchFileSize(apiInfo.ToFile, apiInfo.ServerFileSize); err != nil ||
-				apiInfo.ServerFileSize != recordApiInfo.ServerFileSize {
-				return true, cause
-			}
-
-			return false, nil
 		}).
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
 			apiInfo, _ := workInfo.Work.(*download.ApiInfo)

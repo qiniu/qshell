@@ -328,17 +328,18 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				return true, data.NewEmptyError().AppendDesc("get stat from server").AppendError(sErr)
 			}
 
-			if match, _ := utils.IsFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime); match && stat.PutTime == result.ServerPutTime {
+			isLocalFileNotChange, _ := utils.IsFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime)
+			isServerFileNotChange := stat.PutTime == result.ServerPutTime
+			// 本地文件没有变化，服务端文件没有变化，则不需要再重新上传
+			if isLocalFileNotChange && isServerFileNotChange {
 				return false, nil
+			} else if !isLocalFileNotChange {
+				// 本地有变动，尝试检查 hash，hash 统一由单文件上传之前检查
+				return true, data.NewEmptyError().AppendDesc("local file has change")
+			} else {
+				// 服务端文件有变动，尝试检查 hash，hash 统一由单文件上传之前检查
+				return true, data.NewEmptyError().AppendDesc("server file has change")
 			}
-
-			// 本地或服务端文件有变动，则先查 size，size 不同则需要重新下载， 相同再尝试检查 hash，hash 统一由单文件上传之前检查
-			if _, mErr := utils.IsFileMatchFileSize(uploadInfo.FilePath, recordUploadInfo.LocalFileSize); mErr != nil ||
-				stat.FSize != result.ServerFileSize {
-				return true, data.NewEmptyError().AppendDesc("size don't match").AppendError(mErr)
-			}
-
-			return false, nil
 		}).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
