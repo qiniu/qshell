@@ -7,10 +7,10 @@ import (
 )
 
 type Metric struct {
-	mu    sync.Mutex
-	start time.Time
+	mu                   sync.Mutex
+	start                time.Time
+	disablePrintProgress bool
 
-	DisablePrintProgress bool  `json:"-"`
 	Duration             int64 `json:"duration"`
 	TotalCount           int64 `json:"total_count"`
 	CurrentCount         int64 `json:"-"`
@@ -77,8 +77,12 @@ func (m *Metric) AddSkippedCount(count int64) {
 	m.mu.Unlock()
 }
 
+func (m *Metric) DisablePrintProgress() {
+	m.disablePrintProgress = true
+}
+
 func (m *Metric) PrintProgress(tag string) {
-	if m == nil || m.DisablePrintProgress {
+	if m == nil || m.disablePrintProgress {
 		return
 	}
 

@@ -162,8 +162,9 @@ func (h *handler) Start() {
 		}
 	}
 
-	metric := &Metric{
-		DisablePrintProgress: isArraySource,
+	metric := &Metric{}
+	if isArraySource {
+		metric.DisablePrintProgress()
 	}
 	metric.Start()
 	workerBuilder.
