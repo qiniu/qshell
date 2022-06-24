@@ -349,7 +349,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 					if current.After(checkStartTime) {
 						checkTimes += 1
 						ret, cErr := object.CheckAsyncFetchStatus(in.Bucket, in.Info.Id)
-						log.DebugF("batch async fetch check, bucket:%s key:%s id:%s wait:%d", in.Bucket, in.Key, in.Key, ret.Wait)
+						log.DebugF("batch async fetch check [%d], bucket:%s key:%s id:%s wait:%d", checkTimes, in.Bucket, in.Key, in.Info.Id, ret.Wait)
 						if cErr != nil {
 							log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
 						} else if ret.Wait == -1 { // 视频抓取过一次，有可能成功了，有可能失败了
@@ -357,9 +357,10 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 								Bucket: in.Bucket,
 								Key:    in.Key,
 							}); exist {
+								log.DebugF("batch async fetch check [%d], bucket:%s key:%s exist", checkTimes, in.Bucket, in.Key)
 								return in, nil
 							} else {
-								log.ErrorF("Check Stat:%s error:%v ID:%s", in.Key, err, in.Info.Id)
+								log.ErrorF("Check Stat[%d]:%s error:%v ID:%s", checkTimes, in.Key, err, in.Info.Id)
 							}
 						}
 					}
