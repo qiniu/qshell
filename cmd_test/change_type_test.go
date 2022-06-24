@@ -169,7 +169,7 @@ func TestBatchChangeTypeRecord(t *testing.T) {
 		t.Fatal("batch result: should skip success work")
 	}
 	if !strings.Contains(result, "work redo") {
-		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
+		t.Fatal("batch result: should redo because set --record-redo-while-error")
 	}
 
 	//back

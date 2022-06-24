@@ -1,9 +1,11 @@
 # 简介
-`batchmatch` 指令用来批量验证本地文件和七牛云存储文件是否匹配。
+`batchmatch` 指令用来批量验证指定的七牛云存储文件是否和本地文件相匹配。
+
+使用此命令，您需要指定待验证的七牛云文件 Key，指定当时见选项 `-i/--input-file`，命令会根据指定的 Key 查到 <LocalFileDir> 路径下与此 Key 对应的文件，然后检查两个文件的一致性。
 
 # 格式
 ```
-qshell batchmatch <Bucket> <LocalFile> 
+qshell batchmatch <Bucket> <LocalFileDir> 
 ```
 
 # 鉴权
@@ -15,7 +17,7 @@ qshell batchmatch <Bucket> <LocalFile>
 
 注：
 本地文件和七牛云存储文件对应关系必须满足一下条件：
-$LocalFilePath = ${LocalFileDir} + ${文件分隔符} + ${七牛存储 Key}
+`${LocalFilePath} = ${LocalFileDir} + ${文件分隔符} + ${七牛存储 Key}`
 
 # 选项
 - i/--input-file：接受一个文件参数，文件内容每行包含待检查文件的 Key 等信息。每行多个元素名之间用分割符分隔（默认 tab 制表符）； 如果需要自定义分割符，可以使用 `-F` 或 `--sep` 选项指定自定义的分隔符；也可以直接使用 list 接口结果保存的文件。如果没有通过该选项指定该文件参数， 从标准输入读取内容。 具体格式如下：（【可选】）
