@@ -371,6 +371,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 						break
 					}
 				}
+				log.ErrorF("batch async fetch check [%s:%s] for [%d] times, but can't object in qiniu server", in.Bucket, in.Key, checkTimes)
 				return nil, data.NewEmptyError().AppendDesc("can't find object in bucket")
 			}), nil
 		})).
