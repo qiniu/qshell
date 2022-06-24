@@ -91,6 +91,7 @@ func TestBatchCopy(t *testing.T) {
 		"-i", path,
 		"--success-list", successLogPath,
 		"--failure-list", failLogPath,
+		"--overwrite",
 		"--worker", "4",
 		"-w",
 		"-y")
@@ -105,6 +106,56 @@ func TestBatchCopy(t *testing.T) {
 
 	if !test.IsFileHasContent(failLogPath) {
 		t.Fatal("batch result: fail log  to file error: file empty")
+	}
+}
+
+func TestBatchCopyRecord(t *testing.T) {
+	batchConfig := ""
+	keys := test.OriginKeys
+	for i, key := range keys {
+		batchConfig += key + "\t" + test.Keys[i] + "\t" + "\n"
+	}
+	batchConfig += "\n"
+	batchConfig += "hello10.json" + "\t" + "hello10_test.json" + "\t" + "\n"
+	path, err := test.CreateFileWithContent("batch_chtype.txt", batchConfig)
+	if err != nil {
+		t.Fatal("create batch move config file error:", err)
+	}
+
+	test.RunCmdWithError("batchcopy", test.Bucket, test.Bucket,
+		"-i", path,
+		"--enable-record",
+		"--worker", "4",
+		"-w",
+		"-y")
+
+	result, _ := test.RunCmdWithError("batchcopy", test.Bucket, test.Bucket,
+		"-i", path,
+		"--enable-record",
+		"--worker", "4",
+		"-y",
+		"-w",
+		"-d")
+	if !strings.Contains(result, "because have done and success") {
+		t.Fatal("batch result: should skip success work")
+	}
+	if strings.Contains(result, "work redo") {
+		t.Fatal("batch result: shouldn't redo because not set --record-redo-while-error")
+	}
+
+	result, _ = test.RunCmdWithError("batchcopy", test.Bucket, test.Bucket,
+		"-i", path,
+		"--enable-record",
+		"--record-redo-while-error",
+		"--worker", "4",
+		"-y",
+		"-w",
+		"-d")
+	if !strings.Contains(result, "because have done and success") {
+		t.Fatal("batch result: should skip success work")
+	}
+	if !strings.Contains(result, "work redo") {
+		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
 	}
 }
 

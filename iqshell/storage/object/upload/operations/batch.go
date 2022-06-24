@@ -6,11 +6,10 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
+	"github.com/qiniu/qshell/v2/iqshell/common/locker"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/synchronized"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
 	"os"
 	"path/filepath"
@@ -20,22 +19,31 @@ import (
 )
 
 type BatchUploadInfo struct {
-	BatchInfo        batch.Info
+	flow.Info
+	export.FileExporterConfig
+
+	Overwrite bool // 是否覆盖
+
+	// 工作数据源
+	InputFile    string // 工作数据源：文件
+	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
+	EnableStdin  bool   // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
+
 	UploadConfigFile string
 	CallbackHost     string
 	CallbackUrl      string
 }
 
 func (info *BatchUploadInfo) Check() *data.CodeError {
-	if info.BatchInfo.WorkerCount < 1 || info.BatchInfo.WorkerCount > 2000 {
-		info.BatchInfo.WorkerCount = 5
+	if info.WorkerCount < 1 || info.WorkerCount > 2000 {
+		info.WorkerCount = 5
 		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
-			info.BatchInfo.Info.WorkerCount)
+			info.Info.WorkerCount)
 	}
-	if err := info.BatchInfo.Check(); err != nil {
+	if err := info.Info.Check(); err != nil {
 		return err
 	}
-	info.BatchInfo.Force = true
+	info.Force = true
 	return nil
 }
 
@@ -58,8 +66,12 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 	}
 
 	upload2Info := BatchUpload2Info{
-		BatchInfo:    info.BatchInfo,
-		UploadConfig: DefaultUploadConfig(),
+		Info:               info.Info,
+		FileExporterConfig: info.FileExporterConfig,
+		InputFile:          info.InputFile,
+		ItemSeparate:       info.ItemSeparate,
+		EnableStdin:        info.EnableStdin,
+		UploadConfig:       DefaultUploadConfig(),
 	}
 	upload2Info.UploadConfig.Policy = &storage.PutPolicy{
 		CallbackURL:  info.CallbackUrl,
@@ -79,48 +91,72 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 }
 
 type BatchUpload2Info struct {
-	// 输入文件通过 upload config 输入
-	BatchInfo batch.Info
+	flow.Info
+	export.FileExporterConfig
 	UploadConfig
+
+	// 工作数据源
+	InputFile    string // 工作数据源：文件
+	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
+	EnableStdin  bool   // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
 }
 
 func (info *BatchUpload2Info) Check() *data.CodeError {
-	if info.BatchInfo.WorkerCount < 1 || info.BatchInfo.WorkerCount > 2000 {
-		info.BatchInfo.WorkerCount = 5
+	if info.Info.WorkerCount < 1 || info.Info.WorkerCount > 2000 {
+		info.Info.WorkerCount = 5
 		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
-			info.BatchInfo.Info.WorkerCount)
+			info.Info.WorkerCount)
 	}
-	if err := info.BatchInfo.Check(); err != nil {
+	if err := info.Info.Check(); err != nil {
 		return err
 	}
 	if err := info.UploadConfig.Check(); err != nil {
 		return err
 	}
+	if info.UploadConfig.Policy == nil {
+		info.UploadConfig.Policy = &storage.PutPolicy{}
+	}
+	if len(info.ItemSeparate) == 0 {
+		info.ItemSeparate = data.DefaultLineSeparate
+	}
 	return nil
 }
 
 func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		if len(info.RecordRoot) > 0 {
+			return info.RecordRoot
+		}
+		return filepath.Join(cmdPath, info.JobId())
+	}
+
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
-		BeforeLoadFileLog: func() {
-			if len(info.RecordRoot) == 0 {
-				info.RecordRoot = uploadCachePath(workspace.GetConfig(), &info.UploadConfig)
-			}
-			if data.Empty(cfg.CmdCfg.Log.LogFile) {
-				workspace.GetConfig().Log.LogFile = data.NewString(filepath.Join(info.RecordRoot, "log.txt"))
-			}
-		},
 	}); !shouldContinue {
 		return
 	}
 
-	log.DebugF("record root: %s", info.RecordRoot)
+	if e := locker.Lock(); e != nil {
+		log.ErrorF("Upload, %v", e)
+		return
+	}
+
+	unlockHandler := func() {
+		if e := locker.TryUnlock(); e != nil {
+			log.ErrorF("Upload, %v", e)
+		}
+	}
+	workspace.AddCancelObserver(func(s os.Signal) {
+		unlockHandler()
+	})
+	defer unlockHandler()
 
 	batchUpload(info)
 }
 
 func batchUpload(info BatchUpload2Info) {
-	dbPath := filepath.Join(info.RecordRoot, ".ldb")
+
+	dbPath := filepath.Join(workspace.GetJobDir(), ".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
 
 	// 扫描本地文件
@@ -131,10 +167,10 @@ func batchUpload(info BatchUpload2Info) {
 		if _, err := os.Stat(info.FileList); err == nil {
 			// 存在 file list 无需再重新扫描
 			needScanLocal = false
-			info.BatchInfo.InputFile = info.FileList
+			info.InputFile = info.FileList
 		} else {
-			info.BatchInfo.InputFile = filepath.Join(info.RecordRoot, ".cache")
-			if _, statErr := os.Stat(info.BatchInfo.InputFile); statErr == nil {
+			info.InputFile = filepath.Join(workspace.GetJobDir(), ".cache")
+			if _, statErr := os.Stat(info.InputFile); statErr == nil {
 				//file exists
 				needScanLocal = info.IsRescanLocal()
 			} else {
@@ -149,11 +185,11 @@ func batchUpload(info BatchUpload2Info) {
 			return
 		}
 
-		if len(info.BatchInfo.InputFile) == 0 {
-			info.BatchInfo.InputFile = filepath.Join(info.RecordRoot, ".cache")
+		if len(info.InputFile) == 0 {
+			info.InputFile = filepath.Join(workspace.GetJobDir(), ".cache")
 		}
 
-		_, err := utils.DirCache(info.SrcDir, info.BatchInfo.InputFile)
+		_, err := utils.DirCache(info.SrcDir, info.InputFile)
 		if err != nil {
 			log.ErrorF("create dir files cache error:%v", err)
 			return
@@ -164,7 +200,7 @@ func batchUpload(info BatchUpload2Info) {
 }
 
 func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath string) {
-	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
+	exporter, err := export.NewFileExport(info.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
 		return
@@ -176,20 +212,13 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 		return
 	}
 
-	timeStart := time.Now()
-	syncLocker := synchronized.NewSynchronized(nil)
-	var totalFileCount int64
-	var currentFileCount int64
-	var successFileCount int64
-	var failureFileCount int64
-	var overwriteCount int64
-	var notOverwriteCount int64
-	var skippedFileCount int64
+	metric := &Metric{}
+	metric.Start()
 
-	flow.New(info.BatchInfo.Info).
-		WorkProviderWithFile(info.BatchInfo.InputFile,
+	flow.New(info.Info).
+		WorkProviderWithFile(info.InputFile,
 			false,
-			flow.NewItemsWorkCreator(info.BatchInfo.ItemSeparate,
+			flow.NewItemsWorkCreator(info.ItemSeparate,
 				3,
 				func(items []string) (work flow.Work, err *data.CodeError) {
 					fileRelativePath := items[0]
@@ -250,24 +279,20 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
-				syncLocker.Do(func() {
-					currentFileCount += 1
-				})
-				apiInfo := workInfo.Work.(*UploadInfo)
+				apiInfo, _ := workInfo.Work.(*UploadInfo)
 
-				log.AlertF("Uploading %s [%d/%d, %.1f%%] ...", apiInfo.FilePath, currentFileCount, totalFileCount,
-					float32(currentFileCount)*100/float32(totalFileCount))
+				metric.AddCurrentCount(1)
+				metric.PrintProgress("Uploading " + apiInfo.FilePath)
 
-				res, err := uploadFile(apiInfo)
-
-				if err != nil {
-					return nil, err
+				if res, e := uploadFile(apiInfo); e != nil {
+					return nil, e
+				} else {
+					return res, nil
 				}
-				return res, nil
 			}), nil
 		})).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
-			totalFileCount = flow.WorkProvider.WorkTotalCount()
+			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
 		}).
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
@@ -289,50 +314,48 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			}
 			return
 		}).
-		OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
-			syncLocker.Do(func() {
-				skippedFileCount += 1
-			})
+		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
+			metric.AddSkippedCount(1)
+			metric.AddCurrentCount(1)
 			log.Info(err.Error())
 			exporter.Skip().Export(workInfo.Data)
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-			res := result.(upload.ApiResult)
-
-			syncLocker.Do(func() {
-				if res.IsNotOverwrite {
-					notOverwriteCount += 1
-				} else if res.IsOverwrite {
-					overwriteCount += 1
-					exporter.Overwrite().Export(workInfo.Data)
-				} else if res.IsSkip {
-					skippedFileCount += 1
-					exporter.Skip().Export(workInfo.Data)
-				} else {
-					successFileCount += 1
-					exporter.Success().Export(workInfo.Data)
-				}
-			})
+			res, _ := result.(*upload.ApiResult)
+			if res.IsNotOverwrite {
+				metric.AddNotOverwriteCount(1)
+			} else if res.IsOverwrite {
+				metric.AddOverwriteCount(1)
+				exporter.Overwrite().Export(workInfo.Data)
+			} else {
+				metric.AddSuccessCount(1)
+				exporter.Success().Export(workInfo.Data)
+			}
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
-			syncLocker.Do(func() {
-				failureFileCount += 1
-			})
+			metric.AddFailureCount(1)
 			exporter.Fail().ExportF("%s%s%%s", workInfo.Data, flow.ErrorSeparate, err)
 			log.ErrorF("Upload Failed, %s error:%s", workInfo.Data, err)
 		}).Build().Start()
 
-	log.Alert("--------------- Upload Result ---------------")
-	log.AlertF("%20s%10d", "Total:", totalFileCount)
-	log.AlertF("%20s%10d", "Success:", successFileCount)
-	log.AlertF("%20s%10d", "Failure:", failureFileCount)
-	log.AlertF("%20s%10d", "Overwrite:", overwriteCount)
-	log.AlertF("%20s%10d", "NotOverwrite:", notOverwriteCount)
-	log.AlertF("%20s%10d", "Skipped:", skippedFileCount)
-	log.AlertF("%20s%15s", "Duration:", time.Since(timeStart))
-	log.AlertF("---------------------------------------------")
+	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
+	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		log.ErrorF("save download result to path:%s error:%v", resultPath, e)
+	} else {
+		log.DebugF("save download result to path:%s", resultPath)
+	}
+
+	log.Info("--------------- Upload Result ---------------")
+	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
+	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
+	log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
+	log.InfoF("%20s%10d", "Overwrite:", metric.OverwriteCount)
+	log.InfoF("%20s%10d", "NotOverwrite:", metric.NotOverwriteCount)
+	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
+	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
+	log.InfoF("---------------------------------------------")
 	if workspace.GetConfig().Log.Enable() {
-		log.AlertF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+		log.InfoF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
 	}
 }
 

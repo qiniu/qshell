@@ -91,6 +91,63 @@ func TestBatchFetch(t *testing.T) {
 	if !test.IsFileHasContent(failLogPath) {
 		t.Fatal("batch result: fail log  to file error: file empty")
 	}
+
+	result, _ := test.RunCmdWithError("batchfetch", test.Bucket,
+		"-i", path,
+		"--success-list", successLogPath,
+		"--failure-list", failLogPath,
+		"--worker", "4",
+		"-y")
+	if !strings.Contains(result, "Skip") {
+		t.Fatal("batch result: redo should skip")
+	}
+}
+
+func TestBatchFetchWithRecord(t *testing.T) {
+	batchConfig := ""
+	domains := []string{test.BucketObjectDomain, "https://qshell-na0.qiniupkg.com/hello10.json"}
+	for _, domain := range domains {
+		name := "batch_fetch_" + filepath.Base(domain)
+		batchConfig += domain + "\t" + name + "\n"
+	}
+
+	resultDir, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result dir error:", err)
+	}
+
+	successLogPath := filepath.Join(resultDir, "batch_copy_success.txt")
+	failLogPath := filepath.Join(resultDir, "batch_copy_fail.txt")
+
+	path, err := test.CreateFileWithContent("batch_fetch.txt", batchConfig)
+	if err != nil {
+		t.Fatal("create batch fetch config file error:", err)
+	}
+
+	test.RunCmdWithError("batchfetch", test.Bucket,
+		"-i", path,
+		"--success-list", successLogPath,
+		"--failure-list", failLogPath,
+		"--enable-record",
+		"--worker", "1",
+		"-y")
+	defer func() {
+		test.RemoveFile(successLogPath)
+		test.RemoveFile(failLogPath)
+	}()
+
+	result, _ := test.RunCmdWithError("batchfetch", test.Bucket,
+		"-i", path,
+		"--success-list", successLogPath,
+		"--failure-list", failLogPath,
+		"--enable-record",
+		"--worker", "4",
+		"--worker", "1",
+		"-y",
+		"-d")
+	if !strings.Contains(result, "Skip") {
+		t.Fatal("batch result: redo should skip")
+	}
 }
 
 func TestBatchFetchDocument(t *testing.T) {

@@ -1,20 +1,20 @@
 package aws
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"strings"
-	"sync"
+	"path/filepath"
 	"time"
 )
 
@@ -53,13 +53,17 @@ func (info *FetchInfo) Check() *data.CodeError {
 }
 
 func Fetch(cfg *iqshell.Config, info FetchInfo) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s:%s", cfg.CmdCfg.CmdId, info.AwsBucketInfo.Region, info.AwsBucketInfo.Bucket, info.QiniuBucket))
+		return filepath.Join(cmdPath, jobId)
+	}
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
 		return
 	}
 
-	resultExport, err := export.NewFileExport(export.FileExporterConfig{
+	exporter, err := export.NewFileExport(export.FileExporterConfig{
 		SuccessExportFilePath:   info.BatchInfo.SuccessExportFilePath,
 		FailExportFilePath:      info.BatchInfo.FailExportFilePath,
 		OverwriteExportFilePath: info.BatchInfo.OverwriteExportFilePath,
@@ -70,90 +74,144 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 		return
 	}
 
-	fetchInfoChan := make(chan object.FetchApiInfo, info.BatchInfo.WorkerCount)
+	fetchInfoChan := make(chan flow.Work, info.BatchInfo.WorkerCount)
 	// 生产者
 	go func() {
-		// AWS related code
-		s3session, nErr := session.NewSession()
-		if nErr != nil {
-			log.ErrorF("create AWS session error:%v", nErr)
-			return
-		}
-		s3session.Config.WithRegion(info.AwsBucketInfo.Region)
-		s3session.Config.WithCredentials(credentials.NewStaticCredentials(info.AwsBucketInfo.Id, info.AwsBucketInfo.SecretKey, ""))
-
-		svc := s3.New(s3session)
-		input := &s3.ListObjectsV2Input{
-			Bucket:    aws.String(info.AwsBucketInfo.Bucket),
-			Prefix:    aws.String(info.AwsBucketInfo.Prefix),
-			Delimiter: aws.String(info.AwsBucketInfo.Delimiter),
-			MaxKeys:   aws.Int64(info.AwsBucketInfo.MaxKeys),
-		}
-		if info.AwsBucketInfo.CToken != "" {
-			input.ContinuationToken = aws.String(info.AwsBucketInfo.CToken)
-		}
-
-		for {
-			result, lErr := svc.ListObjectsV2(input)
-			if lErr != nil {
-				if aErr, ok := lErr.(awserr.Error); ok {
-					switch aErr.Code() {
-					case s3.ErrCodeNoSuchBucket:
-						log.ErrorF("list error:%s, %v", s3.ErrCodeNoSuchBucket, aErr.Error())
-					default:
-						log.Error(aErr.Error())
-					}
-				} else {
-					log.Error(err.Error())
+		if e := listBucket(info.AwsBucketInfo, func(svc *s3.S3, obj *s3.Object) {
+			req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+				Bucket: aws.String(info.AwsBucketInfo.Bucket),
+				Key:    obj.Key,
+			})
+			if downloadUrl, e := req.Presign(5 * 3600 * time.Second); e == nil {
+				fetchInfoChan <- &object.FetchApiInfo{
+					Bucket:  info.QiniuBucket,
+					Key:     *obj.Key,
+					FromUrl: downloadUrl,
 				}
-				log.ErrorF("ContinuationToken: %v", input.ContinuationToken)
-				break
-			}
-
-			for _, obj := range result.Contents {
-				if strings.HasSuffix(*obj.Key, "/") && *obj.Size == 0 { // 跳过目录
-					continue
-				}
-				req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
-					Bucket: aws.String(info.AwsBucketInfo.Bucket),
-					Key:    obj.Key,
-				})
-				if downloadUrl, e := req.Presign(5 * 3600 * time.Second); e == nil {
-					fetchInfoChan <- object.FetchApiInfo{
-						Bucket:  info.QiniuBucket,
-						Key:     *obj.Key,
-						FromUrl: downloadUrl,
-					}
-				} else {
-					log.ErrorF("fetch([%s:%s]) create download url error: %v", info.AwsBucketInfo.Bucket, *obj.Key, e)
-				}
-			}
-
-			if *result.IsTruncated {
-				input.ContinuationToken = result.NextContinuationToken
+				log.DebugF("get object:%s\t%d\t%s\t%s\n%s", *obj.Key, *obj.Size, *obj.ETag, *obj.LastModified, downloadUrl)
 			} else {
-				break
+				log.ErrorF("fetch([%s:%s]) create download url error: %v", info.AwsBucketInfo.Bucket, *obj.Key, e)
 			}
+		}); e != nil {
+			log.Error(e)
 		}
 		close(fetchInfoChan)
 	}()
 
-	// 消费者
-	waiter := sync.WaitGroup{}
-	waiter.Add(info.BatchInfo.WorkerCount)
-	for i := 0; i < info.BatchInfo.WorkerCount; i++ {
-		go func() {
-			for fetchInfo := range fetchInfoChan {
-				if _, e := object.Fetch(fetchInfo); e != nil {
-					log.ErrorF("fetch %s => [%s:%s] failed, error:%v", fetchInfo.FromUrl, fetchInfo.Bucket, fetchInfo.Key, e)
-					resultExport.Fail().ExportF("%s\t%s\t%v", fetchInfo.FromUrl, fetchInfo.Key, e)
-				} else {
-					log.AlertF("fetch %s => [%s:%s] success", fetchInfo.FromUrl, fetchInfo.Bucket, fetchInfo.Key)
-					resultExport.Success().ExportF("%s\t%s", fetchInfo.FromUrl, fetchInfo.Key)
-				}
+	var overseer flow.Overseer
+	if info.BatchInfo.EnableRecord {
+		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
+		log.DebugF("aws batch fetch recorder:%s", dbPath)
+		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: nil,
+				},
+				Result: &object.FetchResult{},
+				Err:    nil,
 			}
-			waiter.Done()
-		}()
+		}); err != nil {
+			log.ErrorF("aws batch fetch create overseer error:%v", err)
+			return
+		}
+	} else {
+		log.Debug("aws batch fetch recorder:Not Enable")
 	}
-	waiter.Wait()
+
+	metric := &batch.Metric{}
+	metric.Start()
+	flow.New(info.BatchInfo.Info).
+		WorkProviderWithChan(fetchInfoChan).
+		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
+			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
+				in := workInfo.Work.(*object.FetchApiInfo)
+				return object.Fetch(*in)
+			}), nil
+		})).
+		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
+			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
+			return nil
+		}).
+		SetOverseer(overseer).
+		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+			if workRecord.Err == nil {
+				return false, nil
+			}
+
+			if !info.BatchInfo.RecordRedoWhileError {
+				return false, workRecord.Err
+			}
+
+			result, _ := workRecord.Result.(*object.FetchResult)
+			if result == nil {
+				return true, data.NewEmptyError().AppendDesc("no result found")
+			}
+			if !result.IsValid() {
+				return true, data.NewEmptyError().AppendDesc("result is invalid")
+			}
+			return false, nil
+		}).
+		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
+			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching:" + work.Data)
+
+			operationResult, _ := result.(*object.FetchResult)
+			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
+				if operationResult != nil && operationResult.IsValid() {
+					metric.AddSuccessCount(1)
+					log.DebugF("Skip line:%s because have done and success", work.Data)
+				} else {
+					metric.AddFailureCount(1)
+					log.DebugF("Skip line:%s because have done and failure, %v", work.Data, err)
+				}
+			} else {
+				metric.AddSkippedCount(1)
+				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
+				log.DebugF("Skip line:%s because:%v", work.Data, err)
+			}
+
+		}).
+		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
+			metric.AddCurrentCount(1)
+			metric.AddSuccessCount(1)
+			metric.PrintProgress("Batching:" + workInfo.Data)
+
+			in, _ := workInfo.Work.(*object.FetchApiInfo)
+			exporter.Success().ExportF("%s\t%s", in.FromUrl, in.Bucket)
+			log.InfoF("AWS Fetch Success, '%s' => [%s:%s]", in.FromUrl, in.Bucket, in.Key)
+		}).
+		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
+			metric.AddCurrentCount(1)
+			metric.AddFailureCount(1)
+			metric.PrintProgress("AWS Batching:" + workInfo.Data)
+
+			exporter.Fail().ExportF("%s%s%v", workInfo.Data, flow.ErrorSeparate, err)
+			if in, ok := workInfo.Work.(*object.FetchApiInfo); ok {
+				log.ErrorF("AWS Fetch Failed, '%s' => [%s:%s], Error: %v", in.FromUrl, in.Bucket, in.Key, err)
+			} else {
+				log.ErrorF("AWS Fetch Failed, %s, Error: %s", workInfo.Data, err)
+			}
+		}).Build().Start()
+
+	metric.End()
+	if metric.TotalCount <= 0 {
+		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.SkippedCount
+	}
+
+	// 输出结果
+	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
+	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		log.ErrorF("save aws batch fetch result to path:%s error:%v", resultPath, e)
+	} else {
+		log.DebugF("save aws batch fetch result to path:%s", resultPath)
+	}
+
+	log.Info("------------- AWS Batch Result --------------")
+	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
+	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
+	log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
+	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
+	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
+	log.InfoF("--------------------------------------------")
 }

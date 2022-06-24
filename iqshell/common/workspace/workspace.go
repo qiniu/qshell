@@ -12,6 +12,7 @@ import (
 const (
 	workspaceName         = ".qshell"
 	usersDirName          = "users"
+	defaultUserDirName    = ".unknown"
 	usersDBName           = "account.db"
 	currentUserFileName   = "account.json"
 	oldUserFileName       = "old_account.json"

@@ -51,14 +51,20 @@ type OperationCreator interface {
 }
 
 type OperationResult struct {
-	Code     int
-	Hash     string `json:"hash"`
-	FSize    int64  `json:"fsize"`
-	PutTime  int64  `json:"putTime"`
-	MimeType string `json:"mimeType"`
-	Type     int    `json:"type"`
-	Error    string
+	Code     int     `json:"code"`
+	Hash     string  `json:"hash"`
+	FSize    int64   `json:"fsize"`
+	PutTime  int64   `json:"putTime"`
+	MimeType string  `json:"mimeType"`
+	Type     int     `json:"type"`
+	Error    string  `json:"error"`
 	Parts    []int64 `json:"parts"`
+}
+
+var _ flow.Result = (*OperationResult)(nil)
+
+func (r *OperationResult) IsValid() bool {
+	return r.IsSuccess()
 }
 
 func (r *OperationResult) IsSuccess() bool {
@@ -66,5 +72,12 @@ func (r *OperationResult) IsSuccess() bool {
 		return false
 	}
 
-	return r.Code == 0 || r.Code == 200
+	return (r.Code == 0 || r.Code == 200) && len(r.Error) == 0
+}
+
+func (r *OperationResult) ErrorDescription() string {
+	if r == nil || r.IsSuccess() {
+		return ""
+	}
+	return fmt.Sprintf("Code:%d Error:%s", r.Code, r.Error)
 }

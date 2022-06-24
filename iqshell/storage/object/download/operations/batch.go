@@ -5,24 +5,29 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
+	"github.com/qiniu/qshell/v2/iqshell/common/locker"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
+	"os"
 	"path/filepath"
 	"strings"
-	"sync"
-	"time"
 )
 
 type BatchDownloadWithConfigInfo struct {
-	BatchInfo           batch.Info
+	flow.Info
+	export.FileExporterConfig
+
+	// 工作数据源
+	InputFile    string // 工作数据源：文件
+	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
+
 	LocalDownloadConfig string
 }
 
 func (info *BatchDownloadWithConfigInfo) Check() *data.CodeError {
-	if err := info.BatchInfo.Check(); err != nil {
+	if err := info.Info.Check(); err != nil {
 		return err
 	}
 	return nil
@@ -40,8 +45,11 @@ func BatchDownloadWithConfig(cfg *iqshell.Config, info BatchDownloadWithConfigIn
 	}
 
 	downloadInfo := BatchDownloadInfo{
-		BatchInfo:   info.BatchInfo,
-		DownloadCfg: DefaultDownloadCfg(),
+		Info:               info.Info,
+		FileExporterConfig: info.FileExporterConfig,
+		InputFile:          info.InputFile,
+		ItemSeparate:       info.ItemSeparate,
+		DownloadCfg:        DefaultDownloadCfg(),
 	}
 	if err := utils.UnMarshalFromFile(info.LocalDownloadConfig, &downloadInfo.DownloadCfg); err != nil {
 		log.ErrorF("UnMarshal: read download config error:%v config file:%s", info.LocalDownloadConfig, err)
@@ -55,69 +63,82 @@ func BatchDownloadWithConfig(cfg *iqshell.Config, info BatchDownloadWithConfigIn
 }
 
 type BatchDownloadInfo struct {
-	BatchInfo batch.Info
+	flow.Info
+	export.FileExporterConfig
 	DownloadCfg
+
+	// 工作数据源
+	InputFile    string // 工作数据源：文件
+	ItemSeparate string // 工作数据源：每行元素按分隔符分的分隔符
 }
 
 func (info *BatchDownloadInfo) Check() *data.CodeError {
-	if info.BatchInfo.WorkerCount < 1 || info.BatchInfo.WorkerCount > 2000 {
-		info.BatchInfo.WorkerCount = 5
+	if info.WorkerCount < 1 || info.WorkerCount > 2000 {
+		info.WorkerCount = 5
 	}
-	if err := info.BatchInfo.Check(); err != nil {
+	if err := info.Info.Check(); err != nil {
 		return err
 	}
 	if err := info.DownloadCfg.Check(); err != nil {
 		return err
 	}
+	if len(info.ItemSeparate) == 0 {
+		info.ItemSeparate = data.DefaultLineSeparate
+	}
 	return nil
 }
 
 func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		if len(info.RecordRoot) > 0 {
+			return info.RecordRoot
+		}
+		return filepath.Join(cmdPath, info.JobId())
+	}
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
-		BeforeLoadFileLog: func() {
-			if len(info.RecordRoot) == 0 {
-				info.RecordRoot = downloadCachePath(workspace.GetConfig(), &info.DownloadCfg)
-			}
-			if data.Empty(cfg.CmdCfg.Log.LogFile) {
-				workspace.GetConfig().Log.LogFile = data.NewString(filepath.Join(info.RecordRoot, "log.txt"))
-			}
-		},
 	}); !shouldContinue {
 		return
 	}
 
-	log.InfoF("record root: %s", info.RecordRoot)
+	// 配置 locker
+	if e := locker.TryLock(); e != nil {
+		log.ErrorF("Download, %v", e)
+		return
+	}
 
-	info.BatchInfo.InputFile = info.KeyFile
+	unlockHandler := func() {
+		if e := locker.TryUnlock(); e != nil {
+			log.ErrorF("Download, %v", e)
+		}
+	}
+	workspace.AddCancelObserver(func(s os.Signal) {
+		unlockHandler()
+	})
+	defer unlockHandler()
+
+	info.InputFile = info.KeyFile
 	hostProvider := getDownloadHostProvider(workspace.GetConfig(), &info.DownloadCfg)
 	if available, e := hostProvider.Available(); !available {
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or bind domain to bucket; %v", info.Bucket, e)
 		return
 	}
 
-	dbPath := filepath.Join(info.RecordRoot, ".ldb")
+	dbPath := filepath.Join(workspace.GetJobDir(), ".ldb")
 	log.InfoF("download db dir:%s", dbPath)
 
 	exporter, err := export.NewFileExport(export.FileExporterConfig{
-		SuccessExportFilePath:   info.BatchInfo.SuccessExportFilePath,
-		FailExportFilePath:      info.BatchInfo.FailExportFilePath,
-		OverwriteExportFilePath: info.BatchInfo.OverwriteExportFilePath,
+		SuccessExportFilePath:   info.SuccessExportFilePath,
+		FailExportFilePath:      info.FailExportFilePath,
+		OverwriteExportFilePath: info.OverwriteExportFilePath,
 	})
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	timeStart := time.Now()
-	var locker sync.Mutex
-	var totalFileCount int64
-	var currentFileCount int64
-	var existsFileCount int64
-	var updateFileCount int64
-	var successFileCount int64
-	var failureFileCount int64
-	var skipBySuffixes int64
+	metric := &Metric{}
+	metric.Start()
 
 	hasPrefixes := len(info.Prefix) > 0
 	prefixes := strings.Split(info.Prefix, ",")
@@ -149,8 +170,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return true
 	}
 
-	flow.New(info.BatchInfo.Info).
-		WorkProvider(NewWorkProvider(info.Bucket, info.BatchInfo.InputFile, info.BatchInfo.ItemSeparate)).
+	flow.New(info.Info).
+		WorkProvider(NewWorkProvider(info.Bucket, info.InputFile, info.ItemSeparate)).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
@@ -166,16 +187,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 					apiInfo.FileHash = ""
 				}
 
-				locker.Lock()
-				currentFileCount += 1
-				locker.Unlock()
-
-				if totalFileCount > 0 {
-					log.AlertF("Downloading %s [%d/%d, %.1f%%] ...", apiInfo.Key, currentFileCount, totalFileCount,
-						float32(currentFileCount)*100/float32(totalFileCount))
-				} else {
-					log.AlertF("Downloading %s [%d/-, -] ...", apiInfo.Key, currentFileCount)
-				}
+				metric.AddCurrentCount(1)
+				metric.PrintProgress("Downloading " + apiInfo.Key)
 
 				if file, e := downloadFile(apiInfo); e != nil {
 					return nil, e
@@ -195,57 +208,56 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			return false, nil
 		}).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
-			totalFileCount = flow.WorkProvider.WorkTotalCount()
+			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
 		}).
-		OnWorkSkip(func(workInfo *flow.WorkInfo, err *data.CodeError) {
-			locker.Lock()
-			skipBySuffixes += 1
-			locker.Unlock()
+		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
+			metric.AddSkippedCount(1)
 
 			log.Info(err.Error())
 			exporter.Skip().Export(workInfo.Data)
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-			res := result.(download.ApiResult)
-			locker.Lock()
+			res := result.(*download.ApiResult)
 			if res.IsExist {
-				existsFileCount += 1
+				metric.AddExistCount(1)
 			} else if res.IsUpdate {
-				updateFileCount += 1
+				metric.AddUpdateCount(1)
 			} else {
-				successFileCount += 1
+				metric.AddSuccessCount(1)
 			}
-			locker.Unlock()
 
 			exporter.Success().Export(workInfo.Data)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {
-			locker.Lock()
-			failureFileCount += 1
-			locker.Unlock()
+			metric.AddFailureCount(1)
 
 			exporter.Fail().ExportF("%s%s%s", workInfo.Data, flow.ErrorSeparate, err)
 			log.ErrorF("Download  Failed, %s error:%v", workInfo.Data, err)
 		}).Build().Start()
 
-	if totalFileCount == 0 {
-		totalFileCount = skipBySuffixes + existsFileCount + successFileCount + updateFileCount + failureFileCount
-	} else {
-		skipBySuffixes = totalFileCount - existsFileCount - successFileCount - updateFileCount - failureFileCount
+	metric.End()
+	if metric.TotalCount <= 0 {
+		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.UpdateCount + metric.ExistCount + metric.SkippedCount
 	}
 
-	log.Alert("-------Download Result-------")
-	log.AlertF("%10s%10d", "Total:", totalFileCount)
-	log.AlertF("%10s%10d", "Skipped:", skipBySuffixes)
-	log.AlertF("%10s%10d", "Exists:", existsFileCount)
-	log.AlertF("%10s%10d", "Success:", successFileCount)
-	log.AlertF("%10s%10d", "Update:", updateFileCount)
-	log.AlertF("%10s%10d", "Failure:", failureFileCount)
-	log.AlertF("%10s%15s", "Duration:", time.Since(timeStart))
-	log.AlertF("-----------------------------")
+	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
+	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		log.ErrorF("save download result to path:%s error:%v", resultPath, e)
+	} else {
+		log.DebugF("save download result to path:%s", resultPath)
+	}
 
+	log.Info("-------Download Result-------")
+	log.InfoF("%10s%10d", "Total:", metric.TotalCount)
+	log.InfoF("%10s%10d", "Skipped:", metric.SkippedCount)
+	log.InfoF("%10s%10d", "Exists:", metric.ExistCount)
+	log.InfoF("%10s%10d", "Success:", metric.SuccessCount)
+	log.InfoF("%10s%10d", "Update:", metric.UpdateCount)
+	log.InfoF("%10s%10d", "Failure:", metric.FailureCount)
+	log.InfoF("%10s%10ds", "Duration:", metric.Duration)
+	log.InfoF("-----------------------------")
 	if workspace.GetConfig().Log.Enable() {
-		log.AlertF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
+		log.InfoF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
 	}
 }

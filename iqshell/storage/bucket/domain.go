@@ -74,7 +74,7 @@ func (i *DomainInfo) DetailDescriptionString() string {
 func AllDomainsOfBucket(bucket string) (domains []DomainInfo, err *data.CodeError) {
 	domains, err = allDomainsOfBucket(workspace.GetConfig(), bucket)
 	if len(domains) == 0 {
-		return domains, err
+		return domains, data.NewEmptyError().AppendDesc("domain list is empty").AppendError(err)
 	}
 
 	cdnDomains := make([]DomainInfo, 0)
@@ -114,11 +114,10 @@ func allDomainsOfBucket(cfg *config.Config, bucket string) ([]DomainInfo, *data.
 	if err != nil {
 		if e, ok := err.(*storage.ErrorInfo); ok {
 			if e.Code != 404 {
-				return nil, data.ConvertError(e)
+				return nil, data.NewError(e.Code, "domain list request error:"+e.Err)
 			}
-			err = nil
 		} else {
-			return nil, data.ConvertError(err)
+			return nil, data.NewEmptyError().AppendDesc("domain list request").AppendError(err)
 		}
 	}
 	return domains, nil

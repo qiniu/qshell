@@ -272,7 +272,7 @@ func Endpoint(useHttps bool, host string) string {
 }
 
 func RemoveUrlScheme(url string) string {
-	url = strings.TrimLeft(url, "http://")
-	url = strings.TrimLeft(url, "https://")
+	url = strings.TrimPrefix(url, "http://")
+	url = strings.TrimPrefix(url, "https://")
 	return url
 }

@@ -24,6 +24,44 @@ var domainsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var bucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.GetBucketInfo{}
+	var cmd = &cobra.Command{
+		Use:   "bucket <Bucket>",
+		Short: "Get bucket info",
+		Long:  `Get bucket info`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.BucketType
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.GetBucket(cfg, info)
+		},
+	}
+	return cmd
+}
+
+var mkBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.CreateInfo{}
+	var cmd = &cobra.Command{
+		Use:   "mkbucket <Bucket>",
+		Short: "Create a bucket in region",
+		Long: `Create a bucket in region; 
+
+The Bucket name is required to be unique within the scope of the object storage system, consists of 3 to 63 characters, supports lowercase letters, dashes(-) and numbers, and must start and end with lowercase letters or numbers.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.MkBucketType
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.Create(cfg, info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.RegionId, "region", "", "z0", "z0:huadong; z1:huabei; z2:huanan; na0:North America; as0:Southeast Asia;for more:https://developer.qiniu.com/kodo/1671/region-endpoint-fq")
+	cmd.Flags().BoolVarP(&info.Private, "private", "", false, "create private bucket")
+	return cmd
+}
+
 var listBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.ListInfo{
 		Marker:     "",
@@ -73,6 +111,12 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
 	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
+
+	cmd.Flags().StringVarP(&info.StorageTypes, "storages", "", "", "Specify storage type, separated by comma. 0:STANDARD storage, 1:IA storage, 2 means ARCHIVE storage. 3:DEEP_ARCHIVE storage")
+	cmd.Flags().StringVarP(&info.MimeTypes, "mimetypes", "", "", "Specify mimetype, separated by comma.")
+	cmd.Flags().StringVarP(&info.MinFileSize, "min-file-size", "", "", "Specify min file size")
+	cmd.Flags().StringVarP(&info.MaxFileSize, "max-file-size", "", "", "Specify max file size")
+
 	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "result append to file instead of overwriting")
 	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
 	cmd.Flags().IntVarP(&info.Limit, "limit", "", -1, "max count of items to output")
@@ -86,6 +130,8 @@ func init() {
 
 func bucketCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
+		bucketCmdBuilder(cfg),
+		mkBucketCmdBuilder(cfg),
 		listBucketCmdBuilder(cfg),
 		listBucketCmd2Builder(cfg),
 		domainsCmdBuilder(cfg),

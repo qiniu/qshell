@@ -56,20 +56,20 @@ func (c *CodeError) HeaderInsertDesc(desc string) *CodeError {
 
 func (c *CodeError) AppendDesc(desc string) *CodeError {
 	if len(c.Desc) > 0 {
-		c.Desc += " "
+		c.Desc += ", "
 	}
 	c.Desc += desc
 	return c
 }
 
 func (c *CodeError) HeaderInsertDescF(f string, a ...interface{}) *CodeError {
-	c.Desc = fmt.Sprintf(f, a...) + " " + c.Desc
+	c.Desc = fmt.Sprintf(f, a...) + ", " + c.Desc
 	return c
 }
 
 func (c *CodeError) AppendDescF(f string, a ...interface{}) *CodeError {
 	if len(c.Desc) > 0 {
-		c.Desc += " "
+		c.Desc += ", "
 	}
 	c.Desc += fmt.Sprintf(f, a...)
 	return c
@@ -78,9 +78,9 @@ func (c *CodeError) AppendDescF(f string, a ...interface{}) *CodeError {
 func (c *CodeError) AppendError(err error) *CodeError {
 	if err != nil {
 		if len(c.Desc) > 0 {
-			c.Desc += " "
+			c.Desc += " => "
 		}
-		c.Desc += "error:" + err.Error()
+		c.Desc += err.Error()
 	}
 	return c
 }
@@ -90,7 +90,7 @@ func NewErrorWithError(code int, desc string, err error) *CodeError {
 	e.Code = code
 	e.Desc = desc
 	if err != nil {
-		e.Desc += ":" + err.Error()
+		e.Desc += " => " + err.Error()
 	}
 	return e
 }
@@ -105,7 +105,10 @@ func (c *CodeError) Error() string {
 	if c == nil {
 		return ""
 	}
-	return c.Desc
+	if c.Code == 0 {
+		return c.Desc
+	}
+	return fmt.Sprintf("【%d】%s", c.Code, c.Desc)
 }
 
 func ErrorCode(err error) *Int {

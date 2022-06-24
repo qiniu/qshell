@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"net/url"
@@ -37,19 +38,29 @@ type PublicUrlToPrivateApiInfo struct {
 	Deadline  int64
 }
 
+type PublicUrlToPrivateApiResult struct {
+	Url string
+}
+
+var _ flow.Result = (*PublicUrlToPrivateApiResult)(nil)
+
+func (p *PublicUrlToPrivateApiResult) IsValid() bool {
+	return len(p.Url) > 0
+}
+
 // PublicUrlToPrivate 公转私
-func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (finalUrl string, err *data.CodeError) {
+func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (result *PublicUrlToPrivateApiResult, err *data.CodeError) {
 	if len(info.PublicUrl) == 0 {
-		return "", alert.CannotEmptyError("url", "")
+		return nil, alert.CannotEmptyError("url", "")
 	}
 
 	if info.Deadline < 1 {
-		return "", data.NewEmptyError().AppendDesc("deadline is invalid")
+		return nil, data.NewEmptyError().AppendDesc("deadline is invalid")
 	}
 
 	m, err := bucket.GetBucketManager()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	srcUri, pErr := url.Parse(info.PublicUrl)
@@ -70,18 +81,21 @@ func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (finalUrl string, err *d
 
 	sign := base64.URLEncoding.EncodeToString(h.Sum(nil))
 	token := m.Mac.AccessKey + ":" + sign
-	finalUrl = fmt.Sprintf("%s&token=%s", urlToSign, token)
-	return
+	return &PublicUrlToPrivateApiResult{
+		Url: fmt.Sprintf("%s&token=%s", urlToSign, token),
+	}, nil
 }
 
 // PrivateUrl 返回私有空间的下载链接， 也可以用于公有空间的下载
 func PrivateUrl(info UrlApiInfo) (fileUrl string) {
 	publicUrl := PublicUrl(UrlApiInfo(info))
 	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
-	privateUrl, _ := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
+	result, _ := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
 		PublicUrl: publicUrl,
 		Deadline:  deadline,
 	})
-	fileUrl = privateUrl
+	if result != nil {
+		fileUrl = result.Url
+	}
 	return
 }

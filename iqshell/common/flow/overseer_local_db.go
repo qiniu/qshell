@@ -81,10 +81,15 @@ func (l *localDBRecordOverseer) getWorkStatus(work *WorkInfo) *workStatus {
 		WorkRecord: l.BlankWorkRecordBuilder(),
 		Status:     workStatusPrepare,
 	}
-
+	if status.WorkRecord.Err == nil {
+		status.WorkRecord.Err = data.NewEmptyError()
+	}
 	if e := unmarshalWorkStatus(value, status); e != nil {
 		return nil
 	} else {
+		if status.Status == workStatusSuccess {
+			status.WorkRecord.Err = nil
+		}
 		return status
 	}
 }

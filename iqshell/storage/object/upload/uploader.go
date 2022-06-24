@@ -4,6 +4,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -87,15 +88,21 @@ type ApiResult struct {
 	IsOverwrite    bool   `json:"-"`         // 覆盖之前的上传
 }
 
+var _ flow.Result = (*ApiResult)(nil)
+
+func (a *ApiResult) IsValid() bool {
+	return len(a.Key) > 0 && len(a.MimeType) > 0 && len(a.Hash) > 0
+}
+
 func ApiResultFormat() string {
 	return `{"key":"$(key)","hash":"$(etag)","file_size":$(fsize),"mime_type":"$(mimeType)"}`
 }
 
 type Uploader interface {
-	upload(info *ApiInfo) (ApiResult, *data.CodeError)
+	upload(info *ApiInfo) (*ApiResult, *data.CodeError)
 }
 
-func Upload(info *ApiInfo) (res ApiResult, err *data.CodeError) {
+func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	err = info.Check()
 	if err != nil {
 		log.WarningF("upload: info init error:%v", err)
@@ -137,6 +144,7 @@ func Upload(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 		}
 	}
 
+	res = &ApiResult{}
 	isSkip := false
 	isOverWrite := false
 	isNotOverWrite := false
@@ -166,6 +174,9 @@ func Upload(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 
 	log.DebugF("upload: start upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 	res, err = uploadSource(info)
+	if res == nil {
+		res = &ApiResult{}
+	}
 	res.IsSkip = isSkip
 	res.IsOverwrite = isOverWrite
 	res.IsNotOverwrite = isNotOverWrite
@@ -186,7 +197,7 @@ func Upload(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 
 var once sync.Once
 
-func uploadSource(info *ApiInfo) (ApiResult, *data.CodeError) {
+func uploadSource(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	once.Do(func() {
 		storage.SetSettings(&storage.Settings{
 			TaskQsize: 0,

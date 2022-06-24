@@ -11,16 +11,18 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
+	"path/filepath"
 	"runtime"
 )
 
 type Config struct {
-	Document       bool   // 是否展示 document
-	DebugEnable    bool   // 开启命令行的调试模式
-	DDebugEnable   bool   // go SDK client 和命令行开启调试模式
-	ConfigFilePath string // 配置文件路径，用户可以指定配置文件
-	Local          bool   // 是否使用当前文件夹作为工作区
-	StdoutColorful bool   // 控制台输出是否多彩
+	Document       bool                        // 是否展示 document
+	DebugEnable    bool                        // 开启命令行的调试模式
+	DDebugEnable   bool                        // go SDK client 和命令行开启调试模式
+	ConfigFilePath string                      // 配置文件路径，用户可以指定配置文件
+	Local          bool                        // 是否使用当前文件夹作为工作区
+	StdoutColorful bool                        // 控制台输出是否多彩
+	JobPathBuilder func(cmdPath string) string // job 路径生成器
 	CmdCfg         config.Config
 }
 
@@ -121,6 +123,7 @@ func LoadWorkspace(cfg *Config) (shouldContinue bool) {
 		CmdConfig:      &cfg.CmdCfg,
 		WorkspacePath:  workspacePath,
 		UserConfigPath: cfg.ConfigFilePath,
+		JobPathBuilder: cfg.JobPathBuilder,
 	}); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "load workspace error: %v\n", err)
 		return false
@@ -130,7 +133,10 @@ func LoadWorkspace(cfg *Config) (shouldContinue bool) {
 
 func LoadFileLog(cfg *Config) (shouldContinue bool) {
 	// 配置日志文件输出
-	if ls := workspace.GetLogConfig(); ls != nil && ls.Enable() && data.NotEmpty(ls.LogFile) {
+	if ls := workspace.GetLogConfig(); ls != nil && ls.Enable() {
+		if data.Empty(ls.LogFile) {
+			ls.LogFile = data.NewString(filepath.Join(workspace.GetJobDir(), "log.txt"))
+		}
 		err := utils.CreateFileDirIfNotExist(ls.LogFile.Value())
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "load file log, create log file error: %v\n", err)
@@ -144,7 +150,7 @@ func LoadFileLog(cfg *Config) (shouldContinue bool) {
 			EnableStdout:   ls.IsLogStdout(),
 			MaxDays:        ls.LogRotate.Value(),
 		})
-		log.AlertF("Writing log to file:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+		log.AlertF("Writing log to file:%s \n\n", ls.LogFile.Value())
 	} else {
 		log.DebugF("log file not enable, log level:%s \n\n", workspace.GetConfig().Log.LogLevel.Value())
 	}

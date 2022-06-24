@@ -26,6 +26,21 @@ func (b *WorkProvideBuilder) WorkProvider(provider WorkProvider) *WorkerProvideB
 	}
 }
 
+func (b *WorkProvideBuilder) WorkProviderWithChan(works <-chan Work) *WorkerProvideBuilder {
+	if provider, err := NewChanWorkProvider(works); err != nil {
+		return &WorkerProvideBuilder{
+			flow: b.flow,
+			err:  err,
+		}
+	} else {
+		b.flow.WorkProvider = provider
+		return &WorkerProvideBuilder{
+			flow: b.flow,
+			err:  b.err,
+		}
+	}
+}
+
 func (b *WorkProvideBuilder) WorkProviderWithArray(workList []Work) *WorkerProvideBuilder {
 	if provider, err := NewArrayWorkProvider(workList); err != nil {
 		return &WorkerProvideBuilder{
@@ -77,6 +92,29 @@ func (b *FlowBuilder) DoWorkListMaxCount(count int) *FlowBuilder {
 	}
 }
 
+func (b *FlowBuilder) SetOverseer(overseer Overseer) *FlowBuilder {
+	b.flow.Overseer = overseer
+	return &FlowBuilder{
+		flow: b.flow,
+		err:  b.err,
+	}
+}
+
+func (b *FlowBuilder) SetDBOverseer(dbPath string, blankWorkRecordBuilder func() *WorkRecord) *FlowBuilder {
+	if overseer, err := NewDBRecordOverseer(dbPath, blankWorkRecordBuilder); err != nil {
+		return &FlowBuilder{
+			flow: b.flow,
+			err:  err,
+		}
+	} else {
+		b.flow.Overseer = overseer
+		return &FlowBuilder{
+			flow: b.flow,
+			err:  b.err,
+		}
+	}
+}
+
 func (b *FlowBuilder) ShouldSkip(f func(workInfo *WorkInfo) (skip bool, cause *data.CodeError)) *FlowBuilder {
 	b.flow.Skipper = NewSkipper(f)
 	return &FlowBuilder{
@@ -117,7 +155,7 @@ func (b *FlowBuilder) OnWillWork(f func(workInfo *WorkInfo) (shouldContinue bool
 	}
 }
 
-func (b *FlowBuilder) OnWorkSkip(f func(workInfo *WorkInfo, err *data.CodeError)) *FlowBuilder {
+func (b *FlowBuilder) OnWorkSkip(f func(workInfo *WorkInfo, result Result, err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.OnWorkSkipFunc = f
 	return &FlowBuilder{
 		flow: b.flow,

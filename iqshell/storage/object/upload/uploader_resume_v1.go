@@ -18,18 +18,17 @@ func newResumeV1Uploader(cfg *storage.Config) Uploader {
 	}
 }
 
-func (r *resumeV1Uploader) upload(info *ApiInfo) (ApiResult, *data.CodeError) {
+func (r *resumeV1Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	log.DebugF("resume v1 upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 
-	var ret ApiResult
 	file, err := os.Open(info.FilePath)
 	if err != nil {
-		return ret, data.NewEmptyError().AppendDesc("resume v1 upload: open file error:" + err.Error())
+		return nil, data.NewEmptyError().AppendDesc("resume v1 upload: open file error:" + err.Error())
 	}
 
 	fileStatus, err := file.Stat()
 	if err != nil {
-		return ret, data.NewEmptyError().AppendDesc("resume v1 upload: ger file status error:" + err.Error())
+		return nil, data.NewEmptyError().AppendDesc("resume v1 upload: ger file status error:" + err.Error())
 	}
 
 	token := info.TokenProvider()
@@ -40,6 +39,7 @@ func (r *resumeV1Uploader) upload(info *ApiInfo) (ApiResult, *data.CodeError) {
 		info.Progress.Start()
 	}
 
+	ret := &ApiResult{}
 	up := storage.NewResumeUploader(r.cfg)
 	err = up.Put(workspace.GetContext(), &ret, token, info.SaveKey, file, fileStatus.Size(), &storage.RputExtra{
 		Recorder:   nil,

@@ -15,6 +15,7 @@ func awsFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 		Short: "Copy data from AWS bucket to qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.AwsFetch
+			info.BatchInfo.Force = true
 			if len(args) > 0 {
 				info.AwsBucketInfo.Bucket = args[0]
 			}
@@ -31,12 +32,14 @@ func awsFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.Prefix, "prefix", "p", "", "list AWS bucket with this prefix if set")
 	cmd.Flags().Int64VarP(&info.AwsBucketInfo.MaxKeys, "max-keys", "n", 1000, "list AWS bucket with numbers of keys returned each time limited by this number if set")
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.CToken, "continuation-token", "m", "", "AWS list continuation token")
-	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "thead-count", "c", 20, "maximum of fetch thread")
+	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "thread-count", "c", 20, "maximum of fetch thread")
 	cmd.Flags().StringVarP(&info.Host, "up-host", "u", "", "Qiniu fetch up host")
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.SecretKey, "aws-secret-key", "S", "", "AWS secret key")
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.Id, "aws-id", "A", "", "AWS ID")
 	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "success fetch key list")
 	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "error fetch key list")
+	cmd.Flags().BoolVarP(&info.BatchInfo.EnableRecord, "enable-record", "", false, "record work progress, and do from last progress while retry")
+	cmd.Flags().BoolVarP(&info.BatchInfo.RecordRedoWhileError, "record-redo-while-error", "", false, "when re-executing the command and checking the command task progress record, if a task has already been done and failed, the task will be re-executed. The default is false, and the task will not be re-executed when it detects that the task fails")
 
 	return cmd
 }

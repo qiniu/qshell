@@ -51,9 +51,20 @@ func TestGetWithDomain(t *testing.T) {
 }
 
 func TestGetNoExistDomain(t *testing.T) {
-	_, errs := test.RunCmdWithError("get", test.Bucket, test.Key,
-		"--domain", "qiniu.mock.com")
-	if !strings.Contains(errs, "lookup qiniu.mock.com: no such host") {
+	resultPath, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result path error:", err)
+	}
+	path := filepath.Join(resultPath, test.Key)
+	defer func() {
+		test.RemoveFile(path)
+	}()
+
+	result, _ := test.RunCmdWithError("get", test.Bucket, test.Key,
+		"--domain", "qiniu.mock.com",
+		"-o", path,
+		"-d")
+	if !strings.Contains(result, "download freeze host:qiniu.mock.com") {
 		t.Fail()
 	}
 }

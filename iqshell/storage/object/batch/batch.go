@@ -1,12 +1,18 @@
 package batch
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
+	"github.com/qiniu/qshell/v2/iqshell/common/locker"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"os"
+	"path/filepath"
 )
 
 type Info struct {
@@ -22,6 +28,8 @@ type Info struct {
 	MinItemsCount int         // 工作数据源：每行元素最小数量
 	EnableStdin   bool        // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
 
+	EnableRecord                bool // 是否开启 record
+	RecordRedoWhileError        bool // 重新执行任务时，如果任务已执行但是失败，则再重新执行一次。
 	MaxOperationCountPerRequest int
 }
 
@@ -48,6 +56,7 @@ func (info *Info) Check() *data.CodeError {
 }
 
 type Handler interface {
+	SetFileExport(exporter *export.FileExporter) Handler
 	ItemsToOperation(func(items []string) (operation Operation, err *data.CodeError)) Handler
 	OnResult(func(operationInfo string, operation Operation, result *OperationResult)) Handler
 	OnError(func(err *data.CodeError)) Handler
@@ -55,16 +64,24 @@ type Handler interface {
 }
 
 func NewHandler(info Info) Handler {
-	return &handler{
+	h := &handler{
 		info: &info,
 	}
+	h.exporter = export.EmptyFileExport()
+	return h
 }
 
 type handler struct {
 	info                  *Info
+	exporter              *export.FileExporter
 	operationItemsCreator func(items []string) (operation Operation, err *data.CodeError)
 	onError               func(err *data.CodeError)
 	onResult              func(operationInfo string, operation Operation, result *OperationResult)
+}
+
+func (h *handler) SetFileExport(exporter *export.FileExporter) Handler {
+	h.exporter = exporter
+	return h
 }
 
 func (h *handler) ItemsToOperation(reader func(items []string) (operation Operation, err *data.CodeError)) Handler {
@@ -83,6 +100,24 @@ func (h *handler) OnError(handler func(err *data.CodeError)) Handler {
 }
 
 func (h *handler) Start() {
+	isArraySource := h.info.WorkList != nil && len(h.info.WorkList) > 0
+	if !isArraySource {
+		if e := locker.TryLock(); e != nil {
+			log.ErrorF("batch job, %v", e)
+			return
+		}
+
+		unlockHandler := func() {
+			if e := locker.TryUnlock(); e != nil {
+				log.ErrorF("batch job, %v", e)
+			}
+		}
+		workspace.AddCancelObserver(func(s os.Signal) {
+			unlockHandler()
+		})
+		defer unlockHandler()
+	}
+
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {
 		h.onError(err)
@@ -91,7 +126,7 @@ func (h *handler) Start() {
 
 	workBuilder := flow.New(h.info.Info)
 	var workerBuilder *flow.WorkerProvideBuilder
-	if h.info.WorkList != nil && len(h.info.WorkList) > 0 {
+	if isArraySource {
 		workerBuilder = workBuilder.WorkProviderWithArray(h.info.WorkList)
 	} else {
 		log.DebugF("forceFlag: %v, overwriteFlag: %v, worker: %v, inputFile: %q, successFilePath: %q, failureFilePath: %q, sep: %q",
@@ -109,6 +144,33 @@ func (h *handler) Start() {
 			}))
 	}
 
+	// overseer， EnableRecord 未开启不记录中间状态（数组类型的数据源默认关闭）
+	var overseer flow.Overseer
+	if h.info.EnableRecord {
+		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
+		log.DebugF("batch recorder:%s", dbPath)
+		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: nil,
+				},
+				Result: &OperationResult{},
+				Err:    nil,
+			}
+		}); err != nil {
+			log.ErrorF("create overseer error:%v", err)
+			return
+		}
+	} else {
+		log.Debug("batch recorder:Not Enable")
+	}
+
+	metric := &Metric{}
+	if isArraySource {
+		metric.DisablePrintProgress()
+	}
+	metric.Start()
 	workerBuilder.
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewWorker(func(workInfoList []*flow.WorkInfo) ([]*flow.WorkRecord, *data.CodeError) {
@@ -151,19 +213,116 @@ func (h *handler) Start() {
 			}), nil
 		})).
 		DoWorkListMaxCount(h.info.MaxOperationCountPerRequest).
-		OnWorkSkip(func(work *flow.WorkInfo, err *data.CodeError) {
-			log.WarningF("Skip line:%s error:%v", work.Data, err)
+		SetOverseer(overseer).
+		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
+			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
+			return nil
+		}).
+		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+			result, _ := workRecord.Result.(*OperationResult)
+
+			if workRecord.Err == nil && result != nil && result.IsValid() {
+				return false, nil
+			}
+
+			if !h.info.RecordRedoWhileError {
+				if result == nil {
+					return false, data.NewEmptyError().AppendDescF("result:nil error:%s", workRecord.Err)
+				} else {
+					return false, data.NewEmptyError().AppendDescF("result:%s error:%s", result.ErrorDescription(), workRecord.Err)
+				}
+			}
+
+			if result == nil {
+				return true, data.NewEmptyError().AppendDesc("no result found")
+			}
+			if !result.IsValid() {
+				return true, data.NewEmptyError().AppendDescF("result is invalid, %s", result.ErrorDescription())
+			}
+			return false, nil
+		}).
+		OnWorkSkip(func(work *flow.WorkInfo, result flow.Result, err *data.CodeError) {
+			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching:" + work.Data)
+
+			operationResult, _ := result.(*OperationResult)
+			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
+				if operationResult != nil && operationResult.IsValid() {
+					metric.AddSuccessCount(1)
+					log.InfoF("Skip line:%s because have done and success", work.Data)
+					h.exporter.Success().Export(work.Data)
+				} else {
+					metric.AddFailureCount(1)
+					errDesc := ""
+					if operationResult != nil {
+						errDesc = operationResult.ErrorDescription()
+					}
+					log.InfoF("Skip line:%s because have done and failure, %v%s", work.Data, err, errDesc)
+					h.exporter.Fail().ExportF("%s%s-%s", work.Data, flow.ErrorSeparate, errDesc)
+				}
+			} else {
+				metric.AddSkippedCount(1)
+				operation, _ := work.Work.(Operation)
+				h.onResult(work.Data, operation, &OperationResult{
+					Code:  data.ErrorCodeUnknown,
+					Error: fmt.Sprintf("%v", err),
+				})
+				log.InfoF("Skip line:%s because:%v", work.Data, err)
+				h.exporter.Fail().ExportF("%s%s-%v", work.Data, flow.ErrorSeparate, err)
+			}
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
+			metric.AddCurrentCount(1)
+			metric.PrintProgress("Batching:" + work.Data)
+
 			operation, _ := work.Work.(Operation)
 			operationResult, _ := result.(*OperationResult)
+			if operationResult != nil && operationResult.IsSuccess() {
+				metric.AddSuccessCount(1)
+				h.exporter.Success().Export(work.Data)
+			} else {
+				metric.AddFailureCount(1)
+				if operationResult == nil {
+					h.exporter.Fail().ExportF("%s%s-no result", work.Data, flow.ErrorSeparate)
+				} else {
+					h.exporter.Fail().ExportF("%s%s[%d]%s", work.Data, flow.ErrorSeparate, operationResult.Code, operationResult.Error)
+				}
+			}
 			h.onResult(work.Data, operation, operationResult)
 		}).
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
+			metric.AddCurrentCount(1)
+			metric.AddFailureCount(1)
+			metric.PrintProgress("Batching:" + work.Data)
+			h.exporter.Fail().ExportF("%s%s[%d]%s", work.Data, flow.ErrorSeparate, data.ErrorCodeUnknown, err.Desc)
+
 			operation, _ := work.Work.(Operation)
 			h.onResult(work.Data, operation, &OperationResult{
 				Code:  data.ErrorCodeUnknown,
-				Error: err.Error(),
+				Error: err.Desc,
 			})
 		}).Build().Start()
+
+	metric.End()
+	if metric.TotalCount <= 0 {
+		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.SkippedCount
+	}
+
+	if !isArraySource {
+		// 数组源不输出结果
+		resultPath := filepath.Join(workspace.GetJobDir(), ".result")
+		if e := utils.MarshalToFile(resultPath, metric); e != nil {
+			log.ErrorF("save batch result to path:%s error:%v", resultPath, e)
+		} else {
+			log.DebugF("save batch result to path:%s", resultPath)
+		}
+
+		log.Info("--------------- Batch Result ---------------")
+		log.InfoF("%20s%10d", "Total:", metric.TotalCount)
+		log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
+		log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
+		log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
+		log.InfoF("%20s%10ds", "Duration:", metric.Duration)
+		log.InfoF("--------------------------------------------")
+	}
 }

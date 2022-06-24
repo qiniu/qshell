@@ -7,9 +7,11 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"strings"
 )
 
 type FetchApiInfo struct {
@@ -19,35 +21,47 @@ type FetchApiInfo struct {
 }
 
 func (i *FetchApiInfo) WorkId() string {
-	return fmt.Sprintf("%s:%s:%s", i.Bucket, i.Key, i.FromUrl)
+	urls := strings.Split(i.FromUrl, "?")
+	if len(urls) > 0 {
+		return fmt.Sprintf("%s:%s:%s", i.Bucket, i.Key, urls[0])
+	} else {
+		return fmt.Sprintf("%s:%s:%s", i.Bucket, i.Key, i.FromUrl)
+	}
 }
 
-type FetchResult = storage.FetchRet
+type FetchResult storage.FetchRet
 
-func Fetch(info FetchApiInfo) (FetchResult, *data.CodeError) {
-	var result FetchResult
+var _ flow.Result = (*FetchResult)(nil)
+
+func (a *FetchResult) IsValid() bool {
+	return len(a.Key) > 0 && len(a.MimeType) > 0 && len(a.Hash) > 0
+}
+
+func Fetch(info FetchApiInfo) (*FetchResult, *data.CodeError) {
+
 	if len(info.Bucket) == 0 {
-		return result, alert.CannotEmptyError("bucket", "")
+		return nil, alert.CannotEmptyError("bucket", "")
 	}
 
 	if len(info.FromUrl) == 0 {
-		return result, alert.CannotEmptyError("from url", "")
+		return nil, alert.CannotEmptyError("from url", "")
 	}
 
 	log.DebugF("fetch start: %s => [%s:%s]", info.FromUrl, info.Bucket, info.Key)
 	bucketManager, e := bucket.GetBucketManager()
 	if e != nil {
-		return result, e
+		return nil, e
 	}
 
 	var err error
+	var result storage.FetchRet
 	if len(info.Key) == 0 {
 		result, err = bucketManager.FetchWithoutKey(info.FromUrl, info.Bucket)
 	} else {
 		result, err = bucketManager.Fetch(info.FromUrl, info.Bucket, info.Key)
 	}
 	log.DebugF("fetch   end: %s => [%s:%s]", info.FromUrl, info.Bucket, info.Key)
-	return result, data.ConvertError(err)
+	return (*FetchResult)(&result), data.ConvertError(err)
 }
 
 type AsyncFetchApiInfo struct {
@@ -69,11 +83,15 @@ type AsyncFetchApiResult struct {
 	Wait int    `json:"wait"`
 }
 
-func (result AsyncFetchApiResult) String() string {
+func (result *AsyncFetchApiResult) IsValid() bool {
+	return len(result.Id) > 0
+}
+
+func (result *AsyncFetchApiResult) String() string {
 	return fmt.Sprintf(`{"id":"%s", "wait":%d}`, result.Id, result.Wait)
 }
 
-func AsyncFetch(info AsyncFetchApiInfo) (result AsyncFetchApiResult, err *data.CodeError) {
+func AsyncFetch(info AsyncFetchApiInfo) (result *AsyncFetchApiResult, err *data.CodeError) {
 	bm, err := bucket.GetBucketManager()
 	if err != nil {
 		return result, err
@@ -85,7 +103,8 @@ func AsyncFetch(info AsyncFetchApiInfo) (result AsyncFetchApiResult, err *data.C
 
 	reqUrl += "/sisyphus/fetch"
 
-	e = bm.Client.CredentialedCallWithJson(context.Background(), bm.Mac, auth.TokenQiniu, &result, "POST", reqUrl, nil, info)
+	result = &AsyncFetchApiResult{}
+	e = bm.Client.CredentialedCallWithJson(context.Background(), bm.Mac, auth.TokenQiniu, result, "POST", reqUrl, nil, info)
 	return result, data.ConvertError(e)
 }
 

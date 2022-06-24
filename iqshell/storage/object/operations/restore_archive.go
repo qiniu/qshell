@@ -1,14 +1,16 @@
 package operations
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
-	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
+	"path/filepath"
 	"strconv"
 )
 
@@ -110,6 +112,11 @@ func (info *BatchRestoreArchiveInfo) Check() *data.CodeError {
 }
 
 func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", cfg.CmdCfg.CmdId, info.Bucket, info.BatchInfo.InputFile))
+		return filepath.Join(cmdPath, jobId)
+	}
+
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
@@ -122,35 +129,36 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		key := items[0]
-		if len(key) > 0 {
-			return &object.RestoreArchiveApiInfo{
-				Bucket:          info.Bucket,
-				Key:             key,
-				FreezeAfterDays: info.freezeAfterDaysInt,
-			}, nil
-		}
-		return nil, alert.Error("key invalid", "")
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		apiInfo, ok := (operation).(*object.RestoreArchiveApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Rename Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
+	batch.NewHandler(info.BatchInfo).
+		SetFileExport(exporter).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			key := items[0]
+			if len(key) > 0 {
+				return &object.RestoreArchiveApiInfo{
+					Bucket:          info.Bucket,
+					Key:             key,
+					FreezeAfterDays: info.freezeAfterDaysInt,
+				}, nil
+			}
+			return nil, alert.Error("key invalid", "")
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			apiInfo, ok := (operation).(*object.RestoreArchiveApiInfo)
+			if !ok {
+				log.ErrorF("Rename Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
 
-		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%d, Code: %d, Error: %s",
-				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays,
-				result.Code, result.Error)
-		} else {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%d",
-				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
-		}
-	}).OnError(func(err *data.CodeError) {
-		log.ErrorF("Batch restore archive error:%v:", err)
-	}).Start()
+			if result.IsSuccess() {
+				log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%d",
+					apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
+			} else {
+				log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%d, Code: %d, Error: %s",
+					apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays,
+					result.Code, result.Error)
+			}
+		}).
+		OnError(func(err *data.CodeError) {
+			log.ErrorF("Batch restore archive error:%v:", err)
+		}).Start()
 }

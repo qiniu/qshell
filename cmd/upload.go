@@ -17,17 +17,20 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QUploadType
-			info.BatchInfo.Force = true
+			cfg.CmdCfg.Log.LogLevel = data.NewString(config.DebugKey)
+			cfg.CmdCfg.Log.LogStdout = data.NewBool(true)
+			cfg.CmdCfg.Log.LogRotate = data.NewInt(7)
+			info.Force = true
 			if len(args) > 0 {
 				info.UploadConfigFile = args[0]
 			}
 			operations.BatchUpload(cfg, info)
 		},
 	}
-	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
-	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
-	cmd.Flags().StringVarP(&info.BatchInfo.OverwriteExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
-	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "worker", "c", 1, "worker count")
+	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
+	cmd.Flags().StringVarP(&info.OverwriteExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
+	cmd.Flags().IntVarP(&info.Info.WorkerCount, "worker", "c", 1, "worker count")
 	cmd.Flags().StringVarP(&info.CallbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "upload callback host")
 	return cmd
@@ -49,7 +52,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QUpload2Type
-			info.BatchInfo.Force = true
+			info.Force = true
 			cfg.CmdCfg.Log = &config.LogSetting{
 				LogLevel:  data.NewString(LogLevel),
 				LogFile:   data.NewString(LogFile),
@@ -59,10 +62,10 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.BatchUpload2(cfg, info)
 		},
 	}
-	cmd.Flags().StringVar(&info.BatchInfo.SuccessExportFilePath, "success-list", "", "upload success file list")
-	cmd.Flags().StringVar(&info.BatchInfo.FailExportFilePath, "failure-list", "", "upload failure file list")
-	cmd.Flags().StringVar(&info.BatchInfo.OverwriteExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
-	cmd.Flags().IntVar(&info.BatchInfo.WorkerCount, "thread-count", 1, "multiple thread count")
+	cmd.Flags().StringVar(&info.SuccessExportFilePath, "success-list", "", "upload success file list")
+	cmd.Flags().StringVar(&info.FailExportFilePath, "failure-list", "", "upload failure file list")
+	cmd.Flags().StringVar(&info.OverwriteExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
+	cmd.Flags().IntVar(&info.Info.WorkerCount, "thread-count", 1, "multiple thread count")
 
 	cmd.Flags().BoolVarP(&info.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&info.IgnoreDir, "ignore-dir", false, "ignore the dir in the dest file key")
@@ -88,7 +91,8 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&LogLevel, "log-level", "debug", "log level")
 	cmd.Flags().IntVar(&LogRotate, "log-rotate", 7, "log rotate days")
 
-	cmd.Flags().IntVar(&info.FileType, "file-type", 0, "set storage file type")
+	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
+	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
 	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindUpIp, "bind-up-ip", "", "upload host ip to bind")
@@ -119,7 +123,8 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.SaveKey, "key", "k", "", "save as <key> in bucket")
 	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "upload host")
-	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
+	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
+	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "", false, "overwrite the file of same key in bucket")
 
 	return cmd
 }
@@ -148,7 +153,7 @@ var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
-	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "storage type")
+	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "uphost")
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
@@ -184,7 +189,7 @@ var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().Int64VarP(&info.ChunkSize, "v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
-	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "storage type")
+	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
 	cmd.Flags().IntVarP(&info.ResumeWorkerCount, "worker", "c", 16, "worker count")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "uphost")
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")

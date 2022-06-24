@@ -33,7 +33,7 @@ func newConveyorUploader(cfg *storage.Config) Uploader {
 	}
 }
 
-func (c *conveyor) upload(info *ApiInfo) (ret ApiResult, err *data.CodeError) {
+func (c *conveyor) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeError) {
 	log.DebugF("conveyor upload:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 
 	// 检查 Host

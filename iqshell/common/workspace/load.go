@@ -15,6 +15,7 @@ type LoadInfo struct {
 	UserConfigPath   string
 	CmdConfig        *config.Config
 	WorkspacePath    string
+	JobPathBuilder   func(cmdPath string) string
 	globalConfigPath string
 }
 
@@ -30,18 +31,18 @@ func Load(info LoadInfo) (err *data.CodeError) {
 		err = data.NewEmptyError().AppendDesc("can't get home dir")
 		return
 	}
-	workspacePath = info.WorkspacePath
-	log.Debug("workspace:" + workspacePath)
+	workspaceDir = info.WorkspacePath
+	log.Debug("workspace:" + workspaceDir)
 
-	err = utils.CreateDirIfNotExist(workspacePath)
+	err = utils.CreateDirIfNotExist(workspaceDir)
 	if err != nil {
 		return
 	}
 
 	// 加载账户
-	accountDBPath := filepath.Join(workspacePath, usersDBName)
-	accountPath := filepath.Join(workspacePath, currentUserFileName)
-	oldAccountPath := filepath.Join(workspacePath, oldUserFileName)
+	accountDBPath := filepath.Join(workspaceDir, usersDBName)
+	accountPath := filepath.Join(workspaceDir, currentUserFileName)
+	oldAccountPath := filepath.Join(workspaceDir, oldUserFileName)
 	err = account.Load(account.LoadInfo{
 		AccountPath:    accountPath,
 		OldAccountPath: oldAccountPath,
@@ -62,22 +63,32 @@ func Load(info LoadInfo) (err *data.CodeError) {
 		}
 		log.DebugF("current user name:%s", accountName)
 
-		userPath = filepath.Join(workspacePath, usersDirName, accountName)
-		err = utils.CreateDirIfNotExist(userPath)
-		if err != nil {
-			return data.NewEmptyError().AppendDescF("create user dir error:%v", err)
-		}
+		userDir = filepath.Join(workspaceDir, usersDirName, accountName)
 
 		// 配置 config 的 Credentials
 		cfg.Credentials = &auth.Credentials{
 			AccessKey: acc.AccessKey,
 			SecretKey: []byte(acc.SecretKey),
 		}
+	} else {
+		userDir = filepath.Join(workspaceDir, usersDirName, defaultUserDirName)
 	}
+	log.DebugF("user dir:%s", userDir)
+
+	// 配置 Job path
+	jobDir = filepath.Join(userDir, info.CmdConfig.CmdId)
+	if info.JobPathBuilder != nil {
+		jobDir = info.JobPathBuilder(jobDir)
+	}
+	err = utils.CreateDirIfNotExist(jobDir)
+	if err != nil {
+		return data.NewEmptyError().AppendDescF("create job dir error:%v", err)
+	}
+	log.DebugF("job dir:%s", jobDir)
 
 	// 检查用户配置，用户配置可能被指定，如果未指定则使用用户目录下配置
-	if len(info.UserConfigPath) == 0 && len(userPath) > 0 {
-		info.UserConfigPath = filepath.Join(userPath, configFileName)
+	if len(info.UserConfigPath) == 0 && len(userDir) > 0 {
+		info.UserConfigPath = filepath.Join(userDir, configFileName)
 	}
 
 	// 设置配置文件路径

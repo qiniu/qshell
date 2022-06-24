@@ -91,7 +91,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	_, _ = downloadFile(apiInfo)
 }
 
-func downloadFile(info *download.ApiInfo) (download.ApiResult, *data.CodeError) {
+func downloadFile(info *download.ApiInfo) (*download.ApiResult, *data.CodeError) {
 	log.InfoF("Download [%s:%s] => %s", info.Bucket, info.Key, info.ToFile)
 	startTime := time.Now().UnixNano() / 1e6
 	res, err := download.Download(info)

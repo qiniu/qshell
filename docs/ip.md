@@ -22,6 +22,17 @@ qshell ip 180.154.236.170  192.168.1.1
 
 输出：
 ```
-Ip: 180.154.236.170      => Code: 0	Country: 中国	Area: 华东	Region: 上海市	City: 上海市	County: 	Isp: 电信
-Ip: 192.168.1.1          => Code: 0	Country: 未分配或者内网IP	Area: 	Region: 	City: 	County: 	Isp:
+IP        :180.154.236.170
+Country   :中国
+Area      :
+Region    :上海
+City      :上海
+Isp       :电信
+
+IP        :192.168.1.1
+Country   :局域网
+Area      :
+Region    :局域网
+City      :
+Isp       :局域网
 ```

@@ -1,14 +1,16 @@
 package operations
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
-	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
+	"path/filepath"
 )
 
 // rename 实际用的还是 move
@@ -79,6 +81,10 @@ func (info *BatchRenameInfo) Check() *data.CodeError {
 }
 
 func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", cfg.CmdCfg.CmdId, info.Bucket, info.BatchInfo.InputFile))
+		return filepath.Join(cmdPath, jobId)
+	}
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
@@ -91,43 +97,44 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		if len(items) > 1 {
-			sourceKey, destKey := items[0], items[1]
-			if sourceKey != "" && destKey != "" {
-				return &object.MoveApiInfo{
-					SourceBucket: info.Bucket,
-					SourceKey:    sourceKey,
-					DestBucket:   info.Bucket,
-					DestKey:      destKey,
-					Force:        info.BatchInfo.Force,
-				}, nil
-			} else {
-				return nil, alert.Error("key invalid", "")
+	batch.NewHandler(info.BatchInfo).
+		SetFileExport(exporter).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			if len(items) > 1 {
+				sourceKey, destKey := items[0], items[1]
+				if sourceKey != "" && destKey != "" {
+					return &object.MoveApiInfo{
+						SourceBucket: info.Bucket,
+						SourceKey:    sourceKey,
+						DestBucket:   info.Bucket,
+						DestKey:      destKey,
+						Force:        info.BatchInfo.Force,
+					}, nil
+				} else {
+					return nil, alert.Error("key invalid", "")
+				}
 			}
-		}
-		return nil, alert.Error("need more than one param", "")
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		apiInfo, ok := (operation).(*object.MoveApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Rename Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
-		in := (*RenameInfo)(apiInfo)
-		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
-				in.SourceBucket, in.SourceKey,
-				in.DestBucket, in.DestKey,
-				result.Code, result.Error)
-		} else {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Rename Success, [%s:%s] => [%s:%s]",
-				in.SourceBucket, in.SourceKey,
-				in.DestBucket, in.DestKey)
-		}
-	}).OnError(func(err *data.CodeError) {
-		log.ErrorF("Batch rename error:%v:", err)
-	}).Start()
+			return nil, alert.Error("need more than one param", "")
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			apiInfo, ok := (operation).(*object.MoveApiInfo)
+			if !ok {
+				log.ErrorF("Rename Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
+			in := (*RenameInfo)(apiInfo)
+			if result.IsSuccess() {
+				log.InfoF("Rename Success, [%s:%s] => [%s:%s]",
+					in.SourceBucket, in.SourceKey,
+					in.DestBucket, in.DestKey)
+			} else {
+				log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
+					in.SourceBucket, in.SourceKey,
+					in.DestBucket, in.DestKey,
+					result.Code, result.Error)
+			}
+		}).
+		OnError(func(err *data.CodeError) {
+			log.ErrorF("Batch rename error:%v:", err)
+		}).Start()
 }

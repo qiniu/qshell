@@ -27,6 +27,8 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdForceFlags(cmd, &info.BatchInfo)
+	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
 	return cmd
 }
 
@@ -199,6 +201,8 @@ var batchSignCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
 	cmd.Flags().StringVarP(&info.Deadline, "deadline", "e", "3600", "deadline in seconds, default 3600")
 	return cmd
 }
@@ -221,7 +225,15 @@ var batchFetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.BatchFetch(cfg, info)
 		},
 	}
-	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
+
+	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
+	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdItemSeparateFlags(cmd, &info.BatchInfo)
+	setBatchCmdForceFlags(cmd, &info.BatchInfo)
+	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "worker", "c", 1, "worker count")
 	cmd.Flags().StringVarP(&upHost, "up-host", "u", "", "fetch uphost")
 	return cmd
 }
@@ -229,6 +241,8 @@ var batchFetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 func setBatchCmdDefaultFlags(cmd *cobra.Command, info *batch.Info) {
 	setBatchCmdInputFileFlags(cmd, info)
 	setBatchCmdWorkCountFlags(cmd, info)
+	setBatchCmdEnableRecordFlags(cmd, info)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, info)
 	setBatchCmdSuccessExportFileFlags(cmd, info)
 	setBatchCmdFailExportFileFlags(cmd, info)
 	setBatchCmdItemSeparateFlags(cmd, info)
@@ -237,20 +251,26 @@ func setBatchCmdDefaultFlags(cmd *cobra.Command, info *batch.Info) {
 func setBatchCmdInputFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.InputFile, "input-file", "i", "", "input file, read from stdin if not set")
 }
+func setBatchCmdForceFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force mode, default false")
+}
 func setBatchCmdWorkCountFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 1, "worker count")
+	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 1, "worker count. 1 means the number of objects in one operation is 1000 and if configured as 3 , the number of objects in one operation is 3000. This value needs to be consistent with the upper limit of Qiniu’s operation, otherwise unexpected errors will occur. Under normal circumstances you do not need to adjust this value and if you need please carefully.")
+}
+func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default is \\t (tab)")
+}
+func setBatchCmdEnableRecordFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "record work progress, and do from last progress while retry")
+}
+func setBatchCmdRecordRedoWhileErrorFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().BoolVarP(&info.RecordRedoWhileError, "record-redo-while-error", "", false, "when re-executing the command and checking the command task progress record, if a task has already been done and failed, the task will be re-executed. The default is false, and the task will not be re-executed when it detects that the task fails")
 }
 func setBatchCmdSuccessExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "rename success list")
 }
 func setBatchCmdFailExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "e", "", "rename failure list")
-}
-func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default is \\t (tab)")
-}
-func setBatchCmdForceFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force mode, default false")
 }
 func setBatchCmdOverwriteFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "w", false, "overwrite mode")

@@ -33,6 +33,7 @@ var forbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short: "Forbidden file in qiniu bucket",
 		Long:  "Forbidden object in qiniu bucket, when used with -r option, unforbidden the object",
 		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.ForbiddenType
 			if len(args) > 1 {
 				info.Bucket = args[0]
 				info.Key = args[1]

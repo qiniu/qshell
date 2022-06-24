@@ -97,6 +97,55 @@ func TestBatchDelete(t *testing.T) {
 	}
 }
 
+func TestBatchDeleteRecord(t *testing.T) {
+	TestBatchCopy(t)
+
+	batchConfig := ""
+	keys := test.Keys
+	keys = append(keys, "hello10.json")
+	for _, key := range keys {
+		batchConfig += key + "\n"
+	}
+
+	path, err := test.CreateFileWithContent("batch_delete.txt", batchConfig)
+	if err != nil {
+		t.Fatal("create batch move config file error:", err)
+	}
+
+	test.RunCmdWithError("batchdelete", test.Bucket,
+		"-i", path,
+		"--worker", "4",
+		"--enable-record",
+		"-y")
+
+	result, _ := test.RunCmdWithError("batchdelete", test.Bucket,
+		"-i", path,
+		"--worker", "4",
+		"--enable-record",
+		"-y",
+		"-d")
+	if !strings.Contains(result, "because have done and success") {
+		t.Fatal("batch result: should skip success work")
+	}
+	if strings.Contains(result, "work redo") {
+		t.Fatal("batch result: shouldn't redo because not set --record-redo-while-error")
+	}
+
+	result, _ = test.RunCmdWithError("batchdelete", test.Bucket,
+		"-i", path,
+		"--worker", "4",
+		"--enable-record",
+		"--record-redo-while-error",
+		"-y",
+		"-d")
+	if !strings.Contains(result, "because have done and success") {
+		t.Fatal("batch result: should skip success work")
+	}
+	if !strings.Contains(result, "work redo") {
+		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
+	}
+}
+
 func TestBatchDeleteDocument(t *testing.T) {
 	test.TestDocument("batchdelete", t)
 }

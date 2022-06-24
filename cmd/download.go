@@ -3,6 +3,8 @@ package cmd
 import (
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 	"github.com/spf13/cobra"
 )
@@ -17,14 +19,15 @@ And qdownload will use batch stat api or list api to get files info so that it h
 have already in local disk and need to skip download or not.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QDownloadType
-			info.BatchInfo.Force = true
+			cfg.CmdCfg.Log.LogLevel = data.NewString(config.DebugKey)
+			info.Force = true
 			if len(args) > 0 {
 				info.LocalDownloadConfig = args[0]
 			}
 			operations.BatchDownloadWithConfig(cfg, info)
 		},
 	}
-	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "thread", "c", 5, "num of threads to download files")
+	cmd.Flags().IntVarP(&info.WorkerCount, "thread", "c", 5, "num of threads to download files")
 	return cmd
 }
 
@@ -47,7 +50,7 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 	cmd.Flags().StringVarP(&info.ToFile, "outfile", "o", "", "save file as specified by this option")
 	cmd.Flags().StringVarP(&info.Domain, "domain", "", "", "domain of request")
-	cmd.Flags().BoolVarP(&info.CheckHash, "check-hash", "", false, "check the consistency of the hash of the local file and the server file after downloading..")
+	cmd.Flags().BoolVarP(&info.CheckHash, "check-hash", "", false, "check the consistency of the hash of the local file and the server file after downloading.")
 	cmd.Flags().BoolVarP(&info.UseGetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")
 	cmd.Flags().BoolVarP(&info.RemoveTempWhileError, "remove-temp-while-error", "", false, "remove download temp file while error happened, default is false")
 	return cmd

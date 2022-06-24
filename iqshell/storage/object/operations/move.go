@@ -1,14 +1,16 @@
 package operations
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
-	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
+	"path/filepath"
 )
 
 type MoveInfo object.MoveApiInfo
@@ -83,6 +85,10 @@ func (info *BatchMoveInfo) Check() *data.CodeError {
 }
 
 func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s:%s", cfg.CmdCfg.CmdId, info.SourceBucket, info.DestBucket, info.BatchInfo.InputFile))
+		return filepath.Join(cmdPath, jobId)
+	}
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
@@ -95,42 +101,43 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		srcKey, destKey := items[0], items[0]
-		if len(items) > 1 {
-			destKey = items[1]
-		}
-		if srcKey != "" && destKey != "" {
-			return &object.MoveApiInfo{
-				SourceBucket: info.SourceBucket,
-				SourceKey:    srcKey,
-				DestBucket:   info.DestBucket,
-				DestKey:      destKey,
-				Force:        info.BatchInfo.Force,
-			}, nil
-		}
-		return nil, alert.Error("key invalid", "")
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		apiInfo, ok := (operation).(*object.MoveApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Change mimetype Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
+	batch.NewHandler(info.BatchInfo).
+		SetFileExport(exporter).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			srcKey, destKey := items[0], items[0]
+			if len(items) > 1 {
+				destKey = items[1]
+			}
+			if srcKey != "" && destKey != "" {
+				return &object.MoveApiInfo{
+					SourceBucket: info.SourceBucket,
+					SourceKey:    srcKey,
+					DestBucket:   info.DestBucket,
+					DestKey:      destKey,
+					Force:        info.BatchInfo.Force,
+				}, nil
+			}
+			return nil, alert.Error("key invalid", "")
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			apiInfo, ok := (operation).(*object.MoveApiInfo)
+			if !ok {
+				log.ErrorF("Change mimetype Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
 
-		if result.Code != 200 || result.Error != "" {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
-				apiInfo.SourceBucket, apiInfo.SourceKey,
-				apiInfo.DestBucket, apiInfo.DestKey,
-				result.Code, result.Error)
-		} else {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Move Success, [%s:%s] => [%s:%s]",
-				apiInfo.SourceBucket, apiInfo.SourceKey,
-				apiInfo.DestBucket, apiInfo.DestKey)
-		}
-	}).OnError(func(err *data.CodeError) {
-		log.ErrorF("Batch move error:%v:", err)
-	}).Start()
+			if result.IsSuccess() {
+				log.InfoF("Move Success, [%s:%s] => [%s:%s]",
+					apiInfo.SourceBucket, apiInfo.SourceKey,
+					apiInfo.DestBucket, apiInfo.DestKey)
+			} else {
+				log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
+					apiInfo.SourceBucket, apiInfo.SourceKey,
+					apiInfo.DestBucket, apiInfo.DestKey,
+					result.Code, result.Error)
+			}
+		}).
+		OnError(func(err *data.CodeError) {
+			log.ErrorF("Batch move error:%v:", err)
+		}).Start()
 }

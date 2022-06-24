@@ -1,17 +1,15 @@
 package utils
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"encoding/base64"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
-	"io/ioutil"
 	"os"
 )
 
 const (
-	defaultChunkSize = 4 * 1024 * 1024
+	defaultChunkSize int64 = 4 * 1024 * 1024
 )
 
 func GetEtag(filename string) (etag string, err *data.CodeError) {
@@ -35,13 +33,13 @@ func EtagV1(reader io.Reader) (string, *data.CodeError) {
 func etagV1WithoutBase64Encoded(reader io.Reader) ([]byte, *data.CodeError) {
 	var sha1s [][]byte
 	for {
-		dataBuf, err := ioutil.ReadAll(io.LimitReader(reader, defaultChunkSize))
-		if err != nil {
-			return nil, data.NewEmptyError().AppendError(err)
-		} else if len(dataBuf) == 0 {
+		sha1Hash := sha1.New()
+		if size, err := io.Copy(sha1Hash, io.LimitReader(reader, defaultChunkSize)); err != nil {
+			return nil, data.NewEmptyError().AppendDescF("etag v1 read data:%v", err)
+		} else if size == 0 {
 			break
 		}
-		sha1Result := sha1.Sum(dataBuf)
+		sha1Result := sha1Hash.Sum(nil)
 		sha1s = append(sha1s, sha1Result[:])
 	}
 	return hashSha1s(sha1s), nil
@@ -50,23 +48,38 @@ func etagV1WithoutBase64Encoded(reader io.Reader) ([]byte, *data.CodeError) {
 var ErrPartSizeMismatch = data.NewEmptyError().AppendDesc("part size mismatch with data from reader")
 
 func EtagV2(reader io.Reader, parts []int64) (string, *data.CodeError) {
+	if len(parts) == 0 {
+		return "", data.NewEmptyError().AppendDesc("object part info is empty")
+	}
+
 	if is4MbParts(parts) {
 		return EtagV1(reader)
 	}
 
 	var sha1Buf []byte
 	for _, partSize := range parts {
-		dataBuf, err := ioutil.ReadAll(io.LimitReader(reader, partSize))
-		if err != nil {
-			return "", data.NewEmptyError().AppendError(err)
-		} else if len(dataBuf) != int(partSize) {
-			return "", data.NewEmptyError().AppendError(ErrPartSizeMismatch)
+
+		var partSha1s [][]byte
+		var readSize int64
+		leftSize := partSize
+		for leftSize > 0 {
+			readSize = defaultChunkSize
+			if readSize > leftSize {
+				readSize = leftSize
+			}
+
+			sha1Hash := sha1.New()
+			if size, err := io.Copy(sha1Hash, io.LimitReader(reader, readSize)); err != nil {
+				return "", data.NewEmptyError().AppendDescF("etag v2 read data:%v", err)
+			} else if size != readSize {
+				return "", data.NewEmptyError().AppendDescF("etag v2 read data size Unexpected, %d:%d", size, readSize)
+			}
+			sha1Result := sha1Hash.Sum(nil)
+			partSha1s = append(partSha1s, sha1Result[:])
+			leftSize = leftSize - readSize
 		}
-		etagResult, err := etagV1WithoutBase64Encoded(bytes.NewReader(dataBuf))
-		if err != nil {
-			return "", data.NewEmptyError().AppendError(err)
-		}
-		sha1Buf = append(sha1Buf, etagResult[1:]...)
+
+		sha1Buf = append(sha1Buf, hashSha1s(partSha1s)[1:]...)
 	}
 	sha1Result := sha1.Sum(sha1Buf)
 	sha1Buf = sha1Buf[:0]

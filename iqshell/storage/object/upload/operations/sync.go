@@ -21,6 +21,9 @@ func (info *SyncInfo) Check() *data.CodeError {
 	if len(info.ToBucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
+	if info.Overwrite && len(info.SaveKey) == 0 {
+		return alert.CannotEmptyError("Overwrite mode and Key", "")
+	}
 	return nil
 }
 

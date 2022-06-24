@@ -3,10 +3,10 @@ package download
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
@@ -43,8 +43,14 @@ type ApiResult struct {
 	IsExist     bool   // 是否为已存在
 }
 
+var _ flow.Result = (*ApiResult)(nil)
+
+func (a *ApiResult) IsValid() bool {
+	return len(a.FileAbsPath) > 0
+}
+
 // Download 下载一个文件，从 Url 下载保存至 ToFile
-func Download(info *ApiInfo) (res ApiResult, err *data.CodeError) {
+func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	if len(info.ToFile) == 0 {
 		err = data.NewEmptyError().AppendDesc("the filename saved after downloading is empty")
 		return
@@ -68,8 +74,8 @@ func Download(info *ApiInfo) (res ApiResult, err *data.CodeError) {
 		return
 	}
 
+	res = &ApiResult{}
 	shouldDownload := true
-
 	// 文件存在则检查文件状态
 	fileStatus, sErr := os.Stat(f.toAbsFile)
 	tempFileStatus, tempErr := os.Stat(f.tempFile)
@@ -160,9 +166,12 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	}
 
 	var response *http.Response
-	for i := 0; i < 6; i++ {
+	for times := 0; times < 6; times++ {
+		if available, _ := info.HostProvider.Available(); !available {
+			break
+		}
 		response, err = dl.Download(info)
-		if err == nil || !utils.IsHostUnavailableError(err) {
+		if err == nil && response != nil && response.StatusCode/100 == 2 {
 			break
 		}
 	}
@@ -219,9 +228,9 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 }
 
 func renameTempFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
-	err := os.Rename(fInfo.tempFile, fInfo.toFile)
+	err := os.Rename(fInfo.tempFile, fInfo.toAbsFile)
 	if err != nil {
-		return data.NewEmptyError().AppendDesc(" Rename temp file to final file error" + err.Error())
+		return data.NewEmptyError().AppendDescF(" Rename temp file to final file error:%v", err.Error())
 	}
 	return nil
 }
