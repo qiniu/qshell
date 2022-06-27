@@ -1,3 +1,9 @@
+# 2.8.0
+1. 新增创建存储空间命令 mkbucket 和查看存储空间信息命令 bucket
+2. 存储相关所有 batch 操作命令，支持保存当前执行状态，方便重试，详细使用方式可通过 qshell <子命令> 查看
+3. 存储所有上传命令，支持在上传时支持指定存储类型，详细使用方式可通过 qshell <子命令> 查看
+4. 修复了一些已知问题
+
 # 2.7.0
 1. 存储相关命令（比如上传、管理等）支持 [深度归档](https://developer.qiniu.com/kodo/3956/kodo-category) 存储类型
 2. 存储 [buckets](docs/buckets.md)、[domains](docs/domains.md) 等命令支持 --detail 参数可以输出更多详细信息

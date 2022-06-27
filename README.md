@@ -19,15 +19,15 @@ qshell是利用 [七牛文档上公开的API](http://developer.qiniu.com) 实现
 
 | 支持平台                | 链接                                                                                               |
 | ----------------------- | -------------------------------------------------------------------------------------------------- |
-| Windows X86             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-windows-386.zip)     |
-| Windows amd64           | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-windows-amd64.zip)   |
-| Windows arm             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-windows-arm.zip)     |
-| Linux X86               | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-386.tar.gz)    |
-| Linux amd64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-amd64.tar.gz)  |
-| Linux arm               | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-arm.tar.gz)    |
-| Linux arm64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-arm64.tar.gz)  |
-| Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-darwin-amd64.tar.gz) |
-| Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-darwin-arm64.tar.gz) |
+| Windows X86             | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-windows-386.zip)     |
+| Windows amd64           | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-windows-amd64.zip)   |
+| Windows arm             | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-windows-arm.zip)     |
+| Linux X86               | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-linux-386.tar.gz)    |
+| Linux amd64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-linux-amd64.tar.gz)  |
+| Linux arm               | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-linux-arm.tar.gz)    |
+| Linux arm64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-linux-arm64.tar.gz)  |
+| Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-darwin-amd64.tar.gz) |
+| Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-darwin-arm64.tar.gz) |
 
 
 ## 安装
@@ -210,7 +210,11 @@ fi
 
 
 ## 命令列表
-
+- `v2.7.0 及以上版本，命令列表及命令使用详细文档说明，支持直接使用 qshell 自助查看。`
+    - `qshell -h，显示支持命令列表`
+    - `qshell <子命令> --doc 查看详细命令使用说明` 
+- 查看工具版本号请使用命令 qshell -v 
+                  
 ### 账号设置命令
 | 命令        | 类别   | 描述                                                                 | 详细                        |
 | ----------- | ------ | -------------------------------------------------------------------- | --------------------------- |
@@ -220,6 +224,8 @@ fi
 ### 存储相关命令
 | 命令        | 类别   | 描述                                                                 | 详细                        |
 | ----------- | ------ | -------------------------------------------------------------------- | --------------------------- |
+| mkbucket    | 创建   | 创建存储空间                                           | [文档](docs/mkbucket.md) |
+| bucket      | 查看                       |查看存储空间信息                  |[文档](docs/bucket.md)|  
 | batchdelete | 删除   | 批量删除七牛空间中的文件，可以直接根据`listbucket`的结果来删除       | [文档](docs/batchdelete.md) |
 | delete      | 删除   | 删除七牛空间中的一个文件                                             | [文档](docs/delete.md)      |
 | batchchgm   | 修改   | 批量修改七牛空间中文件的MimeType                                     | [文档](docs/batchchgm.md)   |
