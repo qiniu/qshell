@@ -9,11 +9,11 @@ import (
 )
 
 type MoveApiInfo struct {
-	SourceBucket string
-	SourceKey    string
-	DestBucket   string
-	DestKey      string
-	Force        bool
+	SourceBucket string `json:"source_bucket"`
+	SourceKey    string `json:"source_key"`
+	DestBucket   string `json:"dest_bucket"`
+	DestKey      string `json:"dest_key"`
+	Force        bool   `json:"force"`
 }
 
 func (m *MoveApiInfo) ToOperation() (string, *data.CodeError) {

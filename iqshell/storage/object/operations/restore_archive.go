@@ -69,22 +69,19 @@ func RestoreArchive(cfg *iqshell.Config, info RestoreArchiveInfo) {
 		Key:             info.Key,
 		FreezeAfterDays: info.freezeAfterDaysInt,
 	})
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Error: %v",
 			info.Bucket, info.Key, info.FreezeAfterDays, err)
-		return
-	}
-
-	if len(result.Error) != 0 {
-		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Code: %d, Error: %s",
-			info.Bucket, info.Key, info.FreezeAfterDays,
-			result.Code, result.Error)
 		return
 	}
 
 	if result.IsSuccess() {
 		log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%s",
 			info.Bucket, info.Key, info.FreezeAfterDays)
+	} else {
+		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Code: %d, Error: %s",
+			info.Bucket, info.Key, info.FreezeAfterDays,
+			result.Code, result.Error)
 	}
 }
 
@@ -130,35 +127,39 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		key := items[0]
-		if len(key) > 0 {
-			return &object.RestoreArchiveApiInfo{
-				Bucket:          info.Bucket,
-				Key:             key,
-				FreezeAfterDays: info.freezeAfterDaysInt,
-			}, nil
-		}
-		return nil, alert.Error("key invalid", "")
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		apiInfo, ok := (operation).(*object.RestoreArchiveApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Rename Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
+	batch.NewHandler(info.BatchInfo).
+		EmptyOperation(func() flow.Work {
+			return &object.RestoreArchiveApiInfo{}
+		}).
+		SetFileExport(exporter).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			key := items[0]
+			if len(key) > 0 {
+				return &object.RestoreArchiveApiInfo{
+					Bucket:          info.Bucket,
+					Key:             key,
+					FreezeAfterDays: info.freezeAfterDaysInt,
+				}, nil
+			}
+			return nil, alert.Error("key invalid", "")
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			apiInfo, ok := (operation).(*object.RestoreArchiveApiInfo)
+			if !ok {
+				log.ErrorF("Restore archive Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
 
-		if result.IsSuccess() {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%d",
-				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
-		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%d, Code: %d, Error: %s",
-				apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays,
-				result.Code, result.Error)
-		}
-	}).OnError(func(err *data.CodeError) {
-		log.ErrorF("Batch restore archive error:%v:", err)
-	}).Start()
+			if result.IsSuccess() {
+				log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%d",
+					apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
+			} else {
+				log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%d, Code: %d, Error: %s",
+					apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays,
+					result.Code, result.Error)
+			}
+		}).
+		OnError(func(err *data.CodeError) {
+			log.ErrorF("Batch restore archive error:%v:", err)
+		}).Start()
 }

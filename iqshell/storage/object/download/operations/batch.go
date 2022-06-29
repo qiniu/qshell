@@ -82,6 +82,9 @@ func (info *BatchDownloadInfo) Check() *data.CodeError {
 	if err := info.DownloadCfg.Check(); err != nil {
 		return err
 	}
+	if len(info.ItemSeparate) == 0 {
+		info.ItemSeparate = data.DefaultLineSeparate
+	}
 	return nil
 }
 
@@ -121,7 +124,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return
 	}
 
-	dbPath := filepath.Join(workspace.GetJobDir(), ".ldb")
+	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 	log.InfoF("download db dir:%s", dbPath)
 
 	exporter, err := export.NewFileExport(export.FileExporterConfig{
@@ -172,20 +175,23 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
+				saveKey := apiInfo.Key
+				if len(info.IgnoreKeyPrefixInFilePath) > 0 {
+					saveKey = strings.TrimPrefix(saveKey, info.IgnoreKeyPrefixInFilePath)
+				}
 				apiInfo.HostProvider = hostProvider
-				apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
-				apiInfo.StatusDBPath = dbPath
+				apiInfo.ToFile = filepath.Join(info.DestDir, saveKey)
 				apiInfo.Referer = info.Referer
 				apiInfo.FileEncoding = info.FileEncoding
 				apiInfo.Bucket = info.Bucket
 				apiInfo.RemoveTempWhileError = info.RemoveTempWhileError
 				apiInfo.UseGetFileApi = info.GetFileApi
 				if !info.CheckHash {
-					apiInfo.FileHash = ""
+					apiInfo.ServerFileHash = ""
 				}
 
 				metric.AddCurrentCount(1)
-				metric.PrintProgress("Downloading " + apiInfo.Key)
+				metric.PrintProgress("Downloading: " + workInfo.Data)
 
 				if file, e := downloadFile(apiInfo); e != nil {
 					return nil, e
@@ -194,12 +200,54 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				}
 			}), nil
 		})).
+		SetOverseerEnable(true).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &download.ApiInfo{},
+				},
+				Result: &download.ApiResult{},
+				Err:    nil,
+			}
+		}).
+		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+			if workRecord.Err != nil {
+				return true, workRecord.Err
+			}
+
+			apiInfo, _ := workInfo.Work.(*download.ApiInfo)
+			recordApiInfo, _ := workRecord.Work.(*download.ApiInfo)
+
+			result, _ := workRecord.Result.(*download.ApiResult)
+			if result == nil {
+				return true, data.NewEmptyError().AppendDesc("no result found")
+			}
+			if !result.IsValid() {
+				return true, data.NewEmptyError().AppendDesc("result is invalid")
+			}
+
+			isLocalFileNotChange, _ := utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime)
+			isServerFileNotChange := apiInfo.ServerFilePutTime == recordApiInfo.ServerFilePutTime
+			// 本地文件和服务端文件均没有变化，则不需要重新下载
+			if isLocalFileNotChange && isServerFileNotChange {
+				return false, nil
+			} else if !isLocalFileNotChange {
+				// 本地有变动，尝试检查 hash，hash 统一由单文件上传之前检查
+				return true, data.NewEmptyError().AppendDesc("local file has change")
+			} else {
+				// 服务端文件有变动，尝试检查 hash，hash 统一由单文件上传之前检查
+				return true, data.NewEmptyError().AppendDesc("server file has change")
+			}
+		}).
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
-			apiInfo := workInfo.Work.(*download.ApiInfo)
+			apiInfo, _ := workInfo.Work.(*download.ApiInfo)
 			if filterPrefix(apiInfo.Key) {
+				log.InfoF("Download Skip because key prefix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
 				return true, data.NewEmptyError().AppendDescF("Skip download `%s`, prefix filter not match", apiInfo.Key)
 			}
 			if filterSuffixes(apiInfo.Key) {
+				log.InfoF("Download Skip because key suffix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
 				return true, data.NewEmptyError().AppendDescF("Skip download `%s`, suffix filter not match", apiInfo.Key)
 			}
 			return false, nil
@@ -209,13 +257,26 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			return nil
 		}).
 		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
-			metric.AddSkippedCount(1)
+			metric.AddCurrentCount(1)
+			metric.PrintProgress("Downloading: " + workInfo.Data)
 
-			log.Info(err.Error())
-			exporter.Skip().Export(workInfo.Data)
+			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
+				operationResult, _ := result.(*download.ApiResult)
+				if operationResult != nil && operationResult.IsValid() {
+					metric.AddSuccessCount(1)
+					log.InfoF("Skip line:%s because have done and success", workInfo.Data)
+				} else {
+					metric.AddFailureCount(1)
+					log.InfoF("Skip line:%s because have done and failure, %v", workInfo.Data, err)
+				}
+			} else {
+				metric.AddSkippedCount(1)
+				log.DebugF("Skip line:%s because:%v", workInfo.Data, err)
+				exporter.Skip().Export(workInfo.Data)
+			}
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-			res := result.(*download.ApiResult)
+			res, _ := result.(*download.ApiResult)
 			if res.IsExist {
 				metric.AddExistCount(1)
 			} else if res.IsUpdate {

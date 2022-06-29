@@ -13,7 +13,7 @@ func Some(operations []Operation) ([]*OperationResult, *data.CodeError) {
 		err:        nil,
 	}
 
-	works := make([]flow.Work, len(operations))
+	works := make([]flow.Work, 0, len(operations))
 	for _, operation := range operations {
 		works = append(works, operation)
 	}
@@ -24,7 +24,7 @@ func Some(operations []Operation) ([]*OperationResult, *data.CodeError) {
 			StopWhenWorkError: true,
 		},
 		WorkList:                    works,
-		MaxOperationCountPerRequest: 1000,
+		MaxOperationCountPerRequest: defaultOperationCountPerRequest,
 	}).OnResult(func(operationInfo string, operation Operation, result *OperationResult) {
 		h.results = append(h.results, result)
 	}).OnError(func(err *data.CodeError) {

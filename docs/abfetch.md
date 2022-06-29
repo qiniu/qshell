@@ -1,6 +1,10 @@
 # 简介
 `abfetch` 使用批量异步抓取接口抓取网络资源到七牛存储空间。
 
+批量异步 fetch 分两步：
+1. 发起异步 fetch 请求，请求成功并不意味着 fetch 成功，需要 `步骤 2` 来检测是否真的 fetch 成功。
+2. 通过查询文件是否存在于指定的七牛存储空间中来检测 fetch 是否成功；你可以使用长选项 `--disable-check-fetch-result` 跳过此步骤。
+
 参考文档：[异步抓取 (async fetch)](https://developer.qiniu.com/kodo/api/4097/asynch-fetch)
 
 # 格式
@@ -25,6 +29,7 @@ qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <Callback
 - -c/--thread-count：抓取指定的线程数目，默认：20。 【可选】
 - -s/--success-list：抓取成功后导出到的文件。 【可选】
 - -e/--failure-list：抓取失败后导出到的文件。 【可选】
+- --disable-check-fetch-result：不检测异步 fetch 是否成功，检测方式是查询目标 bucket 是否存在 fetch 的文件；默认检测。【可选】  
 - --enable-record：记录任务执行状态，当下次执行命令时会跳过已执行的任务。 【可选】
 - --record-redo-while-error：依赖于 --enable-record，当检测任务状态时（命令重新执行时，所有任务会从头到尾重新执行；任务执行前会先检测当前任务是否已经执行），如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败不重新执行。 【可选】
 

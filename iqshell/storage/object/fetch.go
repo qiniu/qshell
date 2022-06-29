@@ -15,9 +15,9 @@ import (
 )
 
 type FetchApiInfo struct {
-	Bucket  string
-	Key     string
-	FromUrl string
+	Bucket  string `json:"bucket"`
+	Key     string `json:"key"`
+	FromUrl string `json:"from_url"`
 }
 
 func (i *FetchApiInfo) WorkId() string {
@@ -79,8 +79,8 @@ type AsyncFetchApiInfo struct {
 }
 
 type AsyncFetchApiResult struct {
-	Id   string `json:"id"`
-	Wait int    `json:"wait"`
+	Id   string `json:"id"`   // 异步任务Id
+	Wait int    `json:"wait"` // 当前任务前面的排队任务数量, 0表示当前任务正在进行, -1表示任务已经至少被处理过一次（可能会进入重试逻辑）
 }
 
 func (result *AsyncFetchApiResult) IsValid() bool {

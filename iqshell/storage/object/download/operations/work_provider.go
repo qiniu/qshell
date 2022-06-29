@@ -74,10 +74,10 @@ func (w *workProvider) getWorkInfoFromFile() {
 				}
 
 				return &download.ApiInfo{
-					Key:            listObject.Key,
-					FileSize:       listObject.Fsize,
-					FileHash:       listObject.Hash,
-					FileModifyTime: listObject.PutTime,
+					Key:               listObject.Key,
+					ServerFileSize:    listObject.Fsize,
+					ServerFileHash:    listObject.Hash,
+					ServerFilePutTime: listObject.PutTime,
 				}, nil
 			}))
 
@@ -106,7 +106,7 @@ func (w *workProvider) getWorkInfoFromFile() {
 				}
 			} else if workInfo != nil && workInfo.Work != nil {
 				downloadApiInfo, _ := (workInfo.Work).(*download.ApiInfo)
-				if downloadApiInfo.FileModifyTime < 1 {
+				if downloadApiInfo.ServerFilePutTime < 1 {
 					keys = append(keys, downloadApiInfo.Key)
 				} else {
 					w.downloadItemChan <- &downloadItem{
@@ -160,10 +160,11 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) {
 						result.Hash, w.itemSeparate,
 						result.PutTime),
 					Work: &download.ApiInfo{
-						Key:            item.Key,
-						FileHash:       result.Hash,
-						FileSize:       result.FSize,
-						FileModifyTime: result.PutTime,
+						Bucket:            w.bucket,
+						Key:               item.Key,
+						ServerFileHash:    result.Hash,
+						ServerFileSize:    result.FSize,
+						ServerFilePutTime: result.PutTime,
 					},
 				}
 			}
@@ -203,10 +204,11 @@ func (w *workProvider) getWorkInfoFromBucket() {
 						object.Hash, w.itemSeparate,
 						object.PutTime),
 					Work: &download.ApiInfo{
-						Key:            object.Key,
-						FileHash:       object.Hash,
-						FileSize:       object.Fsize,
-						FileModifyTime: object.PutTime,
+						Bucket:            w.bucket,
+						Key:               object.Key,
+						ServerFileHash:    object.Hash,
+						ServerFileSize:    object.Fsize,
+						ServerFilePutTime: object.PutTime,
 					},
 				},
 				err: nil,

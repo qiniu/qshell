@@ -12,7 +12,7 @@ import (
 func TestResumeV1Upload(t *testing.T) {
 	test.RunCmdWithError("delete", test.Bucket, "qshell_rput_5M")
 
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -33,7 +33,7 @@ func TestResumeV1Upload(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5*1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -43,7 +43,7 @@ func TestResumeV1Upload(t *testing.T) {
 		"--mimetype", "image/png",
 		"--storage", "1",
 		"--worker", "4")
-	if !strings.Contains(errs, "upload error:file exists") {
+	if !strings.Contains(errs, "file exists") {
 		t.Fatal(result)
 	}
 
@@ -64,7 +64,7 @@ func TestResumeV1Upload(t *testing.T) {
 }
 
 func TestResumeV1UploadWithUploadHost(t *testing.T) {
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -72,7 +72,7 @@ func TestResumeV1UploadWithUploadHost(t *testing.T) {
 	result, errs := test.RunCmdWithError("rput", test.Bucket, "qshell_rput_uploadHost_5M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "0",
-		"--up-host", "up-na0.qiniup.com",
+		"--up-host", test.UploadDomain,
 		"--overwrite")
 	if len(errs) > 0 {
 		t.Fail()
@@ -87,7 +87,7 @@ func TestResumeV1UploadWithUploadHost(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5*1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -97,7 +97,7 @@ func TestResumeV1UploadWithUploadHost(t *testing.T) {
 func TestResumeV2Upload(t *testing.T) {
 	test.RunCmdWithError("delete", test.Bucket, "qshell_rput_5M")
 
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -119,7 +119,7 @@ func TestResumeV2Upload(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5*1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -129,7 +129,7 @@ func TestResumeV2Upload(t *testing.T) {
 		"--mimetype", "image/png",
 		"--storage", "1",
 		"--resumable-api-v2")
-	if !strings.Contains(errs, "upload error:file exists") {
+	if !strings.Contains(errs, "file exists") {
 		t.Fatal(errs)
 	}
 
@@ -151,7 +151,7 @@ func TestResumeV2Upload(t *testing.T) {
 }
 
 func TestResumeV2UploadWithUploadHost(t *testing.T) {
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -159,7 +159,7 @@ func TestResumeV2UploadWithUploadHost(t *testing.T) {
 	result, errs := test.RunCmdWithError("rput", test.Bucket, "qshell_rput_v2_uploadHost_5M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "0",
-		"--up-host", "up-na0.qiniup.com",
+		"--up-host", test.UploadDomain,
 		"--overwrite",
 		"--resumable-api-v2")
 	if len(errs) > 0 {
@@ -175,14 +175,14 @@ func TestResumeV2UploadWithUploadHost(t *testing.T) {
 		t.Fatal(result)
 	}
 
-	path, err = test.CreateTempFile(5*1024 + 1)
+	path, err = test.CreateTempFile(1*1024 + 1)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
 }
 
 func TestResumeUploadWithWrongUploadHost(t *testing.T) {
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}
@@ -192,13 +192,14 @@ func TestResumeUploadWithWrongUploadHost(t *testing.T) {
 		"--storage", "0",
 		"--up-host", "up-mock.qiniup.com",
 		"--overwrite")
-	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") {
+	if !strings.Contains(errs, "dial tcp: lookup up-mock.qiniup.com: no such host") &&
+		!strings.Contains(errs, "Upload file error") {
 		t.Fail()
 	}
 }
 
 func TestResumeUploadNoExistBucket(t *testing.T) {
-	path, err := test.CreateTempFile(5 * 1024)
+	path, err := test.CreateTempFile(1 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}

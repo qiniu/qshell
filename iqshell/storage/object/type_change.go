@@ -9,9 +9,9 @@ import (
 )
 
 type ChangeTypeApiInfo struct {
-	Bucket string
-	Key    string
-	Type   int
+	Bucket string `json:"bucket"`
+	Key    string `json:"key"`
+	Type   int    `json:"type"`
 }
 
 func (c *ChangeTypeApiInfo) ToOperation() (string, *data.CodeError) {

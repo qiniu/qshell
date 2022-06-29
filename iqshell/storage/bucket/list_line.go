@@ -81,7 +81,7 @@ type ListLineCreator struct {
 	Readable bool     // 是否可读
 }
 
-func (l *ListLineCreator)Create(object *ListObject) string {
+func (l *ListLineCreator) Create(object *ListObject) string {
 	return listObjectDescWithFields(object, l.Fields, l.Sep, l.Readable)
 }
 

@@ -36,8 +36,8 @@ func Create(cfg *iqshell.Config, info CreateInfo) {
 		Bucket:   info.Bucket,
 		Private:  info.Private,
 	}); err != nil {
-		log.ErrorF("bucket:%s-%s create error:%v", info.RegionId, info.Bucket, err)
+		log.ErrorF("bucket:%s create at region:%s error:%v", info.Bucket, info.RegionId, err)
 	} else {
-		log.AlertF("bucket:%s-%s create success", info.RegionId, info.Bucket)
+		log.AlertF("bucket:%s create at region:%s success", info.Bucket, info.RegionId)
 	}
 }

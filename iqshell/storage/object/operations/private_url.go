@@ -97,23 +97,9 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 		return
 	}
 
-	var overseer flow.Overseer
+	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 	if info.BatchInfo.EnableRecord {
-		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 		log.DebugF("batch sign recorder:%s", dbPath)
-		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
-			return &flow.WorkRecord{
-				WorkInfo: &flow.WorkInfo{
-					Data: "",
-					Work: nil,
-				},
-				Result: &download.PublicUrlToPrivateApiResult{},
-				Err:    nil,
-			}
-		}); err != nil {
-			log.ErrorF("batch sign create overseer error:%v", err)
-			return
-		}
 	} else {
 		log.Debug("batch sign recorder:Not Enable")
 	}
@@ -159,7 +145,17 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
 		}).
-		SetOverseer(overseer).
+		SetOverseerEnable(info.BatchInfo.EnableRecord).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &PrivateUrlInfo{},
+				},
+				Result: &download.PublicUrlToPrivateApiResult{},
+				Err:    nil,
+			}
+		}).
 		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
 			if !info.BatchInfo.RecordRedoWhileError {
 				return false, nil
@@ -185,9 +181,11 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
+					exporter.Success().Export(work.Data)
 					log.DebugF("Skip line:%s because have done and success", work.Data)
 				} else {
 					metric.AddFailureCount(1)
+					exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 					log.DebugF("Skip line:%s because have done and failure, %v", work.Data, err)
 				}
 			} else {

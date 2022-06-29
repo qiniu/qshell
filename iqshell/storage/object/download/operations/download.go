@@ -72,21 +72,20 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		IsPublic:             info.IsPublic,
 		HostProvider:         hostProvider,
 		ToFile:               info.ToFile,
-		StatusDBPath:         "",
 		Referer:              "",
 		FileEncoding:         "",
 		Bucket:               info.Bucket,
 		Key:                  info.Key,
-		FileModifyTime:       fileStatus.PutTime,
-		FileSize:             fileStatus.FSize,
-		FileHash:             "",
+		ServerFilePutTime:    fileStatus.PutTime,
+		ServerFileSize:       fileStatus.FSize,
+		ServerFileHash:       "",
 		FromBytes:            0,
 		RemoveTempWhileError: info.RemoveTempWhileError,
 		UseGetFileApi:        info.UseGetFileApi,
 		Progress:             progress.NewPrintProgress(" 进度"),
 	}
 	if info.CheckHash {
-		apiInfo.FileHash = fileStatus.Hash
+		apiInfo.ServerFileHash = fileStatus.Hash
 	}
 	_, _ = downloadFile(apiInfo)
 }
@@ -112,7 +111,11 @@ func downloadFile(info *download.ApiInfo) (*download.ApiResult, *data.CodeError)
 
 	endTime := time.Now().UnixNano() / 1e6
 	duration := float64(endTime-startTime) / 1000
-	speed := fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/duration/1024)
+	speed := "0KB/s"
+	if duration > 0.1 {
+		// 小于 100ms, 可能没有进行下载操作
+		speed = fmt.Sprintf("%.2fKB/s", float64(fileStatus.Size())/duration/1024)
+	}
 	if res.IsExist {
 		log.InfoF("Download Skip because file exist, [%s:%s] => %s", info.Bucket, info.Key, res.FileAbsPath)
 	} else if res.IsUpdate {

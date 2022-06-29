@@ -93,23 +93,9 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 		return
 	}
 
-	var overseer flow.Overseer
+	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 	if info.BatchInfo.EnableRecord {
-		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 		log.DebugF("batch match recorder:%s", dbPath)
-		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
-			return &flow.WorkRecord{
-				WorkInfo: &flow.WorkInfo{
-					Data: "",
-					Work: nil,
-				},
-				Result: &object.MatchResult{},
-				Err:    nil,
-			}
-		}); err != nil {
-			log.ErrorF("batch match create overseer error:%v", err)
-			return
-		}
 	} else {
 		log.Debug("batch match recorder:Not Enable")
 	}
@@ -131,10 +117,10 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 				}
 
 				return &object.MatchApiInfo{
-					Bucket:    info.Bucket,
-					Key:       listObject.Key,
-					FileHash:  listObject.Hash,
-					LocalFile: filepath.Join(info.LocalFileDir, listObject.Key),
+					Bucket:         info.Bucket,
+					Key:            listObject.Key,
+					ServerFileHash: listObject.Hash,
+					LocalFile:      filepath.Join(info.LocalFileDir, listObject.Key),
 				}, nil
 			})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
@@ -147,7 +133,17 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
 		}).
-		SetOverseer(overseer).
+		SetOverseerEnable(info.BatchInfo.EnableRecord).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &object.MatchApiInfo{},
+				},
+				Result: &object.MatchResult{},
+				Err:    nil,
+			}
+		}).
 		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
 			if workRecord.Err == nil {
 				return false, nil
@@ -174,17 +170,18 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
-					log.DebugF("Skip line:%s because have done and success", work.Data)
+					exporter.Success().ExportF("%s", work.Data)
+					log.InfoF("Skip line:%s because have done and success", work.Data)
 				} else {
 					metric.AddFailureCount(1)
-					log.DebugF("Skip line:%s because have done and failure, %v", work.Data, err)
+					exporter.Fail().ExportF("%s", work.Data)
+					log.InfoF("Skip line:%s because have done and failure, %v", work.Data, err)
 				}
 			} else {
 				metric.AddSkippedCount(1)
 				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
-				log.DebugF("Skip line:%s because:%v", work.Data, err)
+				log.InfoF("Skip line:%s because:%v", work.Data, err)
 			}
-
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)
@@ -192,7 +189,7 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			in, _ := workInfo.Work.(*object.MatchApiInfo)
-			exporter.Success().ExportF("%s\t \t%s", in.Key, in.FileHash)
+			exporter.Success().ExportF("%s\t \t%s", in.Key, in.ServerFileHash)
 			log.InfoF("Match Success, [%s:%s] => '%s'", info.Bucket, in.Key, in.LocalFile)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {

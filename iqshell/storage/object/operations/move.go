@@ -40,7 +40,7 @@ func Move(cfg *iqshell.Config, info MoveInfo) {
 	}
 
 	result, err := object.Move((*object.MoveApiInfo)(&info))
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -48,18 +48,15 @@ func Move(cfg *iqshell.Config, info MoveInfo) {
 		return
 	}
 
-	if len(result.Error) != 0 {
-		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
-			info.SourceBucket, info.SourceKey,
-			info.DestBucket, info.DestKey,
-			result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Move Success, [%s:%s] => [%s:%s]",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
+	} else {
+		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			result.Code, result.Error)
 	}
 }
 
@@ -102,42 +99,46 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		srcKey, destKey := items[0], items[0]
-		if len(items) > 1 {
-			destKey = items[1]
-		}
-		if srcKey != "" && destKey != "" {
-			return &object.MoveApiInfo{
-				SourceBucket: info.SourceBucket,
-				SourceKey:    srcKey,
-				DestBucket:   info.DestBucket,
-				DestKey:      destKey,
-				Force:        info.BatchInfo.Force,
-			}, nil
-		}
-		return nil, alert.Error("key invalid", "")
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		apiInfo, ok := (operation).(*object.MoveApiInfo)
-		if !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Change mimetype Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
+	batch.NewHandler(info.BatchInfo).
+		SetFileExport(exporter).
+		EmptyOperation(func() flow.Work {
+			return &object.MoveApiInfo{}
+		}).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			srcKey, destKey := items[0], items[0]
+			if len(items) > 1 {
+				destKey = items[1]
+			}
+			if srcKey != "" && destKey != "" {
+				return &object.MoveApiInfo{
+					SourceBucket: info.SourceBucket,
+					SourceKey:    srcKey,
+					DestBucket:   info.DestBucket,
+					DestKey:      destKey,
+					Force:        info.BatchInfo.Force,
+				}, nil
+			}
+			return nil, alert.Error("key invalid", "")
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			apiInfo, ok := (operation).(*object.MoveApiInfo)
+			if !ok {
+				log.ErrorF("Change mimetype Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
 
-		if result.IsSuccess() {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Move Success, [%s:%s] => [%s:%s]",
-				apiInfo.SourceBucket, apiInfo.SourceKey,
-				apiInfo.DestBucket, apiInfo.DestKey)
-		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
-				apiInfo.SourceBucket, apiInfo.SourceKey,
-				apiInfo.DestBucket, apiInfo.DestKey,
-				result.Code, result.Error)
-		}
-	}).OnError(func(err *data.CodeError) {
-		log.ErrorF("Batch move error:%v:", err)
-	}).Start()
+			if result.IsSuccess() {
+				log.InfoF("Move Success, [%s:%s] => [%s:%s]",
+					apiInfo.SourceBucket, apiInfo.SourceKey,
+					apiInfo.DestBucket, apiInfo.DestKey)
+			} else {
+				log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
+					apiInfo.SourceBucket, apiInfo.SourceKey,
+					apiInfo.DestBucket, apiInfo.DestKey,
+					result.Code, result.Error)
+			}
+		}).
+		OnError(func(err *data.CodeError) {
+			log.ErrorF("Batch move error:%v:", err)
+		}).Start()
 }

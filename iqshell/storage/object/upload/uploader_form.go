@@ -25,13 +25,13 @@ func (f *formUploader) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeErro
 
 	file, oErr := os.Open(info.FilePath)
 	if oErr != nil {
-		err = data.NewEmptyError().AppendDesc("form upload: open file error:" + err.Error())
+		err = data.NewEmptyError().AppendDesc("form upload: open file:").AppendError(err)
 		return
 	}
 
 	fileStatus, sErr := file.Stat()
 	if sErr != nil {
-		err = data.NewEmptyError().AppendDesc("form upload: ger file status error:" + err.Error())
+		err = data.NewEmptyError().AppendDesc("form upload: get file status").AppendError(err)
 		return
 	}
 
@@ -39,7 +39,7 @@ func (f *formUploader) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeErro
 	log.DebugF("upload token:%s", token)
 
 	if info.Progress != nil {
-		info.Progress.SetFileSize(info.FileSize)
+		info.Progress.SetFileSize(info.LocalFileSize)
 		info.Progress.Start()
 		f.ext.OnProgress = func(fsize, uploaded int64) {
 			info.Progress.Progress(uploaded)
@@ -48,7 +48,7 @@ func (f *formUploader) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeErro
 
 	up := storage.NewFormUploader(f.cfg)
 	if e := up.Put(workspace.GetContext(), &ret, token, info.SaveKey, file, fileStatus.Size(), f.ext); e != nil {
-		err = data.NewEmptyError().AppendDesc("form upload: upload error:" + e.Error())
+		err = data.NewEmptyError().AppendDesc("form upload").AppendError(e)
 	} else {
 		if info.Progress != nil {
 			info.Progress.End()

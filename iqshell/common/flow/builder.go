@@ -86,105 +86,80 @@ func (b *WorkerProvideBuilder) WorkerProvider(provider WorkerProvider) *FlowBuil
 
 func (b *FlowBuilder) DoWorkListMaxCount(count int) *FlowBuilder {
 	b.flow.DoWorkInfoListMaxCount = count
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
 }
 
 func (b *FlowBuilder) SetOverseer(overseer Overseer) *FlowBuilder {
 	b.flow.Overseer = overseer
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
+}
+
+func (b *FlowBuilder) SetOverseerEnable(enable bool) *FlowBuilder {
+	b.enableOverseer = enable
+	return b
 }
 
 func (b *FlowBuilder) SetDBOverseer(dbPath string, blankWorkRecordBuilder func() *WorkRecord) *FlowBuilder {
 	if overseer, err := NewDBRecordOverseer(dbPath, blankWorkRecordBuilder); err != nil {
-		return &FlowBuilder{
-			flow: b.flow,
-			err:  err,
-		}
+		b.err = err
+		return b
 	} else {
 		b.flow.Overseer = overseer
-		return &FlowBuilder{
-			flow: b.flow,
-			err:  b.err,
-		}
+		return b
 	}
 }
 
 func (b *FlowBuilder) ShouldSkip(f func(workInfo *WorkInfo) (skip bool, cause *data.CodeError)) *FlowBuilder {
 	b.flow.Skipper = NewSkipper(f)
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
 }
 
 func (b *FlowBuilder) ShouldRedo(f func(workInfo *WorkInfo, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError)) *FlowBuilder {
 	b.flow.Redo = NewRedo(f)
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
 }
 
 func (b *FlowBuilder) FlowWillStartFunc(f func(flow *Flow) (err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.FlowWillStartFunc = f
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
 }
 
 func (b *FlowBuilder) FlowWillEndFunc(f func(flow *Flow) (err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.FlowWillEndFunc = f
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
 }
 
 func (b *FlowBuilder) OnWillWork(f func(workInfo *WorkInfo) (shouldContinue bool, err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.WillWorkFunc = f
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
 }
 
 func (b *FlowBuilder) OnWorkSkip(f func(workInfo *WorkInfo, result Result, err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.OnWorkSkipFunc = f
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
 }
 
 func (b *FlowBuilder) OnWorkSuccess(f func(workInfo *WorkInfo, result Result)) *FlowBuilder {
 	b.flow.EventListener.OnWorkSuccessFunc = f
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
 }
 
 func (b *FlowBuilder) OnWorkFail(f func(workInfo *WorkInfo, err *data.CodeError)) *FlowBuilder {
 	b.flow.EventListener.OnWorkFailFunc = f
-	return &FlowBuilder{
-		flow: b.flow,
-		err:  b.err,
-	}
+	return b
 }
 
 type FlowBuilder struct {
-	flow *Flow
-	err  error
+	enableOverseer bool
+	flow           *Flow
+	err            error
 }
 
 func (b *FlowBuilder) Build() *Flow {
+	if !b.enableOverseer {
+		b.flow.Overseer = nil
+	}
+
 	if b.err != nil {
 		log.ErrorF("Flow Builder error:%s", b.err)
 	}

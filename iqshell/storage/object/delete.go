@@ -9,10 +9,10 @@ import (
 )
 
 type DeleteApiInfo struct {
-	Bucket          string
-	Key             string
-	DeleteAfterDays int
-	Condition       batch.OperationCondition
+	Bucket          string                   `json:"bucket"`
+	Key             string                   `json:"key"`
+	DeleteAfterDays int                      `json:"delete_after_days"`
+	Condition       batch.OperationCondition `json:"condition"`
 }
 
 func (d *DeleteApiInfo) ToOperation() (string, *data.CodeError) {

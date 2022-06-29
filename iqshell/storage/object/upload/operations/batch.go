@@ -1,6 +1,12 @@
 package operations
 
 import (
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -10,12 +16,8 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type BatchUploadInfo struct {
@@ -112,6 +114,12 @@ func (info *BatchUpload2Info) Check() *data.CodeError {
 	}
 	if err := info.UploadConfig.Check(); err != nil {
 		return err
+	}
+	if info.UploadConfig.Policy == nil {
+		info.UploadConfig.Policy = &storage.PutPolicy{}
+	}
+	if len(info.ItemSeparate) == 0 {
+		info.ItemSeparate = data.DefaultLineSeparate
 	}
 	return nil
 }
@@ -239,44 +247,43 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 					log.DebugF("Key:%s FileSize:%d ModifyTime:%d", key, fileSize, modifyTime)
 
 					localFilePath := filepath.Join(uploadConfig.SrcDir, fileRelativePath)
-					apiInfo := &UploadInfo{
+					uploadInfo := &UploadInfo{
 						ApiInfo: upload.ApiInfo{
-							FilePath:         localFilePath,
-							ToBucket:         uploadConfig.Bucket,
-							SaveKey:          key,
-							MimeType:         "",
-							FileType:         uploadConfig.FileType,
-							CheckExist:       uploadConfig.CheckExists,
-							CheckHash:        uploadConfig.CheckHash,
-							CheckSize:        uploadConfig.CheckSize,
-							Overwrite:        uploadConfig.Overwrite,
-							UpHost:           uploadConfig.UpHost,
-							FileStatusDBPath: dbPath,
-							TokenProvider:    nil,
-							TryTimes:         3,
-							TryInterval:      500 * time.Millisecond,
-							FileSize:         fileSize,
-							FileModifyTime:   modifyTime,
-							DisableForm:      uploadConfig.DisableForm,
-							DisableResume:    uploadConfig.DisableResume,
-							UseResumeV2:      uploadConfig.ResumableAPIV2,
-							ChunkSize:        uploadConfig.ResumableAPIV2PartSize,
-							PutThreshold:     uploadConfig.PutThreshold,
-							Progress:         nil,
+							FilePath:            localFilePath,
+							ToBucket:            uploadConfig.Bucket,
+							SaveKey:             key,
+							MimeType:            "",
+							FileType:            uploadConfig.FileType,
+							CheckExist:          uploadConfig.CheckExists,
+							CheckHash:           uploadConfig.CheckHash,
+							CheckSize:           uploadConfig.CheckSize,
+							Overwrite:           uploadConfig.Overwrite,
+							UpHost:              uploadConfig.UpHost,
+							TokenProvider:       nil,
+							TryTimes:            3,
+							TryInterval:         500 * time.Millisecond,
+							LocalFileSize:       fileSize,
+							LocalFileModifyTime: modifyTime,
+							DisableForm:         uploadConfig.DisableForm,
+							DisableResume:       uploadConfig.DisableResume,
+							UseResumeV2:         uploadConfig.ResumableAPIV2,
+							ChunkSize:           uploadConfig.ResumableAPIV2PartSize,
+							PutThreshold:        uploadConfig.PutThreshold,
+							Progress:            nil,
 						},
 						RelativePathToSrcPath: fileRelativePath,
 						Policy:                uploadConfig.Policy,
 						DeleteOnSuccess:       uploadConfig.DeleteOnSuccess,
 					}
-					apiInfo.TokenProvider = createTokenProviderWithMac(mac, apiInfo)
-					return apiInfo, nil
+					uploadInfo.TokenProvider = createTokenProviderWithMac(mac, uploadInfo)
+					return uploadInfo, nil
 				})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo, _ := workInfo.Work.(*UploadInfo)
 
 				metric.AddCurrentCount(1)
-				metric.PrintProgress("Uploading " + apiInfo.FilePath)
+				metric.PrintProgress("Uploading: " + apiInfo.FilePath)
 
 				if res, e := uploadFile(apiInfo); e != nil {
 					return nil, e
@@ -285,33 +292,96 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				}
 			}), nil
 		})).
+		SetOverseerEnable(true).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &UploadInfo{},
+				},
+				Result: &upload.ApiResult{},
+				Err:    nil,
+			}
+		}).
+		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+			if workRecord.Err != nil {
+				return true, workRecord.Err
+			}
+			uploadInfo, _ := workInfo.Work.(*UploadInfo)
+			recordUploadInfo, _ := workRecord.Work.(*UploadInfo)
+
+			result, _ := workRecord.Result.(*upload.ApiResult)
+			if result == nil {
+				return true, data.NewEmptyError().AppendDesc("no result found")
+			}
+			if !result.IsValid() {
+				return true, data.NewEmptyError().AppendDesc("result is invalid")
+			}
+
+			// 本地文件和服务端文件均没有变化，则不需要重新上传
+			stat, sErr := object.Status(object.StatusApiInfo{
+				Bucket:   uploadInfo.ToBucket,
+				Key:      uploadInfo.SaveKey,
+				NeedPart: false,
+			})
+			if sErr != nil {
+				return true, data.NewEmptyError().AppendDesc("get stat from server").AppendError(sErr)
+			}
+
+			isLocalFileNotChange, _ := utils.IsFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime)
+			isServerFileNotChange := stat.PutTime == result.ServerPutTime
+			// 本地文件没有变化，服务端文件没有变化，则不需要再重新上传
+			if isLocalFileNotChange && isServerFileNotChange {
+				return false, nil
+			} else if !isLocalFileNotChange {
+				// 本地有变动，尝试检查 hash，hash 统一由单文件上传之前检查
+				return true, data.NewEmptyError().AppendDesc("local file has change")
+			} else {
+				// 服务端文件有变动，尝试检查 hash，hash 统一由单文件上传之前检查
+				return true, data.NewEmptyError().AppendDesc("server file has change")
+			}
+		}).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
 		}).
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
-			apiInfo := workInfo.Work.(*UploadInfo)
-			if hit, prefix := uploadConfig.HitByPathPrefixes(apiInfo.RelativePathToSrcPath); hit {
-				return true, data.NewEmptyError().AppendDescF("Skip by path prefix `%s` for local file path `%s`", prefix, apiInfo.RelativePathToSrcPath)
+			uploadInfo := workInfo.Work.(*UploadInfo)
+			if hit, prefix := uploadConfig.HitByPathPrefixes(uploadInfo.RelativePathToSrcPath); hit {
+				return true, data.NewEmptyError().AppendDescF("Skip by path prefix `%s` for local file path `%s`", prefix, uploadInfo.RelativePathToSrcPath)
 			}
 
-			if hit, prefix := uploadConfig.HitByFilePrefixes(apiInfo.RelativePathToSrcPath); hit {
-				return true, data.NewEmptyError().AppendDescF("Skip by file prefix `%s` for local file path `%s`", prefix, apiInfo.RelativePathToSrcPath)
+			if hit, prefix := uploadConfig.HitByFilePrefixes(uploadInfo.RelativePathToSrcPath); hit {
+				return true, data.NewEmptyError().AppendDescF("Skip by file prefix `%s` for local file path `%s`", prefix, uploadInfo.RelativePathToSrcPath)
 			}
 
-			if hit, fixedStr := uploadConfig.HitByFixesString(apiInfo.RelativePathToSrcPath); hit {
-				return true, data.NewEmptyError().AppendDescF("Skip by fixed string `%s` for local file path `%s`", fixedStr, apiInfo.RelativePathToSrcPath)
+			if hit, fixedStr := uploadConfig.HitByFixesString(uploadInfo.RelativePathToSrcPath); hit {
+				return true, data.NewEmptyError().AppendDescF("Skip by fixed string `%s` for local file path `%s`", fixedStr, uploadInfo.RelativePathToSrcPath)
 			}
 
-			if hit, suffix := uploadConfig.HitBySuffixes(apiInfo.RelativePathToSrcPath); hit {
-				return true, data.NewEmptyError().AppendDescF("Skip by suffix `%s` for local file `%s`", suffix, apiInfo.RelativePathToSrcPath)
+			if hit, suffix := uploadConfig.HitBySuffixes(uploadInfo.RelativePathToSrcPath); hit {
+				return true, data.NewEmptyError().AppendDescF("Skip by suffix `%s` for local file `%s`", suffix, uploadInfo.RelativePathToSrcPath)
 			}
 			return
 		}).
 		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
-			metric.AddSkippedCount(1)
-			log.Info(err.Error())
-			exporter.Skip().Export(workInfo.Data)
+			metric.AddCurrentCount(1)
+			metric.PrintProgress("Uploading: " + workInfo.Data)
+
+			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
+				operationResult, _ := result.(*upload.ApiResult)
+				if operationResult != nil && operationResult.IsValid() {
+					metric.AddSuccessCount(1)
+					log.InfoF("Skip line:%s because have done and success", workInfo.Data)
+				} else {
+					metric.AddFailureCount(1)
+					log.InfoF("Skip line:%s because have done and failure, %v", workInfo.Data, err)
+				}
+			} else {
+				metric.AddSkippedCount(1)
+				log.InfoF("Skip line:%s because:%v", workInfo.Data, err)
+				exporter.Skip().Export(workInfo.Data)
+			}
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			res, _ := result.(*upload.ApiResult)
@@ -320,9 +390,6 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			} else if res.IsOverwrite {
 				metric.AddOverwriteCount(1)
 				exporter.Overwrite().Export(workInfo.Data)
-			} else if res.IsSkip {
-				metric.AddSkippedCount(1)
-				exporter.Skip().Export(workInfo.Data)
 			} else {
 				metric.AddSuccessCount(1)
 				exporter.Success().Export(workInfo.Data)

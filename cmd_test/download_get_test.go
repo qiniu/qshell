@@ -64,7 +64,7 @@ func TestGetNoExistDomain(t *testing.T) {
 		"--domain", "qiniu.mock.com",
 		"-o", path,
 		"-d")
-	if !strings.Contains(result, "lookup qiniu.mock.com: no such host") {
+	if !strings.Contains(result, "download freeze host:qiniu.mock.com") {
 		t.Fail()
 	}
 }

@@ -83,6 +83,6 @@ func (i *freezeItem) Available() bool {
 }
 
 func (i *freezeItem) Freeze() {
-	t := time.Now().Add(time.Hour * 24 * 365 * 20)
+	t := time.Now().Add(time.Second * 300)
 	i.availableTime = &t
 }

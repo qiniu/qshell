@@ -98,23 +98,9 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 		close(fetchInfoChan)
 	}()
 
-	var overseer flow.Overseer
+	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 	if info.BatchInfo.EnableRecord {
-		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 		log.DebugF("aws batch fetch recorder:%s", dbPath)
-		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
-			return &flow.WorkRecord{
-				WorkInfo: &flow.WorkInfo{
-					Data: "",
-					Work: nil,
-				},
-				Result: &object.FetchResult{},
-				Err:    nil,
-			}
-		}); err != nil {
-			log.ErrorF("aws batch fetch create overseer error:%v", err)
-			return
-		}
 	} else {
 		log.Debug("aws batch fetch recorder:Not Enable")
 	}
@@ -133,7 +119,17 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
 		}).
-		SetOverseer(overseer).
+		SetOverseerEnable(info.BatchInfo.EnableRecord).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &object.FetchApiInfo{},
+				},
+				Result: &object.FetchResult{},
+				Err:    nil,
+			}
+		}).
 		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
 			if workRecord.Err == nil {
 				return false, nil

@@ -37,7 +37,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
     "remove_temp_while_error": false,
     "log_file"               :   "download.log",
     "log_level"              :   "info",
-    "log_rotate"             :   1,
+    "log_rotate"             :   10,
     "log_stdout"             :   false
 }
 ```
@@ -61,15 +61,13 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - record_root：下载记录信息保存路径，包括日志文件和下载进度文件；默认为 `qshell` 下载目录；【可选】
     - 通过 `-L` 指定工作目录时，`record_root` 则为 `此工作目录/qupload/$jobId`，
     - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qupload/$jobId`
-    - 注意 `jobId` 是根据上传任务动态生成；据图方式为 MD5("DestDir:$Bucket:KeyFile")；`CurrentUserName` 当前用户的名称
+    - 注意 `jobId` 是根据上传任务动态生成；具体方式为 MD5("DestDir:$Bucket:KeyFile")；`CurrentUserName` 当前用户的名称
 
 ##### 备注：
-
 1. 在Windows系统下面使用的时候，注意 `dest_dir` 的设置遵循 `D:\\jemy\\backup` 这种方式。也就是路径里面的 `\` 要有两个（`\\`）。
 2. 在默认不指定 `cdn_domain` 的情况下，会从存储源站下载资源，这部分下载产生的流量会生成存储源站下载流量的计费，请注意，这部分计费不在七牛 CDN 免费 10G 流量覆盖范围。
 
 # 示例
-
 需要同步空间 `qdisk` 中的所有以 `movies/` 开头(理解为前缀的概念，那么 `movies/1.mp4`, `movies/2.mp4` 等以 `movies/` 为前缀的文件都会被下载保存)，并以 `.mp4`
 结尾的文件到本地路径 `/Users/jemy/Temp7/backup` 下面（把下面的配置内容写入配置文件 `qdisk_down.conf`，该配置文件需要自行创建）：
 
@@ -80,7 +78,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 	"cdn_domain"    :      "if-pbl.qiniudn.com",
 	"prefix"	:	"movies/",
 	"suffixes"	:	".mp4",
-	"check_hash"    : false
+	"check_hash"    :   false
 }
 ```
 

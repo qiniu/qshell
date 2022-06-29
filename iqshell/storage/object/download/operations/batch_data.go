@@ -8,16 +8,17 @@ import (
 )
 
 type DownloadCfg struct {
-	ThreadCount  int    `json:"thread_count,omitempty"`
-	FileEncoding string `json:"file_encoding,omitempty"`
-	KeyFile      string `json:"key_file,omitempty"`
-	DestDir      string `json:"dest_dir,omitempty"`
-	Bucket       string `json:"bucket,omitempty"`
-	Prefix       string `json:"prefix,omitempty"`
-	Suffixes     string `json:"suffixes,omitempty"`
-	IoHost       string `json:"io_host,omitempty"`
-	Public       bool   `json:"public,omitempty"`
-	CheckHash    bool   `json:"check_hash,omitempty"`
+	ThreadCount               int    `json:"thread_count,omitempty"`
+	FileEncoding              string `json:"file_encoding,omitempty"`
+	KeyFile                   string `json:"key_file,omitempty"`
+	DestDir                   string `json:"dest_dir,omitempty"`
+	Bucket                    string `json:"bucket,omitempty"`
+	Prefix                    string `json:"prefix,omitempty"`
+	IgnoreKeyPrefixInFilePath string `json:"ignore_key_prefix_in_file_path"`
+	Suffixes                  string `json:"suffixes,omitempty"`
+	IoHost                    string `json:"io_host,omitempty"`
+	Public                    bool   `json:"public,omitempty"`
+	CheckHash                 bool   `json:"check_hash,omitempty"`
 
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`

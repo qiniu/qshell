@@ -9,6 +9,8 @@ import (
 )
 
 func TestAsyncFetch(t *testing.T) {
+	TestBatchCopy(t)
+
 	fetchKeys := test.Keys
 	fetchKeys = append(fetchKeys, "hello10.json")
 	content := ""
@@ -36,15 +38,17 @@ func TestAsyncFetch(t *testing.T) {
 		"-e", failLogPath,
 		"-g", "1",
 		"-c", "2")
+	defer func() {
+		test.RemoveFile(failLogPath)
+		test.RemoveFile(successLogPath)
+	}()
 	if !test.IsFileHasContent(successLogPath) {
-		t.Fail()
+		t.Fatal("success log can't empty")
 	}
-	test.RemoveFile(successLogPath)
 
 	if !test.IsFileHasContent(failLogPath) {
-		t.Fail()
+		t.Fatal("fail log can't empty")
 	}
-	test.RemoveFile(failLogPath)
 }
 
 func TestAsyncFetchNoBucket(t *testing.T) {
@@ -61,7 +65,7 @@ func TestAsyncFetchDocument(t *testing.T) {
 func TestACheck(t *testing.T) {
 	id := "eyJ6b25lIjoibmEwIiwicXVldWUiOiJTSVNZUEhVUy1KT0JTLVYzIiwicGFydF9pZCI6OSwib2Zmc2V0Ijo1NTEzMTU3fQ=="
 	result, err := test.RunCmdWithError("acheck", test.Bucket, id)
-	if len(err) > 0 || len(result) == 0 {
+	if len(err) > 0 && !strings.Contains(err, "incorrect zone") && len(result) == 0 {
 		t.Fail()
 	}
 }

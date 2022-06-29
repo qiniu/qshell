@@ -32,6 +32,31 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var batchForbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.BatchChangeStatusInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchforbidden <Bucket> [-i <KeyListFile>] [-r]",
+		Short: "Batch forbidden files in bucket",
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.BatchForbiddenType
+			info.BatchInfo.EnableStdin = true
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.BatchChangeStatus(cfg, info)
+		},
+	}
+	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdWorkCountFlags(cmd, &info.BatchInfo)
+	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdForceFlags(cmd, &info.BatchInfo)
+	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
+	cmd.Flags().BoolVarP(&info.UnForbidden, "reverse", "r", false, "unforbidden object in qiniu bucket")
+	return cmd
+}
+
 var batchDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchDeleteInfo{}
 	var cmd = &cobra.Command{
@@ -225,7 +250,15 @@ var batchFetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.BatchFetch(cfg, info)
 		},
 	}
-	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
+
+	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
+	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
+	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdItemSeparateFlags(cmd, &info.BatchInfo)
+	setBatchCmdForceFlags(cmd, &info.BatchInfo)
+	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "worker", "c", 1, "worker count")
 	cmd.Flags().StringVarP(&upHost, "up-host", "u", "", "fetch uphost")
 	return cmd
 }
@@ -247,7 +280,7 @@ func setBatchCmdForceFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force mode, default false")
 }
 func setBatchCmdWorkCountFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 1, "worker count")
+	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 1, "worker count. 1 means the number of objects in one operation is 1000 and if configured as 3 , the number of objects in one operation is 3000. This value needs to be consistent with the upper limit of Qiniu’s operation, otherwise unexpected errors will occur. Under normal circumstances you do not need to adjust this value and if you need please carefully.")
 }
 func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default is \\t (tab)")
@@ -275,6 +308,7 @@ func init() {
 func rsBatchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		batchStatCmdBuilder(cfg),
+		batchForbiddenCmdBuilder(cfg),
 		batchCopyCmdBuilder(cfg),
 		batchMoveCmdBuilder(cfg),
 		batchRenameCmdBuilder(cfg),

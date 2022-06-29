@@ -2,6 +2,8 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -11,7 +13,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"path/filepath"
 )
 
 type CopyInfo object.CopyApiInfo
@@ -28,7 +29,7 @@ func (info *CopyInfo) Check() *data.CodeError {
 	}
 	if len(info.DestKey) == 0 {
 		info.DestKey = info.SourceKey
-		log.WarningF("No set DestKey and set DestKey to SourceKey:%s", info.SourceKey)
+		log.WarningF("No DestKey and set SourceKey to DestKey:%s", info.SourceKey)
 	}
 	return nil
 }
@@ -41,7 +42,7 @@ func Copy(cfg *iqshell.Config, info CopyInfo) {
 	}
 
 	result, err := object.Copy((*object.CopyApiInfo)(&info))
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -49,18 +50,15 @@ func Copy(cfg *iqshell.Config, info CopyInfo) {
 		return
 	}
 
-	if len(result.Error) != 0 {
-		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
-			info.SourceBucket, info.SourceKey,
-			info.DestBucket, info.DestKey,
-			result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Copy Success, [%s:%s] => [%s:%s]",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
+	} else {
+		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			result.Code, result.Error)
 	}
 }
 
@@ -103,45 +101,49 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 		return
 	}
 
-	batch.NewHandler(info.BatchInfo).ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-		// 如果只有一个参数，源 key 即为目标 key
-		srcKey, destKey := items[0], items[0]
-		if len(items) > 1 {
-			destKey = items[1]
-		}
-		if srcKey != "" && destKey != "" {
-			return &object.CopyApiInfo{
-				SourceBucket: info.SourceBucket,
-				SourceKey:    srcKey,
-				DestBucket:   info.DestBucket,
-				DestKey:      destKey,
-				Force:        info.BatchInfo.Overwrite,
-			}, nil
-		} else {
-			return nil, alert.Error("", "")
-		}
-	}).OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
-		apiInfo, ok := (operation).(*object.CopyApiInfo)
-		if apiInfo == nil || !ok {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Copy Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
-			return
-		}
+	batch.NewHandler(info.BatchInfo).
+		EmptyOperation(func() flow.Work {
+			return &object.CopyApiInfo{}
+		}).
+		SetFileExport(exporter).
+		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
+			// 如果只有一个参数，源 key 即为目标 key
+			srcKey, destKey := items[0], items[0]
+			if len(items) > 1 {
+				destKey = items[1]
+			}
+			if srcKey != "" && destKey != "" {
+				return &object.CopyApiInfo{
+					SourceBucket: info.SourceBucket,
+					SourceKey:    srcKey,
+					DestBucket:   info.DestBucket,
+					DestKey:      destKey,
+					Force:        info.BatchInfo.Overwrite,
+				}, nil
+			} else {
+				return nil, alert.Error("src key is empty", "")
+			}
+		}).
+		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
+			apiInfo, ok := (operation).(*object.CopyApiInfo)
+			if apiInfo == nil || !ok {
+				log.ErrorF("Copy Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				return
+			}
 
-		in := (*CopyInfo)(apiInfo)
-		if result.IsSuccess() {
-			exporter.Success().Export(operationInfo)
-			log.InfoF("Copy Success, '%s:%s' => '%s:%s'",
-				in.SourceBucket, in.SourceKey,
-				in.DestBucket, in.DestKey)
-		} else {
-			exporter.Fail().ExportF("%s%s%d-%s", operationInfo, flow.ErrorSeparate, result.Code, result.Error)
-			log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
-				in.SourceBucket, in.SourceKey,
-				in.DestBucket, in.DestKey,
-				result.Code, result.Error)
-		}
-	}).OnError(func(err *data.CodeError) {
-		log.ErrorF("Batch copy error:%v:", err)
-	}).Start()
+			in := (*CopyInfo)(apiInfo)
+			if result.IsSuccess() {
+				log.InfoF("Copy Success, '%s:%s' => '%s:%s'",
+					in.SourceBucket, in.SourceKey,
+					in.DestBucket, in.DestKey)
+			} else {
+				log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
+					in.SourceBucket, in.SourceKey,
+					in.DestBucket, in.DestKey,
+					result.Code, result.Error)
+			}
+		}).
+		OnError(func(err *data.CodeError) {
+			log.ErrorF("Batch copy error:%v:", err)
+		}).Start()
 }

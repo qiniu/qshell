@@ -9,6 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"net/http"
@@ -17,21 +18,20 @@ import (
 )
 
 type ApiInfo struct {
-	Bucket               string            // 文件所在 bucket 【必填】
-	Key                  string            // 文件被保存的 key 【必填】
-	IsPublic             bool              // 是否使用共有链接 【必填】
-	HostProvider         host.Provider     // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
-	ToFile               string            // 文件保存的路径 【必填】
-	StatusDBPath         string            // 下载状态缓存的 db 路径 【选填】
-	Referer              string            // 请求 header 中的 Referer 【选填】
-	FileEncoding         string            // 文件编码方式 【选填】
-	FileModifyTime       int64             // 文件修改时间 【选填】
-	FileSize             int64             // 文件大小，有值则会检测文件大小 【选填】
-	FileHash             string            // 文件 hash，有值则会检测 hash 【选填】
-	FromBytes            int64             // 下载开始的位置，内部会缓存 【内部使用】
-	RemoveTempWhileError bool              // 当遇到错误时删除临时文件 【选填】
-	UseGetFileApi        bool              // 是否使用 get file api(私有云会使用)【选填】
-	Progress             progress.Progress // 下载进度回调【选填】
+	Bucket               string            `json:"bucket"`               // 文件所在 bucket 【必填】
+	Key                  string            `json:"key"`                  // 文件被保存的 key 【必填】
+	IsPublic             bool              `json:"-"`                    // 是否使用共有链接 【必填】
+	HostProvider         host.Provider     `json:"-"`                    // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
+	ToFile               string            `json:"to_file"`              // 文件保存的路径 【必填】
+	Referer              string            `json:"referer"`              // 请求 header 中的 Referer 【选填】
+	FileEncoding         string            `json:"-"`                    // 文件编码方式 【选填】
+	ServerFilePutTime    int64             `json:"server_file_put_time"` // 文件修改时间 【选填】
+	ServerFileSize       int64             `json:"server_file_size"`     // 文件大小，有值则会检测文件大小 【选填】
+	ServerFileHash       string            `json:"server_file_hash"`     // 文件 hash，有值则会检测 hash 【选填】
+	FromBytes            int64             `json:"-"`                    // 下载开始的位置，内部会缓存 【内部使用】
+	RemoveTempWhileError bool              `json:"-"`                    // 当遇到错误时删除临时文件 【选填】
+	UseGetFileApi        bool              `json:"-"`                    // 是否使用 get file api(私有云会使用)【选填】
+	Progress             progress.Progress `json:"-"`                    // 下载进度回调【选填】
 }
 
 func (i *ApiInfo) WorkId() string {
@@ -39,15 +39,16 @@ func (i *ApiInfo) WorkId() string {
 }
 
 type ApiResult struct {
-	FileAbsPath string // 文件被保存的绝对路径
-	IsUpdate    bool   // 是否为接续下载
-	IsExist     bool   // 是否为已存在
+	FileModifyTime int64  // 下载后文件修改时间
+	FileAbsPath    string // 文件被保存的绝对路径
+	IsUpdate       bool   // 是否为接续下载
+	IsExist        bool   // 是否为已存在
 }
 
 var _ flow.Result = (*ApiResult)(nil)
 
 func (a *ApiResult) IsValid() bool {
-	return len(a.FileAbsPath) > 0
+	return len(a.FileAbsPath) > 0 && a.FileModifyTime > 0
 }
 
 // Download 下载一个文件，从 Url 下载保存至 ToFile
@@ -62,80 +63,71 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		return
 	}
 
-	// 检查文件是否已存在，如果存在是否符合预期
-	dbChecker := &dbHandler{
-		DBFilePath:           info.StatusDBPath,
-		FilePath:             f.toAbsFile,
-		FileHash:             info.FileHash,
-		FileSize:             info.FileSize,
-		FileServerUpdateTime: info.FileModifyTime,
-	}
-	err = dbChecker.init()
-	if err != nil {
-		return
+	res = &ApiResult{
+		FileAbsPath: f.toAbsFile,
 	}
 
-	res = &ApiResult{}
-	shouldDownload := true
 	// 文件存在则检查文件状态
+	checkMode := object.MatchCheckModeFileSize
+	if len(info.ServerFileHash) > 0 {
+		checkMode = object.MatchCheckModeFileHash
+	}
 	fileStatus, sErr := os.Stat(f.toAbsFile)
 	tempFileStatus, tempErr := os.Stat(f.tempFile)
 	if sErr == nil || os.IsExist(err) || tempErr == nil || os.IsExist(tempErr) {
-		// 中间文件 和 最终文件 中任意一个存在
-		if cErr := dbChecker.checkInfoOfDB(); cErr != nil {
-			// 检查服务端文件是否变更，如果变更则清除
-			log.WarningF("Local file `%s` exist for key `%s`, but not match:%v", f.toAbsFile, info.Key, cErr)
-			if e := f.clean(); e != nil {
-				log.WarningF("Local file `%s` exist for key `%s`, clean error:%v", f.toAbsFile, info.Key, e)
-			}
-			if sErr := dbChecker.saveInfoToDB(); sErr != nil {
-				log.WarningF("Local file `%s` exist for key `%s`, save info to db error:%v", f.toAbsFile, info.Key, sErr)
-			}
-		}
 		if tempFileStatus != nil && tempFileStatus.Size() > 0 {
 			// 文件是否已下载了一部分，需要继续下载
 			res.IsUpdate = true
 		}
+
 		if fileStatus != nil {
-			if fileStatus.Size() == info.FileSize {
-				// 文件是否已下载完成，如果完成跳过下载阶段，直接验证
-				res.IsExist = true
-				shouldDownload = false
-			} else {
-				log.DebugF("Local file `%s` exist for key `%s`, but not match, FileSize:%d|%d", f.toAbsFile, info.Key, fileStatus.Size(), info.FileSize)
+			// 文件已下载，检测文件内容
+			checkResult, mErr := object.Match(object.MatchApiInfo{
+				Bucket:         info.Bucket,
+				Key:            info.Key,
+				LocalFile:      f.toAbsFile,
+				CheckMode:      checkMode,
+				ServerFileHash: info.ServerFileHash,
+				ServerFileSize: info.ServerFileSize,
+			})
+			if mErr != nil {
+				f.fromBytes = 0
+				log.DebugF("check error before download:%v", mErr)
+			}
+			if checkResult != nil {
+				res.IsExist = checkResult.Exist
+			}
+			if mErr == nil && checkResult.Match {
+				return
 			}
 		}
 	}
 
-	res.FileAbsPath = f.toAbsFile
-
 	// 下载
-	if shouldDownload {
-		err = download(f, info)
-		if err != nil {
-			return
-		}
-		err = dbChecker.saveInfoToDB()
-		if err != nil {
-			err = data.NewEmptyError().AppendDescF("download info save to db, %v key:%s localFile:%s", err, f.toAbsFile, info.Key)
-			return
-		}
-	}
-
-	// 检查下载后的数据是否符合预期
-	err = (&LocalFileInfo{
-		File:                f.toAbsFile,
-		Bucket:              info.Bucket,
-		Key:                 info.Key,
-		FileHash:            info.FileHash,
-		FileSize:            info.FileSize,
-		RemoveFileWhenError: true,
-	}).CheckDownloadFile()
+	err = download(f, info)
 	if err != nil {
 		return
 	}
 
-	return
+	info.ServerFilePutTime, err = utils.FileModify(f.toAbsFile)
+	if err != nil {
+		return
+	}
+
+	// 检查下载后的数据是否符合预期
+	checkResult, mErr := object.Match(object.MatchApiInfo{
+		Bucket:         info.Bucket,
+		Key:            info.Key,
+		LocalFile:      f.toAbsFile,
+		CheckMode:      checkMode,
+		ServerFileHash: info.ServerFileHash,
+		ServerFileSize: info.ServerFileSize,
+	})
+	if mErr != nil || (checkResult != nil && !checkResult.Match) {
+		return res, data.NewEmptyError().AppendDesc("check error after download").AppendError(mErr)
+	}
+
+	return res, nil
 }
 
 func download(fInfo *fileInfo, info *ApiInfo) (err *data.CodeError) {
@@ -167,9 +159,12 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	}
 
 	var response *http.Response
-	for i := 0; i < 6; i++ {
+	for times := 0; times < 6; times++ {
+		if available, _ := info.HostProvider.Available(); !available {
+			break
+		}
 		response, err = dl.Download(info)
-		if err == nil || !utils.IsHostUnavailableError(err) {
+		if err == nil && response != nil && response.StatusCode/100 == 2 {
 			break
 		}
 	}
@@ -226,9 +221,9 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 }
 
 func renameTempFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
-	err := os.Rename(fInfo.tempFile, fInfo.toFile)
+	err := os.Rename(fInfo.tempFile, fInfo.toAbsFile)
 	if err != nil {
-		return data.NewEmptyError().AppendDesc(" Rename temp file to final file error" + err.Error())
+		return data.NewEmptyError().AppendDescF(" Rename temp file to final file error:%v", err.Error())
 	}
 	return nil
 }

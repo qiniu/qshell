@@ -80,23 +80,9 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 		return
 	}
 
-	var overseer flow.Overseer
+	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 	if info.BatchInfo.EnableRecord {
-		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 		log.DebugF("batch fetch recorder:%s", dbPath)
-		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
-			return &flow.WorkRecord{
-				WorkInfo: &flow.WorkInfo{
-					Data: "",
-					Work: nil,
-				},
-				Result: &object.FetchResult{},
-				Err:    nil,
-			}
-		}); err != nil {
-			log.ErrorF("batch fetch create overseer error:%v", err)
-			return
-		}
 	} else {
 		log.Debug("batch fetch recorder:Not Enable")
 	}
@@ -134,7 +120,17 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
 		}).
-		SetOverseer(overseer).
+		SetOverseerEnable(info.BatchInfo.EnableRecord).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &object.FetchApiInfo{},
+				},
+				Result: &object.FetchResult{},
+				Err:    nil,
+			}
+		}).
 		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
 			if workRecord.Err == nil {
 				return false, nil
@@ -161,15 +157,17 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
 				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
-					log.DebugF("Skip line:%s because have done and success", work.Data)
+					exporter.Success().ExportF("%s", work.Data)
+					log.InfoF("Skip line:%s because have done and success", work.Data)
 				} else {
 					metric.AddFailureCount(1)
-					log.DebugF("Skip line:%s because have done and failure, %v", work.Data, err)
+					exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
+					log.InfoF("Skip line:%s because have done and failure, %v", work.Data, err)
 				}
 			} else {
 				metric.AddSkippedCount(1)
 				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
-				log.DebugF("Skip line:%s because:%v", work.Data, err)
+				log.InfoF("Skip line:%s because:%v", work.Data, err)
 			}
 
 		}).
@@ -179,7 +177,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			in, _ := workInfo.Work.(*object.FetchApiInfo)
-			exporter.Success().ExportF("%s\t%s", in.FromUrl, in.Bucket)
+			exporter.Success().ExportF("%s\t%s", in.FromUrl, in.Key)
 			log.InfoF("Fetch Success, '%s' => [%s:%s]", in.FromUrl, info.Bucket, in.Key)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {

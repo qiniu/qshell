@@ -19,15 +19,15 @@ qshell是利用 [七牛文档上公开的API](http://developer.qiniu.com) 实现
 
 | 支持平台                | 链接                                                                                               |
 | ----------------------- | -------------------------------------------------------------------------------------------------- |
-| Windows X86             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-windows-386.zip)     |
-| Windows amd64           | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-windows-amd64.zip)   |
-| Windows arm             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-windows-arm.zip)     |
-| Linux X86               | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-386.tar.gz)    |
-| Linux amd64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-amd64.tar.gz)  |
-| Linux arm               | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-arm.tar.gz)    |
-| Linux arm64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-linux-arm64.tar.gz)  |
-| Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-darwin-amd64.tar.gz) |
-| Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.7.0/qshell-v2.7.0-darwin-arm64.tar.gz) |
+| Windows X86             | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-windows-386.zip)     |
+| Windows amd64           | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-windows-amd64.zip)   |
+| Windows arm             | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-windows-arm.zip)     |
+| Linux X86               | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-linux-386.tar.gz)    |
+| Linux amd64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-linux-amd64.tar.gz)  |
+| Linux arm               | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-linux-arm.tar.gz)    |
+| Linux arm64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-linux-arm64.tar.gz)  |
+| Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-darwin-amd64.tar.gz) |
+| Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.8.0/qshell-v2.8.0-darwin-arm64.tar.gz) |
 
 
 ## 安装
@@ -210,7 +210,11 @@ fi
 
 
 ## 命令列表
-
+- `v2.7.0 及以上版本，命令列表及命令使用详细文档说明，支持直接使用 qshell 自助查看。`
+    - `qshell -h，显示支持命令列表`
+    - `qshell <子命令> --doc 查看详细命令使用说明` 
+- 查看工具版本号请使用命令 qshell -v 
+                  
 ### 账号设置命令
 | 命令        | 类别   | 描述                                                                 | 详细                        |
 | ----------- | ------ | -------------------------------------------------------------------- | --------------------------- |
@@ -220,12 +224,14 @@ fi
 ### 存储相关命令
 | 命令        | 类别   | 描述                                                                 | 详细                        |
 | ----------- | ------ | -------------------------------------------------------------------- | --------------------------- |
+| mkbucket    | 创建   | 创建存储空间                                           | [文档](docs/mkbucket.md) |
+| bucket      | 查看                       |查看存储空间信息                  |[文档](docs/bucket.md)|  
 | batchdelete | 删除   | 批量删除七牛空间中的文件，可以直接根据`listbucket`的结果来删除       | [文档](docs/batchdelete.md) |
 | delete      | 删除   | 删除七牛空间中的一个文件                                             | [文档](docs/delete.md)      |
 | batchchgm   | 修改   | 批量修改七牛空间中文件的MimeType                                     | [文档](docs/batchchgm.md)   |
 | chgm        | 修改   | 修改七牛空间中的一个文件的MimeType                                   | [文档](docs/chgm.md)        |
-| batchchtype | 修改   | 批量修改七牛空间中的文件的存储类型，支持普通存储（0）和低频存储（1） | [文档](docs/batchchtype.md) |
-| chtype      | 修改   | 修改七牛空间中的一个文件的存储类型，支持普通存储（0）和低频存储（1） | [文档](docs/chtype.md)      |
+| batchchtype | 修改   | 批量修改七牛空间中的文件的存储类型                                     | [文档](docs/batchchtype.md) |
+| chtype      | 修改   | 修改七牛空间中的一个文件的存储类型                                     | [文档](docs/chtype.md)      |
 | batchexpire | 修改   | 批量修改七牛空间中的文件的生存时间                                   | [文档](docs/batchexpire.md) |
 | expire      | 修改   | 修改七牛空间中的一个文件的生存时间                                   | [文档](docs/expire.md)      |
 | batchcopy   | 拷贝   | 批量复制七牛空间中的文件到另一个空间                                 | [文档](docs/batchcopy.md)   |
@@ -241,6 +247,7 @@ fi
 | domains     | 查询   | 获取指定空间的所有关联域名                                           | [文档](docs/domains.md)     |
 | listbucket  | 列举   | 列举七牛空间里面的所有文件                                           | [文档](docs/listbucket.md)  |
 | listbucket2 | 列举   | 列举七牛空间里面的所有文件                                           | [文档](docs/listbucket2.md) |
+| forbidden   | 禁用   |修改文件可访问状态                                                   | [文档](docs/forbidden.md)  |
 | fput        | 上传   | 以文件表单的方式上传一个文件                                         | [文档](docs/fput.md)        |
 | rput        | 上传   | 以分片上传的方式上传一个文件                                         | [文档](docs/rput.md)        |
 | qupload     | 上传   | 同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（配置式）  | [文档](docs/qupload.md)     |
