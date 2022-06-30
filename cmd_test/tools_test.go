@@ -275,7 +275,6 @@ func TestIPDocument(t *testing.T) {
 	test.TestDocument("ip", t)
 }
 
-
 func TestFunc(t *testing.T) {
 	result := test.RunCmd(t, "func", "{\"name\":\"this is a test\"}", "{{trimSuffix \"test\" .name}}")
 	if !strings.Contains(result, "[this is a ]") {
@@ -297,4 +296,3 @@ func TestFunc(t *testing.T) {
 func TestFuncDocument(t *testing.T) {
 	test.TestDocument("func", t)
 }
-

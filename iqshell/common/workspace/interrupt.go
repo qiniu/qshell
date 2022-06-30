@@ -49,7 +49,7 @@ func observerCmdInterrupt() {
 		atomic.StoreUint32(&isCmdInterrupt, 1)
 		Cancel()
 		notifyCancelSignalToObservers(si)
-		time.Sleep(time.Millisecond*200)
+		time.Sleep(time.Millisecond * 200)
 		os.Exit(data.StatusUserCancel)
 	}()
 }
