@@ -64,6 +64,7 @@ func TestDownloadFromBucket(t *testing.T) {
 		DownloadCfg: operations.DownloadCfg{
 			ThreadCount: 4,
 			KeyFile:     "",
+			SavePathHandler: "{{pathJoin .DestDir (replace \"hello\" \"lala\" .Key)}}",
 			Bucket:      test.Bucket,
 			Prefix:      "hello3,hello5,hello7",
 			Suffixes:    "",

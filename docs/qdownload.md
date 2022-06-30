@@ -27,6 +27,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 {
     "dest_dir"               :   "<LocalBackupDir>",
     "bucket"                 :   "<Bucket>",
+    "save_path_handler"      :   "",
     "prefix"                 :   "image/",
     "suffixes"               :   ".png,.jpg",
     "key_file"               :   "<KeyFile>",
@@ -34,7 +35,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
     "cdn_domain"             :   "down.example.com",
     "referer"                :   "http://www.example.com",
     "public"                 :   true,
-    "remove_temp_while_error": false,
+    "remove_temp_while_error":   false,
     "log_file"               :   "download.log",
     "log_level"              :   "info",
     "log_rotate"             :   10,
@@ -49,6 +50,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - prefix：只同步指定前缀的文件，默认为空 【可选】
 - suffixes：只同步指定后缀的文件，默认为空 【可选】
 - key_file：配置一个文件，指定需要下载的 keys；默认为空，全量下载 bucket 中的文件 【可选】
+- save_path_handler：指定一个回调函数，此函数通过 Go 语言的模板实现，函数验证使用 func 命令；在构建文件的保存路径时，优先使用此选项进行构建，如果不配置则使用 $dest_dir + $文件分割符 + $Key 方式进行构建。具体语法可参考 func 命令说明，handler 使用方式下方有示例可供参考 【可选】
 - check_hash：是否验证 hash，如果开启可能会耗费较长时间，默认为 `false` 【可选】
 - cdn_domain：设置下载的 CDN 域名，默认为空表示从存储源站下载，【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】 【可选】
 - referer：如果 CDN 域名配置了域名白名单防盗链，需要指定一个允许访问的 referer 地址；默认为空 【可选】
@@ -89,3 +91,42 @@ qshell qdownload -c 10 qdisk_down.conf
 ```
 
 `key_file` 文件格式： 每行一个 key, 且仅有 key 的内容，除 key 外不能有其他字符。
+
+`save_path_handler` 可使用的文件参数信息如下：
+- Key: 文件的在七牛云存储的 Key 值
+- ServerFileSize: 文件的在七牛云存储的大小
+- ServerFileHash: 文件的在七牛云存储的 Etag
+- ServerFilePutTime: 文件的在七牛云存储的上传时间
+- DestDir: 下载配置的保存路径
+- ToFile: 默认的下载路径
+
+`save_path_handler` 常见示例：
+```
+1. 展示下载文件的信息
+$qshell func '{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}' '{{.Key}} {{.ServerFileSize}} {{.ServerFileHash}} {{printf "%.0f" .ServerFilePutTime}}  {{.DestDir}}  {{.ToFile}}'
+
+
+2. 自定义文件下载后的保存路径：$DestDir + $文件分割符 + ($Key 剔除首部 a/ 的部分)
+文件信息：{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}
+save_path_handler: "{{pathJoin .DestDir (trimPrefix \"a/\" .Key)}}"
+最终文件的保存路径为：
+/user/lala/b/hello.png
+
+验证：
+$qshell func '{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}' "{{pathJoin .DestDir (trimPrefix \"a/\" .Key)}}"
+输出：
+[W]  output is insert [], and you should be careful with spaces etc.
+[I]  [/user/lala/b/hello.png]
+
+
+3. 自定义文件下载后的保存路径：$DestDir + $文件分割符 + ($Key 首部 a/ 替换成 newA/)
+文件信息：{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}
+save_path_handler: "{{pathJoin .DestDir \"newA\" (trimPrefix \"a/\" .Key)}}"
+最终文件的保存路径为：
+/user/lala/newA/b/hello.png
+
+验证：
+$qshell func '{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}' "{{pathJoin .DestDir \"newA\" (trimPrefix \"a/\" .Key)}}"
+[W]  output is insert [], and you should be careful with spaces etc.
+[I]  [/user/lala/newA/b/hello.png]
+```

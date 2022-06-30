@@ -8,6 +8,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"html/template"
+	"path"
 )
 
 type Template struct {
@@ -15,7 +16,9 @@ type Template struct {
 }
 
 func NewTemplate(templateString string) (*Template, *data.CodeError) {
-	if t, err := template.New("QshellTemplate").Funcs(sprig.FuncMap()).Parse(templateString); err != nil {
+	funcs := sprig.FuncMap()
+	funcs["pathJoin"] = path.Join
+	if t, err := template.New("QshellTemplate").Funcs(funcs).Parse(templateString); err != nil {
 		return nil, data.NewEmptyError().AppendDescF("create template by %s fail, %v", templateString, err)
 	} else {
 		return &Template{
@@ -24,7 +27,7 @@ func NewTemplate(templateString string) (*Template, *data.CodeError) {
 	}
 }
 
-func (t *Template) Run(paramJson string) (string, *data.CodeError) {
+func (t *Template) RunWithJsonString(paramJson string) (string, *data.CodeError) {
 	if t == nil {
 		return "", alert.CannotEmptyError("Template", "")
 	}
@@ -44,6 +47,14 @@ func (t *Template) Run(paramJson string) (string, *data.CodeError) {
 		log.DebugF("not map, %v", umErr)
 		log.DebugF("not array, %v", uaErr)
 		log.DebugF("param is string:%v", param)
+	}
+
+	return t.Run(param)
+}
+
+func (t *Template) Run(param interface{}) (string, *data.CodeError) {
+	if t == nil {
+		return "", alert.CannotEmptyError("Template", "")
 	}
 
 	buff := &bytes.Buffer{}

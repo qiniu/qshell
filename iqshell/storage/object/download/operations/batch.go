@@ -170,17 +170,22 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		return true
 	}
 
+	var savePathTemplate *utils.Template
+	if len(info.SavePathHandler) > 0 {
+		if t, tErr := utils.NewTemplate(info.SavePathHandler); tErr != nil {
+			log.ErrorF("create save path template fail, %v", savePathTemplate)
+			return
+		} else {
+			savePathTemplate = t
+		}
+	}
+
 	flow.New(info.Info).
 		WorkProvider(NewWorkProvider(info.Bucket, info.InputFile, info.ItemSeparate)).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
-				saveKey := apiInfo.Key
-				if len(info.IgnoreKeyPrefixInFilePath) > 0 {
-					saveKey = strings.TrimPrefix(saveKey, info.IgnoreKeyPrefixInFilePath)
-				}
 				apiInfo.HostProvider = hostProvider
-				apiInfo.ToFile = filepath.Join(info.DestDir, saveKey)
 				apiInfo.Referer = info.Referer
 				apiInfo.FileEncoding = info.FileEncoding
 				apiInfo.Bucket = info.Bucket
@@ -188,6 +193,15 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				apiInfo.UseGetFileApi = info.GetFileApi
 				if !info.CheckHash {
 					apiInfo.ServerFileHash = ""
+				}
+				apiInfo.DestDir = info.DestDir
+				apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
+				if savePathTemplate != nil {
+					if path, rErr := savePathTemplate.Run(apiInfo); rErr != nil {
+						return nil, rErr
+					} else {
+						apiInfo.ToFile = path
+					}
 				}
 
 				metric.AddCurrentCount(1)

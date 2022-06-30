@@ -52,7 +52,7 @@ func FuncCall(cfg *iqshell.Config, info FuncCallInfo) {
 		return
 	}
 
-	if output, err := t.Run(info.ParamsJson); err != nil {
+	if output, err := t.RunWithJsonString(info.ParamsJson); err != nil {
 		log.ErrorF("error:%v", err)
 	} else {
 		log.Warning("output is insert [], and you should be careful with spaces etc.")

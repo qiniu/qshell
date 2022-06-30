@@ -38,9 +38,9 @@ $qshell func '{"name":"this is a test"}' '{{trimSuffix "test" .name}}'
 
 
 2. 截取 "this is a test" 中首部的 this
-$qshell func '{"name":"this is a test"}' '{{trimPrefix "test" .name}}'
+$qshell func '{"name":"this is a test"}' '{{trimPrefix "this" .name}}'
 [W]  output is insert [], and you should be careful with spaces etc.
-[I]  [this is a test]
+[I]  [ is a test]
 
 
 3. 获取 "this is a test" 中从下标 0 到下标 5 的部分，包含下标 5。

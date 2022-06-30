@@ -22,6 +22,7 @@ type ApiInfo struct {
 	Key                  string            `json:"key"`                  // 文件被保存的 key 【必填】
 	IsPublic             bool              `json:"-"`                    // 是否使用共有链接 【必填】
 	HostProvider         host.Provider     `json:"-"`                    // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
+	DestDir              string            `json:"-"`                    // 文件存储目标路径，目前是为了方便用户在批量下载时构建 ToFile 【此处选填】
 	ToFile               string            `json:"to_file"`              // 文件保存的路径 【必填】
 	Referer              string            `json:"referer"`              // 请求 header 中的 Referer 【选填】
 	FileEncoding         string            `json:"-"`                    // 文件编码方式 【选填】
