@@ -46,8 +46,6 @@ func FuncCall(cfg *iqshell.Config, info FuncCallInfo) {
 		return
 	}
 
-
-
 	t, tErr := utils.NewTemplate(info.FuncTemplate)
 	if tErr != nil {
 		log.ErrorF("%v", tErr)

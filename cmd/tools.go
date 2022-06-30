@@ -348,7 +348,7 @@ var funcCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:   "func <ParamsJson> <FuncTemplate>",
 		Short: "qshell custom function call",
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg.CmdCfg.CmdId = docs.DirCacheType
+			cfg.CmdCfg.CmdId = docs.FuncType
 			if len(args) > 0 {
 				info.ParamsJson = args[0]
 			}
@@ -358,7 +358,6 @@ var funcCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.FuncCall(cfg, info)
 		},
 	}
-	cmd.Flags().StringVarP(&info.RunTimes, "run-times", "", "1", "func process run times")
 	return cmd
 }
 
