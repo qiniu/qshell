@@ -19,6 +19,11 @@ import (
 // @param cacheResultFile - cache result file path
 // @return (fileCount, retErr) - total file count and any error meets
 func DirCache(cacheRootPath string, cacheResultFile string) (int64, *data.CodeError) {
+
+	log.DebugF("cacheRootPath:`%s`", cacheRootPath)
+	cacheRootPath = filepath.Join(cacheRootPath, "")
+	log.DebugF("cacheRootPath after disposed:`%s`", cacheRootPath)
+
 	//check dir
 	rootPathFileInfo, statErr := os.Stat(cacheRootPath)
 	if statErr != nil {
