@@ -328,17 +328,18 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				return true, data.NewEmptyError().AppendDesc("get stat from server").AppendError(sErr)
 			}
 
-			isLocalFileNotChange, _ := utils.IsFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime)
+			// LocalFileModifyTime 单位是 100ns
+			isLocalFileNotChange, mErr := utils.IsFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime/10000000)
 			isServerFileNotChange := stat.PutTime == result.ServerPutTime
 			// 本地文件没有变化，服务端文件没有变化，则不需要再重新上传
 			if isLocalFileNotChange && isServerFileNotChange {
 				return false, nil
 			} else if !isLocalFileNotChange {
 				// 本地有变动，尝试检查 hash，hash 统一由单文件上传之前检查
-				return true, data.NewEmptyError().AppendDesc("local file has change")
+				return true, data.NewEmptyError().AppendDescF("local file has change, %v", mErr)
 			} else {
 				// 服务端文件有变动，尝试检查 hash，hash 统一由单文件上传之前检查
-				return true, data.NewEmptyError().AppendDesc("server file has change")
+				return true, data.NewEmptyError().AppendDescF("server file has change, PutTime don't match, except:%d but:%d", result.ServerPutTime, stat.PutTime)
 			}
 		}).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
