@@ -115,6 +115,8 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 			serverObjectStat = &stat
 			result.Exist = true
 		}
+	} else {
+		result.Exist = true
 	}
 
 	// 计算本地文件 hash

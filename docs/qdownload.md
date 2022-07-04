@@ -92,6 +92,8 @@ qshell qdownload -c 10 qdisk_down.conf
 
 `key_file` 文件格式： 每行一个 key, 且仅有 key 的内容，除 key 外不能有其他字符。
 
+
+### `save_path_handler` 说明
 `save_path_handler` 可使用的文件参数信息如下：
 - Key: 文件的在七牛云存储的 Key 值
 - ServerFileSize: 文件的在七牛云存储的大小
