@@ -202,7 +202,7 @@ fi
 ```json
 {
    "access_key": "",
-   "secret_key": "",
+   "secret_key": ""
 }
 ```
 
@@ -239,6 +239,7 @@ fi
 | batchmove   | 移动   | 批量移动七牛空间中的文件到另一个空间                                 | [文档](docs/batchmove.md)   |
 | move        | 移动   | 移动或重命名七牛空间中的一个文件                                     | [文档](docs/move.md)        |
 | batchrename | 重命名 | 批量重命名七牛空间中的文件                                           | [文档](docs/batchrename.md) |
+| rename | 重命名 | 重命名七牛空间中的文件                                           | [文档](docs/rename.md) |
 | batchrestorear | 解冻 | 批量解冻七牛空间中的归档/深度归档存储类型文件                         | [文档](docs/batchrestorear.md) |  
 | restorear | 解冻 | 解冻七牛空间中的归档/深度归档存储类型文件                                | [文档](docs/restorear.md) |               
 | batchstat   | 查询   | 批量查询七牛空间中文件的基本信息                                     | [文档](docs/batchstat.md)   |

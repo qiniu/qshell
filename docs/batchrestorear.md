@@ -40,8 +40,7 @@ qshell batchrestorear <Bucket> <FreezeAfterDays> [flags]
 ```
 
 上面，我们将 `2015/03/22/qiniu.png` 文件设置为低频存储了，诸如此类。
-把这个内容保存到文件 `restorear.txt` 中，然后使用如下的命令将 `restorear.txt` 中所有的文件进行存储类型改变。
-
+把这个内容保存到文件 `restorear.txt` 中，然后使用如下的命令将 `restorear.txt` 中所有的文件进行解冻。
 ```
 $ qshell batchrestorear if-pbl -i restorear.txt
 ```
