@@ -109,7 +109,7 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 			Key:      info.Key,
 			NeedPart: true,
 		}); sErr != nil {
-			return result, data.NewEmptyError().AppendDescF("Match Check, get file status").AppendError(sErr)
+			return result, data.NewEmptyError().AppendDescF("Match Check, get server file status").AppendError(sErr)
 		} else {
 			info.ServerFileHash = stat.Hash
 			serverObjectStat = &stat
