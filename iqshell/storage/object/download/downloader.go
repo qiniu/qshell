@@ -162,10 +162,19 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	var response *http.Response
 	for times := 0; times < 6; times++ {
 		if available, _ := info.HostProvider.Available(); !available {
+			log.DebugF("Stop download [%s:%s] => %s, because no available host", info.Bucket, info.Key, info.ToFile)
 			break
 		}
+
 		response, err = dl.Download(info)
 		if err == nil && response != nil && response.StatusCode/100 == 2 {
+			break
+		}
+
+		if response != nil &&
+			(response.StatusCode > 399 && response.StatusCode < 500) ||
+			response.StatusCode == 612 || response.StatusCode == 631 {
+			log.DebugF("Stop download [%s:%s] => %s, because [%s]", info.Bucket, info.Key, info.ToFile, response.Status)
 			break
 		}
 	}

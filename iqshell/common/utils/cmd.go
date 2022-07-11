@@ -25,3 +25,15 @@ func RunCmd(name string, params []string) (string, *data.CodeError) {
 	}
 	return buff.String(), nil
 }
+
+func CmdExistBySuccess() {
+	os.Exit(data.StatusOK)
+}
+
+func CmdExistByFail() {
+	os.Exit(data.StatusError)
+}
+
+func CmdExistByUserCancel() {
+	os.Exit(data.StatusUserCancel)
+}
