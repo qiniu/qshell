@@ -77,7 +77,7 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
 - record_root：上传记录信息保存路径，包括日志文件和上传进度文件；默认为 `qshell` 上传目录；【可选】
   - 通过 `-L` 指定工作目录时，`record_root` 则为此工作目录/qdownload/$jobId， 
   - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qdownload/$jobId`
-  - 注意 `jobId` 是根据上传任务动态生成；据图方式为 MD5("$SrcDir:$Bucket:$FileList")； `CurrentUserName` 当前用户的名称
+  - 注意 `jobId` 是根据上传任务动态生成；具体方式为 MD5("$SrcDir:$Bucket:$FileList")； `CurrentUserName` 当前用户的名称
 
 对于那么多的参数，我们可以分为几类来解释：
 
@@ -140,9 +140,28 @@ See upload log at path /Users/jemy/.qshell/qupload/290438bcd0bcc7121bb22a56b1c95
 
 ### 处理中断
 上面的演示，我们的图片比较少，所以很容易成功，那么在大量文件要上传的情况下，怎么样保证上传完成的文件不再继续上传呢？我们在本地使用了一个 leveldb 数据库用来记录这个已上传成功的文件信息。
-这个纪录的格式为 (k, v) => ((localFilePath, uploadFileKey), lastModifyTime)，也就是说记录的key为本地文件的路径加上上传到空间中的文件名构成的，而 value 则是本地文件的最后修改时间，这个用来在下次上传的时候检查文件是否已发生过变化。这个 leveldb 的数据库保存在上传任务的目录之下，每个上传的任务相关的文件都保存在以任务ID命名的目录之下。任务 ID 的生成算法为 MD5(SrcDir+":"+Bucket+":"+FileList)。
+这个纪录的格式为 (k, v) => (MD5(bucket,uploadFileKey,localFilePath), 文件上传相关的 Json 信息)，也就是说记录的 key 为上传的空间名、本地文件的路径加上上传到空间中的文件名构成的，而 value 则是文件上传相关的 Json 信息，这个用来在下次上传的时候检查文件是否已发生过变化。这个 leveldb 的数据库保存在上传任务的目录之下，每个上传的任务相关的文件都保存在以任务 ID 命名的目录之下。任务 ID 的生成算法为 MD5(SrcDir+":"+Bucket+":"+FileList)。
 
 通过上面的方法，我们在每次上传之前，都会去检查是否已有文件上传成功，如果存在本地文件上传成功的记录，而且本地文件的最后修改时间没有变化的话，我们就认为该文件已上传过了，可以不用再传。
+
+#### 怎么检测文件是否变化
+查看本地是否有上传记录
+  - 无，则直接上传
+  - 有，查看本地文件时间戳是否变化，检测服务文件修改时间是否变化，
+    - 二者均未发生变化则认为文件未发生变化，不再上传
+    - 本地/服务文件任一文件时间戳发生变化，则触发上传
+    
+上传
+- 是否配置检查文件是否存在（`check_exists`） 
+  - 未配置，直接上传
+  - 配置，查看文件是否配置检测 Hash（`check_hash`）。
+      - 配置检测 Hash，则检查本地文件 Hash 是否和服务 Hash 一致
+        - 一致，一致则认为文件无变化，跳过上传
+        - 不一致，一致则认为文件有变化，上传文件
+      - 未配置检测 Hash，检测本地文件和服务文件的大小是否一致
+        - 一致，一致则认为文件无变化，跳过上传
+        - 不一致，一致则认为文件有变化，上传文件
+- 上传文件
 
 ### 强制覆盖
 上面说过我们可以处理中断的上传过程，从中断的地方继续上传，但是这里存在的问题是，在这个中断后的时间里面，本地文件内容是否发生过改变，如果发生过改变该怎么处理的问题？这种情况下，我们会比对文件当前的最后修改时间和 leveldb 数据库中记录的最后修改时间，如果时间不一致，我们认为该文件已被修改。这个时候，你可以指定一个参数 `overwrite` 来强制覆盖这个文件，否则的话，工具会给一个警告级别的日志信息，并记录为没有覆盖的文件。
@@ -152,9 +171,9 @@ See upload log at path /Users/jemy/.qshell/qupload/290438bcd0bcc7121bb22a56b1c95
 }
 ```
 
-警告信息：
+错误信息：
 ```
-Skip upload of changed file `xxx` but no overwrite set
+[E]  Upload  failed:./file/1K.tmp => [qshell-z0-01:1024K.tmp] error:upload source => form upload => file exists
 ```
 
 `overwrite` 这个参数设置为 `true` 的时候，覆盖操作会在两种情况下发生：
