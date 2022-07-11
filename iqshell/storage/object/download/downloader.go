@@ -171,11 +171,12 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 			break
 		}
 
-		if response != nil &&
-			(response.StatusCode > 399 && response.StatusCode < 500) ||
-			response.StatusCode == 612 || response.StatusCode == 631 {
-			log.DebugF("Stop download [%s:%s] => %s, because [%s]", info.Bucket, info.Key, info.ToFile, response.Status)
-			break
+		if response != nil {
+			if (response.StatusCode > 399 && response.StatusCode < 500) ||
+				response.StatusCode == 612 || response.StatusCode == 631 {
+				log.DebugF("Stop download [%s:%s] => %s, because [%s]", info.Bucket, info.Key, info.ToFile, response.Status)
+				break
+			}
 		}
 	}
 
