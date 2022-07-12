@@ -5,7 +5,7 @@
 
 因为该命令使用了七牛 fetch 接口，对于较大的资源(大于 100M), 有抓取超时的可能性。
 
-该命令首先使用亚马逊的 List Objects V2 接口[文档](https://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html) 获取空间中的文件， 然后七牛的 fetch 接口[文档](https://developer.qiniu.com/kodo/api/1263/fetch)进行抓取。
+该命令首先使用亚马逊的 List Objects V2 接口[文档](https://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html) 获取空间中的文件， 然后使用七牛的 fetch 接口[文档](https://developer.qiniu.com/kodo/api/1263/fetch)进行抓取。
 
 # 格式
 ```
@@ -33,6 +33,8 @@ $ qshell awsfetch -h
 - -u/--up-host：抓取的资源上传到七牛存储时的上传 HOST 。 【可选】
 - -s/--success-list：文件抓取成功后，将文件信息导入到此文件中，每行一个文件。不配置导出。 【可选】
 - -e/--failure-list：文件抓取失败后，将文件信息导入到此文件中，每行一个文件。不配置导出。 【可选】
+- --enable-record：记录任务执行状态，当下次执行命令时会跳过已执行的任务。 【可选】
+- --record-redo-while-error：依赖于 --enable-record，当检测任务状态时（命令重新执行时，所有任务会从头到尾重新执行；任务执行前会先检测当前任务是否已经执行），如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败不重新执行。 【可选】
 
 # 亚马逊存储数据迁移到七牛存储
 使用场景：
