@@ -3,9 +3,11 @@ package test
 import (
 	"fmt"
 	"strings"
+	"sync"
 )
 
 type lineWriter struct {
+	mu              sync.Locker
 	buff            string
 	WriteStringFunc func(line string)
 }
@@ -19,7 +21,9 @@ func newLineWriter(writeStringFunc func(line string)) *lineWriter {
 }
 
 func (w *lineWriter) Write(p []byte) (n int, err error) {
+	w.mu.Lock()
 	w.buff += string(p)
+	w.mu.Unlock()
 
 	for len(w.buff) > 0 {
 		items := strings.SplitN(w.buff, "\n", 2)
