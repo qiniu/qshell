@@ -15,7 +15,9 @@ func TestUser(t *testing.T) {
 		return
 	}
 
-	TestUserIntegration(t)
+	if test.ShouldTestUser {
+		TestUserIntegration(t)
+	}
 }
 
 func TestUserIntegration(t *testing.T) {
