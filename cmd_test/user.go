@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"testing"
@@ -12,19 +13,22 @@ var accessKey = test.AccessKey
 var secretKey = test.SecretKey
 
 func TestUser(t *testing.T) {
+	defer func() {
+		if err := account.SetAccountToLocalFile(account.Account{
+			Name:      "QShell",
+			AccessKey: accessKey,
+			SecretKey: secretKey,
+		}); err != nil {
+			fmt.Printf("user set error:%v", err)
+		}
+	}()
+
 	if test.Local {
 		return
 	}
 
 	if test.ShouldTestUser {
 		TestUserIntegration(t)
-	} else {
-		userName := "QShell"
-		_ = account.SetAccountToLocalFile(account.Account{
-			Name:      userName,
-			AccessKey: accessKey,
-			SecretKey: secretKey,
-		})
 	}
 }
 

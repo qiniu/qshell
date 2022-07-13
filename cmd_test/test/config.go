@@ -9,7 +9,7 @@ import (
 var (
 	Debug          = true
 	Local          = len(os.Getenv("QSHELL_LOCAL")) > 0
-	ShouldTestUser = len(os.Getenv("Test_User")) > 0
+	ShouldTestUser = len(os.Getenv("QSHELL_Test_User")) > 0
 
 	AccessKey      = os.Getenv("accessKey")
 	SecretKey      = os.Getenv("secretKey")
