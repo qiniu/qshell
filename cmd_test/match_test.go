@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -161,9 +162,15 @@ func TestBatchMatchWithRecord(t *testing.T) {
 		"--enable-record",
 		"-d")
 	if !strings.Contains(result, "because have done and") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: should skip the work had done")
 	}
 	if strings.Contains(result, "work redo") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: shouldn't redo because not set --record-redo-while-error")
 	}
 
@@ -174,9 +181,15 @@ func TestBatchMatchWithRecord(t *testing.T) {
 		"--record-redo-while-error",
 		"-d")
 	if !strings.Contains(result, "because have done and") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: should skip the work had done")
 	}
 	if !strings.Contains(result, "work redo") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
 	}
 }
