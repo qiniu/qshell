@@ -160,8 +160,8 @@ func TestBatchMatchWithRecord(t *testing.T) {
 		"--worker", "4",
 		"--enable-record",
 		"-d")
-	if !strings.Contains(result, "because have done and success") {
-		t.Fatal("batch result: should skip success work")
+	if !strings.Contains(result, "because have done and") {
+		t.Fatal("batch result: should skip the work had done")
 	}
 	if strings.Contains(result, "work redo") {
 		t.Fatal("batch result: shouldn't redo because not set --record-redo-while-error")
@@ -173,8 +173,8 @@ func TestBatchMatchWithRecord(t *testing.T) {
 		"--enable-record",
 		"--record-redo-while-error",
 		"-d")
-	if !strings.Contains(result, "because have done and success") {
-		t.Fatal("batch result: should skip success work")
+	if !strings.Contains(result, "because have done and") {
+		t.Fatal("batch result: should skip the work had done")
 	}
 	if !strings.Contains(result, "work redo") {
 		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
