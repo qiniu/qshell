@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"testing"
 )
 
@@ -17,6 +18,13 @@ func TestUser(t *testing.T) {
 
 	if test.ShouldTestUser {
 		TestUserIntegration(t)
+	} else {
+		userName := "QShell"
+		_ = account.SetAccountToLocalFile(account.Account{
+			Name:      userName,
+			AccessKey: accessKey,
+			SecretKey: secretKey,
+		})
 	}
 }
 
