@@ -19,7 +19,7 @@ func TestFop(t *testing.T) {
 
 	result = strings.ReplaceAll(result, "\n", "")
 	result, errs = test.RunCmdWithError("prefop", result)
-	if len(errs) > 0 {
+	if len(errs) > 0 && !strings.Contains(errs, "not_found") {
 		t.Fail()
 	}
 }
