@@ -14,7 +14,7 @@ var secretKey = test.SecretKey
 
 func TestUser(t *testing.T) {
 	defer func() {
-		os.Args = []string{"qshell", accessKey, secretKey, "QShell"}
+		os.Args = []string{"qshell", "user", "add", accessKey, secretKey, "QShell"}
 		cmd.Execute()
 	}()
 
