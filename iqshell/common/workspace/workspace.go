@@ -7,6 +7,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"sync"
 )
 
 const (
@@ -29,6 +30,8 @@ var (
 	// 当前账户
 	currentAccount *account.Account
 
+	lock       sync.Mutex
+	cancelCtx  context.Context
 	cancelFunc func()
 )
 
@@ -76,10 +79,16 @@ func GetMac() (mac *qbox.Mac, err *data.CodeError) {
 	return
 }
 
+// GetContext 统一使用一个 context
 func GetContext() context.Context {
-	ctx := context.Background()
-	ctx, cancelFunc = context.WithCancel(ctx)
-	return ctx
+	locker.Lock()
+	defer locker.Unlock()
+	if cancelCtx != nil {
+		return cancelCtx
+	}
+
+	cancelCtx, cancelFunc = context.WithCancel(context.Background())
+	return cancelCtx
 }
 
 func Cancel() {

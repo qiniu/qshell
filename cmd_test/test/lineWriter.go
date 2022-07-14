@@ -22,6 +22,8 @@ func newLineWriter(writeStringFunc func(line string)) *lineWriter {
 
 func (w *lineWriter) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
+	defer w.mu.Unlock()
+
 	w.buff += string(p)
 	for len(w.buff) > 0 {
 		items := strings.SplitN(w.buff, "\n", 2)
@@ -36,7 +38,6 @@ func (w *lineWriter) Write(p []byte) (n int, err error) {
 			}
 		}
 	}
-	w.mu.Unlock()
 
 	return len(p), nil
 }
