@@ -7,7 +7,7 @@ import (
 )
 
 type lineWriter struct {
-	mu              sync.Locker
+	mu              sync.Mutex
 	buff            string
 	WriteStringFunc func(line string)
 }
