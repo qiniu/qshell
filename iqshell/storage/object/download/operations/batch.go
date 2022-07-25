@@ -258,16 +258,16 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			apiInfo, _ := workInfo.Work.(*download.ApiInfo)
 
 			if strings.HasSuffix(apiInfo.Key, "/") && apiInfo.ServerFileSize == 0 {
-				log.InfoF("Download Skip because key means a dir, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
-				return true, data.NewEmptyError().AppendDescF("Skip download `%s`, this is dir", apiInfo.Key)
+				//log.InfoF("Download Skip because key means a dir, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
+				return true, data.NewEmptyError().AppendDescF("[%s:%s], this is dir", apiInfo.Bucket, apiInfo.Key)
 			}
 			if filterPrefix(apiInfo.Key) {
-				log.InfoF("Download Skip because key prefix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
-				return true, data.NewEmptyError().AppendDescF("Skip download `%s`, prefix filter not match", apiInfo.Key)
+				//log.InfoF("Download Skip because key prefix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
+				return true, data.NewEmptyError().AppendDescF("[%s:%s], prefix filter not match", apiInfo.Bucket, apiInfo.Key)
 			}
 			if filterSuffixes(apiInfo.Key) {
-				log.InfoF("Download Skip because key suffix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
-				return true, data.NewEmptyError().AppendDescF("Skip download `%s`, suffix filter not match", apiInfo.Key)
+				//log.InfoF("Download Skip because key suffix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
+				return true, data.NewEmptyError().AppendDescF("[%s:%s], suffix filter not match", apiInfo.Bucket, apiInfo.Key)
 			}
 			return false, nil
 		}).
@@ -290,7 +290,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				}
 			} else {
 				metric.AddSkippedCount(1)
-				log.DebugF("Skip line:%s because:%v", workInfo.Data, err)
+				log.InfoF("Skip line:%s because:%v", workInfo.Data, err)
 				exporter.Skip().Export(workInfo.Data)
 			}
 		}).
