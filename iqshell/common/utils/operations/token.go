@@ -53,13 +53,15 @@ func CreateQBoxToken(cfg *iqshell.Config, info QBoxTokenInfo) {
 
 	mac, req, mErr := getMacAndRequest(info.TokenInfo)
 	if mErr != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("create mac and request: %v\n", mErr)
-		os.Exit(data.StatusError)
+		return
 	}
 	token, signErr := mac.SignRequest(req)
 	if signErr != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("create qbox token for url: %s: %v\n", info.Url, signErr)
-		os.Exit(data.StatusError)
+		return
 	}
 	log.Alert("QBox " + token)
 }
@@ -85,13 +87,15 @@ func CreateQiniuToken(cfg *iqshell.Config, info QiniuTokenInfo) {
 
 	mac, req, mErr := getMacAndRequest(info.TokenInfo)
 	if mErr != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("create mac and reqeust: %v\n", mErr)
-		os.Exit(data.StatusError)
+		return
 	}
 	token, signErr := mac.SignRequestV2(req)
 	if signErr != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("create qiniu token for url: %s: %v\n", info.Url, signErr)
-		os.Exit(data.StatusError)
+		return
 	}
 	log.Alert("Qiniu " + token)
 }
@@ -120,15 +124,17 @@ func CreateUploadToken(cfg *iqshell.Config, info UploadTokenInfo) {
 
 	fileInfo, oErr := os.Open(fileName)
 	if oErr != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("open file %s: %v\n", fileName, oErr)
-		os.Exit(data.StatusError)
+		return
 	}
 	defer fileInfo.Close()
 
 	configData, rErr := ioutil.ReadAll(fileInfo)
 	if rErr != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("read putPolicy config file `%s`: %v\n", fileName, rErr)
-		os.Exit(data.StatusError)
+		return
 	}
 
 	//remove UTF-8 BOM
@@ -137,8 +143,9 @@ func CreateUploadToken(cfg *iqshell.Config, info UploadTokenInfo) {
 	putPolicy := new(storage.PutPolicy)
 	uErr := json.Unmarshal(configData, putPolicy)
 	if uErr != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("parse upload config file `%s`: %v\n", fileName, uErr)
-		os.Exit(data.StatusError)
+		return
 	}
 
 	var mac *qbox.Mac
@@ -148,8 +155,9 @@ func CreateUploadToken(cfg *iqshell.Config, info UploadTokenInfo) {
 	} else {
 		mac, mErr = account.GetMac()
 		if mErr != nil {
+			data.SetCmdStatusError()
 			log.ErrorF("get mac: %v\n", mErr)
-			os.Exit(1)
+			return
 		}
 	}
 	uploadToken := putPolicy.UploadToken(mac)

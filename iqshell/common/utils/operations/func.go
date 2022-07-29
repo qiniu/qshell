@@ -48,11 +48,13 @@ func FuncCall(cfg *iqshell.Config, info FuncCallInfo) {
 
 	t, tErr := utils.NewTemplate(info.FuncTemplate)
 	if tErr != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("%v", tErr)
 		return
 	}
 
 	if output, err := t.RunWithJsonString(info.ParamsJson); err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("error:%v", err)
 	} else {
 		log.Warning("output is insert [], and you should be careful with spaces etc.")

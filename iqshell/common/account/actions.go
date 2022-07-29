@@ -62,7 +62,7 @@ func SaveToDB(acc Account, accountOver bool) (err *data.CodeError) {
 	ldb, lErr := leveldb.OpenFile(info.AccountDBPath, nil)
 	if lErr != nil {
 		err = data.NewEmptyError().AppendDescF("open db: %v", err)
-		os.Exit(data.StatusHalt)
+		return
 	}
 	defer ldb.Close()
 

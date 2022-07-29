@@ -43,6 +43,7 @@ func Copy(cfg *iqshell.Config, info CopyInfo) {
 
 	result, err := object.Copy((*object.CopyApiInfo)(&info))
 	if err != nil || result == nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -55,6 +56,7 @@ func Copy(cfg *iqshell.Config, info CopyInfo) {
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
 	} else {
+		data.SetCmdStatusError()
 		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -98,6 +100,7 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -127,6 +130,7 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 			apiInfo, ok := (operation).(*object.CopyApiInfo)
 			if apiInfo == nil || !ok {
+				data.SetCmdStatusError()
 				log.ErrorF("Copy Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 				return
 			}
@@ -137,6 +141,7 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 					in.SourceBucket, in.SourceKey,
 					in.DestBucket, in.DestKey)
 			} else {
+				data.SetCmdStatusError()
 				log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
 					in.SourceBucket, in.SourceKey,
 					in.DestBucket, in.DestKey,

@@ -28,6 +28,7 @@ func PreFopStatus(cfg *iqshell.Config, info PreFopStatusInfo) {
 
 	ret, err := object.PreFopStatus(info.Id)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("pre fog status error:%v", err)
 		return
 	}
@@ -61,6 +62,7 @@ func PreFop(cfg *iqshell.Config, info PreFopInfo) {
 
 	persistentId, err := object.PreFop(object.PreFopApiInfo(info))
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("pre fog error:%v", err)
 		return
 	}

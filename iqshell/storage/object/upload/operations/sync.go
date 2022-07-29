@@ -37,6 +37,7 @@ func SyncFile(cfg *iqshell.Config, info SyncInfo) {
 	info.Progress = progress.NewPrintProgress(" 进度")
 	ret, err := uploadFile((*UploadInfo)(&info))
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Sync file error %v", err)
 	} else {
 		log.Alert("")

@@ -39,6 +39,7 @@ func UrlDecode(cfg *iqshell.Config, info UrlInfo) {
 
 	dataDecoded, err := url.PathUnescape(info.Url)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.Error("Failed to unescape data `", info.Url, "'")
 	} else {
 		log.Alert(dataDecoded)

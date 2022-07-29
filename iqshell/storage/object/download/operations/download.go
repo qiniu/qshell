@@ -53,6 +53,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		NeedPart: false,
 	})
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("get file status error:%v", err)
 		return
 	}
@@ -64,6 +65,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		GetFileApi: info.UseGetFileApi,
 	})
 	if available, e := hostProvider.Available(); !available {
+		data.SetCmdStatusError()
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or io_host or bind domain to bucket, %v", info.Bucket, e)
 		return
 	}
@@ -87,7 +89,10 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	if info.CheckHash {
 		apiInfo.ServerFileHash = fileStatus.Hash
 	}
-	_, _ = downloadFile(apiInfo)
+
+	if e, _ := downloadFile(apiInfo); e != nil {
+		data.SetCmdStatusError()
+	}
 }
 
 func downloadFile(info *download.ApiInfo) (*download.ApiResult, *data.CodeError) {

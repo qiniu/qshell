@@ -44,9 +44,11 @@ func Load(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
 		return false
 	}
 	if !LoadBase(cfg) {
+		data.SetCmdStatusError()
 		return false
 	}
 	if !LoadWorkspace(cfg) {
+		data.SetCmdStatusError()
 		return false
 	}
 	if info.BeforeLoadFileLog != nil {
@@ -57,6 +59,7 @@ func Load(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
 		info.AfterLoadFileLog()
 	}
 	if !shouldContinue {
+		data.SetCmdStatusError()
 		return false
 	}
 
@@ -67,6 +70,7 @@ func Check(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
 	if info.Checker != nil {
 		if err := info.Checker.Check(); err != nil {
 			log.ErrorF("check error: %v", err)
+			data.SetCmdStatusError()
 			return false
 		}
 	}

@@ -71,6 +71,7 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 
 	if err != nil {
 		log.ErrorF("get export error:%v", err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -90,10 +91,12 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 				}
 				log.DebugF("get object:%s\t%d\t%s\t%s\n%s", *obj.Key, *obj.Size, *obj.ETag, *obj.LastModified, downloadUrl)
 			} else {
+				data.SetCmdStatusError()
 				log.ErrorF("fetch([%s:%s]) create download url error: %v", info.AwsBucketInfo.Bucket, *obj.Key, e)
 			}
 		}); e != nil {
 			log.Error(e)
+			data.SetCmdStatusError()
 		}
 		close(fetchInfoChan)
 	}()
@@ -198,6 +201,7 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 	// 输出结果
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("save aws batch fetch result to path:%s error:%v", resultPath, e)
 	} else {
 		log.DebugF("save aws batch fetch result to path:%s", resultPath)
@@ -210,4 +214,8 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
 	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
 	log.InfoF("--------------------------------------------")
+
+	if metric.FailureCount > 0 {
+		data.SetCmdStatusError()
+	}
 }

@@ -29,6 +29,7 @@ func MirrorUpdate(cfg *iqshell.Config, info MirrorUpdateInfo) {
 
 	err := storage.Prefetch(storage.PrefetchApiInfo(info))
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Mirror update Failed, [%s:%s], Error: %v", info.Bucket, info.Key, err)
 	} else {
 		log.InfoF("Mirror update Success, [%s:%s]", info.Bucket, info.Key)

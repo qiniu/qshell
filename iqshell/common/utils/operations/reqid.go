@@ -32,6 +32,7 @@ func DecodeReqId(cfg *iqshell.Config, info ReqIdInfo) {
 
 	decodedBytes, err := base64.URLEncoding.DecodeString(info.ReqId)
 	if err != nil || len(decodedBytes) < 4 {
+		data.SetCmdStatusError()
 		log.Error("Invalid reqid", info.ReqId, err)
 		return
 	}
@@ -45,6 +46,7 @@ func DecodeReqId(cfg *iqshell.Config, info ReqIdInfo) {
 
 	unixNano, err := strconv.ParseInt(newStr, 16, 64)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.Error("Invalid reqid", info.ReqId, err)
 		return
 	}

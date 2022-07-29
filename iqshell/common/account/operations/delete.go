@@ -6,7 +6,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"os"
 )
 
 type CleanInfo struct {
@@ -26,7 +25,7 @@ func Clean(cfg *iqshell.Config, info CleanInfo) {
 	err := account.CleanUser()
 	if err != nil {
 		log.Error(err)
-		os.Exit(data.StatusError)
+		data.SetCmdStatusError()
 	}
 }
 
@@ -51,6 +50,7 @@ func Remove(cfg *iqshell.Config, info RemoveInfo) {
 	err := account.RmUser(info.Name)
 	if err != nil {
 		log.Error(err)
-		os.Exit(data.StatusError)
+		data.SetCmdStatusError()
+		return
 	}
 }

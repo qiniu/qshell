@@ -36,6 +36,7 @@ func Status(cfg *iqshell.Config, info StatusInfo) {
 
 	result, err := object.Status(object.StatusApiInfo(info))
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Status Failed, [%s:%s], Error:%v",
 			info.Bucket, info.Key, err)
 		return
@@ -76,6 +77,7 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -97,6 +99,7 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 			apiInfo, ok := (operation).(*object.StatusApiInfo)
 			if !ok {
+				data.SetCmdStatusError()
 				log.ErrorF("Status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 				return
 			}
@@ -105,10 +108,12 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 				log.AlertF("%s\t%d\t%s\t%s\t%d\t%d",
 					in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
 			} else {
+				data.SetCmdStatusError()
 				log.ErrorF("Status Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)
 			}
 		}).
 		OnError(func(err *data.CodeError) {
+			data.SetCmdStatusError()
 			log.ErrorF("Batch Status error:%v:", err)
 		}).Start()
 }

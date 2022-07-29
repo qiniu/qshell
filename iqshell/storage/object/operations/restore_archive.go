@@ -70,6 +70,7 @@ func RestoreArchive(cfg *iqshell.Config, info RestoreArchiveInfo) {
 		FreezeAfterDays: info.freezeAfterDaysInt,
 	})
 	if err != nil || result == nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Error: %v",
 			info.Bucket, info.Key, info.FreezeAfterDays, err)
 		return
@@ -79,6 +80,7 @@ func RestoreArchive(cfg *iqshell.Config, info RestoreArchiveInfo) {
 		log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%s",
 			info.Bucket, info.Key, info.FreezeAfterDays)
 	} else {
+		data.SetCmdStatusError()
 		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Code: %d, Error: %s",
 			info.Bucket, info.Key, info.FreezeAfterDays,
 			result.Code, result.Error)
@@ -124,6 +126,7 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -146,6 +149,7 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 			apiInfo, ok := (operation).(*object.RestoreArchiveApiInfo)
 			if !ok {
+				data.SetCmdStatusError()
 				log.ErrorF("Restore archive Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 				return
 			}
@@ -154,12 +158,14 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 				log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%d",
 					apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays)
 			} else {
+				data.SetCmdStatusError()
 				log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%d, Code: %d, Error: %s",
 					apiInfo.Bucket, apiInfo.Key, apiInfo.FreezeAfterDays,
 					result.Code, result.Error)
 			}
 		}).
 		OnError(func(err *data.CodeError) {
+			data.SetCmdStatusError()
 			log.ErrorF("Batch restore archive error:%v:", err)
 		}).Start()
 }

@@ -25,6 +25,7 @@ func Change(cfg *iqshell.Config, info ChangeInfo) {
 
 	name, err := account.ChUser(info.Name)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("user change to %s failed, error:%v", name, err)
 		return
 	} else {

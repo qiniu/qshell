@@ -43,11 +43,13 @@ func Add(cfg *iqshell.Config, info AddInfo) {
 	}
 
 	if err := account.SaveToDB(acc, info.Over); err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("user add: save user to db error:%v", err)
 		return
 	}
 
 	if err := account.SetAccountToLocalFile(acc); err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("user add: set current error:%v", err)
 		return
 	}

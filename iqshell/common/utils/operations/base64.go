@@ -50,6 +50,7 @@ func Base64Decode(cfg *iqshell.Config, info Base64Info) {
 	if info.UrlSafe {
 		dataDecoded, err := base64.URLEncoding.DecodeString(info.Data)
 		if err != nil {
+			data.SetCmdStatusError()
 			log.Error("Failed to decode `", info.Data, "' in url safe mode.")
 			return
 		}
@@ -57,6 +58,7 @@ func Base64Decode(cfg *iqshell.Config, info Base64Info) {
 	} else {
 		dataDecoded, err := base64.StdEncoding.DecodeString(info.Data)
 		if err != nil {
+			data.SetCmdStatusError()
 			log.Error("Failed to decode `", info.Data, "' in standard mode.")
 			return
 		}

@@ -47,6 +47,7 @@ func Refresh(cfg *iqshell.Config, info RefreshInfo) {
 			}))
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -56,6 +57,7 @@ func Refresh(cfg *iqshell.Config, info RefreshInfo) {
 	for {
 		hasMore, workInfo, pErr := workProvider.Provide()
 		if pErr != nil {
+			data.SetCmdStatusError()
 			log.ErrorF("read work error:%v", pErr)
 			continue
 		}
@@ -97,6 +99,7 @@ func refreshWithQps(info RefreshInfo, items []string, force bool) (isRefresh boo
 
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 	}
 	return
 }

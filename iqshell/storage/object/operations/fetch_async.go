@@ -43,6 +43,7 @@ func CheckAsyncFetchStatus(cfg *iqshell.Config, info CheckAsyncFetchStatusInfo) 
 
 	ret, err := object.CheckAsyncFetchStatus(info.Bucket, info.Id)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("CheckAsyncFetchStatus error: %v", err)
 	} else {
 		log.Alert(ret)
@@ -84,6 +85,7 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -289,6 +291,10 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
 	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
 	log.InfoF("---------------------------------------------------")
+
+	if !metric.IsCompletedSuccessfully() {
+		data.SetCmdStatusError()
+	}
 }
 
 func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
@@ -436,6 +442,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 	// 输出结果
 	resultPath := filepath.Join(workspace.GetJobDir(), "check.result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("save batch async fetch check result to path:%s error:%v", resultPath, e)
 	} else {
 		log.DebugF("save batch async fetch check result to path:%s", resultPath)
@@ -449,6 +456,10 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
 	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
 	log.InfoF("--------------------------------------------------")
+
+	if !metric.IsCompletedSuccessfully() {
+		data.SetCmdStatusError()
+	}
 }
 
 func asyncFetchCheckMaxDuration(size uint64) int {
