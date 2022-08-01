@@ -28,6 +28,7 @@ func (f *formUploader) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeErro
 		err = data.NewEmptyError().AppendDesc("form upload: open file:").AppendError(err)
 		return
 	}
+	defer file.Close()
 
 	fileStatus, sErr := file.Stat()
 	if sErr != nil {

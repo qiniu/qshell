@@ -101,6 +101,7 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 	if oErr != nil {
 		return result, data.NewEmptyError().AppendDescF("Match check hash, get local file error:%v", oErr)
 	}
+	defer hashFile.Close()
 
 	var serverObjectStat *StatusResult
 	if len(info.ServerFileHash) == 0 {

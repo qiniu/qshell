@@ -63,6 +63,7 @@ func UnMarshalFromFile(filePath string, v interface{}) *data.CodeError {
 	if err != nil {
 		return data.NewEmptyError().AppendDesc("unmarshal: open file").AppendError(err)
 	}
+	defer file.Close()
 
 	d, err := ioutil.ReadAll(file)
 	if err != nil {

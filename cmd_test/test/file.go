@@ -183,6 +183,7 @@ func FileContent(path string) string {
 	if err != nil {
 		return ""
 	}
+	defer file.Close()
 
 	content, err := io.ReadAll(file)
 	if err != nil {

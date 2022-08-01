@@ -45,6 +45,18 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 	if s.sliceSize <= 0 {
 		s.sliceSize = 1 * utils.MB
 	}
+	if s.concurrentCount <= 0 {
+		s.concurrentCount = 10
+	}
+
+	s.totalSliceCount = 0
+	s.downloadError = nil
+	s.currentReadSliceIndex = 0
+	s.currentReadSliceOffset = 0
+	if info.FromBytes > 0 {
+		s.currentReadSliceIndex = info.FromBytes / s.sliceSize
+		s.currentReadSliceOffset = info.FromBytes - s.currentReadSliceIndex*s.sliceSize
+	}
 
 	s.slices = make(chan slice, s.concurrentCount)
 	// 临时文件夹
@@ -81,6 +93,7 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 	// 先尝试下载一个分片
 	err = s.downloadSlice(info, <-s.slices)
 	if err != nil {
+		s.downloadError = err
 		return nil, err
 	}
 
@@ -113,10 +126,14 @@ func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError
 	if err != nil {
 		return err
 	}
-	if f.fromBytes >= s.sliceSize {
+
+	file, _ := os.Stat(toFile)
+	if file != nil && file.Size() == s.sliceSize {
 		// 已下载
 		return nil
 	}
+
+	f.fromBytes = sl.FromBytes + f.fromBytes
 
 	log.DebugF("download slice, index:%d fromBytes:%d toBytes:%d", sl.index, sl.FromBytes, sl.ToBytes)
 	return download(f, &ApiInfo{
@@ -131,7 +148,7 @@ func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError
 		ServerFilePutTime:    0,
 		ServerFileSize:       s.sliceSize,
 		ServerFileHash:       "",
-		FromBytes:            sl.FromBytes + f.fromBytes,
+		FromBytes:            f.fromBytes,
 		ToBytes:              sl.ToBytes,
 		RemoveTempWhileError: false,
 		UseGetFileApi:        false,
@@ -161,6 +178,7 @@ func (s *sliceDownloader) Read(p []byte) (n int, err error) {
 	if err != nil {
 		return 0, err
 	}
+	defer file.Close()
 
 	n, err = file.ReadAt(p, s.currentReadSliceOffset)
 	if err != nil {

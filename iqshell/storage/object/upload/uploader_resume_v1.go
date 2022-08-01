@@ -25,6 +25,7 @@ func (r *resumeV1Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	if err != nil {
 		return nil, data.NewEmptyError().AppendDesc("resume v1 upload: open file error:" + err.Error())
 	}
+	defer file.Close()
 
 	fileStatus, err := file.Stat()
 	if err != nil {
