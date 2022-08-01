@@ -30,6 +30,7 @@ type ApiInfo struct {
 	ServerFileSize       int64             `json:"server_file_size"`     // 文件大小，有值则会检测文件大小 【选填】
 	ServerFileHash       string            `json:"server_file_hash"`     // 文件 hash，有值则会检测 hash 【选填】
 	FromBytes            int64             `json:"-"`                    // 下载开始的位置，内部会缓存 【内部使用】
+	ToBytes              int64             `json:"-"`                    // 下载的终止位置【内部使用】
 	RemoveTempWhileError bool              `json:"-"`                    // 当遇到错误时删除临时文件 【选填】
 	UseGetFileApi        bool              `json:"-"`                    // 是否使用 get file api(私有云会使用)【选填】
 	Progress             progress.Progress `json:"-"`                    // 下载进度回调【选填】
@@ -201,11 +202,11 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	if response.StatusCode/100 != 2 {
 		return data.NewEmptyError().AppendDescF(" Download error: %v", response)
 	}
-	defer response.Body.Close()
 
 	var fErr error
 	var tempFileHandle *os.File
-	if info.FromBytes > 0 {
+	isExist, _ := utils.ExistFile(fInfo.tempFile)
+	if isExist {
 		tempFileHandle, fErr = os.OpenFile(fInfo.tempFile, os.O_APPEND|os.O_WRONLY, 0655)
 		log.InfoF("download [%s:%s] => %s from:%d", info.Bucket, info.Key, info.ToFile, info.FromBytes)
 	} else {
@@ -255,7 +256,11 @@ func createDownloader(info *ApiInfo) (downloader, *data.CodeError) {
 			mac:      mac,
 		}, nil
 	} else {
-		return &getDownloader{useHttps: userHttps}, nil
+		if info.ServerFileSize > 1024*1024*30 {
+			return &sliceDownloader{}, nil
+		} else {
+			return &getDownloader{useHttps: userHttps}, nil
+		}
 	}
 }
 

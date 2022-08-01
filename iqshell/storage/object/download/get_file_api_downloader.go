@@ -86,8 +86,17 @@ func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.R
 	}
 
 	// 设置断点续传
-	if info.FromBytes > 0 {
-		headers.Add("Range", fmt.Sprintf("bytes=%d-", info.FromBytes))
+	if info.FromBytes >= 0 && info.ToBytes >= 0 {
+		if info.FromBytes == info.ToBytes {
+			return &http.Response{
+				Status:     "already download",
+				StatusCode: 200,
+			}, nil
+		} else if info.ToBytes == 0 {
+			headers.Add("Range", fmt.Sprintf("bytes=%d-", info.FromBytes))
+		} else {
+			headers.Add("Range", fmt.Sprintf("bytes=%d-%d", info.FromBytes, info.ToBytes))
+		}
 	}
 
 	// 配置 referer
