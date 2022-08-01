@@ -202,6 +202,9 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	if response.StatusCode/100 != 2 {
 		return data.NewEmptyError().AppendDescF(" Download error: %v", response)
 	}
+	if response.Body == nil {
+		return data.NewEmptyError().AppendDesc(" Download error: response body empty")
+	}
 
 	var fErr error
 	var tempFileHandle *os.File
@@ -256,7 +259,7 @@ func createDownloader(info *ApiInfo) (downloader, *data.CodeError) {
 			mac:      mac,
 		}, nil
 	} else {
-		if info.ServerFileSize > 1024*1024*30 {
+		if info.ServerFileSize > 1024*1024*100 {
 			return &sliceDownloader{}, nil
 		} else {
 			return &getDownloader{useHttps: userHttps}, nil

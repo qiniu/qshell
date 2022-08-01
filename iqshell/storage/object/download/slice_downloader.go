@@ -43,7 +43,7 @@ func (s *sliceDownloader) Download(info *ApiInfo) (response *http.Response, err 
 // 加载本地下载配置文件，没有则创建
 func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 	if s.sliceSize <= 0 {
-		s.sliceSize = 1 * utils.MB
+		s.sliceSize = 4 * utils.MB
 	}
 	if s.concurrentCount <= 0 {
 		s.concurrentCount = 10
@@ -112,9 +112,12 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 		}()
 	}
 
+	responseHeader := http.Header{}
+	responseHeader.Add("Content-Length", fmt.Sprintf("%d", info.ServerFileSize-info.FromBytes))
 	return &http.Response{
 		Status:        "slice download: 200",
 		StatusCode:    200,
+		Header:        responseHeader,
 		Body:          s,
 		ContentLength: info.ServerFileSize - info.FromBytes,
 	}, nil
@@ -195,5 +198,10 @@ func (s *sliceDownloader) Read(p []byte) (n int, err error) {
 }
 
 func (s *sliceDownloader) Close() error {
+	if s.downloadError == nil {
+		if err := os.RemoveAll(s.slicesDir); err != nil {
+			log.ErrorF("slice download delete slice dir:%s error:%v", s.slicesDir, err)
+		}
+	}
 	return nil
 }

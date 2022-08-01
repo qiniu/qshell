@@ -87,7 +87,7 @@ func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.R
 
 	// 设置断点续传
 	if info.FromBytes >= 0 && info.ToBytes >= 0 {
-		if info.FromBytes == info.ToBytes {
+		if info.FromBytes > 0 && info.FromBytes == info.ToBytes {
 			return &http.Response{
 				Status:     "already download",
 				StatusCode: 200,
