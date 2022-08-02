@@ -52,6 +52,7 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.Domain, "domain", "", "", "domain of request")
 	cmd.Flags().BoolVarP(&info.CheckHash, "check-hash", "", false, "check the consistency of the hash of the local file and the server file after downloading.")
 	cmd.Flags().BoolVarP(&info.UseGetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")
+	cmd.Flags().BoolVarP(&info.BigFileEnableSlice, "big-file-enable-slice", "", false, "Big file download using slices, consider files bigger than 40M to be big files. default is false")
 	cmd.Flags().BoolVarP(&info.RemoveTempWhileError, "remove-temp-while-error", "", false, "remove download temp file while error happened, default is false")
 	return cmd
 }

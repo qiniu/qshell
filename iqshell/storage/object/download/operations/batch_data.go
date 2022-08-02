@@ -8,17 +8,18 @@ import (
 )
 
 type DownloadCfg struct {
-	ThreadCount     int    `json:"thread_count,omitempty"`
-	FileEncoding    string `json:"file_encoding,omitempty"`
-	KeyFile         string `json:"key_file,omitempty"`
-	DestDir         string `json:"dest_dir,omitempty"`
-	Bucket          string `json:"bucket,omitempty"`
-	Prefix          string `json:"prefix,omitempty"`
-	SavePathHandler string `json:"save_path_handler"`
-	Suffixes        string `json:"suffixes,omitempty"`
-	IoHost          string `json:"io_host,omitempty"`
-	Public          bool   `json:"public,omitempty"`
-	CheckHash       bool   `json:"check_hash,omitempty"`
+	ThreadCount        int    `json:"thread_count,omitempty"`
+	FileEncoding       string `json:"file_encoding,omitempty"`
+	KeyFile            string `json:"key_file,omitempty"`
+	DestDir            string `json:"dest_dir,omitempty"`
+	Bucket             string `json:"bucket,omitempty"`
+	Prefix             string `json:"prefix,omitempty"`
+	SavePathHandler    string `json:"save_path_handler"`
+	Suffixes           string `json:"suffixes,omitempty"`
+	IoHost             string `json:"io_host,omitempty"`
+	Public             bool   `json:"public,omitempty"`
+	CheckHash          bool   `json:"check_hash,omitempty"`
+	BigFileEnableSlice bool   `json:"big_file_enable_slice"` // 大文件切片下载
 
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`

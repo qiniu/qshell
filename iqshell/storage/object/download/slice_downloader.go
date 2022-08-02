@@ -60,7 +60,7 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 
 	s.slices = make(chan slice, s.concurrentCount)
 	// 临时文件夹
-	s.slicesDir = filepath.Join(info.ToFile + ".slice")
+	s.slicesDir = filepath.Join(info.ToFile + "_download.slice")
 	return utils.CreateDirIfNotExist(s.slicesDir)
 }
 
@@ -193,6 +193,10 @@ func (s *sliceDownloader) Read(p []byte) (n int, err error) {
 	if s.currentReadSliceOffset >= s.sliceSize {
 		s.currentReadSliceOffset = 0
 		s.currentReadSliceIndex += 1
+
+		if e := os.Remove(currentReadSlicePath); e != nil {
+			log.ErrorF("slice download delete slice error:%v", e)
+		}
 	}
 	return
 }

@@ -5,6 +5,5 @@ import (
 )
 
 func main() {
-	//os.Args = []string{"qshell", "get", "qshell-test-z0", "quiche.tar.gz", "-o", "/Users/yangsen/Desktop/quiche.tar.gz"}
 	cmd.Execute()
 }

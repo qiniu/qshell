@@ -23,6 +23,7 @@ type DownloadInfo struct {
 	CheckHash            bool   // 是否检测文件 hash
 	Domain               string // 下载的 domain
 	RemoveTempWhileError bool   //
+	BigFileEnableSlice   bool   // 大文件允许切片下载，大于 40M
 }
 
 func (info *DownloadInfo) Check() *data.CodeError {
@@ -82,6 +83,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		FromBytes:            0,
 		RemoveTempWhileError: info.RemoveTempWhileError,
 		UseGetFileApi:        info.UseGetFileApi,
+		BigFileEnableSlice:   info.BigFileEnableSlice,
 		Progress:             progress.NewPrintProgress(" 进度"),
 	}
 	if info.CheckHash {

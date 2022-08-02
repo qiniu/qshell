@@ -33,6 +33,7 @@ type ApiInfo struct {
 	ToBytes              int64             `json:"-"`                    // 下载的终止位置【内部使用】
 	RemoveTempWhileError bool              `json:"-"`                    // 当遇到错误时删除临时文件 【选填】
 	UseGetFileApi        bool              `json:"-"`                    // 是否使用 get file api(私有云会使用)【选填】
+	BigFileEnableSlice   bool              `json:"-"`                    // 大文件允许切片下载，大于 300M 【选填】
 	Progress             progress.Progress `json:"-"`                    // 下载进度回调【选填】
 }
 
@@ -259,7 +260,7 @@ func createDownloader(info *ApiInfo) (downloader, *data.CodeError) {
 			mac:      mac,
 		}, nil
 	} else {
-		if info.ServerFileSize > 1024*1024*100 {
+		if info.BigFileEnableSlice && info.ServerFileSize > 40*utils.MB {
 			return &sliceDownloader{}, nil
 		} else {
 			return &getDownloader{useHttps: userHttps}, nil

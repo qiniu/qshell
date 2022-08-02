@@ -191,6 +191,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				apiInfo.Bucket = info.Bucket
 				apiInfo.RemoveTempWhileError = info.RemoveTempWhileError
 				apiInfo.UseGetFileApi = info.GetFileApi
+				apiInfo.BigFileEnableSlice = info.BigFileEnableSlice
 				if !info.CheckHash {
 					apiInfo.ServerFileHash = ""
 				}
