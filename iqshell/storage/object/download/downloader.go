@@ -20,7 +20,7 @@ import (
 type ApiInfo struct {
 	Bucket               string            `json:"bucket"`               // 文件所在 bucket 【必填】
 	Key                  string            `json:"key"`                  // 文件被保存的 key 【必填】
-	IsPublic             bool              `json:"-"`                    // 是否使用共有链接 【必填】
+	IsPublic             bool              `json:"-"`                    // 是否使用公有链接 【必填】
 	HostProvider         host.Provider     `json:"-"`                    // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
 	DestDir              string            `json:"-"`                    // 文件存储目标路径，目前是为了方便用户在批量下载时构建 ToFile 【此处选填】
 	ToFile               string            `json:"to_file"`              // 文件保存的路径 【必填】
@@ -42,10 +42,10 @@ func (i *ApiInfo) WorkId() string {
 }
 
 type ApiResult struct {
-	FileModifyTime int64  // 下载后文件修改时间
-	FileAbsPath    string // 文件被保存的绝对路径
-	IsUpdate       bool   // 是否为接续下载
-	IsExist        bool   // 是否为已存在
+	FileModifyTime int64  `json:"file_modify_time"` // 下载后文件修改时间
+	FileAbsPath    string `json:"file_abs_path"`    // 文件被保存的绝对路径
+	IsUpdate       bool   `json:"is_update"`        // 是否为接续下载
+	IsExist        bool   `json:"is_exist"`         // 是否为已存在
 }
 
 var _ flow.Result = (*ApiResult)(nil)
@@ -75,34 +75,39 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	if len(info.ServerFileHash) > 0 {
 		checkMode = object.MatchCheckModeFileHash
 	}
-	fileStatus, sErr := os.Stat(f.toAbsFile)
-	tempFileStatus, tempErr := os.Stat(f.tempFile)
-	if sErr == nil || os.IsExist(err) || tempErr == nil || os.IsExist(tempErr) {
-		if tempFileStatus != nil && tempFileStatus.Size() > 0 {
-			// 文件是否已下载了一部分，需要继续下载
-			res.IsUpdate = true
+
+	// 读不到 status 按不存在该文件处理
+	fileStatus, _ := os.Stat(f.toAbsFile)
+	tempFileStatus, _ := os.Stat(f.tempFile)
+	if tempFileStatus != nil && tempFileStatus.Size() > 0 {
+		// 文件已下载了一部分，需要继续下载
+		res.IsUpdate = true
+	} else if fileStatus != nil {
+		// 文件已下载，检测文件内容
+		checkResult, mErr := object.Match(object.MatchApiInfo{
+			Bucket:         info.Bucket,
+			Key:            info.Key,
+			LocalFile:      f.toAbsFile,
+			CheckMode:      checkMode,
+			ServerFileHash: info.ServerFileHash,
+			ServerFileSize: info.ServerFileSize,
+		})
+		if mErr != nil {
+			f.fromBytes = 0
+			log.DebugF("check error before download:%v", mErr)
+		}
+		if checkResult != nil {
+			res.IsExist = checkResult.Exist
 		}
 
-		if fileStatus != nil {
-			// 文件已下载，检测文件内容
-			checkResult, mErr := object.Match(object.MatchApiInfo{
-				Bucket:         info.Bucket,
-				Key:            info.Key,
-				LocalFile:      f.toAbsFile,
-				CheckMode:      checkMode,
-				ServerFileHash: info.ServerFileHash,
-				ServerFileSize: info.ServerFileSize,
-			})
-			if mErr != nil {
-				f.fromBytes = 0
-				log.DebugF("check error before download:%v", mErr)
+		if mErr == nil && checkResult.Match {
+			// 文件已下载，并在文件匹配，不再下载
+			if fileModifyTime, fErr := utils.FileModify(f.toAbsFile); fErr != nil {
+				log.WarningF("Get file ModifyTime error:%v", fErr)
+			} else {
+				res.FileModifyTime = fileModifyTime
 			}
-			if checkResult != nil {
-				res.IsExist = checkResult.Exist
-			}
-			if mErr == nil && checkResult.Match {
-				return
-			}
+			return
 		}
 	}
 
@@ -112,7 +117,7 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		return
 	}
 
-	info.ServerFilePutTime, err = utils.FileModify(f.toAbsFile)
+	res.FileModifyTime, err = utils.FileModify(f.toAbsFile)
 	if err != nil {
 		return
 	}
@@ -158,7 +163,7 @@ func download(fInfo *fileInfo, info *ApiInfo) (err *data.CodeError) {
 func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	dl, err := createDownloader(info)
 	if err != nil {
-		return data.NewEmptyError().AppendDesc(" Download create downloader error:" + err.Error())
+		return data.NewEmptyError().AppendDesc("Download create downloader error:" + err.Error())
 	}
 
 	var response *http.Response

@@ -112,14 +112,15 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 		}()
 	}
 
+	responseBodyContentLength := info.ServerFileSize - info.FromBytes
 	responseHeader := http.Header{}
-	responseHeader.Add("Content-Length", fmt.Sprintf("%d", info.ServerFileSize-info.FromBytes))
+	responseHeader.Add("Content-Length", fmt.Sprintf("%d", responseBodyContentLength))
 	return &http.Response{
 		Status:        "slice download: 200",
 		StatusCode:    200,
 		Header:        responseHeader,
 		Body:          s,
-		ContentLength: info.ServerFileSize - info.FromBytes,
+		ContentLength: responseBodyContentLength,
 	}, nil
 }
 

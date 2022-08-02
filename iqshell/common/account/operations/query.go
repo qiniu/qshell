@@ -48,9 +48,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 		if info.OnlyListName {
 			log.AlertF(acc.Name)
 		} else {
-			log.AlertF("Name: %s", acc.Name)
-			log.AlertF("Id: %s", acc.AccessKey)
-			log.AlertF("SecretKey: %s", acc.SecretKey)
+			log.AlertF(acc.String())
 		}
 	}
 }
