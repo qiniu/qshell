@@ -15,6 +15,7 @@ qshell get <Bucket> <Key> [-o <OutFile>]
 - --domain：下载请求的 domain 信息。【可选】
 - --get-file-api: 当存储服务端支持 getfile 接口时才有效。【可选】
 - --check-hash: 下载后检测本地文件和服务端文件 hash 的一致性。【可选】
+- --big-file-enable-slice: 当文件大于 40M 时采用分片下载，每个分片大小为 4M ，10 并发下载。
 - --remove-temp-while-error: 当下载遇到错误时删除之前下载的部分文件缓存，默认为 `false` (不删除)【可选】
 
 # 示例
