@@ -100,7 +100,7 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 		var to int64 = 0
 		for ; ; index++ {
 			from = index * s.SliceSize
-			to = from + s.SliceSize
+			to = from + s.SliceSize - 1
 			if from >= info.ServerFileSize {
 				break
 			}
@@ -218,16 +218,12 @@ func (s *sliceDownloader) Read(p []byte) (int, error) {
 	defer file.Close()
 
 	num, err := file.ReadAt(p, s.currentReadSliceOffset)
-	//log.ErrorF("read [%d;%d;%d;%d] error:%v", s.totalSliceCount, s.currentReadSliceIndex, s.currentReadSliceOffset, num, err)
 	if err != nil && !errors.Is(err, io.EOF) {
 		return num, err
 	}
 
 	if err != nil && errors.Is(err, io.EOF) {
 		// 只有最后一个片文件的 LF 符号可返回
-		if s.totalSliceCount != (s.currentReadSliceIndex+1) && num >= 1 {
-			num -= 1
-		}
 		s.currentReadSliceOffset = 0
 		s.currentReadSliceIndex += 1
 
