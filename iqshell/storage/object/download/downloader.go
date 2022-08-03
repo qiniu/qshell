@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type ApiInfo struct {
@@ -66,6 +67,16 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 
 	res = &ApiResult{
 		FileAbsPath: f.toAbsFile,
+	}
+
+	// 以 '/' 结尾，不管大小是否为 0 ，均视为文件夹
+	if strings.HasSuffix(info.Key, "/") {
+		res.IsExist, _ = utils.ExistDir(f.toAbsFile)
+		if !res.IsExist {
+			err = utils.CreateDirIfNotExist(f.toAbsFile)
+		}
+		res.FileModifyTime, _ = utils.FileModify(f.toAbsFile)
+		return res, err
 	}
 
 	// 文件存在则检查文件状态
