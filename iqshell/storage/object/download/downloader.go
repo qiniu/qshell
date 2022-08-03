@@ -18,23 +18,26 @@ import (
 )
 
 type ApiInfo struct {
-	Bucket               string            `json:"bucket"`               // 文件所在 bucket 【必填】
-	Key                  string            `json:"key"`                  // 文件被保存的 key 【必填】
-	IsPublic             bool              `json:"-"`                    // 是否使用公有链接 【必填】
-	HostProvider         host.Provider     `json:"-"`                    // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
-	DestDir              string            `json:"-"`                    // 文件存储目标路径，目前是为了方便用户在批量下载时构建 ToFile 【此处选填】
-	ToFile               string            `json:"to_file"`              // 文件保存的路径 【必填】
-	Referer              string            `json:"referer"`              // 请求 header 中的 Referer 【选填】
-	FileEncoding         string            `json:"-"`                    // 文件编码方式 【选填】
-	ServerFilePutTime    int64             `json:"server_file_put_time"` // 文件修改时间 【选填】
-	ServerFileSize       int64             `json:"server_file_size"`     // 文件大小，有值则会检测文件大小 【选填】
-	ServerFileHash       string            `json:"server_file_hash"`     // 文件 hash，有值则会检测 hash 【选填】
-	FromBytes            int64             `json:"-"`                    // 下载开始的位置，内部会缓存 【内部使用】
-	ToBytes              int64             `json:"-"`                    // 下载的终止位置【内部使用】
-	RemoveTempWhileError bool              `json:"-"`                    // 当遇到错误时删除临时文件 【选填】
-	UseGetFileApi        bool              `json:"-"`                    // 是否使用 get file api(私有云会使用)【选填】
-	BigFileEnableSlice   bool              `json:"-"`                    // 大文件允许切片下载，大于 300M 【选填】
-	Progress             progress.Progress `json:"-"`                    // 下载进度回调【选填】
+	Bucket                 string            `json:"bucket"`               // 文件所在 bucket 【必填】
+	Key                    string            `json:"key"`                  // 文件被保存的 key 【必填】
+	IsPublic               bool              `json:"-"`                    // 是否使用公有链接 【必填】
+	HostProvider           host.Provider     `json:"-"`                    // 文件下载的 host, domain 可能为 ip, 需要搭配 host 使用 【选填】
+	DestDir                string            `json:"-"`                    // 文件存储目标路径，目前是为了方便用户在批量下载时构建 ToFile 【此处选填】
+	ToFile                 string            `json:"to_file"`              // 文件保存的路径 【必填】
+	Referer                string            `json:"referer"`              // 请求 header 中的 Referer 【选填】
+	FileEncoding           string            `json:"-"`                    // 文件编码方式 【选填】
+	ServerFilePutTime      int64             `json:"server_file_put_time"` // 文件修改时间 【选填】
+	ServerFileSize         int64             `json:"server_file_size"`     // 文件大小，有值则会检测文件大小 【选填】
+	ServerFileHash         string            `json:"server_file_hash"`     // 文件 hash，有值则会检测 hash 【选填】
+	FromBytes              int64             `json:"-"`                    // 下载开始的位置，内部会缓存 【内部使用】
+	ToBytes                int64             `json:"-"`                    // 下载的终止位置【内部使用】
+	RemoveTempWhileError   bool              `json:"-"`                    // 当遇到错误时删除临时文件 【选填】
+	UseGetFileApi          bool              `json:"-"`                    // 是否使用 get file api(私有云会使用)【选填】
+	EnableSlice            bool              `json:"-"`                    // 大文件允许切片下载 【选填】
+	SliceFileSizeThreshold int64             `json:"-"`                    // 允许切片下载，切片下载出发的文件大小阈值 【选填】
+	SliceSize              int64             `json:"-"`                    // 允许切片下载，切片的大小 【选填】
+	SliceConcurrentCount   int               `json:"-"`                    // 允许切片下载，并发下载切片的个数 【选填】
+	Progress               progress.Progress `json:"-"`                    // 下载进度回调【选填】
 }
 
 func (i *ApiInfo) WorkId() string {
@@ -272,8 +275,18 @@ func createDownloader(info *ApiInfo) (downloader, *data.CodeError) {
 			mac:      mac,
 		}, nil
 	} else {
-		if info.BigFileEnableSlice && info.ServerFileSize > 40*utils.MB {
-			return &sliceDownloader{}, nil
+		// 使用切片，至少要能切两片
+		if info.EnableSlice && info.ServerFileSize > info.SliceSize && info.ServerFileSize > info.SliceFileSizeThreshold {
+			return &sliceDownloader{
+				SliceSize:              info.SliceSize,
+				slicesDir:              "",
+				concurrentCount:        info.SliceConcurrentCount,
+				totalSliceCount:        0,
+				slices:                 nil,
+				downloadError:          nil,
+				currentReadSliceIndex:  0,
+				currentReadSliceOffset: 0,
+			}, nil
 		} else {
 			return &getDownloader{useHttps: userHttps}, nil
 		}

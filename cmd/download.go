@@ -5,6 +5,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 	"github.com/spf13/cobra"
 )
@@ -52,7 +53,10 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.Domain, "domain", "", "", "domain of request")
 	cmd.Flags().BoolVarP(&info.CheckHash, "check-hash", "", false, "check the consistency of the hash of the local file and the server file after downloading.")
 	cmd.Flags().BoolVarP(&info.UseGetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")
-	cmd.Flags().BoolVarP(&info.BigFileEnableSlice, "big-file-enable-slice", "", false, "Big file download using slices, consider files bigger than 40M to be big files. default is false")
+	cmd.Flags().BoolVarP(&info.EnableSlice, "enable-slice", "", false, "file download using slices, you need to pay attention to the setting of --slice-file-size-threshold. default is false")
+	cmd.Flags().Int64VarP(&info.SliceFileSizeThreshold, "slice-file-size-threshold", "", 40*utils.MB, "the file size threshold that download using slices. when you use --enable-slice option, files larger than this size will be downloaded using slices. Unit: B")
+	cmd.Flags().Int64VarP(&info.SliceSize, "slice-size", "", 4*utils.MB, "slice size that download using slices. when you use --enable-slice option, the file will be cut into data blocks according to the slice size, then the data blocks will be downloaded concurrently, and finally these data blocks will be spliced into a file. Unit: B")
+	cmd.Flags().IntVarP(&info.SliceConcurrentCount, "slice-concurrent-count", "", 10, "the count of concurrently downloaded slices.")
 	cmd.Flags().BoolVarP(&info.RemoveTempWhileError, "remove-temp-while-error", "", false, "remove download temp file while error happened, default is false")
 	return cmd
 }
