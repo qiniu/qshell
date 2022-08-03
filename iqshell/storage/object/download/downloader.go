@@ -14,7 +14,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 type ApiInfo struct {
@@ -189,12 +188,9 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 
 	if response != nil && response.Body != nil {
 		if info.Progress != nil {
-			size := response.Header.Get("Content-Length")
-			if sizeInt, err := strconv.ParseInt(size, 10, 64); err == nil {
-				info.Progress.SetFileSize(sizeInt + info.FromBytes)
-				info.Progress.SendSize(info.FromBytes)
-				info.Progress.Start()
-			}
+			info.Progress.SetFileSize(response.ContentLength + info.FromBytes)
+			info.Progress.SendSize(info.FromBytes)
+			info.Progress.Start()
 		}
 		defer response.Body.Close()
 	}
@@ -217,7 +213,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 	isExist, _ := utils.ExistFile(fInfo.tempFile)
 	if isExist {
 		tempFileHandle, fErr = os.OpenFile(fInfo.tempFile, os.O_APPEND|os.O_WRONLY, 0655)
-		log.InfoF("download [%s:%s] => %s from:%d", info.Bucket, info.Key, info.ToFile, info.FromBytes)
+		log.DebugF("download [%s:%s] => %s from:%d", info.Bucket, info.Key, info.ToFile, info.FromBytes)
 	} else {
 		tempFileHandle, fErr = os.Create(fInfo.tempFile)
 	}

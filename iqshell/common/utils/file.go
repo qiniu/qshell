@@ -45,10 +45,15 @@ func MarshalToFile(filePath string, v interface{}) *data.CodeError {
 		return data.NewEmptyError().AppendDesc("marshal: delete origin file").AppendError(err)
 	}
 
+	err := CreateDirIfNotExist(filepath.Dir(filePath))
+	if err != nil {
+		return err
+	}
+
 	if d, mErr := json.Marshal(v); mErr != nil {
 		return data.NewEmptyError().AppendDesc("marshal: marshal").AppendError(mErr)
 	} else if wErr := os.WriteFile(filePath, d, os.ModePerm); wErr != nil {
-		return data.NewEmptyError().AppendDesc("marshal: write file").AppendError(mErr)
+		return data.NewEmptyError().AppendDesc("marshal: write file").AppendError(wErr)
 	} else {
 		return nil
 	}

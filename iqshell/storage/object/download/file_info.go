@@ -45,7 +45,7 @@ func (d *fileInfo) prepare() *data.CodeError {
 	var err error
 	d.toAbsFile, err = filepath.Abs(d.toFile)
 	if err != nil {
-		err = data.NewEmptyError().AppendDesc("get save file abs path error:" + err.Error())
+		err = data.NewEmptyError().AppendDescF("get abs path of file to save error, path:%s error:%v", d.toFile, err)
 		return data.ConvertError(err)
 	}
 

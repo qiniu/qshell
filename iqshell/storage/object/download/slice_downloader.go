@@ -1,6 +1,7 @@
 package download
 
 import (
+	"errors"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -20,10 +21,10 @@ type slice struct {
 
 // 切片下载
 type sliceDownloader struct {
+	SliceSize              int64 `json:"slice_size"`
+	slicesDir              string
 	concurrentCount        int
 	totalSliceCount        int64
-	sliceSize              int64
-	slicesDir              string
 	slices                 chan slice
 	downloadError          *data.CodeError
 	currentReadSliceIndex  int64
@@ -42,11 +43,41 @@ func (s *sliceDownloader) Download(info *ApiInfo) (response *http.Response, err 
 // 初始化状态
 // 加载本地下载配置文件，没有则创建
 func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
-	if s.sliceSize <= 0 {
-		s.sliceSize = 4 * utils.MB
+	s.slices = make(chan slice, s.concurrentCount)
+	toFile, err := filepath.Abs(info.ToFile)
+	if err != nil {
+		return data.NewEmptyError().AppendDescF("slice download, get abs file path:%s error:%v", info.ToFile, err)
+	}
+
+	// 临时文件夹
+	s.slicesDir = filepath.Join(toFile + "_download.slice")
+
+	if s.SliceSize <= 0 {
+		s.SliceSize = 4 * utils.MB
 	}
 	if s.concurrentCount <= 0 {
 		s.concurrentCount = 10
+	}
+
+	// 配置文件
+	configPath := filepath.Join(s.slicesDir, "config.json")
+	oldConfig := &sliceDownloader{}
+	// 读配置文件，不管存不存在都要读取，读取失败按照不存在处理，避免存在但因读取失败导致的后续问题
+	if e := utils.UnMarshalFromFile(configPath, oldConfig); e != nil {
+		log.WarningF("slice download UnMarshal config file error:%v", e)
+	}
+	// 分片大小不同会导致下载逻辑出错
+	if oldConfig.SliceSize != s.SliceSize {
+		// 不同则删除原来已下载但为合并的文件
+		if e := os.RemoveAll(s.slicesDir); e != nil {
+			log.WarningF("slice download remove all in dir:%s error:%v", s.slicesDir, e)
+		} else {
+			log.DebugF("slice download remove all in dir:%s", s.slicesDir)
+		}
+	}
+	// 配置文件保存
+	if e := utils.MarshalToFile(configPath, s); e != nil {
+		log.WarningF("slice download marshal config file error:%v", e)
 	}
 
 	s.totalSliceCount = 0
@@ -54,26 +85,22 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 	s.currentReadSliceIndex = 0
 	s.currentReadSliceOffset = 0
 	if info.FromBytes > 0 {
-		s.currentReadSliceIndex = info.FromBytes / s.sliceSize
-		s.currentReadSliceOffset = info.FromBytes - s.currentReadSliceIndex*s.sliceSize
+		s.currentReadSliceIndex = info.FromBytes / s.SliceSize
+		s.currentReadSliceOffset = info.FromBytes - s.currentReadSliceIndex*s.SliceSize
 	}
-
-	s.slices = make(chan slice, s.concurrentCount)
-	// 临时文件夹
-	s.slicesDir = filepath.Join(info.ToFile + "_download.slice")
-	return utils.CreateDirIfNotExist(s.slicesDir)
+	return nil
 }
 
 // 并发下载
 func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err *data.CodeError) {
 
+	from := s.currentReadSliceIndex * s.SliceSize
+	index := s.currentReadSliceIndex
 	go func() {
-		var index int64 = 0
-		var from int64 = 0
 		var to int64 = 0
 		for ; ; index++ {
-			from = index * s.sliceSize
-			to = from + s.sliceSize
+			from = index * s.SliceSize
+			to = from + s.SliceSize
 			if from >= info.ServerFileSize {
 				break
 			}
@@ -132,9 +159,15 @@ func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError
 	}
 
 	file, _ := os.Stat(toFile)
-	if file != nil && file.Size() == s.sliceSize {
-		// 已下载
-		return nil
+	if file != nil {
+		if file.Size() == s.SliceSize {
+			// 已下载
+			return nil
+		} else {
+			if e := os.RemoveAll(toFile); e != nil {
+				log.WarningF("delete slice:%s error:%v", toFile, e)
+			}
+		}
 	}
 
 	f.fromBytes = sl.FromBytes + f.fromBytes
@@ -150,7 +183,7 @@ func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError
 		Referer:              info.Referer,
 		FileEncoding:         info.FileEncoding,
 		ServerFilePutTime:    0,
-		ServerFileSize:       s.sliceSize,
+		ServerFileSize:       s.SliceSize,
 		ServerFileHash:       "",
 		FromBytes:            f.fromBytes,
 		ToBytes:              sl.ToBytes,
@@ -160,12 +193,12 @@ func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError
 	})
 }
 
-func (s *sliceDownloader) Read(p []byte) (n int, err error) {
+func (s *sliceDownloader) Read(p []byte) (int, error) {
 	if s.downloadError != nil {
 		return 0, s.downloadError
 	}
 
-	if s.totalSliceCount > 0 && s.currentReadSliceIndex > s.totalSliceCount {
+	if s.totalSliceCount > 0 && s.currentReadSliceIndex >= s.totalSliceCount {
 		return 0, io.EOF
 	}
 
@@ -184,22 +217,28 @@ func (s *sliceDownloader) Read(p []byte) (n int, err error) {
 	}
 	defer file.Close()
 
-	n, err = file.ReadAt(p, s.currentReadSliceOffset)
-	if err != nil {
-		return n, err
+	num, err := file.ReadAt(p, s.currentReadSliceOffset)
+	//log.ErrorF("read [%d;%d;%d;%d] error:%v", s.totalSliceCount, s.currentReadSliceIndex, s.currentReadSliceOffset, num, err)
+	if err != nil && !errors.Is(err, io.EOF) {
+		return num, err
 	}
 
-	s.currentReadSliceOffset += int64(n)
-
-	if s.currentReadSliceOffset >= s.sliceSize {
+	if err != nil && errors.Is(err, io.EOF) {
+		// 只有最后一个片文件的 LF 符号可返回
+		if s.totalSliceCount != (s.currentReadSliceIndex+1) && num >= 1 {
+			num -= 1
+		}
 		s.currentReadSliceOffset = 0
 		s.currentReadSliceIndex += 1
 
 		if e := os.Remove(currentReadSlicePath); e != nil {
 			log.ErrorF("slice download delete slice error:%v", e)
 		}
+	} else {
+		s.currentReadSliceOffset += int64(num)
 	}
-	return
+
+	return num, nil
 }
 
 func (s *sliceDownloader) Close() error {
