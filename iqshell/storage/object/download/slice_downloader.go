@@ -208,7 +208,7 @@ func (s *sliceDownloader) Read(p []byte) (int, error) {
 		if exist {
 			break
 		}
-		time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Millisecond * 100)
 	}
 
 	file, err := os.Open(currentReadSlicePath)
