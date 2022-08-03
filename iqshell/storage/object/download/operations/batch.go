@@ -259,11 +259,6 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		}).
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
 			apiInfo, _ := workInfo.Work.(*download.ApiInfo)
-
-			if strings.HasSuffix(apiInfo.Key, "/") && apiInfo.ServerFileSize == 0 {
-				//log.InfoF("Download Skip because key means a dir, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
-				return true, data.NewEmptyError().AppendDescF("[%s:%s], this is dir", apiInfo.Bucket, apiInfo.Key)
-			}
 			if filterPrefix(apiInfo.Key) {
 				//log.InfoF("Download Skip because key prefix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
 				return true, data.NewEmptyError().AppendDescF("[%s:%s], prefix filter not match", apiInfo.Bucket, apiInfo.Key)
