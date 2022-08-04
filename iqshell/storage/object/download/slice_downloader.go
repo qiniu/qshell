@@ -54,7 +54,11 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 
 	if s.SliceSize <= 0 {
 		s.SliceSize = 4 * utils.MB
+	} else if s.SliceSize < 512*utils.KB {
+		// 切片大小最小 512KB
+		s.SliceSize = 512 * utils.KB
 	}
+
 	if s.concurrentCount <= 0 {
 		s.concurrentCount = 10
 	}

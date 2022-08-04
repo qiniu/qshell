@@ -275,8 +275,11 @@ func createDownloader(info *ApiInfo) (downloader, *data.CodeError) {
 			mac:      mac,
 		}, nil
 	} else {
-		// 使用切片，至少要能切两片
-		if info.EnableSlice && info.ServerFileSize > info.SliceSize && info.ServerFileSize > info.SliceFileSizeThreshold {
+		// 使用切片，并发至少为 2，至少要能切两片，达到切片阈值
+		if info.EnableSlice &&
+			info.SliceConcurrentCount > 1 &&
+			info.ServerFileSize > info.SliceSize &&
+			info.ServerFileSize > info.SliceFileSizeThreshold {
 			return &sliceDownloader{
 				SliceSize:              info.SliceSize,
 				slicesDir:              "",
