@@ -53,7 +53,7 @@ func DefaultDownloadCfg() DownloadCfg {
 		Referer:                "",
 		CdnDomain:              "",
 		GetFileApi:             false,
-		EnableSlice:            true,
+		EnableSlice:            false,
 		SliceFileSizeThreshold: 40 * utils.MB,
 		SliceSize:              4 * utils.MB,
 		SliceConcurrentCount:   10,

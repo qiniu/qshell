@@ -50,7 +50,7 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 	}
 
 	// 临时文件夹
-	s.slicesDir = filepath.Join(toFile + "_download.slice")
+	s.slicesDir = filepath.Join(toFile + ".tmp.slices")
 
 	if s.SliceSize <= 0 {
 		s.SliceSize = 4 * utils.MB
