@@ -18,13 +18,11 @@ func TestUser(t *testing.T) {
 		cmd.Execute()
 	}()
 
-	if test.Local {
+	if test.IsDebug() {
 		return
 	}
 
-	if test.ShouldTestUser {
-		TestUserIntegration(t)
-	}
+	TestUserIntegration(t)
 }
 
 func TestUserIntegration(t *testing.T) {

@@ -78,9 +78,8 @@ func Execute() {
 		data.SetCmdStatusError()
 	}
 
-	//data.
-	if data.GetCmdStatus() != data.StatusOK {
-		//os.Exit(data.GetCmdStatus())
+	if !data.IsTestMode() && data.GetCmdStatus() != data.StatusOK {
+		os.Exit(data.GetCmdStatus())
 	}
 }
 
