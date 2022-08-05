@@ -3,7 +3,9 @@
 package cmd
 
 import (
+	"github.com/qiniu/qshell/v2/cmd"
 	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"os"
 	"testing"
 )
 
@@ -11,7 +13,18 @@ var accessKey = test.AccessKey
 var secretKey = test.SecretKey
 
 func TestUser(t *testing.T) {
-	TestUserIntegration(t)
+	defer func() {
+		os.Args = []string{"qshell", "user", "add", accessKey, secretKey, "QShell"}
+		cmd.Execute()
+	}()
+
+	if test.Local {
+		return
+	}
+
+	if test.ShouldTestUser {
+		TestUserIntegration(t)
+	}
 }
 
 func TestUserIntegration(t *testing.T) {

@@ -6,5 +6,5 @@ type Work interface {
 
 type WorkInfo struct {
 	Data string `json:"data"`
-	Work Work   `json:"-"`
+	Work Work   `json:"work"`
 }

@@ -38,15 +38,17 @@ func TestAsyncFetch(t *testing.T) {
 		"-e", failLogPath,
 		"-g", "1",
 		"-c", "2")
+	defer func() {
+		test.RemoveFile(failLogPath)
+		test.RemoveFile(successLogPath)
+	}()
 	if !test.IsFileHasContent(successLogPath) {
-		t.Fail()
+		t.Fatal("success log can't empty")
 	}
-	test.RemoveFile(successLogPath)
 
 	if !test.IsFileHasContent(failLogPath) {
-		t.Fail()
+		t.Fatal("fail log can't empty")
 	}
-	test.RemoveFile(failLogPath)
 }
 
 func TestAsyncFetchNoBucket(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 )
 
 type ExistApiInfo struct {
-	Bucket string
-	Key    string
+	Bucket string `json:"bucket"`
+	Key    string `json:"key"`
 }
 
 func Exist(info ExistApiInfo) (exists bool, err *data.CodeError) {

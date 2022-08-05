@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -68,22 +69,19 @@ func RestoreArchive(cfg *iqshell.Config, info RestoreArchiveInfo) {
 		Key:             info.Key,
 		FreezeAfterDays: info.freezeAfterDaysInt,
 	})
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Error: %v",
 			info.Bucket, info.Key, info.FreezeAfterDays, err)
-		return
-	}
-
-	if len(result.Error) != 0 {
-		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Code: %d, Error: %s",
-			info.Bucket, info.Key, info.FreezeAfterDays,
-			result.Code, result.Error)
 		return
 	}
 
 	if result.IsSuccess() {
 		log.InfoF("Restore archive Success, [%s:%s], FreezeAfterDays:%s",
 			info.Bucket, info.Key, info.FreezeAfterDays)
+	} else {
+		log.ErrorF("Restore archive Failed, [%s:%s], FreezeAfterDays:%s, Code: %d, Error: %s",
+			info.Bucket, info.Key, info.FreezeAfterDays,
+			result.Code, result.Error)
 	}
 }
 
@@ -130,6 +128,9 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 	}
 
 	batch.NewHandler(info.BatchInfo).
+		EmptyOperation(func() flow.Work {
+			return &object.RestoreArchiveApiInfo{}
+		}).
 		SetFileExport(exporter).
 		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 			key := items[0]
@@ -145,7 +146,7 @@ func BatchRestoreArchive(cfg *iqshell.Config, info BatchRestoreArchiveInfo) {
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 			apiInfo, ok := (operation).(*object.RestoreArchiveApiInfo)
 			if !ok {
-				log.ErrorF("Rename Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
+				log.ErrorF("Restore archive Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 				return
 			}
 

@@ -55,11 +55,12 @@ func (r retryResume) InitServer(ctx context.Context) (err *data.CodeError) {
 	retryTimes := 0
 	for {
 		err = r.resume.InitServer(ctx)
-		if err != nil && retryTimes >= r.retryMax {
-			return
-		}
 		if err == nil {
 			break
+		}
+
+		if retryTimes >= r.retryMax {
+			return
 		}
 
 		time.Sleep(r.retryInterval)

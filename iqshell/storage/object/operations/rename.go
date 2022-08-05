@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -41,7 +42,7 @@ func Rename(cfg *iqshell.Config, info RenameInfo) {
 	}
 
 	result, err := object.Move((*object.MoveApiInfo)(&info))
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -49,18 +50,15 @@ func Rename(cfg *iqshell.Config, info RenameInfo) {
 		return
 	}
 
-	if len(result.Error) != 0 {
-		log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
-			info.SourceBucket, info.SourceKey,
-			info.DestBucket, info.DestKey,
-			result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Rename '%s:%s' => '%s:%s' success",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
+	} else {
+		log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			result.Code, result.Error)
 	}
 }
 
@@ -98,6 +96,9 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 	}
 
 	batch.NewHandler(info.BatchInfo).
+		EmptyOperation(func() flow.Work {
+			return &object.MoveApiInfo{}
+		}).
 		SetFileExport(exporter).
 		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 			if len(items) > 1 {

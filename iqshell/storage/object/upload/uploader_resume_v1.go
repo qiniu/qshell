@@ -35,7 +35,7 @@ func (r *resumeV1Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	log.DebugF("upload token:%s", token)
 
 	if info.Progress != nil {
-		info.Progress.SetFileSize(info.FileSize)
+		info.Progress.SetFileSize(info.LocalFileSize)
 		info.Progress.Start()
 	}
 
@@ -56,7 +56,7 @@ func (r *resumeV1Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 		NotifyErr: nil,
 	})
 	if err != nil {
-		err = data.NewEmptyError().AppendDesc("resume v1 upload: upload error:" + err.Error())
+		err = data.NewEmptyError().AppendDesc("resume v1 upload").AppendError(err)
 	} else {
 		if info.Progress != nil {
 			info.Progress.End()

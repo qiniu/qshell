@@ -42,7 +42,7 @@ AccessKey: ELUs327kxVPJrGCXqWae9yioc0xYZyrIpbM6Wh6x
 SecretKey: LVzZY2SqOQ_I_kM1n00ygACVBArDvOWtiLkDtKiw
 ```
 
-3. 我们可以在设置name_test账户后，继续添加一个账户
+3 我们可以在设置name_test账户后，继续添加一个账户
 ```
 qshell account ELUs327kxVPJrGCXqWae9yioc0xYZyrIpbM6abc LVzZY2SqOQ_I_kM1n00ygACVBArDvOWtiLkDthaha name_test2
 ```

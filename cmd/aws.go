@@ -46,7 +46,6 @@ func awsFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 
 // NewCmdAwsList 返回一个cobra.Command指针
 // 该命令列举亚马逊存储空间中的文件, 会忽略目录
-
 func awsListCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	info := aws.ListBucketInfo{}
 	cmd := &cobra.Command{

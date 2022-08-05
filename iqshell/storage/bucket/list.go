@@ -7,7 +7,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"io"
@@ -18,22 +17,54 @@ import (
 )
 
 type ListApiInfo struct {
-	Bucket       string
-	Prefix       string
-	Marker       string
-	Delimiter    string
-	Limit        int       //  最大输出条数，默认：-1, 无限输出
-	StartTime    time.Time // list item 的 put time 区间的开始时间 【闭区间】
-	EndTime      time.Time // list item 的 put time 区间的终止时间 【闭区间】
-	Suffixes     []string  // list item 必须包含后缀
-	StorageTypes []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
-	MimeTypes    []string  // list item Mimetype类型，多个使用逗号隔开
-	MinFileSize  int64     // 文件最小值，单位: B
-	MaxFileSize  int64     // 文件最大值，单位: B
-	MaxRetry     int       // -1: 无限重试
+	Bucket          string    // 空间名	【必选】
+	Prefix          string    // 前缀
+	Marker          string    // 标记
+	Delimiter       string    //
+	Limit           int       //  最大输出条数，默认：-1, 无限输出
+	StartTime       time.Time // list item 的 put time 区间的开始时间 【闭区间】
+	EndTime         time.Time // list item 的 put time 区间的终止时间 【闭区间】
+	Suffixes        []string  // list item 必须包含后缀
+	StorageTypes    []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
+	MimeTypes       []string  // list item Mimetype类型，多个使用逗号隔开
+	MinFileSize     int64     // 文件最小值，单位: B
+	MaxFileSize     int64     // 文件最大值，单位: B
+	MaxRetry        int       // -1: 无限重试
+	ShowFields      []string  // 需要展示的字段  【必选】
+	OutputFieldsSep string    // 输出信息，每行的分隔符 【必选】
+}
+
+func ListObjectField(field string) string {
+	for _, f := range listObjectFields {
+		if strings.EqualFold(field, f) {
+			return f
+		}
+	}
+	return ""
 }
 
 type ListObject storage.ListItem
+
+func (l *ListObject) PutTimeString() string {
+	if l.PutTime < 1 {
+		return ""
+	}
+	return fmt.Sprintf("%d", l.PutTime)
+}
+
+func (l *ListObject) FileSizeString() string {
+	if l.Fsize < 1 {
+		return ""
+	}
+	return fmt.Sprintf("%d", l.Fsize)
+}
+
+func (l *ListObject) StorageTypeString() string {
+	if l.Type < 1 {
+		return ""
+	}
+	return fmt.Sprintf("%d", l.Type)
+}
 
 // List list 某个 bucket 所有的文件
 func List(info ListApiInfo,
@@ -77,8 +108,9 @@ func List(info ListApiInfo,
 		if lErr != nil {
 			errorHandler(info.Marker, data.ConvertError(lErr))
 			// 空间不存在，直接结束
-			if strings.Contains(lErr.Error(), "query region error") ||
-				strings.Contains(lErr.Error(), "incorrect zone") {
+			if strings.Contains(lErr.Error(), "no such bucket") ||
+				strings.Contains(lErr.Error(), "incorrect zone") ||
+				strings.Contains(lErr.Error(), "context canceled") {
 				break
 			}
 
@@ -171,6 +203,14 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *da
 		log.Warning("list bucket to file: not set error handler")
 	}
 
+	if len(info.ShowFields) == 0 {
+		info.ShowFields = listObjectFields
+	}
+
+	if len(info.OutputFieldsSep) == 0 {
+		info.OutputFieldsSep = data.DefaultLineSeparate
+	}
+
 	var listResultFh io.WriteCloser
 	if info.FilePath == "" {
 		listResultFh = data.Stdout()
@@ -194,22 +234,17 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *da
 	}
 
 	bWriter := bufio.NewWriter(listResultFh)
-	if len(info.FilePath) == 0 {
-		_, _ = bWriter.WriteString("Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser\t\n")
-		_ = bWriter.Flush()
+	title := strings.Join(info.ShowFields, info.OutputFieldsSep)
+	_, _ = bWriter.WriteString(title + "\n")
+	_ = bWriter.Flush()
+	lineCreator := &ListLineCreator{
+		Fields:   info.ShowFields,
+		Sep:      info.OutputFieldsSep,
+		Readable: info.Readable,
 	}
 	List(info.ListApiInfo, func(marker string, object ListObject) (bool, *data.CodeError) {
-		var fileSize interface{}
-		if info.Readable {
-			fileSize = utils.BytesToReadable(object.Fsize)
-		} else {
-			fileSize = object.Fsize
-		}
-
-		lineData := fmt.Sprintf("%s\t%v\t%s\t%d\t%s\t%d\t%s\r\n",
-			object.Key, fileSize, object.Hash,
-			object.PutTime, object.MimeType, object.Type, object.EndUser)
-		if _, wErr := bWriter.WriteString(lineData); wErr != nil {
+		lineData := lineCreator.Create(&object)
+		if _, wErr := bWriter.WriteString(lineData + "\n"); wErr != nil {
 			return false, data.NewEmptyError().AppendDesc("write error:" + wErr.Error())
 		}
 

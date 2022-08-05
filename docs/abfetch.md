@@ -16,7 +16,7 @@ qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <Callback
 - Bucket：空间名，可以为公开空间或私有空间。 【必选】
 
 # 选项
-- -i/--input-file：要抓取的资源列表， 一行一个资源，每一行多个元素时使用\t分割；如果没有通过该选项指定该文件参数， 从标准输入读取内容。每行具体格式如下：（【可选】）
+- -i/--input-file：要抓取的资源列表， 一行一个资源，每一行多个元素时使用 \t （tab 键）分割；如果没有通过该选项指定该文件参数， 从标准输入读取内容。每行具体格式如下：（【可选】）
   - [FileUrl]                     
   - [FileUrl]\t[FileSize] 
   - [FileUrl]\t[FileSize]\t[Key], // eg:https://qiniu.com/a.png\t1024\ta.png    

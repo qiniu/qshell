@@ -12,13 +12,20 @@ import (
 )
 
 type StatusApiInfo struct {
-	Bucket   string
-	Key      string
-	NeedPart bool
+	Bucket   string `json:"bucket"`
+	Key      string `json:"key"`
+	NeedPart bool   `json:"need_part"`
 }
 
 func (s StatusApiInfo) WorkId() string {
 	return fmt.Sprintf("ChangeStatus|%s|%s|%t", s.Bucket, s.Key, s.NeedPart)
+}
+
+func (s StatusApiInfo) ToOperation() (string, *data.CodeError) {
+	if len(s.Bucket) == 0 || len(s.Key) == 0 {
+		return "", alert.CannotEmptyError("status operation bucket or key", "")
+	}
+	return storage.URIStat(s.Bucket, s.Key), nil
 }
 
 type StatusResult struct {
@@ -32,13 +39,12 @@ type StatusResult struct {
 	MD5 string `json:"md5"`
 	// 文件过期删除日期，int64 类型，Unix 时间戳格式
 	Expiration int64 `json:"expiration"`
-}
-
-func (s StatusApiInfo) ToOperation() (string, *data.CodeError) {
-	if len(s.Bucket) == 0 || len(s.Key) == 0 {
-		return "", alert.CannotEmptyError("status operation bucket or key", "")
-	}
-	return storage.URIStat(s.Bucket, s.Key), nil
+	// 文件生命周期中转为低频存储的日期，int64 类型，Unix 时间戳格式
+	TransitionToIA int64 `json:"transitionToIA"`
+	// 文件生命周期中转为归档存储的日期，int64 类型，Unix 时间戳格式
+	TransitionToARCHIVE int64 `json:"transitionToARCHIVE"`
+	// 文件生命周期中转为深度归档存储的日期，int64 类型，Unix 时间戳格式
+	TransitionToDeepArchive int64 `json:"transitionToDeepArchive"`
 }
 
 func Status(info StatusApiInfo) (res StatusResult, err *data.CodeError) {

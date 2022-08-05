@@ -23,8 +23,19 @@ func (g *getDownloader) Download(info *ApiInfo) (response *http.Response, err *d
 
 	for i := 0; i < 3; i++ {
 		response, err = g.download(h, info)
-		if (response != nil && response.StatusCode/100 == 2 && err == nil) || utils.IsHostUnavailableError(err) {
+		if utils.IsHostUnavailableError(err) {
 			break
+		}
+
+		if response != nil {
+			if response.StatusCode/100 == 2 && err == nil {
+				break
+			}
+
+			if (response.StatusCode > 399 && response.StatusCode < 500) ||
+				response.StatusCode == 612 || response.StatusCode == 631 {
+				break
+			}
 		}
 	}
 
@@ -32,10 +43,7 @@ func (g *getDownloader) Download(info *ApiInfo) (response *http.Response, err *d
 		if response == nil {
 			info.HostProvider.Freeze(h)
 			log.DebugF("download freeze host:%s because:%v", h.GetServer(), err)
-		} else if response.StatusCode == 400 || response.StatusCode == 401 ||
-			response.StatusCode == 405 || response.StatusCode == 403 ||
-			response.StatusCode == 419 || response.StatusCode == 502 ||
-			response.StatusCode == 503 || response.StatusCode == 631 {
+		} else if response.StatusCode > 499 && response.StatusCode < 600 {
 			info.HostProvider.Freeze(h)
 			log.DebugF("download freeze host:%s because:[%s] %v", h.GetServer(), response.Status, err)
 		} else {

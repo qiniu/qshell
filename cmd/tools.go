@@ -342,6 +342,25 @@ var dirCacheCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var funcCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.FuncCallInfo{}
+	var cmd = &cobra.Command{
+		Use:   "func <ParamsJson> <FuncTemplate>",
+		Short: "qshell custom function call",
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.FuncType
+			if len(args) > 0 {
+				info.ParamsJson = args[0]
+			}
+			if len(args) > 1 {
+				info.FuncTemplate = args[1]
+			}
+			operations.FuncCall(cfg, info)
+		},
+	}
+	return cmd
+}
+
 func init() {
 	registerLoader(toolsCmdLoader)
 }
@@ -364,5 +383,6 @@ func toolsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 		IpCmdBuilder(cfg),
 		TokenCmdBuilder(cfg),
 		dirCacheCmdBuilder(cfg),
+		funcCmdBuilder(cfg),
 	)
 }

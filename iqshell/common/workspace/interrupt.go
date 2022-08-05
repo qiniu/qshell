@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 var (
@@ -48,6 +49,7 @@ func observerCmdInterrupt() {
 		atomic.StoreUint32(&isCmdInterrupt, 1)
 		Cancel()
 		notifyCancelSignalToObservers(si)
+		time.Sleep(time.Millisecond * 200)
 		os.Exit(data.StatusUserCancel)
 	}()
 }

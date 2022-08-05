@@ -81,6 +81,16 @@ func IsNetworkSource(filePath string) bool {
 	return strings.HasPrefix(filePath, "http://") || strings.HasPrefix(filePath, "https://")
 }
 
+func IsFileMatchFileSize(filePath string, fileSize int64) (match bool, err *data.CodeError) {
+	if size, e := FileSize(filePath); e != nil {
+		return false, e
+	} else if size != fileSize {
+		return false, data.NewEmptyError().AppendDescF("size don't match, except:%d but:%d", fileSize, size)
+	} else {
+		return true, nil
+	}
+}
+
 func FileSize(filePath string) (fileSize int64, err *data.CodeError) {
 	if IsNetworkSource(filePath) {
 		return NetworkFileLength(filePath)
@@ -114,6 +124,40 @@ func NetworkFileLength(srcResUrl string) (fileSize int64, err *data.CodeError) {
 	fileSize, _ = strconv.ParseInt(contentLength, 10, 64)
 
 	return
+}
+
+func IsFileMatchFileModifyTime(filePath string, modifyTime int64) (match bool, err *data.CodeError) {
+	if time, e := FileModify(filePath); e != nil {
+		return false, e
+	} else if time != modifyTime {
+		return false, data.NewEmptyError().AppendDescF("modifyTime don't match, except:%d but:%d", modifyTime, time)
+	} else {
+		return true, nil
+	}
+}
+
+func FileModify(filePath string) (int64, *data.CodeError) {
+	if IsNetworkSource(filePath) {
+		return NetworkFileModify(filePath)
+	} else {
+		return LocalFileModify(filePath)
+	}
+}
+
+func NetworkFileModify(filePath string) (int64, *data.CodeError) {
+	fileStatus, err := os.Stat(filePath)
+	if err != nil {
+		return 0, data.NewEmptyError().AppendDescF("get file : get status error:%v", err)
+	}
+	return fileStatus.ModTime().Unix(), nil
+}
+
+func LocalFileModify(filePath string) (int64, *data.CodeError) {
+	fileStatus, err := os.Stat(filePath)
+	if err != nil {
+		return 0, data.NewEmptyError().AppendDescF("get file : get status error:%v", err)
+	}
+	return fileStatus.ModTime().Unix(), nil
 }
 
 func FileLineCounts(filePath string) (count int64, err *data.CodeError) {

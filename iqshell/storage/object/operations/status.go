@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -41,7 +42,6 @@ func Status(cfg *iqshell.Config, info StatusInfo) {
 	}
 
 	if result.IsSuccess() {
-		log.InfoF("Status Success, [%s:%s]", info.Bucket, info.Key)
 		log.Alert(getResultInfo(info.Bucket, info.Key, result))
 	}
 }
@@ -80,6 +80,9 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 	}
 
 	batch.NewHandler(info.BatchInfo).
+		EmptyOperation(func() flow.Work {
+			return &object.StatusApiInfo{}
+		}).
 		SetFileExport(exporter).
 		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 			key := items[0]
@@ -135,6 +138,21 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	if status.Expiration > 0 {
 		expiration := time.Unix(status.Expiration, 0)
 		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Expiration:", status.Expiration, expiration.String())
+	}
+
+	if status.TransitionToIA > 0 {
+		date := time.Unix(status.TransitionToIA, 0)
+		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "TransitionToIA:", status.TransitionToIA, date.String())
+	}
+
+	if status.TransitionToARCHIVE > 0 {
+		date := time.Unix(status.TransitionToARCHIVE, 0)
+		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "TransitionToARCHIVE:", status.TransitionToARCHIVE, date.String())
+	}
+
+	if status.TransitionToDeepArchive > 0 {
+		date := time.Unix(status.TransitionToDeepArchive, 0)
+		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "TransitionToDeepArchive:", status.TransitionToDeepArchive, date.String())
 	}
 
 	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "FileType:", status.Type, getStorageTypeDescription(status.Type))

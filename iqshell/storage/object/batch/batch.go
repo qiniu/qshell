@@ -2,6 +2,9 @@ package batch
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
@@ -11,8 +14,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
-	"os"
-	"path/filepath"
 )
 
 type Info struct {
@@ -56,6 +57,7 @@ func (info *Info) Check() *data.CodeError {
 }
 
 type Handler interface {
+	EmptyOperation(emptyOperation func() flow.Work) Handler
 	SetFileExport(exporter *export.FileExporter) Handler
 	ItemsToOperation(func(items []string) (operation Operation, err *data.CodeError)) Handler
 	OnResult(func(operationInfo string, operation Operation, result *OperationResult)) Handler
@@ -73,10 +75,16 @@ func NewHandler(info Info) Handler {
 
 type handler struct {
 	info                  *Info
+	emptyOperation        func() flow.Work
 	exporter              *export.FileExporter
 	operationItemsCreator func(items []string) (operation Operation, err *data.CodeError)
 	onError               func(err *data.CodeError)
 	onResult              func(operationInfo string, operation Operation, result *OperationResult)
+}
+
+func (h *handler) EmptyOperation(emptyOperation func() flow.Work) Handler {
+	h.emptyOperation = emptyOperation
+	return h
 }
 
 func (h *handler) SetFileExport(exporter *export.FileExporter) Handler {
@@ -145,25 +153,13 @@ func (h *handler) Start() {
 	}
 
 	// overseer， EnableRecord 未开启不记录中间状态（数组类型的数据源默认关闭）
-	var overseer flow.Overseer
-	if h.info.EnableRecord {
-		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
-		log.DebugF("batch recorder:%s", dbPath)
-		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
-			return &flow.WorkRecord{
-				WorkInfo: &flow.WorkInfo{
-					Data: "",
-					Work: nil,
-				},
-				Result: &OperationResult{},
-				Err:    nil,
-			}
-		}); err != nil {
-			log.ErrorF("create overseer error:%v", err)
-			return
+	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
+	if !isArraySource {
+		if h.info.EnableRecord {
+			log.DebugF("batch recorder:%s", dbPath)
+		} else {
+			log.Debug("batch recorder:Not Enable")
 		}
-	} else {
-		log.Debug("batch recorder:Not Enable")
 	}
 
 	metric := &Metric{}
@@ -213,7 +209,17 @@ func (h *handler) Start() {
 			}), nil
 		})).
 		DoWorkListMaxCount(h.info.MaxOperationCountPerRequest).
-		SetOverseer(overseer).
+		SetOverseerEnable(h.info.EnableRecord).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: h.emptyOperation(),
+				},
+				Result: &OperationResult{},
+				Err:    nil,
+			}
+		}).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
@@ -262,6 +268,7 @@ func (h *handler) Start() {
 				}
 			} else {
 				metric.AddSkippedCount(1)
+
 				operation, _ := work.Work.(Operation)
 				h.onResult(work.Data, operation, &OperationResult{
 					Code:  data.ErrorCodeUnknown,

@@ -22,12 +22,12 @@ func PreFopStatus(persistentId string) (storage.PrefopRet, *data.CodeError) {
 }
 
 type PreFopApiInfo struct {
-	Bucket      string
-	Key         string
-	Fops        string
-	Pipeline    string
-	NotifyURL   string
-	NotifyForce bool
+	Bucket      string `json:"bucket"`
+	Key         string `json:"key"`
+	Fops        string `json:"fops"`
+	Pipeline    string `json:"pipeline"`
+	NotifyURL   string `json:"notify_url"`
+	NotifyForce bool   `json:"notify_force"`
 }
 
 func PreFop(info PreFopApiInfo) (string, *data.CodeError) {

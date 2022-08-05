@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -39,7 +40,7 @@ func Move(cfg *iqshell.Config, info MoveInfo) {
 	}
 
 	result, err := object.Move((*object.MoveApiInfo)(&info))
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -47,18 +48,15 @@ func Move(cfg *iqshell.Config, info MoveInfo) {
 		return
 	}
 
-	if len(result.Error) != 0 {
-		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
-			info.SourceBucket, info.SourceKey,
-			info.DestBucket, info.DestKey,
-			result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Move Success, [%s:%s] => [%s:%s]",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
+	} else {
+		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			result.Code, result.Error)
 	}
 }
 
@@ -103,6 +101,9 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 
 	batch.NewHandler(info.BatchInfo).
 		SetFileExport(exporter).
+		EmptyOperation(func() flow.Work {
+			return &object.MoveApiInfo{}
+		}).
 		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 			srcKey, destKey := items[0], items[0]
 			if len(items) > 1 {

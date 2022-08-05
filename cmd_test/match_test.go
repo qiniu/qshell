@@ -3,10 +3,12 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestMatch(t *testing.T) {
@@ -142,7 +144,8 @@ func TestBatchMatchWithRecord(t *testing.T) {
 		"-o", objectPath)
 	defer test.RemoveFile(objectPath)
 
-	path, err := test.CreateFileWithContent("batch_match.txt", test.KeysString)
+	keys := test.KeysString + "\nhello10_test.json"
+	path, err := test.CreateFileWithContent("batch_match.txt", keys)
 	if err != nil {
 		t.Fatal("create batch match config file error:", err)
 	}
@@ -158,10 +161,16 @@ func TestBatchMatchWithRecord(t *testing.T) {
 		"--worker", "4",
 		"--enable-record",
 		"-d")
-	if !strings.Contains(result, "because have done and success") {
-		t.Fatal("batch result: should skip success work")
+	if !strings.Contains(result, "because have done and") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
+		t.Fatal("batch result: should skip the work had done")
 	}
 	if strings.Contains(result, "work redo") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: shouldn't redo because not set --record-redo-while-error")
 	}
 
@@ -171,10 +180,16 @@ func TestBatchMatchWithRecord(t *testing.T) {
 		"--enable-record",
 		"--record-redo-while-error",
 		"-d")
-	if !strings.Contains(result, "because have done and success") {
-		t.Fatal("batch result: should skip success work")
+	if !strings.Contains(result, "because have done and") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
+		t.Fatal("batch result: should skip the work had done")
 	}
 	if !strings.Contains(result, "work redo") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
 	}
 }

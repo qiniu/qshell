@@ -2,6 +2,11 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -12,10 +17,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"path/filepath"
-	"strconv"
-	"sync"
-	"time"
 )
 
 type CheckAsyncFetchStatusInfo struct {
@@ -113,24 +114,9 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 	metric := &batch.Metric{}
 	metric.Start()
 
-	var overseer flow.Overseer
+	dbPath := filepath.Join(workspace.GetJobDir(), "fetch.recorder")
 	if info.BatchInfo.EnableRecord {
-		var err *data.CodeError
-		dbPath := filepath.Join(workspace.GetJobDir(), "fetch.recorder")
 		log.DebugF("batch async fetch recorder:%s", dbPath)
-		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
-			return &flow.WorkRecord{
-				WorkInfo: &flow.WorkInfo{
-					Data: "",
-					Work: nil,
-				},
-				Result: &asyncFetchResult{},
-				Err:    nil,
-			}
-		}); err != nil {
-			log.ErrorF("batch async fetch create overseer error:%v", err)
-			return
-		}
 	} else {
 		log.Debug("batch async fetch recorder:Not Enable")
 	}
@@ -160,7 +146,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 					saveKey = key
 				}
 
-				return asyncFetchItem{
+				return &asyncFetchItem{
 					fileSize: size,
 					info: object.AsyncFetchApiInfo{
 						Url:              fromUrl,
@@ -179,7 +165,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
-				in := workInfo.Work.(asyncFetchItem)
+				in, _ := workInfo.Work.(*asyncFetchItem)
 
 				metric.PrintProgress(fmt.Sprintf("Fetching, %s => [%s:%s]", in.info.Url, in.info.Bucket, in.info.Key))
 
@@ -193,7 +179,17 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 				}, e
 			}), nil
 		})).
-		SetOverseer(overseer).
+		SetOverseerEnable(info.BatchInfo.EnableRecord).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &asyncFetchItem{},
+				},
+				Result: &asyncFetchResult{},
+				Err:    nil,
+			}
+		}).
 		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
 			if workRecord.Err == nil {
 				return false, nil
@@ -248,7 +244,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			metric.AddCurrentCount(1)
 			metric.PrintProgress("Batching:" + workInfo.Data)
 
-			in := workInfo.Work.(asyncFetchItem)
+			in := workInfo.Work.(*asyncFetchItem)
 			res := result.(*asyncFetchResult)
 			if info.DisableCheckFetchResult {
 				exporter.Success().ExportF("%s", workInfo.Data)
@@ -262,8 +258,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 			metric.AddCurrentCount(1)
 			metric.PrintProgress("Batching:" + workInfo.Data)
 
-			if in, ok := workInfo.Work.(asyncFetchItem); ok {
-				// 不进行检查，需要导出失败条目
+			if in, ok := workInfo.Work.(*asyncFetchItem); ok {
 				exporter.Fail().ExportF("%s%s%v", in.info.Url, flow.ErrorSeparate, err)
 				log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error: %v", in.info.Url, in.info.Bucket, in.info.Key, err)
 			} else {
@@ -286,6 +281,7 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		log.DebugF("save batch async fetch result to path:%s", resultPath)
 	}
 
+	log.Info("")
 	log.Info("------------- Batch Fetch Request Result ------------")
 	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
 	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
@@ -308,24 +304,9 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 	metric := &batch.Metric{}
 	metric.Start()
 
-	var overseer flow.Overseer
+	dbPath := filepath.Join(workspace.GetJobDir(), "check.recorder")
 	if info.BatchInfo.EnableRecord {
-		dbPath := filepath.Join(workspace.GetJobDir(), "check.recorder")
 		log.DebugF("batch async fetch check recorder:%s", dbPath)
-		var err *data.CodeError
-		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
-			return &flow.WorkRecord{
-				WorkInfo: &flow.WorkInfo{
-					Data: "",
-					Work: nil,
-				},
-				Result: &asyncFetchResult{},
-				Err:    nil,
-			}
-		}); err != nil {
-			log.ErrorF("batch async fetch check create overseer error:%v", err)
-			return
-		}
 	} else {
 		log.Debug("batch async fetch check recorder:Not Enable")
 	}
@@ -349,7 +330,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 					if current.After(checkStartTime) {
 						checkTimes += 1
 						ret, cErr := object.CheckAsyncFetchStatus(in.Bucket, in.Info.Id)
-						log.DebugF("batch async fetch check [%d], bucket:%s key:%s id:%s wait:%d", checkTimes, in.Bucket, in.Key, in.Info.Id, ret.Wait)
+						log.DebugF("batch async fetch check [%d], bucket:%s key:%s id:%s wait:%d", checkTimes, in.Bucket, in.Key, in.Key, ret.Wait)
 						if cErr != nil {
 							log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
 						} else if ret.Wait == -1 { // 视频抓取过一次，有可能成功了，有可能失败了
@@ -375,7 +356,17 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 				return nil, data.NewEmptyError().AppendDesc("can't find object in bucket")
 			}), nil
 		})).
-		SetOverseer(overseer).
+		SetOverseerEnable(info.BatchInfo.EnableRecord).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &asyncFetchResult{},
+				},
+				Result: &asyncFetchResult{},
+				Err:    nil,
+			}
+		}).
 		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
 			if workRecord.Err == nil {
 				return false, nil
@@ -450,6 +441,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 		log.DebugF("save batch async fetch check result to path:%s", resultPath)
 	}
 
+	log.Info("")
 	log.Info("------------ Batch Fetch Check Result ------------")
 	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
 	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
@@ -482,7 +474,7 @@ type asyncFetchItem struct {
 	info     object.AsyncFetchApiInfo
 }
 
-func (f asyncFetchItem) WorkId() string {
+func (f *asyncFetchItem) WorkId() string {
 	return fmt.Sprintf("%s:%s:%s", f.info.Url, f.info.Bucket, f.info.Key)
 }
 

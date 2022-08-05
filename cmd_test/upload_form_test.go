@@ -41,7 +41,7 @@ func TestFormUpload(t *testing.T) {
 	_, errs = test.RunCmdWithError("fput", test.Bucket, "qshell_fput_1M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "1")
-	if !strings.Contains(errs, "upload error:file exists") {
+	if !strings.Contains(errs, "file exists") {
 		t.Fatal(errs)
 	}
 

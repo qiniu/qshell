@@ -43,7 +43,7 @@ func TestResumeV1Upload(t *testing.T) {
 		"--mimetype", "image/png",
 		"--storage", "1",
 		"--worker", "4")
-	if !strings.Contains(errs, "upload error:file exists") {
+	if !strings.Contains(errs, "file exists") {
 		t.Fatal(result)
 	}
 
@@ -129,7 +129,7 @@ func TestResumeV2Upload(t *testing.T) {
 		"--mimetype", "image/png",
 		"--storage", "1",
 		"--resumable-api-v2")
-	if !strings.Contains(errs, "upload error:file exists") {
+	if !strings.Contains(errs, "file exists") {
 		t.Fatal(errs)
 	}
 

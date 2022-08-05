@@ -274,3 +274,25 @@ func TestIP(t *testing.T) {
 func TestIPDocument(t *testing.T) {
 	test.TestDocument("ip", t)
 }
+
+func TestFunc(t *testing.T) {
+	result := test.RunCmd(t, "func", "{\"name\":\"this is a test\"}", "{{trimSuffix \"test\" .name}}")
+	if !strings.Contains(result, "[this is a ]") {
+		t.Fail()
+	}
+
+	result = test.RunCmd(t, "func", "{\"name\":\"this is a test\"}", "{{trimPrefix \"this\" .name}}")
+	if !strings.Contains(result, "[ is a test]") {
+		t.Fail()
+	}
+
+	result = test.RunCmd(t, "func", "{\"name\":\"this is a test\"}", "{{substr 0 6 .name}}")
+	if !strings.Contains(result, "[this i]") {
+		t.Fail()
+	}
+	return
+}
+
+func TestFuncDocument(t *testing.T) {
+	test.TestDocument("func", t)
+}

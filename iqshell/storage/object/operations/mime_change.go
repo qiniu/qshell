@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
@@ -36,18 +37,16 @@ func ChangeMime(cfg *iqshell.Config, info ChangeMimeInfo) {
 	}
 
 	result, err := object.ChangeMimeType((*object.ChangeMimeApiInfo)(&info))
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Error:%v", info.Bucket, info.Key, info.Mime, err)
-		return
-	}
-
-	if len(result.Error) != 0 {
-		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code:%d, Error:%v", info.Bucket, info.Key, info.Mime, result.Code, result.Error)
 		return
 	}
 
 	if result.IsSuccess() {
 		log.InfoF("Change mimetype Success, [%s:%s] => '%s'", info.Bucket, info.Key, info.Mime)
+	} else {
+		log.ErrorF("Change mimetype Failed, [%s:%s] => '%s', Code:%d, Error:%v",
+			info.Bucket, info.Key, info.Mime, result.Code, result.Error)
 	}
 }
 
@@ -83,7 +82,11 @@ func BatchChangeMime(cfg *iqshell.Config, info BatchChangeMimeInfo) {
 		log.Error(err)
 		return
 	}
+
 	batch.NewHandler(info.BatchInfo).
+		EmptyOperation(func() flow.Work {
+			return &object.ChangeMimeApiInfo{}
+		}).
 		SetFileExport(exporter).
 		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 			if len(items) > 1 {

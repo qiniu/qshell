@@ -10,6 +10,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"path/filepath"
@@ -92,47 +93,34 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 		return
 	}
 
-	var overseer flow.Overseer
+	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 	if info.BatchInfo.EnableRecord {
-		dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 		log.DebugF("batch match recorder:%s", dbPath)
-		if overseer, err = flow.NewDBRecordOverseer(dbPath, func() *flow.WorkRecord {
-			return &flow.WorkRecord{
-				WorkInfo: &flow.WorkInfo{
-					Data: "",
-					Work: nil,
-				},
-				Result: &object.MatchResult{},
-				Err:    nil,
-			}
-		}); err != nil {
-			log.ErrorF("batch match create overseer error:%v", err)
-			return
-		}
 	} else {
 		log.Debug("batch match recorder:Not Enable")
 	}
 
 	metric := &batch.Metric{}
 	metric.Start()
+	lineParser := bucket.NewListLineParser()
 	flow.New(info.BatchInfo.Info).
 		WorkProviderWithFile(info.BatchInfo.InputFile,
 			info.BatchInfo.EnableStdin,
 			flow.NewItemsWorkCreator(info.BatchInfo.ItemSeparate, 1, func(items []string) (work flow.Work, err *data.CodeError) {
-				key := items[0]
-				fileHash := ""
-				if len(items) > 2 {
-					fileHash = items[2]
+				listObject, e := lineParser.Parse(items)
+				if e != nil {
+					return nil, e
 				}
-				if len(key) == 0 {
-					return nil, alert.Error("key is invalid", "")
+
+				if len(listObject.Key) == 0 {
+					return nil, alert.Error("key invalid", "")
 				}
 
 				return &object.MatchApiInfo{
-					Bucket:    info.Bucket,
-					Key:       key,
-					FileHash:  fileHash,
-					LocalFile: filepath.Join(info.LocalFileDir, key),
+					Bucket:         info.Bucket,
+					Key:            listObject.Key,
+					ServerFileHash: listObject.Hash,
+					LocalFile:      filepath.Join(info.LocalFileDir, listObject.Key),
 				}, nil
 			})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
@@ -145,7 +133,17 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
 		}).
-		SetOverseer(overseer).
+		SetOverseerEnable(info.BatchInfo.EnableRecord).
+		SetDBOverseer(dbPath, func() *flow.WorkRecord {
+			return &flow.WorkRecord{
+				WorkInfo: &flow.WorkInfo{
+					Data: "",
+					Work: &object.MatchApiInfo{},
+				},
+				Result: &object.MatchResult{},
+				Err:    nil,
+			}
+		}).
 		ShouldRedo(func(workInfo *flow.WorkInfo, workRecord *flow.WorkRecord) (shouldRedo bool, cause *data.CodeError) {
 			if workRecord.Err == nil {
 				return false, nil
@@ -191,7 +189,7 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 			metric.PrintProgress("Batching:" + workInfo.Data)
 
 			in, _ := workInfo.Work.(*object.MatchApiInfo)
-			exporter.Success().ExportF("%s\t \t%s", in.Key, in.FileHash)
+			exporter.Success().ExportF("%s\t \t%s", in.Key, in.ServerFileHash)
 			log.InfoF("Match Success, [%s:%s] => '%s'", info.Bucket, in.Key, in.LocalFile)
 		}).
 		OnWorkFail(func(workInfo *flow.WorkInfo, err *data.CodeError) {

@@ -36,7 +36,7 @@ $ qshell copy if-pbl qiniu.jpg if-pbl -k 2015/01/19/qiniu.jpg
 $ qshell copy if-pbl qiniu.jpg if-pri
 ```
 
-3 复制`if-pbl`空间中的`qiniu.jpg`，并保存到`if-pri`中，由于`if-pri`已有文件`qiniu_pri.jpg`，所以加上选项`--overwrite`强制覆盖
+3 复制`if-pbl`空间中的`qiniu.jpg`，并保存到`if-pri`空间中，保存 Key 为：`qiniu_pri.jpg`，由于`if-pri`已有文件`qiniu_pri.jpg`，所以加上选项`--overwrite`强制覆盖
 ```
-$ qshell copy --overwrite if-pbl qiniu.jpg if-pri qiniu_pri.jpg
+$ qshell copy --overwrite if-pbl qiniu.jpg if-pri -k qiniu_pri.jpg
 ```

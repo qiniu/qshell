@@ -7,7 +7,9 @@ import (
 )
 
 var (
-	Debug = true
+	Debug          = true
+	Local          = len(os.Getenv("QSHELL_LOCAL")) > 0
+	ShouldTestUser = len(os.Getenv("QSHELL_Test_User")) > 0
 
 	AccessKey      = os.Getenv("accessKey")
 	SecretKey      = os.Getenv("secretKey")
@@ -21,7 +23,7 @@ func testBucket() string {
 	if b := os.Getenv("bucket"); len(b) > 0 {
 		return b
 	} else {
-		return "qshell-z1"
+		return "qshell-z0-01"
 	}
 }
 
@@ -29,7 +31,7 @@ func testBucketDomain() string {
 	if b := os.Getenv("bucketDomain"); len(b) > 0 {
 		return b
 	} else {
-		return "qshell-z1.qiniupkg.com"
+		return "qshell-z0-01.qiniupkg.com"
 	}
 }
 
@@ -37,7 +39,7 @@ func testUploadDomain() string {
 	if b := os.Getenv("uploadDomain"); len(b) > 0 {
 		return b
 	} else {
-		return "up-z1.qiniup.com"
+		return "up-z0.qiniup.com"
 	}
 }
 

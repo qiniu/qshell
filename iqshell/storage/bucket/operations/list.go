@@ -12,29 +12,60 @@ import (
 )
 
 type ListInfo struct {
-	Bucket       string
-	Prefix       string
-	Marker       string
-	Delimiter    string
-	Limit        int    //  最大输出条数，默认：-1, 无限输出
-	StartDate    string // list item 的 put time 区间的开始时间 【闭区间】
-	EndDate      string // list item 的 put time 区间的终止时间 【闭区间】
-	Suffixes     string // list item 必须包含后缀
-	StorageTypes string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
-	MimeTypes    string // list item Mimetype类型，多个使用逗号隔开
-	MinFileSize  string // 文件最小值，单位: B
-	MaxFileSize  string // 文件最大值，单位: B
-	MaxRetry     int    // -1: 无限重试
-	SaveToFile   string
-	AppendMode   bool
-	Readable     bool
+	Bucket          string
+	Prefix          string
+	Marker          string
+	Delimiter       string
+	Limit           int    //  最大输出条数，默认：-1, 无限输出
+	StartDate       string // list item 的 put time 区间的开始时间 【闭区间】
+	EndDate         string // list item 的 put time 区间的终止时间 【闭区间】
+	Suffixes        string // list item 必须包含后缀
+	StorageTypes    string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
+	MimeTypes       string // list item Mimetype类型，多个使用逗号隔开
+	MinFileSize     string // 文件最小值，单位: B
+	MaxFileSize     string // 文件最大值，单位: B
+	MaxRetry        int    // -1: 无限重试
+	SaveToFile      string //
+	AppendMode      bool   //
+	Readable        bool   //
+	ShowFields      string // 需要展示的字段
+	OutputFieldsSep string // 输出信息，每行的分隔符
 }
 
 func (info *ListInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
+
+	if len(info.ShowFields) > 0 {
+		var fieldsNew []string
+		fields := info.getShowFields()
+		if len(fields) > 0 {
+			for _, field := range fields {
+				f := bucket.ListObjectField(field)
+				if len(f) == 0 {
+					return data.NewEmptyError().AppendDescF("show-fields value error:%s not support", field)
+				}
+				fieldsNew = append(fieldsNew, f)
+			}
+		}
+		info.ShowFields = strings.Join(fieldsNew, ",")
+	}
 	return nil
+}
+
+func (info *ListInfo) getShowFields() []string {
+	if len(info.ShowFields) == 0 {
+		return nil
+	}
+	return strings.Split(info.ShowFields, ",")
+}
+
+func (info *ListInfo) getOutputFieldsSep() string {
+	if len(info.OutputFieldsSep) == 0 {
+		return "\t"
+	}
+	return info.OutputFieldsSep
 }
 
 func List(cfg *iqshell.Config, info ListInfo) {
@@ -57,19 +88,21 @@ func List(cfg *iqshell.Config, info ListInfo) {
 
 	bucket.ListToFile(bucket.ListToFileApiInfo{
 		ListApiInfo: bucket.ListApiInfo{
-			Bucket:       info.Bucket,
-			Prefix:       info.Prefix,
-			Marker:       info.Marker,
-			Delimiter:    info.Delimiter,
-			Limit:        info.Limit,
-			StartTime:    startTime,
-			EndTime:      endTime,
-			Suffixes:     info.getSuffixes(),
-			StorageTypes: info.getStorageTypes(),
-			MimeTypes:    info.getMimeTypes(),
-			MinFileSize:  info.getMinFileSize(),
-			MaxFileSize:  info.getMaxFileSize(),
-			MaxRetry:     info.MaxRetry,
+			Bucket:          info.Bucket,
+			Prefix:          info.Prefix,
+			Marker:          info.Marker,
+			Delimiter:       info.Delimiter,
+			Limit:           info.Limit,
+			StartTime:       startTime,
+			EndTime:         endTime,
+			Suffixes:        info.getSuffixes(),
+			StorageTypes:    info.getStorageTypes(),
+			MimeTypes:       info.getMimeTypes(),
+			MinFileSize:     info.getMinFileSize(),
+			MaxFileSize:     info.getMaxFileSize(),
+			MaxRetry:        info.MaxRetry,
+			ShowFields:      info.getShowFields(),
+			OutputFieldsSep: info.getOutputFieldsSep(),
 		},
 		FilePath:   info.SaveToFile,
 		AppendMode: info.AppendMode,

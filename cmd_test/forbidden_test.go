@@ -10,64 +10,55 @@ import (
 	"testing"
 )
 
-var (
-	restoreKey = "restore_key.json"
-)
+func TestForbidden(t *testing.T) {
+	_, errs := test.RunCmdWithError("forbidden", test.Bucket, test.Key)
+	if len(errs) > 0 && !strings.Contains(errs, "already in normal stat") {
+		t.Fail()
+	}
 
-func TestRestoreArchive(t *testing.T) {
-	copyFile(t, test.OriginKeys[0], restoreKey)
-	changeType(t, restoreKey, "2")
-	_, errs := test.RunCmdWithError("restorear", test.Bucket, restoreKey, "1")
+	_, errs = test.RunCmdWithError("forbidden", test.Bucket, test.Key, "-r")
 	if len(errs) > 0 {
 		t.Fail()
 	}
 }
 
-func TestRestoreArchiveNoExistBucket(t *testing.T) {
-	_, errs := test.RunCmdWithError("restorear", test.BucketNotExist, restoreKey, "1")
+func TestForbiddenNoExistBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("forbidden", test.BucketNotExist, test.Key, "0")
 	if !strings.Contains(errs, "no such bucket") {
 		t.Fail()
 	}
 }
 
-func TestRestoreArchiveNoExistKey(t *testing.T) {
-	_, errs := test.RunCmdWithError("restorear", test.Bucket, test.KeyNotExist, "1")
+func TestForbiddenNoExistKey(t *testing.T) {
+	_, errs := test.RunCmdWithError("forbidden", test.Bucket, test.KeyNotExist, "0")
 	if !strings.Contains(errs, "no such file or directory") {
 		t.Fail()
 	}
 }
 
-func TestRestoreArchiveNoBucket(t *testing.T) {
-	_, errs := test.RunCmdWithError("restorear")
+func TestForbiddenNoBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("forbidden")
 	if !strings.Contains(errs, "Bucket can't empty") {
 		t.Fail()
 	}
 }
 
-func TestRestoreArchiveNoKey(t *testing.T) {
-	_, errs := test.RunCmdWithError("restorear", test.Bucket)
+func TestForbiddenNoKey(t *testing.T) {
+	_, errs := test.RunCmdWithError("forbidden", test.Bucket)
 	if !strings.Contains(errs, "Key can't empty") {
 		t.Fail()
 	}
 }
 
-func TestRestoreArchiveNoFreezeAfterDays(t *testing.T) {
-	_, errs := test.RunCmdWithError("restorear", test.Bucket, test.Key)
-	if !strings.Contains(errs, "FreezeAfterDays can't empty") {
-		t.Fail()
-	}
+func TestForbiddenDocument(t *testing.T) {
+	test.TestDocument("forbidden", t)
 }
 
-func TestRestoreArchiveDocument(t *testing.T) {
-	test.TestDocument("restorear", t)
-}
-
-func TestBatchRestoreArchive(t *testing.T) {
-	copyFile(t, test.OriginKeys[0], restoreKey)
-	changeType(t, restoreKey, "2")
+func TestBatchForbidden(t *testing.T) {
+	TestBatchCopy(t)
 
 	batchConfig := ""
-	keys := []string{restoreKey}
+	keys := test.Keys
 	keys = append(keys, "hello10.json")
 	for _, key := range keys {
 		batchConfig += key + "\n"
@@ -78,21 +69,24 @@ func TestBatchRestoreArchive(t *testing.T) {
 		t.Fatal("get result dir error:", err)
 	}
 
-	successLogPath := filepath.Join(resultDir, "batch_restorear_success.txt")
-	failLogPath := filepath.Join(resultDir, "batch_restorear_fail.txt")
+	successLogPath := filepath.Join(resultDir, "batch_forbidden_success.txt")
+	failLogPath := filepath.Join(resultDir, "batch_forbidden_fail.txt")
 
-	path, err := test.CreateFileWithContent("batch_restorear.txt", batchConfig)
+	path, err := test.CreateFileWithContent("batch_forbidden.txt", batchConfig)
 	if err != nil {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	test.RunCmdWithError("batchrestorear", test.Bucket, "1",
+	test.RunCmdWithError("batchforbidden", test.Bucket,
 		"-i", path,
 		"--success-list", successLogPath,
 		"--failure-list", failLogPath,
 		"--worker", "4",
 		"-y")
 	defer func() {
+		//back
+		test.RunCmdWithError("batchforbidden", test.Bucket, "-i", path, "-y", "-r")
+
 		test.RemoveFile(successLogPath)
 		test.RemoveFile(failLogPath)
 	}()
@@ -106,29 +100,33 @@ func TestBatchRestoreArchive(t *testing.T) {
 	}
 }
 
-func TestBatchRestoreArchiveRecord(t *testing.T) {
-	copyFile(t, test.OriginKeys[0], restoreKey)
-	changeType(t, restoreKey, "2")
+func TestBatchForbiddenRecord(t *testing.T) {
+	TestBatchCopy(t)
 
 	batchConfig := ""
-	keys := []string{restoreKey}
+	keys := test.Keys
 	keys = append(keys, "hello10.json")
 	for _, key := range keys {
 		batchConfig += key + "\n"
 	}
 
-	path, err := test.CreateFileWithContent("batch_restorear.txt", batchConfig)
+	path, err := test.CreateFileWithContent("batch_forbidden.txt", batchConfig)
 	if err != nil {
-		t.Fatal("create cdn config file error:", err)
+		t.Fatal("create batch move config file error:", err)
 	}
 
-	test.RunCmdWithError("batchrestorear", test.Bucket, "1",
+	test.RunCmdWithError("batchforbidden", test.Bucket,
 		"-i", path,
 		"--enable-record",
 		"--worker", "4",
+		"-d",
 		"-y")
+	defer func() {
+		//back
+		test.RunCmdWithError("batchforbidden", test.Bucket, "-i", path, "-y", "-r")
+	}()
 
-	result, _ := test.RunCmdWithError("batchrestorear", test.Bucket, "1",
+	result, _ := test.RunCmdWithError("batchforbidden", test.Bucket,
 		"-i", path,
 		"--enable-record",
 		"--worker", "4",
@@ -147,7 +145,7 @@ func TestBatchRestoreArchiveRecord(t *testing.T) {
 		t.Fatal("batch result: shouldn't redo because not set --record-redo-while-error")
 	}
 
-	result, _ = test.RunCmdWithError("batchrestorear", test.Bucket, "1",
+	result, _ = test.RunCmdWithError("batchforbidden", test.Bucket,
 		"-i", path,
 		"--enable-record",
 		"--record-redo-while-error",
@@ -168,6 +166,6 @@ func TestBatchRestoreArchiveRecord(t *testing.T) {
 	}
 }
 
-func TestBatchRestoreArchiveDocument(t *testing.T) {
-	test.TestDocument("batchrestorear", t)
+func TestBatchForbiddenDocument(t *testing.T) {
+	test.TestDocument("batchforbidden", t)
 }

@@ -2,15 +2,17 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"path/filepath"
 )
 
 type CopyInfo object.CopyApiInfo
@@ -27,7 +29,7 @@ func (info *CopyInfo) Check() *data.CodeError {
 	}
 	if len(info.DestKey) == 0 {
 		info.DestKey = info.SourceKey
-		log.WarningF("No set DestKey and set DestKey to SourceKey:%s", info.SourceKey)
+		log.WarningF("No DestKey and set SourceKey to DestKey:%s", info.SourceKey)
 	}
 	return nil
 }
@@ -40,7 +42,7 @@ func Copy(cfg *iqshell.Config, info CopyInfo) {
 	}
 
 	result, err := object.Copy((*object.CopyApiInfo)(&info))
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -48,18 +50,15 @@ func Copy(cfg *iqshell.Config, info CopyInfo) {
 		return
 	}
 
-	if len(result.Error) != 0 {
-		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
-			info.SourceBucket, info.SourceKey,
-			info.DestBucket, info.DestKey,
-			result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Copy Success, [%s:%s] => [%s:%s]",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
+	} else {
+		log.ErrorF("Copy Failed, '%s:%s' => '%s:%s', Code: %d, Error: %s",
+			info.SourceBucket, info.SourceKey,
+			info.DestBucket, info.DestKey,
+			result.Code, result.Error)
 	}
 }
 
@@ -103,6 +102,9 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 	}
 
 	batch.NewHandler(info.BatchInfo).
+		EmptyOperation(func() flow.Work {
+			return &object.CopyApiInfo{}
+		}).
 		SetFileExport(exporter).
 		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 			// 如果只有一个参数，源 key 即为目标 key
@@ -119,7 +121,7 @@ func BatchCopy(cfg *iqshell.Config, info BatchCopyInfo) {
 					Force:        info.BatchInfo.Overwrite,
 				}, nil
 			} else {
-				return nil, alert.Error("", "")
+				return nil, alert.Error("src key is empty", "")
 			}
 		}).
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {

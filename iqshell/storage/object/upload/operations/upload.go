@@ -53,13 +53,14 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 	info.Progress = progress.NewPrintProgress(" 进度")
 	ret, err := uploadFile(&info)
 	if err != nil {
-		log.ErrorF("Upload file error %v", err)
+		log.ErrorF("Upload file error: %v", err)
 	} else {
 		log.Alert("")
 		log.Alert("-------------- File FlowInfo --------------")
 		log.AlertF("%10s%s", "Key: ", ret.Key)
-		log.AlertF("%10s%s", "Hash: ", ret.Hash)
-		log.AlertF("%10s%d%s", "Fsize: ", ret.FSize, "("+utils.FormatFileSize(ret.FSize)+")")
+		log.AlertF("%10s%s", "Hash: ", ret.ServerFileHash)
+		log.AlertF("%10s%d%s", "FileSize: ", ret.ServerFileSize, "("+utils.FormatFileSize(ret.ServerFileSize)+")")
+		log.AlertF("%10s%d", "PutTime: ", ret.ServerPutTime)
 		log.AlertF("%10s%s", "MimeType: ", ret.MimeType)
 	}
 }
@@ -82,7 +83,7 @@ func uploadFile(info *UploadInfo) (res *upload.ApiResult, err *data.CodeError) {
 	endTime := time.Now().UnixNano() / 1e6
 
 	duration := float64(endTime-startTime) / 1000
-	speed := fmt.Sprintf("%.2fKB/s", float64(res.FSize)/duration/1024)
+	speed := fmt.Sprintf("%.2fKB/s", float64(res.ServerFileSize)/duration/1024)
 	if res.IsSkip {
 		log.AlertF("Upload skip because file exist:%s => [%s:%s]", info.FilePath, info.ToBucket, info.SaveKey)
 	} else {

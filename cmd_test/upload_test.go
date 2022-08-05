@@ -64,7 +64,7 @@ func TestQUpload(t *testing.T) {
 			CheckExists:            false,
 			CheckHash:              true,
 			CheckSize:              true,
-			RescanLocal:            false,
+			RescanLocal:            true,
 			FileType:               0,
 			DeleteOnSuccess:        false,
 			DisableResume:          false,
@@ -165,12 +165,12 @@ func TestQUpload2WithSrcDir(t *testing.T) {
 }
 
 func TestQUpload2WithFileList(t *testing.T) {
-	deleteFile(t, "1K.tmp")
-	deleteFile(t, "32K.tmp")
-	deleteFile(t, "64K.tmp")
-	deleteFile(t, "256K.tmp")
-	copyFile(t, test.Key, "512K.tmp")
-	copyFile(t, test.Key, "1024K.tmp")
+	deleteFile(t, "test/1K.tmp")
+	deleteFile(t, "test/32K.tmp")
+	deleteFile(t, "test/64K.tmp")
+	deleteFile(t, "test/256K.tmp")
+	copyFile(t, test.Key, "test/512K.tmp")
+	copyFile(t, test.Key, "test/1024K.tmp")
 	fileSizeList := []int{1, 32, 64, 256, 512, 1024, 2 * 1024, 4 * 1024, 5 * 1024, 8 * 1024, 10 * 1024}
 	for _, size := range fileSizeList {
 		test.CreateTempFile(size)
@@ -217,7 +217,7 @@ mock02.jpg	10485760	16455233472998522
 		"--file-type", "1",
 		"--rescan-local", "false",
 		"--ignore-dir", "",
-		"--key-prefix", "",
+		"--key-prefix", "test/",
 		"--skip-file-prefixes", "",
 		"--skip-fixed-strings", "",
 		"--skip-path-prefixes", "",

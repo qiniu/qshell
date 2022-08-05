@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"path/filepath"
 	"strings"
@@ -139,9 +140,15 @@ func TestBatchDeleteRecord(t *testing.T) {
 		"-y",
 		"-d")
 	if !strings.Contains(result, "because have done and success") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: should skip success work")
 	}
 	if !strings.Contains(result, "work redo") {
+		fmt.Println("=========================== result start ===========================")
+		fmt.Println(result)
+		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
 	}
 }

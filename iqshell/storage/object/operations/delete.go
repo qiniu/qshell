@@ -6,8 +6,10 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
+	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"path/filepath"
@@ -42,19 +44,18 @@ func Delete(cfg *iqshell.Config, info DeleteInfo) {
 		DeleteAfterDays: 0,
 	})
 
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Delete Failed, [%s:%s], Error:%v",
 			info.Bucket, info.Key, err)
 		return
 	}
 
-	if len(result.Error) > 0 {
+	if result.IsSuccess() {
+		log.InfoF("Delete Success, [%s:%s]", info.Bucket, info.Key)
+	} else {
 		log.ErrorF("Delete Failed, [%s:%s], Code:%d, Error:%s",
 			info.Bucket, info.Key, result.Code, result.Error)
-		return
 	}
-
-	log.InfoF("Delete Success, [%s:%s]", info.Bucket, info.Key)
 }
 
 type BatchDeleteInfo struct {
@@ -91,27 +92,27 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 		return
 	}
 
+	lineParser := bucket.NewListLineParser()
 	batch.NewHandler(info.BatchInfo).
 		SetFileExport(exporter).
+		EmptyOperation(func() flow.Work {
+			return &object.DeleteApiInfo{}
+		}).
 		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
-			putTime := ""
-			key := items[0]
-			if len(key) == 0 {
+			listObject, e := lineParser.Parse(items)
+			if e != nil {
+				return nil, e
+			}
+
+			if len(listObject.Key) == 0 {
 				return nil, alert.Error("key invalid", "")
 			}
 
-			if len(items) > 1 {
-				putTime = items[1]
-			}
-			// list 结果格式 14902611578248790
-			if len(putTime) != 17 && len(items) > 3 && len(items[3]) == 17 {
-				putTime = items[3]
-			}
 			return &object.DeleteApiInfo{
 				Bucket: info.Bucket,
-				Key:    key,
+				Key:    listObject.Key,
 				Condition: batch.OperationCondition{
-					PutTime: putTime,
+					PutTime: listObject.PutTimeString(),
 				},
 			}, nil
 		}).
@@ -188,20 +189,17 @@ func DeleteAfter(cfg *iqshell.Config, info DeleteAfterInfo) {
 		DeleteAfterDays: afterDays,
 	})
 
-	if err != nil {
+	if err != nil || result == nil {
 		log.ErrorF("Expire Failed, [%s:%s], Error:%v",
 			info.Bucket, info.Key, err)
 		return
 	}
 
-	if len(result.Error) > 0 {
-		log.ErrorF("Expire Failed, [%s:%s], Code:%d, Error:%s",
-			info.Bucket, info.Key, result.Code, result.Error)
-		return
-	}
-
 	if result.IsSuccess() {
 		log.InfoF("Expire Success, [%s:%s], '%s'天后删除", info.Bucket, info.Key, info.AfterDays)
+	} else {
+		log.ErrorF("Expire Failed, [%s:%s], Code:%d, Error:%s",
+			info.Bucket, info.Key, result.Code, result.Error)
 	}
 }
 
@@ -224,6 +222,9 @@ func BatchDeleteAfter(cfg *iqshell.Config, info BatchDeleteInfo) {
 
 	batch.NewHandler(info.BatchInfo).
 		SetFileExport(exporter).
+		EmptyOperation(func() flow.Work {
+			return &object.DeleteApiInfo{}
+		}).
 		ItemsToOperation(func(items []string) (operation batch.Operation, err *data.CodeError) {
 			after := ""
 			key := items[0]

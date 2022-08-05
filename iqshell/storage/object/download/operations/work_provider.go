@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -10,7 +11,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
-	"strconv"
 	"time"
 )
 
@@ -60,36 +60,25 @@ func (w *workProvider) getWorkInfoFromFile() {
 	w.totalCount = utils.GetFileLineCount(w.inputFile)
 
 	go func() {
+		lineParser := bucket.NewListLineParser()
 		workPro, err := flow.NewWorkProviderOfFile(w.inputFile, false, flow.NewItemsWorkCreator(w.itemSeparate,
 			1,
 			func(items []string) (work flow.Work, err *data.CodeError) {
-				downloadApiInfo := &download.ApiInfo{
-					Key: items[0],
+				listObject, e := lineParser.Parse(items)
+				if e != nil {
+					return nil, e
 				}
 
-				if len(items) < 4 {
-					// Key FileSize FileHash FileModifyTime, 数据不齐全则通过 stat 接口获取具体信息
-					return downloadApiInfo, nil
+				if len(listObject.Key) == 0 {
+					return nil, alert.Error("key invalid", "")
 				}
 
-				// Key FileSize FileHash FileModifyTime, 数据齐全则直接构建下载文件信息
-				if fileSize, e := strconv.ParseInt(items[1], 10, 64); e != nil {
-					return downloadApiInfo, data.NewEmptyError().AppendDesc("get file size").AppendError(e)
-				} else {
-					downloadApiInfo.FileSize = fileSize
-				}
-
-				// file hash
-				downloadApiInfo.FileHash = items[2]
-
-				// 修改时间
-				if fileModifyTime, e := strconv.ParseInt(items[3], 10, 64); e != nil {
-					return downloadApiInfo, data.NewEmptyError().AppendDesc("get file modify time").AppendError(e)
-				} else {
-					downloadApiInfo.FileModifyTime = fileModifyTime
-				}
-
-				return downloadApiInfo, nil
+				return &download.ApiInfo{
+					Key:               listObject.Key,
+					ServerFileSize:    listObject.Fsize,
+					ServerFileHash:    listObject.Hash,
+					ServerFilePutTime: listObject.PutTime,
+				}, nil
 			}))
 
 		if err != nil {
@@ -117,7 +106,7 @@ func (w *workProvider) getWorkInfoFromFile() {
 				}
 			} else if workInfo != nil && workInfo.Work != nil {
 				downloadApiInfo, _ := (workInfo.Work).(*download.ApiInfo)
-				if downloadApiInfo.FileModifyTime < 1 {
+				if downloadApiInfo.ServerFilePutTime < 1 {
 					keys = append(keys, downloadApiInfo.Key)
 				} else {
 					w.downloadItemChan <- &downloadItem{
@@ -171,10 +160,11 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) {
 						result.Hash, w.itemSeparate,
 						result.PutTime),
 					Work: &download.ApiInfo{
-						Key:            item.Key,
-						FileHash:       result.Hash,
-						FileSize:       result.FSize,
-						FileModifyTime: result.PutTime,
+						Bucket:            w.bucket,
+						Key:               item.Key,
+						ServerFileHash:    result.Hash,
+						ServerFileSize:    result.FSize,
+						ServerFilePutTime: result.PutTime,
 					},
 				}
 			}
@@ -214,10 +204,11 @@ func (w *workProvider) getWorkInfoFromBucket() {
 						object.Hash, w.itemSeparate,
 						object.PutTime),
 					Work: &download.ApiInfo{
-						Key:            object.Key,
-						FileHash:       object.Hash,
-						FileSize:       object.Fsize,
-						FileModifyTime: object.PutTime,
+						Bucket:            w.bucket,
+						Key:               object.Key,
+						ServerFileHash:    object.Hash,
+						ServerFileSize:    object.Fsize,
+						ServerFilePutTime: object.PutTime,
 					},
 				},
 				err: nil,
