@@ -97,7 +97,7 @@ func TestResumeV1UploadWithUploadHost(t *testing.T) {
 func TestResumeV2Upload(t *testing.T) {
 	test.RunCmdWithError("delete", test.Bucket, "qshell_rput_5M")
 
-	path, err := test.CreateTempFile(1 * 1024)
+	path, err := test.CreateTempFile(50 * 1024)
 	if err != nil {
 		t.Fatal("create form upload file error:", err)
 	}

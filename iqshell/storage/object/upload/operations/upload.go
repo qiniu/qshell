@@ -13,6 +13,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -44,12 +45,21 @@ func (info *UploadInfo) WorkId() string {
 }
 
 func UploadFile(cfg *iqshell.Config, info UploadInfo) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		resumeVersion := "v1"
+		if info.UseResumeV2 {
+			resumeVersion = "v2"
+		}
+		return filepath.Join(cmdPath, info.ToBucket, resumeVersion)
+	}
+
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
 		return
 	}
 
+	info.CacheDir = workspace.GetJobDir()
 	info.Progress = progress.NewPrintProgress(" 进度")
 	ret, err := uploadFile(&info)
 	if err != nil {

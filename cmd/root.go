@@ -78,7 +78,10 @@ func Execute() {
 		data.SetCmdStatusError()
 	}
 
-	os.Exit(data.GetCmdStatus())
+	//data.
+	if data.GetCmdStatus() != data.StatusOK {
+		//os.Exit(data.GetCmdStatus())
+	}
 }
 
 type Loader func(superCmd *cobra.Command, cfg *iqshell.Config)
