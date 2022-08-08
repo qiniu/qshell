@@ -127,9 +127,9 @@ func downloadFile(info *download.ApiInfo) (*download.ApiResult, *data.CodeError)
 	if res.IsExist {
 		log.InfoF("Download Skip because file exist, [%s:%s] => %s", info.Bucket, info.Key, res.FileAbsPath)
 	} else if res.IsUpdate {
-		log.InfoF("Download update Success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
+		log.InfoF("Download update Success, [%s:%s] => %s duration:%.2fs speed:%s", info.Bucket, info.Key, res.FileAbsPath, duration, speed)
 	} else {
-		log.InfoF("Download Success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
+		log.InfoF("Download Success, [%s:%s] => %s duration:%.2fs speed:%s", info.Bucket, info.Key, res.FileAbsPath, duration, speed)
 	}
 
 	return res, nil
