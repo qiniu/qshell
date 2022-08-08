@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -29,6 +30,19 @@ type sliceDownloader struct {
 	downloadError          *data.CodeError
 	currentReadSliceIndex  int64
 	currentReadSliceOffset int64
+	locker                 sync.Mutex
+}
+
+func (s *sliceDownloader) getDownloadError() *data.CodeError {
+	s.locker.Lock()
+	defer s.locker.Unlock()
+	return s.downloadError
+}
+
+func (s *sliceDownloader) setDownloadError(err *data.CodeError) {
+	s.locker.Lock()
+	defer s.locker.Unlock()
+	s.downloadError = err
 }
 
 func (s *sliceDownloader) Download(info *ApiInfo) (response *http.Response, err *data.CodeError) {
@@ -131,12 +145,12 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 	for i := 0; i < s.concurrentCount; i++ {
 		go func() {
 			for sl := range s.slices {
-				if s.downloadError != nil {
+				if s.getDownloadError() != nil {
 					break
 				}
 
-				if e := s.downloadSlice(info, sl); e != nil {
-					s.downloadError = e
+				if e := s.downloadSliceWithRetry(info, sl); e != nil {
+					s.setDownloadError(e)
 					break
 				}
 			}
@@ -153,6 +167,17 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 		Body:          s,
 		ContentLength: responseBodyContentLength,
 	}, nil
+}
+
+func (s *sliceDownloader) downloadSliceWithRetry(info *ApiInfo, sl slice) *data.CodeError {
+	var downloadErr *data.CodeError = nil
+	for i := 0; i < 3; i++ {
+		downloadErr = s.downloadSlice(info, sl)
+		if downloadErr == nil {
+			break
+		}
+	}
+	return downloadErr
 }
 
 func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError {
@@ -198,7 +223,8 @@ func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError
 }
 
 func (s *sliceDownloader) Read(p []byte) (int, error) {
-	if s.downloadError != nil {
+
+	if s.getDownloadError() != nil {
 		return 0, s.downloadError
 	}
 
@@ -208,6 +234,10 @@ func (s *sliceDownloader) Read(p []byte) (int, error) {
 
 	currentReadSlicePath := filepath.Join(s.slicesDir, fmt.Sprintf("%d", s.currentReadSliceIndex))
 	for {
+		if s.getDownloadError() != nil {
+			return 0, s.downloadError
+		}
+
 		exist, _ := utils.ExistFile(currentReadSlicePath)
 		if exist {
 			break
@@ -227,7 +257,6 @@ func (s *sliceDownloader) Read(p []byte) (int, error) {
 	}
 
 	if err != nil && errors.Is(err, io.EOF) {
-		// 只有最后一个片文件的 LF 符号可返回
 		s.currentReadSliceOffset = 0
 		s.currentReadSliceIndex += 1
 
