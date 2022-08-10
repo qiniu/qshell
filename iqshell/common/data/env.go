@@ -13,4 +13,3 @@ func IsTestMode() bool {
 func SetTestMode() *CodeError {
 	return ConvertError(os.Setenv(EnvKeyTest, TrueString))
 }
-
