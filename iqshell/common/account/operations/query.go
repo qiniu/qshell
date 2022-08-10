@@ -43,13 +43,16 @@ func List(cfg *iqshell.Config, info ListInfo) {
 		return
 	}
 
-	for _, acc := range accounts {
+	for index, acc := range accounts {
 		if info.OnlyListName {
 			log.AlertF(acc.Name)
 		} else {
-			log.AlertF("Name: %s", acc.Name)
-			log.AlertF("Id: %s", acc.AccessKey)
-			log.AlertF("SecretKey: %s", acc.SecretKey)
+			if index > 0 {
+				log.Alert(" ")
+			}
+			log.AlertF("%-12s: %s", "Name", acc.Name)
+			log.AlertF("%-12s: %s", "ID", acc.AccessKey)
+			log.AlertF("%-12s: %s", "SecretKey", acc.SecretKey)
 		}
 	}
 }
