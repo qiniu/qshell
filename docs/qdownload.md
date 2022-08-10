@@ -2,6 +2,9 @@
 `qdownload` 可以将七牛空间中的文件同步到本地磁盘中。支持只同步带特定前缀或者后缀的文件，也支持在本地备份路径不变的情况下进行增量同步。 需要额外指出的是，将文件同步到本地都是走的七牛存储源站的流量而不是 `CDN`
 的流量，因为 `CDN` 通常情况下会认为大量的文件下载操作是非法访问从而进行限制。
 
+注：
+- `Key` 中的 `/` 会被当做路径处理，也即任何以 `/` 结尾的 `Key` 均会被当做文件夹处理。
+
 ### 注：【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】
 
 本工具批量下载文件支持多文件并发下载，另外还支持单个文件的断点续传。除此之外，也可以支持指定前缀或者后缀的文件同步，注意这里的前缀只能指定一个，但是后缀可以指定多个，多个后缀直接使用英文的逗号(,)分隔。
@@ -50,7 +53,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - prefix：只同步指定前缀的文件，默认为空 【可选】
 - suffixes：只同步指定后缀的文件，默认为空 【可选】
 - key_file：配置一个文件，指定需要下载的 keys；默认为空，全量下载 bucket 中的文件 【可选】
-- save_path_handler：指定一个回调函数，此函数通过 Go 语言的模板实现，函数验证使用 func 命令；在构建文件的保存路径时，优先使用此选项进行构建，如果不配置则使用 $dest_dir + $文件分割符 + $Key 方式进行构建。具体语法可参考 func 命令说明，handler 使用方式下方有示例可供参考 【可选】
+- save_path_handler：指定一个回调函数；在构建文件的保存路径时，优先使用此选项进行构建，如果不配置则使用 $dest_dir + $文件分割符 + $Key 方式进行构建。文档下面有常用场景实例。此函数通过 Go 语言的模板实现，函数验证使用 func 命令，具体语法可参考 func 命令说明，handler 使用方式下方有示例可供参考 【可选】
 - check_hash：是否验证 hash，如果开启可能会耗费较长时间，默认为 `false` 【可选】
 - cdn_domain：设置下载的 CDN 域名，默认为空表示从存储源站下载，【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】 【可选】
 - referer：如果 CDN 域名配置了域名白名单防盗链，需要指定一个允许访问的 referer 地址；默认为空 【可选】
@@ -94,41 +97,49 @@ qshell qdownload -c 10 qdisk_down.conf
 
 
 ### `save_path_handler` 说明
-`save_path_handler` 可使用的文件参数信息如下：
+`save_path_handler` 函数中可使用的文件参数有：
 - Key: 文件的在七牛云存储的 Key 值
+- DestDir: 下载配置的保存路径
+- ToFile: 默认的下载路径
 - ServerFileSize: 文件的在七牛云存储的大小
 - ServerFileHash: 文件的在七牛云存储的 Etag
 - ServerFilePutTime: 文件的在七牛云存储的上传时间
-- DestDir: 下载配置的保存路径
-- ToFile: 默认的下载路径
 
 `save_path_handler` 常见示例：
 ```
-1. 展示下载文件的信息
-$qshell func '{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}' '{{.Key}} {{.ServerFileSize}} {{.ServerFileHash}} {{printf "%.0f" .ServerFilePutTime}}  {{.DestDir}}  {{.ToFile}}'
+1. 在不配置 save_path_handler 时，文件保存路径的构造方式为：
+$dest_dir + $文件分割符 + $Key
 
 
-2. 自定义文件下载后的保存路径：$DestDir + $文件分割符 + ($Key 剔除首部 a/ 的部分)
-文件信息：{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}
-save_path_handler: "{{pathJoin .DestDir (trimPrefix \"a/\" .Key)}}"
-最终文件的保存路径为：
-/user/lala/b/hello.png
+2. 配置 save_path_handler ，使在构造文件保存路径时，去除 Key 中一部分前缀 a/：
+save_path_handler 配置："{{pathJoin .DestDir (trimPrefix \"a/\" .Key)}}"
+pathJoin：路径拼接函数
+.DestDir：对应配置文件中的 dest_dir，假设配置为："/user/lala/"
+trimPrefix：截掉字符串头函数，trimPrefix \"a/\" .Key 表示：将文件 Key 的 "a/" 截掉
+.Key：表示文件的 Key，假设为："a/b/hello.png"
+上面信息最终构造的文件路径为："/user/lala/b/hello.png"
 
+如果需要验证 save_path_handler 配置是否符合预期，可使用 func 命令。
+参数部分：'{"Key": "a/b/hello.png", "DestDir": "/user/lala/"}'，这部分信息在 download 时会自动生成并作为回调函数的参数，用户不用关心。
+回调函数 save_path_handler : "{{pathJoin .DestDir (trimPrefix \"a/\" .Key)}}"
 验证：
-$qshell func '{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}' "{{pathJoin .DestDir (trimPrefix \"a/\" .Key)}}"
+$qshell func '{"Key": "a/b/hello.png", "DestDir": "/user/lala/"}' "{{pathJoin .DestDir (trimPrefix \"a/\" .Key)}}"
 输出：
 [W]  output is insert [], and you should be careful with spaces etc.
 [I]  [/user/lala/b/hello.png]
 
 
 3. 自定义文件下载后的保存路径：$DestDir + $文件分割符 + ($Key 首部 a/ 替换成 newA/)
-文件信息：{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}
-save_path_handler: "{{pathJoin .DestDir \"newA\" (trimPrefix \"a/\" .Key)}}"
+save_path_handler 配置: "{{pathJoin .DestDir \"newA\" (trimPrefix \"a/\" .Key)}}"
+pathJoin：路径拼接函数
+.DestDir：对应配置文件中的 dest_dir，假设配置为："/user/lala/"
+trimPrefix：截掉字符串头函数，trimPrefix \"a/\" .Key 表示：将文件 Key 的 "a/" 截掉
+.Key：表示文件的 Key，假设为："a/b/hello.png"
 最终文件的保存路径为：
 /user/lala/newA/b/hello.png
 
 验证：
-$qshell func '{"Key": "a/b/hello.png", "ServerFileSize": 123, "ServerFileHash": "HashValue", "ServerFilePutTime": 16559775280027185, "DestDir": "/user/lala/", "ToFile": "/user/lala/a/b/hello.png"}' "{{pathJoin .DestDir \"newA\" (trimPrefix \"a/\" .Key)}}"
+$qshell func '{"Key": "a/b/hello.png", "DestDir": "/user/lala/"}' "{{pathJoin .DestDir \"newA\" (trimPrefix \"a/\" .Key)}}"
 [W]  output is insert [], and you should be careful with spaces etc.
 [I]  [/user/lala/newA/b/hello.png]
 ```
