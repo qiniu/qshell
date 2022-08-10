@@ -33,28 +33,28 @@ type CheckAndLoadInfo struct {
 }
 
 func CheckAndLoad(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
-	if !Load(cfg, info) {
+	if ShowDocumentIfNeeded(cfg) {
+		return false
+	}
+	if !load(cfg, info) {
 		return false
 	}
 	return Check(cfg, info)
 }
 
-func Load(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
-	if ShowDocumentIfNeeded(cfg) {
-		return false
-	}
-	if !LoadBase(cfg) {
+func load(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
+	if !loadBase(cfg) {
 		data.SetCmdStatusError()
 		return false
 	}
-	if !LoadWorkspace(cfg) {
+	if !loadWorkspace(cfg) {
 		data.SetCmdStatusError()
 		return false
 	}
 	if info.BeforeLoadFileLog != nil {
 		info.BeforeLoadFileLog()
 	}
-	shouldContinue = LoadFileLog(cfg)
+	shouldContinue = loadFileLog(cfg)
 	if info.AfterLoadFileLog != nil {
 		info.AfterLoadFileLog()
 	}
@@ -85,7 +85,7 @@ func ShowDocumentIfNeeded(cfg *Config) bool {
 	return true
 }
 
-func LoadBase(cfg *Config) (shouldContinue bool) {
+func loadBase(cfg *Config) (shouldContinue bool) {
 	//set cpu count
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -110,7 +110,7 @@ func LoadBase(cfg *Config) (shouldContinue bool) {
 	return true
 }
 
-func LoadWorkspace(cfg *Config) (shouldContinue bool) {
+func loadWorkspace(cfg *Config) (shouldContinue bool) {
 	// 获取工作目录
 	workspacePath := ""
 	if cfg.Local {
@@ -135,7 +135,7 @@ func LoadWorkspace(cfg *Config) (shouldContinue bool) {
 	return true
 }
 
-func LoadFileLog(cfg *Config) (shouldContinue bool) {
+func loadFileLog(cfg *Config) (shouldContinue bool) {
 	// 配置日志文件输出
 	if ls := workspace.GetLogConfig(); ls != nil && ls.Enable() {
 		if data.Empty(ls.LogFile) {
