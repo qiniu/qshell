@@ -36,6 +36,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 	}
 
 	if info.Detail {
+		log.AlertF("%s", servers.BucketInfoDetailDescriptionStringFormat())
 		for _, b := range buckets {
 			log.AlertF("%s", b.DetailDescriptionString())
 		}
@@ -44,5 +45,4 @@ func List(cfg *iqshell.Config, info ListInfo) {
 			log.AlertF("%s", b.DescriptionString())
 		}
 	}
-
 }
