@@ -105,5 +105,11 @@ func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.R
 	}
 
 	response, rErr := storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+	if response != nil && response.Header != nil {
+		etag := response.Header.Get("Etag")
+		if len(etag) > 0 && etag != fmt.Sprintf("\"%s\"", info.ServerFileHash) {
+			return nil, data.NewEmptyError().AppendDescF("file has change, hash before:%s now:%s", info.ServerFileHash, etag)
+		}
+	}
 	return response, data.ConvertError(rErr)
 }
