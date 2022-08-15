@@ -82,7 +82,8 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		Key:                    info.Key,
 		ServerFilePutTime:      fileStatus.PutTime,
 		ServerFileSize:         fileStatus.FSize,
-		ServerFileHash:         "",
+		ServerFileHash:         fileStatus.Hash,
+		CheckHash:              info.CheckHash,
 		FromBytes:              0,
 		RemoveTempWhileError:   info.RemoveTempWhileError,
 		UseGetFileApi:          info.UseGetFileApi,
@@ -91,9 +92,6 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		SliceConcurrentCount:   info.SliceConcurrentCount,
 		SliceFileSizeThreshold: info.SliceFileSizeThreshold,
 		Progress:               progress.NewPrintProgress(" 进度"),
-	}
-	if info.CheckHash {
-		apiInfo.ServerFileHash = fileStatus.Hash
 	}
 	_, _ = downloadFile(apiInfo)
 }

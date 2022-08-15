@@ -192,9 +192,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			apiInfo.SliceSize = info.SliceSize
 			apiInfo.SliceConcurrentCount = info.SliceConcurrentCount
 			apiInfo.SliceFileSizeThreshold = info.SliceFileSizeThreshold
-			if !info.CheckHash {
-				apiInfo.ServerFileHash = ""
-			}
+			apiInfo.CheckHash = info.CheckHash
+
 			apiInfo.DestDir = info.DestDir
 			apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
 			if savePathTemplate != nil {

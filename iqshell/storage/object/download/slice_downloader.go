@@ -22,7 +22,8 @@ type slice struct {
 
 // 切片下载
 type sliceDownloader struct {
-	SliceSize              int64 `json:"slice_size"`
+	SliceSize              int64  `json:"slice_size"`
+	FileHash               string `json:"file_hash"`
 	slicesDir              string
 	concurrentCount        int
 	totalSliceCount        int64
@@ -58,6 +59,7 @@ func (s *sliceDownloader) Download(info *ApiInfo) (response *http.Response, err 
 // 加载本地下载配置文件，没有则创建
 func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 	s.slices = make(chan slice, s.concurrentCount)
+	s.FileHash = info.ServerFileHash
 	toFile, err := filepath.Abs(info.ToFile)
 	if err != nil {
 		return data.NewEmptyError().AppendDescF("slice download, get abs file path:%s error:%v", info.ToFile, err)
@@ -85,7 +87,7 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 		log.WarningF("slice download UnMarshal config file error:%v", e)
 	}
 	// 分片大小不同会导致下载逻辑出错
-	if oldConfig.SliceSize != s.SliceSize {
+	if oldConfig.SliceSize != s.SliceSize || oldConfig.FileHash != s.FileHash {
 		// 不同则删除原来已下载但为合并的文件
 		if e := os.RemoveAll(s.slicesDir); e != nil {
 			log.WarningF("slice download remove all in dir:%s error:%v", s.slicesDir, e)
@@ -93,6 +95,7 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 			log.DebugF("slice download remove all in dir:%s", s.slicesDir)
 		}
 	}
+
 	// 配置文件保存
 	if e := utils.MarshalToFile(configPath, s); e != nil {
 		log.WarningF("slice download marshal config file error:%v", e)

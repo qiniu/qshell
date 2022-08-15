@@ -29,6 +29,7 @@ type ApiInfo struct {
 	ServerFilePutTime      int64             `json:"server_file_put_time"` // 文件修改时间 【选填】
 	ServerFileSize         int64             `json:"server_file_size"`     // 文件大小，有值则会检测文件大小 【选填】
 	ServerFileHash         string            `json:"server_file_hash"`     // 文件 hash，有值则会检测 hash 【选填】
+	CheckHash              bool              `json:"-"`                    // 是否检测文件 hash 【选填】
 	FromBytes              int64             `json:"-"`                    // 下载开始的位置，内部会缓存 【内部使用】
 	ToBytes                int64             `json:"-"`                    // 下载的终止位置【内部使用】
 	RemoveTempWhileError   bool              `json:"-"`                    // 当遇到错误时删除临时文件 【选填】
@@ -85,17 +86,14 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 
 	// 文件存在则检查文件状态
 	checkMode := object.MatchCheckModeFileSize
-	if len(info.ServerFileHash) > 0 {
+	if info.CheckHash {
 		checkMode = object.MatchCheckModeFileHash
 	}
 
 	// 读不到 status 按不存在该文件处理
 	fileStatus, _ := os.Stat(f.toAbsFile)
 	tempFileStatus, _ := os.Stat(f.tempFile)
-	if tempFileStatus != nil && tempFileStatus.Size() > 0 {
-		// 文件已下载了一部分，需要继续下载
-		res.IsUpdate = true
-	} else if fileStatus != nil {
+	if fileStatus != nil {
 		// 文件已下载，检测文件内容
 		checkResult, mErr := object.Match(object.MatchApiInfo{
 			Bucket:         info.Bucket,
@@ -122,6 +120,26 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 			}
 			return
 		}
+	} else if tempFileStatus != nil && tempFileStatus.Size() > 0 {
+		// 文件已下载了一部分，需要继续下载
+		res.IsUpdate = true
+
+		// 下载了一半， 先检查文件是否已经改变，改变则移除临时文件，重新下载
+		status, sErr := object.Status(object.StatusApiInfo{
+			Bucket:   info.Bucket,
+			Key:      info.Key,
+			NeedPart: false,
+		})
+		if sErr != nil {
+			return nil, data.NewEmptyError().AppendDescF("download part, get file status error:%v", sErr)
+		}
+		if info.ServerFileSize != status.FSize || (len(info.ServerFileHash) > 0 && info.ServerFileHash != status.Hash) {
+			f.fromBytes = 0
+			log.DebugF("download part, remove download file because file doesn't match")
+			if rErr := os.Remove(f.tempFile); rErr != nil {
+				log.ErrorF("download part, remove download file error:%s", rErr)
+			}
+		}
 	}
 
 	// 下载
@@ -145,6 +163,10 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		ServerFileSize: info.ServerFileSize,
 	})
 	if mErr != nil || (checkResult != nil && !checkResult.Match) {
+		log.DebugF("after download, remove download file because file doesn't match")
+		if rErr := os.Remove(f.toAbsFile); rErr != nil {
+			log.ErrorF("after download, remove download file error:%s", rErr)
+		}
 		return res, data.NewEmptyError().AppendDesc("check error after download").AppendError(mErr)
 	}
 
