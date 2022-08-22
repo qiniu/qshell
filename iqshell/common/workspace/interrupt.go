@@ -49,5 +49,6 @@ func observerCmdInterrupt() {
 		data.SetCmdStatusUserCancel()
 		Cancel()
 		notifyCancelSignalToObservers(si)
+		os.Exit(data.StatusUserCancel)
 	}()
 }
