@@ -170,17 +170,6 @@ func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		return
 	}
 
-	if stat, sErr := object.Status(object.StatusApiInfo{
-		Bucket:   info.ToBucket,
-		Key:      info.SaveKey,
-		NeedPart: false,
-	}); sErr != nil {
-		err = data.NewEmptyError().AppendDesc("get file status after upload").AppendDescF("upload error:%v", sErr)
-		return
-	} else {
-		res.ServerPutTime = stat.PutTime
-	}
-
 	if info.CheckHash {
 		if _, mErr := object.Match(object.MatchApiInfo{
 			Bucket:         info.ToBucket,

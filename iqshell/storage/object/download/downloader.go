@@ -79,7 +79,7 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		if !res.IsExist {
 			err = utils.CreateDirIfNotExist(f.toAbsFile)
 		}
-		res.FileModifyTime, _ = utils.FileModify(f.toAbsFile)
+		res.FileModifyTime, _ = utils.LocalFileModify(f.toAbsFile)
 		return res, err
 	}
 
@@ -121,11 +121,6 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 
 	// 下载
 	err = download(f, info)
-	if err != nil {
-		return
-	}
-
-	info.ServerFilePutTime, err = utils.FileModify(f.toAbsFile)
 	if err != nil {
 		return
 	}
