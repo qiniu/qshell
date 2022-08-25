@@ -3,7 +3,6 @@ package download
 import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
-	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -104,7 +103,7 @@ func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.R
 		headers.Add("Referer", info.Referer)
 	}
 
-	response, rErr := storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
 	if response != nil && response.Header != nil {
 		etag := response.Header.Get("Etag")
 		if len(etag) > 0 && etag != fmt.Sprintf("\"%s\"", info.ServerFileHash) {

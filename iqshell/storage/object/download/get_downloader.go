@@ -8,7 +8,9 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"net"
 	"net/http"
+	"time"
 )
 
 type getDownloader struct {
@@ -98,7 +100,7 @@ func (g *getDownloader) download(host *host.Host, info *ApiInfo) (*http.Response
 	if len(info.Referer) > 0 {
 		headers.Add("Referer", info.Referer)
 	}
-	response, rErr := storage.DefaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
 	if response != nil && response.Header != nil {
 		etag := response.Header.Get("Etag")
 		if len(etag) > 0 && etag != fmt.Sprintf("\"%s\"", info.ServerFileHash) {
@@ -106,4 +108,21 @@ func (g *getDownloader) download(host *host.Host, info *ApiInfo) (*http.Response
 		}
 	}
 	return response, data.ConvertError(rErr)
+}
+
+var defaultClient = storage.Client{
+	Client: &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   10 * time.Second,
+				KeepAlive: 10 * time.Second,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       10 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	},
 }
