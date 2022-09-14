@@ -21,7 +21,7 @@ func RunCmd(name string, params []string) (string, *data.CodeError) {
 	c.Stderr = os.Stderr
 
 	if err := c.Run(); err != nil {
-		return "", data.NewEmptyError().AppendDescF("cmd start:%v", err)
+		return "", data.NewEmptyError().AppendDescF("cmd run error:%v", err)
 	}
 	return buff.String(), nil
 }

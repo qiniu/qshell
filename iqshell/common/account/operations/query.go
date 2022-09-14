@@ -50,9 +50,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 			if index > 0 {
 				log.Alert(" ")
 			}
-			log.AlertF("%-12s: %s", "Name", acc.Name)
-			log.AlertF("%-12s: %s", "ID", acc.AccessKey)
-			log.AlertF("%-12s: %s", "SecretKey", acc.SecretKey)
+			log.AlertF(acc.String())
 		}
 	}
 }

@@ -101,6 +101,7 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 	if oErr != nil {
 		return result, data.NewEmptyError().AppendDescF("Match check hash, get local file error:%v", oErr)
 	}
+	defer hashFile.Close()
 
 	var serverObjectStat *StatusResult
 	if len(info.ServerFileHash) == 0 {
@@ -149,7 +150,7 @@ func matchHash(info MatchApiInfo) (result *MatchResult, err *data.CodeError) {
 		}
 		log.DebugF("Match check hash, get etag by v1 for key:%s hash:%s", info.Key, hash)
 	}
-	log.DebugF("Match check hash,       server hash, key:%s hash:%s", info.Key, hash)
+	log.DebugF("Match check hash,       server hash, key:%s hash:%s", info.Key, info.ServerFileHash)
 	if hash != info.ServerFileHash {
 		return result, data.NewEmptyError().AppendDescF("Match check hash, file hash doesn't match for key:%s, local file hash:%s server file hash:%s", info.Key, hash, info.ServerFileHash)
 	}

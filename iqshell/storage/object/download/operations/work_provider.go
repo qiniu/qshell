@@ -14,12 +14,13 @@ import (
 	"time"
 )
 
-func NewWorkProvider(bucket string, inputFile string, itemSeparate string) flow.WorkProvider {
+func NewWorkProvider(bucket string, inputFile string, itemSeparate string, infoResetHandler apiInfoResetHandler) flow.WorkProvider {
 	provider := &workProvider{
 		totalCount:       0,
 		bucket:           bucket,
 		inputFile:        inputFile,
 		itemSeparate:     itemSeparate,
+		infoResetHandler: infoResetHandler,
 		downloadItemChan: make(chan *downloadItem),
 	}
 	if len(inputFile) > 0 {
@@ -30,11 +31,14 @@ func NewWorkProvider(bucket string, inputFile string, itemSeparate string) flow.
 	return provider
 }
 
+type apiInfoResetHandler func(apiInfo *download.ApiInfo) *data.CodeError
+
 type workProvider struct {
 	totalCount       int64
 	itemSeparate     string
 	inputFile        string
 	bucket           string
+	infoResetHandler apiInfoResetHandler
 	downloadItemChan chan *downloadItem
 }
 
@@ -73,12 +77,18 @@ func (w *workProvider) getWorkInfoFromFile() {
 					return nil, alert.Error("key invalid", "")
 				}
 
-				return &download.ApiInfo{
+				info := &download.ApiInfo{
 					Key:               listObject.Key,
 					ServerFileSize:    listObject.Fsize,
 					ServerFileHash:    listObject.Hash,
 					ServerFilePutTime: listObject.PutTime,
-				}, nil
+				}
+				if w.infoResetHandler != nil {
+					if e = w.infoResetHandler(info); e != nil {
+						return nil, e
+					}
+				}
+				return info, nil
 			}))
 
 		if err != nil {
@@ -153,19 +163,26 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) {
 				}
 				downItem.err = data.NewError(result.Code, result.Error)
 			} else {
+				info := &download.ApiInfo{
+					Bucket:            w.bucket,
+					Key:               item.Key,
+					ServerFileHash:    result.Hash,
+					ServerFileSize:    result.FSize,
+					ServerFilePutTime: result.PutTime,
+				}
+				if w.infoResetHandler != nil {
+					if e := w.infoResetHandler(info); e != nil {
+						log.ErrorF("reset download api error:%v", e)
+						continue
+					}
+				}
 				downItem.workInfo = &flow.WorkInfo{
 					Data: fmt.Sprintf("%s%s%d%s%s%s%d",
 						item.Key, w.itemSeparate,
 						result.FSize, w.itemSeparate,
 						result.Hash, w.itemSeparate,
 						result.PutTime),
-					Work: &download.ApiInfo{
-						Bucket:            w.bucket,
-						Key:               item.Key,
-						ServerFileHash:    result.Hash,
-						ServerFileSize:    result.FSize,
-						ServerFilePutTime: result.PutTime,
-					},
+					Work: info,
 				}
 			}
 			w.downloadItemChan <- downItem
@@ -196,6 +213,19 @@ func (w *workProvider) getWorkInfoFromBucket() {
 			Suffixes:  nil,
 			MaxRetry:  20,
 		}, func(marker string, object bucket.ListObject) (bool, *data.CodeError) {
+			info := &download.ApiInfo{
+				Bucket:            w.bucket,
+				Key:               object.Key,
+				ServerFileHash:    object.Hash,
+				ServerFileSize:    object.Fsize,
+				ServerFilePutTime: object.PutTime,
+			}
+			if w.infoResetHandler != nil {
+				if err := w.infoResetHandler(info); err != nil {
+					return false, err
+				}
+			}
+
 			w.downloadItemChan <- &downloadItem{
 				workInfo: &flow.WorkInfo{
 					Data: fmt.Sprintf("%s%s%d%s%s%s%d",
@@ -203,13 +233,7 @@ func (w *workProvider) getWorkInfoFromBucket() {
 						object.Fsize, w.itemSeparate,
 						object.Hash, w.itemSeparate,
 						object.PutTime),
-					Work: &download.ApiInfo{
-						Bucket:            w.bucket,
-						Key:               object.Key,
-						ServerFileHash:    object.Hash,
-						ServerFileSize:    object.Fsize,
-						ServerFilePutTime: object.PutTime,
-					},
+					Work: info,
 				},
 				err: nil,
 			}
