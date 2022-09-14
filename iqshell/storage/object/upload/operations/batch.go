@@ -330,7 +330,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			// 本地文件和服务端文件均没有变化，则不需要重新上传
 			isServerFileNotChange := true
 			if uploadConfig.CheckHash {
-				// 检测 hash 需要调用额外接口，如果用户不检测 hash 则认为服务端文件没有变化。
+				// 检测 hash 需要调用 Stat 接口查询 hash，如果用户不检测 hash 则认为服务端文件没有变化。
 				stat, sErr := object.Status(object.StatusApiInfo{
 					Bucket:   uploadInfo.ToBucket,
 					Key:      uploadInfo.SaveKey,
@@ -341,6 +341,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				}
 				isServerFileNotChange = stat.Hash == result.ServerFileHash
 			}
+
 			// LocalFileModifyTime 单位是 100ns
 			isLocalFileNotChange, mErr := utils.IsLocalFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime/10000000)
 			// 本地文件没有变化，服务端文件没有变化，则不需要再重新上传
