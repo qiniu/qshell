@@ -45,15 +45,13 @@ func (d *fileInfo) prepare() *data.CodeError {
 	var err error
 	d.toAbsFile, err = filepath.Abs(d.toFile)
 	if err != nil {
-		err = data.NewEmptyError().AppendDesc("get save file abs path error:" + err.Error())
-		return data.ConvertError(err)
+		return data.NewEmptyError().AppendDescF("get abs path of file to save error, path:%s error:%v", d.toFile, err)
 	}
 
 	if strings.ToLower(d.fileEncoding) == "gbk" {
 		d.toAbsFile, err = utf82GBK(d.toFile)
 		if err != nil {
-			err = data.NewEmptyError().AppendDesc("gbk file path:" + d.toFile + " error:" + err.Error())
-			return data.ConvertError(err)
+			return data.NewEmptyError().AppendDesc("gbk file path:" + d.toFile + " error:" + err.Error())
 		}
 	}
 

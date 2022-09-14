@@ -15,6 +15,10 @@ qshell get <Bucket> <Key> [-o <OutFile>]
 - --domain：下载请求的 domain 信息。【可选】
 - --get-file-api: 当存储服务端支持 getfile 接口时才有效。【可选】
 - --check-hash: 下载后检测本地文件和服务端文件 hash 的一致性。【可选】
+- --enable-slice: 是否开启切片下载，需要注意 `--slice-file-size-threshold` 切片阈值选项的配置，只有开启切片下载，并且下载的文件大小大于切片阈值方会启动切片下载。默认不开启。【可选】
+- --slice-size: 切片大小；当使用切片下载时，每个切片的大小；单位：B。默认为 4194304，也即 4MB。【可选】
+- --slice-concurrent-count: 切片下载的并发度；默认为 10 【可选】
+- --slice-file-size-threshold: 切片下载的文件阈值，当开启切片下载，并且文件大小大于此阈值时方会启用切片下载。【可选】
 - --remove-temp-while-error: 当下载遇到错误时删除之前下载的部分文件缓存，默认为 `false` (不删除)【可选】
 
 # 示例

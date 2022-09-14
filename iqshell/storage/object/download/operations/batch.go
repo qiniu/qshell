@@ -186,35 +186,40 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}
 
 	flow.New(info.Info).
-		WorkProvider(NewWorkProvider(info.Bucket, info.InputFile, info.ItemSeparate)).
+		WorkProvider(NewWorkProvider(info.Bucket, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
+			apiInfo.HostProvider = hostProvider
+			apiInfo.Referer = info.Referer
+			apiInfo.FileEncoding = info.FileEncoding
+			apiInfo.Bucket = info.Bucket
+			apiInfo.RemoveTempWhileError = info.RemoveTempWhileError
+			apiInfo.UseGetFileApi = info.GetFileApi
+			apiInfo.EnableSlice = info.EnableSlice
+			apiInfo.SliceSize = info.SliceSize
+			apiInfo.SliceConcurrentCount = info.SliceConcurrentCount
+			apiInfo.SliceFileSizeThreshold = info.SliceFileSizeThreshold
+			apiInfo.CheckHash = info.CheckHash
+
+			apiInfo.DestDir = info.DestDir
+			apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
+			if savePathTemplate != nil {
+				if path, rErr := savePathTemplate.Run(apiInfo); rErr != nil {
+					return rErr
+				} else {
+					apiInfo.ToFile = path
+				}
+			}
+			return nil
+		})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
 				apiInfo := workInfo.Work.(*download.ApiInfo)
-				apiInfo.HostProvider = hostProvider
-				apiInfo.Referer = info.Referer
-				apiInfo.FileEncoding = info.FileEncoding
-				apiInfo.Bucket = info.Bucket
-				apiInfo.RemoveTempWhileError = info.RemoveTempWhileError
-				apiInfo.UseGetFileApi = info.GetFileApi
-				if !info.CheckHash {
-					apiInfo.ServerFileHash = ""
-				}
-				apiInfo.DestDir = info.DestDir
-				apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
-				if savePathTemplate != nil {
-					if path, rErr := savePathTemplate.Run(apiInfo); rErr != nil {
-						return nil, rErr
-					} else {
-						apiInfo.ToFile = path
-					}
-				}
-
 				metric.AddCurrentCount(1)
 				metric.PrintProgress("Downloading: " + workInfo.Data)
 
 				if file, e := downloadFile(apiInfo); e != nil {
 					return nil, e
 				} else {
+					log.DebugF("Download Result:%+v", file)
 					return file, nil
 				}
 			}), nil
@@ -243,7 +248,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				return true, data.NewEmptyError().AppendDesc("no result found")
 			}
 			if !result.IsValid() {
-				return true, data.NewEmptyError().AppendDesc("result is invalid")
+				return true, data.NewEmptyError().AppendDescF("result is invalid:%+v", result)
 			}
 
 			isLocalFileNotChange, _ := utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime)
