@@ -152,6 +152,12 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		return
 	}
 
+	if fStatus, sErr := os.Stat(f.toAbsFile); sErr != nil {
+		return res, data.NewEmptyError().AppendDesc("get file stat error after download").AppendError(sErr)
+	} else {
+		res.FileModifyTime = fStatus.ModTime().Unix()
+	}
+
 	// 检查下载后的数据是否符合预期
 	checkResult, mErr := object.Match(object.MatchApiInfo{
 		Bucket:         info.Bucket,
