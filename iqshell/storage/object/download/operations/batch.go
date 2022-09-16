@@ -2,6 +2,7 @@ package operations
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
@@ -29,6 +30,9 @@ type BatchDownloadWithConfigInfo struct {
 func (info *BatchDownloadWithConfigInfo) Check() *data.CodeError {
 	if err := info.Info.Check(); err != nil {
 		return err
+	}
+	if len(info.LocalDownloadConfig) == 0 {
+		return alert.CannotEmptyError("LocalDownloadConfig", "")
 	}
 	return nil
 }
