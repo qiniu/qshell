@@ -235,7 +235,7 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *da
 
 	bWriter := bufio.NewWriter(listResultFh)
 	title := strings.Join(info.ShowFields, info.OutputFieldsSep)
-	_, _ = bWriter.WriteString(title + "\n")
+	_, _ = bWriter.WriteString(fmt.Sprintln(title))
 	_ = bWriter.Flush()
 	lineCreator := &ListLineCreator{
 		Fields:   info.ShowFields,
@@ -244,7 +244,7 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *da
 	}
 	List(info.ListApiInfo, func(marker string, object ListObject) (bool, *data.CodeError) {
 		lineData := lineCreator.Create(&object)
-		if _, wErr := bWriter.WriteString(lineData + "\n"); wErr != nil {
+		if _, wErr := bWriter.WriteString(fmt.Sprintln(lineData)); wErr != nil {
 			return false, data.NewEmptyError().AppendDesc("write error:" + wErr.Error())
 		}
 

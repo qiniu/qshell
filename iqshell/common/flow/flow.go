@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"sync"
+	"time"
 )
 
 type Info struct {
@@ -27,6 +28,7 @@ type Flow struct {
 	WorkerProvider WorkerProvider // worker 提供者 【必填】
 
 	DoWorkInfoListMaxCount int           // Worker.DoWork 函数中 works 数组最大长度，最小长度为 1
+	Limit                  AutoLimit     // 速度限制，用于限制
 	EventListener          EventListener // work 处理事项监听者 【可选】
 	Overseer               Overseer      // work 监工，涉及 work 是否已处理相关的逻辑 【可选】
 	Skipper                Skipper       // work 是否跳过相关逻辑 【可选】
@@ -167,6 +169,10 @@ func (f *Flow) Start() {
 					break
 				}
 
+				if f.Limit != nil {
+					_ = f.Limit.Acquire(int64(len(workList)))
+				}
+
 				// workRecordList 有数据则长度和 workList 长度相同
 				workRecordList, workErr := worker.DoWork(workList)
 				if len(workRecordList) == 0 && workErr != nil {
@@ -188,13 +194,37 @@ func (f *Flow) Start() {
 					} else {
 						f.EventListener.OnWorkSuccess(workRecord.WorkInfo, workRecord.Result)
 					}
+
+					// 是否出发了上限，触发了，减小 limit count
+
 				}
 
+				isHitLimit := func(workRecord *WorkRecord) bool {
+					if f.Limit == nil {
+						return false
+					}
+
+					return f.Limit.IsLimitError(0, workRecord.Err)
+				}
+
+				var hitLimitCount int64 = 0
 				for _, record := range workRecordList {
 					if (record.Result == nil || !record.Result.IsValid()) && record.Err == nil {
 						record.Err = workErr
 					}
 					resultHandler(record)
+					if isHitLimit(record) {
+						hitLimitCount += 1
+					}
+				}
+
+				if f.Limit != nil {
+					f.Limit.Release(int64(len(workList)))
+
+					if hitLimitCount > 0 {
+						f.Limit.AddLimitCount(-1 * hitLimitCount)
+						time.Sleep(time.Millisecond * 1500)
+					}
 				}
 
 				// 检测是否需要停止

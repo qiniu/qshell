@@ -10,6 +10,11 @@ import (
 )
 
 func getDownloadHostProvider(cfg *config.Config, downloadCfg *DownloadCfg) host.Provider {
+	hosts := getDownloadHosts(cfg, downloadCfg)
+	return host.NewListProvider(hosts)
+}
+
+func getDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.Host {
 	var hosts []*host.Host
 	if downloadCfg.GetFileApi {
 		hosts = getFileApiHosts(cfg, downloadCfg)
@@ -22,7 +27,7 @@ func getDownloadHostProvider(cfg *config.Config, downloadCfg *DownloadCfg) host.
 		hostStrings = append(hostStrings, h.GetServer())
 	}
 	log.DebugF("download Domain:[%s]", strings.Join(hostStrings, ","))
-	return host.NewListProvider(hosts)
+	return hosts
 }
 
 func defaultDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.Host {
