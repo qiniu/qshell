@@ -195,7 +195,7 @@ func (h *handler) Start() {
 				}
 
 				for i, r := range resultList {
-					recordList[i].Result = &OperationResult{
+					result := &OperationResult{
 						Code:     r.Code,
 						Hash:     r.Data.Hash,
 						FSize:    r.Data.Fsize,
@@ -203,6 +203,10 @@ func (h *handler) Start() {
 						MimeType: r.Data.MimeType,
 						Type:     r.Data.Type,
 						Error:    r.Data.Error,
+					}
+					recordList[i].Result = result
+					if !result.IsSuccess() {
+						recordList[i].Err = data.NewError(result.Code, result.Error)
 					}
 				}
 				return recordList, nil
@@ -220,6 +224,10 @@ func (h *handler) Start() {
 				Err:    nil,
 			}
 		}).
+		SetLimit(flow.NewBlockLimit(h.info.WorkerCount*h.info.MaxOperationCountPerRequest,
+			flow.MaxLimitCount(h.info.WorkerCount*h.info.MaxOperationCountPerRequest),
+			flow.MinLimitCount(h.info.MaxOperationCountPerRequest),
+			flow.IncreaseLimitCount(h.info.MaxOperationCountPerRequest))).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
@@ -301,11 +309,11 @@ func (h *handler) Start() {
 			metric.AddCurrentCount(1)
 			metric.AddFailureCount(1)
 			metric.PrintProgress("Batching:" + work.Data)
-			h.exporter.Fail().ExportF("%s%s[%d]%s", work.Data, flow.ErrorSeparate, data.ErrorCodeUnknown, err.Desc)
+			h.exporter.Fail().ExportF("%s%s[%d]%s", work.Data, flow.ErrorSeparate, err.Code, err.Desc)
 
 			operation, _ := work.Work.(Operation)
 			h.onResult(work.Data, operation, &OperationResult{
-				Code:  data.ErrorCodeUnknown,
+				Code:  err.Code,
 				Error: err.Desc,
 			})
 		}).Build().Start()

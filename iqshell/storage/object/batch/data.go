@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	defaultOperationCountPerRequest = 1000
+	defaultOperationCountPerRequest = 250
 )
 
 // OperationCondition

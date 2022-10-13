@@ -9,10 +9,10 @@ import (
 // BlockLimit 并发 + 限流
 type BlockLimit interface {
 	Limit
-	AddLimitCount(limitCount int64)
+	AddLimitCount(limitCount int)
 }
 
-func NewBlockList(limitCount int64) BlockLimit {
+func NewBlockList(limitCount int) BlockLimit {
 	if limitCount <= 0 {
 		limitCount = 0
 	}
@@ -28,13 +28,13 @@ func NewBlockList(limitCount int64) BlockLimit {
 
 type blockLimit struct {
 	mu               sync.RWMutex //
-	limitCount       int64        // qps 及并发限制数
-	leftCount        int64        // 可消费的数量
-	indexOfRound     int64        // 当前轮中已消费的号
+	limitCount       int          // qps 及并发限制数
+	leftCount        int          // 可消费的数量
+	indexOfRound     int          // 当前轮中已消费的号
 	startTimeOfRound time.Time    // 当前轮开始时间
 }
 
-func (l *blockLimit) AddLimitCount(limitCount int64) {
+func (l *blockLimit) AddLimitCount(limitCount int) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.limitCount += limitCount
@@ -43,7 +43,7 @@ func (l *blockLimit) AddLimitCount(limitCount int64) {
 	}
 }
 
-func (l *blockLimit) Acquire(count int64) *data.CodeError {
+func (l *blockLimit) Acquire(count int) *data.CodeError {
 	if count <= 0 {
 		return nil
 	}
@@ -65,7 +65,7 @@ func (l *blockLimit) Acquire(count int64) *data.CodeError {
 	return nil
 }
 
-func (l *blockLimit) tryAcquire(count int64) int64 {
+func (l *blockLimit) tryAcquire(count int) int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -97,7 +97,7 @@ func (l *blockLimit) tryAcquire(count int64) int64 {
 	return count
 }
 
-func (l *blockLimit) Release(count int64) {
+func (l *blockLimit) Release(count int) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 

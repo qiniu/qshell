@@ -39,7 +39,9 @@ func (w *workerStruct) DoWork(workInfoList []*WorkInfo) ([]*WorkRecord, *data.Co
 
 	if w.DoFunc != nil {
 		return w.DoFunc(workInfoList)
-	} else if w.SimpleDoFunc != nil {
+	}
+
+	if w.SimpleDoFunc != nil {
 		recordList := make([]*WorkRecord, 0, len(workInfoList))
 		for _, workInfo := range workInfoList {
 			record := &WorkRecord{
@@ -49,7 +51,7 @@ func (w *workerStruct) DoWork(workInfoList []*WorkInfo) ([]*WorkRecord, *data.Co
 			recordList = append(recordList, record)
 		}
 		return recordList, nil
-	} else {
-		return nil, alert.Error("worker: no worker func", "")
 	}
+
+	return nil, alert.Error("worker: no worker func", "")
 }
