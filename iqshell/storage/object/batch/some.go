@@ -23,8 +23,8 @@ func Some(operations []Operation) ([]*OperationResult, *data.CodeError) {
 			WorkerCount:       1,
 			StopWhenWorkError: true,
 		},
-		WorkList:                    works,
-		MaxOperationCountPerRequest: defaultOperationCountPerRequest,
+		WorkList:                 works,
+		OperationCountPerRequest: defaultOperationCountPerRequest,
 	}).OnResult(func(operationInfo string, operation Operation, result *OperationResult) {
 		h.results = append(h.results, result)
 	}).OnError(func(err *data.CodeError) {

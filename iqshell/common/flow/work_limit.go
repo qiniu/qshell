@@ -3,7 +3,9 @@ package flow
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/limit"
+	"math/rand"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -40,8 +42,8 @@ func NewBlockLimit(limitCount int, options ...AutoLimitOption) limit.BlockLimit 
 		limitCount:               limitCount,
 		maxLimitCount:            0,
 		minLimitCount:            0,
-		increaseLimitCountPeriod: 2 * time.Second,
-		lastLimitCountChangeTime: time.Time{},
+		increaseLimitCountPeriod: 30 * time.Second,
+		lastLimitCountChangeTime: time.Now(),
 		increaseLimitCount:       10,
 	}
 	for _, option := range options {
@@ -60,16 +62,22 @@ type autoLimit struct {
 	increaseLimitCountPeriod time.Duration    // 增长检测周期
 	lastLimitCountChangeTime time.Time        // 上次减小限制数的时间
 	increaseLimitCount       int              // 增加幅度
+	shouldWait               bool             //
+	notReleaseCount          int64            //
 }
 
 func (l *autoLimit) check() {
 	if l.limitCount < 1 {
 		l.limitCount = 1
 	}
-	if l.maxLimitCount < l.limitCount {
-		l.maxLimitCount = 0
+
+	if l.maxLimitCount > 0 && l.maxLimitCount < l.limitCount {
+		// 上限尽可能小
+		l.limitCount = l.maxLimitCount
 	}
-	if l.minLimitCount > l.limitCount {
+
+	if l.minLimitCount > 0 && l.minLimitCount > l.limitCount {
+		// 下限尽可能不设置
 		l.minLimitCount = 0
 	}
 }
@@ -79,10 +87,16 @@ func (l *autoLimit) Acquire(count int) *data.CodeError {
 	if l.shouldAutoIncreaseLimitCount() {
 		l.AddLimitCount(l.increaseLimitCount)
 	}
+
+	l.waitIfNeeded()
+
+	atomic.AddInt64(&l.notReleaseCount, int64(count))
+
 	return l.blockLimit.Acquire(count)
 }
 
 func (l *autoLimit) Release(count int) {
+	atomic.AddInt64(&l.notReleaseCount, int64(-count))
 	l.blockLimit.Release(count)
 }
 
@@ -92,6 +106,11 @@ func (l *autoLimit) AddLimitCount(count int) {
 	}
 
 	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if count < 0 {
+		l.shouldWait = true
+	}
 
 	l.lastLimitCountChangeTime = time.Now()
 
@@ -102,8 +121,6 @@ func (l *autoLimit) AddLimitCount(count int) {
 		count = l.limitCount - l.minLimitCount
 	}
 	l.limitCount += count
-
-	l.mu.Unlock()
 
 	l.blockLimit.AddLimitCount(count)
 }
@@ -116,5 +133,24 @@ func (l *autoLimit) shouldAutoIncreaseLimitCount() bool {
 		return false
 	}
 
+	if l.shouldWait {
+		return false
+	}
+
 	return l.lastLimitCountChangeTime.Before(time.Now().Add(-1 * l.increaseLimitCountPeriod))
+}
+
+func (l *autoLimit) waitIfNeeded() {
+	waitTime := time.Millisecond * time.Duration(rand.Int31n(1000)+500)
+	for {
+		if !l.shouldWait {
+			break
+		}
+
+		if l.notReleaseCount <= (int64(l.limitCount) / 3) {
+			l.shouldWait = false
+		}
+
+		time.Sleep(waitTime)
+	}
 }

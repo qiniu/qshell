@@ -23,7 +23,9 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
-	setBatchCmdWorkCountFlags(cmd, &info.BatchInfo)
+	setBatchCmdWorkerCountFlags(cmd, &info.BatchInfo)
+	setBatchCmdMinWorkerCountFlags(cmd, &info.BatchInfo)
+	setBatchCmdWorkerCountIncreasePeriodFlags(cmd, &info.BatchInfo)
 	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdForceFlags(cmd, &info.BatchInfo)
@@ -47,7 +49,9 @@ var batchForbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
-	setBatchCmdWorkCountFlags(cmd, &info.BatchInfo)
+	setBatchCmdWorkerCountFlags(cmd, &info.BatchInfo)
+	setBatchCmdMinWorkerCountFlags(cmd, &info.BatchInfo)
+	setBatchCmdWorkerCountIncreasePeriodFlags(cmd, &info.BatchInfo)
 	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdForceFlags(cmd, &info.BatchInfo)
@@ -265,7 +269,9 @@ var batchFetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 func setBatchCmdDefaultFlags(cmd *cobra.Command, info *batch.Info) {
 	setBatchCmdInputFileFlags(cmd, info)
-	setBatchCmdWorkCountFlags(cmd, info)
+	setBatchCmdWorkerCountFlags(cmd, info)
+	setBatchCmdMinWorkerCountFlags(cmd, info)
+	setBatchCmdWorkerCountIncreasePeriodFlags(cmd, info)
 	setBatchCmdEnableRecordFlags(cmd, info)
 	setBatchCmdRecordRedoWhileErrorFlags(cmd, info)
 	setBatchCmdSuccessExportFileFlags(cmd, info)
@@ -279,8 +285,14 @@ func setBatchCmdInputFileFlags(cmd *cobra.Command, info *batch.Info) {
 func setBatchCmdForceFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force mode, default false")
 }
-func setBatchCmdWorkCountFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 1, "worker count. 1 means the number of objects in one operation is 1000 and if configured as 3 , the number of objects in one operation is 3000. This value needs to be consistent with the upper limit of Qiniu’s operation, otherwise unexpected errors will occur. Under normal circumstances you do not need to adjust this value and if you need please carefully.")
+func setBatchCmdWorkerCountFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 20, "worker count. 1 means the number of objects in one operation is 250 and if configured as 10 , the number of objects in one operation is 2500. This value needs to be consistent with the upper limit of Qiniu’s operation, otherwise unexpected errors will occur. Under normal circumstances you do not need to adjust this value and if you need please carefully.")
+}
+func setBatchCmdMinWorkerCountFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().IntVarP(&info.MinWorkerCount, "min-worker", "", 10, "min worker count. 1 means the number of objects in one operation is 1000 and if configured as 3 , the number of objects in one operation is 3000. for more, please refer to worker")
+}
+func setBatchCmdWorkerCountIncreasePeriodFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().IntVarP(&info.WorkerCountIncreasePeriod, "worker-count-increase-period", "", 60, "worker count increase period. when the worker count is too big, an overrun error will be triggered. In order to alleviate this problem, qshell will automatically reduce the worker count. In order to complete the operation as quickly as possible, qshell will periodically increase the worker count. unit: second")
 }
 func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default is \\t (tab)")

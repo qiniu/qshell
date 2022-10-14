@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -29,9 +30,9 @@ type Info struct {
 	MinItemsCount int         // 工作数据源：每行元素最小数量
 	EnableStdin   bool        // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
 
-	EnableRecord                bool // 是否开启 record
-	RecordRedoWhileError        bool // 重新执行任务时，如果任务已执行但是失败，则再重新执行一次。
-	MaxOperationCountPerRequest int
+	EnableRecord             bool // 是否开启 record
+	RecordRedoWhileError     bool // 重新执行任务时，如果任务已执行但是失败，则再重新执行一次。
+	OperationCountPerRequest int  // 每批操作最大的子任务数
 }
 
 func (info *Info) Check() *data.CodeError {
@@ -44,9 +45,9 @@ func (info *Info) Check() *data.CodeError {
 		info.MinItemsCount = 1
 	}
 
-	if info.MaxOperationCountPerRequest <= 0 ||
-		info.MaxOperationCountPerRequest > defaultOperationCountPerRequest {
-		info.MaxOperationCountPerRequest = defaultOperationCountPerRequest
+	if info.OperationCountPerRequest <= 0 ||
+		info.OperationCountPerRequest > defaultOperationCountPerRequest {
+		info.OperationCountPerRequest = defaultOperationCountPerRequest
 	}
 
 	if len(info.ItemSeparate) == 0 {
@@ -212,7 +213,7 @@ func (h *handler) Start() {
 				return recordList, nil
 			}), nil
 		})).
-		DoWorkListMaxCount(h.info.MaxOperationCountPerRequest).
+		DoWorkListMaxCount(h.info.OperationCountPerRequest).
 		SetOverseerEnable(h.info.EnableRecord).
 		SetDBOverseer(dbPath, func() *flow.WorkRecord {
 			return &flow.WorkRecord{
@@ -224,10 +225,11 @@ func (h *handler) Start() {
 				Err:    nil,
 			}
 		}).
-		SetLimit(flow.NewBlockLimit(h.info.WorkerCount*h.info.MaxOperationCountPerRequest,
-			flow.MaxLimitCount(h.info.WorkerCount*h.info.MaxOperationCountPerRequest),
-			flow.MinLimitCount(h.info.MaxOperationCountPerRequest),
-			flow.IncreaseLimitCount(h.info.MaxOperationCountPerRequest))).
+		SetLimit(flow.NewBlockLimit(h.info.WorkerCount*h.info.OperationCountPerRequest,
+			flow.MaxLimitCount(h.info.WorkerCount*h.info.OperationCountPerRequest),
+			flow.MinLimitCount(h.info.MinWorkerCount*h.info.OperationCountPerRequest),
+			flow.IncreaseLimitCount(h.info.OperationCountPerRequest),
+			flow.IncreaseLimitCountPeriod(time.Duration(h.info.WorkerCountIncreasePeriod)*time.Second))).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil

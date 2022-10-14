@@ -6,21 +6,31 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/limit"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"math/rand"
 	"sync"
 	"time"
 )
 
 type Info struct {
-	Force             bool // 是否强制直接进行 Flow, 不强制需要用户输入验证码验证
-	WorkerCount       int  // worker 数量
-	StopWhenWorkError bool // 当某个 work 遇到执行错误是否结束 batch 任务
+	Force                     bool // 是否强制直接进行 Flow, 不强制需要用户输入验证码验证
+	WorkerCount               int  // worker 数量
+	MinWorkerCount            int  // 最小 work 数量，当遇到限制错误会减小 work 数，最小 1
+	WorkerCountIncreasePeriod int  // WorkerCount 递增的周期，当在 WorkerCountIncreasePeriod 时间内没有遇到限制错误时，会尝试增加 WorkerCount，最小 10s
+	StopWhenWorkError         bool // 当某个 work 遇到执行错误是否结束 batch 任务
 }
 
 func (i *Info) Check() *data.CodeError {
 	if i.WorkerCount < 1 {
 		i.WorkerCount = 1
 	}
+
+	if i.MinWorkerCount < 1 {
+		i.MinWorkerCount = 1
+	}
+
+	if i.WorkerCountIncreasePeriod < 10 {
+		i.WorkerCountIncreasePeriod = 10
+	}
+
 	return nil
 }
 
@@ -158,6 +168,7 @@ func (f *Flow) Start() {
 	wait := &sync.WaitGroup{}
 	wait.Add(f.Info.WorkerCount)
 	for i := 0; i < f.Info.WorkerCount; i++ {
+		time.Sleep(time.Millisecond * time.Duration(50))
 		go func(index int) {
 			log.DebugF("work consumer %d start", index)
 			worker, err := f.WorkerProvider.Provide()
@@ -282,8 +293,6 @@ func (f *Flow) limitCountDecrease(count int) {
 	}
 
 	f.Limit.AddLimitCount(-1 * count)
-	ms := rand.Int31n(10) + 5
-	time.Sleep(time.Second * time.Duration(ms))
 }
 
 func (f *Flow) tryChangeWorkGroupCount(err *data.CodeError) {

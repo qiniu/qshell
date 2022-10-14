@@ -2,6 +2,7 @@ package limit
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"sync"
 	"time"
 )
@@ -22,7 +23,7 @@ func NewBlockList(limitCount int) BlockLimit {
 		limitCount:       limitCount,
 		leftCount:        limitCount,
 		indexOfRound:     0,
-		startTimeOfRound: time.Now().Add(time.Second * -1),
+		startTimeOfRound: time.Now().Add(time.Second * -10),
 	}
 }
 
@@ -34,13 +35,16 @@ type blockLimit struct {
 	startTimeOfRound time.Time    // 当前轮开始时间
 }
 
-func (l *blockLimit) AddLimitCount(limitCount int) {
+func (l *blockLimit) AddLimitCount(count int) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.limitCount += limitCount
-	if l.limitCount < 1 {
-		l.limitCount = 1
+
+	if (l.limitCount + count) < 1 {
+		count = l.limitCount - 1
 	}
+	l.limitCount += count
+	l.leftCount = l.limitCount + count
+	log.ErrorF("===== limitCount:%d", l.limitCount)
 }
 
 func (l *blockLimit) Acquire(count int) *data.CodeError {
@@ -48,52 +52,49 @@ func (l *blockLimit) Acquire(count int) *data.CodeError {
 		return nil
 	}
 
-	leftCount := count
+	lCount := count
 	for {
-		if leftCount <= 0 {
+		if lCount <= 0 {
 			break
 		}
 
-		if c := l.tryAcquire(leftCount); c <= 0 {
+		if c := l.tryAcquire(lCount); c <= 0 {
 			// 触及限制
 			time.Sleep(time.Millisecond * 10)
 			continue
 		} else {
-			leftCount -= c
+			lCount -= c
 		}
 	}
 	return nil
 }
 
 func (l *blockLimit) tryAcquire(count int) int {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 
 	if count > l.limitCount {
 		count = l.limitCount
 	}
 
+	// 没有余量，并发耗尽
 	if l.leftCount < count {
-		// 并发耗尽
 		return 0
 	}
 
+	// 并发满足，查看 QPS 是否超标
 	current := time.Now()
-	if current.Add(time.Second * -1).Before(l.startTimeOfRound) {
-		// qps 耗尽
-		return 0
-	}
-
-	l.leftCount -= count
-	if l.leftCount < 0 {
-		l.leftCount = 0
-	}
-
-	l.indexOfRound += 1
 	if l.indexOfRound >= l.limitCount {
+		if current.Add(time.Second * -1).Before(l.startTimeOfRound) {
+			return 0
+		}
 		l.indexOfRound = 0
 		l.startTimeOfRound = current
 	}
+
+	l.leftCount -= count
+	l.indexOfRound += count
+
 	return count
 }
 
@@ -102,7 +103,4 @@ func (l *blockLimit) Release(count int) {
 	defer l.mu.Unlock()
 
 	l.leftCount += count
-	if l.leftCount > l.limitCount {
-		l.leftCount = l.limitCount
-	}
 }
