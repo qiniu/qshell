@@ -150,6 +150,8 @@ func TestBatchForbiddenRecord(t *testing.T) {
 		"--enable-record",
 		"--record-redo-while-error",
 		"--worker", "4",
+		"--min-worker", "10",
+		"--worker-count-increase-period", "50",
 		"-y",
 		"-d")
 	if !strings.Contains(result, "because have done and success") {

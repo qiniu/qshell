@@ -90,6 +90,8 @@ func TestBatchChangeMimeType(t *testing.T) {
 		"--success-list", successLogPath,
 		"--failure-list", failLogPath,
 		"--worker", "4",
+		"--min-worker", "10",
+		"--worker-count-increase-period", "50",
 		"-y")
 	defer func() {
 		test.RemoveFile(successLogPath)
