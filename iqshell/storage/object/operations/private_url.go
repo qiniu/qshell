@@ -83,6 +83,9 @@ type BatchPrivateUrlInfo struct {
 }
 
 func (info *BatchPrivateUrlInfo) Check() *data.CodeError {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
 	return nil
 }
 

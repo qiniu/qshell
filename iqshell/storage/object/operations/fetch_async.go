@@ -64,6 +64,10 @@ type BatchAsyncFetchInfo struct {
 }
 
 func (info *BatchAsyncFetchInfo) Check() *data.CodeError {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
+
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
