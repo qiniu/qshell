@@ -2,7 +2,6 @@ package limit
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"sync"
 	"time"
 )
@@ -20,6 +19,7 @@ func NewBlockList(limitCount int) BlockLimit {
 
 	return &blockLimit{
 		mu:               sync.RWMutex{},
+		acquireCond:      sync.NewCond(&sync.RWMutex{}),
 		limitCount:       limitCount,
 		leftCount:        limitCount,
 		indexOfRound:     0,
@@ -29,6 +29,7 @@ func NewBlockList(limitCount int) BlockLimit {
 
 type blockLimit struct {
 	mu               sync.RWMutex //
+	acquireCond      *sync.Cond   //
 	limitCount       int          // qps 及并发限制数
 	leftCount        int          // 可消费的数量
 	indexOfRound     int          // 当前轮中已消费的号
@@ -44,7 +45,6 @@ func (l *blockLimit) AddLimitCount(count int) {
 	}
 	l.limitCount += count
 	l.leftCount = l.limitCount + count
-	log.ErrorF("===== limitCount:%d", l.limitCount)
 }
 
 func (l *blockLimit) Acquire(count int) *data.CodeError {
@@ -53,19 +53,24 @@ func (l *blockLimit) Acquire(count int) *data.CodeError {
 	}
 
 	lCount := count
-	for {
-		if lCount <= 0 {
-			break
-		}
 
+	l.acquireCond.L.Lock()
+	defer l.acquireCond.L.Unlock()
+
+	for {
 		if c := l.tryAcquire(lCount); c <= 0 {
 			// 触及限制
-			time.Sleep(time.Millisecond * 10)
+			l.acquireCond.Wait()
 			continue
 		} else {
 			lCount -= c
 		}
+
+		if lCount <= 0 {
+			break
+		}
 	}
+
 	return nil
 }
 
@@ -100,7 +105,8 @@ func (l *blockLimit) tryAcquire(count int) int {
 
 func (l *blockLimit) Release(count int) {
 	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	l.leftCount += count
+	l.mu.Unlock()
+
+	l.acquireCond.Broadcast()
 }
