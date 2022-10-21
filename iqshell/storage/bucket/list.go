@@ -8,7 +8,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/syndtr/goleveldb/leveldb/errors"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/internal/list"
 	"io"
 	"math"
 	"os"
@@ -21,7 +21,7 @@ type ListApiInfo struct {
 	Prefix          string    // 前缀
 	Marker          string    // 标记
 	Delimiter       string    //
-	Limit           int       //  最大输出条数，默认：-1, 无限输出
+	OutputLimit     int       // 最大输出条数，默认：-1, 无限输出
 	StartTime       time.Time // list item 的 put time 区间的开始时间 【闭区间】
 	EndTime         time.Time // list item 的 put time 区间的终止时间 【闭区间】
 	Suffixes        []string  // list item 必须包含后缀
@@ -31,6 +31,8 @@ type ListApiInfo struct {
 	MaxFileSize     int64     // 文件最大值，单位: B
 	MaxRetry        int       // -1: 无限重试
 	ShowFields      []string  // 需要展示的字段  【必选】
+	ApiVersion      string    // list api 版本，v1 / v2【可选】
+	V1Limit         int       // 每次请求 size ，list v1 特有
 	OutputFieldsSep string    // 输出信息，每行的分隔符 【必选】
 }
 
@@ -99,14 +101,69 @@ func List(info ListApiInfo,
 	retryCount := 0
 	outputCount := 0
 	complete := false
+
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
-		entries, lErr := bucketManager.ListBucketContext(workspace.GetContext(), info.Bucket, info.Prefix, info.Delimiter, info.Marker)
-		if entries == nil && lErr == nil {
-			lErr = errors.New("meet empty body when list not completed")
-		}
+		hasMore, lErr := list.ListBucket(workspace.GetContext(), list.ApiInfo{
+			Manager:    bucketManager,
+			ApiVersion: list.ApiVersion(info.ApiVersion),
+			Bucket:     info.Bucket,
+			Prefix:     info.Prefix,
+			Delimiter:  info.Delimiter,
+			Marker:     info.Marker,
+			V1Limit:    info.V1Limit,
+		}, func(marker string, dir string, listItem list.Item) (stop bool) {
+			if marker != info.Marker {
+				info.Marker = marker
+			}
+
+			if shouldCheckPutTime {
+				putTime := time.Unix(listItem.PutTime/1e7, 0)
+				if !filterByPutTime(putTime, info.StartTime, info.EndTime) {
+					log.DebugF("filter %s: putTime not match, %s out of range [start:%s ~ end:%s]", listItem.Key, putTime, info.StartTime, info.EndTime)
+					return false
+				}
+			}
+
+			if shouldCheckSuffixes && !filterBySuffixes(listItem.Key, info.Suffixes) {
+				log.DebugF("filter %s: key not match, key:%s suffixes:%s ", listItem.Key, listItem.Key, info.Suffixes)
+				return false
+			}
+
+			if shouldCheckStorageTypes && !filterByStorageType(listItem.Type, info.StorageTypes) {
+				log.DebugF("filter %s: key not match, storageType:%d StorageTypes:%s ", listItem.Key, listItem.Type, info.Suffixes)
+				return false
+			}
+
+			if shouldCheckMimeTypes && !filterByMimeType(listItem.MimeType, info.MimeTypes) {
+				log.DebugF("filter %s: key not match, mimeType:%s mimeTypes:%s ", listItem.Key, listItem.MimeType, info.MimeTypes)
+				return false
+			}
+
+			if shouldCheckFileSize && !filterByFileSize(listItem.Fsize, info.MinFileSize, info.MaxFileSize) {
+				log.DebugF("filter %s: key not match, fileSize:%d minSize:%d maxSize:%d", listItem.Key, listItem.Fsize, info.MinFileSize, info.MaxFileSize)
+				return false
+			}
+
+			shouldContinue, hErr := objectHandler(marker, ListObject(listItem))
+			if hErr != nil {
+				errorHandler(marker, hErr)
+			}
+			if !shouldContinue {
+				complete = true
+				return true
+			}
+
+			outputCount++
+			if info.OutputLimit > 0 && outputCount >= info.OutputLimit {
+				complete = true
+				return true
+			}
+
+			return false
+		})
 
 		if lErr != nil {
-			errorHandler(info.Marker, data.ConvertError(lErr))
+			errorHandler(info.Marker, lErr)
 			// 空间不存在，直接结束
 			if strings.Contains(lErr.Error(), "no such bucket") ||
 				strings.Contains(lErr.Error(), "incorrect zone") ||
@@ -119,62 +176,7 @@ func List(info ListApiInfo,
 			continue
 		}
 
-		for listItem := range entries {
-			if listItem.Marker != info.Marker {
-				info.Marker = listItem.Marker
-			}
-
-			if listItem.Item.IsEmpty() {
-				log.Debug("filter: item empty")
-				continue
-			}
-
-			if shouldCheckPutTime {
-				putTime := time.Unix(listItem.Item.PutTime/1e7, 0)
-				if !filterByPutTime(putTime, info.StartTime, info.EndTime) {
-					log.DebugF("filter %s: putTime not match, %s out of range [start:%s ~ end:%s]", listItem.Item.Key, putTime, info.StartTime, info.EndTime)
-					continue
-				}
-			}
-
-			if shouldCheckSuffixes && !filterBySuffixes(listItem.Item.Key, info.Suffixes) {
-				log.DebugF("filter %s: key not match, key:%s suffixes:%s ", listItem.Item.Key, listItem.Item.Key, info.Suffixes)
-				continue
-			}
-
-			if shouldCheckStorageTypes && !filterByStorageType(listItem.Item.Type, info.StorageTypes) {
-				log.DebugF("filter %s: key not match, storageType:%d StorageTypes:%s ", listItem.Item.Key, listItem.Item.Type, info.Suffixes)
-				continue
-			}
-
-			if shouldCheckMimeTypes && !filterByMimeType(listItem.Item.MimeType, info.MimeTypes) {
-				log.DebugF("filter %s: key not match, mimeType:%s mimeTypes:%s ", listItem.Item.Key, listItem.Item.MimeType, info.MimeTypes)
-				continue
-			}
-
-			if shouldCheckFileSize && !filterByFileSize(listItem.Item.Fsize, info.MinFileSize, info.MaxFileSize) {
-				log.DebugF("filter %s: key not match, fileSize:%d minSize:%d maxSize:%d", listItem.Item.Key, listItem.Item.Fsize, info.MinFileSize, info.MaxFileSize)
-				continue
-			}
-
-			shouldContinue, hErr := objectHandler(listItem.Marker, ListObject(listItem.Item))
-			if hErr != nil {
-				errorHandler(listItem.Marker, hErr)
-			}
-			if !shouldContinue {
-				complete = true
-				break
-			}
-
-			outputCount++
-			if info.Limit > 0 && outputCount >= info.Limit {
-				complete = true
-				break
-			}
-		}
-
-		if len(info.Marker) == 0 {
-			// 列举结束
+		if !hasMore || complete || workspace.IsCmdInterrupt() {
 			break
 		}
 

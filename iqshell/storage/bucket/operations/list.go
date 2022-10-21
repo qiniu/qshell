@@ -6,30 +6,33 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/internal/list"
 	"strconv"
 	"strings"
 	"time"
 )
 
 type ListInfo struct {
-	Bucket          string
-	Prefix          string
-	Marker          string
-	Delimiter       string
-	Limit           int    //  最大输出条数，默认：-1, 无限输出
-	StartDate       string // list item 的 put time 区间的开始时间 【闭区间】
-	EndDate         string // list item 的 put time 区间的终止时间 【闭区间】
-	Suffixes        string // list item 必须包含后缀
-	StorageTypes    string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
-	MimeTypes       string // list item Mimetype类型，多个使用逗号隔开
-	MinFileSize     string // 文件最小值，单位: B
-	MaxFileSize     string // 文件最大值，单位: B
-	MaxRetry        int    // -1: 无限重试
-	SaveToFile      string //
-	AppendMode      bool   //
-	Readable        bool   //
+	Bucket          string // 指定空间【必选】
+	Prefix          string // 指定前缀，只有资源名匹配该前缀的资源会被列出 【可选】
+	Marker          string // 上一次列举返回的位置标记，作为本次列举的起点信息 【可选】
+	Delimiter       string // 指定目录分隔符，列出所有公共前缀（模拟列出目录效果），默认值为空字符串【可选】
+	StartDate       string // list item 的 put time 区间的开始时间 【闭区间】 【可选】
+	EndDate         string // list item 的 put time 区间的终止时间 【闭区间】 【可选】
+	Suffixes        string // list item 必须包含后缀 【可选】
+	StorageTypes    string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储 【可选】
+	MimeTypes       string // list item Mimetype类型，多个使用逗号隔开 【可选】
+	MinFileSize     string // 文件最小值，单位: B 【可选】
+	MaxFileSize     string // 文件最大值，单位: B 【可选】
+	MaxRetry        int    // -1: 无限重试 【可选】
+	SaveToFile      string // 【可选】
+	AppendMode      bool   // 【可选】
+	Readable        bool   // 【可选】
 	ShowFields      string // 需要展示的字段
-	OutputFieldsSep string // 输出信息，每行的分隔符
+	ApiVersion      string // list api 版本，v1 / v2【可选】
+	V1Limit         int    // 每次请求 size ，list v1 特有 【可选】
+	OutputLimit     int    // 最大输出条数，默认：-1, 无限输出 【可选】
+	OutputFieldsSep string // 输出信息，每行的分隔符 【可选】
 }
 
 func (info *ListInfo) Check() *data.CodeError {
@@ -51,6 +54,13 @@ func (info *ListInfo) Check() *data.CodeError {
 		}
 		info.ShowFields = strings.Join(fieldsNew, ",")
 	}
+
+	if len(info.ApiVersion) == 0 {
+		info.ApiVersion = list.ApiVersionV2
+	} else if info.ApiVersion != list.ApiVersionV1 && info.ApiVersion != list.ApiVersionV2 {
+		return alert.Error("list bucket: api version is error, should set one of v1 and v2", "")
+	}
+
 	return nil
 }
 
@@ -92,7 +102,6 @@ func List(cfg *iqshell.Config, info ListInfo) {
 			Prefix:          info.Prefix,
 			Marker:          info.Marker,
 			Delimiter:       info.Delimiter,
-			Limit:           info.Limit,
 			StartTime:       startTime,
 			EndTime:         endTime,
 			Suffixes:        info.getSuffixes(),
@@ -102,6 +111,9 @@ func List(cfg *iqshell.Config, info ListInfo) {
 			MaxFileSize:     info.getMaxFileSize(),
 			MaxRetry:        info.MaxRetry,
 			ShowFields:      info.getShowFields(),
+			ApiVersion:      info.ApiVersion,
+			V1Limit:         info.V1Limit,
+			OutputLimit:     info.OutputLimit,
 			OutputFieldsSep: info.getOutputFieldsSep(),
 		},
 		FilePath:   info.SaveToFile,
