@@ -4,7 +4,6 @@ import (
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/operations"
 	"github.com/spf13/cobra"
 )
@@ -124,6 +123,7 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().IntVarP(&info.OutputLimit, "limit", "", -1, "max count of items to output")
 	cmd.Flags().StringVarP(&info.ApiVersion, "api-version", "", "v2", "list api version, one of v1 and v2. default:v2")
 	cmd.Flags().IntVarP(&info.V1Limit, "api-v1-limit", "", 800, "when using the v1 api, the number of entries per enumeration, in the range 1-1000. default:800")
+	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "enable record, ")
 
 	cmd.Flags().StringVarP(&info.ShowFields, "show-fields", "", "", "The file attributes to be displayed on each line, separated by commas. Optional range: Key, Hash, FileSize, PutTime, MimeType, StorageType, EndUser.")
 	cmd.Flags().StringVarP(&info.OutputFieldsSep, "output-fields-sep", "", data.DefaultLineSeparate, "Each line needs to display the delimiter of the file information.")

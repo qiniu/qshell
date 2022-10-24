@@ -1,12 +1,16 @@
 package operations
 
 import (
+	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/internal/list"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +37,7 @@ type ListInfo struct {
 	V1Limit         int    // 每次请求 size ，list v1 特有 【可选】
 	OutputLimit     int    // 最大输出条数，默认：-1, 无限输出 【可选】
 	OutputFieldsSep string // 输出信息，每行的分隔符 【可选】
+	EnableRecord    bool   // 是否开启 record 记录，开启后会记录 list 信息，下次 list 会自动指定 Marker 继续 list 【可选】
 }
 
 func (info *ListInfo) Check() *data.CodeError {
@@ -64,6 +69,10 @@ func (info *ListInfo) Check() *data.CodeError {
 	return nil
 }
 
+func (info *ListInfo) JobId() string {
+	return utils.Md5Hex(fmt.Sprintf("%s:%s:%s", info.Prefix, info.Bucket, info.SaveToFile))
+}
+
 func (info *ListInfo) getShowFields() []string {
 	if len(info.ShowFields) == 0 {
 		return nil
@@ -79,6 +88,10 @@ func (info *ListInfo) getOutputFieldsSep() string {
 }
 
 func List(cfg *iqshell.Config, info ListInfo) {
+	cfg.JobPathBuilder = func(cmdPath string) string {
+		return filepath.Join(cmdPath, info.JobId())
+	}
+
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
@@ -95,6 +108,9 @@ func List(cfg *iqshell.Config, info ListInfo) {
 		log.Error(err)
 		return
 	}
+
+	cacheDir := workspace.GetJobDir()
+	log.InfoF("list status cache dir:%s ,you can delete it if you don't needed.", cacheDir)
 
 	bucket.ListToFile(bucket.ListToFileApiInfo{
 		ListApiInfo: bucket.ListApiInfo{
@@ -115,6 +131,8 @@ func List(cfg *iqshell.Config, info ListInfo) {
 			V1Limit:         info.V1Limit,
 			OutputLimit:     info.OutputLimit,
 			OutputFieldsSep: info.getOutputFieldsSep(),
+			CacheDir:        cacheDir,
+			EnableRecord:    info.EnableRecord,
 		},
 		FilePath:   info.SaveToFile,
 		AppendMode: info.AppendMode,

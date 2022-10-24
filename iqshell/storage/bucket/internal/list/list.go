@@ -60,6 +60,10 @@ func ListBucket(ctx context.Context, info ApiInfo, handler Handler) (hasMore boo
 		ctx = context.Background()
 	}
 
+	if ctx.Err() != nil {
+		return false, data.ConvertError(ctx.Err())
+	}
+
 	if info.ApiVersion == ApiVersionV1 {
 		return listBucketByV1(ctx, info, handler)
 	} else {

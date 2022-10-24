@@ -36,6 +36,9 @@ qshell listbucket2 [-m|--marker <Marker>] [--limit <Limit>] [--prefix <Prefix> |
 - --marker： marker 标记列举过程中的位置， 如果列举的过程中网络断开，会返回一个 marker, 可以指定该 marker 参数继续列举。【可选】
 - --show-fields：每个文件需要展示的字段，多个使用逗号(,)隔开，可选范围：Key,FileSize,Hash,PutTime,MimeType,StorageType,EndUser 。【可选】
 - --output-fields-sep：输出的文件信息中，每行文件属性之间的分割符，默认 Tab 键（\t）。【可选】
+- --api-version：指定列举 api 的版本，可选：v1，v2 默认：v2。 【可选】
+- --api-v1-limit：当列举 api 的版本为 v1 时，可指定每次列举时的最大条数，范围：0~1000，默认：800。 【可选】
+- --enable-record：记录列举命令执行状态，当下次执行列举命令时会自动补齐 marker 继续列举。记录的 id 与文件所在 Bucket 、列举的前缀以及保存文件的路径相关。默认：不开启 【可选】
 
 
 # 常用场景
