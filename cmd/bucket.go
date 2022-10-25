@@ -110,6 +110,9 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.Suffixes, "suffixes", "q", "", "list by key suffixes, separated by comma")
 	cmd.Flags().IntVarP(&info.MaxRetry, "max-retry", "x", -1, "max retries when error occurred")
 	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
+	cmd.Flags().IntVarP(&info.OutputLimit, "limit", "", -1, "max count of items to output")
+	cmd.Flags().Int64VarP(&info.OutputFileMaxLines, "output-file-max-lines", "", 0, "maximum number of lines per output file.")
+	cmd.Flags().Int64VarP(&info.OutputFileMaxSize, "output-file-max-size", "", 0, "maximum size of each output file")
 	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
 
@@ -120,13 +123,12 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 
 	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "result append to file instead of overwriting")
 	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
-	cmd.Flags().IntVarP(&info.OutputLimit, "limit", "", -1, "max count of items to output")
-	cmd.Flags().StringVarP(&info.ApiVersion, "api-version", "", "v2", "list api version, one of v1 and v2. default:v2")
-	cmd.Flags().IntVarP(&info.V1Limit, "api-v1-limit", "", 800, "when using the v1 api, the number of entries per enumeration, in the range 1-1000. default:800")
+	cmd.Flags().StringVarP(&info.ApiVersion, "api-version", "", "v2", "list api version, one of v1 and v2.")
+	cmd.Flags().IntVarP(&info.V1Limit, "api-v1-limit", "", 800, "when using the v1 api, the number of entries per enumeration, in the range 1-1000.")
 	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "enable record, ")
 
-	cmd.Flags().StringVarP(&info.ShowFields, "show-fields", "", "", "The file attributes to be displayed on each line, separated by commas. Optional range: Key, Hash, FileSize, PutTime, MimeType, StorageType, EndUser.")
 	cmd.Flags().StringVarP(&info.OutputFieldsSep, "output-fields-sep", "", data.DefaultLineSeparate, "Each line needs to display the delimiter of the file information.")
+	cmd.Flags().StringVarP(&info.ShowFields, "show-fields", "", "", "The file attributes to be displayed on each line, separated by commas. Optional range: Key, Hash, FileSize, PutTime, MimeType, StorageType, EndUser.")
 
 	return cmd
 }

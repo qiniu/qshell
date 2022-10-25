@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/file"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/internal/list"
@@ -17,25 +18,27 @@ import (
 )
 
 type ListApiInfo struct {
-	Bucket          string    // 空间名	【必选】
-	Prefix          string    // 前缀
-	Marker          string    // 标记
-	Delimiter       string    //
-	OutputLimit     int       // 最大输出条数，默认：-1, 无限输出
-	StartTime       time.Time // list item 的 put time 区间的开始时间 【闭区间】
-	EndTime         time.Time // list item 的 put time 区间的终止时间 【闭区间】
-	Suffixes        []string  // list item 必须包含后缀
-	StorageTypes    []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
-	MimeTypes       []string  // list item Mimetype类型，多个使用逗号隔开
-	MinFileSize     int64     // 文件最小值，单位: B
-	MaxFileSize     int64     // 文件最大值，单位: B
-	MaxRetry        int       // -1: 无限重试
-	ShowFields      []string  // 需要展示的字段  【必选】
-	ApiVersion      string    // list api 版本，v1 / v2【可选】
-	V1Limit         int       // 每次请求 size ，list v1 特有
-	OutputFieldsSep string    // 输出信息，每行的分隔符 【必选】
-	EnableRecord    bool      // 是否开启 record 记录，开启后会记录 list 信息，下次 list 会自动指定 Marker 继续 list 【可选】
-	CacheDir        string    // 历史数据存储路径 【内部使用】
+	Bucket             string    // 空间名	【必选】
+	Prefix             string    // 前缀
+	Marker             string    // 标记
+	Delimiter          string    //
+	StartTime          time.Time // list item 的 put time 区间的开始时间 【闭区间】
+	EndTime            time.Time // list item 的 put time 区间的终止时间 【闭区间】
+	Suffixes           []string  // list item 必须包含后缀
+	StorageTypes       []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
+	MimeTypes          []string  // list item Mimetype类型，多个使用逗号隔开
+	MinFileSize        int64     // 文件最小值，单位: B
+	MaxFileSize        int64     // 文件最大值，单位: B
+	MaxRetry           int       // -1: 无限重试
+	ShowFields         []string  // 需要展示的字段  【必选】
+	ApiVersion         string    // list api 版本，v1 / v2【可选】
+	V1Limit            int       // 每次请求 size ，list v1 特有
+	OutputLimit        int       // 最大输出条数，默认：-1, 无限输出
+	OutputFieldsSep    string    // 输出信息，每行的分隔符 【必选】
+	OutputFileMaxLines int64     // 输出文件的最大行数，超过则自动创建新的文件，0：不限制输出文件的行数 【可选】
+	OutputFileMaxSize  int64     // 输出文件的最大 Size，超过则自动创建新的文件，0：不限制输出文件的大小 【可选】
+	EnableRecord       bool      // 是否开启 record 记录，开启后会记录 list 信息，下次 list 会自动指定 Marker 继续 list 【可选】
+	CacheDir           string    // 历史数据存储路径 【内部使用】
 }
 
 func ListObjectField(field string) string {
@@ -159,7 +162,7 @@ func List(info ListApiInfo,
 				return false
 			}
 
-			shouldContinue, hErr := objectHandler(marker, ListObject(listItem))
+			shouldContinue, hErr := objectHandler(marker, listItem)
 			if hErr != nil {
 				errorHandler(marker, hErr)
 			}
@@ -248,32 +251,34 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *da
 		info.OutputFieldsSep = data.DefaultLineSeparate
 	}
 
-	var listResultFh io.WriteCloser
+	// 文件头
+	title := strings.Join(info.ShowFields, info.OutputFieldsSep)
+
+	var output io.WriteCloser
 	if info.FilePath == "" {
-		listResultFh = data.Stdout()
+		output = data.Stdout()
+		_, _ = output.Write([]byte(title + "\n"))
 		log.Debug("prepare list bucket to stdout")
 	} else {
-		var openErr error
-		var mode int
+		var nErr *data.CodeError
+		output, nErr = file.NewRotateFile(info.FilePath,
+			file.RotateOptionMaxSize(info.OutputFileMaxSize),
+			file.RotateOptionMaxLine(info.OutputFileMaxLines),
+			file.RotateOptionAppendMode(info.AppendMode),
+			file.RotateOptionFileHeader(title),
+			file.RotateOptionOnOpenFile(func(filename string) {
+				log.InfoF("list: open new output file:%v", filename)
+			}))
 
-		if info.AppendMode {
-			mode = os.O_APPEND | os.O_RDWR
-		} else {
-			mode = os.O_CREATE | os.O_RDWR | os.O_TRUNC
-		}
-		listResultFh, openErr = os.OpenFile(info.FilePath, mode, 0666)
-		if openErr != nil {
-			errorHandler("", data.NewEmptyError().AppendDescF("failed to open list result file `%s`, error:%v", info.FilePath, openErr))
+		if nErr != nil {
+			errorHandler("", data.NewEmptyError().AppendDescF("failed to create rotate file:`%s`, error:%v", info.FilePath, nErr))
 			return
 		}
-		defer listResultFh.Close()
+		defer output.Close()
 		log.Debug("prepare list bucket to file")
 	}
 
-	bWriter := bufio.NewWriter(listResultFh)
-	title := strings.Join(info.ShowFields, info.OutputFieldsSep)
-	_, _ = bWriter.WriteString(title + "\n")
-	_ = bWriter.Flush()
+	bWriter := bufio.NewWriter(output)
 	lineCreator := &ListLineCreator{
 		Fields:   info.ShowFields,
 		Sep:      info.OutputFieldsSep,
