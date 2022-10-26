@@ -124,8 +124,8 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "result append to file instead of overwriting")
 	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
 	cmd.Flags().StringVarP(&info.ApiVersion, "api-version", "", "v2", "list api version, one of v1 and v2.")
-	cmd.Flags().IntVarP(&info.V1Limit, "api-v1-limit", "", 800, "when using the v1 api, the number of entries per enumeration, in the range 1-1000.")
-	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "enable record, ")
+	cmd.Flags().IntVarP(&info.V1Limit, "api-v1-limit", "", 1000, "when using the v1 api, the number of entries per enumeration, in the range 1-1000.")
+	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "record the execution status of the listbucket2 command. When the listbucket2 command is executed next time, the marker will be automatically filled and the listbucket2 will continue. Enabling this option will automatically enable append (see the --append option for details). The id of the record is related to the bucket where the file is located, the prefix listed, and the path where the file is saved.")
 
 	cmd.Flags().StringVarP(&info.OutputFieldsSep, "output-fields-sep", "", data.DefaultLineSeparate, "Each line needs to display the delimiter of the file information.")
 	cmd.Flags().StringVarP(&info.ShowFields, "show-fields", "", "", "The file attributes to be displayed on each line, separated by commas. Optional range: Key, Hash, FileSize, PutTime, MimeType, StorageType, EndUser.")
