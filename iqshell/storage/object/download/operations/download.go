@@ -15,14 +15,18 @@ import (
 )
 
 type DownloadInfo struct {
-	Bucket               string // 文件被保存的 bucket
-	Key                  string // 文件被保存的 key
-	ToFile               string // 文件保存的路径
-	UseGetFileApi        bool   //
-	IsPublic             bool   //
-	CheckHash            bool   // 是否检测文件 hash
-	Domain               string // 下载的 domain
-	RemoveTempWhileError bool   //
+	Bucket                 string // 文件被保存的 bucket
+	Key                    string // 文件被保存的 key
+	ToFile                 string // 文件保存的路径
+	UseGetFileApi          bool   //
+	IsPublic               bool   //
+	CheckHash              bool   // 是否检测文件 hash
+	Domain                 string // 下载的 domain
+	RemoveTempWhileError   bool   //
+	EnableSlice            bool   // 允许切片下载
+	SliceFileSizeThreshold int64  // 允许切片下载，切片下载出发的文件大小阈值，考虑到不希望所有文件都使用切片下载的场景
+	SliceSize              int64  // 允许切片下载，切片的大小
+	SliceConcurrentCount   int    // 允许切片下载，并发下载切片的个数
 }
 
 func (info *DownloadInfo) Check() *data.CodeError {
@@ -69,23 +73,25 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	}
 
 	apiInfo := &download.ApiInfo{
-		IsPublic:             info.IsPublic,
-		HostProvider:         hostProvider,
-		ToFile:               info.ToFile,
-		Referer:              "",
-		FileEncoding:         "",
-		Bucket:               info.Bucket,
-		Key:                  info.Key,
-		ServerFilePutTime:    fileStatus.PutTime,
-		ServerFileSize:       fileStatus.FSize,
-		ServerFileHash:       "",
-		FromBytes:            0,
-		RemoveTempWhileError: info.RemoveTempWhileError,
-		UseGetFileApi:        info.UseGetFileApi,
-		Progress:             progress.NewPrintProgress(" 进度"),
-	}
-	if info.CheckHash {
-		apiInfo.ServerFileHash = fileStatus.Hash
+		IsPublic:               info.IsPublic,
+		HostProvider:           hostProvider,
+		ToFile:                 info.ToFile,
+		Referer:                "",
+		FileEncoding:           "",
+		Bucket:                 info.Bucket,
+		Key:                    info.Key,
+		ServerFilePutTime:      fileStatus.PutTime,
+		ServerFileSize:         fileStatus.FSize,
+		ServerFileHash:         fileStatus.Hash,
+		CheckHash:              info.CheckHash,
+		FromBytes:              0,
+		RemoveTempWhileError:   info.RemoveTempWhileError,
+		UseGetFileApi:          info.UseGetFileApi,
+		EnableSlice:            info.EnableSlice,
+		SliceSize:              info.SliceSize,
+		SliceConcurrentCount:   info.SliceConcurrentCount,
+		SliceFileSizeThreshold: info.SliceFileSizeThreshold,
+		Progress:               progress.NewPrintProgress(" 进度"),
 	}
 	_, _ = downloadFile(apiInfo)
 }
@@ -119,9 +125,9 @@ func downloadFile(info *download.ApiInfo) (*download.ApiResult, *data.CodeError)
 	if res.IsExist {
 		log.InfoF("Download Skip because file exist, [%s:%s] => %s", info.Bucket, info.Key, res.FileAbsPath)
 	} else if res.IsUpdate {
-		log.InfoF("Download update Success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
+		log.InfoF("Download update Success, [%s:%s] => %s duration:%.2fs speed:%s", info.Bucket, info.Key, res.FileAbsPath, duration, speed)
 	} else {
-		log.InfoF("Download Success, [%s:%s] => %s speed:%s", info.Bucket, info.Key, res.FileAbsPath, speed)
+		log.InfoF("Download Success, [%s:%s] => %s duration:%.2fs speed:%s", info.Bucket, info.Key, res.FileAbsPath, duration, speed)
 	}
 
 	return res, nil

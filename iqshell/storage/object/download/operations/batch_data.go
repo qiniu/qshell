@@ -8,17 +8,21 @@ import (
 )
 
 type DownloadCfg struct {
-	ThreadCount     int    `json:"thread_count,omitempty"`
-	FileEncoding    string `json:"file_encoding,omitempty"`
-	KeyFile         string `json:"key_file,omitempty"`
-	DestDir         string `json:"dest_dir,omitempty"`
-	Bucket          string `json:"bucket,omitempty"`
-	Prefix          string `json:"prefix,omitempty"`
-	SavePathHandler string `json:"save_path_handler"`
-	Suffixes        string `json:"suffixes,omitempty"`
-	IoHost          string `json:"io_host,omitempty"`
-	Public          bool   `json:"public,omitempty"`
-	CheckHash       bool   `json:"check_hash,omitempty"`
+	ThreadCount            int    `json:"thread_count,omitempty"`
+	FileEncoding           string `json:"file_encoding,omitempty"`
+	KeyFile                string `json:"key_file,omitempty"`
+	DestDir                string `json:"dest_dir,omitempty"`
+	Bucket                 string `json:"bucket,omitempty"`
+	Prefix                 string `json:"prefix,omitempty"`
+	SavePathHandler        string `json:"save_path_handler"`
+	Suffixes               string `json:"suffixes,omitempty"`
+	IoHost                 string `json:"io_host,omitempty"`
+	Public                 bool   `json:"public,omitempty"`
+	CheckHash              bool   `json:"check_hash,omitempty"`
+	EnableSlice            bool   `json:"enable_slice"`
+	SliceFileSizeThreshold int64  `json:"slice_file_size_threshold"`
+	SliceSize              int64  `json:"slice_size"`
+	SliceConcurrentCount   int    `json:"slice_concurrent_count"`
 
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
@@ -36,21 +40,25 @@ type DownloadCfg struct {
 
 func DefaultDownloadCfg() DownloadCfg {
 	return DownloadCfg{
-		ThreadCount:          5,
-		FileEncoding:         "",
-		KeyFile:              "",
-		DestDir:              "",
-		Bucket:               "",
-		Prefix:               "",
-		Suffixes:             "",
-		IoHost:               "",
-		Public:               false,
-		CheckHash:            false,
-		Referer:              "",
-		CdnDomain:            "",
-		GetFileApi:           false,
-		RemoveTempWhileError: false,
-		RecordRoot:           "",
+		ThreadCount:            5,
+		FileEncoding:           "",
+		KeyFile:                "",
+		DestDir:                "",
+		Bucket:                 "",
+		Prefix:                 "",
+		Suffixes:               "",
+		IoHost:                 "",
+		Public:                 false,
+		CheckHash:              false,
+		Referer:                "",
+		CdnDomain:              "",
+		GetFileApi:             false,
+		EnableSlice:            false,
+		SliceFileSizeThreshold: 40 * utils.MB,
+		SliceSize:              4 * utils.MB,
+		SliceConcurrentCount:   10,
+		RemoveTempWhileError:   false,
+		RecordRoot:             "",
 	}
 }
 
