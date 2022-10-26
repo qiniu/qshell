@@ -2,6 +2,7 @@ package operations
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell"
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
@@ -29,6 +30,9 @@ type BatchDownloadWithConfigInfo struct {
 func (info *BatchDownloadWithConfigInfo) Check() *data.CodeError {
 	if err := info.Info.Check(); err != nil {
 		return err
+	}
+	if len(info.LocalDownloadConfig) == 0 {
+		return alert.CannotEmptyError("LocalDownloadConfig", "")
 	}
 	return nil
 }
@@ -251,8 +255,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				return true, data.NewEmptyError().AppendDescF("result is invalid:%+v", result)
 			}
 
-			isLocalFileNotChange, _ := utils.IsFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime)
-			isServerFileNotChange := apiInfo.ServerFilePutTime == recordApiInfo.ServerFilePutTime
+			isLocalFileNotChange, _ := utils.IsLocalFileMatchFileModifyTime(apiInfo.ToFile, result.FileModifyTime)
+			isServerFileNotChange := apiInfo.ServerFileHash == recordApiInfo.ServerFileHash
 			// 本地文件和服务端文件均没有变化，则不需要重新下载
 			if isLocalFileNotChange && isServerFileNotChange {
 				return false, nil

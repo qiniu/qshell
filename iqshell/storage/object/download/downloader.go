@@ -84,7 +84,7 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		if !res.IsExist {
 			err = utils.CreateDirIfNotExist(f.toAbsFile)
 		}
-		res.FileModifyTime, _ = utils.FileModify(f.toAbsFile)
+		res.FileModifyTime, _ = utils.LocalFileModify(f.toAbsFile)
 		return res, err
 	}
 
@@ -117,7 +117,7 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 
 		if mErr == nil && checkResult.Match {
 			// 文件已下载，并在文件匹配，不再下载
-			if fileModifyTime, fErr := utils.FileModify(f.toAbsFile); fErr != nil {
+			if fileModifyTime, fErr := utils.LocalFileModify(f.toAbsFile); fErr != nil {
 				log.WarningF("Get file ModifyTime error:%v", fErr)
 			} else {
 				res.FileModifyTime = fileModifyTime
@@ -152,9 +152,10 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		return
 	}
 
-	res.FileModifyTime, err = utils.FileModify(f.toAbsFile)
-	if err != nil {
-		return
+	if fStatus, sErr := os.Stat(f.toAbsFile); sErr != nil {
+		return res, data.NewEmptyError().AppendDesc("get file stat error after download").AppendError(sErr)
+	} else {
+		res.FileModifyTime = fStatus.ModTime().Unix()
 	}
 
 	// 检查下载后的数据是否符合预期

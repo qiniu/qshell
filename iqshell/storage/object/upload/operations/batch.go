@@ -328,18 +328,22 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			}
 
 			// 本地文件和服务端文件均没有变化，则不需要重新上传
-			stat, sErr := object.Status(object.StatusApiInfo{
-				Bucket:   uploadInfo.ToBucket,
-				Key:      uploadInfo.SaveKey,
-				NeedPart: false,
-			})
-			if sErr != nil {
-				return true, data.NewEmptyError().AppendDesc("get stat from server").AppendError(sErr)
+			isServerFileNotChange := true
+			if uploadConfig.CheckHash {
+				// 检测 hash 需要调用 Stat 接口查询 hash，如果用户不检测 hash 则认为服务端文件没有变化。
+				stat, sErr := object.Status(object.StatusApiInfo{
+					Bucket:   uploadInfo.ToBucket,
+					Key:      uploadInfo.SaveKey,
+					NeedPart: false,
+				})
+				if sErr != nil {
+					return true, data.NewEmptyError().AppendDesc("get stat from server").AppendError(sErr)
+				}
+				isServerFileNotChange = stat.Hash == result.ServerFileHash
 			}
 
 			// LocalFileModifyTime 单位是 100ns
-			isLocalFileNotChange, mErr := utils.IsFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime/10000000)
-			isServerFileNotChange := stat.PutTime == result.ServerPutTime
+			isLocalFileNotChange, mErr := utils.IsLocalFileMatchFileModifyTime(uploadInfo.FilePath, recordUploadInfo.LocalFileModifyTime/10000000)
 			// 本地文件没有变化，服务端文件没有变化，则不需要再重新上传
 			if isLocalFileNotChange && isServerFileNotChange {
 				return false, nil
@@ -348,7 +352,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				return true, data.NewEmptyError().AppendDescF("local file has change, %v", mErr)
 			} else {
 				// 服务端文件有变动，尝试检查 hash，hash 统一由单文件上传之前检查
-				return true, data.NewEmptyError().AppendDescF("server file has change, PutTime don't match, except:%d but:%d", result.ServerPutTime, stat.PutTime)
+				return true, data.NewEmptyError().AppendDesc("server file has change, hash don't match")
 			}
 		}).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
