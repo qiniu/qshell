@@ -41,6 +41,7 @@ func Move(cfg *iqshell.Config, info MoveInfo) {
 
 	result, err := object.Move((*object.MoveApiInfo)(&info))
 	if err != nil || result == nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -53,6 +54,7 @@ func Move(cfg *iqshell.Config, info MoveInfo) {
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
 	} else {
+		data.SetCmdStatusError()
 		log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -96,6 +98,7 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -123,6 +126,7 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 			apiInfo, ok := (operation).(*object.MoveApiInfo)
 			if !ok {
+				data.SetCmdStatusError()
 				log.ErrorF("Change mimetype Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 				return
 			}
@@ -132,6 +136,7 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 					apiInfo.SourceBucket, apiInfo.SourceKey,
 					apiInfo.DestBucket, apiInfo.DestKey)
 			} else {
+				data.SetCmdStatusError()
 				log.ErrorF("Move Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 					apiInfo.SourceBucket, apiInfo.SourceKey,
 					apiInfo.DestBucket, apiInfo.DestKey,
@@ -139,6 +144,7 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 			}
 		}).
 		OnError(func(err *data.CodeError) {
+			data.SetCmdStatusError()
 			log.ErrorF("Batch move error:%v:", err)
 		}).Start()
 }

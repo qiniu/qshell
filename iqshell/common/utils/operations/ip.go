@@ -39,6 +39,7 @@ func IpQuery(cfg *iqshell.Config, info IpQueryInfo) {
 		}
 		if result, err := parser.Parse(ipString); err != nil {
 			log.Error(err)
+			data.SetCmdStatusError()
 		} else {
 			log.AlertF("%v", result)
 		}

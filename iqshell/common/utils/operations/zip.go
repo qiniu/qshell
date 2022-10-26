@@ -33,11 +33,13 @@ func Unzip(cfg *iqshell.Config, info ZipInfo) {
 	if len(info.UnzipPath) == 0 {
 		info.UnzipPath, err = os.Getwd()
 		if err != nil {
+			data.SetCmdStatusError()
 			log.Error("Get current work directory failed due to error", err)
 			return
 		}
 	} else {
 		if _, statErr := os.Stat(info.UnzipPath); statErr != nil {
+			data.SetCmdStatusError()
 			log.Error("Specified <UnzipToDir> is not a valid directory")
 			return
 		}
@@ -45,6 +47,7 @@ func Unzip(cfg *iqshell.Config, info ZipInfo) {
 
 	unzipErr := utils.Unzip(info.ZipFilePath, info.UnzipPath)
 	if unzipErr != nil {
+		data.SetCmdStatusError()
 		log.Error("Unzip file failed due to error", unzipErr)
 	}
 }

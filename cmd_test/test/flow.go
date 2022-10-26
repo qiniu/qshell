@@ -36,7 +36,7 @@ func (t *testFlow) Run() {
 	fmt.Println("========== CMD Start:", t.args, "==========")
 
 	var err error
-	if Debug {
+	if IsDebug() {
 		err = t.runByDebug()
 	} else {
 		err = t.runByCommand()

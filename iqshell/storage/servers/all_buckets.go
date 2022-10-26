@@ -40,7 +40,11 @@ func (i *BucketInfo) DescriptionString() string {
 
 func (i *BucketInfo) DetailDescriptionString() string {
 	sizeString := utils.FormatFileSize(i.StorageSize.Value())
-	return fmt.Sprintf("%s\t%s\t%d\t%d(%s)", i.Tbl.Value(), i.Region.Value(), i.FileNum.Value(), i.StorageSize.Value(), sizeString)
+	return fmt.Sprintf("%-20s\t%-10d\t%-10s\t%s", i.Region.Value(), i.FileNum.Value(), sizeString, i.Tbl.Value())
+}
+
+func BucketInfoDetailDescriptionStringFormat() string {
+	return fmt.Sprintf("%-20s\t%-10s\t%-10s\t%s", "Region", "FileNum", "StorageSize", "Bucket")
 }
 
 type ListApiInfo struct {

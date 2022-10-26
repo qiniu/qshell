@@ -96,6 +96,10 @@ func (m *Metric) PrintProgress(tag string) {
 	m.mu.Unlock()
 }
 
+func (m *Metric) IsCompletedSuccessfully() bool {
+	return m.FailureCount == 0
+}
+
 func (m *Metric) Lock() {
 	if m == nil {
 		return

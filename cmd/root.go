@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/version"
 	"github.com/spf13/cobra"
 	"os"
@@ -74,7 +75,11 @@ func Execute() {
 
 	if err := rootCmd.Execute(); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		data.SetCmdStatusError()
+	}
+
+	if !data.IsTestMode() && data.GetCmdStatus() != data.StatusOK {
+		os.Exit(data.GetCmdStatus())
 	}
 }
 

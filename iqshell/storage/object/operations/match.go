@@ -40,6 +40,7 @@ func Match(cfg *iqshell.Config, info MatchInfo) {
 
 	_, err := object.Match(object.MatchApiInfo(info))
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Match  Failed, [%s:%s] => '%s', Error:%v",
 			info.Bucket, info.Key, info.LocalFile, err)
 	} else {
@@ -90,6 +91,7 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -213,6 +215,7 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 	// 输出结果
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("save batch match result to path:%s error:%v", resultPath, e)
 	} else {
 		log.DebugF("save batch match result to path:%s", resultPath)
@@ -225,4 +228,8 @@ func BatchMatch(cfg *iqshell.Config, info BatchMatchInfo) {
 	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
 	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
 	log.InfoF("--------------------------------------------------")
+
+	if !metric.IsCompletedSuccessfully() {
+		data.SetCmdStatusError()
+	}
 }

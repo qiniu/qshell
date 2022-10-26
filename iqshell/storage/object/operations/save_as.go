@@ -6,7 +6,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
-	"os"
 )
 
 type SaveAsInfo object.SaveAsApiInfo
@@ -33,8 +32,8 @@ func SaveAs(cfg *iqshell.Config, info SaveAsInfo) {
 
 	url, err := object.SaveAs(object.SaveAsApiInfo(info))
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Save as Failed, Error: %v", err)
-		os.Exit(data.StatusError)
 	} else {
 		log.Alert(url)
 	}

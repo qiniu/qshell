@@ -6,7 +6,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"os"
 )
 
 type UserInfo struct {
@@ -40,14 +39,17 @@ func List(cfg *iqshell.Config, info ListInfo) {
 	accounts, err := account.GetUsers()
 	if err != nil {
 		log.ErrorF("user list error:%v", err)
-		os.Exit(data.StatusError)
+		data.SetCmdStatusError()
 		return
 	}
 
-	for _, acc := range accounts {
+	for index, acc := range accounts {
 		if info.OnlyListName {
 			log.AlertF(acc.Name)
 		} else {
+			if index > 0 {
+				log.Alert(" ")
+			}
 			log.AlertF(acc.String())
 		}
 	}
@@ -64,7 +66,8 @@ func Current(cfg *iqshell.Config) {
 	acc, err := account.GetAccount()
 	if err != nil {
 		log.ErrorF("user current error: %v", err)
-		os.Exit(data.StatusError)
+		data.SetCmdStatusError()
+		return
 	}
 	log.AlertF(acc.String())
 }
@@ -91,7 +94,8 @@ func LookUp(cfg *iqshell.Config, info LookUpInfo) {
 	accounts, err := account.LookUp(info.Name)
 	if err != nil {
 		log.ErrorF("user lookup error: %v", err)
-		os.Exit(data.StatusError)
+		data.SetCmdStatusError()
+		return
 	}
 	for _, acc := range accounts {
 		log.AlertF(acc.String())

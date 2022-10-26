@@ -28,12 +28,14 @@ func CreateEtag(cfg *iqshell.Config, info EtagInfo) {
 	}
 
 	if len(info.FilePath) == 0 {
+		data.SetCmdStatusError()
 		log.Error(alert.CannotEmpty("file path", ""))
 		return
 	}
 
 	etag, err := utils.GetEtag(info.FilePath)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.Error(err)
 		return
 	}

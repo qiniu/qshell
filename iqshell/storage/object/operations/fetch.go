@@ -36,6 +36,7 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 
 	result, err := object.Fetch(object.FetchApiInfo(info))
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Fetch Failed, '%s' => [%s:%s], Error:%v",
 			info.FromUrl, info.Bucket, info.Key, err)
 	} else {
@@ -77,6 +78,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -201,6 +203,7 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 	// 输出结果
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("save batch fetch result to path:%s error:%v", resultPath, e)
 	} else {
 		log.DebugF("save batch fetch result to path:%s", resultPath)
@@ -213,4 +216,8 @@ func BatchFetch(cfg *iqshell.Config, info BatchFetchInfo) {
 	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
 	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
 	log.InfoF("--------------------------------------------")
+
+	if !metric.IsCompletedSuccessfully() {
+		data.SetCmdStatusError()
+	}
 }

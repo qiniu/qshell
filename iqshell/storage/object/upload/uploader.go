@@ -39,6 +39,7 @@ type ApiInfo struct {
 	ResumeWorkerCount   int               `json:"-"`                      // 分片上传 worker 数量
 	ChunkSize           int64             `json:"-"`                      // 分片上传时的分片大小
 	PutThreshold        int64             `json:"-"`                      // 分片上传时上传阈值
+	CacheDir            string            `json:"-"`                      // 临时数据保存路径
 	Progress            progress.Progress `json:"-"`                      // 上传进度回调
 }
 

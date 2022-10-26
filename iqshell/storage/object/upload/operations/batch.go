@@ -63,6 +63,7 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 	}
 
 	if len(info.UploadConfigFile) == 0 {
+		data.SetCmdStatusError()
 		log.Error("LocalDownloadConfig can't empty")
 		return
 	}
@@ -81,10 +82,12 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 	}
 
 	if err := utils.UnMarshalFromFile(info.UploadConfigFile, &upload2Info.UploadConfig); err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("UnMarshal: read upload config error:%v config file:%s", err, info.UploadConfigFile)
 		return
 	}
 	if err := utils.UnMarshalFromFile(info.UploadConfigFile, &cfg.CmdCfg.Log); err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("UnMarshal: read log setting error:%v config file:%s", err, info.UploadConfigFile)
 		return
 	}
@@ -139,12 +142,14 @@ func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 	}
 
 	if e := locker.Lock(); e != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Upload, %v", e)
 		return
 	}
 
 	unlockHandler := func() {
 		if e := locker.TryUnlock(); e != nil {
+			data.SetCmdStatusError()
 			log.ErrorF("Upload, %v", e)
 		}
 	}
@@ -183,6 +188,7 @@ func batchUpload(info BatchUpload2Info) {
 
 	if needScanLocal {
 		if data.Empty(info.SrcDir) {
+			data.SetCmdStatusError()
 			log.ErrorF("scan error: src dir was empty")
 			return
 		}
@@ -193,6 +199,7 @@ func batchUpload(info BatchUpload2Info) {
 
 		_, err := utils.DirCache(info.SrcDir, info.InputFile)
 		if err != nil {
+			data.SetCmdStatusError()
 			log.ErrorF("create dir files cache error:%v", err)
 			return
 		}
@@ -205,11 +212,13 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	exporter, err := export.NewFileExport(info.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
 	mac, err := workspace.GetMac()
 	if err != nil {
+		data.SetCmdStatusError()
 		log.Error("get mac error:" + err.Error())
 		return
 	}
@@ -404,6 +413,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("save download result to path:%s error:%v", resultPath, e)
 	} else {
 		log.DebugF("save download result to path:%s", resultPath)
@@ -420,6 +430,10 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	log.InfoF("---------------------------------------------")
 	if workspace.GetConfig().Log.Enable() {
 		log.InfoF("See upload log at path:%s \n\n", workspace.GetConfig().Log.LogFile.Value())
+	}
+
+	if !metric.IsCompletedSuccessfully() {
+		data.SetCmdStatusError()
 	}
 }
 

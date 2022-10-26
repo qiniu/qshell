@@ -76,6 +76,10 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 
 	// 以 '/' 结尾，不管大小是否为 0 ，均视为文件夹
 	if strings.HasSuffix(info.Key, "/") {
+		if info.ServerFileSize > 0 {
+			return nil, data.NewEmptyError().AppendDescF("[%s:%s] should be a folder, but its size isn't 0:%d", info.Bucket, info.Key, info.ServerFileSize)
+		}
+
 		res.IsExist, _ = utils.ExistDir(f.toAbsFile)
 		if !res.IsExist {
 			err = utils.CreateDirIfNotExist(f.toAbsFile)

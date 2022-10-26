@@ -59,6 +59,7 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 		log.AlertF("%s\t%d\t%s\t%s", *object.Key, *object.Size, *object.ETag, *object.LastModified)
 	}); err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 	}
 }
 

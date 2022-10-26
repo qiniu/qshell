@@ -52,12 +52,14 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 	fp, err := os.Create(info.SaveToFile)
 	if err != nil {
 		log.Error("create file error:", err)
+		data.SetCmdStatusError()
 		return
 	}
 	defer func(fp *os.File) {
 		err := fp.Close()
 		if err != nil {
 			log.Error("file close error:", err)
+			data.SetCmdStatusError()
 		}
 	}(fp)
 
@@ -65,12 +67,14 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 	ossClient, err := oss.New(info.DataCenter, info.AccessKey, info.SecretKey)
 	if err != nil {
 		log.Error("create oss client error:", err)
+		data.SetCmdStatusError()
 		return
 	}
 
 	ossBucket, err := ossClient.Bucket(info.Bucket)
 	if err != nil {
 		log.Error("create oss bucket error:", err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -92,6 +96,7 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 				retryTimes += 1
 				continue
 			} else {
+				data.SetCmdStatusError()
 				break
 			}
 		} else {
@@ -115,7 +120,7 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 	fErr := bw.Flush()
 	if fErr != nil {
 		log.Error("Write data to buffer writer failed", fErr)
-		err = fErr
+		data.SetCmdStatusError()
 		return
 	}
 

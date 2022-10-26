@@ -30,6 +30,7 @@ func Timestamp2Date(cfg *iqshell.Config, info TimestampInfo) {
 
 	ts, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Invalid timestamp Value:%s error:%s", info.Value, err)
 		return
 	}
@@ -48,6 +49,7 @@ func TimestampMilli2Date(cfg *iqshell.Config, info TimestampInfo) {
 
 	tms, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Invalid mill timestamp Value:%s error:%s", info.Value, err)
 		return
 	}
@@ -65,6 +67,7 @@ func TimestampNano2Date(cfg *iqshell.Config, info TimestampInfo) {
 
 	tns, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Invalid nano timestamp Value:%s error:%s", info.Value, err)
 		return
 	}
@@ -82,6 +85,7 @@ func Date2Timestamp(cfg *iqshell.Config, info TimestampInfo) {
 
 	duration, err := strconv.ParseInt(info.Value, 10, 64)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Invalid duration Value:%s error:%s", info.Value, err)
 		return
 	}

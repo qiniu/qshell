@@ -103,12 +103,14 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 	// 配置 locker
 	if e := locker.TryLock(); e != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Download, %v", e)
 		return
 	}
 
 	unlockHandler := func() {
 		if e := locker.TryUnlock(); e != nil {
+			data.SetCmdStatusError()
 			log.ErrorF("Download, %v", e)
 		}
 	}
@@ -120,6 +122,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	info.InputFile = info.KeyFile
 	hostProvider := getDownloadHostProvider(workspace.GetConfig(), &info.DownloadCfg)
 	if available, e := hostProvider.Available(); !available {
+		data.SetCmdStatusError()
 		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or bind domain to bucket; %v", info.Bucket, e)
 		return
 	}
@@ -134,6 +137,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	})
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -173,6 +177,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	var savePathTemplate *utils.Template
 	if len(info.SavePathHandler) > 0 {
 		if t, tErr := utils.NewTemplate(info.SavePathHandler); tErr != nil {
+			data.SetCmdStatusError()
 			log.ErrorF("create save path template fail, %v", savePathTemplate)
 			return
 		} else {
@@ -320,6 +325,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("save download result to path:%s error:%v", resultPath, e)
 	} else {
 		log.DebugF("save download result to path:%s", resultPath)
@@ -336,5 +342,9 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	log.InfoF("-----------------------------")
 	if workspace.GetConfig().Log.Enable() {
 		log.InfoF("See download log at path:%s", workspace.GetConfig().Log.LogFile.Value())
+	}
+
+	if !metric.IsCompletedSuccessfully() {
+		data.SetCmdStatusError()
 	}
 }

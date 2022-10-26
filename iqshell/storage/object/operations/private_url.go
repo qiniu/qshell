@@ -60,6 +60,7 @@ func PrivateUrl(cfg *iqshell.Config, info PrivateUrlInfo) {
 	deadline, err := info.getDeadlineOfInt()
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -67,6 +68,11 @@ func PrivateUrl(cfg *iqshell.Config, info PrivateUrlInfo) {
 		PublicUrl: info.PublicUrl,
 		Deadline:  deadline,
 	})
+	if err != nil {
+		log.Error(err)
+		data.SetCmdStatusError()
+		return
+	}
 
 	log.Alert(url)
 }
@@ -94,6 +100,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -233,4 +240,8 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 	log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
 	log.InfoF("%20s%10ds", "Duration:", metric.Duration)
 	log.InfoF("-------------------------------------------------")
+
+	if !metric.IsCompletedSuccessfully() {
+		data.SetCmdStatusError()
+	}
 }

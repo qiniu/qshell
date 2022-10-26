@@ -5,7 +5,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/servers"
-	"os"
 )
 
 type ListInfo struct {
@@ -28,14 +27,16 @@ func List(cfg *iqshell.Config, info ListInfo) {
 
 	buckets, err := servers.AllBuckets(info.ListApiInfo)
 	if err != nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Get buckets error: %v", err)
-		os.Exit(data.StatusError)
+		return
 	} else if len(buckets) == 0 {
 		log.Warning("No buckets found")
 		return
 	}
 
 	if info.Detail {
+		log.AlertF("%s", servers.BucketInfoDetailDescriptionStringFormat())
 		for _, b := range buckets {
 			log.AlertF("%s", b.DetailDescriptionString())
 		}
@@ -44,5 +45,4 @@ func List(cfg *iqshell.Config, info ListInfo) {
 			log.AlertF("%s", b.DescriptionString())
 		}
 	}
-
 }

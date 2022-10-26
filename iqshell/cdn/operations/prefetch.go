@@ -44,6 +44,7 @@ func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
 			}))
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -53,6 +54,7 @@ func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
 	for {
 		hasMore, workInfo, pErr := workProvider.Provide()
 		if pErr != nil {
+			data.SetCmdStatusError()
 			log.ErrorF("read work error:%v", pErr)
 			continue
 		}
@@ -84,6 +86,7 @@ func prefetchWithQps(urlsToPrefetch []string) {
 		err := cdn.Prefetch(urlsToPrefetch)
 		if err != nil {
 			log.Error(err)
+			data.SetCmdStatusError()
 		}
 	}
 }

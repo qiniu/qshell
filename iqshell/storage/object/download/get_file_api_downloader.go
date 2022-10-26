@@ -9,6 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -63,19 +64,19 @@ func (g *getFileApiDownloader) Download(info *ApiInfo) (response *http.Response,
 func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.Response, *data.CodeError) {
 
 	// /getfile/<ak>/<bucket>/<UrlEncodedKey>[?e=<Deadline>&token=<DownloadToken>
-	url := utils.Endpoint(g.useHttps, host.GetServer())
-	url = strings.Join([]string{url, "getfile", g.mac.AccessKey, info.Bucket, info.Key}, "/")
+	urlString := utils.Endpoint(g.useHttps, host.GetServer())
+	urlString = strings.Join([]string{urlString, "getfile", g.mac.AccessKey, info.Bucket, url.PathEscape(info.Key)}, "/")
 	result, err := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
-		PublicUrl: url,
+		PublicUrl: urlString,
 		Deadline:  7 * 24 * 3600,
 	})
 
 	if result == nil || err != nil {
 		return nil, data.NewEmptyError().AppendDescF("PublicUrlToPrivate error:%v", err)
 	}
-	url = result.Url
+	urlString = result.Url
 
-	log.DebugF("get file api download, url:%s", url)
+	log.DebugF("get file api download, url:%s", urlString)
 	log.DebugF("get download, host:%s", host.GetHost())
 
 	headers := http.Header{}
@@ -103,12 +104,13 @@ func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.R
 		headers.Add("Referer", info.Referer)
 	}
 
-	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
+	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", urlString, headers)
 	if response != nil && response.Header != nil {
 		etag := response.Header.Get("Etag")
 		if len(etag) > 0 && etag != fmt.Sprintf("\"%s\"", info.ServerFileHash) {
 			return nil, data.NewEmptyError().AppendDescF("file has change, hash before:%s now:%s", info.ServerFileHash, etag)
 		}
 	}
+
 	return response, data.ConvertError(rErr)
 }

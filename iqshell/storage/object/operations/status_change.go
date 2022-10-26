@@ -63,6 +63,7 @@ func ForbiddenObject(cfg *iqshell.Config, info ForbiddenInfo) {
 
 	statusDesc := info.getStatusDesc()
 	if err != nil || result == nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Change status Failed, [%s:%s] => %s, Error: %v",
 			info.Bucket, info.Key, statusDesc, err)
 		return
@@ -72,6 +73,7 @@ func ForbiddenObject(cfg *iqshell.Config, info ForbiddenInfo) {
 		log.InfoF("Change status Success, [%s:%s] => %s",
 			info.Bucket, info.Key, statusDesc)
 	} else {
+		data.SetCmdStatusError()
 		log.ErrorF("Change status Failed, [%s:%s] => %s, Code:%d, Error:%s",
 			info.Bucket, info.Key, statusDesc, result.Code, result.Error)
 	}
@@ -113,6 +115,7 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -136,16 +139,20 @@ func BatchChangeStatus(cfg *iqshell.Config, info BatchChangeStatusInfo) {
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 			in, ok := (operation).(*object.ChangeStatusApiInfo)
 			if !ok {
+				data.SetCmdStatusError()
 				log.ErrorF("Change status Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 				return
 			}
 			if result.IsSuccess() {
 				log.InfoF("Change status Success, [%s:%s] => '%d'", in.Bucket, in.Key, in.Status)
 			} else {
+				data.SetCmdStatusError()
 				log.ErrorF("Change status Failed, [%s:%s] => %d, Code: %d, Error: %s",
 					in.Bucket, in.Key, in.Status, result.Code, result.Error)
 			}
-		}).OnError(func(err *data.CodeError) {
-		log.ErrorF("batch change status error:%v:", err)
-	}).Start()
+		}).
+		OnError(func(err *data.CodeError) {
+			data.SetCmdStatusError()
+			log.ErrorF("batch change status error:%v:", err)
+		}).Start()
 }

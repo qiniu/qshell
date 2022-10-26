@@ -43,6 +43,7 @@ func Rename(cfg *iqshell.Config, info RenameInfo) {
 
 	result, err := object.Move((*object.MoveApiInfo)(&info))
 	if err != nil || result == nil {
+		data.SetCmdStatusError()
 		log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Error: %v",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -55,6 +56,7 @@ func Rename(cfg *iqshell.Config, info RenameInfo) {
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey)
 	} else {
+		data.SetCmdStatusError()
 		log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 			info.SourceBucket, info.SourceKey,
 			info.DestBucket, info.DestKey,
@@ -92,6 +94,7 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatusError()
 		return
 	}
 
@@ -120,6 +123,7 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
 			apiInfo, ok := (operation).(*object.MoveApiInfo)
 			if !ok {
+				data.SetCmdStatusError()
 				log.ErrorF("Rename Failed, %s, Code: %d, Error: %s", operationInfo, result.Code, result.Error)
 				return
 			}
@@ -129,6 +133,7 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 					in.SourceBucket, in.SourceKey,
 					in.DestBucket, in.DestKey)
 			} else {
+				data.SetCmdStatusError()
 				log.ErrorF("Rename Failed, [%s:%s] => [%s:%s], Code: %d, Error: %s",
 					in.SourceBucket, in.SourceKey,
 					in.DestBucket, in.DestKey,
@@ -136,6 +141,7 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 			}
 		}).
 		OnError(func(err *data.CodeError) {
+			data.SetCmdStatusError()
 			log.ErrorF("Batch rename error:%v:", err)
 		}).Start()
 }

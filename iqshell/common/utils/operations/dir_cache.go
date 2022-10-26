@@ -5,7 +5,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"os"
 )
 
 type DirCacheInfo struct {
@@ -33,6 +32,7 @@ func DirCache(cfg *iqshell.Config, info DirCacheInfo) {
 
 	_, retErr := utils.DirCache(info.Dir, info.SaveToFile)
 	if retErr != nil {
-		os.Exit(data.StatusError)
+		data.SetCmdStatusError()
+		return
 	}
 }

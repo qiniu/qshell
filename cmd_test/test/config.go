@@ -7,10 +7,6 @@ import (
 )
 
 var (
-	Debug          = true
-	Local          = len(os.Getenv("QSHELL_LOCAL")) > 0
-	ShouldTestUser = len(os.Getenv("QSHELL_Test_User")) > 0
-
 	AccessKey      = os.Getenv("accessKey")
 	SecretKey      = os.Getenv("secretKey")
 	Bucket         = testBucket()
@@ -18,6 +14,10 @@ var (
 	UploadDomain   = testUploadDomain()
 	DocumentOption = "--doc"
 )
+
+func IsDebug() bool {
+	return true
+}
 
 func testBucket() string {
 	if b := os.Getenv("bucket"); len(b) > 0 {
