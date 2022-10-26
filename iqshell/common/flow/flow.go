@@ -103,7 +103,8 @@ func (f *Flow) Start() {
 		for {
 			hasMore, workInfo, err := f.WorkProvider.Provide()
 			if err != nil {
-				if err.Code == data.ErrorCodeParamMissing {
+				if err.Code == data.ErrorCodeParamMissing ||
+					err.Code == data.ErrorCodeLineHeader {
 					f.notifyWorkSkip(workInfo, nil, err)
 				} else {
 					f.notifyWorkFail(workInfo, err)

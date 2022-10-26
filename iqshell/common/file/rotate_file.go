@@ -3,6 +3,7 @@ package file
 import (
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"io"
 	"io/fs"
 	"os"
@@ -51,6 +52,12 @@ func RotateOptionOnOpenFile(f func(filename string)) RotateOption {
 
 func NewRotateFile(name string, options ...RotateOption) (io.WriteCloser, *data.CodeError) {
 
+	if n, aErr := filepath.Abs(name); aErr != nil {
+		return nil, data.ConvertError(aErr)
+	} else {
+		name = n
+	}
+
 	filenameWithSuffix := filepath.Base(name)
 	fileExt := filepath.Ext(filenameWithSuffix)
 	fileName := strings.TrimSuffix(filenameWithSuffix, fileExt)
@@ -70,6 +77,17 @@ func NewRotateFile(name string, options ...RotateOption) (io.WriteCloser, *data.
 
 	for _, option := range options {
 		option(r)
+	}
+
+	if r.maxSize > 0 && r.maxSize < int64(len(r.fileHeader)+1) {
+		return nil, data.NewEmptyError().AppendDescF("max size should bigger than %dB", len(r.fileHeader))
+	}
+
+	if r.maxLine > 0 && len(r.fileHeader) > 0 {
+		fileHeaderLines := int64(len(strings.Split(r.fileHeader, returnChar)))
+		if fileHeaderLines >= r.maxLine {
+			return nil, data.NewEmptyError().AppendDescF("max lines should bigger than %d", fileHeaderLines)
+		}
 	}
 
 	if r.appendMode {
@@ -162,12 +180,10 @@ func (r *rotateFile) writeLine(isNew bool, line string) (n int, err error) {
 
 	// 检测行限制，需要则创建新文件
 	if isNew {
-		r.currentFileLine++
-
-		// 切分的数量比 \n 的数量多 1
-		if r.maxLine > 0 && r.currentFileLine > (r.maxLine-1) {
+		if r.maxLine > 0 && r.currentFileLine > 0 && (r.currentFileLine+1) >= r.maxLine {
 			needCreateNewFile = true
 		}
+		r.currentFileLine++
 	}
 
 	// 检测文件大小限制，需要则创建新文件
@@ -181,9 +197,6 @@ func (r *rotateFile) writeLine(isNew bool, line string) (n int, err error) {
 		if cErr := r.createFile(); cErr != nil {
 			return len(returnChar), cErr
 		}
-
-		r.currentFileLine = 0
-		r.currentFileSize = 0
 	} else if isNew && r.currentFileSize != 0 {
 		// 非新文件的新行 增加换行符
 		line = returnChar + line
@@ -204,11 +217,12 @@ func (r *rotateFile) createFile() error {
 	}
 
 	r.file = nil
-	r.fileIndex++
 
 	// 打开或创建文件
 	flag := os.O_WRONLY | os.O_CREATE
-	if !r.appendMode {
+	if r.appendMode {
+		flag |= os.O_APPEND
+	} else {
 		flag |= os.O_TRUNC
 	}
 
@@ -225,15 +239,27 @@ func (r *rotateFile) createFile() error {
 		r.file = file
 	}
 
+	r.fileIndex++
 	r.currentFileLine = 0
 	r.currentFileSize = 0
 
-	// 写头部
-	if stat, err := r.file.Stat(); err != nil {
+	fileStat, err := r.file.Stat()
+	if err != nil {
 		return err
-	} else if stat.Size() <= 0 {
+	}
+
+	if fileStat.Size() == 0 {
+		// 空文件 写头
 		if _, wErr := r.writeByRotate([]byte(r.fileHeader + returnChar)); wErr != nil {
 			return fmt.Errorf("rotate file write header error:%v", wErr)
+		}
+	} else {
+		// 非空文件，获取文件信息
+		r.currentFileSize = fileStat.Size()
+		if count, fErr := utils.FileLineCounts(newFileName); fErr != nil {
+			return fmt.Errorf("rotate file get line count error:%v", fErr)
+		} else {
+			r.currentFileLine = count
 		}
 	}
 
@@ -250,6 +276,13 @@ func (r *rotateFile) getFileIndex() (index int, err *data.CodeError) {
 	wErr := filepath.WalkDir(r.fileDir, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() {
 			return nil
+		}
+
+		// path 转相对路径
+		if relPath, rErr := filepath.Rel(r.fileDir, path); rErr != nil {
+			return nil
+		} else {
+			path = relPath
 		}
 
 		fileNamePrefix := r.fileName + rotateFileNameSep

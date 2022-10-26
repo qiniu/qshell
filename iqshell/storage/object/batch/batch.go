@@ -285,7 +285,11 @@ func (h *handler) Start() {
 					Error: fmt.Sprintf("%v", err),
 				})
 				log.InfoF("Skip line:%s because:%v", work.Data, err)
-				h.exporter.Fail().ExportF("%s%s-%v", work.Data, flow.ErrorSeparate, err)
+				if err != nil && err.Code == data.ErrorCodeLineHeader {
+					h.exporter.Fail().Export(work.Data)
+				} else {
+					h.exporter.Fail().ExportF("%s%s-%v", work.Data, flow.ErrorSeparate, err)
+				}
 			}
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {

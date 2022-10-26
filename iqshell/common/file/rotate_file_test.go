@@ -1,3 +1,5 @@
+//go:build unit
+
 package file
 
 import (
@@ -130,7 +132,7 @@ func TestLinesFileSize(t *testing.T) {
 	var maxLine int64 = 2
 	r, nErr := NewRotateFile(filepath.Join(dir, "test.txt"),
 		RotateOptionMaxLine(maxLine),
-		RotateOptionMaxSize(10),
+		RotateOptionMaxSize(44),
 		RotateOptionFileHeader("Key\tHash\tSize\tStatus\tModTime\tUser"))
 	if nErr != nil {
 		t.Fatal(nErr)

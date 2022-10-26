@@ -49,7 +49,7 @@ func (p *ListLineParser) Parse(items []string) (*ListObject, *data.CodeError) {
 		isKeys, fields := getKeyItems(items)
 		p.fields = fields
 		if isKeys {
-			return nil, data.NewError(data.ErrorCodeParamMissing, "This is key line")
+			return nil, data.NewError(data.ErrorCodeLineHeader, "This is key line")
 		} else {
 			return p.convert(items)
 		}

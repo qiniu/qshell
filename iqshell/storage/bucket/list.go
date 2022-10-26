@@ -267,7 +267,7 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *da
 			file.RotateOptionAppendMode(info.AppendMode),
 			file.RotateOptionFileHeader(title),
 			file.RotateOptionOnOpenFile(func(filename string) {
-				log.InfoF("list: open new output file:%v", filename)
+				log.InfoF("open output file and prepare to write:%v", filename)
 			}))
 
 		if nErr != nil {
