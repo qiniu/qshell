@@ -31,7 +31,6 @@ _cgo_export.*
 [568vq].out
 report.xml
 .qshell
-qshell_*
 qshell-*
 _testmain.go
 
