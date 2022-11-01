@@ -338,12 +338,12 @@ func (h *handler) Start() {
 			log.DebugF("save batch result to path:%s", resultPath)
 		}
 
-		log.Info("--------------- Batch Result ---------------")
-		log.InfoF("%20s%10d", "Total:", metric.TotalCount)
-		log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
-		log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
-		log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
-		log.InfoF("%20s%10ds", "Duration:", metric.Duration)
-		log.InfoF("--------------------------------------------")
+		log.Alert("--------------- Batch Result ---------------")
+		log.AlertF("%20s%10d", "Total:", metric.TotalCount)
+		log.AlertF("%20s%10d", "Success:", metric.SuccessCount)
+		log.AlertF("%20s%10d", "Failure:", metric.FailureCount)
+		log.AlertF("%20s%10d", "Skipped:", metric.SkippedCount)
+		log.AlertF("%20s%10ds", "Duration:", metric.Duration)
+		log.AlertF("--------------------------------------------")
 	}
 }

@@ -17,6 +17,7 @@ import (
 
 type Config struct {
 	Document       bool                        // 是否展示 document
+	Silence        bool                        // 开启命令行的静默模式，只输出 Error 和 Warning
 	DebugEnable    bool                        // 开启命令行的调试模式
 	DDebugEnable   bool                        // go SDK client 和命令行开启调试模式
 	ConfigFilePath string                      // 配置文件路径，用户可以指定配置文件
@@ -94,11 +95,14 @@ func loadBase(cfg *Config) (shouldContinue bool) {
 
 	// 加载 log
 	logLevel := log.LevelInfo
-	if cfg.DebugEnable || cfg.DDebugEnable {
-		logLevel = log.LevelDebug
-	}
 	if cfg.DDebugEnable {
+		logLevel = log.LevelDebug
+		// 深度 Debug ，client 开启日志模式
 		client.TurnOnDebug()
+	} else if cfg.DebugEnable {
+		logLevel = log.LevelDebug
+	} else if cfg.Silence {
+		logLevel = log.LevelWarning
 	}
 
 	// 加载本地输出
