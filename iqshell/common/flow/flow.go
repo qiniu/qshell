@@ -190,6 +190,7 @@ func (f *Flow) Start() {
 				workRecordList, workErr := worker.DoWork(workList)
 				if len(workRecordList) == 0 && workErr != nil {
 					log.ErrorF("Do Worker Error:%v", err)
+					f.limitRelease(workCount)
 					break
 				}
 

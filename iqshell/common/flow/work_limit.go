@@ -90,9 +90,9 @@ func (l *autoLimit) Acquire(count int) *data.CodeError {
 
 	l.waitIfNeeded()
 
+	err := l.blockLimit.Acquire(count)
 	atomic.AddInt64(&l.notReleaseCount, int64(count))
-
-	return l.blockLimit.Acquire(count)
+	return err
 }
 
 func (l *autoLimit) Release(count int) {
@@ -118,8 +118,12 @@ func (l *autoLimit) AddLimitCount(count int) {
 		count = l.maxLimitCount - l.limitCount
 	}
 	if l.minLimitCount > 0 && l.limitCount+count < l.minLimitCount {
-		count = l.limitCount - l.minLimitCount
+		count = l.minLimitCount - l.limitCount
 	}
+	if l.limitCount+count < 1 {
+		count = 1 - l.limitCount
+	}
+
 	l.limitCount += count
 
 	l.blockLimit.AddLimitCount(count)
@@ -150,7 +154,6 @@ func (l *autoLimit) waitIfNeeded() {
 		if l.notReleaseCount <= (int64(l.limitCount) / 3) {
 			l.shouldWait = false
 		}
-
 		time.Sleep(waitTime)
 	}
 }
