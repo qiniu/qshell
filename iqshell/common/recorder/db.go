@@ -70,7 +70,7 @@ func (db *dbRecorder) Put(key, value string) *data.CodeError {
 		return data.NewEmptyError().AppendDescF("db put key:%s for value:%s error:no db exist", key, value)
 	}
 	err := db.db.Put([]byte(key), []byte(value), &opt.WriteOptions{
-		Sync: true,
+		Sync: false,
 	})
 	if err != nil {
 		return data.NewEmptyError().AppendError(err)
