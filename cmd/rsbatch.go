@@ -286,10 +286,10 @@ func setBatchCmdForceFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force mode, default false")
 }
 func setBatchCmdWorkerCountFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 20, "worker count. 1 means the number of objects in one operation is 250 and if configured as 10 , the number of objects in one operation is 2500. This value needs to be consistent with the upper limit of Qiniu’s operation, otherwise unexpected errors will occur. Under normal circumstances you do not need to adjust this value and if you need please carefully.")
+	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 4, "worker count. 1 means the number of objects in one operation is 250 and if configured as 10 , the number of objects in one operation is 2500. This value needs to be consistent with the upper limit of Qiniu’s operation, otherwise unexpected errors will occur. Under normal circumstances you do not need to adjust this value and if you need please carefully.")
 }
 func setBatchCmdMinWorkerCountFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().IntVarP(&info.MinWorkerCount, "min-worker", "", 10, "min worker count. 1 means the number of objects in one operation is 1000 and if configured as 3 , the number of objects in one operation is 3000. for more, please refer to worker")
+	cmd.Flags().IntVarP(&info.MinWorkerCount, "min-worker", "", 1, "min worker count. 1 means the number of objects in one operation is 1000 and if configured as 3 , the number of objects in one operation is 3000. for more, please refer to worker")
 }
 func setBatchCmdWorkerCountIncreasePeriodFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().IntVarP(&info.WorkerCountIncreasePeriod, "worker-count-increase-period", "", 60, "worker count increase period. when the worker count is too big, an overrun error will be triggered. In order to alleviate this problem, qshell will automatically reduce the worker count. In order to complete the operation as quickly as possible, qshell will periodically increase the worker count. unit: second")
