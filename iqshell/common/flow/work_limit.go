@@ -73,7 +73,7 @@ func (l *autoLimit) check() {
 
 	if l.maxLimitCount > 0 && l.maxLimitCount < l.limitCount {
 		// 上限尽可能小
-		l.limitCount = l.maxLimitCount
+		l.maxLimitCount = l.limitCount
 	}
 
 	if l.minLimitCount > 0 && l.minLimitCount > l.limitCount {
