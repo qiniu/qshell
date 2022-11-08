@@ -3,6 +3,7 @@ package recorder
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"os"
 	"path/filepath"
@@ -43,7 +44,9 @@ func CreateDBRecorder(filePath string) (Recorder, *data.CodeError) {
 }
 
 func openDB(filePath string) (*dbRecorder, *data.CodeError) {
-	db, err := leveldb.OpenFile(filePath, nil)
+	db, err := leveldb.OpenFile(filePath, &opt.Options{
+		Filter: filter.NewBloomFilter(32),
+	})
 	if err != nil {
 		return nil, data.NewEmptyError().AppendError(err)
 	}
