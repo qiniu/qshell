@@ -145,40 +145,45 @@ func List(info ListApiInfo,
 	outputCount := 0
 	complete := false
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
-		hasMore, lErr := list.ListBucket(workspace.GetContext(), list.ApiInfo{
-			Manager:    bucketManager,
-			ApiVersion: list.ApiVersion(info.ApiVersion),
-			Bucket:     info.Bucket,
-			Prefix:     info.Prefix,
-			Delimiter:  info.Delimiter,
-			Marker:     info.Marker,
-			V1Limit:    info.V1Limit,
-		}, func(marker string, dir string, listItem list.Item) (stop bool) {
-			if marker != info.Marker {
-				info.Marker = marker
-			}
+		var hasMore = false
+		var lErr *data.CodeError = nil
 
-			if !isItemExcepted(listItem) {
+		if !workspace.IsCmdInterrupt() {
+			hasMore, lErr = list.ListBucket(workspace.GetContext(), list.ApiInfo{
+				Manager:    bucketManager,
+				ApiVersion: list.ApiVersion(info.ApiVersion),
+				Bucket:     info.Bucket,
+				Prefix:     info.Prefix,
+				Delimiter:  info.Delimiter,
+				Marker:     info.Marker,
+				V1Limit:    info.V1Limit,
+			}, func(marker string, dir string, listItem list.Item) (stop bool) {
+				if marker != info.Marker {
+					info.Marker = marker
+				}
+
+				if !isItemExcepted(listItem) {
+					return false
+				}
+
+				shouldContinue, hErr := objectHandler(marker, listItem)
+				if hErr != nil {
+					errorHandler(marker, hErr)
+				}
+				if !shouldContinue {
+					complete = true
+					return true
+				}
+
+				outputCount++
+				if info.OutputLimit > 0 && outputCount >= info.OutputLimit {
+					complete = true
+					return true
+				}
+
 				return false
-			}
-
-			shouldContinue, hErr := objectHandler(marker, listItem)
-			if hErr != nil {
-				errorHandler(marker, hErr)
-			}
-			if !shouldContinue {
-				complete = true
-				return true
-			}
-
-			outputCount++
-			if info.OutputLimit > 0 && outputCount >= info.OutputLimit {
-				complete = true
-				return true
-			}
-
-			return false
-		})
+			})
+		}
 
 		// 保存信息
 		cacheInfoP.Bucket = info.Bucket
