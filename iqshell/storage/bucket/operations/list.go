@@ -34,7 +34,7 @@ type ListInfo struct {
 	Readable           bool   // 【可选】
 	ShowFields         string // 需要展示的字段
 	ApiVersion         string // list api 版本，v1 / v2【可选】
-	V1Limit            int    // 每次请求 size ，list v1 特有 【可选】
+	ApiLimit           int    // 每次请求 size ，当前仅支持 list v1 【可选】
 	OutputLimit        int    // 最大输出条数，默认：-1, 无限输出 【可选】
 	OutputFieldsSep    string // 输出信息，每行的分隔符 【可选】
 	OutputFileMaxLines int64  // 输出文件的最大行数，超过则自动创建新的文件，0：不限制输出文件的行数 【可选】
@@ -144,7 +144,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 			MaxRetry:           info.MaxRetry,
 			ShowFields:         info.getShowFields(),
 			ApiVersion:         info.ApiVersion,
-			V1Limit:            info.V1Limit,
+			V1Limit:            info.ApiLimit,
 			OutputLimit:        info.OutputLimit,
 			OutputFieldsSep:    info.getOutputFieldsSep(),
 			OutputFileMaxLines: info.OutputFileMaxLines,
