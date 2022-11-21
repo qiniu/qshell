@@ -192,10 +192,10 @@ func uploadSource(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	once.Do(func() {
 		storage.SetSettings(&storage.Settings{
 			TaskQsize: 0,
-			Workers:   0,
+			Workers:   info.ResumeWorkerCount,
 			ChunkSize: 0,
 			PartSize:  0,
-			TryTimes:  info.ResumeWorkerCount,
+			TryTimes:  0,
 		})
 	})
 	storageCfg := workspace.GetStorageConfig()
