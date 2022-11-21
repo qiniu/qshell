@@ -142,7 +142,6 @@ func TestBatchFetchWithRecord(t *testing.T) {
 		"--failure-list", failLogPath,
 		"--enable-record",
 		"--worker", "4",
-		"--worker", "1",
 		"-y",
 		"-d")
 	if !strings.Contains(result, "Skip") {

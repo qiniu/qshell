@@ -86,6 +86,10 @@ type BatchChangeStatusInfo struct {
 }
 
 func (info *BatchChangeStatusInfo) Check() *data.CodeError {
+	if err := info.BatchInfo.Check(); err != nil {
+		return err
+	}
+
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}

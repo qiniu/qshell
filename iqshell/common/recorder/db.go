@@ -3,6 +3,7 @@ package recorder
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"os"
 	"path/filepath"
@@ -43,7 +44,9 @@ func CreateDBRecorder(filePath string) (Recorder, *data.CodeError) {
 }
 
 func openDB(filePath string) (*dbRecorder, *data.CodeError) {
-	db, err := leveldb.OpenFile(filePath, nil)
+	db, err := leveldb.OpenFile(filePath, &opt.Options{
+		Filter: filter.NewBloomFilter(32),
+	})
 	if err != nil {
 		return nil, data.NewEmptyError().AppendError(err)
 	}
@@ -70,7 +73,7 @@ func (db *dbRecorder) Put(key, value string) *data.CodeError {
 		return data.NewEmptyError().AppendDescF("db put key:%s for value:%s error:no db exist", key, value)
 	}
 	err := db.db.Put([]byte(key), []byte(value), &opt.WriteOptions{
-		Sync: true,
+		Sync: false,
 	})
 	if err != nil {
 		return data.NewEmptyError().AppendError(err)

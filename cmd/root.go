@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -47,8 +48,13 @@ var rootCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short:                  "Qiniu commandline tool for managing your bucket and CDN",
 		Version:                version.Version(),
 		BashCompletionFunction: bash_completion_func,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.QShellType
+			docs.ShowCmdDocument(docs.QShellType)
+		},
 	}
 	cmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")
+	cmd.PersistentFlags().BoolVarP(&cfg.Silence, "silence", "", false, "silence mode, The console only outputs warnings、errors and some important information")
 	cmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
 	// ddebug 开启 client debug
 	cmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")

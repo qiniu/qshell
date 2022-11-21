@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -29,9 +30,9 @@ type Info struct {
 	MinItemsCount int         // 工作数据源：每行元素最小数量
 	EnableStdin   bool        // 工作数据源：stdin, 当 InputFile 不存在时使用 stdin
 
-	EnableRecord                bool // 是否开启 record
-	RecordRedoWhileError        bool // 重新执行任务时，如果任务已执行但是失败，则再重新执行一次。
-	MaxOperationCountPerRequest int
+	EnableRecord             bool // 是否开启 record
+	RecordRedoWhileError     bool // 重新执行任务时，如果任务已执行但是失败，则再重新执行一次。
+	OperationCountPerRequest int  // 每批操作最大的子任务数
 }
 
 func (info *Info) Check() *data.CodeError {
@@ -44,9 +45,9 @@ func (info *Info) Check() *data.CodeError {
 		info.MinItemsCount = 1
 	}
 
-	if info.MaxOperationCountPerRequest <= 0 ||
-		info.MaxOperationCountPerRequest > defaultOperationCountPerRequest {
-		info.MaxOperationCountPerRequest = defaultOperationCountPerRequest
+	if info.OperationCountPerRequest <= 0 ||
+		info.OperationCountPerRequest > defaultOperationCountPerRequest {
+		info.OperationCountPerRequest = defaultOperationCountPerRequest
 	}
 
 	if len(info.ItemSeparate) == 0 {
@@ -195,7 +196,7 @@ func (h *handler) Start() {
 				}
 
 				for i, r := range resultList {
-					recordList[i].Result = &OperationResult{
+					result := &OperationResult{
 						Code:     r.Code,
 						Hash:     r.Data.Hash,
 						FSize:    r.Data.Fsize,
@@ -204,11 +205,15 @@ func (h *handler) Start() {
 						Type:     r.Data.Type,
 						Error:    r.Data.Error,
 					}
+					recordList[i].Result = result
+					if !result.IsSuccess() {
+						recordList[i].Err = data.NewError(result.Code, result.Error)
+					}
 				}
 				return recordList, nil
 			}), nil
 		})).
-		DoWorkListMaxCount(h.info.MaxOperationCountPerRequest).
+		DoWorkListMaxCount(h.info.OperationCountPerRequest).
 		SetOverseerEnable(h.info.EnableRecord).
 		SetDBOverseer(dbPath, func() *flow.WorkRecord {
 			return &flow.WorkRecord{
@@ -220,6 +225,11 @@ func (h *handler) Start() {
 				Err:    nil,
 			}
 		}).
+		SetLimit(flow.NewBlockLimit(h.info.WorkerCount*h.info.OperationCountPerRequest,
+			flow.MaxLimitCount(h.info.WorkerCount*h.info.OperationCountPerRequest),
+			flow.MinLimitCount(h.info.MinWorkerCount*h.info.OperationCountPerRequest),
+			flow.IncreaseLimitCount(h.info.OperationCountPerRequest),
+			flow.IncreaseLimitCountPeriod(time.Duration(h.info.WorkerCountIncreasePeriod)*time.Second))).
 		FlowWillStartFunc(func(flow *flow.Flow) (err *data.CodeError) {
 			metric.AddTotalCount(flow.WorkProvider.WorkTotalCount())
 			return nil
@@ -275,7 +285,11 @@ func (h *handler) Start() {
 					Error: fmt.Sprintf("%v", err),
 				})
 				log.InfoF("Skip line:%s because:%v", work.Data, err)
-				h.exporter.Fail().ExportF("%s%s-%v", work.Data, flow.ErrorSeparate, err)
+				if err != nil && err.Code == data.ErrorCodeLineHeader {
+					h.exporter.Fail().Export(work.Data)
+				} else {
+					h.exporter.Fail().ExportF("%s%s-%v", work.Data, flow.ErrorSeparate, err)
+				}
 			}
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
@@ -301,11 +315,11 @@ func (h *handler) Start() {
 			metric.AddCurrentCount(1)
 			metric.AddFailureCount(1)
 			metric.PrintProgress("Batching:" + work.Data)
-			h.exporter.Fail().ExportF("%s%s[%d]%s", work.Data, flow.ErrorSeparate, data.ErrorCodeUnknown, err.Desc)
+			h.exporter.Fail().ExportF("%s%s[%d]%s", work.Data, flow.ErrorSeparate, err.Code, err.Desc)
 
 			operation, _ := work.Work.(Operation)
 			h.onResult(work.Data, operation, &OperationResult{
-				Code:  data.ErrorCodeUnknown,
+				Code:  err.Code,
 				Error: err.Desc,
 			})
 		}).Build().Start()
@@ -324,12 +338,12 @@ func (h *handler) Start() {
 			log.DebugF("save batch result to path:%s", resultPath)
 		}
 
-		log.Info("--------------- Batch Result ---------------")
-		log.InfoF("%20s%10d", "Total:", metric.TotalCount)
-		log.InfoF("%20s%10d", "Success:", metric.SuccessCount)
-		log.InfoF("%20s%10d", "Failure:", metric.FailureCount)
-		log.InfoF("%20s%10d", "Skipped:", metric.SkippedCount)
-		log.InfoF("%20s%10ds", "Duration:", metric.Duration)
-		log.InfoF("--------------------------------------------")
+		log.Alert("--------------- Batch Result ---------------")
+		log.AlertF("%20s%10d", "Total:", metric.TotalCount)
+		log.AlertF("%20s%10d", "Success:", metric.SuccessCount)
+		log.AlertF("%20s%10d", "Failure:", metric.FailureCount)
+		log.AlertF("%20s%10d", "Skipped:", metric.SkippedCount)
+		log.AlertF("%20s%10ds", "Duration:", metric.Duration)
+		log.AlertF("--------------------------------------------")
 	}
 }

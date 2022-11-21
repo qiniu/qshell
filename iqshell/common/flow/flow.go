@@ -3,21 +3,34 @@ package flow
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/limit"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"sync"
+	"time"
 )
 
 type Info struct {
-	Force             bool // 是否强制直接进行 Flow, 不强制需要用户输入验证码验证
-	WorkerCount       int  // worker 数量
-	StopWhenWorkError bool // 当某个 work 遇到执行错误是否结束 batch 任务
+	Force                     bool // 是否强制直接进行 Flow, 不强制需要用户输入验证码验证
+	WorkerCount               int  // worker 数量
+	MinWorkerCount            int  // 最小 work 数量，当遇到限制错误会减小 work 数，最小 1
+	WorkerCountIncreasePeriod int  // WorkerCount 递增的周期，当在 WorkerCountIncreasePeriod 时间内没有遇到限制错误时，会尝试增加 WorkerCount，最小 10s
+	StopWhenWorkError         bool // 当某个 work 遇到执行错误是否结束 batch 任务
 }
 
 func (i *Info) Check() *data.CodeError {
 	if i.WorkerCount < 1 {
 		i.WorkerCount = 1
 	}
+
+	if i.MinWorkerCount < 1 {
+		i.MinWorkerCount = 1
+	}
+
+	if i.WorkerCountIncreasePeriod < 10 {
+		i.WorkerCountIncreasePeriod = 10
+	}
+
 	return nil
 }
 
@@ -26,12 +39,18 @@ type Flow struct {
 	WorkProvider   WorkProvider   // work 提供者 【必填】
 	WorkerProvider WorkerProvider // worker 提供者 【必填】
 
-	DoWorkInfoListMaxCount int           // Worker.DoWork 函数中 works 数组最大长度，最小长度为 1
-	EventListener          EventListener // work 处理事项监听者 【可选】
-	Overseer               Overseer      // work 监工，涉及 work 是否已处理相关的逻辑 【可选】
-	Skipper                Skipper       // work 是否跳过相关逻辑 【可选】
-	Redo                   Redo          // work 是否需要重新做相关逻辑，有些工作虽然已经做过，但下次处理时可能条件发生变化，需要重新处理 【可选】
-	workErrorHappened      bool          // 执行中是否出现错误 【内部变量】
+	DoWorkInfoListMaxCount int // Worker.DoWork 函数中 works 数组最大长度，默认：250，最小长度为 1
+	doWorkInfoListCount    int // Worker.DoWork 函数中 works 数组长度
+	DoWorkInfoListMinCount int // Worker.DoWork 函数中 works 数组最小长度，默认：50，最小长度为 1
+
+	Limit         limit.BlockLimit // 速度限制，用于限制
+	EventListener EventListener    // work 处理事项监听者 【可选】
+	Overseer      Overseer         // work 监工，涉及 work 是否已处理相关的逻辑 【可选】
+	Skipper       Skipper          // work 是否跳过相关逻辑 【可选】
+	Redo          Redo             // work 是否需要重新做相关逻辑，有些工作虽然已经做过，但下次处理时可能条件发生变化，需要重新处理 【可选】
+
+	mu                sync.Mutex //
+	workErrorHappened bool       // 执行中是否出现错误 【内部变量】
 }
 
 func (f *Flow) Check() *data.CodeError {
@@ -50,6 +69,12 @@ func (f *Flow) Check() *data.CodeError {
 		f.DoWorkInfoListMaxCount = 1
 	}
 
+	if f.DoWorkInfoListMinCount < 1 {
+		f.DoWorkInfoListMinCount = 1
+	}
+
+	f.doWorkInfoListCount = f.DoWorkInfoListMaxCount
+
 	return nil
 }
 
@@ -63,11 +88,9 @@ func (f *Flow) Start() {
 		return
 	}
 
-	if f.EventListener.FlowWillStartFunc != nil {
-		if err := f.EventListener.FlowWillStartFunc(f); err != nil {
-			log.ErrorF("Flow start error:%v", err)
-			return
-		}
+	if err := f.notifyFlowWillStart(); err != nil {
+		log.ErrorF("Flow start error:%v", err)
+		return
 	}
 
 	log.Debug("work flow did start")
@@ -76,14 +99,15 @@ func (f *Flow) Start() {
 	go func() {
 		log.DebugF("work producer start")
 
-		workList := make([]*WorkInfo, 0, f.DoWorkInfoListMaxCount)
+		workList := make([]*WorkInfo, 0, f.doWorkInfoListCount)
 		for {
 			hasMore, workInfo, err := f.WorkProvider.Provide()
 			if err != nil {
-				if err.Code == data.ErrorCodeParamMissing {
-					f.EventListener.OnWorkSkip(workInfo, nil, err)
+				if err.Code == data.ErrorCodeParamMissing ||
+					err.Code == data.ErrorCodeLineHeader {
+					f.notifyWorkSkip(workInfo, nil, err)
 				} else {
-					f.EventListener.OnWorkFail(workInfo, err)
+					f.notifyWorkFail(workInfo, err)
 				}
 				continue
 			}
@@ -97,46 +121,37 @@ func (f *Flow) Start() {
 			}
 
 			// 检测 work 是否需要过
-			if f.Skipper != nil {
-				if skip, cause := f.Skipper.ShouldSkip(workInfo); skip {
-					f.EventListener.OnWorkSkip(workInfo, nil, cause)
-					continue
-				}
+			if skip, cause := f.shouldWorkSkip(workInfo); skip {
+				f.notifyWorkSkip(workInfo, nil, cause)
+				continue
 			}
 
 			// 检测 work 是否已经做过
-			if f.Overseer != nil {
-				if hasDone, workRecord := f.Overseer.GetWorkRecordIfHasDone(workInfo); hasDone {
-					if f.Redo == nil {
-						f.EventListener.OnWorkSkip(workInfo, workRecord.Result, data.NewError(data.ErrorCodeAlreadyDone, workRecord.Err.Error()))
-						continue
+			if hasDone, workRecord := f.getWorkRecordIfHasDone(workInfo); hasDone {
+				if shouldRedo, cause := f.shouldWorkRedo(workInfo, workRecord); !shouldRedo {
+					if cause == nil {
+						cause = data.NewError(data.ErrorCodeAlreadyDone, "already done")
 					}
-
-					if shouldRedo, cause := f.Redo.ShouldRedo(workInfo, workRecord); !shouldRedo {
-						if cause == nil {
-							cause = data.NewError(data.ErrorCodeAlreadyDone, "already done")
-						}
-						cause.Code = data.ErrorCodeAlreadyDone
-						f.EventListener.OnWorkSkip(workInfo, workRecord.Result, cause)
-						continue
+					cause.Code = data.ErrorCodeAlreadyDone
+					f.notifyWorkSkip(workInfo, workRecord.Result, cause)
+					continue
+				} else {
+					if cause == nil {
+						log.DebugF("work redo, %s", workInfo.Data)
 					} else {
-						if cause == nil {
-							log.DebugF("work redo, %s", workInfo.Data)
-						} else {
-							log.DebugF("work redo, %s because:%v", workInfo.Data, cause.Desc)
-						}
+						log.DebugF("work redo, %s because:%v", workInfo.Data, cause.Desc)
 					}
 				}
 			}
 
 			// 通知 work 将要执行
-			if shouldContinue, e := f.EventListener.WillWork(workInfo); !shouldContinue {
-				f.EventListener.OnWorkSkip(workInfo, nil, e)
+			if shouldContinue, e := f.notifyWorkWillDoing(workInfo); !shouldContinue {
+				f.notifyWorkSkip(workInfo, nil, e)
 				continue
 			}
 
 			workList = append(workList, workInfo)
-			if len(workList) >= f.DoWorkInfoListMaxCount {
+			if len(workList) >= f.doWorkInfoListCount {
 				workChan <- workList
 				workList = make([]*WorkInfo, 0, f.DoWorkInfoListMaxCount)
 			}
@@ -154,6 +169,7 @@ func (f *Flow) Start() {
 	wait := &sync.WaitGroup{}
 	wait.Add(f.Info.WorkerCount)
 	for i := 0; i < f.Info.WorkerCount; i++ {
+		time.Sleep(time.Millisecond * time.Duration(50))
 		go func(index int) {
 			log.DebugF("work consumer %d start", index)
 			worker, err := f.WorkerProvider.Provide()
@@ -167,35 +183,33 @@ func (f *Flow) Start() {
 					break
 				}
 
+				workCount := len(workList)
+
+				_ = f.limitAcquire(workCount)
+
 				// workRecordList 有数据则长度和 workList 长度相同
 				workRecordList, workErr := worker.DoWork(workList)
 				if len(workRecordList) == 0 && workErr != nil {
 					log.ErrorF("Do Worker Error:%v", err)
+					f.limitRelease(workCount)
 					break
 				}
 
-				resultHandler := func(workRecord *WorkRecord) {
-					if f.Overseer != nil {
-						f.Overseer.WorkDone(&WorkRecord{
-							WorkInfo: workRecord.WorkInfo,
-							Result:   workRecord.Result,
-							Err:      workRecord.Err,
-						})
-					}
-					if workRecord.Err != nil {
-						f.EventListener.OnWorkFail(workRecord.WorkInfo, workRecord.Err)
-						f.workErrorHappened = true
-					} else {
-						f.EventListener.OnWorkSuccess(workRecord.WorkInfo, workRecord.Result)
-					}
-				}
+				f.tryChangeWorkGroupCount(workErr)
 
+				hitLimitCount := 0
 				for _, record := range workRecordList {
 					if (record.Result == nil || !record.Result.IsValid()) && record.Err == nil {
 						record.Err = workErr
 					}
-					resultHandler(record)
+					f.handleWorkResult(record)
+					if f.isWorkResultHitLimit(record) {
+						hitLimitCount += 1
+					}
 				}
+
+				f.limitRelease(workCount)
+				f.limitCountDecrease(hitLimitCount)
 
 				// 检测是否需要停止
 				if f.workErrorHappened && f.Info.StopWhenWorkError {
@@ -209,12 +223,122 @@ func (f *Flow) Start() {
 	}
 	wait.Wait()
 
-	if f.EventListener.FlowWillEndFunc != nil {
-		if err := f.EventListener.FlowWillEndFunc(f); err != nil {
-			log.ErrorF("Flow end error:%v", err)
-			return
-		}
+	if err := f.notifyFlowWillEnd(); err != nil {
+		log.ErrorF("Flow end error:%v", err)
+		return
 	}
 
 	log.Debug("work flow did end")
+}
+
+func (f *Flow) notifyFlowWillStart() *data.CodeError {
+	if f.EventListener.FlowWillStartFunc == nil {
+		return nil
+	}
+	return f.EventListener.FlowWillStartFunc(f)
+}
+
+func (f *Flow) shouldWorkSkip(work *WorkInfo) (skip bool, cause *data.CodeError) {
+	if f.Skipper == nil {
+		return false, nil
+	}
+	return f.Skipper.ShouldSkip(work)
+}
+
+func (f *Flow) notifyWorkSkip(work *WorkInfo, result Result, err *data.CodeError) {
+	f.EventListener.OnWorkSkip(work, result, err)
+}
+
+func (f *Flow) getWorkRecordIfHasDone(work *WorkInfo) (hasDone bool, record *WorkRecord) {
+	if f.Overseer == nil {
+		return false, nil
+	}
+	return f.Overseer.GetWorkRecordIfHasDone(work)
+}
+
+func (f *Flow) shouldWorkRedo(work *WorkInfo, workRecord *WorkRecord) (shouldRedo bool, cause *data.CodeError) {
+	if f.Redo == nil {
+		return false, data.NewError(data.ErrorCodeAlreadyDone, workRecord.Err.Error())
+	}
+	return f.Redo.ShouldRedo(work, workRecord)
+}
+
+func (f *Flow) notifyWorkWillDoing(work *WorkInfo) (shouldContinue bool, err *data.CodeError) {
+	return f.EventListener.WillWork(work)
+}
+
+func (f *Flow) limitAcquire(count int) *data.CodeError {
+	if f.Limit == nil {
+		return nil
+	}
+	return f.Limit.Acquire(count)
+}
+
+func (f *Flow) isWorkResultHitLimit(workRecord *WorkRecord) bool {
+	if f.Limit == nil || workRecord.Err == nil {
+		return false
+	}
+
+	return workRecord.Err.Code == 573
+}
+
+func (f *Flow) limitRelease(count int) {
+	if f.Limit == nil {
+		return
+	}
+	f.Limit.Release(count)
+}
+
+func (f *Flow) limitCountDecrease(count int) {
+	if f.Limit == nil || count <= 0 {
+		return
+	}
+
+	f.Limit.AddLimitCount(-1 * count)
+}
+
+func (f *Flow) tryChangeWorkGroupCount(err *data.CodeError) {
+	if err == nil {
+		return
+	}
+
+	if err.Code != 504 {
+		return
+	}
+
+	f.mu.Lock()
+	f.mu.Unlock()
+
+	f.doWorkInfoListCount -= 10
+}
+
+func (f *Flow) handleWorkResult(workRecord *WorkRecord) {
+	if f.Overseer != nil {
+		f.Overseer.WorkDone(&WorkRecord{
+			WorkInfo: workRecord.WorkInfo,
+			Result:   workRecord.Result,
+			Err:      workRecord.Err,
+		})
+	}
+	if workRecord.Err != nil {
+		f.notifyWorkFail(workRecord.WorkInfo, workRecord.Err)
+		f.workErrorHappened = true
+	} else {
+		f.notifyWorkSuccess(workRecord.WorkInfo, workRecord.Result)
+	}
+}
+
+func (f *Flow) notifyWorkSuccess(work *WorkInfo, result Result) {
+	f.EventListener.OnWorkSuccess(work, result)
+}
+
+func (f *Flow) notifyWorkFail(work *WorkInfo, err *data.CodeError) {
+	f.EventListener.OnWorkFail(work, err)
+}
+
+func (f *Flow) notifyFlowWillEnd() *data.CodeError {
+	if f.EventListener.FlowWillEndFunc == nil {
+		return nil
+	}
+	return f.EventListener.FlowWillEndFunc(f)
 }

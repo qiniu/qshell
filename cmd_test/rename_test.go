@@ -151,6 +151,8 @@ func TestBatchRenameWithRecord(t *testing.T) {
 		"--enable-record",
 		"--record-redo-while-error",
 		"--worker", "4",
+		"--min-worker", "10",
+		"--worker-count-increase-period", "50",
 		"-y",
 		"-w",
 		"-d")

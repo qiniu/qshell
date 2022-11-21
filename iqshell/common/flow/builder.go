@@ -2,13 +2,16 @@ package flow
 
 import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/limit"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
 func New(info Info) *WorkProvideBuilder {
 	return &WorkProvideBuilder{
 		flow: &Flow{
-			Info: info,
+			Info:                   info,
+			DoWorkInfoListMaxCount: 250,
+			DoWorkInfoListMinCount: 50,
 		},
 	}
 }
@@ -89,6 +92,11 @@ func (b *FlowBuilder) DoWorkListMaxCount(count int) *FlowBuilder {
 	return b
 }
 
+func (b *FlowBuilder) DoWorkListMinCount(count int) *FlowBuilder {
+	b.flow.DoWorkInfoListMinCount = count
+	return b
+}
+
 func (b *FlowBuilder) SetOverseer(overseer Overseer) *FlowBuilder {
 	b.flow.Overseer = overseer
 	return b
@@ -107,6 +115,11 @@ func (b *FlowBuilder) SetDBOverseer(dbPath string, blankWorkRecordBuilder func()
 		b.flow.Overseer = overseer
 		return b
 	}
+}
+
+func (b *FlowBuilder) SetLimit(limit limit.BlockLimit) *FlowBuilder {
+	b.flow.Limit = limit
+	return b
 }
 
 func (b *FlowBuilder) ShouldSkip(f func(workInfo *WorkInfo) (skip bool, cause *data.CodeError)) *FlowBuilder {

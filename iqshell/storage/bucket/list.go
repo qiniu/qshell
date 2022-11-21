@@ -2,36 +2,43 @@ package bucket
 
 import (
 	"bufio"
-	"fmt"
-	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/file"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/syndtr/goleveldb/leveldb/errors"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/internal/list"
 	"io"
 	"math"
 	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
 type ListApiInfo struct {
-	Bucket          string    // 空间名	【必选】
-	Prefix          string    // 前缀
-	Marker          string    // 标记
-	Delimiter       string    //
-	Limit           int       //  最大输出条数，默认：-1, 无限输出
-	StartTime       time.Time // list item 的 put time 区间的开始时间 【闭区间】
-	EndTime         time.Time // list item 的 put time 区间的终止时间 【闭区间】
-	Suffixes        []string  // list item 必须包含后缀
-	StorageTypes    []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
-	MimeTypes       []string  // list item Mimetype类型，多个使用逗号隔开
-	MinFileSize     int64     // 文件最小值，单位: B
-	MaxFileSize     int64     // 文件最大值，单位: B
-	MaxRetry        int       // -1: 无限重试
-	ShowFields      []string  // 需要展示的字段  【必选】
-	OutputFieldsSep string    // 输出信息，每行的分隔符 【必选】
+	Bucket             string    // 空间名	【必选】
+	Prefix             string    // 前缀
+	Marker             string    // 标记
+	Delimiter          string    //
+	StartTime          time.Time // list item 的 put time 区间的开始时间 【闭区间】
+	EndTime            time.Time // list item 的 put time 区间的终止时间 【闭区间】
+	Suffixes           []string  // list item 必须包含后缀
+	StorageTypes       []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
+	MimeTypes          []string  // list item Mimetype类型，多个使用逗号隔开
+	MinFileSize        int64     // 文件最小值，单位: B
+	MaxFileSize        int64     // 文件最大值，单位: B
+	MaxRetry           int       // -1: 无限重试
+	ShowFields         []string  // 需要展示的字段  【必选】
+	ApiVersion         string    // list api 版本，v1 / v2【可选】
+	V1Limit            int       // 每次请求 size ，list v1 特有
+	OutputLimit        int       // 最大输出条数，默认：-1, 无限输出
+	OutputFieldsSep    string    // 输出信息，每行的分隔符 【必选】
+	OutputFileMaxLines int64     // 输出文件的最大行数，超过则自动创建新的文件，0：不限制输出文件的行数 【可选】
+	OutputFileMaxSize  int64     // 输出文件的最大 Size，超过则自动创建新的文件，0：不限制输出文件的大小 【可选】
+	EnableRecord       bool      // 是否开启 record 记录，开启后会记录 list 信息，下次 list 会自动指定 Marker 继续 list 【可选】
+	CacheDir           string    // 历史数据存储路径 【内部使用】
 }
 
 func ListObjectField(field string) string {
@@ -43,28 +50,7 @@ func ListObjectField(field string) string {
 	return ""
 }
 
-type ListObject storage.ListItem
-
-func (l *ListObject) PutTimeString() string {
-	if l.PutTime < 1 {
-		return ""
-	}
-	return fmt.Sprintf("%d", l.PutTime)
-}
-
-func (l *ListObject) FileSizeString() string {
-	if l.Fsize < 1 {
-		return ""
-	}
-	return fmt.Sprintf("%d", l.Fsize)
-}
-
-func (l *ListObject) StorageTypeString() string {
-	if l.Type < 1 {
-		return ""
-	}
-	return fmt.Sprintf("%d", l.Type)
-}
+type ListObject = list.Item
 
 // List list 某个 bucket 所有的文件
 func List(info ListApiInfo,
@@ -96,95 +82,155 @@ func List(info ListApiInfo,
 	shouldCheckStorageTypes := len(info.StorageTypes) > 0
 	shouldCheckMimeTypes := len(info.MimeTypes) > 0
 	shouldCheckFileSize := info.MinFileSize > 0 || info.MaxFileSize > 0
+	isItemExcepted := func(listItem list.Item) (isExcepted bool) {
+		if shouldCheckPutTime {
+			putTime := time.Unix(listItem.PutTime/1e7, 0)
+			if !filterByPutTime(putTime, info.StartTime, info.EndTime) {
+				log.DebugF("filter %s: putTime not match, %s out of range [start:%s ~ end:%s]", listItem.Key, putTime, info.StartTime, info.EndTime)
+				return false
+			}
+		}
+
+		if shouldCheckSuffixes && !filterBySuffixes(listItem.Key, info.Suffixes) {
+			log.DebugF("filter %s: key not match, key:%s suffixes:%s ", listItem.Key, listItem.Key, info.Suffixes)
+			return false
+		}
+
+		if shouldCheckStorageTypes && !filterByStorageType(listItem.Type, info.StorageTypes) {
+			log.DebugF("filter %s: key not match, storageType:%d StorageTypes:%s ", listItem.Key, listItem.Type, info.Suffixes)
+			return false
+		}
+
+		if shouldCheckMimeTypes && !filterByMimeType(listItem.MimeType, info.MimeTypes) {
+			log.DebugF("filter %s: key not match, mimeType:%s mimeTypes:%s ", listItem.Key, listItem.MimeType, info.MimeTypes)
+			return false
+		}
+
+		if shouldCheckFileSize && !filterByFileSize(listItem.Fsize, info.MinFileSize, info.MaxFileSize) {
+			log.DebugF("filter %s: key not match, fileSize:%d minSize:%d maxSize:%d", listItem.Key, listItem.Fsize, info.MinFileSize, info.MaxFileSize)
+			return false
+		}
+
+		return true
+	}
+
+	listWaiter := sync.WaitGroup{}
+	listWaiter.Add(1)
+	workspace.AddCancelObserver(func(s os.Signal) {
+		listWaiter.Wait()
+	})
+
+	cache := &listCache{
+		enableRecord: info.EnableRecord,
+		cachePath:    filepath.Join(info.CacheDir, "info.json"),
+	}
+	cacheInfoP, err := cache.loadCache()
+	if err != nil {
+		log.Debug(err)
+	}
+
+	if cacheInfoP != nil && len(cacheInfoP.Marker) > 0 {
+		if len(info.Marker) == 0 {
+			info.Marker = cacheInfoP.Marker
+		}
+	}
+
+	if cacheInfoP == nil {
+		cacheInfoP = &cacheInfo{}
+	} else if len(cacheInfoP.Marker) > 0 {
+		log.InfoF("use marker:%s", cacheInfoP.Marker)
+	}
+
 	retryCount := 0
 	outputCount := 0
 	complete := false
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
-		entries, lErr := bucketManager.ListBucketContext(workspace.GetContext(), info.Bucket, info.Prefix, info.Delimiter, info.Marker)
-		if entries == nil && lErr == nil {
-			lErr = errors.New("meet empty body when list not completed")
+		var hasMore = false
+		var lErr *data.CodeError = nil
+
+		if !workspace.IsCmdInterrupt() {
+			hasMore, lErr = list.ListBucket(workspace.GetContext(), list.ApiInfo{
+				Manager:    bucketManager,
+				ApiVersion: list.ApiVersion(info.ApiVersion),
+				Bucket:     info.Bucket,
+				Prefix:     info.Prefix,
+				Delimiter:  info.Delimiter,
+				Marker:     info.Marker,
+				V1Limit:    info.V1Limit,
+			}, func(marker string, dir string, listItem list.Item) (stop bool) {
+				if marker != info.Marker {
+					info.Marker = marker
+				}
+
+				if !isItemExcepted(listItem) {
+					return false
+				}
+
+				shouldContinue, hErr := objectHandler(marker, listItem)
+				if hErr != nil {
+					errorHandler(marker, hErr)
+				}
+				if !shouldContinue {
+					complete = true
+					return true
+				}
+
+				outputCount++
+				if info.OutputLimit > 0 && outputCount >= info.OutputLimit {
+					complete = true
+					return true
+				}
+
+				return false
+			})
 		}
 
-		if lErr != nil {
-			errorHandler(info.Marker, data.ConvertError(lErr))
-			// 空间不存在，直接结束
-			if strings.Contains(lErr.Error(), "no such bucket") ||
-				strings.Contains(lErr.Error(), "incorrect zone") ||
-				strings.Contains(lErr.Error(), "context canceled") {
+		// 保存信息
+		cacheInfoP.Bucket = info.Bucket
+		cacheInfoP.Prefix = info.Prefix
+		cacheInfoP.Marker = info.Marker
+		_ = cache.saveCache(cacheInfoP)
+
+		if workspace.IsCmdInterrupt() && lErr == nil {
+			lErr = data.NewError(0, "list is interrupted")
+		}
+
+		if lErr != nil || workspace.IsCmdInterrupt() {
+			errorHandler(info.Marker, lErr)
+
+			if workspace.IsCmdInterrupt() || // 取消
+				strings.Contains(lErr.Error(), "no such bucket") || // 空间不存在，直接结束
+				strings.Contains(lErr.Error(), "incorrect zone") || // 空间不正确
+				strings.Contains(lErr.Error(), "invalid list limit") || //  api v1 list limit
+				strings.Contains(lErr.Error(), "context canceled") { // 取消
 				break
 			}
 
 			retryCount++
-			time.Sleep(1)
+			time.Sleep(time.Millisecond * 100)
 			continue
 		}
 
-		for listItem := range entries {
-			if listItem.Marker != info.Marker {
-				info.Marker = listItem.Marker
-			}
-
-			if listItem.Item.IsEmpty() {
-				log.Debug("filter: item empty")
-				continue
-			}
-
-			if shouldCheckPutTime {
-				putTime := time.Unix(listItem.Item.PutTime/1e7, 0)
-				if !filterByPutTime(putTime, info.StartTime, info.EndTime) {
-					log.DebugF("filter %s: putTime not match, %s out of range [start:%s ~ end:%s]", listItem.Item.Key, putTime, info.StartTime, info.EndTime)
-					continue
-				}
-			}
-
-			if shouldCheckSuffixes && !filterBySuffixes(listItem.Item.Key, info.Suffixes) {
-				log.DebugF("filter %s: key not match, key:%s suffixes:%s ", listItem.Item.Key, listItem.Item.Key, info.Suffixes)
-				continue
-			}
-
-			if shouldCheckStorageTypes && !filterByStorageType(listItem.Item.Type, info.StorageTypes) {
-				log.DebugF("filter %s: key not match, storageType:%d StorageTypes:%s ", listItem.Item.Key, listItem.Item.Type, info.Suffixes)
-				continue
-			}
-
-			if shouldCheckMimeTypes && !filterByMimeType(listItem.Item.MimeType, info.MimeTypes) {
-				log.DebugF("filter %s: key not match, mimeType:%s mimeTypes:%s ", listItem.Item.Key, listItem.Item.MimeType, info.MimeTypes)
-				continue
-			}
-
-			if shouldCheckFileSize && !filterByFileSize(listItem.Item.Fsize, info.MinFileSize, info.MaxFileSize) {
-				log.DebugF("filter %s: key not match, fileSize:%d minSize:%d maxSize:%d", listItem.Item.Key, listItem.Item.Fsize, info.MinFileSize, info.MaxFileSize)
-				continue
-			}
-
-			shouldContinue, hErr := objectHandler(listItem.Marker, ListObject(listItem.Item))
-			if hErr != nil {
-				errorHandler(listItem.Marker, hErr)
-			}
-			if !shouldContinue {
-				complete = true
-				break
-			}
-
-			outputCount++
-			if info.Limit > 0 && outputCount >= info.Limit {
-				complete = true
-				break
-			}
-		}
-
-		if len(info.Marker) == 0 {
-			// 列举结束
+		if !hasMore || complete || workspace.IsCmdInterrupt() {
 			break
 		}
 
 		retryCount = 0
 	}
 
-	if len(info.Marker) > 0 {
+	if len(info.Marker) == 0 {
+		if rErr := cache.removeCache(); rErr != nil {
+			log.ErrorF("list remove cache status error: %v", rErr)
+		} else {
+			log.InfoF("list success, remove cache status: %s", cache.cachePath)
+		}
+	} else {
 		log.InfoF("Marker: %s", info.Marker)
 	}
+
 	log.Debug("list bucket end")
+
+	listWaiter.Done()
 }
 
 type ListToFileApiInfo struct {
@@ -211,32 +257,34 @@ func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *da
 		info.OutputFieldsSep = data.DefaultLineSeparate
 	}
 
-	var listResultFh io.WriteCloser
+	// 文件头
+	title := strings.Join(info.ShowFields, info.OutputFieldsSep)
+
+	var output io.WriteCloser
 	if info.FilePath == "" {
-		listResultFh = data.Stdout()
+		output = data.Stdout()
+		_, _ = output.Write([]byte(title + "\n"))
 		log.Debug("prepare list bucket to stdout")
 	} else {
-		var openErr error
-		var mode int
+		var nErr *data.CodeError
+		output, nErr = file.NewRotateFile(info.FilePath,
+			file.RotateOptionMaxSize(info.OutputFileMaxSize),
+			file.RotateOptionMaxLine(info.OutputFileMaxLines),
+			file.RotateOptionAppendMode(info.AppendMode),
+			file.RotateOptionFileHeader(title),
+			file.RotateOptionOnOpenFile(func(filename string) {
+				log.InfoF("open output file and prepare to write:%v", filename)
+			}))
 
-		if info.AppendMode {
-			mode = os.O_APPEND | os.O_RDWR
-		} else {
-			mode = os.O_CREATE | os.O_RDWR | os.O_TRUNC
-		}
-		listResultFh, openErr = os.OpenFile(info.FilePath, mode, 0666)
-		if openErr != nil {
-			errorHandler("", data.NewEmptyError().AppendDescF("failed to open list result file `%s`, error:%v", info.FilePath, openErr))
+		if nErr != nil {
+			errorHandler("", data.NewEmptyError().AppendDescF("failed to create rotate file:`%s`, error:%v", info.FilePath, nErr))
 			return
 		}
-		defer listResultFh.Close()
+		defer output.Close()
 		log.Debug("prepare list bucket to file")
 	}
 
-	bWriter := bufio.NewWriter(listResultFh)
-	title := strings.Join(info.ShowFields, info.OutputFieldsSep)
-	_, _ = bWriter.WriteString(title + "\n")
-	_ = bWriter.Flush()
+	bWriter := bufio.NewWriter(output)
 	lineCreator := &ListLineCreator{
 		Fields:   info.ShowFields,
 		Sep:      info.OutputFieldsSep,

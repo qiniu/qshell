@@ -94,6 +94,8 @@ func TestBatchCopy(t *testing.T) {
 		"--failure-list", failLogPath,
 		"--overwrite",
 		"--worker", "4",
+		"--min-worker", "10",
+		"--worker-count-increase-period", "50",
 		"-w",
 		"-y")
 	defer func() {
