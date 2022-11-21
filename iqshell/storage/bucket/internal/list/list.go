@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"strings"
 )
 
@@ -65,8 +66,10 @@ func ListBucket(ctx context.Context, info ApiInfo, handler Handler) (hasMore boo
 	}
 
 	if info.ApiVersion == ApiVersionV1 {
+		log.DebugF("list by api v1, marker:%s", info.Marker)
 		return listBucketByV1(ctx, info, handler)
 	} else {
+		log.DebugF("list by api v2, marker:%s", info.Marker)
 		return listBucketByV2(ctx, info, handler)
 	}
 }
