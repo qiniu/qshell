@@ -278,6 +278,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 							UseResumeV2:         uploadConfig.ResumableAPIV2,
 							ChunkSize:           uploadConfig.ResumableAPIV2PartSize,
 							PutThreshold:        uploadConfig.PutThreshold,
+							ResumeWorkerCount:   uploadConfig.WorkerCount,
 							Progress:            nil,
 						},
 						RelativePathToSrcPath: fileRelativePath,

@@ -190,7 +190,7 @@ var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().Int64VarP(&info.ChunkSize, "v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
 	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
-	cmd.Flags().IntVarP(&info.ResumeWorkerCount, "worker", "c", 16, "worker count")
+	cmd.Flags().IntVarP(&info.ResumeWorkerCount, "worker", "c", 3, "worker count")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "uphost")
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
