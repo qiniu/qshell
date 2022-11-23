@@ -191,17 +191,18 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 	flow.New(info.Info).
 		WorkProvider(NewWorkProvider(info.Bucket, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
+			apiInfo.Bucket = info.Bucket
+			apiInfo.IsPublic = info.Public
 			apiInfo.HostProvider = hostProvider
 			apiInfo.Referer = info.Referer
 			apiInfo.FileEncoding = info.FileEncoding
-			apiInfo.Bucket = info.Bucket
+			apiInfo.CheckHash = info.CheckHash
 			apiInfo.RemoveTempWhileError = info.RemoveTempWhileError
 			apiInfo.UseGetFileApi = info.GetFileApi
 			apiInfo.EnableSlice = info.EnableSlice
 			apiInfo.SliceSize = info.SliceSize
 			apiInfo.SliceConcurrentCount = info.SliceConcurrentCount
 			apiInfo.SliceFileSizeThreshold = info.SliceFileSizeThreshold
-			apiInfo.CheckHash = info.CheckHash
 
 			apiInfo.DestDir = info.DestDir
 			apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)

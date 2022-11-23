@@ -58,6 +58,18 @@ func defaultDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.
 		}
 	}
 
+	// 3. io 配置作为可选项，优先级最小
+	if cfg != nil && cfg.Hosts != nil && len(cfg.Hosts.Io) > 0 {
+		for _, ioHost := range cfg.Hosts.Io {
+			if len(ioHost) > 0 {
+				hosts = append(hosts, &host.Host{
+					Host:   "",
+					Domain: ioHost,
+				})
+			}
+		}
+	}
+
 	return hosts
 }
 
