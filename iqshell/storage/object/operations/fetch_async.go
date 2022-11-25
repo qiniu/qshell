@@ -343,7 +343,7 @@ func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 						log.DebugF("batch async fetch check [%d], bucket:%s key:%s id:%s wait:%d", checkTimes, in.Bucket, in.Key, in.Key, ret.Wait)
 						if cErr != nil {
 							log.ErrorF("CheckAsyncFetchStatus: %v", cErr)
-						} else if ret.Wait == -1 { // 视频抓取过一次，有可能成功了，有可能失败了
+						} else if ret.Wait < 0 { // 视频抓取过一次，有可能成功了，有可能失败了
 							if exist, err := object.Exist(object.ExistApiInfo{
 								Bucket: in.Bucket,
 								Key:    in.Key,
