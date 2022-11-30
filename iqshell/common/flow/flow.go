@@ -190,7 +190,7 @@ func (f *Flow) Start() {
 				// workRecordList 有数据则长度和 workList 长度相同
 				workRecordList, workErr := worker.DoWork(workList)
 				if len(workRecordList) == 0 && workErr != nil {
-					log.ErrorF("Do Worker Error:%v", err)
+					log.ErrorF("Do Worker Error:%+v", workErr)
 					f.limitRelease(workCount)
 					break
 				}
