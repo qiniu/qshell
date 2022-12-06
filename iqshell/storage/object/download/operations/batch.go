@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
+	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/locker"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -124,10 +125,10 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	defer unlockHandler()
 
 	info.InputFile = info.KeyFile
-	hostProvider := getDownloadHostProvider(workspace.GetConfig(), &info.DownloadCfg)
-	if available, e := hostProvider.Available(); !available {
+	hosts := getDownloadHosts(workspace.GetConfig(), &info.DownloadCfg)
+	if len(hosts) == 0 {
 		data.SetCmdStatusError()
-		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or bind domain to bucket; %v", info.Bucket, e)
+		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or bind domain to bucket", info.Bucket)
 		return
 	}
 
@@ -191,7 +192,9 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 
 	flow.New(info.Info).
 		WorkProvider(NewWorkProvider(info.Bucket, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
-			apiInfo.HostProvider = hostProvider
+			apiInfo.Bucket = info.Bucket
+			apiInfo.IsPublic = info.Public
+			apiInfo.HostProvider = host.NewListProvider(hosts)
 			apiInfo.Referer = info.Referer
 			apiInfo.FileEncoding = info.FileEncoding
 			apiInfo.Bucket = info.Bucket
