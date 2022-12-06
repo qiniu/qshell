@@ -222,7 +222,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 		}
 
 		if response != nil {
-			log.DebugF("Download[%d] [%s:%s] => %s, response:%+v", times, info.Bucket, info.Key, response)
+			log.DebugF("Download[%d] [%s:%s] => %s, response:%+v", times, info.Bucket, info.Key, info.ToFile, response)
 			if (response.StatusCode > 399 && response.StatusCode < 500) ||
 				response.StatusCode == 612 || response.StatusCode == 631 {
 				log.DebugF("Stop download [%s:%s] => %s, because [%s]", info.Bucket, info.Key, info.ToFile, response.Status)
@@ -231,7 +231,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 		}
 
 		if err != nil {
-			log.DebugF("Download[%d] [%s:%s] => %s, error:%+v", times, info.Bucket, info.Key, err)
+			log.DebugF("Download[%d] [%s:%s] => %s, error:%+v", times, info.Bucket, info.Key, info.ToFile, err)
 			if err.Code == 0 {
 				log.DebugF("Stop download [%s:%s] => %s, because [%+v]", info.Bucket, info.Key, info.ToFile, err)
 				break
