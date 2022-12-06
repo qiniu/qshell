@@ -28,9 +28,34 @@ func (g *getFileApiDownloader) Download(info *ApiInfo) (response *http.Response,
 		return nil, hErr.HeaderInsertDesc("[provide host]")
 	}
 
-	response, err = g.download(h, info)
+	for i := 0; i < 3; i++ {
+		response, err = g.download(h, info)
+		if utils.IsHostUnavailableError(err) {
+			break
+		}
+
+		if response != nil {
+			if response.StatusCode/100 == 2 && err == nil {
+				break
+			}
+
+			if (response.StatusCode > 399 && response.StatusCode < 500) ||
+				response.StatusCode == 612 || response.StatusCode == 631 {
+				break
+			}
+		}
+	}
+
 	if err != nil || (response != nil && response.StatusCode/100 != 2) {
-		info.HostProvider.Freeze(h)
+		if response == nil {
+			info.HostProvider.Freeze(h)
+			log.DebugF("download freeze host:%s because:%v", h.GetServer(), err)
+		} else if response.StatusCode > 499 && response.StatusCode < 600 {
+			info.HostProvider.Freeze(h)
+			log.DebugF("download freeze host:%s because:[%s] %v", h.GetServer(), response.Status, err)
+		} else {
+			log.DebugF("download not freeze host:%s because:[%s] %v", h.GetServer(), response.Status, err)
+		}
 	}
 
 	return response, err
@@ -80,7 +105,7 @@ func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.R
 	}
 
 	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", urlString, headers)
-	if len(info.ServerFileHash) != 0 && response != nil && response.Header != nil {
+	if response != nil && response.Header != nil {
 		etag := response.Header.Get("Etag")
 		if len(etag) > 0 && etag != fmt.Sprintf("\"%s\"", info.ServerFileHash) {
 			return nil, data.NewEmptyError().AppendDescF("file has change, hash before:%s now:%s", info.ServerFileHash, etag)
