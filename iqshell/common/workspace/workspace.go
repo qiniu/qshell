@@ -7,6 +7,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"sync"
 )
 
@@ -49,8 +50,12 @@ func GetLogConfig() *config.LogSetting {
 
 func GetStorageConfig() *storage.Config {
 	r := cfg.GetRegion()
-	if len(cfg.Hosts.GetOneUc()) > 0 {
-		storage.SetUcHost(cfg.Hosts.GetOneUc(), cfg.IsUseHttps())
+	log.DebugF("region: %+v", r)
+
+	ucHost := cfg.Hosts.GetOneUc()
+	if len(ucHost) > 0 {
+		log.DebugF("ucHost: %s", ucHost)
+		storage.SetUcHost(ucHost, cfg.IsUseHttps())
 	}
 
 	return &storage.Config{
