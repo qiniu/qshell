@@ -73,7 +73,7 @@ func DefaultUploadConfig() UploadConfig {
 		DeleteOnSuccess:        false,
 		DisableResume:          false,
 		DisableForm:            false,
-		WorkerCount:            0,
+		WorkerCount:            3,
 		RecordRoot:             "",
 		Policy:                 nil,
 	}

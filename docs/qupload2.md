@@ -46,5 +46,6 @@ Flags:
   -s, --storage int                      set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage
       --success-list string              upload success file list
       --thread-count int                 multiple thread count (default 1)
+      --worker-count int                 the number of concurrently uploaded parts of a single file in resumable upload (default 3)
       --up-host string                   upload host
 ```

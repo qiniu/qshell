@@ -112,6 +112,10 @@ func (info *BatchUpload2Info) Check() *data.CodeError {
 		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
 			info.Info.WorkerCount)
 	}
+	if info.UploadConfig.WorkerCount < 1 {
+		info.Info.WorkerCount = 3
+	}
+
 	if err := info.Info.Check(); err != nil {
 		return err
 	}

@@ -78,6 +78,8 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
   - 通过 `-L` 指定工作目录时，`record_root` 则为此工作目录/qdownload/$jobId， 
   - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qdownload/$jobId`
   - 注意 `jobId` 是根据上传任务动态生成；具体方式为 MD5("$SrcDir:$Bucket:$FileList")； `CurrentUserName` 当前用户的名称
+- worker_count：分片上传中单个文件并发上传的分片数；默认为 3。【可选】
+
 
 对于那么多的参数，我们可以分为几类来解释：
 
