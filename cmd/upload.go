@@ -80,7 +80,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&info.SrcDir, "src-dir", "", "src dir to upload")
 	cmd.Flags().StringVar(&info.FileList, "file-list", "", "file list to upload")
 	cmd.Flags().StringVar(&info.Bucket, "bucket", "", "bucket")
-	cmd.Flags().Int64Var(&info.PutThreshold, "put-threshold", 0, "chunk upload threshold")
+	cmd.Flags().Int64Var(&info.PutThreshold, "put-threshold", 8*1024*1024, "chunk upload threshold, unit: B")
 	cmd.Flags().StringVar(&info.KeyPrefix, "key-prefix", "", "key prefix prepended to dest file key")
 	cmd.Flags().StringVar(&info.SkipFilePrefixes, "skip-file-prefixes", "", "skip files with these file prefixes")
 	cmd.Flags().StringVar(&info.SkipPathPrefixes, "skip-path-prefixes", "", "skip files with these relative path prefixes")

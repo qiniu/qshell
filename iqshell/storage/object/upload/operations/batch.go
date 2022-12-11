@@ -282,7 +282,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 							UseResumeV2:         uploadConfig.ResumableAPIV2,
 							ChunkSize:           uploadConfig.ResumableAPIV2PartSize,
 							PutThreshold:        uploadConfig.PutThreshold,
-							ResumeWorkerCount:   uploadConfig.WorkerCount,
+							ResumeWorkerCount:   uploadConfig.WorkerCount * info.Info.WorkerCount, // go SDK 分片并发量是全局的需要做转化
 							Progress:            nil,
 						},
 						RelativePathToSrcPath: fileRelativePath,

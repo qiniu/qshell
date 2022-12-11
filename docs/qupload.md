@@ -73,7 +73,7 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
 - delete_on_success：上传成功的文件，同时删除本地文件，以达到节约磁盘的目的，比如日志归档的场景，默认为 `false`，如果需要开启功能，设置为 `true`即可。【可选】
 - resumable_api_v2：使用分片 V2 进行上传，默认为 `false`使用分片 V1 。【可选】
 - resumable_api_v2_part_size：使用分片 V2 进行上传时定制分片大小，默认 4194304（4M） 。【可选】
-- put_threshold：上传阈值，上传文件大小超过此值会使用分片上传，不超过使用表单上传；默认为 8388608（8M） 。【可选】
+- put_threshold：上传阈值，上传文件大小超过此值会使用分片上传，不超过使用表单上传；单位：B，默认为 8388608（8M） 。【可选】
 - record_root：上传记录信息保存路径，包括日志文件和上传进度文件；默认为 `qshell` 上传目录；【可选】
   - 通过 `-L` 指定工作目录时，`record_root` 则为此工作目录/qdownload/$jobId， 
   - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qdownload/$jobId`
