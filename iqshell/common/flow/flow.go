@@ -172,6 +172,11 @@ func (f *Flow) Start() {
 		time.Sleep(time.Millisecond * time.Duration(50))
 		go func(index int) {
 			log.DebugF("work consumer %d start", index)
+			defer func() {
+				wait.Done()
+				log.DebugF("work consumer %d   end", index)
+			}()
+
 			worker, err := f.WorkerProvider.Provide()
 			if err != nil {
 				log.ErrorF("Create Worker Error:%v", err)
@@ -216,9 +221,6 @@ func (f *Flow) Start() {
 					break
 				}
 			}
-
-			wait.Done()
-			log.DebugF("work consumer %d   end", index)
 		}(i)
 	}
 	wait.Wait()

@@ -230,6 +230,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				}
 			}), nil
 		})).
+		DoWorkListMaxCount(1).
+		DoWorkListMinCount(1).
 		SetOverseerEnable(true).
 		SetDBOverseer(dbPath, func() *flow.WorkRecord {
 			return &flow.WorkRecord{
