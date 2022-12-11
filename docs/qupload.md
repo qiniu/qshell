@@ -57,9 +57,9 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
 - ignore_dir：保存文件在七牛空间时，使用的文件名是否忽略本地路径，默认为 `false`。 【可选】
 - key_prefix：在保存文件在七牛空间时，使用的文件名的前缀，默认为空字符串【可选】
 - overwrite：是否覆盖空间中已有的同名文件，默认为 `false`（不覆盖）。【可选】
-- check_exists：每个文件上传之前是否检查空间中是否存在同名文件，默认为 `true`（检查文件是否在空间中存在）。 【可选】
+- check_exists：每个文件上传之前是否检查空间中是否存在同名文件，默认为 `false`（检查文件是否在空间中存在）。 【可选】
 - check_hash：在 `check_exists` 设置为 `true` 的情况下生效，是否检查本地文件 hash 和空间文件 hash 一致；默认为 `false`（不检查 hash），节约同步时间。 【可选】
-- check_size：在 `check_exists` 设置为 `true` 的情况下生效，是否检查本地大小和空间文件大小一致，优先级低于 `check_hash`；检查耗时小于 `check_hash`；默认为 `true`（检查文件大小是否一致）。 【可选】
+- check_size：在 `check_exists` 设置为 `true` 的情况下生效，是否检查本地大小和空间文件大小一致，优先级低于 `check_hash`；检查耗时小于 `check_hash`；默认为 `false`（检查文件大小是否一致）。 【可选】
 - skip_file_prefixes：跳过所有文件名（不带相对路径）以该前缀列表里面字符串为前缀的文件，默认为空字符。 【可选】
 - skip_path_prefixes：跳过所有文件路径（相对路径）以该前缀列表里面字符串为前缀的文件，默认为空字符。 【可选】
 - skip_fixed_strings：跳过所有文件路径（相对路径）中包含该字符串列表中字符串的文件，默认为空字符。 【可选】
