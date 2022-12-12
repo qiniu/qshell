@@ -216,8 +216,11 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 			break
 		}
 
+		err = nil
+		response = nil
 		response, err = dl.Download(info)
 		if err == nil && response != nil && response.StatusCode/100 == 2 {
+			err = nil
 			break
 		}
 

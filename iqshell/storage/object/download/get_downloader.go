@@ -25,6 +25,7 @@ func (g *getDownloader) Download(info *ApiInfo) (response *http.Response, err *d
 	response, err = g.download(h, info)
 
 	if err != nil || (response != nil && response.StatusCode/100 != 2) {
+		log.DebugF("download freeze host:%s", h.GetServer())
 		info.HostProvider.Freeze(h)
 	}
 
@@ -82,7 +83,14 @@ func (g *getDownloader) download(host *host.Host, info *ApiInfo) (*http.Response
 			return nil, data.NewEmptyError().AppendDescF("file has change, hash before:%s now:%s", info.ServerFileHash, etag)
 		}
 	}
-	return response, data.ConvertError(rErr)
+
+	if rErr == nil {
+		return response, nil
+	}
+
+	cErr := data.ConvertError(rErr)
+	cErr.Code = data.ErrorCodeUnknown
+	return response, cErr
 }
 
 var defaultClient = storage.Client{

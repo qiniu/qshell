@@ -211,10 +211,11 @@ func uploadSource(info *ApiInfo) (*ApiResult, *data.CodeError) {
 func localSourceUploader(info *ApiInfo, storageCfg *storage.Config) (up Uploader) {
 	if info.DisableResume || (!info.DisableForm && info.LocalFileSize < info.PutThreshold) {
 		up = newFromUploader(storageCfg, &storage.PutExtra{
-			Params:     nil,
-			UpHost:     info.UpHost,
-			MimeType:   info.MimeType,
-			OnProgress: nil,
+			Params:             nil,
+			UpHost:             info.UpHost,
+			MimeType:           info.MimeType,
+			HostFreezeDuration: time.Minute * 10,
+			OnProgress:         nil,
 		})
 	} else if info.UseResumeV2 {
 		up = newResumeV2Uploader(storageCfg)
