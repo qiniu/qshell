@@ -71,7 +71,7 @@ func TestGetNoExistDomain(t *testing.T) {
 
 func TestGetNoExistBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("get", test.BucketNotExist, test.Key)
-	if !strings.Contains(errs, "query region error, no such bucket") {
+	if !strings.Contains(errs, "no such bucket") {
 		t.Fail()
 	}
 }

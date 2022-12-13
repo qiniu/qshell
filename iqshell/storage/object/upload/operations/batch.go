@@ -422,6 +422,8 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			log.ErrorF("Upload Failed, %s error:%s", workInfo.Data, err)
 		}).Build().Start()
 
+	metric.End()
+
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
 		data.SetCmdStatusError()

@@ -11,20 +11,22 @@ type LoadInfo struct {
 	GlobalConfigPath string
 }
 
-func Load(info LoadInfo) *data.CodeError {
-	if len(info.GlobalConfigPath) > 0 {
+func LoadGlobalConfig(globalConfigPath string) *data.CodeError {
+	if len(globalConfigPath) > 0 {
 		globalConfigViper = viper.New()
-		globalConfigViper.SetConfigFile(info.GlobalConfigPath)
+		globalConfigViper.SetConfigFile(globalConfigPath)
 		err := globalConfigViper.ReadInConfig()
 		log.DebugF("read global config error:%v", err)
 	}
+	return nil
+}
 
-	if len(info.UserConfigPath) > 0 {
+func LoadUserConfig(userConfigPath string) *data.CodeError {
+	if len(userConfigPath) > 0 {
 		userConfigViper = viper.New()
-		userConfigViper.SetConfigFile(info.UserConfigPath)
+		userConfigViper.SetConfigFile(userConfigPath)
 		err := userConfigViper.ReadInConfig()
 		log.DebugF("read user config error:%v", err)
 	}
-
 	return nil
 }

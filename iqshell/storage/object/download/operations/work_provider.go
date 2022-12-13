@@ -14,10 +14,11 @@ import (
 	"time"
 )
 
-func NewWorkProvider(bucket string, inputFile string, itemSeparate string, infoResetHandler apiInfoResetHandler) flow.WorkProvider {
+func NewWorkProvider(bucket, keyPrefix, inputFile, itemSeparate string, infoResetHandler apiInfoResetHandler) flow.WorkProvider {
 	provider := &workProvider{
 		totalCount:       0,
 		bucket:           bucket,
+		keyPrefix:        keyPrefix,
 		inputFile:        inputFile,
 		itemSeparate:     itemSeparate,
 		infoResetHandler: infoResetHandler,
@@ -38,6 +39,7 @@ type workProvider struct {
 	itemSeparate     string
 	inputFile        string
 	bucket           string
+	keyPrefix        string
 	infoResetHandler apiInfoResetHandler
 	downloadItemChan chan *downloadItem
 }
@@ -205,7 +207,7 @@ func (w *workProvider) getWorkInfoFromBucket() {
 	go func() {
 		bucket.List(bucket.ListApiInfo{
 			Bucket:    w.bucket,
-			Prefix:    "",
+			Prefix:    w.keyPrefix,
 			Marker:    "",
 			Delimiter: "",
 			StartTime: time.Time{},

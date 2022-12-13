@@ -191,7 +191,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}
 
 	flow.New(info.Info).
-		WorkProvider(NewWorkProvider(info.Bucket, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
+		WorkProvider(NewWorkProvider(info.Bucket, info.Prefix, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
 			apiInfo.Bucket = info.Bucket
 			apiInfo.IsPublic = info.Public
 			apiInfo.HostProvider = host.NewListProvider(hosts)

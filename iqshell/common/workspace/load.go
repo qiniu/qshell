@@ -26,6 +26,12 @@ func Load(info LoadInfo) (err *data.CodeError) {
 		return
 	}
 
+	err = config.LoadGlobalConfig(info.globalConfigPath)
+	if err != nil {
+		log.ErrorF("load config error:%v", err)
+		return
+	}
+
 	// 检查工作目录
 	if len(info.WorkspacePath) == 0 {
 		err = data.NewEmptyError().AppendDesc("can't get home dir")
@@ -92,10 +98,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 	}
 
 	// 设置配置文件路径
-	err = config.Load(config.LoadInfo{
-		UserConfigPath:   info.UserConfigPath,
-		GlobalConfigPath: info.globalConfigPath,
-	})
+	err = config.LoadUserConfig(info.UserConfigPath)
 	if err != nil {
 		log.ErrorF("load config error:%v", err)
 		return

@@ -50,8 +50,6 @@ func GetLogConfig() *config.LogSetting {
 
 func GetStorageConfig() *storage.Config {
 	r := cfg.GetRegion()
-	log.DebugF("region: %+v", r)
-
 	ucHost := cfg.Hosts.GetOneUc()
 	if len(ucHost) > 0 {
 		log.DebugF("ucHost: %s", ucHost)
