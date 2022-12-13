@@ -55,7 +55,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - key_file：配置一个文件，指定需要下载的 keys；默认为空，全量下载 bucket 中的文件 【可选】
 - save_path_handler：指定一个回调函数；在构建文件的保存路径时，优先使用此选项进行构建，如果不配置则使用 $dest_dir + $文件分割符 + $Key 方式进行构建。文档下面有常用场景实例。此函数通过 Go 语言的模板实现，函数验证使用 func 命令，具体语法可参考 func 命令说明，handler 使用方式下方有示例可供参考 【可选】
 - check_hash：是否验证 hash，如果开启可能会耗费较长时间，默认为 `false` 【可选】
-- cdn_domain：设置下载的 CDN 域名，默认为空表示从存储源站下载，qshell 下载使用 domain 优先级：1.cdn_domain(此选项) 2.bucket 配置域名(无需配置) 3.qshell 配置文件中 hosts 的 io(需要配置)，当优先级高的 domain 下载失败后会尝试使用优先级低的 domain 进行下载。【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】 【可选】
+- cdn_domain：设置下载的 CDN 域名，默认为空表示从存储源站下载，qshell 下载使用 domain 优先级：1.cdn_domain(此选项) 2.bucket 绑定域名(qshell 内部查询，无需配置) ，当优先级高的 domain 下载失败后会尝试使用优先级低的 domain 进行下载。【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】 【可选】
 - referer：如果 CDN 域名配置了域名白名单防盗链，需要指定一个允许访问的 referer 地址；默认为空 【可选】
 - public：空间是否为公开空间；为 `true` 时为公有空间，公有空间下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为 `false`（私有空间）【可选】
 - enable_slice: 是否开启切片下载，需要注意 `slice_file_size_threshold` 切片阈值选项的配置，只有开启切片下载，并且下载的文件大小大于切片阈值方会启动切片下载。默认不开启。【可选】
