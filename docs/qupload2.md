@@ -33,7 +33,7 @@ Flags:
       --log-rotate int                   log rotate days (default 7)
       --overwrite                        overwrite the file of same key in bucket
       --overwrite-list string            upload success (overwrite) file list
-      --put-threshold int                chunk upload threshold
+      --put-threshold int                chunk upload threshold, unit: B (default 8388608)
       --record-root string               record root dir, and will save record info to the dir(db and log), default <UserRoot>/.qshell
       --rescan-local                     rescan local dir to upload newly add files
       --resumable-api-v2                 use resumable upload v2 APIs to upload

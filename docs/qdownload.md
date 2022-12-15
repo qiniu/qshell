@@ -28,8 +28,8 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 `qdownload` 功能需要配置文件的支持，配置文件的内容如下：
 ```
 {
-    "dest_dir"               :   "<LocalBackupDir>",
     "bucket"                 :   "<Bucket>",
+    "dest_dir"               :   "<LocalBackupDir>",
     "save_path_handler"      :   "",
     "prefix"                 :   "image/",
     "suffixes"               :   ".png,.jpg",
@@ -48,8 +48,8 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 
 字段说明：
 
-- dest_dir：本地数据备份路径，为全路径 【必选】
 - bucket：空间名称 【必选】
+- dest_dir：本地数据备份路径，为全路径，默认：当前路径 【可选】
 - prefix：只同步指定前缀的文件，默认为空 【可选】
 - suffixes：只同步指定后缀的文件，默认为空 【可选】
 - key_file：配置一个文件，指定需要下载的 keys；默认为空，全量下载 bucket 中的文件 【可选】
@@ -61,7 +61,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - enable_slice: 是否开启切片下载，需要注意 `slice_file_size_threshold` 切片阈值选项的配置，只有开启切片下载，并且下载的文件大小大于切片阈值方会启动切片下载。默认不开启。【可选】
 - slice_size: 切片大小；当使用切片下载时，每个切片的大小；单位：B。默认为 4194304，也即 4MB。【可选】
 - slice_concurrent_count: 切片下载的并发度；默认为 10 【可选】
-- slice_file_size_threshold: 切片下载的文件阈值，当开启切片下载，并且文件大小大于此阈值时方会启用切片下载。【可选】
+- slice_file_size_threshold: 切片下载的文件阈值，当开启切片下载，并且文件大小大于此阈值时方会启用切片下载；单位：B。默认：41943040，也即 40M【可选】
 - remove_temp_while_error: 当下载遇到错误时删除之前下载的部分文件缓存，默认为 `false` (不删除)【可选】
 - log_level：下载日志输出级别，可选值为 `debug`,`info`,`warn`,`error`，其他任何字段均会导致不输出日志。默认 `debug` 。【可选】
 - log_file：下载日志的输出文件，默认为输出到 `record_root` 指定的文件中，具体文件路径可以在终端输出看到。【可选】

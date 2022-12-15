@@ -330,6 +330,8 @@ func (h *handler) Start() {
 	}
 
 	if !isArraySource {
+		log.InfoF("job dir:%s, there is a cache related to this command in this folder, which will also be used next time the same command is executed. If you are sure that you don’t need it, you can delete this folder.", workspace.GetJobDir())
+
 		// 数组源不输出结果
 		resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 		if e := utils.MarshalToFile(resultPath, metric); e != nil {

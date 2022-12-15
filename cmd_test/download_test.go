@@ -205,3 +205,85 @@ type DownloadCfg struct {
 	LogRotate *data.Int    `json:"log_rotate"`
 	LogStdout *data.Bool   `json:"log_stdout"`
 }
+
+func TestDownload2NoBucket(t *testing.T) {
+	_, errs := test.RunCmdWithError("qdownload2", "-c", "4")
+	if !strings.Contains(errs, "bucket can't empty") {
+		t.Fail()
+	}
+	return
+}
+
+func TestDownload2AllFilesFromBucket(t *testing.T) {
+	rootPath, err := test.RootPath()
+	if err != nil {
+		t.Fatal("get root path error:", err)
+	}
+
+	destDir := filepath.Join(rootPath, "download2")
+	logPath := filepath.Join(rootPath, "download2_log")
+	defer func() {
+		test.RemoveFile(destDir)
+		test.RemoveFile(logPath)
+	}()
+
+	test.RunCmdWithError("qdownload2",
+		"--bucket", test.Bucket,
+		"--dest-dir", destDir,
+		"--log-file", logPath,
+		"-c", "4")
+	if test.FileCountInDir(destDir) < 2 {
+		t.Fail()
+	}
+
+	if !test.IsFileHasContent(logPath) {
+		t.Fatal("log file should has content")
+	}
+
+	_, errs := test.RunCmdWithError("qdownload2", "-c", "4")
+	if !strings.Contains(errs, "bucket can't empty") {
+		t.Fail()
+	}
+	return
+}
+
+func TestDownload2WithKeyFile(t *testing.T) {
+	keys := test.KeysString + "\nhello_10.json"
+	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", keys)
+	if err != nil {
+		t.Fatal("create cdn config file error:", err)
+	}
+
+	rootPath, err := test.RootPath()
+	if err != nil {
+		t.Fatal("get root path error:", err)
+	}
+
+	destDir := filepath.Join(rootPath, "download2")
+	logPath := filepath.Join(rootPath, "download2_log")
+	defer func() {
+		test.RemoveFile(keysFilePath)
+		test.RemoveFile(destDir)
+		test.RemoveFile(logPath)
+	}()
+
+	test.RunCmdWithError("qdownload2",
+		"--bucket", test.Bucket,
+		"--dest-dir", destDir,
+		"--key-file", keysFilePath,
+		"--log-file", logPath,
+		"-c", "4")
+	if test.FileCountInDir(destDir) < 2 {
+		t.Fail()
+	}
+
+	if !test.IsFileHasContent(logPath) {
+		t.Fatal("log file should has content")
+	}
+
+	return
+}
+
+func TestDownload2Document(t *testing.T) {
+	test.TestDocument("qdownload2", t)
+}

@@ -43,8 +43,8 @@ func IsLock() bool {
 func TryLock() *data.CodeError {
 	SetLockerPath(workspace.GetJobDir())
 	if IsLock() {
-		return data.NewEmptyError().AppendDescF("job doing by process:%s, If it is confirmed that this process doesn't exist or is not a qshell process, you can delete the .lock file in this folder:%s and try again",
-			LockProcess(), workspace.GetJobDir())
+		return data.NewEmptyError().AppendDescF("job doing by process:%s, If it is confirmed that this process doesn't exist or is not a qshell process, you can delete the lock file(%s) and try again",
+			LockProcess(), filepath.Join(workspace.GetJobDir(), ".lock"))
 	}
 
 	if e := Lock(); e != nil {
