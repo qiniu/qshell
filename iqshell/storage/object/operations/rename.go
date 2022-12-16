@@ -112,7 +112,7 @@ func BatchRename(cfg *iqshell.Config, info BatchRenameInfo) {
 						SourceKey:    sourceKey,
 						DestBucket:   info.Bucket,
 						DestKey:      destKey,
-						Force:        info.BatchInfo.Force,
+						Force:        info.BatchInfo.Overwrite,
 					}, nil
 				} else {
 					return nil, alert.Error("key invalid", "")

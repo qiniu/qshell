@@ -118,7 +118,7 @@ func BatchMove(cfg *iqshell.Config, info BatchMoveInfo) {
 					SourceKey:    srcKey,
 					DestBucket:   info.DestBucket,
 					DestKey:      destKey,
-					Force:        info.BatchInfo.Force,
+					Force:        info.BatchInfo.Overwrite,
 				}, nil
 			}
 			return nil, alert.Error("key invalid", "")
