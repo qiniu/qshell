@@ -86,7 +86,7 @@ func TestDownloadFromBucket(t *testing.T) {
 		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
-	test.RunCmdWithError("qdownload", "-c", "4", path)
+	test.RunCmdWithError("qdownload", "-c", "4", path, "-d")
 	if test.FileCountInDir(cfg.DestDir) < 2 {
 		t.Fail()
 	}

@@ -71,6 +71,16 @@ func GetAccount() (account.Account, *data.CodeError) {
 	return *currentAccount, nil
 }
 
+func GetUserName() string {
+	if currentAccount == nil {
+		return ""
+	}
+	if len(currentAccount.Name) > 0 {
+		return currentAccount.Name
+	}
+	return currentAccount.AccessKey
+}
+
 func GetMac() (mac *qbox.Mac, err *data.CodeError) {
 	acc, gErr := GetAccount()
 	if gErr != nil {

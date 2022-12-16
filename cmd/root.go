@@ -6,7 +6,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/version"
 	"github.com/spf13/cobra"
 	"os"
@@ -84,7 +83,6 @@ func Execute() {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		data.SetCmdStatusError()
 	}
-	log.DebugF("== version:%s ==", version.Version())
 
 	if !data.IsTestMode() && data.GetCmdStatus() != data.StatusOK {
 		os.Exit(data.GetCmdStatus())

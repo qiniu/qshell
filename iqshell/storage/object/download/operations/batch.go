@@ -190,8 +190,14 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		}
 	}
 
+	apiPrefix := ""
+	if len(prefixes) == 1 {
+		// api 不支持多个 prefix
+		apiPrefix = prefixes[0]
+	}
+
 	flow.New(info.Info).
-		WorkProvider(NewWorkProvider(info.Bucket, info.Prefix, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
+		WorkProvider(NewWorkProvider(info.Bucket, apiPrefix, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
 			apiInfo.Bucket = info.Bucket
 			apiInfo.IsPublic = info.Public
 			apiInfo.HostProvider = host.NewListProvider(hosts)

@@ -208,7 +208,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 
 	var response *http.Response
 	for times := 0; times < 6; times++ {
-		log.DebugF("Download[%d] [%s:%s] => %s, because no available host", times, info.Bucket, info.Key, info.ToFile)
+		log.DebugF("Download[%d] [%s:%s] => %s", times, info.Bucket, info.Key, info.ToFile)
 
 		if available, aErr := info.HostProvider.Available(); !available {
 			err = data.NewEmptyError().AppendDescF("no available host:%+v", aErr)

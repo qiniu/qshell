@@ -42,6 +42,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 
 	err = utils.CreateDirIfNotExist(workspaceDir)
 	if err != nil {
+		log.ErrorF("create workspace dir error:%v", err)
 		return
 	}
 
