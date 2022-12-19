@@ -233,6 +233,7 @@ func TestDownload2AllFilesFromBucket(t *testing.T) {
 		"--suffixes", ".json",
 		"--public",
 		"--log-file", logPath,
+		"--log-level", "info",
 		"-c", "4")
 	if test.FileCountInDir(destDir) < 2 {
 		t.Fail()
@@ -243,16 +244,8 @@ func TestDownload2AllFilesFromBucket(t *testing.T) {
 	}
 
 	logContent := test.FileContent(logPath)
-	if strings.Contains(logContent, "?e=") {
-		t.Fatal("download url should private")
-	}
-
-	if !strings.Contains(logContent, "work consumer 4 start") {
-		t.Fatal("download should have consumer 4")
-	}
-
-	if strings.Contains(logContent, "work consumer 5 start") {
-		t.Fatal("download shouldn't have consumer 5")
+	if strings.Contains(logContent, "[D]") {
+		t.Fatal("shouldn't has debug log")
 	}
 
 	return
@@ -283,7 +276,59 @@ func TestDownload2WithKeyFile(t *testing.T) {
 		"--dest-dir", destDir,
 		"--key-file", keysFilePath,
 		"--log-file", logPath,
-		"--log-level", "info",
+		"--log-level", "debug",
+		"-c", "4",
+		"-d")
+	if test.FileCountInDir(destDir) < 2 {
+		t.Fail()
+	}
+
+	if !test.IsFileHasContent(logPath) {
+		t.Fatal("log file should has content")
+	}
+
+	logContent := test.FileContent(logPath)
+	if !strings.Contains(logContent, "?e=") {
+		t.Fatal("download url should private")
+	}
+
+	if !strings.Contains(logContent, "work consumer 3 start") {
+		t.Fatal("download should have consumer 3")
+	}
+
+	if strings.Contains(logContent, "work consumer 4 start") {
+		t.Fatal("download shouldn't have consumer 4")
+	}
+	return
+}
+
+func TestDownload2PublicWithKeyFile(t *testing.T) {
+	keys := test.KeysString + "\nhello_10.json"
+	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", keys)
+	if err != nil {
+		t.Fatal("create cdn config file error:", err)
+	}
+
+	rootPath, err := test.RootPath()
+	if err != nil {
+		t.Fatal("get root path error:", err)
+	}
+
+	destDir := filepath.Join(rootPath, "download2")
+	logPath := filepath.Join(rootPath, "download2_log")
+	defer func() {
+		test.RemoveFile(keysFilePath)
+		test.RemoveFile(destDir)
+		test.RemoveFile(logPath)
+	}()
+
+	test.RunCmdWithError("qdownload2",
+		"--bucket", test.Bucket,
+		"--dest-dir", destDir,
+		"--key-file", keysFilePath,
+		"--log-file", logPath,
+		"--log-level", "debug",
+		"--public",
 		"-c", "4")
 	if test.FileCountInDir(destDir) < 2 {
 		t.Fail()
@@ -294,8 +339,8 @@ func TestDownload2WithKeyFile(t *testing.T) {
 	}
 
 	logContent := test.FileContent(logPath)
-	if strings.Contains(logContent, "[D]") {
-		t.Fatal("shouldn't has debug log")
+	if strings.Contains(logContent, "?e=") {
+		t.Fatal("download url should public")
 	}
 
 	return
