@@ -15,6 +15,8 @@ import (
 )
 
 func TestDownloadWithKeyFile(t *testing.T) {
+	test.RemoveRootPath()
+	
 	keys := test.KeysString + "\nhello_10.json"
 	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", keys)
 	if err != nil {
@@ -60,6 +62,8 @@ func TestDownloadWithKeyFile(t *testing.T) {
 }
 
 func TestDownloadFromBucket(t *testing.T) {
+	test.RemoveRootPath()
+
 	cfg := &DownloadCfg{
 		DownloadCfg: operations.DownloadCfg{
 			ThreadCount:     4,
@@ -97,6 +101,8 @@ func TestDownloadFromBucket(t *testing.T) {
 }
 
 func TestDownloadNoBucket(t *testing.T) {
+	test.RemoveRootPath()
+
 	cfg := &DownloadCfg{
 		DownloadCfg: operations.DownloadCfg{
 			ThreadCount: 4,
@@ -130,6 +136,8 @@ func TestDownloadNoBucket(t *testing.T) {
 }
 
 func TestDownloadNoDomain(t *testing.T) {
+	test.RemoveRootPath()
+
 	cfg := &DownloadCfg{
 		DownloadCfg: operations.DownloadCfg{
 			ThreadCount: 4,
@@ -215,6 +223,8 @@ func TestDownload2NoBucket(t *testing.T) {
 }
 
 func TestDownload2AllFilesFromBucket(t *testing.T) {
+	test.RemoveRootPath()
+
 	rootPath, err := test.RootPath()
 	if err != nil {
 		t.Fatal("get root path error:", err)
@@ -252,6 +262,8 @@ func TestDownload2AllFilesFromBucket(t *testing.T) {
 }
 
 func TestDownload2WithKeyFile(t *testing.T) {
+	test.RemoveRootPath()
+
 	keys := test.KeysString + "\nhello_10.json"
 	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", keys)
 	if err != nil {
@@ -303,6 +315,8 @@ func TestDownload2WithKeyFile(t *testing.T) {
 }
 
 func TestDownload2PublicWithKeyFile(t *testing.T) {
+	test.RemoveRootPath()
+
 	keys := test.KeysString + "\nhello_10.json"
 	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", keys)
 	if err != nil {
@@ -329,7 +343,8 @@ func TestDownload2PublicWithKeyFile(t *testing.T) {
 		"--log-file", logPath,
 		"--log-level", "debug",
 		"--public",
-		"-c", "4")
+		"-c", "4",
+		"-d")
 	if test.FileCountInDir(destDir) < 2 {
 		t.Fail()
 	}
