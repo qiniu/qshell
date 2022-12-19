@@ -16,7 +16,7 @@ import (
 
 func TestDownloadWithKeyFile(t *testing.T) {
 	test.RemoveRootPath()
-	
+
 	keys := test.KeysString + "\nhello_10.json"
 	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", keys)
 	if err != nil {
