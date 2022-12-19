@@ -276,7 +276,7 @@ func TestDownload2WithKeyFile(t *testing.T) {
 	}
 
 	destDir := filepath.Join(rootPath, "download2")
-	logPath := filepath.Join(rootPath, "download2_log")
+	logPath := filepath.Join(rootPath, "download2_log.private")
 	defer func() {
 		test.RemoveFile(keysFilePath)
 		test.RemoveFile(destDir)
@@ -329,7 +329,7 @@ func TestDownload2PublicWithKeyFile(t *testing.T) {
 	}
 
 	destDir := filepath.Join(rootPath, "download2")
-	logPath := filepath.Join(rootPath, "download2_log")
+	logPath := filepath.Join(rootPath, "download2_log.public")
 	defer func() {
 		test.RemoveFile(keysFilePath)
 		test.RemoveFile(destDir)
