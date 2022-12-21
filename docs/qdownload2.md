@@ -17,14 +17,15 @@ Flags:
       --bucket string                              storage bucket
       --cdn-domain string                          set the CDN domain name for downloading, the default is empty, which means downloading from the storage source site
       --check-hash                                 whether to verify the hash, if it is enabled, it may take a long time
-      --dest-dir string                            local storage path, full path
+      --dest-dir string                            local storage path, full path. default current dir
       --enable-slice --slice-file-size-threshold   whether to enable slice download, you need to pay attention to the configuration of --slice-file-size-threshold slice threshold option. Only when slice download is enabled and the size of the downloaded file is greater than the slice threshold will the slice download be started
+      --get-file-api                               public storage cloud not support, private storage cloud support when has getfile api.
   -h, --help                                       help for qdownload2
+      --io-host string                             io host of request
       --key-file string                            configure a file and specify the keys to be downloaded; if not configured, download all the files in the bucket
       --log-file string                            the output file of the download log is output to the file specified by record_root by default, and the specific file path can be seen in the terminal output (default "debug")
       --log-level string                           download log output level, optional values are debug,info,warn and error (default "debug")
       --log-rotate int                             the switching period of the download log file, the unit is day, (default 7)
-      --log-stdout                                 whether to output a copy of the download log to the standard terminal at the same time
       --prefix string                              only download files with the specified prefix
       --public                                     whether the space is a public space
       --record-root qshell                         path to save download record information, including log files and download progress files; the default is qshell download directory
