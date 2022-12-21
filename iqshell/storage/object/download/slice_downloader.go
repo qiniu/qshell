@@ -24,6 +24,7 @@ type slice struct {
 type sliceDownloader struct {
 	SliceSize              int64  `json:"slice_size"`
 	FileHash               string `json:"file_hash"`
+	UseGetFileApi          bool   `json:"use_get_file_api"`
 	slicesDir              string
 	concurrentCount        int
 	totalSliceCount        int64
@@ -87,7 +88,7 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 		log.WarningF("slice download UnMarshal config file error:%v", e)
 	}
 	// 分片大小不同会导致下载逻辑出错
-	if oldConfig.SliceSize != s.SliceSize || oldConfig.FileHash != s.FileHash {
+	if oldConfig.SliceSize != s.SliceSize || oldConfig.FileHash != s.FileHash || oldConfig.UseGetFileApi != s.UseGetFileApi {
 		// 不同则删除原来已下载但为合并的文件
 		if e := os.RemoveAll(s.slicesDir); e != nil {
 			log.WarningF("slice download remove all in dir:%s error:%v", s.slicesDir, e)
@@ -221,7 +222,7 @@ func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError
 		FromBytes:            f.fromBytes,
 		ToBytes:              sl.ToBytes,
 		RemoveTempWhileError: false,
-		UseGetFileApi:        false,
+		UseGetFileApi:        info.UseGetFileApi,
 		Progress:             nil,
 	})
 }

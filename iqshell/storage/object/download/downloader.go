@@ -307,30 +307,31 @@ type downloader interface {
 
 func createDownloader(info *ApiInfo) (downloader, *data.CodeError) {
 	userHttps := workspace.GetConfig().IsUseHttps()
-	if info.UseGetFileApi {
-		mac, err := workspace.GetMac()
-		if err != nil {
-			return nil, data.NewEmptyError().AppendDescF("download get mac error:%v", mac)
-		}
-		return &getFileApiDownloader{
-			useHttps: userHttps,
-			mac:      mac,
+
+	// 使用切片，并发至少为 2，至少要能切两片，达到切片阈值
+	if info.EnableSlice &&
+		info.SliceConcurrentCount > 1 &&
+		info.ServerFileSize > info.SliceSize &&
+		info.ServerFileSize > info.SliceFileSizeThreshold {
+		return &sliceDownloader{
+			SliceSize:              info.SliceSize,
+			slicesDir:              "",
+			concurrentCount:        info.SliceConcurrentCount,
+			totalSliceCount:        0,
+			slices:                 nil,
+			downloadError:          nil,
+			currentReadSliceIndex:  0,
+			currentReadSliceOffset: 0,
 		}, nil
 	} else {
-		// 使用切片，并发至少为 2，至少要能切两片，达到切片阈值
-		if info.EnableSlice &&
-			info.SliceConcurrentCount > 1 &&
-			info.ServerFileSize > info.SliceSize &&
-			info.ServerFileSize > info.SliceFileSizeThreshold {
-			return &sliceDownloader{
-				SliceSize:              info.SliceSize,
-				slicesDir:              "",
-				concurrentCount:        info.SliceConcurrentCount,
-				totalSliceCount:        0,
-				slices:                 nil,
-				downloadError:          nil,
-				currentReadSliceIndex:  0,
-				currentReadSliceOffset: 0,
+		if info.UseGetFileApi {
+			mac, err := workspace.GetMac()
+			if err != nil {
+				return nil, data.NewEmptyError().AppendDescF("download get mac error:%v", mac)
+			}
+			return &getFileApiDownloader{
+				useHttps: userHttps,
+				mac:      mac,
 			}, nil
 		} else {
 			return &getDownloader{useHttps: userHttps}, nil
