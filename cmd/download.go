@@ -28,6 +28,9 @@ have already in local disk and need to skip download or not.`,
 			operations.BatchDownloadWithConfig(cfg, info)
 		},
 	}
+	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "specifies the file path where the successful file list is saved")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "f", "", "specifies the file path where the failure file list is saved")
+
 	cmd.Flags().IntVarP(&info.WorkerCount, "thread", "c", 5, "num of threads to download files")
 	return cmd
 }
@@ -58,6 +61,9 @@ have already in local disk and need to skip download or not.`,
 			operations.BatchDownload(cfg, info)
 		},
 	}
+	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "specifies the file path where the successful file list is saved")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "f", "", "specifies the file path where the failure file list is saved")
+
 	cmd.Flags().IntVarP(&info.WorkerCount, "thread", "c", 5, "num of threads to download files")
 	cmd.Flags().StringVarP(&info.DownloadCfg.DestDir, "dest-dir", "", "", "local storage path, full path. default current dir")
 	cmd.Flags().BoolVarP(&info.DownloadCfg.GetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")

@@ -19,6 +19,7 @@ Flags:
       --check-hash                                 whether to verify the hash, if it is enabled, it may take a long time
       --dest-dir string                            local storage path, full path. default current dir
       --enable-slice --slice-file-size-threshold   whether to enable slice download, you need to pay attention to the configuration of --slice-file-size-threshold slice threshold option. Only when slice download is enabled and the size of the downloaded file is greater than the slice threshold will the slice download be started
+  -f, --failure-list string                        specifies the file path where the failure file list is saved
       --get-file-api                               public storage cloud not support, private storage cloud support when has getfile api.
   -h, --help                                       help for qdownload2
       --io-host string                             io host of request
@@ -35,6 +36,7 @@ Flags:
       --slice-concurrent-count int                 concurrency of slice downloads (default 10)
       --slice-file-size-threshold int              file threshold for downloading slices. When slice downloading is enabled and the file size is greater than this threshold, slice downloading will be enabled; unit:B (default 41943040)
       --slice-size int                             slice size; when using slice download, the size of each slice; unit:B (default 4194304)
+  -s, --success-list string                        specifies the file path where the successful file list is saved
       --suffixes string                            only download files with the specified suffixes
   -c, --thread int                                 num of threads to download files (default 5)
 ```

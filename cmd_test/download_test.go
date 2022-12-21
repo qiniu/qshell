@@ -277,6 +277,8 @@ func TestDownload2WithKeyFile(t *testing.T) {
 
 	destDir := filepath.Join(rootPath, "download2")
 	logPath := filepath.Join(rootPath, "download2_log.private")
+	successLogPath := filepath.Join(rootPath, "download2_success.txt")
+	failLogPath := filepath.Join(rootPath, "download2_fail.txt")
 	defer func() {
 		test.RemoveFile(keysFilePath)
 		test.RemoveFile(destDir)
@@ -289,6 +291,8 @@ func TestDownload2WithKeyFile(t *testing.T) {
 		"--key-file", keysFilePath,
 		"--log-file", logPath,
 		"--log-level", "debug",
+		"-s", successLogPath,
+		"-f", failLogPath,
 		"-c", "4",
 		"-d")
 	if test.FileCountInDir(destDir) < 2 {
@@ -297,6 +301,14 @@ func TestDownload2WithKeyFile(t *testing.T) {
 
 	if !test.IsFileHasContent(logPath) {
 		t.Fatal("log file should has content")
+	}
+
+	if !test.IsFileHasContent(successLogPath) {
+		t.Fatal("success log file should has content")
+	}
+
+	if !test.IsFileHasContent(failLogPath) {
+		t.Fatal("fail log file should has content")
 	}
 
 	logContent := test.FileContent(logPath)

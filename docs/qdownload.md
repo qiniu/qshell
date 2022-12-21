@@ -24,6 +24,8 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 
 # 选项
 - -c/--thread：配置下载的并发协程数量，表示支持同时下载多个文件（ThreadCount）, 大小必须在1-2000，如果不在这个范围内，默认为5。
+- -s/--success-list：指定一个文件名字，导入下载成功的文件列表到该文件。
+- -f/--failure-list：指定一个文件名字， 导入下砸失败的文件列表到该文件。
 
 `qdownload` 功能需要配置文件的支持，配置文件的内容如下：
 ```
