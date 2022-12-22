@@ -76,7 +76,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 
 	var downloadProgress progress.Progress = nil
 	if !cfg.Silence {
-		progress.NewPrintProgress(" 进度")
+		downloadProgress = progress.NewPrintProgress(" 进度")
 	}
 
 	apiInfo := &download.ApiInfo{
