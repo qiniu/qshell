@@ -27,7 +27,7 @@ func NewPrintProgress(title string) Progress {
 			progressbar.OptionShowBytes(true),
 			progressbar.OptionEnableColorCodes(true),
 			progressbar.OptionShowCount(),
-			progressbar.OptionThrottle(time.Millisecond*500),
+			progressbar.OptionThrottle(time.Millisecond*1000),
 			progressbar.OptionOnCompletion(func() {
 				fmt.Printf("\n")
 			}),
