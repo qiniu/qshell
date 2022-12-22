@@ -85,7 +85,7 @@ have already in local disk and need to skip download or not.`,
 	cmd.Flags().StringVarP(&info.DownloadCfg.RecordRoot, "record-root", "", "", "path to save download record information, including log files and download progress files; the default is download directory")
 
 	cmd.Flags().StringVarP(&LogLevel, "log-level", "", "debug", "download log output level, optional values are debug,info,warn and error")
-	cmd.Flags().StringVarP(&LogFile, "log-file", "", "debug", "the output file of the download log is output to the file specified by record_root by default, and the specific file path can be seen in the terminal output")
+	cmd.Flags().StringVarP(&LogFile, "log-file", "", "", "the output file of the download log is output to the file specified by record_root by default, and the specific file path can be seen in the terminal output")
 	cmd.Flags().IntVarP(&LogRotate, "log-rotate", "", 7, "the switching period of the download log file, the unit is day,")
 
 	return cmd
