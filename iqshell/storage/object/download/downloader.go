@@ -235,7 +235,7 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 
 		if err != nil {
 			log.DebugF("Download[%d] [%s:%s] => %s, error:%+v", times, info.Bucket, info.Key, info.ToFile, err)
-			if err.Code == 0 {
+			if err.Code == 0 || err.IsCancel() {
 				log.DebugF("Stop download [%s:%s] => %s, because [%+v]", info.Bucket, info.Key, info.ToFile, err)
 				break
 			}

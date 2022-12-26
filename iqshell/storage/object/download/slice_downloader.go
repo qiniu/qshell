@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"io"
 	"net/http"
 	"os"
@@ -149,6 +150,11 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 	for i := 0; i < s.concurrentCount; i++ {
 		go func() {
 			for sl := range s.slices {
+				if workspace.IsCmdInterrupt() {
+					s.setDownloadError(data.CancelError)
+					break
+				}
+
 				if s.getDownloadError() != nil {
 					break
 				}

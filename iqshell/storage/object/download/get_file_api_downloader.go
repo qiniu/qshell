@@ -80,6 +80,10 @@ func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.R
 		headers.Add("Referer", info.Referer)
 	}
 
+	if workspace.IsCmdInterrupt() {
+		return nil, data.CancelError
+	}
+
 	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", urlString, headers)
 	if len(info.ServerFileHash) != 0 && response != nil && response.Header != nil {
 		etag := response.Header.Get("Etag")
@@ -93,6 +97,8 @@ func (g *getFileApiDownloader) download(host *host.Host, info *ApiInfo) (*http.R
 	}
 
 	cErr := data.ConvertError(rErr)
-	cErr.Code = data.ErrorCodeUnknown
+	if cErr.Code <= 0 {
+		cErr.Code = data.ErrorCodeUnknown
+	}
 	return response, cErr
 }
