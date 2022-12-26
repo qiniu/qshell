@@ -8,7 +8,6 @@ import (
 )
 
 type DownloadCfg struct {
-	ThreadCount            int    `json:"thread_count,omitempty"`
 	FileEncoding           string `json:"file_encoding,omitempty"`
 	KeyFile                string `json:"key_file,omitempty"`
 	DestDir                string `json:"dest_dir,omitempty"`
@@ -40,7 +39,6 @@ type DownloadCfg struct {
 
 func DefaultDownloadCfg() DownloadCfg {
 	return DownloadCfg{
-		ThreadCount:            5,
 		FileEncoding:           "",
 		KeyFile:                "",
 		DestDir:                "",

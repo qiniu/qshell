@@ -108,11 +108,11 @@ type BatchUpload2Info struct {
 
 func (info *BatchUpload2Info) Check() *data.CodeError {
 	if info.Info.WorkerCount < 1 || info.Info.WorkerCount > 2000 {
+		log.WarningF("Tip: %d is out of range, you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: 5", info.Info.WorkerCount)
 		info.Info.WorkerCount = 5
-		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
-			info.Info.WorkerCount)
 	}
-	if info.UploadConfig.WorkerCount < 1 {
+	if info.UploadConfig.WorkerCount < 1 || info.Info.WorkerCount > 2000 {
+		log.WarningF("Tip: %d is out of range, you can set <WorkerCount> value between 1 and 200 to improve speed, and now WorkerCount change to: 3", info.Info.WorkerCount)
 		info.Info.WorkerCount = 3
 	}
 

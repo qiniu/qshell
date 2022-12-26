@@ -79,6 +79,8 @@ type BatchDownloadInfo struct {
 
 func (info *BatchDownloadInfo) Check() *data.CodeError {
 	if info.WorkerCount < 1 || info.WorkerCount > 2000 {
+		log.WarningF("Tip: %d is out of range, you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: 5",
+			info.Info.WorkerCount)
 		info.WorkerCount = 5
 	}
 	if err := info.Info.Check(); err != nil {
