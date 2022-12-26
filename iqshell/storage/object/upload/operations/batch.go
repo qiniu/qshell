@@ -111,9 +111,9 @@ func (info *BatchUpload2Info) Check() *data.CodeError {
 		log.WarningF("Tip: %d is out of range, you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: 5", info.Info.WorkerCount)
 		info.Info.WorkerCount = 5
 	}
-	if info.UploadConfig.WorkerCount < 1 || info.Info.WorkerCount > 2000 {
-		log.WarningF("Tip: %d is out of range, you can set <WorkerCount> value between 1 and 200 to improve speed, and now WorkerCount change to: 3", info.Info.WorkerCount)
-		info.Info.WorkerCount = 3
+	if info.UploadConfig.WorkerCount < 1 || info.UploadConfig.WorkerCount > 2000 {
+		log.WarningF("Tip: %d is out of range, you can set <WorkerCount> value between 1 and 200 to improve speed, and now WorkerCount change to: 3", info.UploadConfig.WorkerCount)
+		info.UploadConfig.WorkerCount = 3
 	}
 
 	if err := info.Info.Check(); err != nil {
