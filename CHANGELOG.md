@@ -1,3 +1,8 @@
+# 2.9.2
+1. qdownload 下载功能不再共享 host provider
+2. qupload2 支持配置单文件上传时块并发度
+3. 新增 qdownload2 命令
+
 # 2.9.1
 1. 支持通过 $? 获取命令执行状态
 2. get / qdownload 下载大文件支持切片下载
