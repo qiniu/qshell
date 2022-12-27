@@ -24,12 +24,14 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 
 # 选项
 - -c/--thread：配置下载的并发协程数量，表示支持同时下载多个文件（ThreadCount）, 大小必须在1-2000，如果不在这个范围内，默认为5。
+- -s/--success-list：指定一个文件名字，导入下载成功的文件列表到该文件。
+- -f/--failure-list：指定一个文件名字， 导入下砸失败的文件列表到该文件。
 
 `qdownload` 功能需要配置文件的支持，配置文件的内容如下：
 ```
 {
-    "dest_dir"               :   "<LocalBackupDir>",
     "bucket"                 :   "<Bucket>",
+    "dest_dir"               :   "<LocalBackupDir>",
     "save_path_handler"      :   "",
     "prefix"                 :   "image/",
     "suffixes"               :   ".png,.jpg",
@@ -48,20 +50,20 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 
 字段说明：
 
-- dest_dir：本地数据备份路径，为全路径 【必选】
 - bucket：空间名称 【必选】
+- dest_dir：本地数据备份路径，为全路径，默认：当前路径 【可选】
 - prefix：只同步指定前缀的文件，默认为空 【可选】
 - suffixes：只同步指定后缀的文件，默认为空 【可选】
 - key_file：配置一个文件，指定需要下载的 keys；默认为空，全量下载 bucket 中的文件 【可选】
 - save_path_handler：指定一个回调函数；在构建文件的保存路径时，优先使用此选项进行构建，如果不配置则使用 $dest_dir + $文件分割符 + $Key 方式进行构建。文档下面有常用场景实例。此函数通过 Go 语言的模板实现，函数验证使用 func 命令，具体语法可参考 func 命令说明，handler 使用方式下方有示例可供参考 【可选】
 - check_hash：是否验证 hash，如果开启可能会耗费较长时间，默认为 `false` 【可选】
-- cdn_domain：设置下载的 CDN 域名，默认为空表示从存储源站下载，【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】 【可选】
+- cdn_domain：设置下载的 CDN 域名，默认为空表示从存储源站下载，qshell 下载使用 domain 优先级：1.cdn_domain(此选项) 2.bucket 绑定域名(qshell 内部查询，无需配置) ，当优先级高的 domain 下载失败后会尝试使用优先级低的 domain 进行下载。【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】 【可选】
 - referer：如果 CDN 域名配置了域名白名单防盗链，需要指定一个允许访问的 referer 地址；默认为空 【可选】
 - public：空间是否为公开空间；为 `true` 时为公有空间，公有空间下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为 `false`（私有空间）【可选】
 - enable_slice: 是否开启切片下载，需要注意 `slice_file_size_threshold` 切片阈值选项的配置，只有开启切片下载，并且下载的文件大小大于切片阈值方会启动切片下载。默认不开启。【可选】
 - slice_size: 切片大小；当使用切片下载时，每个切片的大小；单位：B。默认为 4194304，也即 4MB。【可选】
 - slice_concurrent_count: 切片下载的并发度；默认为 10 【可选】
-- slice_file_size_threshold: 切片下载的文件阈值，当开启切片下载，并且文件大小大于此阈值时方会启用切片下载。【可选】
+- slice_file_size_threshold: 切片下载的文件阈值，当开启切片下载，并且文件大小大于此阈值时方会启用切片下载；单位：B。默认：41943040，也即 40M【可选】
 - remove_temp_while_error: 当下载遇到错误时删除之前下载的部分文件缓存，默认为 `false` (不删除)【可选】
 - log_level：下载日志输出级别，可选值为 `debug`,`info`,`warn`,`error`，其他任何字段均会导致不输出日志。默认 `debug` 。【可选】
 - log_file：下载日志的输出文件，默认为输出到 `record_root` 指定的文件中，具体文件路径可以在终端输出看到。【可选】

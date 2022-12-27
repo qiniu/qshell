@@ -208,20 +208,35 @@ func downloadFile(fInfo *fileInfo, info *ApiInfo) *data.CodeError {
 
 	var response *http.Response
 	for times := 0; times < 6; times++ {
-		if available, _ := info.HostProvider.Available(); !available {
+		log.DebugF("Download[%d] [%s:%s] => %s", times, info.Bucket, info.Key, info.ToFile)
+
+		if available, aErr := info.HostProvider.Available(); !available {
+			err = data.NewEmptyError().AppendDescF("no available host:%+v", aErr)
 			log.DebugF("Stop download [%s:%s] => %s, because no available host", info.Bucket, info.Key, info.ToFile)
 			break
 		}
 
+		err = nil
+		response = nil
 		response, err = dl.Download(info)
 		if err == nil && response != nil && response.StatusCode/100 == 2 {
+			err = nil
 			break
 		}
 
 		if response != nil {
+			log.DebugF("Download[%d] [%s:%s] => %s, response:%+v", times, info.Bucket, info.Key, info.ToFile, response)
 			if (response.StatusCode > 399 && response.StatusCode < 500) ||
 				response.StatusCode == 612 || response.StatusCode == 631 {
 				log.DebugF("Stop download [%s:%s] => %s, because [%s]", info.Bucket, info.Key, info.ToFile, response.Status)
+				break
+			}
+		}
+
+		if err != nil {
+			log.DebugF("Download[%d] [%s:%s] => %s, error:%+v", times, info.Bucket, info.Key, info.ToFile, err)
+			if err.Code == 0 || err.IsCancel() {
+				log.DebugF("Stop download [%s:%s] => %s, because [%+v]", info.Bucket, info.Key, info.ToFile, err)
 				break
 			}
 		}
@@ -292,30 +307,31 @@ type downloader interface {
 
 func createDownloader(info *ApiInfo) (downloader, *data.CodeError) {
 	userHttps := workspace.GetConfig().IsUseHttps()
-	if info.UseGetFileApi {
-		mac, err := workspace.GetMac()
-		if err != nil {
-			return nil, data.NewEmptyError().AppendDescF("download get mac error:%v", mac)
-		}
-		return &getFileApiDownloader{
-			useHttps: userHttps,
-			mac:      mac,
+
+	// 使用切片，并发至少为 2，至少要能切两片，达到切片阈值
+	if info.EnableSlice &&
+		info.SliceConcurrentCount > 1 &&
+		info.ServerFileSize > info.SliceSize &&
+		info.ServerFileSize > info.SliceFileSizeThreshold {
+		return &sliceDownloader{
+			SliceSize:              info.SliceSize,
+			slicesDir:              "",
+			concurrentCount:        info.SliceConcurrentCount,
+			totalSliceCount:        0,
+			slices:                 nil,
+			downloadError:          nil,
+			currentReadSliceIndex:  0,
+			currentReadSliceOffset: 0,
 		}, nil
 	} else {
-		// 使用切片，并发至少为 2，至少要能切两片，达到切片阈值
-		if info.EnableSlice &&
-			info.SliceConcurrentCount > 1 &&
-			info.ServerFileSize > info.SliceSize &&
-			info.ServerFileSize > info.SliceFileSizeThreshold {
-			return &sliceDownloader{
-				SliceSize:              info.SliceSize,
-				slicesDir:              "",
-				concurrentCount:        info.SliceConcurrentCount,
-				totalSliceCount:        0,
-				slices:                 nil,
-				downloadError:          nil,
-				currentReadSliceIndex:  0,
-				currentReadSliceOffset: 0,
+		if info.UseGetFileApi {
+			mac, err := workspace.GetMac()
+			if err != nil {
+				return nil, data.NewEmptyError().AppendDescF("download get mac error:%v", mac)
+			}
+			return &getFileApiDownloader{
+				useHttps: userHttps,
+				mac:      mac,
 			}, nil
 		} else {
 			return &getDownloader{useHttps: userHttps}, nil

@@ -304,10 +304,10 @@ func setBatchCmdRecordRedoWhileErrorFlags(cmd *cobra.Command, info *batch.Info) 
 	cmd.Flags().BoolVarP(&info.RecordRedoWhileError, "record-redo-while-error", "", false, "when re-executing the command and checking the command task progress record, if a task has already been done and failed, the task will be re-executed. The default is false, and the task will not be re-executed when it detects that the task fails")
 }
 func setBatchCmdSuccessExportFileFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "rename success list")
+	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "specifies the file path where the successful file list is saved")
 }
 func setBatchCmdFailExportFileFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "e", "", "rename failure list")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "e", "", "specifies the file path where the failure file list is saved")
 }
 func setBatchCmdOverwriteFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "w", false, "overwrite mode")

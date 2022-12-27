@@ -27,9 +27,9 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.BatchUpload(cfg, info)
 		},
 	}
-	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "upload success (all) file list")
-	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "f", "", "upload failure file list")
-	cmd.Flags().StringVarP(&info.OverwriteExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
+	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "specifies the file path where the successful file list is saved")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "f", "", "specifies the file path where the failure file list is saved")
+	cmd.Flags().StringVarP(&info.OverwriteExportFilePath, "overwrite-list", "w", "", "specifies the file path where the overwrite file list is saved")
 	cmd.Flags().IntVarP(&info.Info.WorkerCount, "worker", "c", 1, "worker count")
 	cmd.Flags().StringVarP(&info.CallbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "upload callback host")
@@ -66,6 +66,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&info.FailExportFilePath, "failure-list", "", "upload failure file list")
 	cmd.Flags().StringVar(&info.OverwriteExportFilePath, "overwrite-list", "", "upload success (overwrite) file list")
 	cmd.Flags().IntVar(&info.Info.WorkerCount, "thread-count", 1, "multiple thread count")
+	cmd.Flags().IntVar(&info.UploadConfig.WorkerCount, "worker-count", 3, "the number of concurrently uploaded parts of a single file in resumable upload")
 
 	cmd.Flags().BoolVarP(&info.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&info.IgnoreDir, "ignore-dir", false, "ignore the dir in the dest file key")
@@ -79,7 +80,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&info.SrcDir, "src-dir", "", "src dir to upload")
 	cmd.Flags().StringVar(&info.FileList, "file-list", "", "file list to upload")
 	cmd.Flags().StringVar(&info.Bucket, "bucket", "", "bucket")
-	cmd.Flags().Int64Var(&info.PutThreshold, "put-threshold", 0, "chunk upload threshold")
+	cmd.Flags().Int64Var(&info.PutThreshold, "put-threshold", 8*1024*1024, "chunk upload threshold, unit: B")
 	cmd.Flags().StringVar(&info.KeyPrefix, "key-prefix", "", "key prefix prepended to dest file key")
 	cmd.Flags().StringVar(&info.SkipFilePrefixes, "skip-file-prefixes", "", "skip files with these file prefixes")
 	cmd.Flags().StringVar(&info.SkipPathPrefixes, "skip-path-prefixes", "", "skip files with these relative path prefixes")

@@ -74,6 +74,11 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		return
 	}
 
+	var downloadProgress progress.Progress = nil
+	if !cfg.Silence {
+		downloadProgress = progress.NewPrintProgress(" 进度")
+	}
+
 	apiInfo := &download.ApiInfo{
 		IsPublic:               info.IsPublic,
 		HostProvider:           hostProvider,
@@ -93,7 +98,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		SliceSize:              info.SliceSize,
 		SliceConcurrentCount:   info.SliceConcurrentCount,
 		SliceFileSizeThreshold: info.SliceFileSizeThreshold,
-		Progress:               progress.NewPrintProgress(" 进度"),
+		Progress:               downloadProgress,
 	}
 
 	if e, _ := downloadFile(apiInfo); e != nil {

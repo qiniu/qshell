@@ -21,7 +21,6 @@ func TestAliBucketListNoBucket(t *testing.T) {
 	if !strings.Contains(errs, "Bucket can't empty") {
 		t.Fatal("empty Bucket check error")
 	}
-
 	return
 }
 

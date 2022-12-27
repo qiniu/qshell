@@ -15,9 +15,9 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
 
 # 选项
 - -c/--worker：配置下载的并发协程数量（ThreadCount），默认为 1，即文件一个个上传，对于大量小文件来说，可以通过提高该参数值来提升同步速度。关于 `ThreadCount` 的值，并不是越大越好，所以工具里面限制了范围 `[1, 2000]`（如果不在范围内则重置为 5），在实际情况下最好根据所拥有的上传带宽和文件的平均大小来计算下这个并发数，最简单的算法就是带宽除以平均文件大小即可得到并发数。 假设上传带宽有 10Mbps，文件平均大小 500KB，那么利用 10*1024/8/500 = 2.56，那么并发数差不多就是 3-6 左右。
-- -s/--success-list：接受一个文件名字，导入上传成功的文件列表到该文件。
-- -f/--failure-list：接受一个文件名字， 导入上传失败的文件列表到该文件。
-- -w/--overwrite-list：接受一个文件名字， 导入存储空间中被覆盖的文件列表到该文件。
+- -s/--success-list：指定一个文件名字，导入上传成功的文件列表到该文件。
+- -f/--failure-list：指定一个文件名字， 导入上传失败的文件列表到该文件。
+- -w/--overwrite-list：指定一个文件名字， 导入存储空间中被覆盖的文件列表到该文件。
 - -l/--callback-urls：指定上传回调的地址，可以指定多个地址，以逗号分开。
 - -T/--callback-host：上传回调HOST， 必须和CallbackUrls一起指定。
 
@@ -57,9 +57,9 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
 - ignore_dir：保存文件在七牛空间时，使用的文件名是否忽略本地路径，默认为 `false`。 【可选】
 - key_prefix：在保存文件在七牛空间时，使用的文件名的前缀，默认为空字符串【可选】
 - overwrite：是否覆盖空间中已有的同名文件，默认为 `false`（不覆盖）。【可选】
-- check_exists：每个文件上传之前是否检查空间中是否存在同名文件，默认为 `true`（检查文件是否在空间中存在）。 【可选】
+- check_exists：每个文件上传之前是否检查空间中是否存在同名文件，默认为 `false`（检查文件是否在空间中存在）。 【可选】
 - check_hash：在 `check_exists` 设置为 `true` 的情况下生效，是否检查本地文件 hash 和空间文件 hash 一致；默认为 `false`（不检查 hash），节约同步时间。 【可选】
-- check_size：在 `check_exists` 设置为 `true` 的情况下生效，是否检查本地大小和空间文件大小一致，优先级低于 `check_hash`；检查耗时小于 `check_hash`；默认为 `true`（检查文件大小是否一致）。 【可选】
+- check_size：在 `check_exists` 设置为 `true` 的情况下生效，是否检查本地大小和空间文件大小一致，优先级低于 `check_hash`；检查耗时小于 `check_hash`；默认为 `false`（检查文件大小是否一致）。 【可选】
 - skip_file_prefixes：跳过所有文件名（不带相对路径）以该前缀列表里面字符串为前缀的文件，默认为空字符。 【可选】
 - skip_path_prefixes：跳过所有文件路径（相对路径）以该前缀列表里面字符串为前缀的文件，默认为空字符。 【可选】
 - skip_fixed_strings：跳过所有文件路径（相对路径）中包含该字符串列表中字符串的文件，默认为空字符。 【可选】
@@ -73,11 +73,13 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
 - delete_on_success：上传成功的文件，同时删除本地文件，以达到节约磁盘的目的，比如日志归档的场景，默认为 `false`，如果需要开启功能，设置为 `true`即可。【可选】
 - resumable_api_v2：使用分片 V2 进行上传，默认为 `false`使用分片 V1 。【可选】
 - resumable_api_v2_part_size：使用分片 V2 进行上传时定制分片大小，默认 4194304（4M） 。【可选】
-- put_threshold：上传阈值，上传文件大小超过此值会使用分片上传，不超过使用表单上传；默认为 8388608（8M） 。【可选】
+- put_threshold：上传阈值，上传文件大小超过此值会使用分片上传，不超过使用表单上传；单位：B，默认为 8388608（8M） 。【可选】
 - record_root：上传记录信息保存路径，包括日志文件和上传进度文件；默认为 `qshell` 上传目录；【可选】
   - 通过 `-L` 指定工作目录时，`record_root` 则为此工作目录/qdownload/$jobId， 
   - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qdownload/$jobId`
   - 注意 `jobId` 是根据上传任务动态生成；具体方式为 MD5("$SrcDir:$Bucket:$FileList")； `CurrentUserName` 当前用户的名称
+- worker_count：分片上传中单个文件并发上传的分片数；默认为 3。【可选】
+
 
 对于那么多的参数，我们可以分为几类来解释：
 

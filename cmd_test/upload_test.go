@@ -61,7 +61,7 @@ func TestQUpload(t *testing.T) {
 			PutThreshold:           0,
 			KeyPrefix:              "test/",
 			Overwrite:              true,
-			CheckExists:            false,
+			CheckExists:            true,
 			CheckHash:              true,
 			CheckSize:              true,
 			RescanLocal:            true,

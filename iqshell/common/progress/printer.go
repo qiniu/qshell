@@ -2,9 +2,9 @@ package progress
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/schollz/progressbar/v3"
 	"sync"
+	"time"
 )
 
 const (
@@ -27,6 +27,7 @@ func NewPrintProgress(title string) Progress {
 			progressbar.OptionShowBytes(true),
 			progressbar.OptionEnableColorCodes(true),
 			progressbar.OptionShowCount(),
+			progressbar.OptionThrottle(time.Millisecond*1000),
 			progressbar.OptionOnCompletion(func() {
 				fmt.Printf("\n")
 			}),
@@ -65,7 +66,7 @@ func (p *printer) SendSize(newSize int64) {
 
 func (p *printer) Write(b []byte) (int, error) {
 	if n, e := p.progressBar.Write(b); e != nil {
-		return n, data.NewEmptyError().AppendError(e)
+		return n, e
 	} else {
 		return n, nil
 	}

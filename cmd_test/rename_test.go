@@ -13,7 +13,6 @@ import (
 func TestRename(t *testing.T) {
 	TestBatchCopy(t)
 
-	TestUserIntegration(t)
 	key := "qshell_rename.json"
 	_, errs := test.RunCmdWithError("rename", test.Bucket, test.Key, key, "-w")
 	if len(errs) > 0 {

@@ -108,10 +108,14 @@ type BatchUpload2Info struct {
 
 func (info *BatchUpload2Info) Check() *data.CodeError {
 	if info.Info.WorkerCount < 1 || info.Info.WorkerCount > 2000 {
+		log.WarningF("Tip: %d is out of range, you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: 5", info.Info.WorkerCount)
 		info.Info.WorkerCount = 5
-		log.WarningF("Tip: you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: %d",
-			info.Info.WorkerCount)
 	}
+	if info.UploadConfig.WorkerCount < 1 || info.UploadConfig.WorkerCount > 2000 {
+		log.WarningF("Tip: %d is out of range, you can set <WorkerCount> value between 1 and 200 to improve speed, and now WorkerCount change to: 3", info.UploadConfig.WorkerCount)
+		info.UploadConfig.WorkerCount = 3
+	}
+
 	if err := info.Info.Check(); err != nil {
 		return err
 	}
@@ -278,7 +282,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 							UseResumeV2:         uploadConfig.ResumableAPIV2,
 							ChunkSize:           uploadConfig.ResumableAPIV2PartSize,
 							PutThreshold:        uploadConfig.PutThreshold,
-							ResumeWorkerCount:   uploadConfig.WorkerCount,
+							ResumeWorkerCount:   uploadConfig.WorkerCount * info.Info.WorkerCount, // go SDK 分片并发量是全局的需要做转化
 							Progress:            nil,
 						},
 						RelativePathToSrcPath: fileRelativePath,
@@ -302,6 +306,8 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				}
 			}), nil
 		})).
+		DoWorkListMaxCount(1).
+		DoWorkListMinCount(1).
 		SetOverseerEnable(true).
 		SetDBOverseer(dbPath, func() *flow.WorkRecord {
 			return &flow.WorkRecord{
@@ -415,6 +421,10 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			exporter.Fail().ExportF("%s%s%%s", workInfo.Data, flow.ErrorSeparate, err)
 			log.ErrorF("Upload Failed, %s error:%s", workInfo.Data, err)
 		}).Build().Start()
+
+	metric.End()
+
+	log.InfoF("job dir:%s, there is a cache related to this command in this folder, which will also be used next time the same command is executed. If you are sure that you don’t need it, you can delete this folder.", workspace.GetJobDir())
 
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {

@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
+	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/locker"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -78,6 +79,8 @@ type BatchDownloadInfo struct {
 
 func (info *BatchDownloadInfo) Check() *data.CodeError {
 	if info.WorkerCount < 1 || info.WorkerCount > 2000 {
+		log.WarningF("Tip: %d is out of range, you can set <ThreadCount> value between 1 and 200 to improve speed, and now ThreadCount change to: 5",
+			info.Info.WorkerCount)
 		info.WorkerCount = 5
 	}
 	if err := info.Info.Check(); err != nil {
@@ -124,10 +127,10 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	defer unlockHandler()
 
 	info.InputFile = info.KeyFile
-	hostProvider := getDownloadHostProvider(workspace.GetConfig(), &info.DownloadCfg)
-	if available, e := hostProvider.Available(); !available {
+	hosts := getDownloadHosts(workspace.GetConfig(), &info.DownloadCfg)
+	if len(hosts) == 0 {
 		data.SetCmdStatusError()
-		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or bind domain to bucket; %v", info.Bucket, e)
+		log.ErrorF("get download domain error: not find in config and can't get bucket(%s) domain, you can set cdn_domain or bind domain to bucket", info.Bucket)
 		return
 	}
 
@@ -189,19 +192,26 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		}
 	}
 
+	apiPrefix := ""
+	if len(prefixes) == 1 {
+		// api 不支持多个 prefix
+		apiPrefix = prefixes[0]
+	}
+
 	flow.New(info.Info).
-		WorkProvider(NewWorkProvider(info.Bucket, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
-			apiInfo.HostProvider = hostProvider
+		WorkProvider(NewWorkProvider(info.Bucket, apiPrefix, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
+			apiInfo.Bucket = info.Bucket
+			apiInfo.IsPublic = info.Public
+			apiInfo.HostProvider = host.NewListProvider(hosts)
 			apiInfo.Referer = info.Referer
 			apiInfo.FileEncoding = info.FileEncoding
-			apiInfo.Bucket = info.Bucket
+			apiInfo.CheckHash = info.CheckHash
 			apiInfo.RemoveTempWhileError = info.RemoveTempWhileError
 			apiInfo.UseGetFileApi = info.GetFileApi
 			apiInfo.EnableSlice = info.EnableSlice
 			apiInfo.SliceSize = info.SliceSize
 			apiInfo.SliceConcurrentCount = info.SliceConcurrentCount
 			apiInfo.SliceFileSizeThreshold = info.SliceFileSizeThreshold
-			apiInfo.CheckHash = info.CheckHash
 
 			apiInfo.DestDir = info.DestDir
 			apiInfo.ToFile = filepath.Join(info.DestDir, apiInfo.Key)
@@ -228,6 +238,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				}
 			}), nil
 		})).
+		DoWorkListMaxCount(1).
+		DoWorkListMinCount(1).
 		SetOverseerEnable(true).
 		SetDBOverseer(dbPath, func() *flow.WorkRecord {
 			return &flow.WorkRecord{
@@ -326,6 +338,8 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	if metric.TotalCount <= 0 {
 		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.UpdateCount + metric.ExistCount + metric.SkippedCount
 	}
+
+	log.InfoF("job dir:%s, there is a cache related to this command in this folder, which will also be used next time the same command is executed. If you are sure that you don’t need it, you can delete this folder.", workspace.GetJobDir())
 
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {

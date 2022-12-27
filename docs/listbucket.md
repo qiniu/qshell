@@ -8,7 +8,7 @@ Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 
 参考文档：[资源列举 (list)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/list.html)
 
-备注：优化版本 `listbucket2` 完全兼容 `listbucekt`，支持列举过滤等能力，更加适合海量文件的空间列举。 `listbucekt` 能力不在支持迭代。
+备注：优化版本 `listbucket2` 完全兼容 `listbucket`，支持列举过滤等能力，更加适合海量文件的空间列举。 `listbucket` 能力不在支持迭代。
 
 # 格式
 ```

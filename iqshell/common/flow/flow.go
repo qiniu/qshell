@@ -172,6 +172,11 @@ func (f *Flow) Start() {
 		time.Sleep(time.Millisecond * time.Duration(50))
 		go func(index int) {
 			log.DebugF("work consumer %d start", index)
+			defer func() {
+				wait.Done()
+				log.DebugF("work consumer %d   end", index)
+			}()
+
 			worker, err := f.WorkerProvider.Provide()
 			if err != nil {
 				log.ErrorF("Create Worker Error:%v", err)
@@ -190,7 +195,7 @@ func (f *Flow) Start() {
 				// workRecordList 有数据则长度和 workList 长度相同
 				workRecordList, workErr := worker.DoWork(workList)
 				if len(workRecordList) == 0 && workErr != nil {
-					log.ErrorF("Do Worker Error:%v", err)
+					log.ErrorF("Do Worker Error:%+v", workErr)
 					f.limitRelease(workCount)
 					break
 				}
@@ -216,9 +221,6 @@ func (f *Flow) Start() {
 					break
 				}
 			}
-
-			wait.Done()
-			log.DebugF("work consumer %d   end", index)
 		}(i)
 	}
 	wait.Wait()
@@ -310,6 +312,9 @@ func (f *Flow) tryChangeWorkGroupCount(err *data.CodeError) {
 	f.mu.Unlock()
 
 	f.doWorkInfoListCount -= 10
+	if f.doWorkInfoListCount < 1 {
+		f.doWorkInfoListCount = 1
+	}
 }
 
 func (f *Flow) handleWorkResult(workRecord *WorkRecord) {

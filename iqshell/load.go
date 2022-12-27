@@ -9,6 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/version"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"os"
 	"path/filepath"
@@ -48,10 +49,12 @@ func load(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
 		data.SetCmdStatusError()
 		return false
 	}
+
 	if !loadWorkspace(cfg) {
 		data.SetCmdStatusError()
 		return false
 	}
+
 	if info.BeforeLoadFileLog != nil {
 		info.BeforeLoadFileLog()
 	}
@@ -64,6 +67,7 @@ func load(cfg *Config, info CheckAndLoadInfo) (shouldContinue bool) {
 		return false
 	}
 
+	outputSomeInformationForDebug()
 	return true
 }
 
@@ -158,9 +162,21 @@ func loadFileLog(cfg *Config) (shouldContinue bool) {
 			EnableStdout:   ls.IsLogStdout(),
 			MaxDays:        ls.LogRotate.Value(),
 		})
-		log.AlertF("Writing log to file:%s \n\n", ls.LogFile.Value())
+		log.AlertF("Writing log to file:%s", ls.LogFile.Value())
 	} else {
-		log.DebugF("log file not enable, log level:%s \n\n", workspace.GetConfig().Log.LogLevel.Value())
+		log.DebugF("log file not enable, log level:%s", workspace.GetConfig().Log.LogLevel.Value())
 	}
 	return true
+}
+
+func outputSomeInformationForDebug() {
+	log.DebugF("%-15s:%s", "Version", version.Version())
+	log.DebugF("%-15s:%s", "UserName", workspace.GetUserName())
+	log.DebugF("%-15s:%s", "Workspace", workspace.GetWorkspace())
+	log.DebugF("%-15s:%s", "UserDir", workspace.GetUserDir())
+	log.DebugF("%-15s:%s", "JobDir", workspace.GetJobDir())
+	log.DebugF("%-15s:%s", "OS", runtime.GOOS)
+	log.DebugF("%-15s:%s", "OSArch", runtime.GOARCH)
+	log.DebugF("%-15s:%d", "NumCpu", runtime.NumCPU())
+	log.Debug("")
 }

@@ -47,7 +47,7 @@ func TestBucketListToFile(t *testing.T) {
 
 func TestBucketListWithNotExistBucket(t *testing.T) {
 	_, err := test.RunCmdWithError("listbucket", "test")
-	if !strings.Contains(err, "query region error, no such bucket") {
+	if !strings.Contains(err, "no such bucket") {
 		t.Fail()
 	}
 }

@@ -44,10 +44,10 @@ func defaultDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.
 
 	// 2. 动态获取 bucket 绑定的 domain
 	b := downloadCfg.Bucket
-	log.DebugF("get domain of bucket:%s", b)
 	if domains, e := bucket.AllDomainsOfBucket(b); e != nil {
 		log.DebugF("get bucket:%s domain error:%v", b, e)
 	} else {
+		log.DebugF("get domain of bucket:%s domains:%s", b, domains)
 		for _, domain := range domains {
 			if data.NotEmpty(domain.Domain) {
 				hosts = append(hosts, &host.Host{

@@ -103,9 +103,9 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 
 	dbPath := filepath.Join(workspace.GetJobDir(), ".recorder")
 	if info.BatchInfo.EnableRecord {
-		log.DebugF("aws batch fetch recorder:%s", dbPath)
+		log.InfoF("aws batch fetch recorder:%s", dbPath)
 	} else {
-		log.Debug("aws batch fetch recorder:Not Enable")
+		log.InfoF("aws batch fetch recorder:Not Enable")
 	}
 
 	metric := &batch.Metric{}
@@ -198,15 +198,16 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 		metric.TotalCount = metric.SuccessCount + metric.FailureCount + metric.SkippedCount
 	}
 
-	// 输出结果
+	log.InfoF("job dir:%s, there is a cache related to this command in this folder, which will also be used next time the same command is executed. If you are sure that you don’t need it, you can delete this folder.", workspace.GetJobDir())
 	resultPath := filepath.Join(workspace.GetJobDir(), ".result")
 	if e := utils.MarshalToFile(resultPath, metric); e != nil {
 		data.SetCmdStatusError()
 		log.ErrorF("save aws batch fetch result to path:%s error:%v", resultPath, e)
 	} else {
-		log.DebugF("save aws batch fetch result to path:%s", resultPath)
+		log.InfoF("save aws batch fetch result to path:%s", resultPath)
 	}
 
+	// 输出结果
 	log.Info("------------- AWS Batch Result --------------")
 	log.InfoF("%20s%10d", "Total:", metric.TotalCount)
 	log.InfoF("%20s%10d", "Success:", metric.SuccessCount)

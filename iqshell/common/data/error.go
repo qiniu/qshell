@@ -1,22 +1,34 @@
 package data
 
 import (
+	"context"
+	"errors"
 	"fmt"
 )
 
 var (
 	ErrorCodeUnknown       = -10000
+	ErrorCodeCancel        = -10001
 	ErrorCodeParamNotExist = -11000
 	ErrorCodeParamMissing  = -11001
 	ErrorCodeLineHeader    = -11002
 	ErrorCodeAlreadyDone   = -15000
 )
 
+var (
+	CancelError = NewError(ErrorCodeCancel, "user cancel")
+)
+
 func ConvertError(err error) *CodeError {
 	if err == nil {
 		return nil
 	}
-	return NewEmptyError().AppendError(err)
+
+	rErr := NewEmptyError().AppendError(err)
+	if errors.Is(err, context.Canceled) {
+		rErr.Code = ErrorCodeCancel
+	}
+	return rErr
 }
 
 type CodeError struct {
@@ -110,6 +122,13 @@ func (c *CodeError) Error() string {
 		return c.Desc
 	}
 	return fmt.Sprintf("【%d】%s", c.Code, c.Desc)
+}
+
+func (c *CodeError) IsCancel() bool {
+	if c == nil {
+		return false
+	}
+	return c.Code == ErrorCodeCancel
 }
 
 func ErrorCode(err error) *Int {

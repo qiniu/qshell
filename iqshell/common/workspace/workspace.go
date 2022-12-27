@@ -7,6 +7,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"sync"
 )
 
@@ -49,8 +50,10 @@ func GetLogConfig() *config.LogSetting {
 
 func GetStorageConfig() *storage.Config {
 	r := cfg.GetRegion()
-	if len(cfg.Hosts.GetOneUc()) > 0 {
-		storage.SetUcHost(cfg.Hosts.GetOneUc(), cfg.IsUseHttps())
+	ucHost := cfg.Hosts.GetOneUc()
+	if len(ucHost) > 0 {
+		log.DebugF("ucHost: %s", ucHost)
+		storage.SetUcHost(ucHost, cfg.IsUseHttps())
 	}
 
 	return &storage.Config{
@@ -66,6 +69,16 @@ func GetAccount() (account.Account, *data.CodeError) {
 		return account.Account{}, data.NewEmptyError().AppendDesc("can't get current user")
 	}
 	return *currentAccount, nil
+}
+
+func GetUserName() string {
+	if currentAccount == nil {
+		return ""
+	}
+	if len(currentAccount.Name) > 0 {
+		return currentAccount.Name
+	}
+	return currentAccount.AccessKey
 }
 
 func GetMac() (mac *qbox.Mac, err *data.CodeError) {

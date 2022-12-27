@@ -58,6 +58,10 @@ func (i *DomainInfo) getApiScopeString() string {
 	return DomainApiScopeStrings[i.ApiScope.Value()]
 }
 
+func (i DomainInfo) String() string {
+	return i.DescriptionString()
+}
+
 func (i *DomainInfo) DescriptionString() string {
 	return fmt.Sprintf("%s", i.Domain.Value())
 }
