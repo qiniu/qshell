@@ -254,7 +254,8 @@ fi
 | rput           | 上传   | 以分片上传的方式上传一个文件                        | [文档](docs/rput.md)           |
 | qupload        | 上传   | 同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（配置式）    | [文档](docs/qupload.md)        |
 | qupload2       | 上传   | 同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（命令式）    | [文档](docs/qupload2.md)       |
-| qdownload      | 下载   | 从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步      | [文档](docs/qdownload.md)      |
+| qdownload      | 下载   | 从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步（配置式） | [文档](docs/qdownload.md)      |
+| qdownload2     | 下载   | 从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步（命令式） | [文档](docs/qdownload2.md)     |
 | get            | 下载   | 下载存储空间中的文件                            | [文档](docs/get.md)            |
 | fetch          | 抓取   | 从Internet上抓取一个资源并存储到七牛空间中             | [文档](docs/fetch.md)          |
 | batchfetch     | 抓取   | 从Internet上抓取一个资源并存储到七牛空间中             | [文档](docs/batchfetch.md)     |
