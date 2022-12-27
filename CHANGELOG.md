@@ -1,6 +1,6 @@
 # 2.9.2
-1. qdownload 下载功能不再共享 host provider
-2. qupload2 支持配置单文件上传时块并发度
+1. 优化 qdownload 下载功能
+2. qupload2 支持配置单文件上传时块的并发度
 3. 新增 qdownload2 命令
 
 # 2.9.1
