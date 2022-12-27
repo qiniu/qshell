@@ -26,17 +26,16 @@ func TestDownloadWithKeyFile(t *testing.T) {
 
 	cfg := &DownloadCfg{
 		DownloadCfg: operations.DownloadCfg{
-			ThreadCount: 4,
-			KeyFile:     keysFilePath,
-			Bucket:      test.Bucket,
-			Prefix:      "hell",
-			Suffixes:    ".json",
-			IoHost:      "",
-			Public:      true,
-			CheckHash:   true,
-			Referer:     "",
-			CdnDomain:   "",
-			RecordRoot:  "",
+			KeyFile:    keysFilePath,
+			Bucket:     test.Bucket,
+			Prefix:     "hell",
+			Suffixes:   ".json",
+			IoHost:     "",
+			Public:     true,
+			CheckHash:  true,
+			Referer:    "",
+			CdnDomain:  "",
+			RecordRoot: "",
 		},
 	}
 	path, err := createDownloadConfigFile(cfg)
@@ -66,7 +65,6 @@ func TestDownloadFromBucket(t *testing.T) {
 
 	cfg := &DownloadCfg{
 		DownloadCfg: operations.DownloadCfg{
-			ThreadCount:     4,
 			KeyFile:         "",
 			SavePathHandler: "{{pathJoin .DestDir (replace \"hello\" \"lala\" .Key)}}",
 			Bucket:          test.Bucket,
@@ -105,17 +103,16 @@ func TestDownloadNoBucket(t *testing.T) {
 
 	cfg := &DownloadCfg{
 		DownloadCfg: operations.DownloadCfg{
-			ThreadCount: 4,
-			KeyFile:     "",
-			Bucket:      "",
-			Prefix:      "hello3,hello5,hello7",
-			Suffixes:    "",
-			IoHost:      test.BucketDomain,
-			Public:      true,
-			CheckHash:   true,
-			Referer:     "",
-			CdnDomain:   "",
-			RecordRoot:  "",
+			KeyFile:    "",
+			Bucket:     "",
+			Prefix:     "hello3,hello5,hello7",
+			Suffixes:   "",
+			IoHost:     test.BucketDomain,
+			Public:     true,
+			CheckHash:  true,
+			Referer:    "",
+			CdnDomain:  "",
+			RecordRoot: "",
 		},
 	}
 	path, err := createDownloadConfigFile(cfg)
@@ -140,15 +137,14 @@ func TestDownloadNoDomain(t *testing.T) {
 
 	cfg := &DownloadCfg{
 		DownloadCfg: operations.DownloadCfg{
-			ThreadCount: 4,
-			Bucket:      test.Bucket,
-			Prefix:      "hello3,hello5,hello7",
-			Suffixes:    "",
-			Public:      true,
-			CheckHash:   true,
-			Referer:     "",
-			CdnDomain:   "",
-			RecordRoot:  "",
+			Bucket:     test.Bucket,
+			Prefix:     "hello3,hello5,hello7",
+			Suffixes:   "",
+			Public:     true,
+			CheckHash:  true,
+			Referer:    "",
+			CdnDomain:  "",
+			RecordRoot: "",
 		},
 	}
 	path, err := createDownloadConfigFile(cfg)
