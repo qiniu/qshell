@@ -14,6 +14,10 @@ type ChangeMimeApiInfo struct {
 	Mime   string `json:"mime"`
 }
 
+func (c *ChangeMimeApiInfo) GetBucket() string {
+	return c.Bucket
+}
+
 func (c *ChangeMimeApiInfo) ToOperation() (string, *data.CodeError) {
 	if len(c.Bucket) == 0 || len(c.Key) == 0 {
 		return "", alert.CannotEmptyError("change mime operation bucket or key", "")

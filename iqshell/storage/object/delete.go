@@ -12,7 +12,12 @@ type DeleteApiInfo struct {
 	Bucket          string                   `json:"bucket"`
 	Key             string                   `json:"key"`
 	DeleteAfterDays int                      `json:"delete_after_days"`
+	IsDeleteAfter   bool                     `json:"-"`
 	Condition       batch.OperationCondition `json:"condition"`
+}
+
+func (d *DeleteApiInfo) GetBucket() string {
+	return d.Bucket
 }
 
 func (d *DeleteApiInfo) ToOperation() (string, *data.CodeError) {
@@ -21,12 +26,14 @@ func (d *DeleteApiInfo) ToOperation() (string, *data.CodeError) {
 	}
 
 	condition := batch.OperationConditionURI(d.Condition)
-	if d.DeleteAfterDays < 0 {
-		return "", alert.Error("DeleteAfterDays can't be smaller than 0", "")
-	} else if d.DeleteAfterDays == 0 {
-		return storage.URIDelete(d.Bucket, d.Key) + condition, nil
+	if d.IsDeleteAfter {
+		if d.DeleteAfterDays < 0 {
+			return "", alert.Error("DeleteAfterDays can't be smaller than 0", "")
+		} else {
+			return storage.URIDeleteAfterDays(d.Bucket, d.Key, d.DeleteAfterDays) + condition, nil
+		}
 	} else {
-		return storage.URIDeleteAfterDays(d.Bucket, d.Key, d.DeleteAfterDays) + condition, nil
+		return storage.URIDelete(d.Bucket, d.Key) + condition, nil
 	}
 }
 

@@ -9,7 +9,8 @@ import (
 )
 
 type PreFopStatusInfo struct {
-	Id string
+	Id     string
+	Bucket string // 用于查询 region，私有云必须，公有云可选
 }
 
 func (info *PreFopStatusInfo) Check() *data.CodeError {
@@ -26,7 +27,10 @@ func PreFopStatus(cfg *iqshell.Config, info PreFopStatusInfo) {
 		return
 	}
 
-	ret, err := object.PreFopStatus(info.Id)
+	ret, err := object.PreFopStatus(object.PreFopStatusApiInfo{
+		Id:     info.Id,
+		Bucket: info.Bucket,
+	})
 	if err != nil {
 		data.SetCmdStatusError()
 		log.ErrorF("pre fog status error:%v", err)

@@ -14,6 +14,10 @@ type ChangeTypeApiInfo struct {
 	Type   int    `json:"type"`
 }
 
+func (c *ChangeTypeApiInfo) GetBucket() string {
+	return c.Bucket
+}
+
 func (c *ChangeTypeApiInfo) ToOperation() (string, *data.CodeError) {
 	if len(c.Bucket) == 0 || len(c.Key) == 0 {
 		return "", alert.CannotEmptyError("change type operation bucket or key", "")

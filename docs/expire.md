@@ -13,7 +13,7 @@ qshell expire <Bucket> <Key> <DeleteAfterDays>
 # 参数
 - Bucket：空间名称，可以为公开空间或者私有空间【必选】
 - Key：空间中的文件名【必选】
-- DeleteAfterDays：给文件指定的新过期时间，单位为：天【必选】
+- DeleteAfterDays：给文件指定的新过期时间，范围：>=0，0：取消过期时间。单位为：天【必选】
 
 # 示例
 修改 `if-pbl` 空间中 `qiniu.png` 图片的过期时间为：`3天后自动删除`

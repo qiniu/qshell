@@ -16,6 +16,10 @@ type CopyApiInfo struct {
 	Force        bool   `json:"force"`
 }
 
+func (m *CopyApiInfo) GetBucket() string {
+	return m.SourceBucket
+}
+
 func (m *CopyApiInfo) ToOperation() (string, *data.CodeError) {
 	if len(m.SourceBucket) == 0 || len(m.SourceKey) == 0 || len(m.DestBucket) == 0 || len(m.DestKey) == 0 {
 		return "", alert.CannotEmptyError("copy operation bucket or key of source and dest", "")
