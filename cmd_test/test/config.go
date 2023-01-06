@@ -31,8 +31,7 @@ func testBucketDomain() string {
 	if b := os.Getenv("bucketDomain"); len(b) > 0 {
 		return b
 	} else {
-		return "rnwe51jxu.test.bkt.clouddn.com"
-		//return "qshell-z0-01.qiniupkg.com"
+		return "qshell-z0-01.qiniupkg.com"
 	}
 }
 
@@ -40,8 +39,7 @@ func testUploadDomain() string {
 	if b := os.Getenv("uploadDomain"); len(b) > 0 {
 		return b
 	} else {
-		return "http://up.kodo-dev.svc.cluster.local:5010"
-		//return "up-z0.qiniup.com"
+		return "up-z0.qiniup.com"
 	}
 }
 
