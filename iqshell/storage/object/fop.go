@@ -63,7 +63,7 @@ func getOperationManager(bucket string) (*storage.OperationManager, *data.CodeEr
 	}
 	cfg := workspace.GetStorageConfig()
 	opManager := storage.NewOperationManager(mac, cfg)
-	if len(bucket) == 0 && (opManager.Cfg.Region == nil || opManager.Cfg.Zone == nil || len(opManager.Cfg.Region.ApiHost) != 0) {
+	if len(bucket) != 0 && (opManager.Cfg.Region == nil || opManager.Cfg.Zone == nil || len(opManager.Cfg.Region.ApiHost) == 0) {
 		if region, e := storage.GetZone(opManager.Mac.AccessKey, bucket); e != nil {
 			return nil, data.ConvertError(e)
 		} else {
