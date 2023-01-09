@@ -12,29 +12,24 @@
 qshell awsfetch [-p <Prefix>][-n <maxKeys>][-m <ContinuationToken>][-c <threadCount>][-u <QiniuUpHost>] -S <AwsSecretKey> -A <AwsID> [-s <SuccessList>][-e <FailureList>] <AwsBucket> <AwsRegion> <QiniuBucket>
 ```
 
-# 帮助文档
-可以在命令行输入如下命令获取帮助文档：
-```
-$ qshell awsfetch -h
-```
-
 # 参数
 - AwsBucket: 亚马逊存储空间名称。【必选】
 - AwsRegion: 亚马逊存储空间所在的地区。【必选】
 - QiniuBucket: 七牛存储空间名称。【必选】
 
 # 选项
-- -A/--aws-id：亚马逊账户的 Access Key ID 。【必选】
-- -S/--aws-secret-key：亚马逊账户的 Secret Key 。【必选】
+- -A/--aws-id：亚马逊账户的 Access Key ID。 【必选】
+- -S/--aws-secret-key：亚马逊账户的 Secret Key。 【必选】
 - -p/--prefix：亚马逊存储空间要抓取资源的前缀。 【可选】
 - -n/--max-keys：亚马逊接口每次返回的数据条目数量。 【可选】
-- -m/--continuation-token：亚马逊接口数据每次会返回的 token, 用于下次列举。 【可选】
+- -m/--continuation-token：亚马逊接口返回的 token（日志中会输出），用于断点列举。 【可选】
 - -c/--thread-count：抓取的线程数, 默认为 20。 【可选】
-- -u/--up-host：抓取的资源上传到七牛存储时的上传 HOST 。 【可选】
-- -s/--success-list：文件抓取成功后，将文件信息导入到此文件中，每行一个文件。不配置导出。 【可选】
-- -e/--failure-list：文件抓取失败后，将文件信息导入到此文件中，每行一个文件。不配置导出。 【可选】
+- -u/--up-host：抓取的资源在上传到七牛存储时使用的 HOST 。 【可选】
+- -s/--success-list：指定一个文件的路径，如果资源抓取成功，则将资源信息写入此文件；默认不导出。 【可选】
+- -e/--failure-list：指定一个文件的路径，如果资源抓取失败，则将资源信息写入此文件；默认不导出。 【可选】
 - --enable-record：记录任务执行状态，当下次执行命令时会跳过已执行的任务。 【可选】
-- --record-redo-while-error：依赖于 --enable-record，当检测任务状态时（命令重新执行时，所有任务会从头到尾重新执行；任务执行前会先检测当前任务是否已经执行），如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败不重新执行。 【可选】
+- --record-redo-while-error：依赖于 --enable-record；命令重新执行时，命令中所有任务会从头到尾重新执行；每个任务执行前会根据记录先查看当前任务是否已经执行，如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败则跳过不再重新执行。 【可选】
+
 
 # 亚马逊存储数据迁移到七牛存储
 使用场景：

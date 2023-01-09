@@ -27,8 +27,8 @@ qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <Callback
 - -t/--host：下载资源时使用的 HOST 头。 【可选】
 - -g/--storage-type：抓取的资源存储在七牛存储空间的类型，0:低频存储 1:标准存储 2:归档存储 3:深度归档, 默认为: 0。 【可选】
 - -c/--thread-count：指定抓取时使用的线程数目，默认：20。 【可选】
-- -s/--success-list：指定一个文件路径，资源抓取后，如果成功则将资源信息写入此文件。 【可选】
-- -e/--failure-list：指定一个文件路径，资源抓取后，如果失败则将资源信息写入此文件。 【可选】
+- -s/--success-list：指定一个文件的路径，如果资源抓取成功，则将资源信息写入此文件；默认不导出。 【可选】
+- -e/--failure-list：指定一个文件的路径，如果资源抓取失败，则将资源信息写入此文件；默认不导出。 【可选】
 - --disable-check-fetch-result：不检测异步 fetch 是否成功；检测方式是查询目标 bucket 是否存在 fetch 的文件；默认检测。【可选】  
 - --enable-record：记录任务执行状态，当下次执行命令时会跳过已执行的任务。 【可选】
 - --record-redo-while-error：依赖于 --enable-record；命令重新执行时，命令中所有任务会从头到尾重新执行；每个任务执行前会根据记录先查看当前任务是否已经执行，如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败则跳过不再重新执行。 【可选】
