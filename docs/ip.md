@@ -1,7 +1,7 @@
 # 简介
-`ip` 是一个查询ip归属地和运营商的工具，根据淘宝的API来获取结果。
+`ip` 是一个查询 ip 归属地和运营商的工具，根据淘宝的 API 来获取结果。
 
-API 地址：[http://ip.taobao.com/service/getIpInfo.php](http://ip.taobao.com/service/getIpInfo.php) 。该工具一次可以查询多个ip的信息。
+API 地址：[http://ip.taobao.com/service/getIpInfo.php](http://ip.taobao.com/service/getIpInfo.php) 。该工具一次可以查询多个 ip 的信息。
 
 # 格式
 ```

@@ -22,7 +22,7 @@ $ qshell reqid --doc
 无
 
 # 参数
-- ReqId：待解码的X-Reqid，注意是最后的一部分，比如对于 `Reqid: shared.ffmpeg.62kAAIYB06brhtsT`，这里提供的值是 `62kAAIYB06brhtsT`。 【必须】
+- ReqId：待解码的 X-Reqid，注意是最后的一部分，比如对于 `Reqid: shared.ffmpeg.62kAAIYB06brhtsT`，这里提供的值是 `62kAAIYB06brhtsT`。 【必须】
 
 # 示例
 ```

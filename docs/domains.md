@@ -26,7 +26,7 @@ $ qshell domains --doc
 --detail：展示域名的详细信息，默认只展示域名的名称。【可选】
 
 # 示例
-获取空间 `if-pbl` 对应的所有的域名：
+获取空间 `if-pbl` 对应的所有域名：
 ```
 $ qshell domains if-pbl
 ```

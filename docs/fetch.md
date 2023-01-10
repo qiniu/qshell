@@ -1,6 +1,6 @@
 # 简介
 `fetch` 指令根据七牛的公开API [fetch](http://developer.qiniu.com/code/v6/api/kodo-api/rs/fetch.html) 来从互联网上抓取一个资源并保存到七牛的空间中。 
-每次抓取的资源，如果指定的Key都是一样的，那么会默认覆盖这个Key所对应的文件。
+每次抓取的资源，如果指定的 Key 都是一样的，那么会默认覆盖这个 Key 所对应的文件。
 
 参考文档：[第三方资源抓取 (fetch)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/fetch.html)
 

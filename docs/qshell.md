@@ -1,5 +1,5 @@
 # 简介
-`qshell` 是利用 [七牛文档上公开的API](http://developer.qiniu.com) 实现的一个方便开发者测试和使用七牛API服务的命令行工具。该工具设计和开发的主要目的就是帮助开发者快速解决问题。目前该工具融合了七牛存储，CDN，以及其他的一些七牛服务中经常使用到的方法对应的便捷命令，比如b64decode，就是用来解码七牛的URL安全的Base64编码用的，所以这是一个面向开发者的工具，任何新的被认为适合加到该工具中的命令需求，都可以在 [ISSUE列表](https://github.com/qiniu/qshell/issues) 里面提出来，我们会尽快评估实现，以帮助大家更好地使用七牛服务。
+`qshell` 是利用 [七牛文档上公开的API](http://developer.qiniu.com) 实现的一个方便开发者测试和使用七牛 API 服务的命令行工具。该工具设计和开发的主要目的就是帮助开发者快速解决问题。目前该工具融合了七牛存储，CDN，以及其他的一些七牛服务中经常使用到的方法对应的便捷命令，比如 b64decode，就是用来解码七牛的 URL 安全的 Base64 编码用的，所以这是一个面向开发者的工具，任何新的被认为适合加到该工具中的命令需求，都可以在 [ISSUE列表](https://github.com/qiniu/qshell/issues) 里面提出来，我们会尽快评估实现，以帮助大家更好地使用七牛服务。
 
 
 # 更新日志 
@@ -8,27 +8,26 @@
 
 # 命令任何位置运行
 **Linux和Mac平台**
-对于 Linux 或者 Mac，如果希望能够在任何位置都可以执行，那么可以把 `qshell` 所在的目录加入到环境变量 `$PATH` 中去。假设 `qshell` 命令被解压到路径`/home/jemy/tools` 目录下面，那么我们可以把如下的命令写入到你所使用的 bash 所对应的配置文件中，如果是 `/bin/bash`，那么就是 `~/.bashrc` 文件，如果是 `/bin/zsh `，那么就是 `~/.zshrc` 文件中。写入的内容为：
+对于 Linux 或者 Mac，如果希望能够在任何位置都可以执行，那么可以把 `qshell` 所在的目录加入到环境变量 `$PATH` 中去。假设 `qshell` 命令被解压到路径 `/home/jemy/tools` 目录下面，那么我们可以把如下的命令写入到你所使用的 bash 所对应的配置文件中，如果是 `/bin/bash`，那么就是 `~/.bashrc` 文件，如果是 `/bin/zsh `，那么就是 `~/.zshrc` 文件中。写入的内容为：
 ```
 export PATH=$PATH:/home/jemy/tools
 ```
 保存完毕之后，可以通过两种方式立即生效，其一为输入 `source ~/.zshrc` 或者 `source ~/.bashrc` 来使配置立即生效，或者完全关闭命令行，然后重新打开一个即可，接下来就可以在任何位置使用 `qshell` 命令了。
 
 **Windows平台**
-如果你希望可以在任意目录下使用 `qshell`，请将 `qshell` 工具可执行文件所在目录添加到系统的环境变量中。由于 Windows 系统是图形界面，所以方便一点。假设`qshell.exe` 命令被保存到路径 `E:\jemy\tools` 目录下面，那么我们把这个目录放到系统的环境变量 `PATH` 里面。
+如果你希望可以在任意目录下使用 `qshell`，请将 `qshell` 工具可执行文件所在目录添加到系统的环境变量中。由于 Windows 系统是图形界面，所以方便一点。假设 `qshell.exe` 命令被保存到路径 `E:\jemy\tools` 目录下面，那么我们把这个目录放到系统的环境变量 `PATH` 里面。
 注：
 本工具是一个命令行工具，在 Windows 下面请先打开命令行终端，然后输入工具名称执行，不要双击打开，否则会出现闪退现象。
 
 
 # 快速使用
 该工具有两类命令，一类需要鉴权，另一类不需要。需要鉴权的命令都需要依赖七牛账号下的 `AccessKey`, `SecretKey`和 `Name`。所以这类命令运行之前，需要使用 `account` 命令来添加 `AccessKey` ，`SecretKey`和`Name` 。
-`Name`是用户可以自定义的字符串，用来唯一表示AccessKey/SecretKey账户，qshell会对添加的每一个账户信息加密保存，可以使用自命令`user`进行切换，切换账户的时候，需要使用账户唯一标识
-`Name`。
+`Name`是用户可以自定义的字符串，用来唯一表示 AccessKey/SecretKey 账户，qshell 会对添加的每一个账户信息加密保存，可以使用自命令 `user` 进行切换，切换账户的时候，需要使用账户唯一标识 `Name`。
 ```
 $ qshell account <Your AccessKey> <Your SecretKey> <Your Name>
 ```
 
-其中name表示该账号的名称, 如果 ak, sk, name 首字母是"-", 需要使用如下的方式添加账号, 这样避免把该项识别成命令行选项:
+其中name表示该账号的名称, 如果 ak, sk, name 首字母是 "-", 需要使用如下的方式添加账号, 这样避免把该项识别成命令行选项:
 ```
 $ qshell account -- <Your AccessKey> <Your SecretKey> <Your Name>
 ```

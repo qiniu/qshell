@@ -30,4 +30,4 @@ $ qshell expire --doc
 ```
 $ qshell chtype if-pbl qiniu.png 3
 ```
-输入该命令，后该文件就已经被修改为3天后自动删除了
+输入该命令，后该文件就已经被修改为 3 天后自动删除了。

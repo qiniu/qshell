@@ -83,7 +83,7 @@ qshell listbucket2 [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
  ```
  qshell listbucket2 --start 2018-10-30 --end 2018-11-03 <Bucket>
  ```
-注意startDate 和 endDate 是这种半开半闭区间[startDate, endDate)
+注意 startDate 和 endDate 是这种半开半闭区间[startDate, endDate)
 
 7 获取后缀为 mp4, html 的文件
  ```

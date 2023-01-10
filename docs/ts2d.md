@@ -1,5 +1,5 @@
 # 简介
-`ts2d` 命令将一个以秒(s)为单位的Unix时间戳转换为日期。
+`ts2d` 命令将一个以秒（s）为单位的 Unix 时间戳转换为日期。
 
 # 格式
 ```
@@ -20,7 +20,7 @@ $ qshell ts2d --doc
 无
 
 # 参数
-- TimestampInSeconds：以秒(s)为单位的Unix时间戳。 【必须】
+- TimestampInSeconds：以秒（s）为单位的 Unix 时间戳。 【必须】
 
 # 示例
 ```

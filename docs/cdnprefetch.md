@@ -1,5 +1,5 @@
 # 简介
-`cdnprefetch` 命令用来根据指定的文件访问列表来批量预取CDN的访问外链。
+`cdnprefetch` 命令用来根据指定的文件访问列表来批量预取 CDN 的访问外链。
 
 # 格式
 ```
@@ -47,4 +47,4 @@ http://if-pbl.qiniudn.com/hello7.txt
 $ qshell cdnprefetch -i toprefetch.txt
 ```
 
-就可以预取文件`toprefetch.txt`中的访问外链了。
+就可以预取文件 `toprefetch.txt` 中的访问外链了。

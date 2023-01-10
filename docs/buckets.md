@@ -23,7 +23,7 @@ $ qshell buckets --doc
 无参数。
 
 # 选项
-- --region：指定需要列举 bucket 所在的区域。
+- --region：指定需要列举所在区域的 bucket。
 - --detail：打印 bucket 详情，如果无此选项则仅列举 bucket 名称，增加此选项后可依次展示 bucket 名、bucket 所在区域、bucket 文件数量、bucket 占用空间大小。
 
 # 示例

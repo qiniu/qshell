@@ -1,5 +1,5 @@
 # 简介
-`get` 用来从存储空间下载指定文件
+`get` 用来从存储空间下载指定的文件。
 
 # 格式
 ```
@@ -35,13 +35,13 @@ $ qshell get --doc
 - --remove-temp-while-error: 当下载遇到错误时删除之前下载的部分文件缓存，默认为 `false` (不删除)【可选】
 
 # 示例
-1 把qiniutest空间下的文件test.txt下载到本地， 当前目录
+1 把 `qiniutest` 空间下的文件 test.txt 下载到本地的当前目录：
 ```
 $ qshell get qiniutest test.txt
 ```
-下载完成后，在本地当前目录可以看到文件test.txt
+下载完成后，在本地当前目录可以看到文件 test.txt
 
-2 把 `qiniutest` 空间下的文件 `test.txt` 下载到本地，以路径 `/Users/caijiaqiang/hah.txt` 保存。
+2 把 `qiniutest` 空间下的文件 `test.txt` 下载到本地，以路径 `/Users/caijiaqiang/hah.txt` 进行保存。
 ```
 $ qshell get qiniutest test.txt -o /Users/caijiaqiang/hah.txt
 ```

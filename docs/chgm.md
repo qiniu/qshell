@@ -1,5 +1,5 @@
 # 简介
-`chgm` 指令用来为空间中的一个文件修改MimeType。
+`chgm` 指令用来为空间中的一个文件修改 MimeType。
 
 参考文档：[资源元信息修改 (chgm)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/chgm.html)
 
@@ -32,7 +32,7 @@ $ qshell chgm --doc
 $ qshell chgm if-pbl qiniu.png image/jpeg
 ```
 
-修改完成，我们检查一下文件的MimeType：
+修改完成，我们检查一下文件的 MimeType：
 ```
 $ qshell stat if-pbl qiniu.png
 ```
@@ -46,4 +46,4 @@ Fsize:              5331
 PutTime:            14285516077733591
 MimeType:           image/jpeg
 ```
-我们发现，文件的MimeType已经被修改为 `image/jpeg`。
+我们发现，文件的 MimeType 已经被修改为 `image/jpeg`。

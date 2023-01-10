@@ -37,7 +37,7 @@ $ qshell batchstat --doc
 - --record-redo-while-error：依赖于 --enable-record；命令重新执行时，命令中所有任务会从头到尾重新执行；每个任务执行前会根据记录先查看当前任务是否已经执行，如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败则跳过不再重新执行。 【可选】
 
 # 示例
-- 我们将查询空间`7qiniu`中的一些文件的基本信息，待查询文件列表`listFile` 的内容为：
+- 我们将查询空间 `7qiniu` 中的一些文件的基本信息，待查询文件列表 `listFile` 的内容为：
 ```
 RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000000.ts
 RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000001.ts
@@ -53,7 +53,7 @@ RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts
 $ qshell batchstat 7qiniu -i listFile
 ```
 
-- 输出 Key、Fsize、Hash、MimeType、PutTime 以`\t`分隔：
+- 输出 Key、Fsize、Hash、MimeType、PutTime 以 `\t` 分隔：
 ```
 RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000000.ts 92308   Fk8Uf2SHbQ4S2-cXHINuRc_rooNA    video/mp2t  15003760414606314
 RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000001.ts 91556   FpJP2nfipuLVc6QGvvcb868Rd0pO    video/mp2t  15003760414789673
@@ -64,4 +64,4 @@ RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts 92120   Fh4F
 ```
 
 # 注意
-如果没有指定输入文件， 默认从标准输入读取内容
+如果没有指定输入文件， 默认从标准输入读取内容。

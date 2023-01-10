@@ -1,5 +1,5 @@
 # 简介
-`pfop` 用来提交异步处理音视频请求， 比如视频转码，水印等， 打印服务端返回的`PersistentID` 到标准输出上（终端）， 可以根据该 `PersistentID` 查询处理进度
+`pfop` 用来提交异步处理音视频请求， 比如视频转码，水印等， 打印服务端返回的 `PersistentID` 到标准输出上（终端）， 可以根据该 `PersistentID` 查询处理进度
 
 参考文档：[pfop请求](http://developer.qiniu.com/code/v6/api/dora-api/pfop/pfop.html)
 
@@ -30,7 +30,7 @@ $ qshell pfop --doc
 - -f/--force：强制执行数据处理。当服务端发现 fops 指定的数据处理结果已经存在，那就认为已经处理成功，避免重复处理浪费资源。 增加此选项（--force），则可强制执行数据处理并覆盖原结果。【可选】
 
 # 示例
-1 把qiniutest空间下的文件 `test.avi` 转码成 `mp4文件`, 转码后的结果保存到`qiniutest` 空间中
+1 把 qiniutest 空间下的文件 `test.avi` 转码成 `mp4` 文件，转码后的结果保存到 `qiniutest` 空间中
 ```
 $ qshell pfop qiniutest test.avi 'avthumb/mp4'
 ```

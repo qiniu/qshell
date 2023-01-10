@@ -1,5 +1,5 @@
 # 简介
-`fput` 命令用来以 `multipart/form-data` 的表单方式上传一个文件。适合于中小型文件的上传，一般建议如果文件大小超过100MB的话，都使用分片上传。
+`fput` 命令用来以 `multipart/form-data` 的表单方式上传一个文件。适合于中小型文件的上传，一般建议如果文件大小超过 100MB 的话，都使用分片上传。
 
 参考文档：[直传文件 (upload)](http://developer.qiniu.com/code/v6/api/kodo-api/up/upload.html)
 

@@ -19,12 +19,12 @@ qshell token qbox [--access-key <AccessKey> --secret-key <SecretKey>] [--http-bo
 ```
 
 ### QBox token 示例
-1 七牛的 stat 接口，可以获取一个bucket中的文件信息， 详细[文档](https://developer.qiniu.com/kodo/api/1308/stat)。
+1 七牛的 stat 接口，可以获取一个 bucket 中的文件信息， 详细[文档](https://developer.qiniu.com/kodo/api/1308/stat)。
 这个接口需要计算 `QBox Token`, 那么我们可以使用 `qshell token qbox <Url>` 这个命令来计算。
-Url的格式为： `http://<Host>/<Path>`
+Url 的格式为： `http://<Host>/<Path>`
 
-从接口文档，我们可以看到Host是 `rs.qiniu.com`,  Path是 `/stat/<EncodedEntryURI>`, `<EncodeEntryURI>` 的计算方式参考
-[文档](https://developer.qiniu.com/kodo/api/1276/data-format), 可以通过`qshell b64encode` 来计算这个值。
+从接口文档，我们可以看到 Host 是 `rs.qiniu.com`,  Path是 `/stat/<EncodedEntryURI>`, `<EncodeEntryURI>` 的计算方式参考
+[文档](https://developer.qiniu.com/kodo/api/1276/data-format), 可以通过 `qshell b64encode` 来计算这个值。
 
 假设我们需要拿到文件 `test.mov` 的信息， 这个文件存储在七牛的存储空间 `tonypublic` 中，那么，
 第一步， 计算 `<EncodeEntryURI>`：
@@ -40,9 +40,9 @@ $ qshell b64encode "tonypublic:test.mov"
 $ qshell token qbox http://rs.qiniu.com/stat/dG9ueXB1YmxpYzp0ZXN0Lm1vdg==
 ```
 
-得到 `qbox token`: `QBox 3-pH6WfqAXTwzgG2s3FNMUW0NtkUu5cJLQCfU3Hd:d5rmqx_xsKILoNa61qDHMxUMtp8=`
+得到 `qbox token` : `QBox 3-pH6WfqAXTwzgG2s3FNMUW0NtkUu5cJLQCfU3Hd:d5rmqx_xsKILoNa61qDHMxUMtp8=`
 
-第四步， 通过 curl 发送http请求，拿到test.mov的信息:
+第四步， 通过 curl 发送 http 请求，拿到 test.mov 的信息:
 ```
 $ url 'http://rs.qiniu.com/stat/dG9ueXB1YmxpYzp0ZXN0Lm1vdg==' -H "Authorization: QBox 3-pH6WfqAXTwzgG2s3FNMUW0NtkUu5cJLQCfU3Hd:d5rmqx_xsKILoNa61qDHMxUMtp8="
 ```
@@ -99,7 +99,7 @@ qshell token upload <PutPolicyConfigFile>
 上传策略的各个参数 [详解](https://developer.qiniu.com/kodo/manual/1206/put-policy) 。
 
 ### Upload token 示例
-上传策略配置文件upload.conf内容为：
+上传策略配置文件 upload.conf 内容为：
 ```
 {
     "scope": "tonypublic"
