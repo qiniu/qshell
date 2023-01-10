@@ -8,8 +8,18 @@
 qshell prefop <PersistentId>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell prefop -h 
+
+// 详细文档（此文档）
+$ qshell prefop --doc
+```
+
 # 鉴权
-无
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
 - PersistentId：持久化处理的 Id【必选】

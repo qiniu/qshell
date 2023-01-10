@@ -8,8 +8,18 @@
 qshell copy [--overwrite] <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell copy -h 
+
+// 详细文档（此文档）
+$ qshell copy --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
 - SrcBucket: 源空间名称 【必选】
@@ -26,17 +36,17 @@ qshell copy [--overwrite] <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]
 3 不支持跨存储区域复制文件, SrcBucket, DestBucket必须在统一存储区域
 
 # 描述
-1 复制`if-pbl`空间中的`qiniu.jpg`，并保存在`if-pbl`中，新副本文件名为`2015/01/19/qiniu.jpg`
+1 复制 `if-pbl` 空间中的 `qiniu.jpg`，并保存在 `if-pbl` 中，新副本文件名为 `2015/01/19/qiniu.jpg`
 ```
 $ qshell copy if-pbl qiniu.jpg if-pbl -k 2015/01/19/qiniu.jpg
 ```
 
-2 复制`if-pbl`空间中的`qiniu.jpg`，并保存在`if-pri`中，新副本文件名和原文件名相同
+2 复制 `if-pbl` 空间中的 `qiniu.jpg`，并保存在 `if-pri` 中，新副本文件名和原文件名相同
 ```
 $ qshell copy if-pbl qiniu.jpg if-pri
 ```
 
-3 复制`if-pbl`空间中的`qiniu.jpg`，并保存到`if-pri`空间中，保存 Key 为：`qiniu_pri.jpg`，由于`if-pri`已有文件`qiniu_pri.jpg`，所以加上选项`--overwrite`强制覆盖
+3 复制 `if-pbl` 空间中的 `qiniu.jpg`，并保存到 `if-pri` 空间中，保存 Key 为：`qiniu_pri.jpg`，由于 `if-pri` 已有文件 `qiniu_pri.jpg`，所以加上选项 `--overwrite` 强制覆盖
 ```
 $ qshell copy --overwrite if-pbl qiniu.jpg if-pri -k qiniu_pri.jpg
 ```

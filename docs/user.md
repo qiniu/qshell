@@ -6,11 +6,23 @@
 qshell user <子命令>
 ``` 
 
-# 帮助
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
 ```
-qshell user -h
+// 简单描述
+$ qshell user -h 
+
+// 详细文档（此文档）
+$ qshell user --doc
+
+// 子命令示例
+$ qshell user cu -h
+$ qshell user cu --doc
 ```
-如果想查看子命令的帮助信息，比如 cu 子命令，可以使用 `qshell user cu -h`
+
+# 鉴权
+无
+
 
 # 子命令
 user的字命令有：

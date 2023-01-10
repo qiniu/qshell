@@ -6,9 +6,22 @@
 qshell get <Bucket> <Key> [-o <OutFile>]
 ``` 
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell get -h 
+
+// 详细文档（此文档）
+$ qshell get --doc
+```
+
+# 鉴权
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
+
 # 参数
-- Bucket：存储空间 【必选】
-- Key：存储空间中的文件名字 【必选】
+- Bucket：空间名。 【必选】
+- Key：存储空间中的文件名字。 【必选】
 
 # 选项
 - -o/--outfile：保存在本地的文件路径；不指定，保存在当前文件夹，文件名使用存储空间中的名字【可选】

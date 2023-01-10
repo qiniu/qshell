@@ -7,11 +7,21 @@
 qshell expire <Bucket> <Key> <DeleteAfterDays>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell expire -h 
+
+// 详细文档（此文档）
+$ qshell expire --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
-- Bucket：空间名称，可以为公开空间或者私有空间【必选】
+- Bucket：空间名，可以为公开空间或者私有空间【必选】
 - Key：空间中的文件名【必选】
 - DeleteAfterDays：给文件指定的新过期时间，范围：>=0，0：取消过期时间。单位为：天【必选】
 

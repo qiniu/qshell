@@ -14,14 +14,24 @@ qshell cdnrefresh --dirs -i <DirListFile>
 
 注意需要刷新的目录，必须以 `/` 结尾。如果没有制定输入文件 <UrlListFile> 默认从终端读取输入内容
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell cdnrefresh -h 
+
+// 详细文档（此文档）
+$ qshell cdnrefresh --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
 无
 
 # 选项
-- -i/--input-file：接受一个文件参数，文件内容每行包含一个需要进行刷新的外链。如果没有通过该选项指定文件参数， 则会从标准输入读取内容。每行具体格式如下：【可选】
+- -i/--input-file：指定一个文件，文件内容每行包含一个需要进行刷新的外链。如果没有通过该选项指定文件参数， 则会从标准输入读取内容。每行具体格式如下：【可选】
 ```
 <Url> // <Url>：访问外链，当指定了 -r/--dirs 选项时，Url 需为目录外联；未指定时，Url 需为文件外联
 ```

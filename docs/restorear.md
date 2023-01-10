@@ -12,8 +12,21 @@
 qshell restorear <Bucket> <Key> <FreezeAfterDays> [flags]
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell reqid -h 
+
+// 详细文档（此文档）
+$ qshell reqid --doc
+```
+
+# 鉴权
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
+
 # 参数
-- Bucket: 源空间名称 【必须】
+- Bucket: 空间名 【必须】
 - Key: 源文件名称 【必须】
 - FreezeAfterDays: 恢复的有效期，单位：天。 【必须】
 

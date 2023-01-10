@@ -8,8 +8,18 @@
 qshell pfop [--pipeline <Pipeline>] <Bucket> <Key> <Fops>
 ``` 
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell pfop -h 
+
+// 详细文档（此文档）
+$ qshell pfop --doc
+```
+
 # 参数
-- Bucket：空间名称，可以为公开空间或者私有空间【必选】
+- Bucket：空间名，可以为公开空间或者私有空间【必选】
 - Key：空间中文件的名称【必选】
 - Fops：数据处理命令列表，以;分隔，可以指定多个数据处理命令。
   如： `avthumb/mp4|saveas/cWJ1Y2tldDpxa2V5;avthumb/flv|saveas/cWJ1Y2tldDpxa2V5Mg==`，是将上传的视频文件同时转码成mp4格式和flv格式后另存。

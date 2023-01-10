@@ -5,6 +5,19 @@
 ```
 qshell unzip <QiniuZipFilePath> [<UnzipToDir>]
 ```
+
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell unzip -h 
+
+// 详细文档（此文档）
+$ qshell unzip --doc
+```
+
+# 鉴权
+无
  
 # 参数
 - QiniuZipFilePath：zip 文件路径。 【必须】

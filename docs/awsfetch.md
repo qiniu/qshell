@@ -12,6 +12,19 @@
 qshell awsfetch [-p <Prefix>][-n <maxKeys>][-m <ContinuationToken>][-c <threadCount>][-u <QiniuUpHost>] -S <AwsSecretKey> -A <AwsID> [-s <SuccessList>][-e <FailureList>] <AwsBucket> <AwsRegion> <QiniuBucket>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell awsfetch -h 
+
+// 详细文档（此文档）
+$ qshell awsfetch --doc
+```
+
+# 鉴权
+无
+
 # 参数
 - AwsBucket: 亚马逊存储空间名称。【必选】
 - AwsRegion: 亚马逊存储空间所在的地区。【必选】

@@ -6,11 +6,21 @@
 qshell mkbucket <Bucket> [--region Region] [--private]
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell mkbucket -h 
+
+// 详细文档（此文档）
+$ qshell mkbucket --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
-- Bucket： 空间名称，可以为私有空间或者公开空间名称 【必选】
+- Bucket：空间名，可以为私有空间或者公开空间名称 【必选】
 
 # 选项
 - --region：指定创建 bucket 所在的区域；z0：华东，z1：华北，z2：华南，na0：北美，as0：东南亚(具体参考：https://developer.qiniu.com/kodo/1671/region-endpoint-fq)；默认为 z0。【可选】

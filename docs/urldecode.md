@@ -6,6 +6,19 @@
 qshell urldecode <DataToDecode>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell urldecode -h 
+
+// 详细文档（此文档）
+$ qshell urldecode --doc
+```
+
+# 鉴权
+无
+
 # 参数
 - DataToDecode：待解码字符串。 【必须】
 

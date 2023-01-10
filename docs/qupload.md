@@ -7,8 +7,18 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
 <LocalUploadConfig>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell qupload -h 
+
+// 详细文档（此文档）
+$ qshell qupload --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey`, `SecretKey` 和 `Name` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
 - LocalUploadConfig：数据同步的配置文件，该配置文件里面包含了一些诸如本地同步目录，目标空间名称等信息，详情参考配置文件的讲解 【必选】

@@ -12,11 +12,21 @@ qshell rput [--overwrite] [--v2] [--mimetype <MimeType>] [--callback-urls <Callb
 
 其中 `Overwrite`，`MimeType`，`StorageType` (0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储)参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell rput -h 
+
+// 详细文档（此文档）
+$ qshell rput --doc
+```
+
 # 鉴权
-需要在使用了`account`设置了`AccessKey`, `SecretKey`和`Name`的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
-- Bucket：七牛空间名称，可以为公开空间或私有空间。 【必选】
+- Bucket：空间名，可以为公开空间或私有空间。 【必选】
 - Key: 文件保存在七牛空间的名称。 【必选】
 - LocalFile：本地文件的路径。 【必选】
 

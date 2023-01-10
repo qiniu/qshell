@@ -6,6 +6,19 @@
 qshell alilistbucket <DataCenter> <Bucket> <AccessKeyId> <AccessKeySecret> [Prefix] <ListBucketResultFile>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell alilistbucket -h 
+
+// 详细文档（此文档）
+$ qshell alilistbucket --doc
+```
+
+# 鉴权
+无
+
 # 参数
 - DataCenter：阿里云 OSS 空间所在的数据中心域名。【必选】
 - Bucket：阿里云 OSS 空间名称，可以为公开空间或私有空间。【必选】

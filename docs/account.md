@@ -16,6 +16,19 @@ qshell account
 qshell account [--overwrite | -w] <Your AccessKey> <Your SecretKey> <Your Account Name>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell account -h 
+
+// 详细文档（此文档）
+$ qshell account --doc
+```
+
+# 鉴权
+无
+
 # 参数
 - AccessKey：七牛账号对应的 AccessKey [获取](https://portal.qiniu.com/user/key) 。【必选】
 - SecretKey：七牛账号对应的 SecretKey [获取](https://portal.qiniu.com/user/key) 。【必选】

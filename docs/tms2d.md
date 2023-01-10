@@ -6,6 +6,19 @@
 qshell tms2d <TimestampInMilliSeconds>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell tms2d -h 
+
+// 详细文档（此文档）
+$ qshell tms2d --doc
+```
+
+# 鉴权
+无
+
 # 参数
 - TimestampInMilliSeconds：以毫秒（ms）为单位的 Unix 时间戳。【必选】
 

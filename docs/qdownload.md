@@ -14,8 +14,18 @@
 qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell qdownload -h 
+
+// 详细文档（此文档）
+$ qshell qdownload --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey`, `SecretKey` 和 `Name` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
 - LocalDownloadConfig：本地下载的配置文件，内容包括要下载的文件所在空间，文件前缀等信息，具体参考配置文件说明 【必选】
@@ -50,7 +60,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 
 字段说明：
 
-- bucket：空间名称 【必选】
+- bucket：空间名 【必选】
 - dest_dir：本地数据备份路径，为全路径，默认：当前路径 【可选】
 - prefix：只同步指定前缀的文件，默认为空 【可选】
 - suffixes：只同步指定后缀的文件，默认为空 【可选】

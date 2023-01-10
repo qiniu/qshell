@@ -12,6 +12,19 @@
 qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <CallbackUrl>][-e <FailureList>][-t <DownloadHostHeader>][-g <StorageType>][-s <SuccessList>][-c <ThreadCount>] <Bucket>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell abfetch -h 
+
+// 详细文档（此文档）
+$ qshell abfetch --doc
+```
+
+# 鉴权
+无
+
 # 参数
 - Bucket：空间名，可以为公开空间或私有空间。 【必选】
 

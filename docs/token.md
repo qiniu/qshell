@@ -1,6 +1,15 @@
 # 简介
 `token` 是用来计算 `Qbox token`, `Qiniu Token`, `Upload Token` 的命令。
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell token -h 
+
+// 详细文档（此文档）
+$ qshell token --doc
+```
 
 
 # QBox token

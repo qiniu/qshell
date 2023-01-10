@@ -8,6 +8,19 @@
 qshell reqid <ReqId>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell reqid -h 
+
+// 详细文档（此文档）
+$ qshell reqid --doc
+```
+
+# 鉴权
+无
+
 # 参数
 - ReqId：待解码的X-Reqid，注意是最后的一部分，比如对于 `Reqid: shared.ffmpeg.62kAAIYB06brhtsT`，这里提供的值是 `62kAAIYB06brhtsT`。 【必须】
 

@@ -9,13 +9,23 @@
 qshell rename [--overwrite] <Bucket> <SrcKey> <DestKey>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell rename -h 
+
+// 详细文档（此文档）
+$ qshell rename --doc
+```
+
 # 鉴权
-需要在使用了`account`设置了`AccessKey`和`SecretKey`的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
-- Bucket: 源空间名称
-- SrcKey: 源文件名称
-- DestKey: 目标文件名称
+- Bucket: 空间名 【必须】
+- SrcKey: 原文件名称 【必须】
+- DestKey: 目标文件名称 【必须】
 
 # 示例
 1 将空间 `if-pbl` 中的 `qiniu.jpg` 重命名为 `qiniu_new.jpg`

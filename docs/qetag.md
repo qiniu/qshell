@@ -8,6 +8,16 @@
 qshell qetag <LocalFilePath>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell qetag -h 
+
+// 详细文档（此文档）
+$ qshell qetag --doc
+```
+
 # 参数
 - LocalFilePath：本地文件路径
 

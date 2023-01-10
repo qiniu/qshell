@@ -13,11 +13,21 @@ Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser
 qshell listbucket2 [-m|--marker <Marker>] [--limit <Limit>] [--prefix <Prefix> | --suffixes <suffixes1,suffixes2>] [--start <StartDate>] [--max-retry <RetryCount>][--end <EndDate>] <Bucket> [--readable] [ [-a] -o <ListBucketResultFile>]
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell listbucket2 -h 
+
+// 详细文档（此文档）
+$ qshell listbucket2 --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey`, `SecretKey` 和  `Name` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
-- Bucket： 空间名称，可以为私有空间或者公开空间名称。【必选】
+- Bucket：空间名，可以为私有空间或者公开空间名称。【必选】
   
 # 选项
 - --prefix： 七牛空间中文件名的前缀，该参数为可选参数，如果不指定则获取空间中所有的文件列表。 【可选】
