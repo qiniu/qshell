@@ -6,6 +6,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"net"
 	"net/http"
@@ -83,7 +84,8 @@ func (g *getDownloader) download(host *host.Host, info *ApiInfo) (*http.Response
 	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
 	if len(info.ServerFileHash) != 0 && response != nil && response.Header != nil {
 		etag := fmt.Sprintf(response.Header.Get("Etag"))
-		if len(etag) > 0 && etag != fmt.Sprintf("\"%s\"", info.ServerFileHash) {
+		etag = utils.ParseEtag(etag)
+		if len(etag) > 0 && etag != info.ServerFileHash {
 			return nil, data.NewEmptyError().AppendDescF("file has change, hash before:%s now:%s", info.ServerFileHash, etag)
 		}
 	}
