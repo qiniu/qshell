@@ -59,7 +59,7 @@ func (g *getDownloader) download(host *host.Host, info *ApiInfo) (*http.Response
 	}
 
 	// 设置断点续传
-	if info.FromBytes >= 0 && info.ToBytes >= 0 {
+	if info.FromBytes >= 0 && info.ToBytes >= 0 && (info.FromBytes+info.ToBytes) > 0 {
 		if info.FromBytes > 0 && info.FromBytes == info.ToBytes {
 			return &http.Response{
 				Status:     "already download",
@@ -82,7 +82,7 @@ func (g *getDownloader) download(host *host.Host, info *ApiInfo) (*http.Response
 	}
 	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
 	if len(info.ServerFileHash) != 0 && response != nil && response.Header != nil {
-		etag := response.Header.Get("Etag")
+		etag := fmt.Sprintf(response.Header.Get("Etag"))
 		if len(etag) > 0 && etag != fmt.Sprintf("\"%s\"", info.ServerFileHash) {
 			return nil, data.NewEmptyError().AppendDescF("file has change, hash before:%s now:%s", info.ServerFileHash, etag)
 		}
