@@ -146,6 +146,14 @@ func Download(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 		}
 	}
 
+	// 检查 fromBytes 和 fileSize
+	if (info.ServerFileSize+f.fromBytes) > 0 && f.fromBytes >= info.ServerFileSize {
+		log.WarningF("download, check fromBytes error: fromBytes bigger than file size, remove temp file and continue to download")
+		if cErr := f.cleanTempFile(); cErr != nil {
+			return res, cErr
+		}
+	}
+
 	// 下载
 	err = download(f, info)
 	if err != nil {
