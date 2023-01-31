@@ -17,6 +17,7 @@ type DownloadCfg struct {
 	Suffixes               string `json:"suffixes,omitempty"`
 	IoHost                 string `json:"io_host,omitempty"`
 	Public                 bool   `json:"public,omitempty"`
+	CheckSize              bool   `json:"check_size,omitempty"`
 	CheckHash              bool   `json:"check_hash,omitempty"`
 	EnableSlice            bool   `json:"enable_slice"`
 	SliceFileSizeThreshold int64  `json:"slice_file_size_threshold"`

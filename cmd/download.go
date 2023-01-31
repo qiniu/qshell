@@ -110,7 +110,8 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 	cmd.Flags().StringVarP(&info.ToFile, "outfile", "o", "", "save file as specified by this option")
 	cmd.Flags().StringVarP(&info.Domain, "domain", "", "", "domain of request")
-	cmd.Flags().BoolVarP(&info.CheckHash, "check-hash", "", false, "check the consistency of the hash of the local file and the server file after downloading.")
+	cmd.Flags().BoolVarP(&info.CheckHash, "check-hash", "", false, "check the consistency of the hash between the local file and the server file. the download fails while the file is inconsistent.")
+	cmd.Flags().BoolVarP(&info.CheckHash, "check-size", "", false, "check the consistency of the file size between the local file and the server file. the download fails while the file is inconsistent.")
 	cmd.Flags().BoolVarP(&info.UseGetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")
 	cmd.Flags().BoolVarP(&info.EnableSlice, "enable-slice", "", false, "file download using slices, you need to pay attention to the setting of --slice-file-size-threshold. default is false")
 	cmd.Flags().Int64VarP(&info.SliceFileSizeThreshold, "slice-file-size-threshold", "", 40*utils.MB, "the file size threshold that download using slices. when you use --enable-slice option, files larger than this size will be downloaded using slices. Unit: B")

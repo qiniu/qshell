@@ -26,8 +26,10 @@ type sliceDownloader struct {
 	SliceSize              int64  `json:"slice_size"`
 	FileHash               string `json:"file_hash"`
 	UseGetFileApi          bool   `json:"use_get_file_api"`
+	ToFile                 string `json:"-"`
+	FileEncoding           string `json:"-"`
+	ConcurrentCount        int    `json:"-"`
 	slicesDir              string
-	concurrentCount        int
 	totalSliceCount        int64
 	slices                 chan slice
 	downloadError          *data.CodeError
@@ -48,7 +50,7 @@ func (s *sliceDownloader) setDownloadError(err *data.CodeError) {
 	s.downloadError = err
 }
 
-func (s *sliceDownloader) Download(info *ApiInfo) (response *http.Response, err *data.CodeError) {
+func (s *sliceDownloader) Download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {
 	err = s.initDownloadStatus(info)
 	if err != nil {
 		return
@@ -59,16 +61,12 @@ func (s *sliceDownloader) Download(info *ApiInfo) (response *http.Response, err 
 
 // 初始化状态
 // 加载本地下载配置文件，没有则创建
-func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
-	s.slices = make(chan slice, s.concurrentCount)
-	s.FileHash = info.ServerFileHash
-	toFile, err := filepath.Abs(info.ToFile)
-	if err != nil {
-		return data.NewEmptyError().AppendDescF("slice download, get abs file path:%s error:%v", info.ToFile, err)
-	}
+func (s *sliceDownloader) initDownloadStatus(info *DownloadApiInfo) *data.CodeError {
+	s.slices = make(chan slice, s.ConcurrentCount)
+	s.FileHash = info.FileHash
 
 	// 临时文件夹
-	s.slicesDir = filepath.Join(toFile + ".tmp.slices")
+	s.slicesDir = filepath.Join(s.ToFile + ".tmp.slices")
 
 	if s.SliceSize <= 0 {
 		s.SliceSize = 4 * utils.MB
@@ -77,8 +75,8 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 		s.SliceSize = 512 * utils.KB
 	}
 
-	if s.concurrentCount <= 0 {
-		s.concurrentCount = 10
+	if s.ConcurrentCount <= 0 {
+		s.ConcurrentCount = 10
 	}
 
 	// 配置文件
@@ -107,16 +105,17 @@ func (s *sliceDownloader) initDownloadStatus(info *ApiInfo) *data.CodeError {
 	s.downloadError = nil
 	s.currentReadSliceIndex = 0
 	s.currentReadSliceOffset = 0
-	if info.FromBytes > 0 {
-		s.currentReadSliceIndex = info.FromBytes / s.SliceSize
-		s.currentReadSliceOffset = info.FromBytes - s.currentReadSliceIndex*s.SliceSize
+	if info.RangeFromBytes > 0 {
+		s.currentReadSliceIndex = info.RangeFromBytes / s.SliceSize
+		s.currentReadSliceOffset = info.RangeFromBytes - s.currentReadSliceIndex*s.SliceSize
 	}
 	return nil
 }
 
 // 并发下载
-func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err *data.CodeError) {
+func (s *sliceDownloader) download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {
 
+	log.ErrorF("=== info:%+v", info)
 	from := s.currentReadSliceIndex * s.SliceSize
 	index := s.currentReadSliceIndex
 	go func() {
@@ -124,11 +123,11 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 		for ; ; index++ {
 			from = index * s.SliceSize
 			to = from + s.SliceSize - 1
-			if from >= info.ServerFileSize {
+			if from >= info.FileSize {
 				break
 			}
-			if to > info.ServerFileSize {
-				to = info.ServerFileSize
+			if to >= info.FileSize && info.FileSize > 0 {
+				to = info.FileSize - 1
 			}
 			s.slices <- slice{
 				index:     index,
@@ -147,7 +146,7 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 		return nil, err
 	}
 
-	for i := 0; i < s.concurrentCount; i++ {
+	for i := 0; i < s.ConcurrentCount; i++ {
 		go func() {
 			for sl := range s.slices {
 				if workspace.IsCmdInterrupt() {
@@ -167,7 +166,7 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 		}()
 	}
 
-	responseBodyContentLength := info.ServerFileSize - info.FromBytes
+	responseBodyContentLength := info.FileSize - info.RangeFromBytes
 	responseHeader := http.Header{}
 	responseHeader.Add("Content-Length", fmt.Sprintf("%d", responseBodyContentLength))
 	return &http.Response{
@@ -179,7 +178,7 @@ func (s *sliceDownloader) download(info *ApiInfo) (response *http.Response, err 
 	}, nil
 }
 
-func (s *sliceDownloader) downloadSliceWithRetry(info *ApiInfo, sl slice) *data.CodeError {
+func (s *sliceDownloader) downloadSliceWithRetry(info *DownloadApiInfo, sl slice) *data.CodeError {
 	var downloadErr *data.CodeError = nil
 	for i := 0; i < 3; i++ {
 		downloadErr = s.downloadSlice(info, sl)
@@ -190,9 +189,9 @@ func (s *sliceDownloader) downloadSliceWithRetry(info *ApiInfo, sl slice) *data.
 	return downloadErr
 }
 
-func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError {
+func (s *sliceDownloader) downloadSlice(info *DownloadApiInfo, sl slice) *data.CodeError {
 	toFile := filepath.Join(s.slicesDir, fmt.Sprintf("%d", sl.index))
-	f, err := createDownloadFiles(toFile, info.FileEncoding)
+	f, err := createDownloadFiles(toFile, s.FileEncoding)
 	if err != nil {
 		return err
 	}
@@ -212,25 +211,23 @@ func (s *sliceDownloader) downloadSlice(info *ApiInfo, sl slice) *data.CodeError
 	f.fromBytes = sl.FromBytes + f.fromBytes
 
 	log.DebugF("download slice, index:%d fromBytes:%d toBytes:%d", sl.index, sl.FromBytes, sl.ToBytes)
-	return download(f, &ApiInfo{
-		Bucket:               info.Bucket,
-		Key:                  info.Key,
-		IsPublic:             info.IsPublic,
-		HostProvider:         info.HostProvider,
-		DestDir:              info.DestDir,
-		ToFile:               toFile,
-		Referer:              info.Referer,
-		FileEncoding:         info.FileEncoding,
-		ServerFilePutTime:    0,
-		ServerFileSize:       s.SliceSize,
-		ServerFileHash:       s.FileHash,
-		CheckHash:            false,
-		FromBytes:            f.fromBytes,
-		ToBytes:              sl.ToBytes,
-		RemoveTempWhileError: false,
-		UseGetFileApi:        info.UseGetFileApi,
-		Progress:             nil,
+	err = downloadTempFileWithDownloader(&downloaderFile{}, f, &DownloadApiInfo{
+		Url:            info.Url,
+		Host:           info.Host,
+		Referer:        info.Referer,
+		RangeFromBytes: f.fromBytes,
+		RangeToBytes:   sl.ToBytes,
+		CheckSize:      info.CheckSize,
+		FileSize:       info.FileSize,
+		CheckHash:      info.CheckHash,
+		FileHash:       info.FileHash,
+		Progress:       nil,
 	})
+	if err != nil {
+		return err
+	}
+
+	return renameTempFile(f)
 }
 
 func (s *sliceDownloader) Read(p []byte) (int, error) {
