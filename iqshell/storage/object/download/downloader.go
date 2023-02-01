@@ -278,9 +278,9 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 	if file, err := utils.GetNetworkFileInfo(info.Url); err != nil {
 		return err
 	} else if info.CheckHash && info.FileHash != file.Hash {
-		return data.NewEmptyError().AppendDescF("file hash doesn't match, %s but except:%s", file.Hash, info.FileHash)
+		return data.NewEmptyError().AppendDescF("file(%s) hash doesn't match, %s but except:%s", info.Url, file.Hash, info.FileHash)
 	} else if info.CheckSize && info.FileSize != file.Size {
-		return data.NewEmptyError().AppendDescF("file size doesn't match, %d but except:%d", file.Size, info.FileSize)
+		return data.NewEmptyError().AppendDescF("file(%s) size doesn't match, %d but except:%d", info.Url, file.Size, info.FileSize)
 	} else {
 		info.FileSize = file.Size
 		info.FileHash = file.Hash

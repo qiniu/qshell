@@ -65,6 +65,7 @@ https://domain/hello7_test.json
 `, "domain", BucketDomain)
 
 	Key         = "hello1_test.json"
+	ImageKey    = "image.png"
 	KeyNotExist = "hello_mock.json"
 	OriginKeys  = []string{"hello1.json", "hello2.json", "hello3.json", "hello4.json", "hello5.json", "hello6.json", "hello7.json"}
 	Keys        = []string{"hello1_test.json", "hello2_test.json", "hello3_test.json", "hello4_test.json", "hello5_test.json", "hello6_test.json", "hello7_test.json"}

@@ -9,6 +9,52 @@ import (
 	"testing"
 )
 
+func TestGetImage(t *testing.T) {
+	resultPath, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result path error:", err)
+	}
+	path := filepath.Join(resultPath, test.ImageKey)
+	_, errs := test.RunCmdWithError("get", test.Bucket, test.ImageKey,
+		"--public",
+		"-o", path)
+	defer test.RemoveFile(path)
+
+	if len(errs) > 0 {
+		t.Fail()
+	}
+	if !test.IsFileHasContent(path) {
+		t.Fatal("get file content can't empty")
+	}
+}
+
+func TestGetImageAndCheck(t *testing.T) {
+	resultPath, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result path error:", err)
+	}
+	path := filepath.Join(resultPath, test.ImageKey)
+
+	// 因为有源站域名，所以经过重试下载会成功
+	result, errs := test.RunCmdWithError("get", test.Bucket, test.ImageKey,
+		"--check-size",
+		"--public",
+		"-d",
+		"-o", path)
+	defer test.RemoveFile(path)
+
+	if !strings.Contains(result, "size doesn't match") {
+		t.Fail()
+	}
+
+	if len(errs) > 0 {
+		t.Fail()
+	}
+	if !test.IsFileHasContent(path) {
+		t.Fatal("get file content can't empty")
+	}
+}
+
 func TestGet(t *testing.T) {
 	TestCopy(t)
 
