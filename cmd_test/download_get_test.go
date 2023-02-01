@@ -29,6 +29,48 @@ func TestGet(t *testing.T) {
 	}
 }
 
+func TestGetWithCheckSize(t *testing.T) {
+	TestCopy(t)
+
+	resultPath, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result path error:", err)
+	}
+	path := filepath.Join(resultPath, test.Key)
+	_, errs := test.RunCmdWithError("get", test.Bucket, test.Key,
+		"--check-size",
+		"-o", path)
+	defer test.RemoveFile(path)
+
+	if len(errs) > 0 {
+		t.Fail()
+	}
+	if !test.IsFileHasContent(path) {
+		t.Fatal("get file content can't empty")
+	}
+}
+
+func TestGetWithCheckHash(t *testing.T) {
+	TestCopy(t)
+
+	resultPath, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result path error:", err)
+	}
+	path := filepath.Join(resultPath, test.Key)
+	_, errs := test.RunCmdWithError("get", test.Bucket, test.Key,
+		"--check-hash",
+		"-o", path)
+	defer test.RemoveFile(path)
+
+	if len(errs) > 0 {
+		t.Fail()
+	}
+	if !test.IsFileHasContent(path) {
+		t.Fatal("get file content can't empty")
+	}
+}
+
 func TestGetWithDomain(t *testing.T) {
 	TestCopy(t)
 
