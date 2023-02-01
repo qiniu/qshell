@@ -57,7 +57,7 @@ func (d *downloaderFile) Download(info *DownloadApiInfo) (response *http.Respons
 		if response == nil {
 			continue
 		}
-		
+
 		if (response.StatusCode > 399 && response.StatusCode < 500) ||
 			response.StatusCode == 612 || response.StatusCode == 631 {
 			log.DebugF("Simple Stop download %s, because %+v", info.Url, err)
