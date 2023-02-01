@@ -217,9 +217,9 @@ func (s *sliceDownloader) downloadSlice(info *DownloadApiInfo, sl slice) *data.C
 		Referer:        info.Referer,
 		RangeFromBytes: f.fromBytes,
 		RangeToBytes:   sl.ToBytes,
-		CheckSize:      info.CheckSize,
+		CheckSize:      false,
 		FileSize:       info.FileSize,
-		CheckHash:      info.CheckHash,
+		CheckHash:      false,
 		FileHash:       info.FileHash,
 		Progress:       nil,
 	})

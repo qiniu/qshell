@@ -157,14 +157,6 @@ func Download(info *DownloadActionInfo) (res *DownloadActionResult, err *data.Co
 		}
 	}
 
-	// 检查 fromBytes 和 fileSize
-	if (info.ServerFileSize+f.fromBytes) > 0 && f.fromBytes >= info.ServerFileSize {
-		errorDesc := "download, check fromBytes error: fromBytes bigger than file size, should remove temp file and retry."
-		log.Error(errorDesc)
-		_ = f.cleanTempFile()
-		return nil, data.NewEmptyError().AppendDesc(errorDesc)
-	}
-
 	// 下载
 	err = download(f, info)
 	if err != nil {
@@ -269,6 +261,7 @@ func downloadTempFile(fInfo *fileInfo, info *DownloadActionInfo) (err *data.Code
 		}
 
 		info.HostProvider.Freeze(h)
+		log.DebugF("download freeze host:%s", hostString)
 	}
 	return err
 }
@@ -291,6 +284,19 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 		info.FileHash = file.Hash
 	}
 
+	// 检查 fromBytes 和 fileSize，fromBytes 不能 > fileSize
+	if info.RangeFromBytes > 0 {
+		if info.RangeFromBytes > info.FileSize || info.RangeFromBytes > info.RangeToBytes {
+			errorDesc := "download, check fromBytes error: fromBytes bigger than file size, should remove temp file and retry."
+			log.Error(errorDesc)
+			_ = fInfo.cleanTempFile()
+			return data.NewEmptyError().AppendDesc(errorDesc)
+		} else if info.RangeFromBytes == info.FileSize || info.RangeFromBytes == info.RangeToBytes {
+			// 已经完全下载，只不过未修改名称
+			return nil
+		}
+	}
+
 	response, err := dl.Download(info)
 	if err != nil {
 		return data.NewEmptyError().AppendDesc(" Download error:" + err.Error())
@@ -307,7 +313,7 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 
 	if response != nil && response.Body != nil {
 		if info.Progress != nil {
-			info.Progress.SetFileSize(response.ContentLength + info.RangeFromBytes)
+			info.Progress.SetFileSize(info.FileSize)
 			info.Progress.SendSize(info.RangeFromBytes)
 			info.Progress.Start()
 		}
