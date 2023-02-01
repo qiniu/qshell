@@ -224,8 +224,10 @@ func downloadTempFile(fInfo *fileInfo, info *DownloadActionInfo) (err *data.Code
 
 		h, pErr := info.HostProvider.Provide()
 		if h == nil || pErr != nil {
-			err = data.NewEmptyError().AppendDescF("no available host:%+v", pErr)
-			log.DebugF("Stop download [%s:%s] => %s, because no available host", info.Bucket, info.Key, info.ToFile)
+			if err == nil {
+				err = data.NewEmptyError().AppendDescF("no available host:%+v", pErr)
+			}
+			log.DebugF("Stop download [%s:%s] => %s, because %v", info.Bucket, info.Key, info.ToFile, err)
 			break
 		}
 

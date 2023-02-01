@@ -151,7 +151,7 @@ func GetNetworkFileInfo(srcResUrl string) (*NetworkFileInfo, *data.CodeError) {
 
 	etag := resp.Header.Get("ETag")
 	if contentLength != "" {
-		file.Hash = etag
+		file.Hash = ParseEtag(etag)
 	} else {
 		return nil, data.NewEmptyError().AppendDescF("network file(%s) hasn't Etag", srcResUrl)
 	}
