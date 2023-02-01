@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -46,6 +47,27 @@ type downloaderFile struct {
 }
 
 func (d *downloaderFile) Download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {
+	for times := 0; times < 2; times++ {
+		response, err = d.download(info)
+		log.DebugF("Simple Download[%d] %s, err:%+v", times, info.Url, err)
+		if err == nil {
+			break
+		}
+
+		if response == nil {
+			continue
+		}
+		
+		if (response.StatusCode > 399 && response.StatusCode < 500) ||
+			response.StatusCode == 612 || response.StatusCode == 631 {
+			log.DebugF("Simple Stop download %s, because %+v", info.Url, err)
+			break
+		}
+	}
+	return
+}
+
+func (d *downloaderFile) download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {
 	headers := http.Header{}
 	if len(info.Host) > 0 {
 		headers.Add("Host", info.Host)

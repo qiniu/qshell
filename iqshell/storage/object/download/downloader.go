@@ -267,12 +267,29 @@ func downloadTempFile(fInfo *fileInfo, info *DownloadActionInfo) (err *data.Code
 			log.DebugF("Stop download [%s:%s] => %s, because [%+v]", info.Bucket, info.Key, info.ToFile, err)
 			break
 		}
+
+		info.HostProvider.Freeze(h)
 	}
 	return err
 }
 
 func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *DownloadApiInfo) *data.CodeError {
-	// TODO: 下载之前先验证文件大小
+	// 下载之前先验证文件大小，两点考虑：
+	// 1. 文件可能被更换，非预期文件
+	// 2. 文件开启瘦身等，预期文件
+	// 上面两点无法区分，但必须能让用户可以下载预期文件
+	// 不检测文件信息时，使用下载的文件信息作为标准，可以保证下载成功
+	// 此方案有个问题：如果获取文件信息之后，下载之前文件改变了，下载仍会失败（此情景概率极低，且用户重新下载即可）。
+	if file, err := utils.GetNetworkFileInfo(info.Url); err != nil {
+		return err
+	} else if info.CheckHash && info.FileHash != file.Hash {
+		return data.NewEmptyError().AppendDescF("file hash doesn't match, %s but except:%s", file.Hash, info.FileHash)
+	} else if info.CheckSize && info.FileSize != file.Size {
+		return data.NewEmptyError().AppendDescF("file size doesn't match, %d but except:%d", file.Size, info.FileSize)
+	} else {
+		info.FileSize = file.Size
+		info.FileHash = file.Hash
+	}
 
 	response, err := dl.Download(info)
 	if err != nil {
