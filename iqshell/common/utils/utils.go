@@ -153,14 +153,17 @@ func GetFileLineCount(filePath string) (totalCount int64) {
 }
 
 // Encode URL:
-//	 http://host/url
-//	 https://host/url
+//
+//	http://host/url
+//	https://host/url
+//
 // Path:
-//	 AbsolutePath	(Must start with '/')
-//	 Pid:RelPath	(Pid.len = 16)
-//	 Id: 			(Id.len = 16)
-//	 :LinkId:RelPath
-//	 :LinkId
+//
+//	AbsolutePath	(Must start with '/')
+//	Pid:RelPath	(Pid.len = 16)
+//	Id: 			(Id.len = 16)
+//	:LinkId:RelPath
+//	:LinkId
 func Encode(uri string) string {
 
 	size := len(uri)
