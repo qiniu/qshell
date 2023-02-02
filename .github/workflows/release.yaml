@@ -13,16 +13,42 @@ jobs:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     strategy:
       matrix:
-        goos: [linux, windows, darwin]
-        goarch: ["386", amd64, arm, arm64]
-        exclude:  
-          # windows/arm64 , darwin/arm sand darwin/386 seems useless 
-          - goarch: "386"
-            goos: darwin  
-          - goarch: "arm"
+        include:
+          # macOS targets
+          - goarch: amd64
             goos: darwin
-          - goarch: "arm64"
-            goos: windows  
+          - goarch: arm64
+            goos: darwin
+          # Linux targets
+          - goarch: "386"
+            goos: linux
+          - goarch: amd64
+            goos: linux
+          - goarch: arm
+            goos: linux
+          - goarch: arm64
+            goos: linux
+          - goarch: mips
+            goos: linux
+          - goarch: mipsle
+            goos: linux
+          - goarch: mips64
+            goos: linux
+          - goarch: mips64le
+            goos: linux
+          - goarch: loong64
+            goos: linux
+          - goarch: riscv64
+            goos: linux
+          # Windows targets
+          - goarch: "386"
+            goos: windows
+          - goarch: amd64
+            goos: windows
+          - goarch: arm
+            goos: windows
+          - goarch: arm64
+            goos: windows
     steps:
     - uses: actions/checkout@v2
     - name: Set APP_VERSION env
