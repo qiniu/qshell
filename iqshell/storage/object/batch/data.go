@@ -44,6 +44,7 @@ type Operation interface {
 	flow.Work
 
 	ToOperation() (string, *data.CodeError)
+	GetBucket() string
 }
 
 type OperationCreator interface {

@@ -14,6 +14,10 @@ type RestoreArchiveApiInfo struct {
 	FreezeAfterDays int    `json:"freeze_after_days"`
 }
 
+func (r *RestoreArchiveApiInfo) GetBucket() string {
+	return r.Bucket
+}
+
 func (r *RestoreArchiveApiInfo) ToOperation() (string, *data.CodeError) {
 	if len(r.Bucket) == 0 || len(r.Key) == 0 {
 		return "", alert.CannotEmptyError("Restore archive operation bucket or key", "")

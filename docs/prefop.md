@@ -14,6 +14,9 @@ qshell prefop <PersistentId>
 # 参数
 - PersistentId：持久化处理的 Id【必选】
 
+# 选项
+- --bucket: 持久化处理的文件所在的 bucket；公有云可选，私有云当没有配置 api host 时必选。
+
 # 示例
 查询 `z0.58632a1945a2650cfd5fc8b1` 对应的持久化处理结果：
 ```

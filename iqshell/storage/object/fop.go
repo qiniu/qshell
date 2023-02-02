@@ -8,16 +8,21 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 )
 
-func PreFopStatus(persistentId string) (storage.PrefopRet, *data.CodeError) {
-	if len(persistentId) == 0 {
+type PreFopStatusApiInfo struct {
+	Id     string
+	Bucket string // 用于查询 region，私有云必须，公有云可选
+}
+
+func PreFopStatus(info PreFopStatusApiInfo) (storage.PrefopRet, *data.CodeError) {
+	if len(info.Id) == 0 {
 		return storage.PrefopRet{}, alert.CannotEmptyError("persistent id", "")
 	}
 
-	opManager, err := getOperationManager()
+	opManager, err := getOperationManager(info.Bucket)
 	if err != nil {
 		return storage.PrefopRet{}, err
 	}
-	ret, e := opManager.Prefop(persistentId)
+	ret, e := opManager.Prefop(info.Id)
 	return ret, data.ConvertError(e)
 }
 
@@ -43,7 +48,7 @@ func PreFop(info PreFopApiInfo) (string, *data.CodeError) {
 		return "", alert.CannotEmptyError("fops", "")
 	}
 
-	opManager, err := getOperationManager()
+	opManager, err := getOperationManager(info.Bucket)
 	if err != nil {
 		return "", err
 	}
@@ -51,12 +56,21 @@ func PreFop(info PreFopApiInfo) (string, *data.CodeError) {
 	return persistentId, data.ConvertError(e)
 }
 
-func getOperationManager() (*storage.OperationManager, *data.CodeError) {
+func getOperationManager(bucket string) (*storage.OperationManager, *data.CodeError) {
 	mac, err := account.GetMac()
 	if err != nil {
 		return nil, err
 	}
 	cfg := workspace.GetStorageConfig()
 	opManager := storage.NewOperationManager(mac, cfg)
+	if len(bucket) != 0 && (opManager.Cfg.Region == nil || opManager.Cfg.Zone == nil || len(opManager.Cfg.Region.ApiHost) == 0) {
+		if region, e := storage.GetZone(opManager.Mac.AccessKey, bucket); e != nil {
+			return nil, data.ConvertError(e)
+		} else {
+			opManager.Cfg.Region = region
+			opManager.Cfg.Zone = region
+			opManager.Cfg.CentralRsHost = region.RsHost
+		}
+	}
 	return opManager, nil
 }

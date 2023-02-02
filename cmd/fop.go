@@ -20,6 +20,9 @@ var preFopStatusCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.PreFopStatus(cfg, info)
 		},
 	}
+
+	cmd.Flags().StringVarP(&info.Bucket, "bucket", "", "", "the bucket that the fop file in, public cloud is optional, private cloud must be set when no api host is configured.")
+
 	return cmd
 }
 

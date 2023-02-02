@@ -45,23 +45,23 @@ func testUploadDomain() string {
 
 var (
 	BucketNotExist      = "qshell-na0-mock"
-	BucketObjectDomain  = fmt.Sprintf("https://%s/hello1_test.json", BucketDomain)
+	BucketObjectDomain  = fmt.Sprintf("http://%s/hello1_test.json", BucketDomain)
 	BucketObjectDomains = []string{
-		fmt.Sprintf("https://%s/hello1_test.json", BucketDomain),
-		fmt.Sprintf("https://%s/hello2_test.json", BucketDomain),
-		fmt.Sprintf("https://%s/hello3_test.json", BucketDomain),
-		fmt.Sprintf("https://%s/hello4_test.json", BucketDomain),
-		fmt.Sprintf("https://%s/hello5_test.json", BucketDomain),
-		fmt.Sprintf("https://%s/hello6_test.json", BucketDomain),
-		fmt.Sprintf("https://%s/hello7_test.json", BucketDomain),
+		fmt.Sprintf("http://%s/hello1_test.json", BucketDomain),
+		fmt.Sprintf("http://%s/hello2_test.json", BucketDomain),
+		fmt.Sprintf("http://%s/hello3_test.json", BucketDomain),
+		fmt.Sprintf("http://%s/hello4_test.json", BucketDomain),
+		fmt.Sprintf("http://%s/hello5_test.json", BucketDomain),
+		fmt.Sprintf("http://%s/hello6_test.json", BucketDomain),
+		fmt.Sprintf("http://%s/hello7_test.json", BucketDomain),
 	}
-	BucketObjectDomainsString = strings.ReplaceAll(`https://domain/hello1_test.json
-https://domain/hello2_test.json
-https://domain/hello3_test.json
-https://domain/hello4_test.json
-https://domain/hello5_test.json
-https://domain/hello6_test.json
-https://domain/hello7_test.json
+	BucketObjectDomainsString = strings.ReplaceAll(`http://domain/hello1_test.json
+http://domain/hello2_test.json
+http://domain/hello3_test.json
+http://domain/hello4_test.json
+http://domain/hello5_test.json
+http://domain/hello6_test.json
+http://domain/hello7_test.json
 `, "domain", BucketDomain)
 
 	Key         = "hello1_test.json"

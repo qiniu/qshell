@@ -42,6 +42,7 @@ func Delete(cfg *iqshell.Config, info DeleteInfo) {
 		Bucket:          info.Bucket,
 		Key:             info.Key,
 		DeleteAfterDays: 0,
+		IsDeleteAfter:   false,
 	})
 
 	if err != nil || result == nil {
@@ -111,8 +112,9 @@ func BatchDelete(cfg *iqshell.Config, info BatchDeleteInfo) {
 			}
 
 			return &object.DeleteApiInfo{
-				Bucket: info.Bucket,
-				Key:    listObject.Key,
+				Bucket:        info.Bucket,
+				Key:           listObject.Key,
+				IsDeleteAfter: false,
 				Condition: batch.OperationCondition{
 					PutTime: listObject.PutTimeString(),
 				},
@@ -192,6 +194,7 @@ func DeleteAfter(cfg *iqshell.Config, info DeleteAfterInfo) {
 		Bucket:          info.Bucket,
 		Key:             info.Key,
 		DeleteAfterDays: afterDays,
+		IsDeleteAfter:   true,
 	})
 
 	if err != nil || result == nil {
@@ -202,7 +205,11 @@ func DeleteAfter(cfg *iqshell.Config, info DeleteAfterInfo) {
 	}
 
 	if result.IsSuccess() {
-		log.InfoF("Expire Success, [%s:%s], '%s'天后删除", info.Bucket, info.Key, info.AfterDays)
+		if afterDays == 0 {
+			log.InfoF("Expire Success, [%s:%s], cancel expiration time", info.Bucket, info.Key)
+		} else {
+			log.InfoF("Expire Success, [%s:%s], delete after '%s' days", info.Bucket, info.Key, info.AfterDays)
+		}
 	} else {
 		data.SetCmdStatusError()
 		log.ErrorF("Expire Failed, [%s:%s], Code:%d, Error:%s",
@@ -252,6 +259,7 @@ func BatchDeleteAfter(cfg *iqshell.Config, info BatchDeleteInfo) {
 				Bucket:          info.Bucket,
 				Key:             key,
 				DeleteAfterDays: afterDays,
+				IsDeleteAfter:   true,
 			}, nil
 		}).
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {
@@ -262,10 +270,14 @@ func BatchDeleteAfter(cfg *iqshell.Config, info BatchDeleteInfo) {
 				return
 			}
 			if result.IsSuccess() {
-				log.InfoF("Expire Success, [%s:%s], '%d'天后删除", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays)
+				if apiInfo.DeleteAfterDays == 0 {
+					log.InfoF("Expire Success, [%s:%s], cancel expiration time", apiInfo.Bucket, apiInfo.Key)
+				} else {
+					log.InfoF("Expire Success, [%s:%s], delete after '%d' days", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays)
+				}
 			} else {
 				data.SetCmdStatusError()
-				log.ErrorF("Expire Failed, [%s:%s], '%d'天后删除, Code: %d, Error: %s", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays, result.Code, result.Error)
+				log.ErrorF("Expire Failed, [%s:%s], DeleteAfterDays:'%d', Code: %d, Error: %s", apiInfo.Bucket, apiInfo.Key, apiInfo.DeleteAfterDays, result.Code, result.Error)
 			}
 		}).
 		OnError(func(err *data.CodeError) {

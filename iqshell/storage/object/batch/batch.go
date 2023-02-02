@@ -39,7 +39,6 @@ func (info *Info) Check() *data.CodeError {
 	if err := info.Info.Check(); err != nil {
 		return err
 	}
-	info.Force = true
 
 	if info.MinItemsCount < 1 {
 		info.MinItemsCount = 1
@@ -172,6 +171,7 @@ func (h *handler) Start() {
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewWorker(func(workInfoList []*flow.WorkInfo) ([]*flow.WorkRecord, *data.CodeError) {
 
+				operationBucket := ""
 				recordList := make([]*flow.WorkRecord, 0, len(workInfoList))
 				operationStrings := make([]string, 0, len(workInfoList))
 				for _, workInfo := range workInfoList {
@@ -182,12 +182,20 @@ func (h *handler) Start() {
 					if operation, ok := workInfo.Work.(Operation); !ok {
 						return nil, alert.Error("batch WorkerProvider, operation type conv error", "")
 					} else {
+						if len(operationBucket) == 0 {
+							operationBucket = operation.GetBucket()
+						}
+
 						if operationString, e := operation.ToOperation(); e != nil {
 							return nil, alert.Error("batch WorkerProvider, ToOperation error:"+e.Error(), "")
 						} else {
 							operationStrings = append(operationStrings, operationString)
 						}
 					}
+				}
+
+				if cErr := bucket.CompleteBucketManagerRegion(bucketManager, operationBucket); cErr != nil {
+					return nil, cErr
 				}
 
 				resultList, e := bucketManager.Batch(operationStrings)
