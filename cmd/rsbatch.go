@@ -140,7 +140,7 @@ var batchDeleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchDeleteInfo{}
 	var cmd = &cobra.Command{
 		Use:   "batchexpire <Bucket> [-i <KeyDeleteAfterDaysMapFile>]",
-		Short: "Batch set the deleteAfterDays of the files in bucket",
+		Short: "Batch set the deleteAfterDays of the files in bucket. DeleteAfterDays:great than or equal to 0, 0: cancel expiration time, unit: day",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.BatchExpireType
 			info.BatchInfo.EnableStdin = true

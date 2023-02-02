@@ -14,7 +14,7 @@ func TestCdnPrefetch(t *testing.T) {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	result, errString := test.RunCmdWithError("cdnprefetch", "-i", path, "--qps", "1", "--size", "2")
+	result, errString := test.RunCmdWithError("cdnprefetch", "-i", path, "--qps", "1", "--size", "2", "-D")
 	if !strings.Contains(result, "CDN prefetch Code: 200, FlowInfo: success") &&
 		!strings.Contains(errString, "count limit error") {
 		t.Fail()

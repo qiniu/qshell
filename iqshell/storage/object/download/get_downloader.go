@@ -81,7 +81,7 @@ func (g *getDownloader) download(host *host.Host, info *ApiInfo) (*http.Response
 		return nil, data.CancelError
 	}
 	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", url, headers)
-	if len(info.ServerFileHash) != 0 && response != nil && response.Header != nil {
+	if info.CheckHash && len(info.ServerFileHash) != 0 && response != nil && response.Header != nil {
 		etag := response.Header.Get("Etag")
 		if len(etag) > 0 && etag != fmt.Sprintf("\"%s\"", info.ServerFileHash) {
 			return nil, data.NewEmptyError().AppendDescF("file has change, hash before:%s now:%s", info.ServerFileHash, etag)

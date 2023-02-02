@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"github.com/qiniu/go-sdk/v7/auth"
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"path/filepath"
 
@@ -108,6 +109,9 @@ func Load(info LoadInfo) (err *data.CodeError) {
 		return data.NewEmptyError().AppendDescF("create job dir error:%v", err)
 	}
 	log.DebugF("job dir:%s", jobDir)
+
+	// uc 缓存路径, 实际路径在用户目录下，不存在 uc_cache
+	storage.SetRegionCachePath(filepath.Join(userDir, "uc_cache"))
 
 	// 在工作区加载之后监听
 	observerCmdInterrupt()

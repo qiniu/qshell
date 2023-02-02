@@ -70,7 +70,7 @@ var deleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.DeleteAfterInfo{}
 	var cmd = &cobra.Command{
 		Use:   "expire <Bucket> <Key> <DeleteAfterDays>",
-		Short: "Set the deleteAfterDays of a file",
+		Short: "Set the deleteAfterDays of a file. DeleteAfterDays:great than or equal to 0, 0: cancel expiration time, unit: day",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ExpireType
 			if len(args) > 0 {

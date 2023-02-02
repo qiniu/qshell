@@ -21,6 +21,10 @@ func (s StatusApiInfo) WorkId() string {
 	return fmt.Sprintf("ChangeStatus|%s|%s|%t", s.Bucket, s.Key, s.NeedPart)
 }
 
+func (s StatusApiInfo) GetBucket() string {
+	return s.Bucket
+}
+
 func (s StatusApiInfo) ToOperation() (string, *data.CodeError) {
 	if len(s.Bucket) == 0 || len(s.Key) == 0 {
 		return "", alert.CannotEmptyError("status operation bucket or key", "")
@@ -78,6 +82,10 @@ type ChangeStatusApiInfo struct {
 	Bucket string
 	Key    string
 	Status int
+}
+
+func (c *ChangeStatusApiInfo) GetBucket() string {
+	return c.Bucket
 }
 
 func (c *ChangeStatusApiInfo) ToOperation() (string, *data.CodeError) {

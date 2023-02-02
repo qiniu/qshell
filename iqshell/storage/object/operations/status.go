@@ -119,14 +119,14 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 }
 
 func getResultInfo(bucket, key string, status object.StatusResult) string {
-	statInfo := fmt.Sprintf("%-20s%s\r\n", "Bucket:", bucket)
-	statInfo += fmt.Sprintf("%-20s%s\r\n", "Key:", key)
-	statInfo += fmt.Sprintf("%-20s%s\r\n", "FileHash:", status.Hash)
-	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Fsize:", status.FSize, utils.FormatFileSize(status.FSize))
+	statInfo := fmt.Sprintf("%-25s%s\r\n", "Bucket:", bucket)
+	statInfo += fmt.Sprintf("%-25s%s\r\n", "Key:", key)
+	statInfo += fmt.Sprintf("%-25s%s\r\n", "FileHash:", status.Hash)
+	statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "Fsize:", status.FSize, utils.FormatFileSize(status.FSize))
 
 	putTime := time.Unix(0, status.PutTime*100)
-	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "PutTime:", status.PutTime, putTime.String())
-	statInfo += fmt.Sprintf("%-20s%s\r\n", "MimeType:", status.MimeType)
+	statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "PutTime:", status.PutTime, putTime.String())
+	statInfo += fmt.Sprintf("%-25s%s\r\n", "MimeType:", status.MimeType)
 
 	resoreStatus := ""
 	if status.RestoreStatus > 0 {
@@ -137,30 +137,38 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 		}
 	}
 	if len(resoreStatus) > 0 {
-		statInfo += fmt.Sprintf("%-20s%d(%s)\r\n", "RestoreStatus:", status.RestoreStatus, resoreStatus)
+		statInfo += fmt.Sprintf("%-25s%d(%s)\r\n", "RestoreStatus:", status.RestoreStatus, resoreStatus)
 	}
 
 	if status.Expiration > 0 {
 		expiration := time.Unix(status.Expiration, 0)
-		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "Expiration:", status.Expiration, expiration.String())
+		statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "Expiration:", status.Expiration, expiration.String())
+	} else {
+		statInfo += fmt.Sprintf("%-25s%s\r\n", "Expiration:", "not set")
 	}
 
 	if status.TransitionToIA > 0 {
 		date := time.Unix(status.TransitionToIA, 0)
-		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "TransitionToIA:", status.TransitionToIA, date.String())
+		statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "TransitionToIA:", status.TransitionToIA, date.String())
+	} else {
+		statInfo += fmt.Sprintf("%-25s%s\r\n", "TransitionToIA:", "not set")
 	}
 
 	if status.TransitionToARCHIVE > 0 {
 		date := time.Unix(status.TransitionToARCHIVE, 0)
-		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "TransitionToARCHIVE:", status.TransitionToARCHIVE, date.String())
+		statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "TransitionToArchive:", status.TransitionToARCHIVE, date.String())
+	} else {
+		statInfo += fmt.Sprintf("%-25s%s\r\n", "TransitionToArchive:", "not set")
 	}
 
 	if status.TransitionToDeepArchive > 0 {
 		date := time.Unix(status.TransitionToDeepArchive, 0)
-		statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "TransitionToDeepArchive:", status.TransitionToDeepArchive, date.String())
+		statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "TransitionToDeepArchive:", status.TransitionToDeepArchive, date.String())
+	} else {
+		statInfo += fmt.Sprintf("%-25s%s\r\n", "TransitionToDeepArchive:", "not set")
 	}
 
-	statInfo += fmt.Sprintf("%-20s%d -> %s\r\n", "FileType:", status.Type, getStorageTypeDescription(status.Type))
+	statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "FileType:", status.Type, getStorageTypeDescription(status.Type))
 
 	return statInfo
 }

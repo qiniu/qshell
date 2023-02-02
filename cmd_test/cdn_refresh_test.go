@@ -14,7 +14,7 @@ func TestCdnRefreshFile(t *testing.T) {
 		t.Fatal("create cdn config file error:", err)
 	}
 
-	result, errString := test.RunCmdWithError("cdnrefresh", "-i", path, "--qps", "1", "--size", "2")
+	result, errString := test.RunCmdWithError("cdnrefresh", "-i", path, "--qps", "1", "--size", "2", "-d")
 	if !strings.Contains(result, "CDN refresh Code: 200, FlowInfo: success") &&
 		!strings.Contains(errString, "count limit error") {
 		t.Fail()
