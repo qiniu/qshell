@@ -24,7 +24,7 @@ qshell get <Bucket> <Key> [-o <OutFile>]
 - --remove-temp-while-error: 当下载遇到错误时删除之前下载的部分文件缓存，默认为 `false` (不删除)【可选】
 
 注：
-如果文件开启了瘦身，下载文件的信息和七牛服务端记录的文件信息不一致，不要开启 --check-size 和 --check-hash 否则会下载失败。
+如果使用的是 CDN 域名，且 CDN 域名开启了图片优化中的图片自动瘦身功能时，下载文件的信息和七牛服务端记录的文件信息不一致，此时下载不要使用 --check-size 和 --check-hash 选项，否则下载会失败。
 
 # 示例
 1 把qiniutest空间下的文件test.txt下载到本地， 当前目录

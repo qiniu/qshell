@@ -115,7 +115,6 @@ func (s *sliceDownloader) initDownloadStatus(info *DownloadApiInfo) *data.CodeEr
 // 并发下载
 func (s *sliceDownloader) download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {
 
-	log.ErrorF("=== info:%+v", info)
 	from := s.currentReadSliceIndex * s.SliceSize
 	index := s.currentReadSliceIndex
 	go func() {
