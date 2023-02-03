@@ -44,7 +44,7 @@ func (l *blockLimit) AddLimitCount(count int) {
 		count = l.limitCount - 1
 	}
 	l.limitCount += count
-	l.leftCount = l.limitCount + count
+	l.Release(count)
 }
 
 func (l *blockLimit) Acquire(count int) *data.CodeError {
