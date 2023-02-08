@@ -74,7 +74,7 @@ func PrivateUrl(cfg *iqshell.Config, info PrivateUrlInfo) {
 		return
 	}
 
-	log.Alert(url)
+	log.Alert(url.Url)
 }
 
 type BatchPrivateUrlInfo struct {

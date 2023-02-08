@@ -199,7 +199,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 	}
 
 	flow.New(info.Info).
-		WorkProvider(NewWorkProvider(info.Bucket, apiPrefix, info.InputFile, info.ItemSeparate, func(apiInfo *download.ApiInfo) *data.CodeError {
+		WorkProvider(NewWorkProvider(info.Bucket, apiPrefix, info.InputFile, info.ItemSeparate, func(apiInfo *download.DownloadActionInfo) *data.CodeError {
 			apiInfo.Bucket = info.Bucket
 			apiInfo.IsPublic = info.Public
 			apiInfo.HostProvider = host.NewListProvider(hosts)
@@ -226,7 +226,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		})).
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewSimpleWorker(func(workInfo *flow.WorkInfo) (flow.Result, *data.CodeError) {
-				apiInfo := workInfo.Work.(*download.ApiInfo)
+				apiInfo := workInfo.Work.(*download.DownloadActionInfo)
 				metric.AddCurrentCount(1)
 				metric.PrintProgress("Downloading: " + workInfo.Data)
 
@@ -245,9 +245,9 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			return &flow.WorkRecord{
 				WorkInfo: &flow.WorkInfo{
 					Data: "",
-					Work: &download.ApiInfo{},
+					Work: &download.DownloadActionInfo{},
 				},
-				Result: &download.ApiResult{},
+				Result: &download.DownloadActionResult{},
 				Err:    nil,
 			}
 		}).
@@ -256,10 +256,10 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 				return true, workRecord.Err
 			}
 
-			apiInfo, _ := workInfo.Work.(*download.ApiInfo)
-			recordApiInfo, _ := workRecord.Work.(*download.ApiInfo)
+			apiInfo, _ := workInfo.Work.(*download.DownloadActionInfo)
+			recordApiInfo, _ := workRecord.Work.(*download.DownloadActionInfo)
 
-			result, _ := workRecord.Result.(*download.ApiResult)
+			result, _ := workRecord.Result.(*download.DownloadActionResult)
 			if result == nil {
 				return true, data.NewEmptyError().AppendDesc("no result found")
 			}
@@ -281,7 +281,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			}
 		}).
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
-			apiInfo, _ := workInfo.Work.(*download.ApiInfo)
+			apiInfo, _ := workInfo.Work.(*download.DownloadActionInfo)
 			if filterPrefix(apiInfo.Key) {
 				//log.InfoF("Download Skip because key prefix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
 				return true, data.NewEmptyError().AppendDescF("[%s:%s], prefix filter not match", apiInfo.Bucket, apiInfo.Key)
@@ -301,7 +301,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			metric.PrintProgress("Downloading: " + workInfo.Data)
 
 			if err != nil && err.Code == data.ErrorCodeAlreadyDone {
-				operationResult, _ := result.(*download.ApiResult)
+				operationResult, _ := result.(*download.DownloadActionResult)
 				if operationResult != nil && operationResult.IsValid() {
 					metric.AddSuccessCount(1)
 					log.InfoF("Skip line:%s because have done and success", workInfo.Data)
@@ -316,7 +316,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			}
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
-			res, _ := result.(*download.ApiResult)
+			res, _ := result.(*download.DownloadActionResult)
 			if res.IsExist {
 				metric.AddExistCount(1)
 			} else if res.IsUpdate {

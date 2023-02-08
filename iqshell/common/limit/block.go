@@ -44,7 +44,9 @@ func (l *blockLimit) AddLimitCount(count int) {
 		count = l.limitCount - 1
 	}
 	l.limitCount += count
-	l.leftCount = l.limitCount + count
+	l.leftCount += count
+
+	l.acquireCond.Broadcast()
 }
 
 func (l *blockLimit) Acquire(count int) *data.CodeError {
@@ -58,10 +60,13 @@ func (l *blockLimit) Acquire(count int) *data.CodeError {
 	defer l.acquireCond.L.Unlock()
 
 	for {
-		if c := l.tryAcquire(lCount); c <= 0 {
-			// 触及限制
+		if c := l.tryAcquire(lCount); c < 0 {
+			// 没有余量
 			l.acquireCond.Wait()
 			continue
+		} else if c == 0 {
+			// 有余量，但需要等下一个周期
+			time.Sleep(time.Millisecond * 100)
 		} else {
 			lCount -= c
 		}
@@ -75,8 +80,8 @@ func (l *blockLimit) Acquire(count int) *data.CodeError {
 }
 
 func (l *blockLimit) tryAcquire(count int) int {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	if count > l.limitCount {
 		count = l.limitCount
@@ -84,7 +89,7 @@ func (l *blockLimit) tryAcquire(count int) int {
 
 	// 没有余量，并发耗尽
 	if l.leftCount < count {
-		return 0
+		return -1
 	}
 
 	// 并发满足，查看 QPS 是否超标
@@ -105,8 +110,8 @@ func (l *blockLimit) tryAcquire(count int) int {
 
 func (l *blockLimit) Release(count int) {
 	l.mu.Lock()
-	l.leftCount += count
-	l.mu.Unlock()
+	defer l.mu.Unlock()
 
+	l.leftCount += count
 	l.acquireCond.Broadcast()
 }
