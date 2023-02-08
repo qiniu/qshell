@@ -39,7 +39,6 @@ func (info *Info) Check() *data.CodeError {
 	if err := info.Info.Check(); err != nil {
 		return err
 	}
-	info.Force = true
 
 	if info.MinItemsCount < 1 {
 		info.MinItemsCount = 1
