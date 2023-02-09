@@ -105,7 +105,7 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 			}
 			in := (*StatusInfo)(apiInfo)
 			if result.IsSuccess() {
-				log.AlertF("%s\t%d\t%s\t%s\t%d\t%d",
+				log.InfoF("%s\t%d\t%s\t%s\t%d\t%d",
 					in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
 			} else {
 				data.SetCmdStatusError()
