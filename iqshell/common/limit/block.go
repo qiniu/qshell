@@ -38,13 +38,12 @@ type blockLimit struct {
 
 func (l *blockLimit) AddLimitCount(count int) {
 	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	if (l.limitCount + count) < 1 {
 		count = l.limitCount - 1
 	}
 	l.limitCount += count
 	l.leftCount += count
+	l.mu.Unlock()
 
 	l.acquireCond.Broadcast()
 }
@@ -110,8 +109,8 @@ func (l *blockLimit) tryAcquire(count int) int {
 
 func (l *blockLimit) Release(count int) {
 	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	l.leftCount += count
+	l.mu.Unlock()
+
 	l.acquireCond.Broadcast()
 }
