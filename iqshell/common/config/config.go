@@ -43,6 +43,13 @@ func (c *Config) GetRegion() *storage.Region {
 	}
 }
 
+func (c *Config) GetEndpoint() string {
+	if c == nil || c.Hosts == nil {
+		return ""
+	}
+	return c.Hosts.GetOneEndpoint()
+}
+
 func (c *Config) Merge(from *Config) {
 	if from == nil {
 		return

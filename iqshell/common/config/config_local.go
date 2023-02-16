@@ -46,7 +46,11 @@ var (
 	localKeyHostUc  = []string{"hosts.uc", "hosts.uc_host"}
 	localKeyHostUcs = []string{"hosts.ucs", "hosts.uc_hosts"}
 
-	// UC HOST
+	// ENDPOINT HOST
+	localKeyHostEndpoint  = []string{"hosts.endpoint", "hosts.endpoint_host"}
+	localKeyHostEndpoints = []string{"hosts.endpoints", "hosts.endpoint_hosts"}
+
+	// USE HTTPS
 	localKeyIsUseHttps = []string{"use_https"}
 
 	// 账户密钥信息
@@ -89,6 +93,10 @@ func GetUcHosts(configType ConfigType) []string {
 
 func GetApiHosts(configType ConfigType) []string {
 	return getHostsFromLocal(configType, localKeyHostApi, localKeyHostApis)
+}
+
+func GetEndpoints(configType ConfigType) []string {
+	return getHostsFromLocal(configType, localKeyHostEndpoint, localKeyHostEndpoints)
 }
 
 func GetCredentials(configType ConfigType) auth.Credentials {
