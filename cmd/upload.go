@@ -13,7 +13,7 @@ import (
 var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.BatchUploadInfo{}
 	cmd := &cobra.Command{
-		Use:   "qupload <LocalDownloadConfig>",
+		Use:   "qupload <LocalUploadConfig>",
 		Short: "Batch upload files to the qiniu bucket",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.QUploadType
