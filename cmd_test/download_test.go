@@ -72,7 +72,7 @@ func TestDownloadFromBucket(t *testing.T) {
 			Suffixes:        "",
 			IoHost:          test.BucketDomain,
 			Public:          true,
-			CheckHash:       true,
+			CheckSize:       true,
 			Referer:         "",
 			CdnDomain:       "",
 			RecordRoot:      "",

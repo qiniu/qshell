@@ -6,11 +6,19 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"os"
+	"strings"
 )
 
 const (
 	defaultChunkSize int64 = 4 * 1024 * 1024
 )
+
+func ParseEtag(etag string) string {
+	etag = strings.TrimPrefix(etag, "\"")
+	etag = strings.TrimSuffix(etag, "\"")
+	etag = strings.TrimSuffix(etag, ".gz")
+	return etag
+}
 
 func GetEtag(filename string) (etag string, err *data.CodeError) {
 	f, e := os.Open(filename)

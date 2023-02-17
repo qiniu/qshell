@@ -252,7 +252,7 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 	return buffer, nil
 }
 
-//Content-Range: bytes 25538640-25538647/25538648
+// Content-Range: bytes 25538640-25538647/25538648
 func parseContentRange(contentRange string) (rangeSize, totalSize int64) {
 	contentRangeItems := strings.Split(contentRange, " ")
 	sizeItems := strings.Split(contentRangeItems[1], "/")

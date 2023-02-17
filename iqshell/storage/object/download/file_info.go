@@ -84,3 +84,9 @@ func (d *fileInfo) clean() *data.CodeError {
 	}
 	return data.ConvertError(err)
 }
+
+func (d *fileInfo) cleanTempFile() *data.CodeError {
+	d.fromBytes = 0
+	err := os.Remove(d.tempFile)
+	return data.ConvertError(err)
+}

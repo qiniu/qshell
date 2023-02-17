@@ -83,20 +83,21 @@ func (l *autoLimit) check() {
 }
 
 func (l *autoLimit) Acquire(count int) *data.CodeError {
-	// 在 acquire 的时候尝试增加一次 limit count
-	if l.shouldAutoIncreaseLimitCount() {
-		l.AddLimitCount(l.increaseLimitCount)
-	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	l.waitIfNeeded()
 
 	err := l.blockLimit.Acquire(count)
+	if err != nil {
+		return err
+	}
 	atomic.AddInt64(&l.notReleaseCount, int64(count))
-	return err
+	return nil
 }
 
 func (l *autoLimit) Release(count int) {
-	atomic.AddInt64(&l.notReleaseCount, int64(-count))
+	atomic.AddInt64(&l.notReleaseCount, -1*int64(count))
 	l.blockLimit.Release(count)
 }
 
@@ -107,6 +108,14 @@ func (l *autoLimit) AddLimitCount(count int) {
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
+
+	l.addLimitCount(count)
+}
+
+func (l *autoLimit) addLimitCount(count int) {
+	if count == 0 {
+		return
+	}
 
 	if count < 0 {
 		l.shouldWait = true
@@ -130,9 +139,6 @@ func (l *autoLimit) AddLimitCount(count int) {
 }
 
 func (l *autoLimit) shouldAutoIncreaseLimitCount() bool {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	if l.maxLimitCount > 0 && l.limitCount >= l.maxLimitCount {
 		return false
 	}
@@ -147,6 +153,10 @@ func (l *autoLimit) shouldAutoIncreaseLimitCount() bool {
 func (l *autoLimit) waitIfNeeded() {
 	waitTime := time.Millisecond * time.Duration(rand.Int31n(1000)+500)
 	for {
+		if l.shouldAutoIncreaseLimitCount() {
+			l.addLimitCount(l.increaseLimitCount)
+		}
+
 		if !l.shouldWait {
 			break
 		}
