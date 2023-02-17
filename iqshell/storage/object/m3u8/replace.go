@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-//replace and upload
+// replace and upload
 type ReplaceDomainApiInfo struct {
 	Bucket              string
 	Key                 string
