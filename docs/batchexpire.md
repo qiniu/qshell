@@ -1,6 +1,10 @@
 # 简介
 `batchexpire` 命令用来为空间中的文件设置过期时间。该操作发生在同一个空间中。（将文件设置为从现在开始xx天后自动删除的状态）
 
+## 注：
+v2.7.0 到 v2.9.2 不支持取消过期时间配置，如果过期天数配置为 0 会立即删除文件。
+v2.9.3 开始，过期天数配置为 0 时为取消过期时间配置。
+
 # 格式
 ```
 qshell batchexpire [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] <Bucket> <-i KeyDeleteAfterDaysMapFile>
