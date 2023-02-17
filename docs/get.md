@@ -14,12 +14,17 @@ qshell get <Bucket> <Key> [-o <OutFile>]
 - -o/--outfile：保存在本地的文件路径；不指定，保存在当前文件夹，文件名使用存储空间中的名字【可选】
 - --domain：下载请求的 domain，qshell 下载使用 domain 优先级：1.domain(此选项) 2.bucket 绑定域名(qshell 内部查询，无需配置) ，当优先级高的 domain 下载失败后会尝试使用优先级低的 domain 进行下载。【可选】
 - --get-file-api: 当存储服务端支持 getfile 接口时才有效。【可选】
+- --public：空间是否为公开空间；为 `true` 时为公有空间，公有空间下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为 `false`（私有空间）【可选】
+- --check-size: 下载后检测本地文件和服务端文件 size 的一致性。【可选】
 - --check-hash: 下载后检测本地文件和服务端文件 hash 的一致性。【可选】
 - --enable-slice: 是否开启切片下载，需要注意 `--slice-file-size-threshold` 切片阈值选项的配置，只有开启切片下载，并且下载的文件大小大于切片阈值方会启动切片下载。默认不开启。【可选】
 - --slice-size: 切片大小；当使用切片下载时，每个切片的大小；单位：B。默认为 4194304，也即 4MB。【可选】
 - --slice-concurrent-count: 切片下载的并发度；默认为 10 【可选】
 - --slice-file-size-threshold: 切片下载的文件阈值，当开启切片下载，并且文件大小大于此阈值时方会启用切片下载。【可选】
 - --remove-temp-while-error: 当下载遇到错误时删除之前下载的部分文件缓存，默认为 `false` (不删除)【可选】
+
+注：
+如果使用的是 CDN 域名，且 CDN 域名开启了图片优化中的图片自动瘦身功能时，下载文件的信息和七牛服务端记录的文件信息不一致，此时下载不要使用 --check-size 和 --check-hash 选项，否则下载会失败。
 
 # 示例
 1 把qiniutest空间下的文件test.txt下载到本地， 当前目录

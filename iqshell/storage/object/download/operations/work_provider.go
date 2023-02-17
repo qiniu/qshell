@@ -32,7 +32,7 @@ func NewWorkProvider(bucket, keyPrefix, inputFile, itemSeparate string, infoRese
 	return provider
 }
 
-type apiInfoResetHandler func(apiInfo *download.ApiInfo) *data.CodeError
+type apiInfoResetHandler func(apiInfo *download.DownloadActionInfo) *data.CodeError
 
 type workProvider struct {
 	totalCount       int64
@@ -79,7 +79,7 @@ func (w *workProvider) getWorkInfoFromFile() {
 					return nil, alert.Error("key invalid", "")
 				}
 
-				info := &download.ApiInfo{
+				info := &download.DownloadActionInfo{
 					Key:               listObject.Key,
 					ServerFileSize:    listObject.Fsize,
 					ServerFileHash:    listObject.Hash,
@@ -117,7 +117,7 @@ func (w *workProvider) getWorkInfoFromFile() {
 					err:      pErr,
 				}
 			} else if workInfo != nil && workInfo.Work != nil {
-				downloadApiInfo, _ := (workInfo.Work).(*download.ApiInfo)
+				downloadApiInfo, _ := (workInfo.Work).(*download.DownloadActionInfo)
 				if downloadApiInfo.ServerFilePutTime < 1 {
 					keys = append(keys, downloadApiInfo.Key)
 				} else {
@@ -165,7 +165,7 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) {
 				}
 				downItem.err = data.NewError(result.Code, result.Error)
 			} else {
-				info := &download.ApiInfo{
+				info := &download.DownloadActionInfo{
 					Bucket:            w.bucket,
 					Key:               item.Key,
 					ServerFileHash:    result.Hash,
@@ -215,7 +215,7 @@ func (w *workProvider) getWorkInfoFromBucket() {
 			Suffixes:  nil,
 			MaxRetry:  20,
 		}, func(marker string, object bucket.ListObject) (bool, *data.CodeError) {
-			info := &download.ApiInfo{
+			info := &download.DownloadActionInfo{
 				Bucket:            w.bucket,
 				Key:               object.Key,
 				ServerFileHash:    object.Hash,

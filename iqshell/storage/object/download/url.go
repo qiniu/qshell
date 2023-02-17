@@ -8,7 +8,9 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
+	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"net/url"
 	"strings"
@@ -98,4 +100,41 @@ func PrivateUrl(info UrlApiInfo) (fileUrl string) {
 		fileUrl = result.Url
 	}
 	return
+}
+
+// 下载 Url
+func createDownloadUrl(info *DownloadActionInfo, useHttps bool) (string, *data.CodeError) {
+	h, hErr := info.HostProvider.Provide()
+	if hErr != nil {
+		return "", hErr.HeaderInsertDesc("[provide host]")
+	}
+	return createDownloadUrlWithHost(h, info, useHttps)
+}
+
+func createDownloadUrlWithHost(h *host.Host, info *DownloadActionInfo, useHttps bool) (string, *data.CodeError) {
+	urlString := ""
+	// 构造下载 url
+	if info.UseGetFileApi {
+		mac, err := workspace.GetMac()
+		if err != nil {
+			return "", data.NewEmptyError().AppendDescF("download get mac error:%v", mac)
+		}
+		urlString = utils.Endpoint(useHttps, h.GetServer())
+		urlString = strings.Join([]string{urlString, "getfile", mac.AccessKey, info.Bucket, url.PathEscape(info.Key)}, "/")
+	} else {
+		if info.IsPublic {
+			urlString = PublicUrl(UrlApiInfo{
+				BucketDomain: h.GetServer(),
+				Key:          info.Key,
+				UseHttps:     useHttps,
+			})
+		} else {
+			urlString = PrivateUrl(UrlApiInfo{
+				BucketDomain: h.GetServer(),
+				Key:          info.Key,
+				UseHttps:     useHttps,
+			})
+		}
+	}
+	return urlString, nil
 }

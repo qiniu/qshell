@@ -4,6 +4,10 @@
 qshell qdownload2 --dest-dir=/home/jemy/temp --bucket=test
 ```
 
+注：
+- `Key` 中的 `/` 会被当做路径处理，也即任何以 `/` 结尾的 `Key` 均会被当做文件夹处理。
+- 如果使用的是 CDN 域名，且 CDN 域名开启了图片优化中的图片自动瘦身功能时，下载文件的信息和七牛服务端记录的文件信息不一致，此时下载不要使用 --check-size 和 --check-hash 选项，否则下载会失败。
+
 其所支持的命令参数列表，可以通过 `-h` 选项获得，参数含义参考：[qdownload](qdownload.md)
 ```
 qshell qdownload2 -h                                         

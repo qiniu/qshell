@@ -309,12 +309,11 @@ func (f *Flow) tryChangeWorkGroupCount(err *data.CodeError) {
 	}
 
 	f.mu.Lock()
-	f.mu.Unlock()
-
 	f.doWorkInfoListCount -= 10
 	if f.doWorkInfoListCount < 1 {
 		f.doWorkInfoListCount = 1
 	}
+	f.mu.Unlock()
 }
 
 func (f *Flow) handleWorkResult(workRecord *WorkRecord) {

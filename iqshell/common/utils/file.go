@@ -113,23 +113,50 @@ func LocalFileSize(filePath string) (int64, *data.CodeError) {
 	return fileStatus.Size(), nil
 }
 
+type NetworkFileInfo struct {
+	Size int64
+	Hash string
+}
+
 func NetworkFileLength(srcResUrl string) (fileSize int64, err *data.CodeError) {
+	if f, gErr := GetNetworkFileInfo(srcResUrl); gErr != nil {
+		return -1, gErr
+	} else {
+		return f.Size, nil
+	}
+}
+
+func GetNetworkFileInfo(srcResUrl string) (*NetworkFileInfo, *data.CodeError) {
+
 	resp, respErr := http.Head(srcResUrl)
 	if respErr != nil {
-		err = data.NewEmptyError().AppendDescF("New head request failed, %s", respErr.Error())
-		return
+		return nil, data.NewEmptyError().AppendDescF("New head request failed, %s", respErr.Error())
 	}
 	defer resp.Body.Close()
 
+	file := &NetworkFileInfo{
+		Size: -1,
+		Hash: "",
+	}
 	contentLength := resp.Header.Get("Content-Length")
-	if contentLength == "" {
-		err = data.NewEmptyError().AppendDesc("head request with no Content-Length found error")
-		return
+	if contentLength != "" {
+		if size, pErr := strconv.ParseInt(contentLength, 10, 64); pErr != nil {
+			return nil, data.NewEmptyError().AppendDescF("parse network file(%s) size error:%v", srcResUrl, pErr)
+		} else {
+			file.Size = size
+		}
+	} else {
+		return file, data.NewEmptyError().AppendDescF("network file(%s) hasn't Content-Length", srcResUrl)
 	}
 
-	fileSize, _ = strconv.ParseInt(contentLength, 10, 64)
+	etag := resp.Header.Get("ETag")
+	if contentLength != "" {
+		file.Hash = ParseEtag(etag)
+	} else {
+		return nil, data.NewEmptyError().AppendDescF("network file(%s) hasn't Etag", srcResUrl)
+	}
 
-	return
+	return file, nil
 }
 
 func IsLocalFileMatchFileModifyTime(filePath string, modifyTime int64) (match bool, err *data.CodeError) {
