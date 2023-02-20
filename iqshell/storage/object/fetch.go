@@ -108,7 +108,8 @@ func AsyncFetch(info AsyncFetchApiInfo) (result *AsyncFetchApiResult, err *data.
 	return result, data.ConvertError(e)
 }
 
-func CheckAsyncFetchStatus(toBucket, id string) (ret AsyncFetchApiResult, err *data.CodeError) {
+func CheckAsyncFetchStatus(toBucket, id string) (ret *AsyncFetchApiResult, err *data.CodeError) {
+	ret = &AsyncFetchApiResult{}
 	bm, gErr := bucket.GetBucketManager()
 	if gErr != nil {
 		err = gErr
@@ -129,6 +130,6 @@ func CheckAsyncFetchStatus(toBucket, id string) (ret AsyncFetchApiResult, err *d
 
 	reqUrl += ("/sisyphus/fetch?id=" + id)
 	ctx := auth.WithCredentialsType(workspace.GetContext(), mac, auth.TokenQiniu)
-	err = data.ConvertError(bm.Client.Call(ctx, &ret, "GET", reqUrl, nil))
+	err = data.ConvertError(bm.Client.Call(ctx, ret, "GET", reqUrl, nil))
 	return
 }

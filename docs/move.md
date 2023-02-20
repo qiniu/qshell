@@ -1,5 +1,5 @@
 # 简介
-`move` 命令可以将一个空间中的文件移动到另外一个空间中，也可以对同一空间中的文件重命名。注意：移动文件仅支持在同一个帐号下面的空间中移动。
+`move` 命令可以将一个空间中的文件移动到另外一个空间中，也可以对同一空间中的文件重命名。移动文件仅支持在同一个帐号下面的同区域空间中移动。
 注意如果目标文件已存在空间中的时候，默认情况下，`move` 会失败，报错 `614 file exists`，如果一定要强制覆盖目标文件，可以使用选项 `--overwrite` 。
 
 参考文档：[资源移动／重命名 (move)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/move.html)
@@ -9,8 +9,18 @@
 qshell move [--overwrite] <SrcBucket> <SrcKey> <DestBucket> <DestKey>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell move -h 
+
+// 详细文档（此文档）
+$ qshell move --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
 - SrcBucket: 源空间名称

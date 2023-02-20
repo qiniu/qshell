@@ -1,13 +1,26 @@
 # 简介
-`dircache` 用来为指定的本地目录生成一个该目录下面所有的文件的列表，文件列表的每行分别为每个文件的相对路径，文件大小和最后修改时间，该文件列表可以作为 `qupload` 命令的 `file_list` 的参数。你可以修改该命令生成的文件，删除一些行，然后给`qupload` 的参数 `file_list`，这样就可以只上传指定的文件列表。
+`dircache` 用来为指定的本地目录生成一个该目录下面所有的文件的列表，文件列表的每行分别为每个文件的相对路径，文件大小和最后修改时间，该文件列表可以作为 `qupload` 命令的 `file_list` 的参数。你可以修改该命令生成的文件，删除一些行，然后给 `qupload` 的参数 `file_list`，这样就可以只上传指定的文件列表。
 
 # 格式
 ```
 qshell dircache <DirCacheRootPath> [-o <DirCacheResultFile>]
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell dircache -h 
+
+// 详细文档（此文档）
+$ qshell dircache --doc
+```
+
+# 鉴权
+无
+
 # 参数
-- DirCacheRootPath：本地需要对其做快照的路径，最好是绝对路径，比如`/Users/jemy/Demo1`这样的路径【必选】
+- DirCacheRootPath：本地需要对其做快照的路径，最好是绝对路径，比如 `/Users/jemy/Demo1` 这样的路径【必选】
 - DirCacheResultFile：快照结果的保存文件，可以是绝对路径或者相对路径, 如果没有指定，默认输出到标准输出终端。 【可选】
 
 # 示例
@@ -16,7 +29,7 @@ qshell dircache <DirCacheRootPath> [-o <DirCacheResultFile>]
 qshell dircache /Users/jemy/Temp4 -o temp4.list.txt
 ```
 
-其中`temp4.list.txt`是你保存列表结果的文件。列举的结果以如下格式组织：
+其中 `temp4.list.txt` 是你保存列表结果的文件。列举的结果以如下格式组织：
 ```
 文件相对于<DirCacheRootPath>的相对路径\t文件大小(单位字节)\t文件上次修改时间(单位100纳秒)
 ```

@@ -6,8 +6,18 @@
 qshell saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell saveas -h 
+
+// 详细文档（此文档）
+$ qshell saveas --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
 - PublicUrlWithFop：带实时处理指令的资源公开外链。 【必须】
