@@ -45,19 +45,33 @@ $ qshell account -- <Your AccessKey> <Your SecretKey> <Your Name>
        -D: 设置是否输出更加详细的 DEBUG 日志，如果指定这个选项，则输出详细的 DEBUG 级别的日志
        -h: 打印命令列表帮助信息，遇到参数忘记的情况下，可以使用该命令
        -v: 打印工具版本，反馈问题的时候，请提前告知工具对应版本号
-       -C: qshell配置文件, 其配置格式请看下一节
-       -L: 使用当前工作路径作为qshell的配置目录
+       -C: qshell 配置文件, 其配置格式请看下一节
+       -L: 使用当前工作路径作为 qshell 的配置目录
 
 注：
 --silence、-d、-D 优先级：-D > -d > --silence
 
 # 配置文件
-1. 配置文件格式支持 json, 如果需要使用配置文件，需要在家目录下创建文件名为 .qshell.json 的 json 文件
-2. 配置文件可以配置如 io host, up host, uc host, api host, rs host, rsf host，公有云可以不配置，但私有云必须配置。
+1. 配置文件格式支持 json，用户可按需进行配置，配置文件分两层：
+   - 全局配置：需要在家目录下创建文件名为 .qshell.json 的 json 文件，此配置对 qshell 中的所有账号生效（qshell 当前账号可以通过 qshell user cu 命令进行切换）。
+   - 账号配置：在 qshell 用户目录下（ ${家目录}/.qshell/users/${qshell 账号名}/ ）创建文件名为 .qshell.json 的 json 文件，此配置仅对当前目录所属的 qshell 账号生效；账号配置优先级大于全局配置。
+2. 配置文件可以配置 use_https 和 host 相关信息： 
+   - use_https：qshell 请求是否使用 https。
+   - host 配置：如 io host, up host, uc host, api host, rs host, rsf host；除 uc host 外，其他 host 要么不配置，要么全配置。
+     - 公有云可以不配置 host；
+     - 私有云：如果私有云支持 uc 查询 bucket 所在区域信息，那么仅配置 uc host 即可；如果不支持则必须配置所有 host。
 
-例子：
+注：
+qshell 某些命令的配置和文件的配置会有重合，此时优先级如下：
+```
+qshell 命令配置 > 账号配置 > 全局配置
+```
+通过 -C/-L 选项指定配置文件，实际是指定账号配置。
+
+配置例子：
 ```json
 {
+    "use_https": false,
     "hosts": {
         "rs": "rs-test.qiniu.com",
         "io": "io-test.qiniu.com",
@@ -75,7 +89,7 @@ $ qshell account -- <Your AccessKey> <Your SecretKey> <Your Name>
 - 查看工具版本号请使用命令： qshell -v
 
 ### 账号设置命令
-- account：设置或显示当前用户的 `AccessKey` 和 `SecretKey`
+- account：设置或显示当前账号的 `AccessKey` 和 `SecretKey`
 - user：列举账号信息，在各个账号之间切换，添加账号，删除账号。        
 
 ### 存储相关命令
