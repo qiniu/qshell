@@ -1,12 +1,11 @@
 package docs
 
-import _ "embed"
-
-//go:embed qshell.md
-var qshellDocument string
+import (
+	"github.com/qiniu/qshell/v2"
+)
 
 const QShellType = "qshell"
 
 func init() {
-	addCmdDocumentInfo(QShellType, qshellDocument)
+	addCmdDocumentInfo(QShellType, qshell.ReadMeDocument)
 }
