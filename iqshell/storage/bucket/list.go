@@ -162,6 +162,10 @@ func List(info ListApiInfo,
 					info.Marker = marker
 				}
 
+				if listItem.IsNull() {
+					return false
+				}
+
 				if !isItemExcepted(listItem) {
 					return false
 				}

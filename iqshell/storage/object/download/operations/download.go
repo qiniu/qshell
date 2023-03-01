@@ -104,7 +104,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		Progress:               downloadProgress,
 	}
 
-	if e, _ := downloadFile(apiInfo); e != nil {
+	if _, e := downloadFile(apiInfo); e != nil {
 		data.SetCmdStatusError()
 	}
 }

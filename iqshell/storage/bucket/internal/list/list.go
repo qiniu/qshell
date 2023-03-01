@@ -29,6 +29,16 @@ type ApiInfo struct {
 
 type Item storage.ListItem
 
+func (l *Item) IsNull() bool {
+	if l == nil {
+		return true
+	}
+
+	return len(l.Key) == 0 && len(l.Hash) == 0 &&
+		len(l.MimeType) == 0 && len(l.EndUser) == 0 &&
+		l.PutTime == 0 && l.Type == 0 && l.Fsize == 0
+}
+
 func (l *Item) PutTimeString() string {
 	if l.PutTime < 1 {
 		return ""
