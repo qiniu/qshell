@@ -116,8 +116,10 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
 
-	cmd.Flags().StringVarP(&info.FileTypes, "storages", "", "", "Specify storage type, same to --file-types")
 	cmd.Flags().StringVarP(&info.FileTypes, "file-types", "", "", "Specify storage type, separated by comma. 0:STANDARD storage, 1:IA storage, 2 means ARCHIVE storage. 3:DEEP_ARCHIVE storage")
+	cmd.Flags().StringVarP(&info.FileTypes, "storages", "", "", "Specify storage type, same to --file-types")
+	_ = cmd.Flags().MarkDeprecated("storages", "use --file-types instead") // 废弃 storages
+
 	cmd.Flags().StringVarP(&info.MimeTypes, "mimetypes", "", "", "Specify mimetype, separated by comma.")
 	cmd.Flags().StringVarP(&info.MinFileSize, "min-file-size", "", "", "Specify min file size")
 	cmd.Flags().StringVarP(&info.MaxFileSize, "max-file-size", "", "", "Specify max file size")
@@ -131,8 +133,6 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.OutputFieldsSep, "output-fields-sep", "", data.DefaultLineSeparate, "Each line needs to display the delimiter of the file information.")
 	cmd.Flags().StringVarP(&info.ShowFields, "show-fields", "", "", "The file attributes to be displayed on each line, separated by commas. Optional range: Key, Hash, FileSize, PutTime, MimeType, FileType, EndUser.")
 
-	// 废弃
-	_ = cmd.Flags().MarkDeprecated("storages", "use --file-types instead")
 	return cmd
 }
 
