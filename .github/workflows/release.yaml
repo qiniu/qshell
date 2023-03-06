@@ -63,3 +63,4 @@ jobs:
         goarch: ${{ matrix.goarch }}
         goversion: "https://golang.org/dl/go1.20.1.linux-amd64.tar.gz"
         ldflags: -X "github.com/qiniu/qshell/v2/iqshell/common/version.version=${{ env.APP_VERSION }}" -extldflags "-static"
+        project_path: "./main"
