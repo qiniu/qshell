@@ -42,6 +42,7 @@ func TestResumeV1Upload(t *testing.T) {
 	result, errs = test.RunCmdWithError("rput", test.Bucket, "qshell_rput_5M", path,
 		"--mimetype", "image/png",
 		"--storage", "1",
+		"--file-type", "1",
 		"--worker", "4")
 	if !strings.Contains(errs, "file exists") {
 		t.Fatal(result)

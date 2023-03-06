@@ -31,7 +31,8 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.CallbackUrl, "callback-url", "a", "", "callback url")
 	cmd.Flags().StringVarP(&info.CallbackBody, "callback-body", "b", "", "callback body")
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "callback HOST")
-	cmd.Flags().IntVarP(&info.FileType, "storage-type", "g", 0, "storage type")
+	cmd.Flags().IntVarP(&info.FileType, "storage-type", "g", 0, "storage type, same to --file-type")
+	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "storage type, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
 	cmd.Flags().BoolVar(&info.Overwrite, "overwrite", false, "overwrite the file of same key in bucket")
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file with urls")
 	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "thread-count", "c", 20, "thread count")
@@ -41,6 +42,8 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "success fetch list")
 	cmd.Flags().StringVarP(&info.BatchInfo.FailExportFilePath, "failure-list", "e", "", "error fetch list")
 
+	// 废弃
+	_ = cmd.Flags().MarkDeprecated("storage-type", "use --file-type instead")
 	return cmd
 }
 

@@ -5,10 +5,10 @@
 
 # 格式
 ```
-qshell fput [--overwrite] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>] [--storage <StorageType>] [--mimetype <MimeType>] <Bucket> <Key> <LocalFile>
+qshell fput [--overwrite] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>] [--file-type <FileType>] [--mimetype <MimeType>] <Bucket> <Key> <LocalFile>
 ```
 
-其中 `Overwrite`，`MimeType`，`StorageType` 参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
+其中 `Overwrite`，`MimeType`，`FileType` 参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
 
 # 帮助文档
 可以在命令行输入如下命令获取帮助文档：
@@ -31,7 +31,7 @@ $ qshell fput --doc
 # 选项
 - --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
 - --mimetype：指定文件的 MimeType。 【可选】
-- --storage：文件存储类型，默认为 `0`（标准存储），`1` 为低频存储，`2` 为归档存储，`3` 为深度归档存储。 【可选】
+- --file-type：文件存储类型，默认为 `0`（标准存储），`1` 为低频存储，`2` 为归档存储，`3` 为深度归档存储。 【可选】
 - --up-host: 指定上传域名。 【可选】
 - --callback-urls：上传回调地址， 可以指定多个地址，以逗号分隔。 【可选】
 - --callback-host：上传回调的 HOST, 必须和 CallbackUrls 一起指定。 【可选】
@@ -54,5 +54,5 @@ $ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg --over
 
 5 使用低频存储
 ```
-$ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg --storage 1
+$ qshell fput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg --file-type 1
 ```

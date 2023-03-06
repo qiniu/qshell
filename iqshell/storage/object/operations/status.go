@@ -168,17 +168,17 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 		statInfo += fmt.Sprintf("%-25s%s\r\n", "TransitionToDeepArchive:", "not set")
 	}
 
-	statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "FileType:", status.Type, getStorageTypeDescription(status.Type))
+	statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "FileType:", status.Type, getFileTypeDescription(status.Type))
 
 	return statInfo
 }
 
 var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储"}
 
-func getStorageTypeDescription(storageType int) string {
+func getFileTypeDescription(fileTypes int) string {
 	typeString := "未知类型"
-	if storageType >= 0 && storageType < len(objectTypes) {
-		typeString = objectTypes[storageType]
+	if fileTypes >= 0 && fileTypes < len(objectTypes) {
+		typeString = objectTypes[fileTypes]
 	}
 	return typeString
 }

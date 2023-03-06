@@ -95,7 +95,7 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "listbucket2 <Bucket>",
 		Short: "List all the files in the bucket using v2/list interface",
-		Long:  "List all the files in the bucket using v2/list interface to stdout if output file not specified. Each row of data information is displayed in the following order by default:\n Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser",
+		Long:  "List all the files in the bucket using v2/list interface to stdout if output file not specified. Each row of data information is displayed in the following order by default:\n Key\tFileSize\tHash\tPutTime\tMimeType\tFileType\tEndUser",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ListBucket2Type
 			if len(args) > 0 {
@@ -116,7 +116,8 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss")
 	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss")
 
-	cmd.Flags().StringVarP(&info.StorageTypes, "storages", "", "", "Specify storage type, separated by comma. 0:STANDARD storage, 1:IA storage, 2 means ARCHIVE storage. 3:DEEP_ARCHIVE storage")
+	cmd.Flags().StringVarP(&info.FileTypes, "storages", "", "", "Specify storage type, same to --file-types")
+	cmd.Flags().StringVarP(&info.FileTypes, "file-types", "", "", "Specify storage type, separated by comma. 0:STANDARD storage, 1:IA storage, 2 means ARCHIVE storage. 3:DEEP_ARCHIVE storage")
 	cmd.Flags().StringVarP(&info.MimeTypes, "mimetypes", "", "", "Specify mimetype, separated by comma.")
 	cmd.Flags().StringVarP(&info.MinFileSize, "min-file-size", "", "", "Specify min file size")
 	cmd.Flags().StringVarP(&info.MaxFileSize, "max-file-size", "", "", "Specify max file size")
@@ -128,8 +129,10 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "record the execution status of the listbucket2 command. When the listbucket2 command is executed next time, the marker will be automatically filled and the listbucket2 will continue. Enabling this option will automatically enable append (see the --append option for details). The id of the record is related to the bucket where the file is located, the prefix listed, and the path where the file is saved.")
 
 	cmd.Flags().StringVarP(&info.OutputFieldsSep, "output-fields-sep", "", data.DefaultLineSeparate, "Each line needs to display the delimiter of the file information.")
-	cmd.Flags().StringVarP(&info.ShowFields, "show-fields", "", "", "The file attributes to be displayed on each line, separated by commas. Optional range: Key, Hash, FileSize, PutTime, MimeType, StorageType, EndUser.")
+	cmd.Flags().StringVarP(&info.ShowFields, "show-fields", "", "", "The file attributes to be displayed on each line, separated by commas. Optional range: Key, Hash, FileSize, PutTime, MimeType, FileType, EndUser.")
 
+	// 废弃
+	_ = cmd.Flags().MarkDeprecated("storages", "use --file-types instead")
 	return cmd
 }
 

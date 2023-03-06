@@ -53,7 +53,7 @@ func (l *Item) FileSizeString() string {
 	return fmt.Sprintf("%d", l.Fsize)
 }
 
-func (l *Item) StorageTypeString() string {
+func (l *Item) FileTypeString() string {
 	if l.Type < 1 {
 		return ""
 	}

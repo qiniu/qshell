@@ -13,6 +13,7 @@ func TestSyncV1(t *testing.T) {
 	result, errs := test.RunCmdWithError("sync", url, test.Bucket,
 		"-k", "1024K.tmp",
 		"--overwrite",
+		"--file-type", "1",
 		"-d")
 	if len(errs) > 0 {
 		t.Fail()

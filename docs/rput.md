@@ -7,10 +7,10 @@
 
 # 格式
 ```
-qshell rput [--overwrite] [--v2] [--mimetype <MimeType>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>] [--storage <StorageType> ] <Bucket> <Key> <LocalFile>
+qshell rput [--overwrite] [--v2] [--mimetype <MimeType>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>] [--file-type <FileType> ] <Bucket> <Key> <LocalFile>
 ```
 
-其中 `Overwrite`，`MimeType`，`StorageType` (0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储)参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
+其中 `Overwrite`，`MimeType`，`FileType` (0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储)参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
 
 # 帮助文档
 可以在命令行输入如下命令获取帮助文档：
@@ -33,7 +33,7 @@ $ qshell rput --doc
 # 选项
 - --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
 - -t/--mimetype：指定文件的 MimeType 。【可选】
-- -s/--storage：文件存储类型；0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储；默认为`0`(标准存储）。 【可选】
+- --file-type：文件存储类型；0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储；默认为`0`(标准存储）。 【可选】
 - -l/--callback-urls：上传回调地址，可以指定多个地址，以逗号分开。【可选】
 - -T/--callbackHost：上传回调HOST, 必须和 CallbackUrls 一起指定。 【可选】
 - --resumable-api-v2：使用分片上传 API V2 进行上传，默认为 `false`, 使用 V1 上传。【可选】
@@ -61,5 +61,5 @@ $ qshell rput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg --over
 
 4 使用低频存储
 ```
-$ qshell rput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg --storage 1
+$ qshell rput if-pbl 2015/01/18/qiniu.jpg /Users/jemy/Documents/qiniu.jpg --file-type 1
 ```

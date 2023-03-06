@@ -3,7 +3,7 @@
 
 获取的文件列表组织格式如下（每个字段用 Tab 分隔）：
 ```
-Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser
+Key\tFileSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 ```
 
 参考文档：[资源列举 (list)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/list.html)
@@ -37,7 +37,7 @@ $ qshell listbucket2 --doc
 - --output-file-max-size：每个输出文件的最大尺寸，大于此值会自动创建新的文件（新文件的文件名规律示例，源文件：/x/x/a.txt，新建文件为：/x/x/a-${index}.txt，index 为创建文件的序列号，从 0 开始），0：不限制单个输出文件的尺寸，单位：B，默认：0。 【可选】
 - --start：列举整个空间，然后从中筛选出文件上传日期在 <StartDate> 之后的文件；格式：yyyy-mm-dd-hh-MM-ss eg:2022-01-10-08-30-20 。【可选】
 - --end：列举整个空间， 然后从中筛选出文件上传日期在<EndDate>之前的文件；格式：yyyy-mm-dd-hh-MM-ss eg:2022-01-10-08-30-20 。【可选】
-- --storages：列举整个空间，然后从中筛选出满足七牛存储类型的文件；配置多个存储类型时中间用逗号隔开（eg: 1,2,3）；`0`：`普通存储`，`1`：`低频存储`，`2`：`归档存储`，`3`：`深度归档存储`。
+- --file-types：列举整个空间，然后从中筛选出满足七牛存储类型的文件；配置多个存储类型时中间用逗号隔开（eg: 1,2,3）；`0`：`普通存储`，`1`：`低频存储`，`2`：`归档存储`，`3`：`深度归档存储`。
 - --mimetypes：列举整个空间，然后从中筛选出满足 MimeType 的文件；配置多个 MimeType 时中间用逗号隔开（eg: image/*,video/）。
 - --min-file-size：列举整个空间，然后从中筛选出文件大小大于该值的文件；单位:B 。
 - --max-file-size：列举整个空间，然后从中筛选出文件大小小于该值的文件；单位:B 。
@@ -46,7 +46,7 @@ $ qshell listbucket2 --doc
 - --append： 开启选项 --out 的 append 模式， 如果本地保存文件列表的文件已经存在，如果希望像该文件添加内容，使用该选项, 必须和 --out 选项一起使用。【可选】
 - --readable： 开启文件大小的可读性选项， 会以合适的 KB, MB, GB 等显示。 【可选】
 - --marker： marker 标记列举过程中的位置， 如果列举的过程中网络断开，会返回一个 marker, 可以指定该 marker 参数继续列举。【可选】
-- --show-fields：每个文件需要展示的字段，多个使用逗号(,)隔开，可选范围：Key,FileSize,Hash,PutTime,MimeType,StorageType,EndUser 。【可选】
+- --show-fields：每个文件需要展示的字段，多个使用逗号(,)隔开，可选范围：Key,FileSize,Hash,PutTime,MimeType,FileType,EndUser 。【可选】
 - --output-fields-sep：输出的文件信息中，每行文件属性之间的分割符，默认 Tab 键（\t）。【可选】
 - --api-version：指定列举 api 的版本，可选：v1，v2 默认：v2。 【可选】
 - --api-limit：一次列举会进行多次请求，每次请求时的返回的最大条数；当前仅支持 v1，范围：0~1000，默认：1000。 【可选】

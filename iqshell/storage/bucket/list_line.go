@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	listObjectFieldsKey         = "Key"
-	listObjectFieldsHash        = "Hash"
-	listObjectFieldsFileSize    = "FileSize"
-	listObjectFieldsPutTime     = "PutTime"
-	listObjectFieldsMimeType    = "MimeType"
-	listObjectFieldsStorageType = "StorageType"
-	listObjectFieldsEndUser     = "EndUser"
+	listObjectFieldsKey      = "Key"
+	listObjectFieldsHash     = "Hash"
+	listObjectFieldsFileSize = "FileSize"
+	listObjectFieldsPutTime  = "PutTime"
+	listObjectFieldsMimeType = "MimeType"
+	listObjectFieldsFileType = "FileType"
+	listObjectFieldsEndUser  = "EndUser"
 )
 
 var listObjectFields = []string{
@@ -25,7 +25,7 @@ var listObjectFields = []string{
 	listObjectFieldsHash,
 	listObjectFieldsPutTime,
 	listObjectFieldsMimeType,
-	listObjectFieldsStorageType,
+	listObjectFieldsFileType,
 	listObjectFieldsEndUser,
 }
 
@@ -152,7 +152,7 @@ func listObjectFieldStringValue(object *ListObject, field string, readable bool)
 	case listObjectFieldsMimeType:
 		value = object.MimeType
 		break
-	case listObjectFieldsStorageType:
+	case listObjectFieldsFileType:
 		value = object.Type
 		break
 	case listObjectFieldsEndUser:
@@ -193,9 +193,9 @@ func listObjectSetFieldWithStringValue(object *ListObject, field string, value s
 	case listObjectFieldsMimeType:
 		object.MimeType = value
 		break
-	case listObjectFieldsStorageType:
+	case listObjectFieldsFileType:
 		if i, e := strconv.Atoi(value); e != nil {
-			err = data.NewEmptyError().AppendDescF("get storage type error:%v", e)
+			err = data.NewEmptyError().AppendDescF("get file type error:%v", e)
 		} else {
 			object.Type = i
 		}
