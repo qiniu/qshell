@@ -223,6 +223,8 @@ mock02.jpg	10485760	16455233472998522
 		"--skip-path-prefixes", "",
 		"--skip-suffixes", "",
 		"--thread-count", "4",
+		"--resumable-api-v2",
+		"--resumable-api-v2-part-size", "4194304",
 		"--success-list", successLogPath,
 		"--failure-list", failLogPath,
 		"--overwrite-list", overwriteLogPath,
