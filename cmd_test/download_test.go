@@ -88,7 +88,10 @@ func TestDownloadFromBucket(t *testing.T) {
 		test.RemoveFile(cfg.LogFile.Value())
 	}()
 
-	test.RunCmdWithError("qdownload", "-c", "4", path, "-d")
+	test.RunCmdWithError("qdownload",
+		"-c", "4",
+		"--thread-count", "3",
+		path, "-d")
 	if test.FileCountInDir(cfg.DestDir) < 2 {
 		t.Fail()
 	}
@@ -240,7 +243,8 @@ func TestDownload2AllFilesFromBucket(t *testing.T) {
 		"--public",
 		"--log-file", logPath,
 		"--log-level", "info",
-		"-c", "4")
+		"-c", "4",
+		"--thread-count", "3")
 	if test.FileCountInDir(destDir) < 2 {
 		t.Fail()
 	}
