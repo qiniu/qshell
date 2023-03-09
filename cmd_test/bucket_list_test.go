@@ -88,7 +88,9 @@ func TestBucketList2ToFile(t *testing.T) {
 	}
 	defer test.RemoveFile(file)
 
-	_, errs := test.RunCmdWithError("listbucket2", test.Bucket, "--prefix", "hello", "-o", file)
+	_, errs := test.RunCmdWithError("listbucket2", test.Bucket, "--prefix", "hello",
+		"-o", file,
+		"--outfile", file)
 
 	if len(errs) > 0 {
 		t.Fatal("error:", errs)

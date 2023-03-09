@@ -109,7 +109,11 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.Prefix, "prefix", "p", "", "list by prefix")
 	cmd.Flags().StringVarP(&info.Suffixes, "suffixes", "q", "", "list by key suffixes, separated by comma")
 	cmd.Flags().IntVarP(&info.MaxRetry, "max-retry", "x", -1, "max retries when error occurred")
-	cmd.Flags().StringVarP(&info.SaveToFile, "out", "o", "", "output file")
+
+	cmd.Flags().StringVarP(&info.SaveToFile, "out", "", "", "output file")
+	cmd.Flags().StringVarP(&info.SaveToFile, "outfile", "o", "", "output file")
+	_ = cmd.Flags().MarkDeprecated("out", "use --outfile instead")
+
 	cmd.Flags().IntVarP(&info.OutputLimit, "limit", "", -1, "max count of items to output")
 	cmd.Flags().Int64VarP(&info.OutputFileMaxLines, "output-file-max-lines", "", 0, "maximum number of lines per output file.")
 	cmd.Flags().Int64VarP(&info.OutputFileMaxSize, "output-file-max-size", "", 0, "maximum size of each output file")
