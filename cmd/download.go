@@ -116,7 +116,11 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&info.ToFile, "outfile", "o", "", "save file as specified by this option")
+
 	cmd.Flags().StringVarP(&info.Domain, "domain", "", "", "domain of request")
+	cmd.Flags().StringVarP(&info.Domain, "cdn-domain", "", "", "set the CDN domain name for downloading, the default is empty, which means downloading from the storage source site")
+	_ = cmd.Flags().MarkDeprecated("domain", "use --cdn-domain instead")
+	
 	cmd.Flags().BoolVarP(&info.CheckHash, "check-hash", "", false, "check the consistency of the hash between the local file and the server file. the download fails while the file is inconsistent.")
 	cmd.Flags().BoolVarP(&info.CheckSize, "check-size", "", false, "check the consistency of the file size between the local file and the server file. the download fails while the file is inconsistent.")
 	cmd.Flags().BoolVarP(&info.UseGetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")

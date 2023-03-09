@@ -47,7 +47,7 @@ var preFopCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&info.Pipeline, "pipeline", "p", "", "task pipeline")
 	cmd.Flags().StringVarP(&info.NotifyURL, "notify-url", "u", "", "notfiy url")
-	cmd.Flags().BoolVarP(&info.NotifyForce, "force", "f", false, "force execute")
+	cmd.Flags().BoolVarP(&info.NotifyForce, "force", "y", false, "force execute")
 	return cmd
 }
 
