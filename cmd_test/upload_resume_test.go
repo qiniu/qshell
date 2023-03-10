@@ -106,7 +106,8 @@ func TestResumeV2Upload(t *testing.T) {
 	result, errs := test.RunCmdWithError("rput", test.Bucket, "qshell_rput_5M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "0",
-		"--resumable-api-v2")
+		"--resumable-api-v2",
+		"--resumable-api-v2-part-size", "73875456")
 	if len(errs) > 0 {
 		t.Fail()
 	}

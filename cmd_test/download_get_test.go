@@ -127,6 +127,7 @@ func TestGetWithDomain(t *testing.T) {
 	path := filepath.Join(resultPath, test.Key)
 	_, errs := test.RunCmdWithError("get", test.Bucket, test.Key,
 		"--domain", test.BucketDomain,
+		"--cdn-domain", test.BucketDomain,
 		"-o", path)
 	defer test.RemoveFile(path)
 

@@ -4,7 +4,11 @@
 qshell qupload2 --src-dir=/home/jemy/temp --bucket=test
 ```
 
-其所支持的命令参数列表，可以通过 `-h` 选项获得，参数含义参考：[qupload](qupload.md)
+其所支持的命令参数列表，可以通过 `-h` 选项获得，参数含义参考 `qupload` 命令类似的选项：[qupload](qupload.md)
+例子：
+`qupload2` 的 `--bucket` 选项含义可参考 `qupload` 的 `bucket` 配置；
+`qupload2` 的 `--check-hash` 选项含义可参考 `qupload` 的 `check_hash` 配置；
+
 ```
 jemy•~» qshell qupload2 -h                                         
 ```
