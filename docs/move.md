@@ -6,7 +6,7 @@
 
 # 格式
 ```
-qshell move [--overwrite] <SrcBucket> <SrcKey> <DestBucket> <DestKey>
+qshell move [--overwrite] <SrcBucket> <SrcKey> <DestBucket> -k <DestKey>
 ```
 
 # 帮助文档
