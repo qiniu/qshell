@@ -93,7 +93,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().IntVar(&LogRotate, "log-rotate", 7, "log rotate days")
 
 	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
-	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, same to --file-type")
+	cmd.Flags().IntVarP(&info.FileType, "storage", "", 0, "set storage type of file, same to --file-type")
 	_ = cmd.Flags().MarkDeprecated("storage", "use --file-type instead") // 废弃 storage
 
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")

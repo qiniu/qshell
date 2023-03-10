@@ -46,7 +46,7 @@ $ qshell rput --doc
 $ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4
 
 // 使用使用分片上传 API V2
-$ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4 --v2
+$ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4 --resumable-api-v2
 ```
 
 2 上传本地文件 `/Users/jemy/Documents/qiniu.mp4` 到空间 `if-pbl` 里面，带前缀 `2015/01/18/`，并且指定 `MimeType` 参数为 `video/mp4`。
