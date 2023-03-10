@@ -36,7 +36,7 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().IntVarP(&info.FileType, "storage-type", "g", 0, "storage type, same to --file-type")
 	_ = cmd.Flags().MarkDeprecated("storage-type", "use --file-type instead") // 废弃 storage-type
 
-	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "w", false, "overwrite the file of same key in bucket")
+	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "", false, "overwrite the file of same key in bucket")
 	cmd.Flags().StringVarP(&info.BatchInfo.InputFile, "input-file", "i", "", "input file with urls")
 	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "thread-count", "c", 20, "thread count")
 	cmd.Flags().BoolVarP(&info.BatchInfo.EnableRecord, "enable-record", "", false, "record work progress, and do from last progress while retry")

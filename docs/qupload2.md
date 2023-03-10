@@ -22,7 +22,7 @@ Flags:
       --check-exists                     check file key whether in bucket before upload
       --check-hash                       check hash
       --check-size                       check file size
-      --failure-list string              upload failure file list
+  -e, --failure-list string              upload failure file list
       --file-list string                 file list to upload
       --file-type int                    set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage
   -h, --help                             help for qupload2

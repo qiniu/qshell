@@ -292,7 +292,7 @@ func TestDownload2WithKeyFile(t *testing.T) {
 		"--log-file", logPath,
 		"--log-level", "debug",
 		"-s", successLogPath,
-		"-f", failLogPath,
+		"-e", failLogPath,
 		"-c", "4",
 		"-d")
 	if test.FileCountInDir(destDir) < 2 {

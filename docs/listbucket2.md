@@ -32,7 +32,7 @@ $ qshell listbucket2 --doc
 # 选项
 - --prefix： 七牛空间中文件名的前缀，该参数为可选参数，如果不指定则获取空间中所有的文件列表。 【可选】
 - --limit：最多列条目的数量；当设置了此选项，输出的 marker 会有误差，不能使用； 默认输出所有条目。【可选】
-- --out：获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用。 【可选】
+- -o/--outfile：获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用。 【可选】
 - --output-file-max-lines：每个输出文件的最大行数，大于此行数会自动创建新的文件（新文件的文件名规律示例，源文件：/x/x/a.txt，新建文件为：/x/x/a-${index}.txt，index 为创建文件的序列号，从 0 开始），0：不限制单个输出文件的行数，默认：0。 【可选】
 - --output-file-max-size：每个输出文件的最大尺寸，大于此值会自动创建新的文件（新文件的文件名规律示例，源文件：/x/x/a.txt，新建文件为：/x/x/a-${index}.txt，index 为创建文件的序列号，从 0 开始），0：不限制单个输出文件的尺寸，单位：B，默认：0。 【可选】
 - --start：列举整个空间，然后从中筛选出文件上传日期在 <StartDate> 之后的文件；格式：yyyy-mm-dd-hh-MM-ss eg:2022-01-10-08-30-20 。【可选】
@@ -117,7 +117,7 @@ qshell listbucket if-pbl --prefix '2014/10/07/' -o if-pbl.prefix.list.txt
 hello.jpg	1710619	FlUqUK7zqbqm3NPwzq2q7TMZ-Ijs	14209629320769140	image/jpeg  1
 hello.mp4	8495868	lns2dAHvO0qYseZFgDn3UqZlMOi-	14207312835630132	video/mp4   0
 hhh	1492031	FjiRl_U0AeSsVCHXscCGObKyMy8f	14200176147531840	image/jpeg  1
-jemygraw.jpg	1900176	FtmHAbztWfPEqPMv4t4vMNRYMETK	14208960018750329	application/octet-stream	1   QiniuAndroid
+jemygraw.jpg	1900176	FtmHAbztWfPEqPMv4t4vMNRYMETK	14208960018750329	application/octet-stream	1
 ```
 
 # FAQ

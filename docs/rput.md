@@ -37,7 +37,7 @@ $ qshell rput --doc
 - -l/--callback-urls：上传回调地址，可以指定多个地址，以逗号分开。【可选】
 - -T/--callbackHost：上传回调HOST, 必须和 CallbackUrls 一起指定。 【可选】
 - --resumable-api-v2：使用分片上传 API V2 进行上传，默认为 `false`, 使用 V1 上传。【可选】
-- --v2-part-size：使用分片上传 API V2 进行上传时的分片大小，默认为 4M 。【可选】
+- --resumable-api-v2-part-size：使用分片上传 API V2 进行上传时的分片大小，默认为 4M 。【可选】
 
 # 示例
 1 上传本地文件 `/Users/jemy/Documents/qiniu.mp4` 到空间 `if-pbl` 里面。

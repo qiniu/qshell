@@ -25,7 +25,7 @@ $ qshell get --doc
 
 # 选项
 - -o/--outfile：保存在本地的文件路径；不指定，保存在当前文件夹，文件名使用存储空间中的名字【可选】
-- --domain：下载请求的 domain，qshell 下载使用 domain 优先级：1.domain(此选项) 2.bucket 绑定域名(qshell 内部查询，无需配置) ，当优先级高的 domain 下载失败后会尝试使用优先级低的 domain 进行下载。【可选】
+- --cdn-domain：下载请求的 domain，qshell 下载使用 domain 优先级：1.domain(此选项) 2.bucket 绑定域名(qshell 内部查询，无需配置) ，当优先级高的 domain 下载失败后会尝试使用优先级低的 domain 进行下载。【可选】
 - --get-file-api: 当存储服务端支持 getfile 接口时才有效。【可选】
 - --public：空间是否为公开空间；为 `true` 时为公有空间，公有空间下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为 `false`（私有空间）【可选】
 - --check-size: 下载后检测本地文件和服务端文件 size 的一致性。【可选】
