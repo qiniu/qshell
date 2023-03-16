@@ -10,13 +10,13 @@ func GetUser() *Config {
 		},
 		UseHttps: getIsUseHttps(ConfigTypeUser),
 		Hosts: &Hosts{
-			UC:       GetUcHosts(ConfigTypeUser),
-			Api:      GetApiHosts(ConfigTypeUser),
-			Rs:       GetRsHosts(ConfigTypeUser),
-			Rsf:      GetRsfHosts(ConfigTypeUser),
-			Io:       GetIoHosts(ConfigTypeUser),
-			Up:       GetUpHosts(ConfigTypeUser),
-			Endpoint: GetEndpoints(ConfigTypeUser),
+			UC:    GetUcHosts(ConfigTypeUser),
+			Api:   GetApiHosts(ConfigTypeUser),
+			Rs:    GetRsHosts(ConfigTypeUser),
+			Rsf:   GetRsfHosts(ConfigTypeUser),
+			Io:    GetIoHosts(ConfigTypeUser),
+			Up:    GetUpHosts(ConfigTypeUser),
+			IoSrc: GetEndpoints(ConfigTypeUser),
 		},
 	}
 }

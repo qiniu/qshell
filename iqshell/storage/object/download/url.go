@@ -10,7 +10,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
@@ -126,7 +125,7 @@ func createDownloadUrlWithHost(h *host.Host, info *DownloadActionInfo, useHttps 
 		urlString = utils.Endpoint(useHttps, server)
 		urlString = strings.Join([]string{urlString, "getfile", mac.AccessKey, info.Bucket, url.PathEscape(info.Key)}, "/")
 	} else {
-		isSrcDomain := isSrcDownloadDomain(server)
+		isSrcDomain := isIoSrcHost(server)
 		// 源站域名需要签名
 		if info.IsPublic && !isSrcDomain {
 			urlString = PublicUrl(UrlApiInfo{
@@ -147,36 +146,26 @@ func createDownloadUrlWithHost(h *host.Host, info *DownloadActionInfo, useHttps 
 
 // CreateSrcDownloadDomainWithBucket 公有云 bucket 源站下载域名
 func CreateSrcDownloadDomainWithBucket(cfg *config.Config, bucketName string, regionId string) (string, *data.CodeError) {
-	if len(regionId) == 0 {
-		if info, gErr := bucket.GetBucketInfo(bucket.GetBucketApiInfo{
-			Bucket: bucketName,
-		}); gErr != nil {
-			return "", gErr
-		} else {
-			regionId = getRegionId(info.Region)
-			log.DebugF("=== bucket:%+v", info)
-		}
-	}
 
-	endPoint := ""
+	ioSrcHost := ""
 	if cfg != nil {
-		endPoint = cfg.GetEndpoint()
+		ioSrcHost = cfg.GetIoSrcHost()
 	}
-	if len(endPoint) == 0 {
-		endPoint = createPublicCloudSrcDownloadEndPoint(regionId)
+	if len(ioSrcHost) == 0 {
+		ioSrcHost = createPublicCloudSrcDownloadEndPoint(regionId)
 	}
-	return bucketName + "." + endPoint, nil
+	return bucketName + "." + ioSrcHost, nil
 }
 
-func isSrcDownloadDomain(domain string) bool {
+func isIoSrcHost(host string) bool {
 	customEndpoint := ""
 	if workspace.GetConfig() != nil {
-		customEndpoint = workspace.GetConfig().GetEndpoint()
+		customEndpoint = workspace.GetConfig().GetIoSrcHost()
 	}
 	if len(customEndpoint) > 0 {
-		return strings.Contains(domain, customEndpoint)
+		return strings.Contains(host, customEndpoint)
 	} else {
-		return isPublicCloudSrcDownloadDomain(domain)
+		return isPublicCloudSrcDownloadDomain(host)
 	}
 }
 
@@ -186,23 +175,4 @@ func isPublicCloudSrcDownloadDomain(domain string) bool {
 
 func createPublicCloudSrcDownloadEndPoint(regionId string) string {
 	return "kodo-" + regionId + ".qiniucs.com"
-}
-
-var regionMap = map[string]string{
-	"z0":             "cn-east-1",
-	"cn-east-2":      "cn-east-2",
-	"z1":             "cn-north-1",
-	"z2":             "cn-south-1",
-	"na0":            "us-north-1",
-	"as0":            "ap-southeast-1",
-	"ap-northeast-1": "ap-northeast-1",
-}
-
-func getRegionId(region string) string {
-	regionId := regionMap[region]
-	if len(regionId) == 0 {
-		return region
-	} else {
-		return regionId
-	}
 }

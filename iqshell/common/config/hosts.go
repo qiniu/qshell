@@ -3,13 +3,13 @@ package config
 import "github.com/qiniu/qshell/v2/iqshell/common/utils"
 
 type Hosts struct {
-	UC       []string `json:"uc,omitempty"`
-	Api      []string `json:"api,omitempty"`
-	Rs       []string `json:"rs,omitempty"`
-	Rsf      []string `json:"rsf,omitempty"`
-	Io       []string `json:"io,omitempty"`
-	Up       []string `json:"up,omitempty"`
-	Endpoint []string `json:"endpoint,omitempty"`
+	UC    []string `json:"uc,omitempty"`
+	Api   []string `json:"api,omitempty"`
+	Rs    []string `json:"rs,omitempty"`
+	Rsf   []string `json:"rsf,omitempty"`
+	Io    []string `json:"io,omitempty"`
+	Up    []string `json:"up,omitempty"`
+	IoSrc []string `json:"io_src,omitempty"`
 }
 
 func (h *Hosts) GetOneUc() string {
@@ -36,8 +36,8 @@ func (h *Hosts) GetOneUp() string {
 	return getOneHostFromStringArray(h.Up)
 }
 
-func (h *Hosts) GetOneEndpoint() string {
-	return getOneHostFromStringArray(h.Endpoint)
+func (h *Hosts) GetOneIoSrc() string {
+	return getOneHostFromStringArray(h.IoSrc)
 }
 
 func getOneHostFromStringArray(hosts []string) string {
@@ -90,7 +90,7 @@ func (h *Hosts) merge(from *Hosts) {
 		h.Up = getRealHosts(from.Up)
 	}
 
-	if len(h.Endpoint) == 0 {
-		h.Endpoint = getRealHosts(from.Endpoint)
+	if len(h.IoSrc) == 0 {
+		h.IoSrc = getRealHosts(from.IoSrc)
 	}
 }

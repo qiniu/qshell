@@ -12,13 +12,13 @@ func GetGlobal() *Config {
 		},
 		UseHttps: getIsUseHttps(ConfigTypeGlobal),
 		Hosts: &Hosts{
-			UC:       GetUcHosts(ConfigTypeGlobal),
-			Api:      GetApiHosts(ConfigTypeGlobal),
-			Rs:       GetRsHosts(ConfigTypeGlobal),
-			Rsf:      GetRsfHosts(ConfigTypeGlobal),
-			Io:       GetIoHosts(ConfigTypeGlobal),
-			Up:       GetUpHosts(ConfigTypeGlobal),
-			Endpoint: GetEndpoints(ConfigTypeGlobal),
+			UC:    GetUcHosts(ConfigTypeGlobal),
+			Api:   GetApiHosts(ConfigTypeGlobal),
+			Rs:    GetRsHosts(ConfigTypeGlobal),
+			Rsf:   GetRsfHosts(ConfigTypeGlobal),
+			Io:    GetIoHosts(ConfigTypeGlobal),
+			Up:    GetUpHosts(ConfigTypeGlobal),
+			IoSrc: GetEndpoints(ConfigTypeGlobal),
 		},
 	}
 }
