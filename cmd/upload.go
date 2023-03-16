@@ -28,7 +28,11 @@ var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "specifies the file path where the successful file list is saved")
+
 	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "e", "", "specifies the file path where the failure file list is saved")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list-old", "f", "", "specifies the file path where the failure file list is saved, deprecated")
+	_ = cmd.Flags().MarkDeprecated("failure-list-old", "use --failure-list instead")
+
 	cmd.Flags().StringVarP(&info.OverwriteExportFilePath, "overwrite-list", "w", "", "specifies the file path where the overwrite file list is saved")
 	cmd.Flags().IntVarP(&info.Info.WorkerCount, "worker", "c", 1, "worker count")
 	cmd.Flags().StringVarP(&info.CallbackUrl, "callback-urls", "l", "", "upload callback urls, separated by comma")
