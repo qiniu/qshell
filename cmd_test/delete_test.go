@@ -39,14 +39,14 @@ func TestDeleteNoExistKey(t *testing.T) {
 
 func TestDeleteNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("delete")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestDeleteNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("delete", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }

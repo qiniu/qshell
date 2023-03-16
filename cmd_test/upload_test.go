@@ -260,7 +260,7 @@ mock02.jpg	10485760	16455233472998522
 
 func TestQUpload2NoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("qupload2")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fatal(errs)
 	}
 }
@@ -268,7 +268,7 @@ func TestQUpload2NoBucket(t *testing.T) {
 func TestQUpload2NoSrc(t *testing.T) {
 	_, errs := test.RunCmdWithError("qupload2",
 		"--bucket", test.Bucket)
-	if !strings.Contains(errs, "SrcDir can't empty") {
+	if !strings.Contains(errs, "SrcDir can't be empty") {
 		t.Fatal(errs)
 	}
 }

@@ -64,7 +64,7 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 
 	if len(info.UploadConfigFile) == 0 {
 		data.SetCmdStatusError()
-		log.Error("LocalDownloadConfig can't empty")
+		log.Error("LocalDownloadConfig can't be empty")
 		return
 	}
 

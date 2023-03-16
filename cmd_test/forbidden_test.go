@@ -38,14 +38,14 @@ func TestForbiddenNoExistKey(t *testing.T) {
 
 func TestForbiddenNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("forbidden")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestForbiddenNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("forbidden", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }

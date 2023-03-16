@@ -38,21 +38,21 @@ func TestMimeTypeNoExistKey(t *testing.T) {
 
 func TestMimeTypeNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("chgm")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestMimeTypeNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("chgm", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestMimeTypeNoMimeType(t *testing.T) {
 	_, errs := test.RunCmdWithError("chgm", test.Bucket, test.Key)
-	if !strings.Contains(errs, "MimeType can't empty") {
+	if !strings.Contains(errs, "MimeType can't be empty") {
 		t.Fail()
 	}
 }

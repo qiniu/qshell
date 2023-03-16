@@ -34,7 +34,7 @@ func TestRPCEncodeMoreData(t *testing.T) {
 
 func TestRPCEncodeNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("rpcencode")
-	if !strings.Contains(err, "Data can't empty") {
+	if !strings.Contains(err, "Data can't be empty") {
 		t.Fail()
 	}
 	return
@@ -79,7 +79,7 @@ func TestBase64Encode(t *testing.T) {
 
 func TestBase64EncodeNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("b64encode")
-	if !strings.Contains(err, "Data can't empty") {
+	if !strings.Contains(err, "Data can't be empty") {
 		t.Fail()
 	}
 	return
@@ -99,7 +99,7 @@ func TestBase64Decode(t *testing.T) {
 
 func TestBase64DecodeNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("b64decode")
-	if !strings.Contains(err, "Data can't empty") {
+	if !strings.Contains(err, "Data can't be empty") {
 		t.Fail()
 	}
 	return
@@ -122,7 +122,7 @@ func TestD2ts(t *testing.T) {
 
 func TestD2tsNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("d2ts")
-	if !strings.Contains(err, "args can't empty") {
+	if !strings.Contains(err, "args can't be empty") {
 		t.Fail()
 	}
 	return
@@ -147,7 +147,7 @@ func TestTs2D(t *testing.T) {
 
 func TestTs2DNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("ts2d")
-	if !strings.Contains(err, "args can't empty") {
+	if !strings.Contains(err, "args can't be empty") {
 		t.Fail()
 	}
 	return
@@ -167,7 +167,7 @@ func TestTms2d(t *testing.T) {
 
 func TestTms2dNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("tms2d")
-	if !strings.Contains(err, "args can't empty") {
+	if !strings.Contains(err, "args can't be empty") {
 		t.Fail()
 	}
 	return
@@ -188,7 +188,7 @@ func TestTns2d(t *testing.T) {
 
 func TestTns2dNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("tns2d")
-	if !strings.Contains(err, "args can't empty") {
+	if !strings.Contains(err, "args can't be empty") {
 		t.Fail()
 	}
 	return
@@ -213,7 +213,7 @@ func TestUrlEncode(t *testing.T) {
 
 func TestUrlEncodeNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("urlencode")
-	if !strings.Contains(err, "Data can't empty") {
+	if !strings.Contains(err, "Data can't be empty") {
 		t.Fail()
 	}
 	return
@@ -233,7 +233,7 @@ func TestUrlDecode(t *testing.T) {
 
 func TestUrlDecodeNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("urldecode")
-	if !strings.Contains(err, "Data can't empty") {
+	if !strings.Contains(err, "Data can't be empty") {
 		t.Fail()
 	}
 	return
@@ -253,7 +253,7 @@ func TestReqid(t *testing.T) {
 
 func TestReqidNoData(t *testing.T) {
 	_, err := test.RunCmdWithError("reqid")
-	if !strings.Contains(err, "ReqId can't empty") {
+	if !strings.Contains(err, "ReqId can't be empty") {
 		t.Fail()
 	}
 	return

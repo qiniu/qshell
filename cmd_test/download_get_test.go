@@ -24,7 +24,7 @@ func TestGetImage(t *testing.T) {
 		t.Fail()
 	}
 	if !test.IsFileHasContent(path) {
-		t.Fatal("get file content can't empty")
+		t.Fatal("get file content can't be empty")
 	}
 }
 
@@ -51,7 +51,7 @@ func TestGetImageAndCheck(t *testing.T) {
 		t.Fail()
 	}
 	if !test.IsFileHasContent(path) {
-		t.Fatal("get file content can't empty")
+		t.Fatal("get file content can't be empty")
 	}
 }
 
@@ -71,7 +71,7 @@ func TestGet(t *testing.T) {
 		t.Fail()
 	}
 	if !test.IsFileHasContent(path) {
-		t.Fatal("get file content can't empty")
+		t.Fatal("get file content can't be empty")
 	}
 }
 
@@ -92,7 +92,7 @@ func TestGetWithCheckSize(t *testing.T) {
 		t.Fail()
 	}
 	if !test.IsFileHasContent(path) {
-		t.Fatal("get file content can't empty")
+		t.Fatal("get file content can't be empty")
 	}
 }
 
@@ -113,7 +113,7 @@ func TestGetWithCheckHash(t *testing.T) {
 		t.Fail()
 	}
 	if !test.IsFileHasContent(path) {
-		t.Fatal("get file content can't empty")
+		t.Fatal("get file content can't be empty")
 	}
 }
 
@@ -134,7 +134,7 @@ func TestGetWithDomain(t *testing.T) {
 		t.Fail()
 	}
 	if !test.IsFileHasContent(path) {
-		t.Fatal("get file content can't empty")
+		t.Fatal("get file content can't be empty")
 	}
 }
 
@@ -173,14 +173,14 @@ func TestGetNoExistKey(t *testing.T) {
 
 func TestGetNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("get")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestGetNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("get", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }

@@ -24,7 +24,7 @@ func TestBucket(t *testing.T) {
 
 func TestBucketNoBucket(t *testing.T) {
 	_, err := test.RunCmdWithError("bucket")
-	if !strings.Contains(err, "Bucket can't empty") {
+	if !strings.Contains(err, "Bucket can't be empty") {
 		t.Fail()
 	}
 }

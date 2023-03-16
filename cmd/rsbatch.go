@@ -154,6 +154,33 @@ var batchDeleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var batchChangeLifecycleCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.BatchChangeLifecycleInfo{}
+	var cmd = &cobra.Command{
+		Use:   "batchchlifecycle <Bucket> [-i <KeyFile>] [--to-ia-after-days <ToIAAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--delete-after-days <DeleteAfterDays>]",
+		Short: "Set the lifecycle of some file.",
+		Long: `Set the lifecycle of some file. <KeyFile> contain all file keys that need to set. one key per line.
+Lifecycle value must great than or equal to -1, unit: day.
+* less than  -1: there's no point and it won't trigger any effect
+* equal to   -1: cancel lifecycle
+* equal to    0: there's no point and it won't trigger any effect
+* bigger than 0: set lifecycle`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.BatchChangeLifecycle
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			operations.BatchChangeLifecycle(cfg, info)
+		},
+	}
+	cmd.Flags().StringVarP(&info.ToIAAfterDays, "to-ia-after-days", "", "", "to IA storage after some days. the range is -1 or bigger than 0. -1 means cancel to IA storage")
+	cmd.Flags().StringVarP(&info.ToArchiveAfterDays, "to-archive-after-days", "", "", "to archive storage after some days. the range is -1 or bigger than 0. -1 means cancel to archive storage")
+	cmd.Flags().StringVarP(&info.ToDeepArchiveAfterDays, "to-deep-archive-after-days", "", "", "to deep archive storage after some days. the range is -1 or bigger than 0. -1 means cancel to deep archive storage")
+	cmd.Flags().StringVarP(&info.DeleteAfterDays, "delete-after-days", "", "", "delete after some days. the range is -1 or bigger than 0. -1 means cancel to delete")
+	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
+	return cmd
+}
+
 var batchMoveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.BatchMoveInfo{}
 	var cmd = &cobra.Command{
@@ -325,6 +352,7 @@ func rsBatchCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 		batchMoveCmdBuilder(cfg),
 		batchRenameCmdBuilder(cfg),
 		batchDeleteCmdBuilder(cfg),
+		batchChangeLifecycleCmdBuilder(cfg),
 		batchDeleteAfterCmdBuilder(cfg),
 		batchChangeMimeCmdBuilder(cfg),
 		batchChangeTypeCmdBuilder(cfg),
