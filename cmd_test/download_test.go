@@ -101,6 +101,47 @@ func TestDownloadFromBucket(t *testing.T) {
 	}
 }
 
+func TestDownloadWithDomain(t *testing.T) {
+	test.RemoveRootPath()
+
+	cfg := &DownloadCfg{
+		DownloadCfg: operations.DownloadCfg{
+			KeyFile:         "",
+			SavePathHandler: "{{pathJoin .DestDir (replace \"hello\" \"lala\" .Key)}}",
+			Bucket:          test.Bucket,
+			Prefix:          "hello3,hello5,hello7",
+			Suffixes:        "",
+			IoHost:          test.BucketDomain,
+			Public:          true,
+			CheckSize:       true,
+			Referer:         "",
+			Domain:          test.BucketDomain,
+			RecordRoot:      "",
+		},
+	}
+	path, err := createDownloadConfigFile(cfg)
+	if err != nil {
+		t.Fatal("create cdn config file error:", err)
+	}
+	defer func() {
+		test.RemoveFile(path)
+		test.RemoveFile(cfg.DestDir)
+		test.RemoveFile(cfg.LogFile.Value())
+	}()
+
+	test.RunCmdWithError("qdownload",
+		"-c", "4",
+		"--thread-count", "3",
+		path, "-d")
+	if test.FileCountInDir(cfg.DestDir) < 2 {
+		t.Fail()
+	}
+
+	if !test.IsFileHasContent(cfg.LogFile.Value()) {
+		t.Fatal("log file should has content")
+	}
+}
+
 func TestDownloadNoBucket(t *testing.T) {
 	test.RemoveRootPath()
 
@@ -350,6 +391,54 @@ func TestDownload2PublicWithKeyFile(t *testing.T) {
 
 	test.RunCmdWithError("qdownload2",
 		"--bucket", test.Bucket,
+		"--dest-dir", destDir,
+		"--key-file", keysFilePath,
+		"--log-file", logPath,
+		"--log-level", "debug",
+		"--public",
+		"-c", "4",
+		"-d")
+	if test.FileCountInDir(destDir) < 2 {
+		t.Fail()
+	}
+
+	if !test.IsFileHasContent(logPath) {
+		t.Fatal("log file should has content")
+	}
+
+	logContent := test.FileContent(logPath)
+	if strings.Contains(logContent, "?e=") {
+		t.Fatal("download url should public")
+	}
+
+	return
+}
+
+func TestDownload2PublicWithDomain(t *testing.T) {
+	test.RemoveRootPath()
+
+	keys := test.KeysString + "\nhello_10.json"
+	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", keys)
+	if err != nil {
+		t.Fatal("create cdn config file error:", err)
+	}
+
+	rootPath, err := test.RootPath()
+	if err != nil {
+		t.Fatal("get root path error:", err)
+	}
+
+	destDir := filepath.Join(rootPath, "download2")
+	logPath := filepath.Join(rootPath, "download2_log.public")
+	defer func() {
+		test.RemoveFile(keysFilePath)
+		test.RemoveFile(destDir)
+		test.RemoveFile(logPath)
+	}()
+
+	test.RunCmdWithError("qdownload2",
+		"--bucket", test.Bucket,
+		"--domain", test.BucketDomain,
 		"--dest-dir", destDir,
 		"--key-file", keysFilePath,
 		"--log-file", logPath,
