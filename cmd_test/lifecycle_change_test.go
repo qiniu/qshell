@@ -67,6 +67,13 @@ func TestChangeLifecycleNoSrcKey(t *testing.T) {
 	}
 }
 
+func TestChangeLifecycleNoAction(t *testing.T) {
+	_, errs := test.RunCmdWithError("chlifecycle", test.Bucket, test.KeyNotExist)
+	if !strings.Contains(errs, "must set at least one value of lifecycle") {
+		t.Fail()
+	}
+}
+
 func TestChangeLifecycleDocument(t *testing.T) {
 	test.TestDocument("chlifecycle", t)
 }
@@ -182,6 +189,29 @@ func TestBatchChangeLifecycleWithRecord(t *testing.T) {
 		fmt.Println(result)
 		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: shouldn redo because set --record-redo-while-error")
+	}
+}
+
+func TestBatchChangeLifecycleNoAction(t *testing.T) {
+	batchConfig := ""
+	keys := test.Keys
+	for _, key := range keys {
+		batchConfig += key + "\n"
+	}
+
+	path, err := test.CreateFileWithContent("batch_change_lifecycle.txt", batchConfig)
+	if err != nil {
+		t.Fatal("create batch change lifecycle config file error:", err)
+	}
+	defer func() {
+		_ = test.RemoveFile(path)
+	}()
+
+	_, errs := test.RunCmdWithError("batchchlifecycle", test.Bucket,
+		"-i", path,
+		"-y")
+	if !strings.Contains(errs, "must set at least one value of lifecycle") {
+		t.Fail()
 	}
 }
 
