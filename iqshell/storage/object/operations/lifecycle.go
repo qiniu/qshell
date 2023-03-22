@@ -25,10 +25,10 @@ func (info *ChangeLifecycleInfo) Check() *data.CodeError {
 		return alert.CannotEmptyError("Key", "")
 	}
 
-	if len(info.ToIAAfterDays) == 0 &&
-		len(info.ToArchiveAfterDays) == 0 &&
-		len(info.ToDeepArchiveAfterDays) == 0 &&
-		len(info.DeleteAfterDays) == 0 {
+	if info.ToIAAfterDays == 0 &&
+		info.ToArchiveAfterDays == 0 &&
+		info.ToDeepArchiveAfterDays == 0 &&
+		info.DeleteAfterDays == 0 {
 		return data.NewEmptyError().AppendDesc("must set at least one value of lifecycle")
 	}
 
@@ -51,7 +51,7 @@ func ChangeLifecycle(cfg *iqshell.Config, info *ChangeLifecycleInfo) {
 	}
 
 	if result.IsSuccess() {
-		lifecycleValues := []string{info.ToIAAfterDays, info.ToArchiveAfterDays,
+		lifecycleValues := []int{info.ToIAAfterDays, info.ToArchiveAfterDays,
 			info.ToDeepArchiveAfterDays, info.DeleteAfterDays}
 		lifecycleDescs := []string{"to IA storage", "to archive storage",
 			"to deep archive storage", "delete"}
@@ -59,13 +59,13 @@ func ChangeLifecycle(cfg *iqshell.Config, info *ChangeLifecycleInfo) {
 		for i := 0; i < len(lifecycleValues); i++ {
 			lifecycleValue := lifecycleValues[i]
 			lifecycleDesc := lifecycleDescs[i]
-			if len(lifecycleValue) == 0 {
+			if lifecycleValue == 0 {
 				continue
 			}
-			if lifecycleValue == "-1" {
+			if lifecycleValue == -1 {
 				log.InfoF("● cancel %s", lifecycleDesc)
 			} else {
-				log.InfoF("● %s after %s days", lifecycleDesc, lifecycleValue)
+				log.InfoF("● %s after %d days", lifecycleDesc, lifecycleValue)
 			}
 		}
 	} else {
@@ -78,10 +78,10 @@ func ChangeLifecycle(cfg *iqshell.Config, info *ChangeLifecycleInfo) {
 type BatchChangeLifecycleInfo struct {
 	BatchInfo              batch.Info //
 	Bucket                 string     //
-	ToIAAfterDays          string     // 转换到 低频存储类型，设置为 -1 表示取消
-	ToArchiveAfterDays     string     // 转换到 归档存储类型， 设置为 -1 表示取消
-	ToDeepArchiveAfterDays string     // 转换到 深度归档存储类型， 设置为 -1 表示取消
-	DeleteAfterDays        string     // 过期删除，删除后不可恢复，设置为 -1 表示取消
+	ToIAAfterDays          int        // 转换到 低频存储类型，设置为 -1 表示取消
+	ToArchiveAfterDays     int        // 转换到 归档存储类型， 设置为 -1 表示取消
+	ToDeepArchiveAfterDays int        // 转换到 深度归档存储类型， 设置为 -1 表示取消
+	DeleteAfterDays        int        // 过期删除，删除后不可恢复，设置为 -1 表示取消
 }
 
 func (info *BatchChangeLifecycleInfo) Check() *data.CodeError {
@@ -93,12 +93,13 @@ func (info *BatchChangeLifecycleInfo) Check() *data.CodeError {
 		return alert.CannotEmptyError("Bucket", "")
 	}
 
-	if len(info.ToIAAfterDays) == 0 &&
-		len(info.ToArchiveAfterDays) == 0 &&
-		len(info.ToDeepArchiveAfterDays) == 0 &&
-		len(info.DeleteAfterDays) == 0 {
+	if info.ToIAAfterDays == 0 &&
+		info.ToArchiveAfterDays == 0 &&
+		info.ToDeepArchiveAfterDays == 0 &&
+		info.DeleteAfterDays == 0 {
 		return data.NewEmptyError().AppendDesc("must set at least one value of lifecycle")
 	}
+
 	return nil
 }
 

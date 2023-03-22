@@ -13,10 +13,10 @@ import (
 type ChangeLifecycleApiInfo struct {
 	Bucket                 string `json:"bucket"`
 	Key                    string `json:"key"`
-	ToIAAfterDays          string `json:"to_ia_after_days"`           // 转换到 低频存储类型，设置为 -1 表示取消
-	ToArchiveAfterDays     string `json:"to_archive_after_days"`      // 转换到 归档存储类型， 设置为 -1 表示取消
-	ToDeepArchiveAfterDays string `json:"to_deep_archive_after_days"` // 转换到 深度归档存储类型， 设置为 -1 表示取消
-	DeleteAfterDays        string `json:"delete_after_days"`          // 过期删除，删除后不可恢复，设置为 -1 表示取消
+	ToIAAfterDays          int    `json:"to_ia_after_days"`           // 转换到 低频存储类型，设置为 -1 表示取消
+	ToArchiveAfterDays     int    `json:"to_archive_after_days"`      // 转换到 归档存储类型， 设置为 -1 表示取消
+	ToDeepArchiveAfterDays int    `json:"to_deep_archive_after_days"` // 转换到 深度归档存储类型， 设置为 -1 表示取消
+	DeleteAfterDays        int    `json:"delete_after_days"`          // 过期删除，删除后不可恢复，设置为 -1 表示取消
 }
 
 func (l *ChangeLifecycleApiInfo) GetBucket() string {
@@ -29,17 +29,17 @@ func (l *ChangeLifecycleApiInfo) ToOperation() (string, *data.CodeError) {
 	}
 
 	lifecycleSetting := ""
-	if len(l.ToIAAfterDays) > 0 && l.ToIAAfterDays != "0" {
-		lifecycleSetting += fmt.Sprintf("/toIAAfterDays/%s", l.ToIAAfterDays)
+	if l.ToIAAfterDays != 0 {
+		lifecycleSetting += fmt.Sprintf("/toIAAfterDays/%d", l.ToIAAfterDays)
 	}
-	if len(l.ToArchiveAfterDays) > 0 && l.ToArchiveAfterDays != "0" {
-		lifecycleSetting += fmt.Sprintf("/toArchiveAfterDays/%s", l.ToArchiveAfterDays)
+	if l.ToArchiveAfterDays != 0 {
+		lifecycleSetting += fmt.Sprintf("/toArchiveAfterDays/%d", l.ToArchiveAfterDays)
 	}
-	if len(l.ToDeepArchiveAfterDays) > 0 && l.ToDeepArchiveAfterDays != "0" {
-		lifecycleSetting += fmt.Sprintf("/toDeepArchiveAfterDays/%s", l.ToDeepArchiveAfterDays)
+	if l.ToDeepArchiveAfterDays != 0 {
+		lifecycleSetting += fmt.Sprintf("/toDeepArchiveAfterDays/%d", l.ToDeepArchiveAfterDays)
 	}
-	if len(l.DeleteAfterDays) > 0 && l.DeleteAfterDays != "0" {
-		lifecycleSetting += fmt.Sprintf("/deleteAfterDays/%s", l.DeleteAfterDays)
+	if l.DeleteAfterDays != 0 {
+		lifecycleSetting += fmt.Sprintf("/deleteAfterDays/%d", l.DeleteAfterDays)
 	}
 
 	if len(lifecycleSetting) == 0 {

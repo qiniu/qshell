@@ -75,7 +75,7 @@ $ qshell batchchlifecycle if-pbl -i lifecycle.txt \
 
 2 如果不希望上面的重命名过程出现验证码提示，可以使用 `--force` 选项：
 ```
-$ qshell batchchlifecycle force if-pbl -i lifecycle.txt \
+$ qshell batchchlifecycle --force if-pbl -i lifecycle.txt \
  --to-ia-after-days 30 \
  --to-archive-after-days 60 \
  --to-deep-archive-after-days 180 \
