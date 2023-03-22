@@ -225,51 +225,53 @@ qshell 命令配置 > 账号配置 > 全局配置
 | user     | 账号   | 列举账号信息，在各个账号之间切换, 删除账号               | [文档](docs/user.md)     |                
 
 ### 存储相关命令
-| 命令             | 类别   | 描述                                      | 详细                           |
-|----------------| ------ |-----------------------------------------|------------------------------|
-| mkbucket       | 创建   | 创建存储空间                                  | [文档](docs/mkbucket.md)       |
-| bucket         | 查看                       | 查看存储空间信息                                | [文档](docs/bucket.md)         |  
-| batchdelete    | 删除   | 批量删除七牛空间中的文件，可以直接根据 `listbucket` 的结果来删除 | [文档](docs/batchdelete.md)    |
-| delete         | 删除   | 删除七牛空间中的一个文件                            | [文档](docs/delete.md)         |
-| batchchgm      | 修改   | 批量修改七牛空间中文件的MimeType                    | [文档](docs/batchchgm.md)      |
-| chgm           | 修改   | 修改七牛空间中的一个文件的MimeType                   | [文档](docs/chgm.md)           |
-| batchchtype    | 修改   | 批量修改七牛空间中的文件的存储类型                       | [文档](docs/batchchtype.md)    |
-| chtype         | 修改   | 修改七牛空间中的一个文件的存储类型                       | [文档](docs/chtype.md)         |
-| batchexpire    | 修改   | 批量修改七牛空间中的文件的生存时间                       | [文档](docs/batchexpire.md)    |
-| expire         | 修改   | 修改七牛空间中的一个文件的生存时间                       | [文档](docs/expire.md)         |
-| batchcopy      | 拷贝   | 批量复制七牛空间中的文件到另一个空间                      | [文档](docs/batchcopy.md)      |
-| copy           | 拷贝   | 复制七牛空间中的一个文件                            | [文档](docs/copy.md)           |
-| batchmove      | 移动   | 批量移动七牛空间中的文件到另一个空间                      | [文档](docs/batchmove.md)      |
-| move           | 移动   | 移动或重命名七牛空间中的一个文件                        | [文档](docs/move.md)           |
-| batchrename    | 重命名 | 批量重命名七牛空间中的文件                           | [文档](docs/batchrename.md)    |
-| rename         | 重命名 | 重命名七牛空间中的文件                             | [文档](docs/rename.md)         |
-| batchrestorear | 解冻 | 批量解冻七牛空间中的归档/深度归档存储类型文件                 | [文档](docs/batchrestorear.md) |  
-| restorear      | 解冻 | 解冻七牛空间中的归档/深度归档存储类型文件                   | [文档](docs/restorear.md)      |               
-| batchstat      | 查询   | 批量查询七牛空间中文件的基本信息                        | [文档](docs/batchstat.md)      |
-| stat           | 查询   | 查询七牛空间中一个文件的基本信息                        | [文档](docs/stat.md)           |
-| buckets        | 查询   | 获取当前账号下所有的空间名称                          | [文档](docs/buckets.md)        |
-| domains        | 查询   | 获取指定空间的所有关联域名                           | [文档](docs/domains.md)        |
-| listbucket     | 列举   | 列举七牛空间里面的所有文件                           | [文档](docs/listbucket.md)     |
-| listbucket2    | 列举   | 列举七牛空间里面的所有文件                           | [文档](docs/listbucket2.md)    |
-| batchforbidden | 禁用   | 批量修改文件可访问状态                             | [文档](docs/batchforbidden.md) |
-| forbidden      | 禁用   | 修改文件可访问状态                               | [文档](docs/forbidden.md)      |
-| fput           | 上传   | 以文件表单的方式上传一个文件                          | [文档](docs/fput.md)           |
-| rput           | 上传   | 以分片上传的方式上传一个文件                          | [文档](docs/rput.md)           |
-| qupload        | 上传   | 同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（配置式）      | [文档](docs/qupload.md)        |
-| qupload2       | 上传   | 同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（命令式）      | [文档](docs/qupload2.md)       |
-| qdownload      | 下载   | 从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步（配置式）   | [文档](docs/qdownload.md)      |
-| qdownload2     | 下载   | 从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步（命令式）   | [文档](docs/qdownload2.md)     |
-| get            | 下载   | 下载存储空间中的文件                              | [文档](docs/get.md)            |
-| fetch          | 抓取   | 从Internet上抓取一个资源并存储到七牛空间中               | [文档](docs/fetch.md)          |
-| batchfetch     | 抓取   | 从Internet上抓取一个资源并存储到七牛空间中               | [文档](docs/batchfetch.md)     |
-| sync           | 抓取   | 从Internet上抓取一个资源并存储到七牛空间中，适合大文件的场合      | [文档](docs/sync.md)           |
-| abfetch        | 抓取   | 异步抓取网络资源到七牛存储空间                         | [文档](docs/abfetch.md)        |
-| m3u8delete     | m3u8   | 根据流媒体播放列表文件删除七牛空间中的流媒体切片                | [文档](docs/m3u8delete.md)     |
-| m3u8replace    | m3u8   | 修改流媒体播放列表文件中的切片引用域名                     | [文档](docs/m3u8replace.md)    |
-| batchsign      | 其他   | 批量根据资源的公开外链生成资源的私有外链                    | [文档](docs/batchsign.md)      |
-| dircache       | 其他   | 输出本地指定路径下所有的文件列表                        | [文档](docs/dircache.md)       |
-| prefetch       | 其他   | 更新七牛空间中从源站镜像过来的文件                       | [文档](docs/prefetch.md)       |
-| privateurl     | 其他   | 生成私有空间资源的访问外链                           | [文档](docs/privateurl.md)     |
+| 命令               | 类别   | 描述                                      | 详细                          |
+|------------------|------|-----------------------------------------|-----------------------------|
+| mkbucket         | 创建   | 创建存储空间                                  | [文档](docs/mkbucket.md)      |
+| bucket           | 查看   | 查看存储空间信息                                | [文档](docs/bucket.md)        |  
+| batchdelete      | 删除   | 批量删除七牛空间中的文件，可以直接根据 `listbucket` 的结果来删除 | [文档](docs/batchdelete.md)   |
+| delete           | 删除   | 删除七牛空间中的一个文件                            | [文档](docs/delete.md)        |
+| batchchgm        | 修改   | 批量修改七牛空间中文件的MimeType                    | [文档](docs/batchchgm.md)     |
+| chgm             | 修改   | 修改七牛空间中的一个文件的MimeType                   | [文档](docs/chgm.md)          |
+| batchchtype      | 修改   | 批量修改七牛空间中的文件的存储类型                       | [文档](docs/batchchtype.md)   |
+| chtype           | 修改   | 修改七牛空间中的一个文件的存储类型                       | [文档](docs/chtype.md)        |
+| batchexpire      | 修改   | 批量修改七牛空间中的文件的生存时间                       | [文档](docs/batchexpire.md)   |
+| expire           | 修改   | 修改七牛空间中的一个文件的生存时间                       | [文档](docs/expire.md)        |
+| batchcopy        | 拷贝   | 批量复制七牛空间中的文件到另一个空间                      | [文档](docs/batchcopy.md)     |
+| copy             | 拷贝   | 复制七牛空间中的一个文件                            | [文档](docs/copy.md)          |
+| batchmove        | 移动   | 批量移动七牛空间中的文件到另一个空间                      | [文档](docs/batchmove.md)     |
+| move             | 移动   | 移动或重命名七牛空间中的一个文件                        | [文档](docs/move.md)          |
+| batchrename      | 重命名  | 批量重命名七牛空间中的文件                           | [文档](docs/batchrename.md)   |
+| rename           | 重命名  | 重命名七牛空间中的文件                             | [文档](docs/rename.md)        |
+| batchrestorear   | 解冻   | 批量解冻七牛空间中的归档/深度归档存储类型文件                 | [文档](docs/batchrestorear.md) |  
+| restorear        | 解冻   | 解冻七牛空间中的归档/深度归档存储类型文件                   | [文档](docs/restorear.md)     |               
+| batchstat        | 查询   | 批量查询七牛空间中文件的基本信息                        | [文档](docs/batchstat.md)     |
+| stat             | 查询   | 查询七牛空间中一个文件的基本信息                        | [文档](docs/stat.md)          |
+| chlifecycle      | 修改   | 修改七牛空间中一个文件的生命周期                        | [文档](docs/chlifecycle.md)              |
+| batchchlifecycle | 修改   | 批量修改七牛空间中文件的生命周期                      | [文档](docs/batchchlifecycle.md)          |
+| buckets          | 查询   | 获取当前账号下所有的空间名称                          | [文档](docs/buckets.md)       |
+| domains          | 查询   | 获取指定空间的所有关联域名                           | [文档](docs/domains.md)       |
+| listbucket       | 列举   | 列举七牛空间里面的所有文件                           | [文档](docs/listbucket.md)    |
+| listbucket2      | 列举   | 列举七牛空间里面的所有文件                           | [文档](docs/listbucket2.md)   |
+| batchforbidden   | 禁用   | 批量修改文件可访问状态                             | [文档](docs/batchforbidden.md) |
+| forbidden        | 禁用   | 修改文件可访问状态                               | [文档](docs/forbidden.md)     |
+| fput             | 上传   | 以文件表单的方式上传一个文件                          | [文档](docs/fput.md)          |
+| rput             | 上传   | 以分片上传的方式上传一个文件                          | [文档](docs/rput.md)          |
+| qupload          | 上传   | 同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（配置式）      | [文档](docs/qupload.md)       |
+| qupload2         | 上传   | 同步数据到七牛空间， 带同步进度信息，和数据上传完整性检查（命令式）      | [文档](docs/qupload2.md)      |
+| qdownload        | 下载   | 从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步（配置式）   | [文档](docs/qdownload.md)     |
+| qdownload2       | 下载   | 从七牛空间同步数据到本地，支持只同步某些前缀的文件，支持增量同步（命令式）   | [文档](docs/qdownload2.md)    |
+| get              | 下载   | 下载存储空间中的文件                              | [文档](docs/get.md)           |
+| fetch            | 抓取   | 从Internet上抓取一个资源并存储到七牛空间中               | [文档](docs/fetch.md)         |
+| batchfetch       | 抓取   | 从Internet上抓取一个资源并存储到七牛空间中               | [文档](docs/batchfetch.md)    |
+| sync             | 抓取   | 从Internet上抓取一个资源并存储到七牛空间中，适合大文件的场合      | [文档](docs/sync.md)          |
+| abfetch          | 抓取   | 异步抓取网络资源到七牛存储空间                         | [文档](docs/abfetch.md)       |
+| m3u8delete       | m3u8 | 根据流媒体播放列表文件删除七牛空间中的流媒体切片                | [文档](docs/m3u8delete.md)    |
+| m3u8replace      | m3u8 | 修改流媒体播放列表文件中的切片引用域名                     | [文档](docs/m3u8replace.md)   |
+| batchsign        | 其他   | 批量根据资源的公开外链生成资源的私有外链                    | [文档](docs/batchsign.md)     |
+| dircache         | 其他   | 输出本地指定路径下所有的文件列表                        | [文档](docs/dircache.md)      |
+| prefetch         | 其他   | 更新七牛空间中从源站镜像过来的文件                       | [文档](docs/prefetch.md)      |
+| privateurl       | 其他   | 生成私有空间资源的访问外链                           | [文档](docs/privateurl.md)    |
 
 
 ### CDN 相关的命令
