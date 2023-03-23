@@ -105,7 +105,7 @@ func (info *BatchChangeLifecycleInfo) Check() *data.CodeError {
 
 func BatchChangeLifecycle(cfg *iqshell.Config, info BatchChangeLifecycleInfo) {
 	cfg.JobPathBuilder = func(cmdPath string) string {
-		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s:%s:%s:%s:%s", cfg.CmdCfg.CmdId, info.Bucket,
+		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%d:%d:%d:%d:%s", cfg.CmdCfg.CmdId, info.Bucket,
 			info.ToIAAfterDays, info.ToArchiveAfterDays, info.ToDeepArchiveAfterDays, info.DeleteAfterDays,
 			info.BatchInfo.InputFile))
 		return filepath.Join(cmdPath, jobId)
