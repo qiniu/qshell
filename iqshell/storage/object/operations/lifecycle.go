@@ -155,7 +155,7 @@ func BatchChangeLifecycle(cfg *iqshell.Config, info BatchChangeLifecycleInfo) {
 			}
 			in := (*ChangeLifecycleInfo)(apiInfo)
 			if result.IsSuccess() {
-				log.InfoF("Change lifecycle Success, [%s:%s] => '%s:%s:%s:%s'", in.Bucket, in.Key,
+				log.InfoF("Change lifecycle Success, [%s:%s] => '%d:%d:%d:%d'", in.Bucket, in.Key,
 					in.ToIAAfterDays, in.ToArchiveAfterDays, in.ToDeepArchiveAfterDays, in.DeleteAfterDays)
 			} else {
 				data.SetCmdStatusError()
