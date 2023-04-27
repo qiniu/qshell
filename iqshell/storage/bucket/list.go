@@ -25,7 +25,7 @@ type ListApiInfo struct {
 	StartTime          time.Time // list item 的 put time 区间的开始时间 【闭区间】
 	EndTime            time.Time // list item 的 put time 区间的终止时间 【闭区间】
 	Suffixes           []string  // list item 必须包含后缀
-	StorageTypes       []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
+	FileTypes          []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
 	MimeTypes          []string  // list item Mimetype类型，多个使用逗号隔开
 	MinFileSize        int64     // 文件最小值，单位: B
 	MaxFileSize        int64     // 文件最大值，单位: B
@@ -79,7 +79,7 @@ func List(info ListApiInfo,
 	log.DebugF("Suffixes:%s", info.Suffixes)
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.EndTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
-	shouldCheckStorageTypes := len(info.StorageTypes) > 0
+	shouldCheckFileTypes := len(info.FileTypes) > 0
 	shouldCheckMimeTypes := len(info.MimeTypes) > 0
 	shouldCheckFileSize := info.MinFileSize > 0 || info.MaxFileSize > 0
 	isItemExcepted := func(listItem list.Item) (isExcepted bool) {
@@ -96,8 +96,8 @@ func List(info ListApiInfo,
 			return false
 		}
 
-		if shouldCheckStorageTypes && !filterByStorageType(listItem.Type, info.StorageTypes) {
-			log.DebugF("filter %s: key not match, storageType:%d StorageTypes:%s ", listItem.Key, listItem.Type, info.Suffixes)
+		if shouldCheckFileTypes && !filterByFileType(listItem.Type, info.FileTypes) {
+			log.DebugF("filter %s: key not match, fileType:%d FileTypes:%s ", listItem.Key, listItem.Type, info.Suffixes)
 			return false
 		}
 
@@ -160,6 +160,10 @@ func List(info ListApiInfo,
 			}, func(marker string, dir string, listItem list.Item) (stop bool) {
 				if marker != info.Marker {
 					info.Marker = marker
+				}
+
+				if listItem.IsNull() {
+					return false
 				}
 
 				if !isItemExcepted(listItem) {
@@ -332,18 +336,18 @@ func filterBySuffixes(key string, suffixes []string) bool {
 	return hasSuffix
 }
 
-func filterByStorageType(storageType int, storageTypes []int) bool {
-	hasStorageType := false
-	if len(storageTypes) == 0 {
-		hasStorageType = true
+func filterByFileType(fileType int, fileTypes []int) bool {
+	hasFileType := false
+	if len(fileTypes) == 0 {
+		hasFileType = true
 	}
-	for _, s := range storageTypes {
-		if storageType == s {
-			hasStorageType = true
+	for _, s := range fileTypes {
+		if fileType == s {
+			hasFileType = true
 			break
 		}
 	}
-	return hasStorageType
+	return hasFileType
 }
 
 func filterByMimeType(mimeType string, mimeTypes []string) bool {

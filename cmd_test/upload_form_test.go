@@ -18,7 +18,8 @@ func TestFormUpload(t *testing.T) {
 
 	result, errs := test.RunCmdWithError("fput", test.Bucket, "qshell_fput_1M", path,
 		"--mimetype", "image/jpg",
-		"--storage", "0")
+		"--storage", "0",
+		"--file-type", "1")
 	if len(errs) > 0 {
 		t.Fail()
 	}

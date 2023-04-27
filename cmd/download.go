@@ -29,9 +29,12 @@ have already in local disk and need to skip download or not.`,
 		},
 	}
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "specifies the file path where the successful file list is saved")
-	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "f", "", "specifies the file path where the failure file list is saved")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "e", "", "specifies the file path where the failure file list is saved")
 
-	cmd.Flags().IntVarP(&info.WorkerCount, "thread", "c", 5, "num of threads to download files")
+	cmd.Flags().IntVarP(&info.WorkerCount, "thread-count", "c", 5, "num of threads to download files")
+	cmd.Flags().IntVarP(&info.WorkerCount, "thread", "", 5, "num of threads to download files")
+	_ = cmd.Flags().MarkDeprecated("thread", "use --thread-count instead") // 废弃 thread-count
+
 	return cmd
 }
 
@@ -62,9 +65,12 @@ have already in local disk and need to skip download or not.`,
 		},
 	}
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "specifies the file path where the successful file list is saved")
-	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "f", "", "specifies the file path where the failure file list is saved")
+	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "e", "", "specifies the file path where the failure file list is saved")
 
-	cmd.Flags().IntVarP(&info.WorkerCount, "thread", "c", 5, "num of threads to download files")
+	cmd.Flags().IntVarP(&info.WorkerCount, "thread-count", "c", 5, "num of threads to download files")
+	cmd.Flags().IntVarP(&info.WorkerCount, "thread", "", 5, "num of threads to download files")
+	_ = cmd.Flags().MarkDeprecated("thread", "use --thread-count instead") // 废弃 thread-count
+
 	cmd.Flags().StringVarP(&info.DownloadCfg.DestDir, "dest-dir", "", "", "local storage path, full path. default current dir")
 	cmd.Flags().BoolVarP(&info.DownloadCfg.GetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")
 	cmd.Flags().StringVarP(&info.DownloadCfg.Bucket, "bucket", "", "", "storage bucket")
@@ -75,7 +81,11 @@ have already in local disk and need to skip download or not.`,
 	cmd.Flags().BoolVarP(&info.DownloadCfg.CheckHash, "check-hash", "", false, "whether to verify the hash, if it is enabled, it may take a long time")
 	cmd.Flags().BoolVarP(&info.DownloadCfg.CheckSize, "check-size", "", false, "check the consistency of the file size between the local file and the server file. the download fails while the file is inconsistent.")
 	cmd.Flags().StringVarP(&info.IoHost, "io-host", "", "", "io host of request")
-	cmd.Flags().StringVarP(&info.DownloadCfg.CdnDomain, "cdn-domain", "", "", "set the CDN domain name for downloading, the default is empty, which means downloading from the storage source site")
+
+	cmd.Flags().StringVarP(&info.DownloadCfg.Domain, "cdn-domain", "", "", "same to --domain, deprecated")
+	cmd.Flags().StringVarP(&info.DownloadCfg.Domain, "domain", "", "", "domain of the download request, the default is empty, which means downloading from the storage source site")
+	_ = cmd.Flags().MarkDeprecated("cdn-domain", "use --domain instead")
+
 	cmd.Flags().StringVarP(&info.DownloadCfg.Referer, "referer", "", "", "if the CDN domain name is configured with domain name whitelist anti-leech, you need to specify a referer address that allows access")
 	cmd.Flags().BoolVarP(&info.DownloadCfg.Public, "public", "", false, "whether the space is a public space")
 	cmd.Flags().BoolVarP(&info.DownloadCfg.EnableSlice, "enable-slice", "", false, "whether to enable slice download, you need to pay attention to the configuration of --slice-file-size-threshold slice threshold option. Only when slice download is enabled and the size of the downloaded file is greater than the slice threshold will the slice download be started")
@@ -110,7 +120,7 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&info.ToFile, "outfile", "o", "", "save file as specified by this option")
-	cmd.Flags().StringVarP(&info.Domain, "domain", "", "", "domain of request")
+	cmd.Flags().StringVarP(&info.Domain, "domain", "", "", "domain of the download request")
 	cmd.Flags().BoolVarP(&info.CheckHash, "check-hash", "", false, "check the consistency of the hash between the local file and the server file. the download fails while the file is inconsistent.")
 	cmd.Flags().BoolVarP(&info.CheckSize, "check-size", "", false, "check the consistency of the file size between the local file and the server file. the download fails while the file is inconsistent.")
 	cmd.Flags().BoolVarP(&info.UseGetFileApi, "get-file-api", "", false, "public storage cloud not support, private storage cloud support when has getfile api.")

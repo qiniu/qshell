@@ -3,8 +3,11 @@
 
 获取的文件列表组织格式如下（每个字段用 Tab 分隔）：
 ```
-Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser
+Key\tFileSize\tHash\tPutTime\tMimeType\tFileType\tEndUser
 ```
+
+# 注：
+除了前缀外（--prefix 选项指定），其他过滤条件不会减少服务端返回的文件条目数量，命令会根据前缀列举整个空间，然后使用除前缀以外的过滤条件进行过滤。
 
 参考文档：[资源列举 (list)](http://developer.qiniu.com/code/v6/api/kodo-api/rs/list.html)
 
@@ -32,21 +35,21 @@ $ qshell listbucket2 --doc
 # 选项
 - --prefix： 七牛空间中文件名的前缀，该参数为可选参数，如果不指定则获取空间中所有的文件列表。 【可选】
 - --limit：最多列条目的数量；当设置了此选项，输出的 marker 会有误差，不能使用； 默认输出所有条目。【可选】
-- --out：获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用。 【可选】
+- -o/--outfile：获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用。 【可选】
 - --output-file-max-lines：每个输出文件的最大行数，大于此行数会自动创建新的文件（新文件的文件名规律示例，源文件：/x/x/a.txt，新建文件为：/x/x/a-${index}.txt，index 为创建文件的序列号，从 0 开始），0：不限制单个输出文件的行数，默认：0。 【可选】
 - --output-file-max-size：每个输出文件的最大尺寸，大于此值会自动创建新的文件（新文件的文件名规律示例，源文件：/x/x/a.txt，新建文件为：/x/x/a-${index}.txt，index 为创建文件的序列号，从 0 开始），0：不限制单个输出文件的尺寸，单位：B，默认：0。 【可选】
-- --start：列举整个空间，然后从中筛选出文件上传日期在 <StartDate> 之后的文件；格式：yyyy-mm-dd-hh-MM-ss eg:2022-01-10-08-30-20 。【可选】
-- --end：列举整个空间， 然后从中筛选出文件上传日期在<EndDate>之前的文件；格式：yyyy-mm-dd-hh-MM-ss eg:2022-01-10-08-30-20 。【可选】
-- --storages：列举整个空间，然后从中筛选出满足七牛存储类型的文件；配置多个存储类型时中间用逗号隔开（eg: 1,2,3）；`0`：`普通存储`，`1`：`低频存储`，`2`：`归档存储`，`3`：`深度归档存储`。
-- --mimetypes：列举整个空间，然后从中筛选出满足 MimeType 的文件；配置多个 MimeType 时中间用逗号隔开（eg: image/*,video/）。
-- --min-file-size：列举整个空间，然后从中筛选出文件大小大于该值的文件；单位:B 。
-- --max-file-size：列举整个空间，然后从中筛选出文件大小小于该值的文件；单位:B 。
-- --max-retry： 列举整个空间文件出错以后，最大的尝试次数；超过最大尝试次数以后，程序退出，打印出 marker 。 【可选】
-- --suffixes： 列举整个空间文件， 然后从中筛选出文件后缀为在 [suffixes1, suffixes2, ...] 中的文件。【可选】
+- --start：根据列举前缀列举整个空间，然后从中筛选出文件上传日期在 <StartDate> 之后的文件；格式：yyyy-mm-dd-hh-MM-ss eg:2022-01-10-08-30-20 。【可选】
+- --end：根据列举前缀列举整个空间， 然后从中筛选出文件上传日期在<EndDate>之前的文件；格式：yyyy-mm-dd-hh-MM-ss eg:2022-01-10-08-30-20 。【可选】
+- --file-types：根据列举前缀列举整个空间，然后从中筛选出满足七牛存储类型的文件；配置多个存储类型时中间用逗号隔开（eg: 1,2,3）；`0`：`普通存储`，`1`：`低频存储`，`2`：`归档存储`，`3`：`深度归档存储`。
+- --mimetypes：根据列举前缀列举整个空间，然后从中筛选出满足 MimeType 的文件；配置多个 MimeType 时中间用逗号隔开（eg: image/*,video/）。
+- --min-file-size：根据列举前缀列举整个空间，然后从中筛选出文件大小大于该值的文件；单位:B 。
+- --max-file-size：根据列举前缀列举整个空间，然后从中筛选出文件大小小于该值的文件；单位:B 。
+- --max-retry：列举整个空间文件出错以后，最大的尝试次数；超过最大尝试次数以后，程序退出，打印出 marker 。 【可选】
+- --suffixes：根据列举前缀列举整个空间文件， 然后从中筛选出文件后缀为在 [suffixes1, suffixes2, ...] 中的文件。【可选】
 - --append： 开启选项 --out 的 append 模式， 如果本地保存文件列表的文件已经存在，如果希望像该文件添加内容，使用该选项, 必须和 --out 选项一起使用。【可选】
 - --readable： 开启文件大小的可读性选项， 会以合适的 KB, MB, GB 等显示。 【可选】
 - --marker： marker 标记列举过程中的位置， 如果列举的过程中网络断开，会返回一个 marker, 可以指定该 marker 参数继续列举。【可选】
-- --show-fields：每个文件需要展示的字段，多个使用逗号(,)隔开，可选范围：Key,FileSize,Hash,PutTime,MimeType,StorageType,EndUser 。【可选】
+- --show-fields：每个文件需要展示的字段，多个使用逗号(,)隔开，可选范围：Key,FileSize,Hash,PutTime,MimeType,FileType,EndUser 。【可选】
 - --output-fields-sep：输出的文件信息中，每行文件属性之间的分割符，默认 Tab 键（\t）。【可选】
 - --api-version：指定列举 api 的版本，可选：v1，v2 默认：v2。 【可选】
 - --api-limit：一次列举会进行多次请求，每次请求时的返回的最大条数；当前仅支持 v1，范围：0~1000，默认：1000。 【可选】
@@ -117,7 +120,7 @@ qshell listbucket if-pbl --prefix '2014/10/07/' -o if-pbl.prefix.list.txt
 hello.jpg	1710619	FlUqUK7zqbqm3NPwzq2q7TMZ-Ijs	14209629320769140	image/jpeg  1
 hello.mp4	8495868	lns2dAHvO0qYseZFgDn3UqZlMOi-	14207312835630132	video/mp4   0
 hhh	1492031	FjiRl_U0AeSsVCHXscCGObKyMy8f	14200176147531840	image/jpeg  1
-jemygraw.jpg	1900176	FtmHAbztWfPEqPMv4t4vMNRYMETK	14208960018750329	application/octet-stream	1   QiniuAndroid
+jemygraw.jpg	1900176	FtmHAbztWfPEqPMv4t4vMNRYMETK	14208960018750329	application/octet-stream	1
 ```
 
 # FAQ

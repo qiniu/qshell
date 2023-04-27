@@ -9,7 +9,7 @@
 
 # 格式
 ```
-qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <CallbackUrl>][-e <FailureList>][-t <DownloadHostHeader>][-g <StorageType>][-s <SuccessList>][-c <ThreadCount>] <Bucket>
+qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <CallbackUrl>][-e <FailureList>][-t <DownloadHostHeader>][--file-type <FileType>][-s <SuccessList>][-c <ThreadCount>] <Bucket>
 ```
 
 # 帮助文档
@@ -37,9 +37,9 @@ $ qshell abfetch --doc
 - -b/--callback-body：回调的 http Body。 【可选】          
 - -T/--callback-host：回调时的 HOST 头。 【可选】
 - -a/--callback-url：回调的请求地址。 【可选】
-- -t/--host：下载资源时使用的 HOST 头。 【可选】
-- -g/--storage-type：抓取的资源存储在七牛存储空间的类型，0:普通存储 1:低频存储 2:归档存储 3:深度归档, 默认为: 0。 【可选】
+- --file-type：抓取的资源存储在七牛存储空间的类型，0:普通存储 1:低频存储 2:归档存储 3:深度归档, 默认为: 0。 【可选】
 - -c/--thread-count：指定抓取时使用的线程数目，默认：20。 【可选】
+- --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
 - -s/--success-list：指定一个文件的路径，如果资源抓取成功，则将资源信息写入此文件；默认不导出。 【可选】
 - -e/--failure-list：指定一个文件的路径，如果资源抓取失败，则将资源信息写入此文件；默认不导出。 【可选】
 - --disable-check-fetch-result：不检测异步 fetch 是否成功；检测方式是查询目标 bucket 是否存在 fetch 的文件；默认检测。【可选】  

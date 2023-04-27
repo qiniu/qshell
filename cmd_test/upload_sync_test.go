@@ -13,6 +13,7 @@ func TestSyncV1(t *testing.T) {
 	result, errs := test.RunCmdWithError("sync", url, test.Bucket,
 		"-k", "1024K.tmp",
 		"--overwrite",
+		"--file-type", "1",
 		"-d")
 	if len(errs) > 0 {
 		t.Fail()
@@ -70,7 +71,10 @@ func TestSyncV2WithKey(t *testing.T) {
 
 	test.RunCmdWithError("delete", test.Bucket, key)
 
-	result, errs := test.RunCmdWithError("sync", url, test.Bucket, "--resumable-api-v2", "--key", key, "-d")
+	result, errs := test.RunCmdWithError("sync", url, test.Bucket,
+		"--resumable-api-v2",
+		"--resumable-api-v2-part-size", "4194304",
+		"--key", key, "-d")
 	if len(errs) > 0 {
 		t.Fail()
 	}
