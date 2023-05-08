@@ -82,11 +82,16 @@ func TestBucketList2(t *testing.T) {
 func TestBucketList2WithApiV1(t *testing.T) {
 	result, errs := test.RunCmdWithError("listbucket2", test.Bucket,
 		"--api-version", "v1",
-		"--prefix", "hello",
+		"--prefix", "hello2.json",
 		"--readable",
-		"--end", "2023-01-12-00-00-00")
+		"--end", "2023-01-12-00-00-00",
+		"-d")
 	if len(errs) > 0 {
 		t.Fatal("error:", errs)
+	}
+
+	if !strings.Contains(result, "list by api v1,") {
+		t.Fatal("should list by v1")
 	}
 
 	if !strings.Contains(result, "hello") {
@@ -100,17 +105,27 @@ func TestBucketList2WithApiV2(t *testing.T) {
 	result, errs := test.RunCmdWithError("listbucket2", test.Bucket,
 		"--api-version", "v2",
 		"--readable",
-		"--prefix", "hello")
+		"--prefix", "hello2.json",
+		"--end", "2023-01-12-00-00-00",
+		"-d")
 	if len(errs) > 0 {
 		t.Fatal("error:", errs)
 	}
 
-	if !strings.Contains(result, "hello") {
-		t.Fatal("no expected key:% but not exist", test.BucketDomain)
+	if !strings.Contains(result, "list by api v2,") {
+		t.Fatal("should list by v2")
 	}
 
 	if !strings.Contains(result, "api v2 is deprecated") {
 		t.Fatal("api v2 is should deprecated")
+	}
+
+	if !strings.Contains(result, "hello2.json") {
+		t.Fatal("no expected key:% but not exist", test.BucketDomain)
+	}
+
+	if strings.Contains(result, "hello3.json") {
+		t.Fatal("hello3.json shouldn't be list")
 	}
 
 	return

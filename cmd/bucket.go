@@ -95,7 +95,7 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "listbucket2 <Bucket>",
 		Short: "List all the files in the bucket",
-		Long:  "List all the files in the bucket to stdout if output file not specified. Each row of data information is displayed in the following order by default:\n Key\tFileSize\tHash\tPutTime\tMimeType\tStorageType\tEndUser",
+		Long:  "List all the files in the bucket to stdout if output file not specified. Each row of data information is displayed in the following order by default:\n Key\tFileSize\tHash\tPutTime\tMimeType\tFileType\tEndUser",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ListBucket2Type
 			if len(args) > 0 {
