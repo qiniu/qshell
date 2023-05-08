@@ -21,12 +21,9 @@ func listBucketByV1(ctx context.Context, info ApiInfo, handler Handler) (hasMore
 		return hasMore, data.ConvertError(e)
 	}
 
-	marker := rets.Marker
-	commonPrefixes := rets.CommonPrefixes
-	items := rets.Items
-	dir := strings.Join(commonPrefixes, info.Delimiter)
-	for _, item := range items {
-		if handler(marker, dir, Item(item)) {
+	dir := strings.Join(rets.CommonPrefixes, info.Delimiter)
+	for _, item := range rets.Items {
+		if handler(rets.Marker, dir, Item(item)) {
 			break
 		}
 	}
