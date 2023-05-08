@@ -117,7 +117,7 @@ func TestBucketList2WithApiV2(t *testing.T) {
 	}
 
 	if !strings.Contains(result, "api v2 is deprecated") {
-		t.Fatal("api v2 is should deprecated")
+		t.Fatal("api v2 should be deprecated")
 	}
 
 	if !strings.Contains(result, "hello2.json") {
