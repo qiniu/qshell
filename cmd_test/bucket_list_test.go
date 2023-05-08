@@ -81,6 +81,19 @@ func TestBucketList2(t *testing.T) {
 
 func TestBucketList2WithApiV1(t *testing.T) {
 	result, errs := test.RunCmdWithError("listbucket2", test.Bucket,
+		"--prefix", "hello2.json",
+		"--readable",
+		"--end", "2023-01-12-00-00-00",
+		"-d")
+	if len(errs) > 0 {
+		t.Fatal("error:", errs)
+	}
+
+	if !strings.Contains(result, "list by api v1,") {
+		t.Fatal("should list by v1")
+	}
+
+	result, errs = test.RunCmdWithError("listbucket2", test.Bucket,
 		"--api-version", "v1",
 		"--prefix", "hello2.json",
 		"--readable",
