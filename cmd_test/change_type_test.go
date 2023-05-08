@@ -45,21 +45,21 @@ func TestChangeTypeNoExistKey(t *testing.T) {
 
 func TestChangeTypeNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("chtype")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestChangeTypeNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("chtype", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestChangeTypeNoMimeType(t *testing.T) {
 	_, errs := test.RunCmdWithError("chtype", test.Bucket, test.Key)
-	if !strings.Contains(errs, "Type can't empty") {
+	if !strings.Contains(errs, "Type can't be empty") {
 		t.Fail()
 	}
 }

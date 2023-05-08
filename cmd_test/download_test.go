@@ -170,7 +170,7 @@ func TestDownloadNoBucket(t *testing.T) {
 	}()
 
 	_, errs := test.RunCmdWithError("qdownload", "-c", "4", path)
-	if !strings.Contains(errs, "bucket can't empty") {
+	if !strings.Contains(errs, "bucket can't be empty") {
 		t.Fail()
 	}
 	return
@@ -256,7 +256,7 @@ type DownloadCfg struct {
 
 func TestDownload2NoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("qdownload2", "-c", "4")
-	if !strings.Contains(errs, "bucket can't empty") {
+	if !strings.Contains(errs, "bucket can't be empty") {
 		t.Fail()
 	}
 	return

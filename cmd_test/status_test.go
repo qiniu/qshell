@@ -38,14 +38,14 @@ func TestStatusNoExistKey(t *testing.T) {
 
 func TestStatusNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("stat")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestStatusNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("stat", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }

@@ -205,13 +205,15 @@ func List(info ListApiInfo,
 			if workspace.IsCmdInterrupt() || // 取消
 				strings.Contains(lErr.Error(), "no such bucket") || // 空间不存在，直接结束
 				strings.Contains(lErr.Error(), "incorrect zone") || // 空间不正确
+				strings.Contains(lErr.Error(), "query region error") || // 查询空间错误
+				strings.Contains(lErr.Error(), "app/accesskey is not found") || // AK/SK 错误
 				strings.Contains(lErr.Error(), "invalid list limit") || //  api v1 list limit
 				strings.Contains(lErr.Error(), "context canceled") { // 取消
 				break
 			}
 
 			retryCount++
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * 500)
 			continue
 		}
 

@@ -214,21 +214,21 @@ func TestResumeUploadNoExistBucket(t *testing.T) {
 
 func TestResumeUploadNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("rput")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestResumeUploadNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("rput", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestResumeUploadNoLocalFilePath(t *testing.T) {
 	_, errs := test.RunCmdWithError("rput", test.Bucket, test.Key)
-	if !strings.Contains(errs, "LocalFile can't empty") {
+	if !strings.Contains(errs, "LocalFile can't be empty") {
 		t.Fail()
 	}
 }

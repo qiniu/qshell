@@ -15,7 +15,7 @@ func Error(desc string, suggest string) *data.CodeError {
 func CannotEmpty(words string, suggest string) string {
 	desc := words
 	if len(words) > 0 {
-		desc += " can't empty"
+		desc += " can't be empty"
 	}
 	return Description(desc, suggest)
 }

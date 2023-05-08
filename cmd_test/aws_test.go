@@ -10,7 +10,7 @@ import (
 
 func TestAwsBucketListNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("awslist")
-	if !strings.Contains(errs, "AWS bucket can't empty") {
+	if !strings.Contains(errs, "AWS bucket can't be empty") {
 		t.Fatal("empty Bucket check error")
 	}
 
@@ -19,7 +19,7 @@ func TestAwsBucketListNoBucket(t *testing.T) {
 
 func TestAwsBucketListNoRegion(t *testing.T) {
 	_, errs := test.RunCmdWithError("awslist", "bucket")
-	if !strings.Contains(errs, "AWS region can't empty") {
+	if !strings.Contains(errs, "AWS region can't be empty") {
 		t.Fatal("empty Region check error")
 	}
 
@@ -28,7 +28,7 @@ func TestAwsBucketListNoRegion(t *testing.T) {
 
 func TestAwsBucketListNoId(t *testing.T) {
 	_, errs := test.RunCmdWithError("awslist", "bucket", "region")
-	if !strings.Contains(errs, "AWS ID and SecretKey can't empty") {
+	if !strings.Contains(errs, "AWS ID and SecretKey can't be empty") {
 		t.Fatal("empty AWS ID check error")
 	}
 
@@ -38,7 +38,7 @@ func TestAwsBucketListNoId(t *testing.T) {
 func TestAwsBucketListNoSecret(t *testing.T) {
 	_, errs := test.RunCmdWithError("awslist", "bucket", "region",
 		"--aws-id", "id")
-	if !strings.Contains(errs, "AWS ID and SecretKey can't empty") {
+	if !strings.Contains(errs, "AWS ID and SecretKey can't be empty") {
 		t.Fatal("empty Bucket check error")
 	}
 
@@ -51,7 +51,7 @@ func TestAwsBucketListDocument(t *testing.T) {
 
 func TestAwsFetchNoAwsBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("awsfetch")
-	if !strings.Contains(errs, "AWS bucket can't empty") {
+	if !strings.Contains(errs, "AWS bucket can't be empty") {
 		t.Fatal("empty AWS Bucket check error")
 	}
 
@@ -60,7 +60,7 @@ func TestAwsFetchNoAwsBucket(t *testing.T) {
 
 func TestAwsFetchNoAwsRegion(t *testing.T) {
 	_, errs := test.RunCmdWithError("awsfetch", "bucket")
-	if !strings.Contains(errs, "AWS region can't empty") {
+	if !strings.Contains(errs, "AWS region can't be empty") {
 		t.Fatal("empty Region check error")
 	}
 
@@ -69,7 +69,7 @@ func TestAwsFetchNoAwsRegion(t *testing.T) {
 
 func TestAwsFetchNoQiniuBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("awsfetch", "bucket", "region")
-	if !strings.Contains(errs, "Qiniu bucket can't empty") {
+	if !strings.Contains(errs, "Qiniu bucket can't be empty") {
 		t.Fatal("empty Qiniu Bucket check error")
 	}
 
@@ -78,7 +78,7 @@ func TestAwsFetchNoQiniuBucket(t *testing.T) {
 
 func TestAwsFetchNoId(t *testing.T) {
 	_, errs := test.RunCmdWithError("awsfetch", "bucket", "region", "qiniu_bucket")
-	if !strings.Contains(errs, "AWS ID and SecretKey can't empty") {
+	if !strings.Contains(errs, "AWS ID and SecretKey can't be empty") {
 		t.Fatal("empty AWS ID check error")
 	}
 
@@ -88,7 +88,7 @@ func TestAwsFetchNoId(t *testing.T) {
 func TestAwsFetchNoSecret(t *testing.T) {
 	_, errs := test.RunCmdWithError("awsfetch", "bucket", "region", "qiniu_bucket",
 		"--aws-id", "id")
-	if !strings.Contains(errs, "AWS ID and SecretKey can't empty") {
+	if !strings.Contains(errs, "AWS ID and SecretKey can't be empty") {
 		t.Fatal("empty Bucket check error")
 	}
 

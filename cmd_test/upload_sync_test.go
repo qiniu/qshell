@@ -118,7 +118,7 @@ func TestSyncWithWrongUploadHost(t *testing.T) {
 
 func TestSyncNoUrl(t *testing.T) {
 	_, errs := test.RunCmdWithError("sync")
-	if !strings.Contains(errs, "SrcResUrl can't empty") {
+	if !strings.Contains(errs, "SrcResUrl can't be empty") {
 		t.Fail()
 	}
 }
@@ -126,7 +126,7 @@ func TestSyncNoUrl(t *testing.T) {
 func TestSyncNoBucket(t *testing.T) {
 	url := "https://qshell-na0.qiniupkg.com/1024K.tmp"
 	_, errs := test.RunCmdWithError("sync", url)
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }

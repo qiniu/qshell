@@ -47,21 +47,21 @@ func TestMoveNoExistSrcKey(t *testing.T) {
 
 func TestMoveNoSrcBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("move")
-	if !strings.Contains(errs, "SourceBucket can't empty") {
+	if !strings.Contains(errs, "SourceBucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestMoveNoSrcKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("move", test.Bucket)
-	if !strings.Contains(errs, "SourceKey can't empty") {
+	if !strings.Contains(errs, "SourceKey can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestMoveNoDestBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("move", test.Bucket, test.KeyNotExist)
-	if !strings.Contains(errs, "DestBucket can't empty") {
+	if !strings.Contains(errs, "DestBucket can't be empty") {
 		t.Fail()
 	}
 }

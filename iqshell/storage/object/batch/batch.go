@@ -171,14 +171,11 @@ func (h *handler) Start() {
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewWorker(func(workInfoList []*flow.WorkInfo) ([]*flow.WorkRecord, *data.CodeError) {
 
-				operationBucket := ""
 				recordList := make([]*flow.WorkRecord, 0, len(workInfoList))
-				operationStrings := make([]string, 0, len(workInfoList))
+				operationBucket := ""
+				operationStringList := make([]string, 0, len(workInfoList))
+				operationWorkInfoList := make([]*flow.WorkInfo, 0, len(workInfoList))
 				for _, workInfo := range workInfoList {
-					recordList = append(recordList, &flow.WorkRecord{
-						WorkInfo: workInfo,
-					})
-
 					if operation, ok := workInfo.Work.(Operation); !ok {
 						return nil, alert.Error("batch WorkerProvider, operation type conv error", "")
 					} else {
@@ -187,9 +184,14 @@ func (h *handler) Start() {
 						}
 
 						if operationString, e := operation.ToOperation(); e != nil {
-							return nil, alert.Error("batch WorkerProvider, ToOperation error:"+e.Error(), "")
+							recordList = append(recordList, &flow.WorkRecord{
+								WorkInfo: workInfo,
+								Result:   nil,
+								Err:      e,
+							})
 						} else {
-							operationStrings = append(operationStrings, operationString)
+							operationStringList = append(operationStringList, operationString)
+							operationWorkInfoList = append(operationWorkInfoList, workInfo)
 						}
 					}
 				}
@@ -198,8 +200,8 @@ func (h *handler) Start() {
 					return nil, cErr
 				}
 
-				resultList, e := bucketManager.Batch(operationStrings)
-				if len(resultList) != len(operationStrings) {
+				resultList, e := bucketManager.Batch(operationStringList)
+				if len(resultList) != len(operationStringList) {
 					return recordList, data.ConvertError(e)
 				}
 
@@ -213,10 +215,14 @@ func (h *handler) Start() {
 						Type:     r.Data.Type,
 						Error:    r.Data.Error,
 					}
-					recordList[i].Result = result
-					if !result.IsSuccess() {
-						recordList[i].Err = data.NewError(result.Code, result.Error)
+					record := &flow.WorkRecord{
+						WorkInfo: operationWorkInfoList[i],
+						Result:   result,
 					}
+					if !result.IsSuccess() {
+						record.Err = data.NewError(result.Code, result.Error)
+					}
+					recordList = append(recordList, record)
 				}
 				return recordList, nil
 			}), nil

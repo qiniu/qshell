@@ -68,21 +68,21 @@ func TestMatchNoExistLocalFile(t *testing.T) {
 
 func TestMatchWithEmptyBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("match", "", test.Key, "/user/desktop/a.txt")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestMatchNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("match", test.Bucket, "", "/user/desktop/a.txt")
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestMatchNoLocalFile(t *testing.T) {
 	_, errs := test.RunCmdWithError("match", test.Bucket, test.KeyNotExist, "")
-	if !strings.Contains(errs, "LocalFile can't empty") {
+	if !strings.Contains(errs, "LocalFile can't be empty") {
 		t.Fail()
 	}
 }

@@ -66,6 +66,34 @@ var deleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var changeLifecycleCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = &operations.ChangeLifecycleInfo{}
+	var cmd = &cobra.Command{
+		Use:   "chlifecycle <Bucket> <Key> [--to-ia-after-days <ToIAAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--delete-after-days <DeleteAfterDays>]",
+		Short: "Set the lifecycle of a file.",
+		Long: `Set the lifecycle of a file. Lifecycle value must great than or equal to -1, unit: day.
+* less than  -1: there's no point and it won't trigger any effect
+* equal to   -1: cancel lifecycle
+* equal to    0: there's no point and it won't trigger any effect
+* bigger than 0: set lifecycle`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.ChangeLifecycle
+			if len(args) > 0 {
+				info.Bucket = args[0]
+			}
+			if len(args) > 1 {
+				info.Key = args[1]
+			}
+			operations.ChangeLifecycle(cfg, info)
+		},
+	}
+	cmd.Flags().IntVarP(&info.ToIAAfterDays, "to-ia-after-days", "", 0, "to IA storage after some days. the range is -1 or bigger than 0. -1 means cancel to IA storage")
+	cmd.Flags().IntVarP(&info.ToArchiveAfterDays, "to-archive-after-days", "", 0, "to archive storage after some days. the range is -1 or bigger than 0. -1 means cancel to archive storage")
+	cmd.Flags().IntVarP(&info.ToDeepArchiveAfterDays, "to-deep-archive-after-days", "", 0, "to deep archive storage after some days. the range is -1 or bigger than 0. -1 means cancel to deep archive storage")
+	cmd.Flags().IntVarP(&info.DeleteAfterDays, "delete-after-days", "", 0, "delete after some days. the range is -1 or bigger than 0. -1 means cancel to delete")
+	return cmd
+}
+
 var deleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.DeleteAfterInfo{}
 	var cmd = &cobra.Command{
@@ -368,6 +396,7 @@ func rsCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
 		statCmdBuilder(cfg),
 		forbiddenCmdBuilder(cfg),
+		changeLifecycleCmdBuilder(cfg),
 		deleteCmdBuilder(cfg),
 		deleteAfterCmdBuilder(cfg),
 		moveCmdBuilder(cfg),

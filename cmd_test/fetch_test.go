@@ -35,7 +35,7 @@ func TestFetchNoExistBucket(t *testing.T) {
 
 func TestFetchNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("fetch", test.BucketObjectDomain)
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
