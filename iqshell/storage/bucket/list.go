@@ -144,9 +144,10 @@ func List(info ListApiInfo,
 	retryCount := 0
 	outputCount := 0
 	complete := false
+	var lErr *data.CodeError = nil
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
+		lErr = nil
 		var hasMore = false
-		var lErr *data.CodeError = nil
 
 		if !workspace.IsCmdInterrupt() {
 			hasMore, lErr = list.ListBucket(workspace.GetContext(), list.ApiInfo{
@@ -190,10 +191,12 @@ func List(info ListApiInfo,
 		}
 
 		// 保存信息
-		cacheInfoP.Bucket = info.Bucket
-		cacheInfoP.Prefix = info.Prefix
-		cacheInfoP.Marker = info.Marker
-		_ = cache.saveCache(cacheInfoP)
+		if len(info.Marker) > 0 {
+			cacheInfoP.Bucket = info.Bucket
+			cacheInfoP.Prefix = info.Prefix
+			cacheInfoP.Marker = info.Marker
+			_ = cache.saveCache(cacheInfoP)
+		}
 
 		if workspace.IsCmdInterrupt() && lErr == nil {
 			lErr = data.NewError(0, "list is interrupted")
@@ -224,11 +227,11 @@ func List(info ListApiInfo,
 		retryCount = 0
 	}
 
-	if len(info.Marker) == 0 {
+	if lErr == nil && len(info.Marker) == 0 && info.EnableRecord {
 		if rErr := cache.removeCache(); rErr != nil {
 			log.ErrorF("list remove cache status error: %v", rErr)
 		} else {
-			log.InfoF("list success, remove cache status: %s", cache.cachePath)
+			log.InfoF("list complete, remove cache status: %s", cache.cachePath)
 		}
 	} else {
 		log.InfoF("Marker: %s", info.Marker)
