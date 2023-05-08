@@ -47,6 +47,14 @@ func (info *ListInfo) Check() *data.CodeError {
 		return alert.CannotEmptyError("Bucket", "")
 	}
 
+	if len(info.ApiVersion) == 0 {
+		info.ApiVersion = list.ApiVersionV1
+	} else if info.ApiVersion == list.ApiVersionV2 {
+		log.Warning("list bucket: api v2 is deprecated, recommend to use v1 instead")
+	} else if info.ApiVersion != list.ApiVersionV1 && info.ApiVersion != list.ApiVersionV2 {
+		return alert.Error("list bucket: api version is error, should set one of v1 and v2", "")
+	}
+
 	if len(info.ShowFields) > 0 {
 		var fieldsNew []string
 		fields := info.getShowFields()
@@ -60,12 +68,6 @@ func (info *ListInfo) Check() *data.CodeError {
 			}
 		}
 		info.ShowFields = strings.Join(fieldsNew, ",")
-	}
-
-	if len(info.ApiVersion) == 0 {
-		info.ApiVersion = list.ApiVersionV2
-	} else if info.ApiVersion != list.ApiVersionV1 && info.ApiVersion != list.ApiVersionV2 {
-		return alert.Error("list bucket: api version is error, should set one of v1 and v2", "")
 	}
 
 	if info.EnableRecord {

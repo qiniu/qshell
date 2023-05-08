@@ -44,7 +44,7 @@ $ qshell token qbox http://rs.qiniu.com/stat/dG9ueXB1YmxpYzp0ZXN0Lm1vdg==
 
 第四步， 通过 curl 发送 http 请求，拿到 test.mov 的信息:
 ```
-$ url 'http://rs.qiniu.com/stat/dG9ueXB1YmxpYzp0ZXN0Lm1vdg==' -H "Authorization: QBox 3-pH6WfqAXTwzgG2s3FNMUW0NtkUu5cJLQCfU3Hd:d5rmqx_xsKILoNa61qDHMxUMtp8="
+$ curl 'http://rs.qiniu.com/stat/dG9ueXB1YmxpYzp0ZXN0Lm1vdg==' -H "Authorization: QBox 3-pH6WfqAXTwzgG2s3FNMUW0NtkUu5cJLQCfU3Hd:d5rmqx_xsKILoNa61qDHMxUMtp8="
 ```
 得到该文件的信息如下:
 ```json

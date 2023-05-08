@@ -79,6 +79,43 @@ func TestBucketList2(t *testing.T) {
 	return
 }
 
+func TestBucketList2WithApiV1(t *testing.T) {
+	result, errs := test.RunCmdWithError("listbucket2", test.Bucket,
+		"--api-version", "v1",
+		"--prefix", "hello",
+		"--readable",
+		"--end", "2023-01-12-00-00-00")
+	if len(errs) > 0 {
+		t.Fatal("error:", errs)
+	}
+
+	if !strings.Contains(result, "hello") {
+		t.Fatal("no expected key:% but not exist", test.BucketDomain)
+	}
+
+	return
+}
+
+func TestBucketList2WithApiV2(t *testing.T) {
+	result, errs := test.RunCmdWithError("listbucket2", test.Bucket,
+		"--api-version", "v2",
+		"--readable",
+		"--prefix", "hello")
+	if len(errs) > 0 {
+		t.Fatal("error:", errs)
+	}
+
+	if !strings.Contains(result, "hello") {
+		t.Fatal("no expected key:% but not exist", test.BucketDomain)
+	}
+
+	if !strings.Contains(result, "api v2 is deprecated") {
+		t.Fatal("api v2 is should deprecated")
+	}
+
+	return
+}
+
 func TestBucketList2ToFile(t *testing.T) {
 	defaultContent := "AAAAAAA\n"
 	file, err := test.CreateFileWithContent(test.Bucket+"-listbucket2.txt", defaultContent)
