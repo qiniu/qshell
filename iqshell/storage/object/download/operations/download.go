@@ -65,7 +65,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 
 	hostProvider := getDownloadHostProvider(workspace.GetConfig(), &DownloadCfg{
 		IoHost:     info.Domain,
-		CdnDomain:  info.Domain,
+		Domain:     info.Domain,
 		Bucket:     info.Bucket,
 		GetFileApi: info.UseGetFileApi,
 	})
@@ -104,7 +104,7 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 		Progress:               downloadProgress,
 	}
 
-	if e, _ := downloadFile(apiInfo); e != nil {
+	if _, e := downloadFile(apiInfo); e != nil {
 		data.SetCmdStatusError()
 	}
 }

@@ -338,6 +338,7 @@ func setBatchCmdFailExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 }
 func setBatchCmdOverwriteFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "w", false, "overwrite mode")
+	_ = cmd.Flags().MarkShorthandDeprecated("overwrite", "deprecated and use --overwrite instead")
 }
 
 func init() {

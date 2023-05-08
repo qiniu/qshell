@@ -139,6 +139,8 @@ var moveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
+	_ = cmd.Flags().MarkShorthandDeprecated("overwrite", "deprecated and use --overwrite instead")
+
 	cmd.Flags().StringVarP(&info.DestKey, "key", "k", "", "filename saved in bucket")
 	return cmd
 }
@@ -169,6 +171,8 @@ you can check if B.png has exists by:
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
+	_ = cmd.Flags().MarkShorthandDeprecated("overwrite", "deprecated and use --overwrite instead")
+
 	return cmd
 }
 
@@ -197,6 +201,8 @@ you can check if B.png has exists by:
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Force, "overwrite", "w", false, "overwrite mode")
+	_ = cmd.Flags().MarkShorthandDeprecated("overwrite", "deprecated and use --overwrite instead")
+
 	cmd.Flags().StringVarP(&info.DestKey, "key", "k", "", "filename saved in bucket, use <SrcKey> while omitted")
 	return cmd
 }

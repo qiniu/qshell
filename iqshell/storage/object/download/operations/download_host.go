@@ -35,10 +35,10 @@ func defaultDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.
 	hosts := make([]*host.Host, 0)
 
 	// 1. 从 download 配置获取
-	if len(downloadCfg.CdnDomain) > 0 {
+	if len(downloadCfg.Domain) > 0 {
 		hosts = append(hosts, &host.Host{
 			Host:   "",
-			Domain: downloadCfg.CdnDomain,
+			Domain: downloadCfg.Domain,
 		})
 	}
 
@@ -65,10 +65,10 @@ func getFileApiHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.Host 
 	hosts := make([]*host.Host, 0)
 
 	// 1. 从 download 配置获取
-	if len(downloadCfg.CdnDomain) > 0 {
+	if len(downloadCfg.Domain) > 0 {
 		hosts = append(hosts, &host.Host{
 			Host:   "",
-			Domain: downloadCfg.CdnDomain,
+			Domain: downloadCfg.Domain,
 		})
 	}
 
