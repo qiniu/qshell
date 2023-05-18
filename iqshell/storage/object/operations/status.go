@@ -127,55 +127,44 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 			statInfo += fmt.Sprintf("%-25s%v -> %s\r\n", name+":", value, desc)
 		}
 	}
+
+	fieldAdderWithValueDescs := func(name string, value interface{}, descs map[interface{}]string, noneDesc string) {
+		desc := descs[value]
+		if len(descs[value]) > 0 {
+			fieldAdder(name, value, desc)
+		} else {
+			fieldAdder(name, noneDesc, "")
+		}
+	}
+
 	fieldAdder("Bucket", bucket, "")
 	fieldAdder("Key", key, "")
 	fieldAdder("Etag", status.Hash, "")
 	fieldAdder("MD5", status.MD5, "")
 	fieldAdder("Fsize", status.FSize, utils.FormatFileSize(status.FSize))
-
-	putTime := time.Unix(0, status.PutTime*100)
-	fieldAdder("PutTime", status.PutTime, putTime.String())
+	fieldAdder("PutTime", status.PutTime, time.Unix(0, status.PutTime*100).String())
 	fieldAdder("MimeType", status.MimeType, "")
 
-	if status.Status == 1 {
-		fieldAdder("Status", status.Status, "禁用")
-	} else {
-		fieldAdder("Status", status.Status, "未禁用")
-	}
+	fieldAdderWithValueDescs("Status", status.Status,
+		map[interface{}]string{1: "禁用"},
+		"未禁用")
 
-	if status.RestoreStatus == 1 {
-		fieldAdder("RestoreStatus", status.RestoreStatus, "解冻中")
-	} else if status.RestoreStatus == 2 {
-		fieldAdder("RestoreStatus", status.RestoreStatus, "解冻完成")
-	}
+	fieldAdderWithValueDescs("RestoreStatus", status.Status,
+		map[interface{}]string{1: "解冻中", 2: "解冻完成"},
+		"无解冻操作")
 
-	if status.Expiration > 0 {
-		expiration := time.Unix(status.Expiration, 0)
-		fieldAdder("Expiration", status.Expiration, expiration.String())
-	} else {
-		fieldAdder("Expiration", "not set", "")
+	lifecycleFieldAdder := func(name string, date int64) {
+		if date > 0 {
+			t := time.Unix(date, 0)
+			fieldAdder(name, date, t.String())
+		} else {
+			fieldAdder(name, "未设置", "")
+		}
 	}
-
-	if status.TransitionToIA > 0 {
-		date := time.Unix(status.TransitionToIA, 0)
-		fieldAdder("TransitionToIA", status.TransitionToIA, date.String())
-	} else {
-		fieldAdder("TransitionToIA", "not set", "")
-	}
-
-	if status.TransitionToARCHIVE > 0 {
-		date := time.Unix(status.TransitionToARCHIVE, 0)
-		fieldAdder("TransitionToArchive", status.TransitionToARCHIVE, date.String())
-	} else {
-		fieldAdder("TransitionToArchive", "not set", "")
-	}
-
-	if status.TransitionToDeepArchive > 0 {
-		date := time.Unix(status.TransitionToDeepArchive, 0)
-		fieldAdder("TransitionToDeepArchive", status.TransitionToDeepArchive, date.String())
-	} else {
-		fieldAdder("TransitionToDeepArchive", "not set", "")
-	}
+	lifecycleFieldAdder("Expiration", status.Expiration)
+	lifecycleFieldAdder("TransitionToIA", status.TransitionToIA)
+	lifecycleFieldAdder("TransitionToARCHIVE", status.TransitionToARCHIVE)
+	lifecycleFieldAdder("TransitionToDeepArchive", status.TransitionToDeepArchive)
 
 	fieldAdder("FileType", status.Type, getFileTypeDescription(status.Type))
 
