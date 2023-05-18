@@ -9,7 +9,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
-	"github.com/qiniu/qshell/v2/iqshell/common/host"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
@@ -91,8 +91,8 @@ func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (result *PublicUrlToPriv
 
 // PrivateUrl 返回私有空间的下载链接， 也可以用于公有空间的下载
 func PrivateUrl(info UrlApiInfo) (fileUrl string) {
-	publicUrl := PublicUrl(UrlApiInfo(info))
-	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
+	publicUrl := PublicUrl(info)
+	deadline := time.Now().Add(time.Minute * 24 * 30).Unix()
 	result, _ := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
 		PublicUrl: publicUrl,
 		Deadline:  deadline,
@@ -104,17 +104,9 @@ func PrivateUrl(info UrlApiInfo) (fileUrl string) {
 }
 
 // 下载 Url
-func createDownloadUrl(info *DownloadActionInfo, useHttps bool) (string, *data.CodeError) {
-	h, hErr := info.HostProvider.Provide()
-	if hErr != nil {
-		return "", hErr.HeaderInsertDesc("[provide host]")
-	}
-	return createDownloadUrlWithHost(h, info, useHttps)
-}
-
-func createDownloadUrlWithHost(h *host.Host, info *DownloadActionInfo, useHttps bool) (string, *data.CodeError) {
+func createDownloadUrl(info *DownloadApiInfo) (string, *data.CodeError) {
 	urlString := ""
-	server := h.GetServer()
+	useHttps := workspace.GetConfig().IsUseHttps()
 
 	// 构造下载 url
 	if info.UseGetFileApi {
@@ -122,57 +114,79 @@ func createDownloadUrlWithHost(h *host.Host, info *DownloadActionInfo, useHttps 
 		if err != nil {
 			return "", data.NewEmptyError().AppendDescF("download get mac error:%v", mac)
 		}
-		urlString = utils.Endpoint(useHttps, server)
+		urlString = utils.Endpoint(useHttps, info.Host)
 		urlString = strings.Join([]string{urlString, "getfile", mac.AccessKey, info.Bucket, url.PathEscape(info.Key)}, "/")
 	} else {
-		isSrcDomain := isIoSrcHost(server)
+		urlString = PublicUrl(UrlApiInfo{
+			BucketDomain: info.Host,
+			Key:          info.Key,
+			UseHttps:     useHttps,
+		})
+
 		// 源站域名需要签名
-		if info.IsPublic && !isSrcDomain {
-			urlString = PublicUrl(UrlApiInfo{
-				BucketDomain: server,
-				Key:          info.Key,
-				UseHttps:     useHttps,
-			})
-		} else {
-			urlString = PrivateUrl(UrlApiInfo{
-				BucketDomain: server,
-				Key:          info.Key,
-				UseHttps:     useHttps,
-			})
+		if !info.IsPublicBucket || isIoSrcHost(info.Host, info.Key) {
+			if u, e := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
+				PublicUrl: urlString,
+				Deadline:  5*60 + time.Now().Unix(),
+			}); e != nil {
+				return "", e
+			} else {
+				urlString = u.Url
+			}
 		}
 	}
 	return urlString, nil
 }
 
-// CreateSrcDownloadDomainWithBucket 公有云 bucket 源站下载域名
-func CreateSrcDownloadDomainWithBucket(cfg *config.Config, bucketName string, regionId string) (string, *data.CodeError) {
+// CreateSrcDownloadDomainWithBucket bucket 源站下载域名
+func CreateSrcDownloadDomainWithBucket(cfg *config.Config, bucketName string) ([]string, *data.CodeError) {
 
-	ioSrcHost := ""
-	if cfg != nil {
-		ioSrcHost = cfg.GetIoSrcHost()
+	hosts := make([]string, 0, 0)
+	if cfg != nil && len(cfg.GetIoSrcHost()) > 0 {
+		hosts = append(hosts, cfg.GetIoSrcHost())
 	}
-	if len(ioSrcHost) == 0 {
-		ioSrcHost = createPublicCloudSrcDownloadEndPoint(regionId)
+
+	serverCfgHost, err := getSrcDownloadDomainWithBucket(bucketName)
+	if err != nil {
+		log.WarningF("get io src host for bucket:%s error:%v", bucketName, err)
 	}
-	return bucketName + "." + ioSrcHost, nil
+	if len(serverCfgHost) > 0 {
+		hosts = append(hosts, serverCfgHost)
+	}
+	return hosts, nil
 }
 
-func isIoSrcHost(host string) bool {
+func isIoSrcHost(host string, bucketName string) bool {
+	host = utils.RemoveUrlScheme(host)
+	if len(host) == 0 {
+		return false
+	}
+
 	customEndpoint := ""
 	if workspace.GetConfig() != nil {
 		customEndpoint = workspace.GetConfig().GetIoSrcHost()
 	}
 	if len(customEndpoint) > 0 {
 		return strings.Contains(host, customEndpoint)
-	} else {
-		return isPublicCloudSrcDownloadDomain(host)
 	}
+
+	srcDownloadDomain, _ := getSrcDownloadDomainWithBucket(bucketName)
+	if len(srcDownloadDomain) == 0 {
+		return false
+	}
+
+	return strings.Contains(host, srcDownloadDomain)
 }
 
-func isPublicCloudSrcDownloadDomain(domain string) bool {
-	return strings.Contains(domain, "kodo-") && strings.HasSuffix(domain, ".qiniucs.com")
-}
+func getSrcDownloadDomainWithBucket(bucketName string) (string, *data.CodeError) {
+	region, err := bucket.Region(bucketName)
+	if err != nil {
+		return "", err
+	}
 
-func createPublicCloudSrcDownloadEndPoint(regionId string) string {
-	return "kodo-" + regionId + ".qiniucs.com"
+	if len(region.IoSrcHost) == 0 {
+		return "", data.NewEmptyError().AppendDesc("io src is empty")
+	}
+
+	return region.IoSrcHost, nil
 }

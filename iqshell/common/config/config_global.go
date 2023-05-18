@@ -18,7 +18,7 @@ func GetGlobal() *Config {
 			Rsf:   GetRsfHosts(ConfigTypeGlobal),
 			Io:    GetIoHosts(ConfigTypeGlobal),
 			Up:    GetUpHosts(ConfigTypeGlobal),
-			IoSrc: GetEndpoints(ConfigTypeGlobal),
+			IoSrc: GetIoSrcHosts(ConfigTypeGlobal),
 		},
 	}
 }

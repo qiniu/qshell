@@ -8,7 +8,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
@@ -214,7 +213,6 @@ func download(fInfo *fileInfo, info *DownloadActionInfo) (err *data.CodeError) {
 }
 
 func downloadTempFile(fInfo *fileInfo, info *DownloadActionInfo) (err *data.CodeError) {
-	useHttps := workspace.GetConfig().IsUseHttps()
 	for times := 0; times < 6; times++ {
 		dl, cErr := createDownloader(info)
 		if cErr != nil {
@@ -232,7 +230,6 @@ func downloadTempFile(fInfo *fileInfo, info *DownloadActionInfo) (err *data.Code
 		}
 
 		hostString := h.GetServer()
-		urlString, cErr := createDownloadUrlWithHost(h, info, useHttps)
 		if len(hostString) == 0 || cErr != nil {
 			err = data.NewEmptyError().AppendDescF("create download url error:%+v", cErr)
 			log.DebugF("Stop download [%s:%s] => %s, because %+v", info.Bucket, info.Key, info.ToFile, err)
@@ -240,7 +237,10 @@ func downloadTempFile(fInfo *fileInfo, info *DownloadActionInfo) (err *data.Code
 		}
 
 		err = downloadTempFileWithDownloader(dl, fInfo, &DownloadApiInfo{
-			Url:            urlString,
+			Bucket:         info.Bucket,
+			Key:            info.Key,
+			IsPublicBucket: info.IsPublic,
+			UseGetFileApi:  info.UseGetFileApi,
 			Host:           hostString,
 			Referer:        info.Referer,
 			RangeFromBytes: fInfo.fromBytes,
@@ -275,12 +275,16 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 	// 上面两点无法区分，但必须能让用户可以下载预期文件
 	// 不检测文件信息时，使用下载的文件信息作为标准，可以保证下载成功
 	// 此方案有个问题：如果获取文件信息之后，下载之前文件改变了，下载仍会失败（此情景概率极低，且用户重新下载即可）。
-	if file, err := utils.GetNetworkFileInfo(info.Url); err != nil {
+	downloadUrl, cErr := createDownloadUrl(info)
+	if cErr != nil {
+		return cErr
+	}
+	if file, err := utils.GetNetworkFileInfo(downloadUrl); err != nil {
 		return err
 	} else if info.CheckHash && info.FileHash != file.Hash {
-		return data.NewEmptyError().AppendDescF("file(%s) hash doesn't match, %s but except:%s", info.Url, file.Hash, info.FileHash)
+		return data.NewEmptyError().AppendDescF("file(%s) hash doesn't match, %s but except:%s", downloadUrl, file.Hash, info.FileHash)
 	} else if info.CheckSize && info.FileSize != file.Size {
-		return data.NewEmptyError().AppendDescF("file(%s) size doesn't match, %d but except:%d", info.Url, file.Size, info.FileSize)
+		return data.NewEmptyError().AppendDescF("file(%s) size doesn't match, %d but except:%d", downloadUrl, file.Size, info.FileSize)
 	} else {
 		info.FileSize = file.Size
 		info.FileHash = file.Hash
@@ -327,7 +331,7 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 	isExist, _ := utils.ExistFile(fInfo.tempFile)
 	if isExist {
 		tempFileHandle, fErr = os.OpenFile(fInfo.tempFile, os.O_APPEND|os.O_WRONLY, 0655)
-		log.DebugF("download %s => %s from:%d", info.Url, fInfo.toFile, info.RangeFromBytes)
+		log.DebugF("download %s => %s from:%d", downloadUrl, fInfo.toFile, info.RangeFromBytes)
 	} else {
 		tempFileHandle, fErr = os.Create(fInfo.tempFile)
 	}

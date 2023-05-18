@@ -16,7 +16,7 @@ func GetUser() *Config {
 			Rsf:   GetRsfHosts(ConfigTypeUser),
 			Io:    GetIoHosts(ConfigTypeUser),
 			Up:    GetUpHosts(ConfigTypeUser),
-			IoSrc: GetEndpoints(ConfigTypeUser),
+			IoSrc: GetIoSrcHosts(ConfigTypeUser),
 		},
 	}
 }
