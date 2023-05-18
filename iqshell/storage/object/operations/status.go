@@ -163,7 +163,7 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	}
 	lifecycleFieldAdder("Expiration", status.Expiration)
 	lifecycleFieldAdder("TransitionToIA", status.TransitionToIA)
-	lifecycleFieldAdder("TransitionToARCHIVE", status.TransitionToARCHIVE)
+	lifecycleFieldAdder("TransitionToArchive", status.TransitionToARCHIVE)
 	lifecycleFieldAdder("TransitionToDeepArchive", status.TransitionToDeepArchive)
 
 	fieldAdder("FileType", status.Type, getFileTypeDescription(status.Type))
