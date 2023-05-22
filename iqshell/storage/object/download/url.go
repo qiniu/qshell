@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
@@ -92,7 +91,7 @@ func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (result *PublicUrlToPriv
 // PrivateUrl 返回私有空间的下载链接， 也可以用于公有空间的下载
 func PrivateUrl(info UrlApiInfo) (fileUrl string) {
 	publicUrl := PublicUrl(info)
-	deadline := time.Now().Add(time.Minute * 24 * 30).Unix()
+	deadline := time.Now().Add(time.Hour * 24 * 30).Unix()
 	result, _ := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
 		PublicUrl: publicUrl,
 		Deadline:  deadline,
@@ -138,22 +137,13 @@ func createDownloadUrl(info *DownloadApiInfo) (string, *data.CodeError) {
 	return urlString, nil
 }
 
-// CreateSrcDownloadDomainWithBucket bucket 源站下载域名
-func CreateSrcDownloadDomainWithBucket(cfg *config.Config, bucketName string) (string, *data.CodeError) {
-	serverCfgHost, err := getSrcDownloadDomainWithBucket(bucketName)
-	if err != nil {
-		return "", err
-	}
-	return serverCfgHost, nil
-}
-
 func isIoSrcHost(host string, bucketName string) bool {
 	host = utils.RemoveUrlScheme(host)
 	if len(host) == 0 {
 		return false
 	}
 
-	srcDownloadDomain, err := getSrcDownloadDomainWithBucket(bucketName)
+	srcDownloadDomain, err := GetBucketIoSrcDomain(bucketName)
 	if err != nil {
 		log.WarningF("check host is src host error:%v", err)
 	}
@@ -164,7 +154,7 @@ func isIoSrcHost(host string, bucketName string) bool {
 	return strings.Contains(host, srcDownloadDomain)
 }
 
-func getSrcDownloadDomainWithBucket(bucketName string) (string, *data.CodeError) {
+func GetBucketIoSrcDomain(bucketName string) (string, *data.CodeError) {
 	region, err := bucket.Region(bucketName)
 	if err != nil {
 		return "", err

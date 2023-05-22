@@ -60,7 +60,7 @@ func defaultDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.
 	}
 
 	// 3. 源站域名
-	if ioSrcHost, e := download.CreateSrcDownloadDomainWithBucket(cfg, downloadCfg.Bucket); e != nil {
+	if ioSrcHost, e := download.GetBucketIoSrcDomain(downloadCfg.Bucket); e != nil {
 		log.Warning("create bucket:%s src domain error:%v", b, e)
 	} else if len(ioSrcHost) > 0 {
 		hosts = append(hosts, &host.Host{
