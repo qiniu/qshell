@@ -43,13 +43,6 @@ func (c *Config) GetRegion() *storage.Region {
 	}
 }
 
-func (c *Config) GetIoSrcHost() string {
-	if c == nil || c.Hosts == nil {
-		return ""
-	}
-	return c.Hosts.GetOneIoSrc()
-}
-
 func (c *Config) Merge(from *Config) {
 	if from == nil {
 		return

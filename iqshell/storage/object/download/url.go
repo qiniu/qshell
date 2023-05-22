@@ -139,21 +139,12 @@ func createDownloadUrl(info *DownloadApiInfo) (string, *data.CodeError) {
 }
 
 // CreateSrcDownloadDomainWithBucket bucket 源站下载域名
-func CreateSrcDownloadDomainWithBucket(cfg *config.Config, bucketName string) ([]string, *data.CodeError) {
-
-	hosts := make([]string, 0, 0)
-	if cfg != nil && len(cfg.GetIoSrcHost()) > 0 {
-		hosts = append(hosts, cfg.GetIoSrcHost())
-	}
-
+func CreateSrcDownloadDomainWithBucket(cfg *config.Config, bucketName string) (string, *data.CodeError) {
 	serverCfgHost, err := getSrcDownloadDomainWithBucket(bucketName)
 	if err != nil {
-		log.WarningF("get io src host for bucket:%s error:%v", bucketName, err)
+		return "", err
 	}
-	if len(serverCfgHost) > 0 {
-		hosts = append(hosts, serverCfgHost)
-	}
-	return hosts, nil
+	return serverCfgHost, nil
 }
 
 func isIoSrcHost(host string, bucketName string) bool {
@@ -162,15 +153,10 @@ func isIoSrcHost(host string, bucketName string) bool {
 		return false
 	}
 
-	customEndpoint := ""
-	if workspace.GetConfig() != nil {
-		customEndpoint = workspace.GetConfig().GetIoSrcHost()
+	srcDownloadDomain, err := getSrcDownloadDomainWithBucket(bucketName)
+	if err != nil {
+		log.WarningF("check host is src host error:%v", err)
 	}
-	if len(customEndpoint) > 0 {
-		return strings.Contains(host, customEndpoint)
-	}
-
-	srcDownloadDomain, _ := getSrcDownloadDomainWithBucket(bucketName)
 	if len(srcDownloadDomain) == 0 {
 		return false
 	}

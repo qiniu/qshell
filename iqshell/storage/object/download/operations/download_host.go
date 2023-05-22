@@ -60,16 +60,13 @@ func defaultDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.
 	}
 
 	// 3. 源站域名
-	// 此处不传 RegionId 通过 UC bucket 接口自动获取
-	if ioSrcHosts, e := download.CreateSrcDownloadDomainWithBucket(cfg, downloadCfg.Bucket); e != nil {
-		log.DebugF("create bucket:%s src domain error:%v", b, e)
-	} else {
-		for _, h := range ioSrcHosts {
-			hosts = append(hosts, &host.Host{
-				Host:   "",
-				Domain: h,
-			})
-		}
+	if ioSrcHost, e := download.CreateSrcDownloadDomainWithBucket(cfg, downloadCfg.Bucket); e != nil {
+		log.Warning("create bucket:%s src domain error:%v", b, e)
+	} else if len(ioSrcHost) > 0 {
+		hosts = append(hosts, &host.Host{
+			Host:   "",
+			Domain: ioSrcHost,
+		})
 	}
 
 	return hosts
