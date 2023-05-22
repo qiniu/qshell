@@ -123,10 +123,16 @@ func createDownloadUrl(info *DownloadApiInfo) (string, *data.CodeError) {
 		})
 
 		// 源站域名需要签名
-		if !info.IsPublicBucket || isIoSrcHost(info.Host, info.Key) {
+		if !info.IsPublicBucket || isIoSrcHost(info.Host, info.Bucket) {
+			expire := 60 * time.Minute
+			// 是源站域名，但也可能是 私有空间，所以上面逻辑不能对调
+			if isIoSrcHost(info.Host, info.Bucket) {
+				expire = 3 * time.Minute
+			}
+
 			if u, e := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
 				PublicUrl: urlString,
-				Deadline:  5*60 + time.Now().Unix(),
+				Deadline:  time.Now().Add(expire).Unix(),
 			}); e != nil {
 				return "", e
 			} else {
@@ -145,13 +151,9 @@ func isIoSrcHost(host string, bucketName string) bool {
 
 	srcDownloadDomain, err := GetBucketIoSrcDomain(bucketName)
 	if err != nil {
-		log.WarningF("check host is src host error:%v", err)
+		log.WarningF("check host(bucket:%s) is src host error:%v", bucketName, err)
 	}
-	if len(srcDownloadDomain) == 0 {
-		return false
-	}
-
-	return strings.Contains(host, srcDownloadDomain)
+	return host == srcDownloadDomain
 }
 
 func GetBucketIoSrcDomain(bucketName string) (string, *data.CodeError) {
