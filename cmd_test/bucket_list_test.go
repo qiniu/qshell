@@ -54,7 +54,7 @@ func TestBucketListWithNotExistBucket(t *testing.T) {
 
 func TestBucketListNoBucket(t *testing.T) {
 	_, err := test.RunCmdWithError("listbucket")
-	if !strings.Contains(err, "Bucket can't empty") {
+	if !strings.Contains(err, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
@@ -88,7 +88,10 @@ func TestBucketList2ToFile(t *testing.T) {
 	}
 	defer test.RemoveFile(file)
 
-	_, errs := test.RunCmdWithError("listbucket2", test.Bucket, "--prefix", "hello", "-o", file)
+	_, errs := test.RunCmdWithError("listbucket2", test.Bucket, "--prefix", "hello",
+		"--file-types", "0,1,2",
+		"-o", file,
+		"--outfile", file)
 
 	if len(errs) > 0 {
 		t.Fatal("error:", errs)
@@ -138,7 +141,7 @@ func TestBucketList2ToFileByAppend(t *testing.T) {
 
 func TestBucketList2NoBucket(t *testing.T) {
 	_, err := test.RunCmdWithError("listbucket2")
-	if !strings.Contains(err, "Bucket can't empty") {
+	if !strings.Contains(err, "Bucket can't be empty") {
 		t.Fail()
 	}
 }

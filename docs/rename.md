@@ -27,6 +27,9 @@ $ qshell rename --doc
 - SrcKey: 原文件名称 【必须】
 - DestKey: 目标文件名称 【必须】
 
+# 选项
+- --overwrite: 当保存的文件已存在时，强制用新文件覆盖原文件，如果无此选项操作会失败。【可选】
+
 # 示例
 1 将空间 `if-pbl` 中的 `qiniu.jpg` 重命名为 `qiniu_new.jpg`
 ```

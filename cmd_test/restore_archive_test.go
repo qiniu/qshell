@@ -39,21 +39,21 @@ func TestRestoreArchiveNoExistKey(t *testing.T) {
 
 func TestRestoreArchiveNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("restorear")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestRestoreArchiveNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("restorear", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestRestoreArchiveNoFreezeAfterDays(t *testing.T) {
 	_, errs := test.RunCmdWithError("restorear", test.Bucket, test.Key)
-	if !strings.Contains(errs, "FreezeAfterDays can't empty") {
+	if !strings.Contains(errs, "FreezeAfterDays can't be empty") {
 		t.Fail()
 	}
 }

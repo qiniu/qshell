@@ -223,8 +223,13 @@ mock02.jpg	10485760	16455233472998522
 		"--skip-path-prefixes", "",
 		"--skip-suffixes", "",
 		"--thread-count", "4",
+		"--resumable-api-v2",
+		"--resumable-api-v2-part-size", "4194304",
+		"-s", successLogPath,
 		"--success-list", successLogPath,
+		"-e", failLogPath,
 		"--failure-list", failLogPath,
+		"-w", overwriteLogPath,
 		"--overwrite-list", overwriteLogPath,
 		"--record-root", recordPath,
 		"--log-file", logPath,
@@ -260,7 +265,7 @@ mock02.jpg	10485760	16455233472998522
 
 func TestQUpload2NoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("qupload2")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fatal(errs)
 	}
 }
@@ -268,7 +273,7 @@ func TestQUpload2NoBucket(t *testing.T) {
 func TestQUpload2NoSrc(t *testing.T) {
 	_, errs := test.RunCmdWithError("qupload2",
 		"--bucket", test.Bucket)
-	if !strings.Contains(errs, "SrcDir can't empty") {
+	if !strings.Contains(errs, "SrcDir can't be empty") {
 		t.Fatal(errs)
 	}
 }

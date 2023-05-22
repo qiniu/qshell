@@ -24,7 +24,7 @@ type ListInfo struct {
 	StartDate          string // list item 的 put time 区间的开始时间 【闭区间】 【可选】
 	EndDate            string // list item 的 put time 区间的终止时间 【闭区间】 【可选】
 	Suffixes           string // list item 必须包含后缀 【可选】
-	StorageTypes       string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储 【可选】
+	FileTypes          string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储 【可选】
 	MimeTypes          string // list item Mimetype类型，多个使用逗号隔开 【可选】
 	MinFileSize        string // 文件最小值，单位: B 【可选】
 	MaxFileSize        string // 文件最大值，单位: B 【可选】
@@ -137,7 +137,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 			StartTime:          startTime,
 			EndTime:            endTime,
 			Suffixes:           info.getSuffixes(),
-			StorageTypes:       info.getStorageTypes(),
+			FileTypes:          info.getFileTypes(),
 			MimeTypes:          info.getMimeTypes(),
 			MinFileSize:        info.getMinFileSize(),
 			MaxFileSize:        info.getMaxFileSize(),
@@ -182,15 +182,15 @@ func parseDate(dateString string) (time.Time, *data.CodeError) {
 	return time.Date(dateItems[0], time.Month(dateItems[1]), dateItems[2], dateItems[3], dateItems[4], dateItems[5], 0, time.Local), nil
 }
 
-func (info ListInfo) getStartDate() (time.Time, *data.CodeError) {
+func (info *ListInfo) getStartDate() (time.Time, *data.CodeError) {
 	return parseDate(info.StartDate)
 }
 
-func (info ListInfo) getEndDate() (time.Time, *data.CodeError) {
+func (info *ListInfo) getEndDate() (time.Time, *data.CodeError) {
 	return parseDate(info.EndDate)
 }
 
-func (info ListInfo) getSuffixes() []string {
+func (info *ListInfo) getSuffixes() []string {
 	ret := make([]string, 0)
 	suffixes := strings.Split(info.Suffixes, ",")
 	for _, s := range suffixes {
@@ -202,23 +202,23 @@ func (info ListInfo) getSuffixes() []string {
 	return ret
 }
 
-func (info ListInfo) getStorageTypes() []int {
+func (info *ListInfo) getFileTypes() []int {
 	ret := make([]int, 0)
-	storageTypes := strings.Split(info.StorageTypes, ",")
-	for _, s := range storageTypes {
+	fileTypes := strings.Split(info.FileTypes, ",")
+	for _, s := range fileTypes {
 		s = strings.TrimSpace(s)
 		if len(s) > 0 {
-			if storageType, e := strconv.Atoi(s); e == nil {
-				ret = append(ret, storageType)
+			if fileType, e := strconv.Atoi(s); e == nil {
+				ret = append(ret, fileType)
 			} else {
-				log.WarningF("storageType(%s) config error:%v", s, e)
+				log.WarningF("fileType(%s) config error:%v", s, e)
 			}
 		}
 	}
 	return ret
 }
 
-func (info ListInfo) getMimeTypes() []string {
+func (info *ListInfo) getMimeTypes() []string {
 	ret := make([]string, 0)
 	mimeTypes := strings.Split(info.MimeTypes, ",")
 	for _, m := range mimeTypes {
@@ -230,7 +230,7 @@ func (info ListInfo) getMimeTypes() []string {
 	return ret
 }
 
-func (info ListInfo) getMinFileSize() int64 {
+func (info *ListInfo) getMinFileSize() int64 {
 	if len(info.MinFileSize) == 0 {
 		return -1
 	}
@@ -242,7 +242,7 @@ func (info ListInfo) getMinFileSize() int64 {
 	}
 }
 
-func (info ListInfo) getMaxFileSize() int64 {
+func (info *ListInfo) getMaxFileSize() int64 {
 	if len(info.MaxFileSize) == 0 {
 		return -1
 	}

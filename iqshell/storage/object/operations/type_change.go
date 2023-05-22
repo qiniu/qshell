@@ -73,16 +73,16 @@ func ChangeType(cfg *iqshell.Config, info ChangeTypeInfo) {
 	if err != nil || result == nil {
 		data.SetCmdStatusError()
 		log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Error: %v",
-			info.Bucket, info.Key, t, getStorageTypeDescription(t), err)
+			info.Bucket, info.Key, t, getFileTypeDescription(t), err)
 		return
 	}
 
 	if result.IsSuccess() {
-		log.InfoF("Change Type Success, [%s:%s] => '%d'(%s)", info.Bucket, info.Key, t, getStorageTypeDescription(t))
+		log.InfoF("Change Type Success, [%s:%s] => '%d'(%s)", info.Bucket, info.Key, t, getFileTypeDescription(t))
 	} else {
 		data.SetCmdStatusError()
 		log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Code: %d, Error: %s",
-			info.Bucket, info.Key, t, getStorageTypeDescription(t), result.Code, result.Error)
+			info.Bucket, info.Key, t, getFileTypeDescription(t), result.Code, result.Error)
 	}
 }
 
@@ -148,11 +148,11 @@ func BatchChangeType(cfg *iqshell.Config, info BatchChangeTypeInfo) {
 			}
 			if result.IsSuccess() {
 				log.InfoF("Change Type Success, [%s:%s] => '%d'(%s) ",
-					info.Bucket, in.Key, in.Type, getStorageTypeDescription(in.Type))
+					info.Bucket, in.Key, in.Type, getFileTypeDescription(in.Type))
 			} else {
 				data.SetCmdStatusError()
 				log.ErrorF("Change Type Failed, [%s:%s] => '%d'(%s), Code: %d, Error: %s",
-					info.Bucket, in.Key, in.Type, getStorageTypeDescription(in.Type), result.Code, result.Error)
+					info.Bucket, in.Key, in.Type, getFileTypeDescription(in.Type), result.Code, result.Error)
 			}
 		}).
 		OnError(func(err *data.CodeError) {

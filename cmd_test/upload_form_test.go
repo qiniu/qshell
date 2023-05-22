@@ -18,7 +18,8 @@ func TestFormUpload(t *testing.T) {
 
 	result, errs := test.RunCmdWithError("fput", test.Bucket, "qshell_fput_1M", path,
 		"--mimetype", "image/jpg",
-		"--storage", "0")
+		"--storage", "0",
+		"--file-type", "1")
 	if len(errs) > 0 {
 		t.Fail()
 	}
@@ -122,21 +123,21 @@ func TestFormUploadNoExistBucket(t *testing.T) {
 
 func TestFormUploadNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("fput")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestFormUploadNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("fput", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestFormUploadNoLocalFilePath(t *testing.T) {
 	_, errs := test.RunCmdWithError("fput", test.Bucket, test.Key)
-	if !strings.Contains(errs, "LocalFile can't empty") {
+	if !strings.Contains(errs, "LocalFile can't be empty") {
 		t.Fail()
 	}
 }

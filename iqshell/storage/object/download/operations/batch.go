@@ -206,6 +206,7 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 			apiInfo.Referer = info.Referer
 			apiInfo.FileEncoding = info.FileEncoding
 			apiInfo.CheckHash = info.CheckHash
+			apiInfo.CheckSize = info.CheckSize
 			apiInfo.RemoveTempWhileError = info.RemoveTempWhileError
 			apiInfo.UseGetFileApi = info.GetFileApi
 			apiInfo.EnableSlice = info.EnableSlice

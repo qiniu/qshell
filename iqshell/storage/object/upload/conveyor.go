@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	resumeV2MaxPart = 10000
-	httpTimeout     = time.Second * 60
+	resumeV2MinChunkSize = 1024 * 1024
+	resumeV2MaxPart      = 10000
+	httpTimeout          = time.Second * 60
 )
 
 type conveyor struct {
@@ -87,7 +88,11 @@ func (c *conveyor) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeError) {
 	}
 
 	// 2. 上传文件分片
-	var blockSize = int64(data.BLOCK_SIZE)
+	var blockSize = info.ChunkSize
+	if blockSize < resumeV2MinChunkSize {
+		blockSize = int64(data.BLOCK_SIZE)
+	}
+
 	if info.UseResumeV2 {
 		// 检查块大小是否满足实际需求
 		maxParts := int64(resumeV2MaxPart)
@@ -252,7 +257,7 @@ func getRange(srcResUrl string, totalSize, rangeStartOffset, rangeBlockSize int6
 	return buffer, nil
 }
 
-//Content-Range: bytes 25538640-25538647/25538648
+// Content-Range: bytes 25538640-25538647/25538648
 func parseContentRange(contentRange string) (rangeSize, totalSize int64) {
 	contentRangeItems := strings.Split(contentRange, " ")
 	sizeItems := strings.Split(contentRangeItems[1], "/")

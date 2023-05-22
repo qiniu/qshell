@@ -44,21 +44,21 @@ func TestCopyNoExistSrcKey(t *testing.T) {
 
 func TestCopyNoSrcBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("copy")
-	if !strings.Contains(errs, "SourceBucket can't empty") {
+	if !strings.Contains(errs, "SourceBucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestCopyNoSrcKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("copy", test.Bucket)
-	if !strings.Contains(errs, "SourceKey can't empty") {
+	if !strings.Contains(errs, "SourceKey can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestCopyNoDestBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("copy", test.Bucket, test.KeyNotExist)
-	if !strings.Contains(errs, "DestBucket can't empty") {
+	if !strings.Contains(errs, "DestBucket can't be empty") {
 		t.Fail()
 	}
 }

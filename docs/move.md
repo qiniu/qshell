@@ -6,7 +6,7 @@
 
 # 格式
 ```
-qshell move [--overwrite] <SrcBucket> <SrcKey> <DestBucket> <DestKey>
+qshell move [--overwrite] <SrcBucket> <SrcKey> <DestBucket> [-k DestKey]
 ```
 
 # 帮助文档
@@ -26,7 +26,10 @@ $ qshell move --doc
 - SrcBucket: 源空间名称
 - SrcKey: 源文件名称
 - DestBucket: 目标空间名称
-- DestKey: 目标文件名称
+
+# 选项
+- -k/--key: 目标文件名称(DestKey)，如果是 `DestBucket` 和 `SrcBucket` 不同的情况下，这个参数可以不填，默认和 `SrcKey` 相同。【可选】
+- --overwrite: 当保存的文件已存在时，强制用新文件覆盖原文件，如果无此选项操作会失败。【可选】
 
 # 示例
 1 将空间 `if-pbl` 中的 `qiniu.jpg` 移动到 `if-pri` 中

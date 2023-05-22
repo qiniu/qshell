@@ -15,7 +15,7 @@ func TestAsyncFetch(t *testing.T) {
 	fetchKeys = append(fetchKeys, "hello10.json")
 	content := ""
 	for _, key := range fetchKeys {
-		content += "https://" + test.BucketDomain + "/" + key + "\t" + "0" + "\t" + "fetch_" + key + "\n"
+		content += "http://" + test.BucketDomain + "/" + key + "\t" + "0" + "\t" + "fetch_" + key + "\n"
 	}
 	path, err := test.CreateFileWithContent("async_fetch.txt", content)
 	if err != nil {
@@ -37,23 +37,24 @@ func TestAsyncFetch(t *testing.T) {
 		"-s", successLogPath,
 		"-e", failLogPath,
 		"-g", "1",
+		"--file-type", "1",
 		"-c", "2")
 	defer func() {
 		test.RemoveFile(failLogPath)
 		test.RemoveFile(successLogPath)
 	}()
 	if !test.IsFileHasContent(successLogPath) {
-		t.Fatal("success log can't empty")
+		t.Fatal("success log can't be empty")
 	}
 
 	if !test.IsFileHasContent(failLogPath) {
-		t.Fatal("fail log can't empty")
+		t.Fatal("fail log can't be empty")
 	}
 }
 
 func TestAsyncFetchNoBucket(t *testing.T) {
 	_, err := test.RunCmdWithError("abfetch")
-	if !strings.Contains(err, "Bucket can't empty") {
+	if !strings.Contains(err, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
@@ -72,14 +73,14 @@ func TestACheck(t *testing.T) {
 
 func TestACheckNoId(t *testing.T) {
 	_, err := test.RunCmdWithError("acheck", test.Bucket)
-	if !strings.Contains(err, "Id can't empty") {
+	if !strings.Contains(err, "Id can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestACheckNoBucket(t *testing.T) {
 	_, err := test.RunCmdWithError("acheck")
-	if !strings.Contains(err, "Bucket can't empty") {
+	if !strings.Contains(err, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
