@@ -16,19 +16,26 @@ qshell awslist [-p <Prefix>][-n <maxKeys>][-m <ContinuationToken>] -S <AwsSecret
 # 帮助文档
 可以在命令行输入如下命令获取帮助文档：
 ```
-$ qshell awslist -h
+// 简单描述
+$ qshell awslist -h 
+
+// 详细文档（此文档）
+$ qshell awslist --doc
 ```
+
+# 鉴权
+无
 
 # 参数
 - AwsBucket: 亚马逊存储空间名称
 - AwsRegion: 亚马逊存储空间所在的地区
 
 # 选项
-- -A/--aws-id：亚马逊账户的Access Key ID 。【必选】
-- -S/--aws-secret-key：亚马逊账户的Secret Key 。【必选】
+- -A/--aws-id：亚马逊账户的 Access Key ID 。【必选】
+- -S/--aws-secret-key：亚马逊账户的 Secret Key 。【必选】
 - -p/--prefix：亚马逊存储空间要抓取资源的前缀。【可选】
-- -n/-max-keys：亚马逊接口每次返回的数据条目数量。【可选】
-- -m/--continuation-token：亚马逊接口数据每次会返回的token, 用于下次列举。【可选】
+- -n/--max-keys：亚马逊每次列举请求返回数据的条目数量。【可选】
+- -m/--continuation-token：亚马逊接口返回的 token，用于断点列举。【可选】
 
 # 列举
 使用场景：

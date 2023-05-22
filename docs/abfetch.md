@@ -9,8 +9,21 @@
 
 # 格式
 ```
-qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <CallbackUrl>][-e <FailureList>][-t <DownloadHostHeader>][-g <StorageType>][-s <SuccessList>][-c <ThreadCount>] <Bucket>
+qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <CallbackUrl>][-e <FailureList>][-t <DownloadHostHeader>][--file-type <FileType>][-s <SuccessList>][-c <ThreadCount>] <Bucket>
 ```
+
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell abfetch -h 
+
+// 详细文档（此文档）
+$ qshell abfetch --doc
+```
+
+# 鉴权
+无
 
 # 参数
 - Bucket：空间名，可以为公开空间或私有空间。 【必选】
@@ -20,18 +33,18 @@ qshell abfetch [-i <URLList>][-b <CallbackBody>][-T <CallbackHost>][-a <Callback
   - [FileUrl]                     
   - [FileUrl]\t[FileSize] 
   - [FileUrl]\t[FileSize]\t[Key], // eg:https://qiniu.com/a.png\t1024\ta.png    
-  注：如果不指定 key 则从 url 中获取最后一个 path 信息作为 key；eg:https://qiniu.com/a.png\t1024\ta.png  key 为：ta.png
+  注：FileSize 单位：B；如果不指定 key 则从 url 中获取最后一个 path 信息作为 key；eg:https://qiniu.com/a.png\t1024\ta.png  key 为：ta.png
 - -b/--callback-body：回调的 http Body。 【可选】          
 - -T/--callback-host：回调时的 HOST 头。 【可选】
 - -a/--callback-url：回调的请求地址。 【可选】
-- -t/--host：下载资源时使用的 HOST 头。 【可选】
-- -g/--storage-type：抓取的资源存储在七牛存储空间的类型，0:低频存储 1:标准存储 2:归档存储 3:深度归档, 默认为: 0 。 【可选】
-- -c/--thread-count：抓取指定的线程数目，默认：20。 【可选】
-- -s/--success-list：抓取成功后导出到的文件。 【可选】
-- -e/--failure-list：抓取失败后导出到的文件。 【可选】
-- --disable-check-fetch-result：不检测异步 fetch 是否成功，检测方式是查询目标 bucket 是否存在 fetch 的文件；默认检测。【可选】  
+- --file-type：抓取的资源存储在七牛存储空间的类型，0:普通存储 1:低频存储 2:归档存储 3:深度归档, 默认为: 0。 【可选】
+- -c/--thread-count：指定抓取时使用的线程数目，默认：20。 【可选】
+- --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
+- -s/--success-list：指定一个文件的路径，如果资源抓取成功，则将资源信息写入此文件；默认不导出。 【可选】
+- -e/--failure-list：指定一个文件的路径，如果资源抓取失败，则将资源信息写入此文件；默认不导出。 【可选】
+- --disable-check-fetch-result：不检测异步 fetch 是否成功；检测方式是查询目标 bucket 是否存在 fetch 的文件；默认检测。【可选】  
 - --enable-record：记录任务执行状态，当下次执行命令时会跳过已执行的任务。 【可选】
-- --record-redo-while-error：依赖于 --enable-record，当检测任务状态时（命令重新执行时，所有任务会从头到尾重新执行；任务执行前会先检测当前任务是否已经执行），如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败不重新执行。 【可选】
+- --record-redo-while-error：依赖于 --enable-record；命令重新执行时，命令中所有任务会从头到尾重新执行；每个任务执行前会根据记录先查看当前任务是否已经执行，如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败则跳过不再重新执行。 【可选】
 
 详细的选项介绍，请参考：[异步抓取 (async fetch)](https://developer.qiniu.com/kodo/api/4097/asynch-fetch)
 
@@ -50,30 +63,27 @@ http://test.com/test1.txt
 http://test.com/test2.txt
 http://test.com/test3.txt
 ```
-每行一个地址 。
+每行一个地址，因为未指定 key，所以 key 默认为 url 中最后一个 path 信息，分别为：test1.txt、test2.txt、test3.txt。
 
 ### 第二步:
-使用如下的命令就可以抓取资源到存储 "test" 中
+使用如下的命令就可以抓取资源到存储名为 "test" 空间中
 ```
 $ qshell abfetch -i urls.txt test
 ```
 
-但是这样我们不知道哪些成功了，哪些抓取失败了，可以使用选项-e 导出失败列表到文件"failure.txt"中:
+但是这样我们不知道哪些成功了，哪些抓取失败了，可以使用选项 -e 导出失败资源列表到文件 "failure.txt" 中:
 ```
 $ qshell abfetch -i urls.txt -e failure.txt test
 ```
 
-如果要提高请求的并发量， 可以使用选项-c 指定提交的线程数, 下面的命令指定线程数为100:
+如果要提高请求的并发量， 可以使用选项 -c 指定提交的线程数, 下面的命令指定线程数为 100:
 ```
 $ qshell abfetch -i urls.txt -e failure.txt -c 100 test
 ```
-线程数只能决定请求接口后台服务器的快慢， 提交的请求会到服务器处理队列中， 如果队列中有很多要抓取的资源，抓取速度不一定会提高，所以适当设置线程数
+线程数只能决定向后台服务器提交抓取请求的快慢，提交的抓取请求会到服务器处理队列中，如果队列中有很多要抓取的资源，抓取速度不一定会提高，所以适当设置线程数。
 
 # 文件大小
-异步接口暂时没办法判断是否抓取成功， 当异步接口返回的数据 wait 是 -1 时，表示抓取过这个文件，这时程序会用 stat 接口去存储获取文件的信息，如果可以获取到，说明抓取成功了；如果 wait 为 -1， 重试三次 stat 都失败，那么认为抓取失败。
-
-获取异步接口的返回结果是通过轮训进行的， 每次轮训的时间间隔取决于文件的大小， 大的文件时间间隔长点，小的文件时间间隔短点。
-因此可以在抓取的资源文件后面附上文件大小来帮助程序估算大概的时间间隔。
+异步接口暂时没办法判断是否抓取成功，当异步接口返回的数据 wait 小于 0 时，程序会用 stat 接口去存储获取文件的信息，如果可以获取到，说明抓取成功了；如果 wait 小于 0， 且在一定时间内（由文件大小决定，文件越大等待时间越长）重试多次 stat 都失败，那么认为抓取失败。
 
 比如要抓取的资源地址为：
 http://test.com/test1.txt

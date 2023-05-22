@@ -1,3 +1,8 @@
+# 2.10.0
+1. expire 与 batchexpire 命令调整，deleteAfterDay 为 0 时取消文件的过期删除配置
+2. 处理文件大小为 0 字节下载失败问题
+3. 私有云支持仅配置 UC 域名
+
 # 2.9.2
 1. 优化 qdownload 下载功能
 2. qupload2 支持配置单文件上传时块的并发度

@@ -1,5 +1,5 @@
 # 简介
-`func` 命令是封装 Go 语言的模板功能，你可已使用此命令进行模板的相关处理。
+`func` 命令是封装 Go 语言的模板功能，你可以使用此命令进行模板相关的处理。
 
 具体参考：
 https://pkg.go.dev/text/template
@@ -16,6 +16,19 @@ qshell 有些命令的回调使用模板方式实现，在使用之前可以使�
 ```
 qshell func <ParamsJson> <FuncTemplate> [flags]
 ``` 
+
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell func -h 
+
+// 详细文档（此文档）
+$ qshell func --doc
+```
+
+# 鉴权
+无
 
 # 参数
 - ParamsJson：Go 语言模板功能输入的参数 【必选】

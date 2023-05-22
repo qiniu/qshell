@@ -42,6 +42,7 @@ func TestResumeV1Upload(t *testing.T) {
 	result, errs = test.RunCmdWithError("rput", test.Bucket, "qshell_rput_5M", path,
 		"--mimetype", "image/png",
 		"--storage", "1",
+		"--file-type", "1",
 		"--worker", "4")
 	if !strings.Contains(errs, "file exists") {
 		t.Fatal(result)
@@ -105,7 +106,8 @@ func TestResumeV2Upload(t *testing.T) {
 	result, errs := test.RunCmdWithError("rput", test.Bucket, "qshell_rput_5M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "0",
-		"--resumable-api-v2")
+		"--resumable-api-v2",
+		"--resumable-api-v2-part-size", "73875456")
 	if len(errs) > 0 {
 		t.Fail()
 	}
@@ -212,21 +214,21 @@ func TestResumeUploadNoExistBucket(t *testing.T) {
 
 func TestResumeUploadNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("rput")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestResumeUploadNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("rput", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestResumeUploadNoLocalFilePath(t *testing.T) {
 	_, errs := test.RunCmdWithError("rput", test.Bucket, test.Key)
-	if !strings.Contains(errs, "LocalFile can't empty") {
+	if !strings.Contains(errs, "LocalFile can't be empty") {
 		t.Fail()
 	}
 }

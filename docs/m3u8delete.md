@@ -6,8 +6,18 @@
 qshell m3u8delete <Bucket> <M3u8Key>
 ``` 
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell m3u8delete -h 
+
+// 详细文档（此文档）
+$ qshell m3u8delete --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
 - Bucket：m3u8 文件所在空间，可以为公开空间或私有空间 【必选】

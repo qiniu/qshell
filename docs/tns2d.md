@@ -6,6 +6,19 @@
 qshell tns2d <TimestampIn100NanoSeconds>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell tns2d -h 
+
+// 详细文档（此文档）
+$ qshell tns2d --doc
+```
+
+# 鉴权
+无
+
 # 参数
 - TimestampIn100NanoSeconds：以 100 纳秒为单位的 Unix 时间戳。 【必选】
 

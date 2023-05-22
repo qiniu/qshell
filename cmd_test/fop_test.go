@@ -40,21 +40,21 @@ func TestFopNoExistKey(t *testing.T) {
 
 func TestFopNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("pfop")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestFopNoKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("pfop", test.Bucket)
-	if !strings.Contains(errs, "Key can't empty") {
+	if !strings.Contains(errs, "Key can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestFopNoFopValue(t *testing.T) {
 	_, errs := test.RunCmdWithError("pfop", test.Bucket, fopObjectKey)
-	if !strings.Contains(errs, "Fops can't empty") {
+	if !strings.Contains(errs, "Fops can't be empty") {
 		t.Fail()
 	}
 }
@@ -65,7 +65,7 @@ func TestFopDocument(t *testing.T) {
 
 func TestPreFopNoID(t *testing.T) {
 	_, errs := test.RunCmdWithError("prefop")
-	if !strings.Contains(errs, "PersistentID can't empty") {
+	if !strings.Contains(errs, "PersistentID can't be empty") {
 		t.Fail()
 	}
 }

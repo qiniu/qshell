@@ -6,17 +6,27 @@
 qshell batchsign [-i <UrlListFile>] [-e <Deadline>]
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell batchsign -h 
+
+// 详细文档（此文档）
+$ qshell batchsign --doc
+```
+
 # 鉴权
-需要在使用了 `account `设置了 `AccessKey` 和 `SecretKey` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
-- -i/--input-file：接受一个文件参数, 内容每行包含一个公开的外链。如果没有通过该选项指定该文件参数， 从标准输入读取内容。每行具体格式如下：（【可选】）
+- -i/--input-file：指定一个文件, 内容每行包含一个公开的外链。如果没有通过该选项指定该文件参数， 从标准输入读取内容。每行具体格式如下：（【可选】）
 ```
 <PublicUrl>   // 资源外链
 ```
 - -e/--deadline：接受一个过时的 deadline 参数，如果没有指定该参数，默认为 3600s 。【必选】 
 - --enable-record：记录任务执行状态，当下次执行命令时会检测任务执行的状态并跳过已执行的任务。 【可选】
-- --record-redo-while-error：依赖于 --enable-record，当检测任务状态时（命令重新执行时，所有任务会从头到尾重新执行；任务执行前会先检测当前任务是否已经执行），如果任务已执行且失败，则再执行一次；默认此选项不生效，当任务执行失败不重新执行。 【可选】
+- --record-redo-while-error：依赖于 --enable-record；命令重新执行时，命令中所有任务会从头到尾重新执行；每个任务执行前会根据记录先查看当前任务是否已经执行，如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败则跳过不再重新执行。 【可选】
 
 # 示例
 比如我们对文件`tosign.txt`里面的公开访问外链做签名。`tosign.txt`内容如下：

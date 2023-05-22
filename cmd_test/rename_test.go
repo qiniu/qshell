@@ -42,21 +42,21 @@ func TestRenameNoExistSrcKey(t *testing.T) {
 
 func TestRenameNoSrcBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("rename")
-	if !strings.Contains(errs, "SourceBucket can't empty") {
+	if !strings.Contains(errs, "SourceBucket can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestRenameNoSrcKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("rename", test.Bucket)
-	if !strings.Contains(errs, "SourceKey can't empty") {
+	if !strings.Contains(errs, "SourceKey can't be empty") {
 		t.Fail()
 	}
 }
 
 func TestRenameNoDestKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("rename", test.Bucket, test.Key)
-	if !strings.Contains(errs, "DestKey can't empty") {
+	if !strings.Contains(errs, "DestKey can't be empty") {
 		t.Fail()
 	}
 }

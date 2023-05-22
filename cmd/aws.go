@@ -33,7 +33,11 @@ func awsFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().Int64VarP(&info.AwsBucketInfo.MaxKeys, "max-keys", "n", 1000, "list AWS bucket with numbers of keys returned each time limited by this number if set")
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.CToken, "continuation-token", "m", "", "AWS list continuation token")
 	cmd.Flags().IntVarP(&info.BatchInfo.WorkerCount, "thread-count", "c", 20, "maximum of fetch thread")
-	cmd.Flags().StringVarP(&info.Host, "up-host", "u", "", "Qiniu fetch up host")
+
+	// 没有实际作用
+	cmd.Flags().StringVarP(&info.Host, "up-host", "u", "", "Qiniu fetch up host, deprecated")
+	_ = cmd.Flags().MarkDeprecated("up-host", "deprecated")
+
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.SecretKey, "aws-secret-key", "S", "", "AWS secret key")
 	cmd.Flags().StringVarP(&info.AwsBucketInfo.Id, "aws-id", "A", "", "AWS ID")
 	cmd.Flags().StringVarP(&info.BatchInfo.SuccessExportFilePath, "success-list", "s", "", "success fetch key list")

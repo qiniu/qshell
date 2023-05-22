@@ -26,7 +26,8 @@ type DownloadCfg struct {
 
 	//down from cdn
 	Referer   string `json:"referer,omitempty"`
-	CdnDomain string `json:"cdn_domain,omitempty"`
+	CdnDomain string `json:"cdn_domain,omitempty"` // 废弃
+	Domain    string `json:"domain,omitempty"`
 
 	// 是否使用 getfile api，私有云使用
 	GetFileApi bool `json:"get_file_api"`
@@ -51,6 +52,7 @@ func DefaultDownloadCfg() DownloadCfg {
 		CheckHash:              false,
 		Referer:                "",
 		CdnDomain:              "",
+		Domain:                 "",
 		GetFileApi:             false,
 		EnableSlice:            false,
 		SliceFileSizeThreshold: 40 * utils.MB,
@@ -69,5 +71,14 @@ func (d *DownloadCfg) Check() *data.CodeError {
 	if len(d.Bucket) == 0 {
 		return alert.CannotEmptyError("bucket", "")
 	}
+
+	if len(d.CdnDomain) > 0 && len(d.Domain) == 0 {
+		// 兼容处理
+		d.Domain = d.CdnDomain
+	}
+
+	// 兼容处理，防止其他地方使用
+	d.CdnDomain = d.Domain
+
 	return nil
 }

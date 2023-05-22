@@ -10,7 +10,7 @@ import (
 
 func TestAliBucketListNoDataCenter(t *testing.T) {
 	_, errs := test.RunCmdWithError("alilistbucket")
-	if !strings.Contains(errs, "DataCenter can't empty") {
+	if !strings.Contains(errs, "DataCenter can't be empty") {
 		t.Fatal("empty DataCenter check error")
 	}
 	return
@@ -18,7 +18,7 @@ func TestAliBucketListNoDataCenter(t *testing.T) {
 
 func TestAliBucketListNoBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("alilistbucket", "DataCenter")
-	if !strings.Contains(errs, "Bucket can't empty") {
+	if !strings.Contains(errs, "Bucket can't be empty") {
 		t.Fatal("empty Bucket check error")
 	}
 	return
@@ -26,7 +26,7 @@ func TestAliBucketListNoBucket(t *testing.T) {
 
 func TestAliBucketListNoAccessKeyId(t *testing.T) {
 	_, errs := test.RunCmdWithError("alilistbucket", "DataCenter", "Bucket")
-	if !strings.Contains(errs, "AccessKeyId can't empty") {
+	if !strings.Contains(errs, "AccessKeyId can't be empty") {
 		t.Fatal("empty AccessKeyId check error")
 	}
 
@@ -35,7 +35,7 @@ func TestAliBucketListNoAccessKeyId(t *testing.T) {
 
 func TestAliBucketListNoAccessKeySecret(t *testing.T) {
 	_, errs := test.RunCmdWithError("alilistbucket", "DataCenter", "Bucket", "AccessKeyId")
-	if !strings.Contains(errs, "AccessKeySecret can't empty") {
+	if !strings.Contains(errs, "AccessKeySecret can't be empty") {
 		t.Fatal("empty AccessKeySecret check error")
 	}
 	return

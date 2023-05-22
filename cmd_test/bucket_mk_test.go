@@ -38,7 +38,7 @@ func TestMkBucketNotExistRegion(t *testing.T) {
 
 func TestMkBucketNoBucket(t *testing.T) {
 	_, err := test.RunCmdWithError("mkbucket")
-	if !strings.Contains(err, "Bucket can't empty") {
+	if !strings.Contains(err, "Bucket can't be empty") {
 		t.Fail()
 	}
 }

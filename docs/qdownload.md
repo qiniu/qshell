@@ -6,17 +6,27 @@
 - `Key` 中的 `/` 会被当做路径处理，也即任何以 `/` 结尾的 `Key` 均会被当做文件夹处理。
 - 如果使用的是 CDN 域名，且 CDN 域名开启了图片优化中的图片自动瘦身功能时，下载文件的信息和七牛服务端记录的文件信息不一致，此时下载不要使用 --check-size 和 --check-hash 选项，否则下载会失败。
 
-### 注：【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】
+### 注：【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行将 domain 参数设置为 CDN 域名，如不设置，需支付源站流量费用，无法减免！！！】
 
-本工具批量下载文件支持多文件并发下载，另外还支持单个文件的断点续传。除此之外，也可以支持指定前缀或者后缀的文件同步，注意这里的前缀只能指定一个，但是后缀可以指定多个，多个后缀直接使用英文的逗号(,)分隔。
+本工具批量下载文件支持多文件并发下载，另外还支持单个文件的断点下载。除此之外，也可以支持指定前缀或者后缀的文件同步，注意这里的前缀只能指定一个，但是后缀可以指定多个，多个后缀直接使用英文的逗号(,)分隔。
 
 # 格式
 ```
 qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 ```
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell qdownload -h 
+
+// 详细文档（此文档）
+$ qshell qdownload --doc
+```
+
 # 鉴权
-需要在使用了 `account` 设置了 `AccessKey`, `SecretKey` 和 `Name` 的情况下使用。
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
 
 # 参数
 - LocalDownloadConfig：本地下载的配置文件，内容包括要下载的文件所在空间，文件前缀等信息，具体参考配置文件说明 【必选】
@@ -24,9 +34,9 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 其中 `ThreadCount` 表示支持同时下载多个文件。
 
 # 选项
-- -c/--thread：配置下载的并发协程数量，表示支持同时下载多个文件（ThreadCount）, 大小必须在1-2000，如果不在这个范围内，默认为5。
+- -c/--thread-count：配置下载的并发协程数量，表示支持同时下载多个文件（ThreadCount）, 大小必须在 1~2000，如果不在这个范围内，默认为 5。
 - -s/--success-list：指定一个文件名字，导入下载成功的文件列表到该文件。
-- -f/--failure-list：指定一个文件名字， 导入下砸失败的文件列表到该文件。
+- -e/--failure-list：指定一个文件名字， 导入下砸失败的文件列表到该文件。
 
 `qdownload` 功能需要配置文件的支持，配置文件的内容如下：
 ```
@@ -38,7 +48,7 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
     "suffixes"               :   ".png,.jpg",
     "key_file"               :   "<KeyFile>",
     "check_hash"             :   false,
-    "cdn_domain"             :   "down.example.com",
+    "domain"                 :   "down.example.com",
     "referer"                :   "http://www.example.com",
     "public"                 :   true,
     "remove_temp_while_error":   false,
@@ -50,7 +60,8 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 ```
 
 字段说明：
-- bucket：空间名称 【必选】
+
+- bucket：空间名 【必选】
 - dest_dir：本地数据备份路径，为全路径，默认：当前路径 【可选】
 - prefix：只同步指定前缀的文件，默认为空 【可选】
 - suffixes：只同步指定后缀的文件，默认为空 【可选】
@@ -58,8 +69,8 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - save_path_handler：指定一个回调函数；在构建文件的保存路径时，优先使用此选项进行构建，如果不配置则使用 $dest_dir + $文件分割符 + $Key 方式进行构建。文档下面有常用场景实例。此函数通过 Go 语言的模板实现，函数验证使用 func 命令，具体语法可参考 func 命令说明，handler 使用方式下方有示例可供参考 【可选】
 - check_size：下载后检测本地文件和服务端文件 size 的一致性，默认为 `false`。【可选】
 - check_hash：是否验证 hash，如果开启可能会耗费较长时间，默认为 `false` 【可选】
-- cdn_domain：设置下载的 CDN 域名，默认为空表示从存储源站下载，qshell 下载使用 domain 优先级：1.cdn_domain(此选项) 2.bucket 绑定域名(qshell 内部查询，无需配置) ，当优先级高的 domain 下载失败后会尝试使用优先级低的 domain 进行下载。【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行设置 cdn_domain 参数，如不设置，需支付源站流量费用，无法减免！！！】 【可选】
-- referer：如果 CDN 域名配置了域名白名单防盗链，需要指定一个允许访问的 referer 地址；默认为空 【可选】
+- domain：设置下载请求的域名，默认为空表示从存储源站下载，qshell 下载使用域名的优先级：1.配置文件中的下载请求域名(此参数) 2.bucket 绑定的域名(qshell 内部查询，无需配置) ，当优先级高的域名下载失败后会尝试使用优先级低的域名进行下载。【该功能默认需要计费，如果希望享受 10G 的免费流量，请自行配置此参数为 CDN 域名，如不配置，需支付源站流量费用，无法减免！！！】 【可选】
+- referer：如果下载请求域名配置了域名白名单防盗链，需要指定一个允许访问的 referer 地址；默认为空 【可选】
 - public：空间是否为公开空间；为 `true` 时为公有空间，公有空间下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为 `false`（私有空间）【可选】
 - enable_slice: 是否开启切片下载，需要注意 `slice_file_size_threshold` 切片阈值选项的配置，只有开启切片下载，并且下载的文件大小大于切片阈值方会启动切片下载。默认不开启。【可选】
 - slice_size: 切片大小；当使用切片下载时，每个切片的大小；单位：B。默认为 4194304，也即 4MB。【可选】
@@ -73,21 +84,20 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 - record_root：下载记录信息保存路径，包括日志文件和下载进度文件；默认为 `qshell` 下载目录；【可选】
     - 通过 `-L` 指定工作目录时，`record_root` 则为 `此工作目录/qupload/$jobId`，
     - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qupload/$jobId`
-    - 注意 `jobId` 是根据上传任务动态生成；具体方式为 MD5("DestDir:$Bucket:KeyFile")；`CurrentUserName` 当前用户的名称
+    - 注意 `jobId` 是根据上传任务动态生成；具体方式为 MD5("DestDir:$Bucket:$KeyFile")；`CurrentUserName` 当前用户的名称
 
 ##### 备注：
-1. 在Windows系统下面使用的时候，注意 `dest_dir` 的设置遵循 `D:\\jemy\\backup` 这种方式。也就是路径里面的 `\` 要有两个（`\\`）。
-2. 在默认不指定 `cdn_domain` 的情况下，会从存储源站下载资源，这部分下载产生的流量会生成存储源站下载流量的计费，请注意，这部分计费不在七牛 CDN 免费 10G 流量覆盖范围。
+1. 在 Windows 系统下面使用的时候，注意 `dest_dir` 的设置遵循 `D:\\jemy\\backup` 这种方式。也就是路径里面的 `\` 要有两个（`\\`）。
+2. 在默认不指定 `domain` 的情况下，会从存储源站下载资源，这部分下载产生的流量会生成存储源站下载流量的计费，请注意，这部分计费不在七牛 CDN 免费 10G 流量覆盖范围。
 
 # 示例
 需要同步空间 `qdisk` 中的所有以 `movies/` 开头(理解为前缀的概念，那么 `movies/1.mp4`, `movies/2.mp4` 等以 `movies/` 为前缀的文件都会被下载保存)，并以 `.mp4`
-结尾的文件到本地路径 `/Users/jemy/Temp7/backup` 下面（把下面的配置内容写入配置文件 `qdisk_down.conf`，该配置文件需要自行创建）：
-
+结尾的文件到本地路径 `/Users/jemy/Temp7/backup` 下面；把下面的配置内容写入配置文件 `qdisk_down.conf`，该配置文件需要自行创建：
 ```
 {
 	"dest_dir"	:	"/Users/jemy/Temp7/backup",
 	"bucket"	:	"qdisk",
-	"cdn_domain"    :      "if-pbl.qiniudn.com",
+	"domain"    :   "if-pbl.qiniudn.com",
 	"prefix"	:	"movies/",
 	"suffixes"	:	".mp4",
 	"check_hash"    :   false
@@ -95,7 +105,6 @@ qshell qdownload [-c <ThreadCount>] <LocalDownloadConfig>
 ```
 
 运行命令（下载并发数表示可以同时下载 10 个文件）：
-
 ```
 qshell qdownload -c 10 qdisk_down.conf
 ```

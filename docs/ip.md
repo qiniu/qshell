@@ -1,12 +1,25 @@
 # 简介
-`ip` 是一个查询ip归属地和运营商的工具，根据淘宝的API来获取结果。
+`ip` 是一个查询 ip 归属地和运营商的工具，根据淘宝的 API 来获取结果。
 
-API 地址：[http://ip.taobao.com/service/getIpInfo.php](http://ip.taobao.com/service/getIpInfo.php) 。该工具一次可以查询多个ip的信息。
+API 地址：[http://ip.taobao.com/service/getIpInfo.php](http://ip.taobao.com/service/getIpInfo.php) 。该工具一次可以查询多个 ip 的信息。
 
 # 格式
 ```
 qshell ip <Ip1> [<Ip2> [<Ip3> ...]]]
 ```
+
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell ip -h 
+
+// 详细文档（此文档）
+$ qshell ip --doc
+```
+
+# 鉴权
+无
 
 # 参数
 - Ip1：第一个ip地址 【必选】

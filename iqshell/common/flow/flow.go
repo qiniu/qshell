@@ -191,12 +191,19 @@ func (f *Flow) Start() {
 				workCount := len(workList)
 
 				_ = f.limitAcquire(workCount)
-
 				// workRecordList 有数据则长度和 workList 长度相同
 				workRecordList, workErr := worker.DoWork(workList)
+				f.limitRelease(workCount)
+
 				if len(workRecordList) == 0 && workErr != nil {
 					log.ErrorF("Do Worker Error:%+v", workErr)
-					f.limitRelease(workCount)
+					for _, workInfo := range workList {
+						f.handleWorkResult(&WorkRecord{
+							WorkInfo: workInfo,
+							Result:   nil,
+							Err:      workErr,
+						})
+					}
 					break
 				}
 
@@ -212,8 +219,6 @@ func (f *Flow) Start() {
 						hitLimitCount += 1
 					}
 				}
-
-				f.limitRelease(workCount)
 				f.limitCountDecrease(hitLimitCount)
 
 				// 检测是否需要停止

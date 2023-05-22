@@ -1,18 +1,31 @@
 # 简介
-`get` 用来从存储空间下载指定文件
+`get` 用来从存储空间下载指定的文件。
 
 # 格式
 ```
 qshell get <Bucket> <Key> [-o <OutFile>]
 ``` 
 
+# 帮助文档
+可以在命令行输入如下命令获取帮助文档：
+```
+// 简单描述
+$ qshell get -h 
+
+// 详细文档（此文档）
+$ qshell get --doc
+```
+
+# 鉴权
+需要使用 `qshell account` 或者 `qshell user add` 命令设置鉴权信息 `AccessKey`, `SecretKey` 和 `Name`。
+
 # 参数
-- Bucket：存储空间 【必选】
-- Key：存储空间中的文件名字 【必选】
+- Bucket：空间名。 【必选】
+- Key：存储空间中的文件名字。 【必选】
 
 # 选项
 - -o/--outfile：保存在本地的文件路径；不指定，保存在当前文件夹，文件名使用存储空间中的名字【可选】
-- --domain：下载请求的 domain，qshell 下载使用 domain 优先级：1.domain(此选项) 2.bucket 绑定域名(qshell 内部查询，无需配置) ，当优先级高的 domain 下载失败后会尝试使用优先级低的 domain 进行下载。【可选】
+- --domain：设置下载请求的域名，默认为空表示从存储源站下载，qshell 下载使用域名的优先级：1.配置选项中的下载请求域名(此参数) 2.bucket 绑定的域名(qshell 内部查询，无需配置) ，当优先级高的域名下载失败后会尝试使用优先级低的域名进行下载。【可选】
 - --get-file-api: 当存储服务端支持 getfile 接口时才有效。【可选】
 - --public：空间是否为公开空间；为 `true` 时为公有空间，公有空间下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为 `false`（私有空间）【可选】
 - --check-size: 下载后检测本地文件和服务端文件 size 的一致性。【可选】
@@ -27,13 +40,13 @@ qshell get <Bucket> <Key> [-o <OutFile>]
 如果使用的是 CDN 域名，且 CDN 域名开启了图片优化中的图片自动瘦身功能时，下载文件的信息和七牛服务端记录的文件信息不一致，此时下载不要使用 --check-size 和 --check-hash 选项，否则下载会失败。
 
 # 示例
-1 把qiniutest空间下的文件test.txt下载到本地， 当前目录
+1 把 `qiniutest` 空间下的文件 test.txt 下载到本地的当前目录：
 ```
 $ qshell get qiniutest test.txt
 ```
-下载完成后，在本地当前目录可以看到文件test.txt
+下载完成后，在本地当前目录可以看到文件 test.txt
 
-2 把 `qiniutest` 空间下的文件 `test.txt` 下载到本地，以路径 `/Users/caijiaqiang/hah.txt` 保存。
+2 把 `qiniutest` 空间下的文件 `test.txt` 下载到本地，以路径 `/Users/caijiaqiang/hah.txt` 进行保存。
 ```
 $ qshell get qiniutest test.txt -o /Users/caijiaqiang/hah.txt
 ```
