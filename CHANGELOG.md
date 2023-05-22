@@ -1,3 +1,12 @@
+# 2.11.0
+## 新增
+1. 不同命令选项统一化，老的选项不废弃，但不推荐使用
+2. 新增修改文件生命周期命令：chlifecycle 和 batchchlifecycle
+
+## 修复
+1. 列举 Bucket 时过滤空的 item
+
+
 # 2.10.0
 1. expire 与 batchexpire 命令调整，deleteAfterDay 为 0 时取消文件的过期删除配置
 2. 处理文件大小为 0 字节下载失败问题
