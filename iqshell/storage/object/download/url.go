@@ -122,11 +122,15 @@ func createDownloadUrl(info *DownloadApiInfo) (string, *data.CodeError) {
 			UseHttps:     useHttps,
 		})
 
+		isIoSrc, iErr := isIoSrcHost(info.Host, info.Bucket)
+		if iErr != nil {
+			log.WarningF("check host(bucket:%s) is src host error:%v", info.Bucket, iErr)
+		}
 		// 源站域名需要签名
-		if !info.IsPublicBucket || isIoSrcHost(info.Host, info.Bucket) {
+		if !info.IsPublicBucket || isIoSrc {
+			// 是源站域名，但也可能是 私有空间，所以此处逻辑不能对调
 			expire := 60 * time.Minute
-			// 是源站域名，但也可能是 私有空间，所以上面逻辑不能对调
-			if isIoSrcHost(info.Host, info.Bucket) {
+			if isIoSrc {
 				expire = 3 * time.Minute
 			}
 
@@ -143,17 +147,17 @@ func createDownloadUrl(info *DownloadApiInfo) (string, *data.CodeError) {
 	return urlString, nil
 }
 
-func isIoSrcHost(host string, bucketName string) bool {
+func isIoSrcHost(host string, bucketName string) (bool, *data.CodeError) {
 	host = utils.RemoveUrlScheme(host)
 	if len(host) == 0 {
-		return false
+		return false, nil
 	}
 
 	srcDownloadDomain, err := GetBucketIoSrcDomain(bucketName)
 	if err != nil {
-		log.WarningF("check host(bucket:%s) is src host error:%v", bucketName, err)
+		return false, err
 	}
-	return host == srcDownloadDomain
+	return host == srcDownloadDomain, nil
 }
 
 func GetBucketIoSrcDomain(bucketName string) (string, *data.CodeError) {
