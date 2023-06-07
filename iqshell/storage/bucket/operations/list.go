@@ -50,7 +50,8 @@ func (info *ListInfo) Check() *data.CodeError {
 	if len(info.ApiVersion) == 0 {
 		info.ApiVersion = list.ApiVersionV1
 	} else if info.ApiVersion == list.ApiVersionV2 {
-		log.Warning("list bucket: api v2 is deprecated, recommend to use v1 instead")
+		log.Warning("list bucket: api v2 is deprecated and use v1 instead")
+		info.ApiVersion = list.ApiVersionV1
 	} else if info.ApiVersion != list.ApiVersionV1 && info.ApiVersion != list.ApiVersionV2 {
 		return alert.Error("list bucket: api version is error, should set one of v1 and v2", "")
 	}

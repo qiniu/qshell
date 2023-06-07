@@ -147,7 +147,9 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVarP(&info.AppendMode, "append", "a", false, "result append to file instead of overwriting")
 	cmd.Flags().BoolVarP(&info.Readable, "readable", "r", false, "present file size with human readable format")
 	cmd.Flags().StringVarP(&info.ApiVersion, "api-version", "", "v1", "list api version, one of v1 and v2. v2 is deprecated and recommend to use v1")
-	cmd.Flags().IntVarP(&info.ApiLimit, "api-limit", "", 1000, "one enumeration will make multiple requests, and the maximum number of items returned for each request; currently only v1 is supported; in the range 1-1000.")
+	_ = cmd.Flags().MarkDeprecated("api-version", "deprecated，only use api v1") // 废弃 storages
+
+	cmd.Flags().IntVarP(&info.ApiLimit, "api-limit", "", 1000, "one enumeration will make multiple requests, and the maximum number of items returned for each request; in the range 1-1000.")
 	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "record the execution status of the listbucket2 command. When the listbucket2 command is executed next time, the marker will be automatically filled and the listbucket2 will continue. Enabling this option will automatically enable append (see the --append option for details). The id of the record is related to the bucket where the file is located, the prefix listed, and the path where the file is saved.")
 
 	cmd.Flags().StringVarP(&info.OutputFieldsSep, "output-fields-sep", "", data.DefaultLineSeparate, "Each line needs to display the delimiter of the file information.")

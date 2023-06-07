@@ -74,11 +74,11 @@ func ListBucket(ctx context.Context, info ApiInfo, handler Handler) (hasMore boo
 		return false, data.ConvertError(ctx.Err())
 	}
 
-	if info.ApiVersion == ApiVersionV1 {
-		log.DebugF("list by api v1, marker:%s", info.Marker)
-		return listBucketByV1(ctx, info, handler)
-	} else {
+	if info.ApiVersion == ApiVersionV2 {
 		log.DebugF("list by api v2, marker:%s", info.Marker)
 		return listBucketByV2(ctx, info, handler)
+	} else {
+		log.DebugF("list by api v1, marker:%s", info.Marker)
+		return listBucketByV1(ctx, info, handler)
 	}
 }
