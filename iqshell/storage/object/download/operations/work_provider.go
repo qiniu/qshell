@@ -244,6 +244,7 @@ func (w *workProvider) getWorkInfoFromBucket() {
 			if err != nil {
 				log.ErrorF("download list bucket error:%v", err)
 			}
+			data.SetCmdStatus(data.StatusError)
 		})
 		close(w.downloadItemChan)
 	}()

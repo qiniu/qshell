@@ -41,6 +41,12 @@ type ListApiInfo struct {
 	CacheDir           string    // 历史数据存储路径 【内部使用】
 }
 
+func (l *ListApiInfo) init() {
+	if l.V1Limit == 0 {
+		l.V1Limit = 250
+	}
+}
+
 func ListObjectField(field string) string {
 	for _, f := range listObjectFields {
 		if strings.EqualFold(field, f) {
@@ -75,8 +81,8 @@ func List(info ListApiInfo,
 		return
 	}
 
-	log.Debug("will list bucket")
-	log.DebugF("Suffixes:%s", info.Suffixes)
+	info.init()
+	log.DebugF("will list bucket:%s, suffixes:%s, prefix:%s", info.Bucket, info.Suffixes, info.Prefix)
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.EndTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	shouldCheckFileTypes := len(info.FileTypes) > 0
