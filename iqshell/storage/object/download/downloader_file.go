@@ -31,7 +31,11 @@ var defaultClient = storage.Client{
 }
 
 type DownloadApiInfo struct {
-	Url            string
+	downloadUrl    string
+	Bucket         string
+	Key            string
+	IsPublicBucket bool
+	UseGetFileApi  bool
 	Host           string
 	Referer        string
 	RangeFromBytes int64
@@ -48,8 +52,13 @@ type downloaderFile struct {
 
 func (d *downloaderFile) Download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {
 	for times := 0; times < 2; times++ {
+		if url, e := createDownloadUrl(info); e != nil {
+			return nil, e
+		} else {
+			info.downloadUrl = url
+		}
 		response, err = d.download(info)
-		log.DebugF("Simple Download[%d] %s, err:%+v", times, info.Url, err)
+		log.DebugF("Simple Download[%d] %s, err:%+v", times, info.downloadUrl, err)
 		if err == nil {
 			break
 		}
@@ -60,7 +69,7 @@ func (d *downloaderFile) Download(info *DownloadApiInfo) (response *http.Respons
 
 		if (response.StatusCode > 399 && response.StatusCode < 500) ||
 			response.StatusCode == 612 || response.StatusCode == 631 {
-			log.DebugF("Simple Stop download %s, because %+v", info.Url, err)
+			log.DebugF("Simple Stop download %s, because %+v", info.downloadUrl, err)
 			break
 		}
 	}
@@ -95,7 +104,7 @@ func (d *downloaderFile) download(info *DownloadApiInfo) (response *http.Respons
 	if workspace.IsCmdInterrupt() {
 		return nil, data.CancelError
 	}
-	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", info.Url, headers)
+	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", info.downloadUrl, headers)
 	if info.CheckHash && len(info.FileHash) != 0 && response != nil && response.Header != nil {
 		etag := fmt.Sprintf(response.Header.Get("Etag"))
 		etag = utils.ParseEtag(etag)
