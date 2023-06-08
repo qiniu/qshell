@@ -125,8 +125,8 @@ func TestBucketList2WithApiV2(t *testing.T) {
 		t.Fatal("error:", errs)
 	}
 
-	if !strings.Contains(result, "list by api v2,") {
-		t.Fatal("should list by v2")
+	if strings.Contains(result, "list by api v2,") {
+		t.Fatal("should list by v1")
 	}
 
 	if !strings.Contains(result, "api v2 is deprecated") {
