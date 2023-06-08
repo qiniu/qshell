@@ -119,56 +119,54 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 }
 
 func getResultInfo(bucket, key string, status object.StatusResult) string {
-	statInfo := fmt.Sprintf("%-25s%s\r\n", "Bucket:", bucket)
-	statInfo += fmt.Sprintf("%-25s%s\r\n", "Key:", key)
-	statInfo += fmt.Sprintf("%-25s%s\r\n", "FileHash:", status.Hash)
-	statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "Fsize:", status.FSize, utils.FormatFileSize(status.FSize))
-
-	putTime := time.Unix(0, status.PutTime*100)
-	statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "PutTime:", status.PutTime, putTime.String())
-	statInfo += fmt.Sprintf("%-25s%s\r\n", "MimeType:", status.MimeType)
-
-	resoreStatus := ""
-	if status.RestoreStatus > 0 {
-		if status.RestoreStatus == 1 {
-			resoreStatus = "解冻中"
-		} else if status.RestoreStatus == 2 {
-			resoreStatus = "解冻完成"
+	statInfo := ""
+	fieldAdder := func(name string, value interface{}, desc string) {
+		if len(desc) == 0 {
+			statInfo += fmt.Sprintf("%-25s%v\r\n", name+":", value)
+		} else {
+			statInfo += fmt.Sprintf("%-25s%v -> %s\r\n", name+":", value, desc)
 		}
 	}
-	if len(resoreStatus) > 0 {
-		statInfo += fmt.Sprintf("%-25s%d(%s)\r\n", "RestoreStatus:", status.RestoreStatus, resoreStatus)
+
+	fieldAdderWithValueDescs := func(name string, value interface{}, descs map[interface{}]string, noneDesc string) {
+		desc := descs[value]
+		if len(descs[value]) > 0 {
+			fieldAdder(name, value, desc)
+		} else {
+			fieldAdder(name, noneDesc, "")
+		}
 	}
 
-	if status.Expiration > 0 {
-		expiration := time.Unix(status.Expiration, 0)
-		statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "Expiration:", status.Expiration, expiration.String())
-	} else {
-		statInfo += fmt.Sprintf("%-25s%s\r\n", "Expiration:", "not set")
-	}
+	fieldAdder("Bucket", bucket, "")
+	fieldAdder("Key", key, "")
+	fieldAdder("Etag", status.Hash, "")
+	fieldAdder("MD5", status.MD5, "")
+	fieldAdder("Fsize", status.FSize, utils.FormatFileSize(status.FSize))
+	fieldAdder("PutTime", status.PutTime, time.Unix(0, status.PutTime*100).String())
+	fieldAdder("MimeType", status.MimeType, "")
 
-	if status.TransitionToIA > 0 {
-		date := time.Unix(status.TransitionToIA, 0)
-		statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "TransitionToIA:", status.TransitionToIA, date.String())
-	} else {
-		statInfo += fmt.Sprintf("%-25s%s\r\n", "TransitionToIA:", "not set")
-	}
+	fieldAdderWithValueDescs("Status", status.Status,
+		map[interface{}]string{1: "禁用"},
+		"未禁用")
 
-	if status.TransitionToARCHIVE > 0 {
-		date := time.Unix(status.TransitionToARCHIVE, 0)
-		statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "TransitionToArchive:", status.TransitionToARCHIVE, date.String())
-	} else {
-		statInfo += fmt.Sprintf("%-25s%s\r\n", "TransitionToArchive:", "not set")
-	}
+	fieldAdderWithValueDescs("RestoreStatus", status.Status,
+		map[interface{}]string{1: "解冻中", 2: "解冻完成"},
+		"无解冻操作")
 
-	if status.TransitionToDeepArchive > 0 {
-		date := time.Unix(status.TransitionToDeepArchive, 0)
-		statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "TransitionToDeepArchive:", status.TransitionToDeepArchive, date.String())
-	} else {
-		statInfo += fmt.Sprintf("%-25s%s\r\n", "TransitionToDeepArchive:", "not set")
+	lifecycleFieldAdder := func(name string, date int64) {
+		if date > 0 {
+			t := time.Unix(date, 0)
+			fieldAdder(name, date, t.String())
+		} else {
+			fieldAdder(name, "未设置", "")
+		}
 	}
+	lifecycleFieldAdder("Expiration", status.Expiration)
+	lifecycleFieldAdder("TransitionToIA", status.TransitionToIA)
+	lifecycleFieldAdder("TransitionToArchive", status.TransitionToARCHIVE)
+	lifecycleFieldAdder("TransitionToDeepArchive", status.TransitionToDeepArchive)
 
-	statInfo += fmt.Sprintf("%-25s%d -> %s\r\n", "FileType:", status.Type, getFileTypeDescription(status.Type))
+	fieldAdder("FileType", status.Type, getFileTypeDescription(status.Type))
 
 	return statInfo
 }

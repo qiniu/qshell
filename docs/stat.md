@@ -33,11 +33,18 @@ $ qshell stat if-pbl qiniu.png
 
 输出：
 ```
-Bucket:             qshell-na0
-Key:                hello2.json
-FileHash:           FvySxBAiQRAd1iSF4XrC4SrDrhff
-Fsize:              29 -> 29B
-PutTime:            16455255178836491 -> 2022-02-22 18:25:17.8836491 +0800 CST
-MimeType:           image/jpeg
-FileType:           1 -> 低频存储
+Bucket:                  if-pbl
+Key:                     qiniu.png
+Etag:                    lozgLP_MAdAKZkPCXGvfd0LIDSUI
+MD5:                     689b5cea4734143964a62214178f3f57
+Fsize:                   5444314 -> 5.19MB
+PutTime:                 16768889367943931 -> 2023-02-20 18:28:56.7943931 +0800 CST
+MimeType:                text/plain
+Status:                  未禁用
+RestoreStatus:           无解冻操作
+Expiration:              1715961600 -> 2024-05-18 00:00:00 +0800 CST
+TransitionToIA:          未设置
+TransitionToArchive:     1689609600 -> 2023-07-18 00:00:00 +0800 CST
+TransitionToDeepArchive: 1699977600 -> 2023-11-15 00:00:00 +0800 CST
+FileType:                1 -> 低频存储
 ```

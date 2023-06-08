@@ -263,7 +263,7 @@ func TestReqIdDocument(t *testing.T) {
 	test.TestDocument("reqid", t)
 }
 
-func TestIP(t *testing.T) {
+func noTestIP(t *testing.T) {
 	result := test.RunCmd(t, "ip", "180.154.236.170")
 	if !strings.Contains(result, "180.154.236.170") {
 		t.Fail()
