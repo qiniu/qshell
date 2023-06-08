@@ -15,13 +15,17 @@ func TestGetImage(t *testing.T) {
 		t.Fatal("get result path error:", err)
 	}
 	path := filepath.Join(resultPath, test.ImageKey)
-	_, errs := test.RunCmdWithError("get", test.Bucket, test.ImageKey,
+	ret, errs := test.RunCmdWithError("get", test.Bucket, test.ImageKey,
 		"--public",
-		"-o", path)
+		"-o", path,
+		"-d")
 	defer test.RemoveFile(path)
 
 	if len(errs) > 0 {
 		t.Fail()
+	}
+	if !strings.Contains(ret, ".qiniucs.com") {
+		t.Fatal("get file: should get io src domain")
 	}
 	if !test.IsFileHasContent(path) {
 		t.Fatal("get file content can't be empty")

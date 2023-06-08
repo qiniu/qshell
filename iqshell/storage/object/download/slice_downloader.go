@@ -211,7 +211,10 @@ func (s *sliceDownloader) downloadSlice(info *DownloadApiInfo, sl slice) *data.C
 
 	log.DebugF("download slice, index:%d fromBytes:%d toBytes:%d", sl.index, sl.FromBytes, sl.ToBytes)
 	err = downloadTempFileWithDownloader(&downloaderFile{}, f, &DownloadApiInfo{
-		Url:            info.Url,
+		Bucket:         info.Bucket,
+		Key:            info.Key,
+		IsPublicBucket: info.IsPublicBucket,
+		UseGetFileApi:  info.UseGetFileApi,
 		Host:           info.Host,
 		Referer:        info.Referer,
 		RangeFromBytes: f.fromBytes,
