@@ -19,6 +19,7 @@ qshell 是利用 [七牛文档上公开的 API](http://developer.qiniu.com) 实�
 
 | 支持平台                | 链接                                                                                               |
 | ----------------------- | -------------------------------------------------------------------------------------------------- |
+| Windows X86             | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.11.0-windows-386.zip)   |
 | Windows amd64           | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.11.0-windows-amd64.zip)   |
 | Windows arm             | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.11.0-windows-arm.zip)     |
 | Linux X86               | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.11.0-linux-386.tar.gz)    |
