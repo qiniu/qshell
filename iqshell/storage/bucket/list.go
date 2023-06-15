@@ -41,6 +41,12 @@ type ListApiInfo struct {
 	CacheDir           string    // 历史数据存储路径 【内部使用】
 }
 
+func (l *ListApiInfo) init() {
+	if l.V1Limit == 0 {
+		l.V1Limit = 250
+	}
+}
+
 func ListObjectField(field string) string {
 	for _, f := range listObjectFields {
 		if strings.EqualFold(field, f) {
@@ -75,8 +81,8 @@ func List(info ListApiInfo,
 		return
 	}
 
-	log.Debug("will list bucket")
-	log.DebugF("Suffixes:%s", info.Suffixes)
+	info.init()
+	log.DebugF("will list bucket:%s, suffixes:%s, prefix:%s", info.Bucket, info.Suffixes, info.Prefix)
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.EndTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	shouldCheckFileTypes := len(info.FileTypes) > 0
@@ -144,9 +150,10 @@ func List(info ListApiInfo,
 	retryCount := 0
 	outputCount := 0
 	complete := false
+	var lErr *data.CodeError = nil
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
+		lErr = nil
 		var hasMore = false
-		var lErr *data.CodeError = nil
 
 		if !workspace.IsCmdInterrupt() {
 			hasMore, lErr = list.ListBucket(workspace.GetContext(), list.ApiInfo{
@@ -190,10 +197,12 @@ func List(info ListApiInfo,
 		}
 
 		// 保存信息
-		cacheInfoP.Bucket = info.Bucket
-		cacheInfoP.Prefix = info.Prefix
-		cacheInfoP.Marker = info.Marker
-		_ = cache.saveCache(cacheInfoP)
+		if len(info.Marker) > 0 {
+			cacheInfoP.Bucket = info.Bucket
+			cacheInfoP.Prefix = info.Prefix
+			cacheInfoP.Marker = info.Marker
+			_ = cache.saveCache(cacheInfoP)
+		}
 
 		if workspace.IsCmdInterrupt() && lErr == nil {
 			lErr = data.NewError(0, "list is interrupted")
@@ -224,11 +233,11 @@ func List(info ListApiInfo,
 		retryCount = 0
 	}
 
-	if len(info.Marker) == 0 {
+	if lErr == nil && len(info.Marker) == 0 && info.EnableRecord {
 		if rErr := cache.removeCache(); rErr != nil {
 			log.ErrorF("list remove cache status error: %v", rErr)
 		} else {
-			log.InfoF("list success, remove cache status: %s", cache.cachePath)
+			log.InfoF("list complete, remove cache status: %s", cache.cachePath)
 		}
 	} else {
 		log.InfoF("Marker: %s", info.Marker)

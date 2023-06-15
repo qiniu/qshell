@@ -125,7 +125,7 @@ func loadWorkspace(cfg *Config) (shouldContinue bool) {
 		dir, gErr := os.Getwd()
 		if gErr != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "get current directory: %v\n", gErr)
-			os.Exit(1)
+			os.Exit(data.StatusError)
 		}
 		workspacePath = dir
 	}

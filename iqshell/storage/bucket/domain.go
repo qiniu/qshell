@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -102,17 +101,9 @@ func allDomainsOfBucket(cfg *config.Config, bucket string) ([]DomainInfo, *data.
 		return nil, gErr
 	}
 
-	reqHost := cfg.Hosts.GetOneApi()
-	if len(reqHost) == 0 {
-		if region, err := Region(bucket); err != nil {
-			return nil, alert.Error("get region error:"+err.Error(), "")
-		} else {
-			reqHost = region.ApiHost
-		}
-	}
-
 	var domains []DomainInfo
-	reqURL := fmt.Sprintf("%s/v7/domain/list?tbl=%s", utils.Endpoint(cfg.IsUseHttps(), reqHost), bucket)
+	reqHost := workspace.GetConfig().Hosts.GetOneUc()
+	reqURL := fmt.Sprintf("%s/v3/domains?tbl=%s", utils.Endpoint(cfg.IsUseHttps(), reqHost), bucket)
 	//reqURL = fmt.Sprintf("%s/domain?bucket=%s&type=all", utils.Endpoint(cfg.IsUseHttps(), reqHost), bucket)
 	err := bucketManager.Client.CredentialedCall(workspace.GetContext(), bucketManager.Mac, auth.TokenQiniu, &domains, "GET", reqURL, nil)
 	if err != nil {

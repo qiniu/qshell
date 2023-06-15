@@ -7,7 +7,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"strings"
 )
 
 type ApiVersion string
@@ -75,50 +74,11 @@ func ListBucket(ctx context.Context, info ApiInfo, handler Handler) (hasMore boo
 		return false, data.ConvertError(ctx.Err())
 	}
 
-	if info.ApiVersion == ApiVersionV1 {
-		log.DebugF("list by api v1, marker:%s", info.Marker)
-		return listBucketByV1(ctx, info, handler)
-	} else {
+	if info.ApiVersion == ApiVersionV2 {
 		log.DebugF("list by api v2, marker:%s", info.Marker)
 		return listBucketByV2(ctx, info, handler)
+	} else {
+		log.DebugF("list by api v1, marker:%s", info.Marker)
+		return listBucketByV1(ctx, info, handler)
 	}
-}
-
-func listBucketByV1(ctx context.Context, info ApiInfo, handler Handler) (hasMore bool, err *data.CodeError) {
-	rets, commonPrefixes, marker, hasMore, e := info.Manager.ListFiles(info.Bucket, info.Prefix, info.Delimiter, info.Marker, info.V1Limit)
-	if e == nil && rets == nil {
-		return hasMore, data.NewError(0, "v1 meet empty body when list not completed")
-	}
-
-	if e != nil {
-		return hasMore, data.ConvertError(e)
-	}
-
-	dir := strings.Join(commonPrefixes, info.Delimiter)
-	for _, item := range rets {
-		if handler(marker, dir, Item(item)) {
-			break
-		}
-	}
-	return hasMore, nil
-}
-
-func listBucketByV2(ctx context.Context, info ApiInfo, handler Handler) (hasMore bool, err *data.CodeError) {
-	ret, e := info.Manager.ListBucketContext(ctx, info.Bucket, info.Prefix, info.Delimiter, info.Marker)
-	if e == nil && ret == nil {
-		return true, data.NewError(0, "v2 meet empty body when list not completed")
-	}
-
-	if e != nil {
-		return true, data.ConvertError(e)
-	}
-
-	marker := ""
-	for item := range ret {
-		marker = item.Marker
-		if handler(item.Marker, item.Dir, Item(item.Item)) {
-			break
-		}
-	}
-	return len(marker) > 0, nil
 }
