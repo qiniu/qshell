@@ -32,8 +32,8 @@ $ qshell abfetch --doc
 - -i/--input-file：要抓取的资源列表， 一行一个资源，每一行多个元素时使用 \t （tab 键）分割；如果没有通过该选项指定该文件参数， 从标准输入读取内容。每行具体格式如下：（【可选】）
   - [FileUrl]                     
   - [FileUrl]\t[FileSize] 
-  - [FileUrl]\t[FileSize]\t[Key], // eg:https://qiniu.com/a.png\t1024\ta.png    
-  注：FileSize 单位：B；如果不指定 key 则从 url 中获取最后一个 path 信息作为 key；eg:https://qiniu.com/a.png\t1024\ta.png  key 为：ta.png
+  - [FileUrl]\t[FileSize]\t[Key], // eg:https://qiniu.com/a.png\t1024\tb.png key 为：b.png    
+  注：FileSize 单位：B；如果不指定 key 则从 url 中获取 path 信息作为 key；eg:https://qiniu.com/a/b/c.png  key 为：a/b/c.png
 - -b/--callback-body：回调的 http Body。 【可选】          
 - -T/--callback-host：回调时的 HOST 头。 【可选】
 - -a/--callback-url：回调的请求地址。 【可选】
@@ -60,10 +60,10 @@ http://test.com/test3.txt
 在当前目录下创建名为"urls.txt"的文件， 文件内容为
 ```
 http://test.com/test1.txt
-http://test.com/test2.txt
-http://test.com/test3.txt
+http://test.com/a/test2.txt
+http://test.com/a/b/test3.txt
 ```
-每行一个地址，因为未指定 key，所以 key 默认为 url 中最后一个 path 信息，分别为：test1.txt、test2.txt、test3.txt。
+每行一个地址，因为未指定 key，所以 key 默认为 url 中的 path 信息，分别为：test1.txt、a/test2.txt、a/b/test3.txt。
 
 ### 第二步:
 使用如下的命令就可以抓取资源到存储名为 "test" 空间中
