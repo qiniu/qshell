@@ -6,3 +6,5 @@ import _ "embed"
 var ReadMeDocument string
 
 this is awsome thing
+
+wonderful good
