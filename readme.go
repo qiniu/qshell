@@ -8,3 +8,4 @@ var ReadMeDocument string
 this is awsome thing
 
 wonderful good
+first second
