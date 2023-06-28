@@ -19,15 +19,15 @@ qshell 是利用 [七牛文档上公开的 API](http://developer.qiniu.com) 实�
 
 | 支持平台                | 链接                                                                                               |
 | ----------------------- | -------------------------------------------------------------------------------------------------- |
-| Windows X86             | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.12.0-windows-386.zip)   |
-| Windows amd64           | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.12.0-windows-amd64.zip)   |
-| Windows arm             | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.12.0-windows-arm.zip)     |
-| Linux X86               | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.12.0-linux-386.tar.gz)    |
-| Linux amd64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.12.0-linux-amd64.tar.gz)  |
-| Linux arm               | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.12.0-linux-arm.tar.gz)    |
-| Linux arm64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.12.0-linux-arm64.tar.gz)  |
-| Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.12.0-darwin-amd64.tar.gz) |
-| Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.11.0/qshell-v2.12.0-darwin-arm64.tar.gz) |
+| Windows X86             | [下载](https://github.com/qiniu/qshell/releases/download/v2.12.0/qshell-v2.12.0-windows-386.zip)   |
+| Windows amd64           | [下载](https://github.com/qiniu/qshell/releases/download/v2.12.0/qshell-v2.12.0-windows-amd64.zip)   |
+| Windows arm             | [下载](https://github.com/qiniu/qshell/releases/download/v2.12.0/qshell-v2.12.0-windows-arm.zip)     |
+| Linux X86               | [下载](https://github.com/qiniu/qshell/releases/download/v2.12.0/qshell-v2.12.0-linux-386.tar.gz)    |
+| Linux amd64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.12.0/qshell-v2.12.0-linux-amd64.tar.gz)  |
+| Linux arm               | [下载](https://github.com/qiniu/qshell/releases/download/v2.12.0/qshell-v2.12.0-linux-arm.tar.gz)    |
+| Linux arm64             | [下载](https://github.com/qiniu/qshell/releases/download/v2.12.0/qshell-v2.12.0-linux-arm64.tar.gz)  |
+| Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.12.0/qshell-v2.12.0-darwin-amd64.tar.gz) |
+| Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.12.0/qshell-v2.12.0-darwin-arm64.tar.gz) |
 
 
 ## 安装
