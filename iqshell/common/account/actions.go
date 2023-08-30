@@ -7,11 +7,12 @@ import (
 	"strings"
 
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/opt"
 )
 
 // 保存账户信息到账户文件中
@@ -98,7 +99,7 @@ func SaveToDB(acc Account, accountOver bool) (err *data.CodeError) {
 func getAccount(pt string) (account Account, err *data.CodeError) {
 	accountFh, openErr := os.Open(pt)
 	if openErr != nil {
-		err = data.NewEmptyError().AppendDescF("Open account file error, %s, please use `account` to set Id and SecretKey first", openErr)
+		err = data.NewEmptyError().AppendDescF("Get account error, %s, please use `account` to set Id and SecretKey first", openErr)
 		return
 	}
 	defer accountFh.Close()
@@ -116,7 +117,7 @@ func getAccount(pt string) (account Account, err *data.CodeError) {
 
 	acc, dErr := decrypt(string(accountBytes))
 	if dErr != nil {
-		err = data.NewEmptyError().AppendDescF("Decrypt account bytes: %v", dErr)
+		err = data.NewEmptyError().AppendDescF("Decrypt account bytes: %s, you can delete account file(%s) and use `account` command to reset the account", dErr, pt)
 		return
 	}
 	account = acc
