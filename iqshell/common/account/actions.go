@@ -116,12 +116,21 @@ func getAccount(pt string) (account Account, err *data.CodeError) {
 	}
 
 	acc, dErr := decrypt(string(accountBytes))
-	if dErr != nil {
-		err = data.NewEmptyError().AppendDescF("Decrypt account bytes: %s, you can delete account file(%s) and use `account` command to reset the account", dErr, pt)
+	if dErr == nil {
+		account = acc
 		return
 	}
-	account = acc
-	return
+
+	if len(acc.Name) == 0 {
+		return account, data.NewEmptyError().AppendDescF("Decrypt account bytes: %s, you can delete account file(%s) and use `account` command to reset the account", dErr, pt)
+	}
+
+	accs, lErr := LookUp(acc.Name)
+	if lErr != nil || len(accs) == 0 {
+		return account, data.NewEmptyError().AppendDescF("Decrypt account bytes: %s, you can delete account file(%s) and use `account` command to reset the account", dErr, pt)
+	}
+
+	return accs[0], nil
 }
 
 // qshell 会记录当前的user信息，当切换账户后， 老的账户信息会记录下来
