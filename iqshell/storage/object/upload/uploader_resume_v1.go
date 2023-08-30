@@ -1,11 +1,13 @@
 package upload
 
 import (
+	"os"
+
 	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"os"
 )
 
 type resumeV1Uploader struct {
@@ -45,7 +47,7 @@ func (r *resumeV1Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	var progress int64 = 0
 	ret := &ApiResult{}
 	up := storage.NewResumeUploader(r.cfg)
-	if pErr := up.PutFile(workspace.GetContext(), &ret, token, info.SaveKey, info.FilePath, &storage.RputExtra{
+	extra := &storage.RputExtra{
 		Recorder:   recorder,
 		Params:     nil,
 		UpHost:     info.UpHost,
@@ -65,7 +67,24 @@ func (r *resumeV1Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 			}
 		},
 		NotifyErr: nil,
-	}); pErr != nil {
+	}
+
+	var pErr error
+	if info.SequentialReadFile {
+		file, oErr := os.Open(info.FilePath)
+		if oErr != nil {
+			return nil, data.NewEmptyError().AppendDesc("resume v1 upload: open error:" + oErr.Error())
+		}
+		defer file.Close()
+
+		log.Debug("resume v1 upload: put with reader")
+		pErr = up.PutWithoutSize(workspace.GetContext(), &ret, token, info.SaveKey, file, extra)
+	} else {
+		log.Debug("resume v1 upload: put with file path")
+		pErr = up.PutFile(workspace.GetContext(), &ret, token, info.SaveKey, info.FilePath, extra)
+	}
+
+	if pErr != nil {
 		return ret, data.NewEmptyError().AppendDesc("resume v1 upload").AppendError(pErr)
 	} else {
 		if info.Progress != nil {

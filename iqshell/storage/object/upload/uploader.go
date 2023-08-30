@@ -2,7 +2,13 @@ package upload
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"sync"
+	"time"
+
 	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
@@ -11,10 +17,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
-	"os"
-	"path"
-	"sync"
-	"time"
 )
 
 type ApiInfo struct {
@@ -40,6 +42,7 @@ type ApiInfo struct {
 	ChunkSize           int64             `json:"-"`                      // 分片上传时的分片大小
 	PutThreshold        int64             `json:"-"`                      // 分片上传时上传阈值
 	CacheDir            string            `json:"-"`                      // 临时数据保存路径
+	SequentialReadFile  bool              `json:"-"`                      // 文件是否使用顺序读
 	Progress            progress.Progress `json:"-"`                      // 上传进度回调
 }
 

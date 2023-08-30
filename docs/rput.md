@@ -38,6 +38,7 @@ $ qshell rput --doc
 - -T/--callbackHost：上传回调HOST, 必须和 CallbackUrls 一起指定。 【可选】
 - --resumable-api-v2：使用分片上传 API V2 进行上传，默认为 `false`, 使用 V1 上传。【可选】
 - --resumable-api-v2-part-size：使用分片上传 API V2 进行上传时的分片大小，默认为 4M 。【可选】
+- --sequential-read-file: 文件读为顺序读，不涉及跳读；开启后，上传中的分片数据会被加载至内存。此选项可能会增加挂载网络文件系统的文件上传速度。默认是：false。【可选】
 
 # 示例
 1 上传本地文件 `/Users/jemy/Documents/qiniu.mp4` 到空间 `if-pbl` 里面。

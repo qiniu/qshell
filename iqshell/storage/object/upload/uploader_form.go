@@ -1,11 +1,13 @@
 package upload
 
 import (
+	"os"
+
 	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"os"
 )
 
 type formUploader struct {
@@ -25,14 +27,14 @@ func (f *formUploader) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeErro
 
 	file, oErr := os.Open(info.FilePath)
 	if oErr != nil {
-		err = data.NewEmptyError().AppendDesc("form upload: open file:").AppendError(err)
+		err = data.NewEmptyError().AppendDesc("form upload: open file:").AppendError(oErr)
 		return
 	}
 	defer file.Close()
 
 	fileStatus, sErr := file.Stat()
 	if sErr != nil {
-		err = data.NewEmptyError().AppendDesc("form upload: get file status").AppendError(err)
+		err = data.NewEmptyError().AppendDesc("form upload: get file status").AppendError(sErr)
 		return
 	}
 
