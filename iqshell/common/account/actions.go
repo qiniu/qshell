@@ -97,7 +97,7 @@ func SaveToDB(acc Account, accountOver bool) (err *data.CodeError) {
 }
 
 func getAccount(pt string) (account Account, err *data.CodeError) {
-	accountFh, openErr := os.Open(pt)
+	accountFh, openErr := os.OpenFile(info.AccountPath, os.O_RDWR, 0600)
 	if openErr != nil {
 		err = data.NewEmptyError().AppendDescF("Get account error, %s, please use `account` to set Id and SecretKey first", openErr)
 		return
@@ -121,16 +121,43 @@ func getAccount(pt string) (account Account, err *data.CodeError) {
 		return
 	}
 
+	oldError := data.NewEmptyError().AppendDescF("Decrypt account bytes: %s, you can delete account file(%s) and use `account` command to reset the account", dErr, pt)
 	if len(acc.Name) == 0 {
-		return account, data.NewEmptyError().AppendDescF("Decrypt account bytes: %s, you can delete account file(%s) and use `account` command to reset the account", dErr, pt)
+		return account, oldError
 	}
 
-	accs, lErr := LookUp(acc.Name)
-	if lErr != nil || len(accs) == 0 {
-		return account, data.NewEmptyError().AppendDescF("Decrypt account bytes: %s, you can delete account file(%s) and use `account` command to reset the account", dErr, pt)
+	accounts, lErr := LookUp(acc.Name)
+	if lErr != nil || len(accounts) == 0 {
+		return account, oldError
 	}
 
-	return accs[0], nil
+	account = accounts[0]
+
+	// 尝试替换错误缓存，失败也没关系
+	jsonStr, mErr := account.value()
+	if mErr != nil {
+		log.WarningF("get account, get json error:%s", mErr)
+		return account, nil
+	}
+
+	_, sErr := accountFh.Seek(0, io.SeekStart)
+	if sErr != nil {
+		log.WarningF("get account, file seek error:%s", sErr)
+		return account, nil
+	}
+
+	tErr := accountFh.Truncate(0)
+	if tErr != nil {
+		log.WarningF("get account, file truncate error:%s", tErr)
+		return account, nil
+	}
+
+	_, wErr := accountFh.WriteString(jsonStr)
+	if wErr != nil {
+		log.WarningF("get account, file write error:%s", wErr)
+	}
+
+	return account, nil
 }
 
 // qshell 会记录当前的user信息，当切换账户后， 老的账户信息会记录下来
