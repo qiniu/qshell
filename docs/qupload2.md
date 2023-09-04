@@ -42,6 +42,7 @@ Flags:
       --rescan-local                     rescan local dir to upload newly add files
       --resumable-api-v2                 use resumable upload v2 APIs to upload
       --resumable-api-v2-part-size int   the part size when use resumable upload v2 APIs to upload (default 4194304)
+      --sequential-read-file             File reading is sequential and does not involve skipping; when enabled, the uploading fragment data will be loaded into the memory. This option may increase file upload speed for mounted network filesystems.
       --skip-file-prefixes string        skip files with these file prefixes
       --skip-fixed-strings string        skip files with the fixed string in the name
       --skip-path-prefixes string        skip files with these relative path prefixes

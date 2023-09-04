@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/export"
@@ -283,6 +284,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 							ChunkSize:           uploadConfig.ResumableAPIV2PartSize,
 							PutThreshold:        uploadConfig.PutThreshold,
 							ResumeWorkerCount:   uploadConfig.WorkerCount * info.Info.WorkerCount, // go SDK 分片并发量是全局的需要做转化
+							SequentialReadFile:  uploadConfig.SequentialReadFile,
 							Progress:            nil,
 						},
 						RelativePathToSrcPath: fileRelativePath,

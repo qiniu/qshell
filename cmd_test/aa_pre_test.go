@@ -4,9 +4,10 @@ package cmd
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"testing"
 )
 
 func TestCmd(t *testing.T) {

@@ -3,10 +3,11 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd"
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"os"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd"
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 var accessKey = test.AccessKey

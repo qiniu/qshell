@@ -2,8 +2,9 @@ package account
 
 import (
 	"encoding/base64"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"strings"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
@@ -15,6 +16,15 @@ func splits(joinStr string) []string {
 // 对保存在account.json中的文件字符串进行揭秘操作, 返回Account
 func decrypt(joinStr string) (acc Account, err *data.CodeError) {
 	ss := splits(joinStr)
+	if len(ss) > 0 {
+		acc.Name = ss[0]
+	}
+
+	if len(ss) != 3 {
+		err = data.NewEmptyError().AppendDescF("account json style format error")
+		return
+	}
+
 	name, accessKey, encryptedKey := ss[0], ss[1], ss[2]
 	if name == "" || accessKey == "" || encryptedKey == "" {
 		err = data.NewEmptyError().AppendDescF("name, accessKey and encryptedKey should not be empty")
