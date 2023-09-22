@@ -5,13 +5,15 @@ package cmd
 import (
 	"encoding/json"
 	"errors"
-	"github.com/qiniu/qshell/v2/cmd_test/test"
-	"github.com/qiniu/qshell/v2/iqshell/common/config"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"github.com/qiniu/qshell/v2/iqshell/common/config"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/download/operations"
 )
 
 func TestDownloadWithKeyFile(t *testing.T) {
@@ -70,7 +72,7 @@ func TestDownloadFromBucket(t *testing.T) {
 			Bucket:          test.Bucket,
 			Prefix:          "hello3,hello5,hello7",
 			Suffixes:        "",
-			IoHost:          test.BucketDomain,
+			IoHost:          utils.Endpoint(false, test.BucketDomain),
 			Public:          true,
 			CheckSize:       true,
 			Referer:         "",
@@ -111,11 +113,11 @@ func TestDownloadWithDomain(t *testing.T) {
 			Bucket:          test.Bucket,
 			Prefix:          "hello3,hello5,hello7",
 			Suffixes:        "",
-			IoHost:          test.BucketDomain,
+			IoHost:          utils.Endpoint(false, test.BucketDomain),
 			Public:          true,
 			CheckSize:       true,
 			Referer:         "",
-			Domain:          test.BucketDomain,
+			Domain:          utils.Endpoint(false, test.BucketDomain),
 			RecordRoot:      "",
 		},
 	}
@@ -151,7 +153,7 @@ func TestDownloadNoBucket(t *testing.T) {
 			Bucket:     "",
 			Prefix:     "hello3,hello5,hello7",
 			Suffixes:   "",
-			IoHost:     test.BucketDomain,
+			IoHost:     utils.Endpoint(false, test.BucketDomain),
 			Public:     true,
 			CheckHash:  true,
 			Referer:    "",
@@ -438,7 +440,7 @@ func TestDownload2PublicWithDomain(t *testing.T) {
 
 	test.RunCmdWithError("qdownload2",
 		"--bucket", test.Bucket,
-		"--domain", test.BucketDomain,
+		"--domain", utils.Endpoint(false, test.BucketDomain),
 		"--dest-dir", destDir,
 		"--key-file", keysFilePath,
 		"--log-file", logPath,
@@ -457,6 +459,42 @@ func TestDownload2PublicWithDomain(t *testing.T) {
 	logContent := test.FileContent(logPath)
 	if strings.Contains(logContent, "?e=") {
 		t.Fatal("download url should public")
+	}
+
+	return
+}
+
+func TestDownload2PublicWithErrorDomain(t *testing.T) {
+	test.RemoveRootPath()
+
+	keys := test.KeysString + "\nhello_10.json"
+	keysFilePath, err := test.CreateFileWithContent("download_keys.txt", keys)
+	if err != nil {
+		t.Fatal("create cdn config file error:", err)
+	}
+
+	rootPath, err := test.RootPath()
+	if err != nil {
+		t.Fatal("get root path error:", err)
+	}
+
+	destDir := filepath.Join(rootPath, "download2")
+
+	errString, _ := test.RunCmdWithError("qdownload2",
+		"--bucket", test.Bucket,
+		"--domain", "error.qiniu.com",
+		"--dest-dir", destDir,
+		"--key-file", keysFilePath,
+		"--log-level", "debug",
+		"--public",
+		"-c", "4",
+		"-d")
+	if len(errString) == 0 {
+		t.Fatal("should be error")
+	}
+
+	if test.FileCountInDir(destDir) > 0 {
+		t.Fatal("no file should be download")
 	}
 
 	return

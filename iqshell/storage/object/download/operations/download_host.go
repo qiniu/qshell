@@ -1,13 +1,14 @@
 package operations
 
 import (
+	"strings"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
-	"strings"
 )
 
 func getDownloadHostProvider(cfg *config.Config, downloadCfg *DownloadCfg) host.Provider {
@@ -41,6 +42,7 @@ func defaultDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.
 			Host:   "",
 			Domain: downloadCfg.Domain,
 		})
+		return hosts
 	}
 
 	// 2. 动态获取 bucket 绑定的 domain
@@ -81,6 +83,7 @@ func getFileApiHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.Host 
 			Host:   "",
 			Domain: downloadCfg.Domain,
 		})
+		return hosts
 	}
 
 	if len(downloadCfg.IoHost) > 0 {
