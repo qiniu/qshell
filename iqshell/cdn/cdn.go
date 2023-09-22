@@ -3,9 +3,10 @@ package cdn
 import (
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/cdn"
-	"github.com/qiniu/qshell/v2/iqshell/common/account"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 
 // GetCdnManager 获取CdnManager
 func getCdnManager() (cdnManager *cdn.CdnManager, err *data.CodeError) {
-	acc, gErr := account.GetAccount()
+	acc, gErr := workspace.GetAccount()
 	if gErr != nil {
 		err = data.NewEmptyError().AppendDescF("GetCdnManager error: %v\n", gErr)
 		return
