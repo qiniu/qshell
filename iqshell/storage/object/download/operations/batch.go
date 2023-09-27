@@ -1,6 +1,10 @@
 package operations
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -12,9 +16,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 type BatchDownloadWithConfigInfo struct {

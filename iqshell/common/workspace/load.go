@@ -153,7 +153,6 @@ func loadUserInfo() {
 		}
 	} else {
 		userDir = filepath.Join(workspaceDir, usersDirName, defaultUserDirName)
-		log.WarningF("load user error:%s", err)
 	}
 
 	log.DebugF("user dir:%s", userDir)
