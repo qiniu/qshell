@@ -5,6 +5,7 @@ import (
 
 	"github.com/qiniu/go-sdk/v7/storage"
 
+	"github.com/qiniu/qshell/v2/iqshell/common/client"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -46,7 +47,8 @@ func (r *resumeV2Uploader) upload(info *ApiInfo) (*ApiResult, *data.CodeError) {
 
 	var progress int64 = 0
 	ret := &ApiResult{}
-	up := storage.NewResumeUploaderV2(r.cfg)
+	c := client.DefaultStorageClient()
+	up := storage.NewResumeUploaderV2Ex(r.cfg, &c)
 	extra := &storage.RputV2Extra{
 		Recorder:   recorder,
 		Metadata:   nil,

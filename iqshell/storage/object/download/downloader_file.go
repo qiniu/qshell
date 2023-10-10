@@ -2,36 +2,15 @@ package download
 
 import (
 	"fmt"
-	"net"
 	"net/http"
-	"time"
 
-	"github.com/qiniu/go-sdk/v7/storage"
-
+	"github.com/qiniu/qshell/v2/iqshell/common/client"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 )
-
-var defaultClient = storage.Client{
-	Client: &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:   10 * time.Second,
-				KeepAlive: 10 * time.Second,
-			}).DialContext,
-			ForceAttemptHTTP2:     true,
-			MaxIdleConns:          4000,
-			MaxIdleConnsPerHost:   1000,
-			IdleConnTimeout:       10 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
-	},
-}
 
 type DownloadApiInfo struct {
 	downloadUrl    string
@@ -107,7 +86,7 @@ func (d *downloaderFile) download(info *DownloadApiInfo) (response *http.Respons
 	if workspace.IsCmdInterrupt() {
 		return nil, data.CancelError
 	}
-	response, rErr := defaultClient.DoRequest(workspace.GetContext(), "GET", info.downloadUrl, headers)
+	response, rErr := client.DefaultStorageClient().DoRequest(workspace.GetContext(), "GET", info.downloadUrl, headers)
 	if info.CheckHash && len(info.FileHash) != 0 && response != nil && response.Header != nil {
 		etag := fmt.Sprintf(response.Header.Get("Etag"))
 		etag = utils.ParseEtag(etag)
