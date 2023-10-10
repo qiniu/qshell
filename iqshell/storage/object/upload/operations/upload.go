@@ -2,8 +2,13 @@ package operations
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -12,9 +17,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 type UploadInfo struct {
@@ -71,7 +73,6 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 		log.AlertF("%10s%s", "Key: ", ret.Key)
 		log.AlertF("%10s%s", "Hash: ", ret.ServerFileHash)
 		log.AlertF("%10s%d%s", "FileSize: ", ret.ServerFileSize, "("+utils.FormatFileSize(ret.ServerFileSize)+")")
-		log.AlertF("%10s%d", "PutTime: ", ret.ServerPutTime)
 		log.AlertF("%10s%s", "MimeType: ", ret.MimeType)
 	}
 }

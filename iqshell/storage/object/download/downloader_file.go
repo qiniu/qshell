@@ -2,15 +2,17 @@ package download
 
 import (
 	"fmt"
+	"net"
+	"net/http"
+	"time"
+
 	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"net"
-	"net/http"
-	"time"
 )
 
 var defaultClient = storage.Client{
@@ -22,7 +24,8 @@ var defaultClient = storage.Client{
 				KeepAlive: 10 * time.Second,
 			}).DialContext,
 			ForceAttemptHTTP2:     true,
-			MaxIdleConns:          100,
+			MaxIdleConns:          4000,
+			MaxIdleConnsPerHost:   1000,
 			IdleConnTimeout:       10 * time.Second,
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
