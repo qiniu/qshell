@@ -4,13 +4,15 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/client"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 const (
@@ -128,11 +130,16 @@ func NetworkFileLength(srcResUrl string) (fileSize int64, err *data.CodeError) {
 
 func GetNetworkFileInfo(srcResUrl string) (*NetworkFileInfo, *data.CodeError) {
 
-	resp, respErr := http.Head(srcResUrl)
+	resp, respErr := client.DefaultStorageClient().Head(srcResUrl)
 	if respErr != nil {
 		return nil, data.NewEmptyError().AppendDescF("New head request failed, %s", respErr.Error())
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if resp.Body != nil {
+			io.Copy(ioutil.Discard, resp.Body)
+			resp.Body.Close()
+		}
+	}()
 
 	file := &NetworkFileInfo{
 		Size: -1,
