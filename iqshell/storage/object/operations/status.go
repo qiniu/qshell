@@ -2,6 +2,9 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -11,8 +14,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"path/filepath"
-	"time"
 )
 
 type StatusInfo object.StatusApiInfo
@@ -105,8 +106,10 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 			}
 			in := (*StatusInfo)(apiInfo)
 			if result.IsSuccess() {
-				log.InfoF("%s\t%d\t%s\t%s\t%d\t%d",
+				infoString := fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d",
 					in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
+				log.Alert(infoString)
+				exporter.Result().Export(infoString)
 			} else {
 				data.SetCmdStatusError()
 				log.ErrorF("Status Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)

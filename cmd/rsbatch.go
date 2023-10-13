@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
-	"github.com/spf13/cobra"
 )
 
 var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
@@ -28,6 +29,7 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	setBatchCmdWorkerCountIncreasePeriodFlags(cmd, &info.BatchInfo)
 	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdResultExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdForceFlags(cmd, &info.BatchInfo)
 	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
 	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
@@ -257,6 +259,7 @@ var batchSignCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdResultExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
 	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
 	cmd.Flags().StringVarP(&info.Deadline, "deadline", "e", "3600", "deadline in seconds, default 3600")
@@ -339,6 +342,9 @@ func setBatchCmdFailExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 func setBatchCmdOverwriteFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "w", false, "overwrite mode")
 	_ = cmd.Flags().MarkShorthandDeprecated("overwrite", "deprecated and use --overwrite instead")
+}
+func setBatchCmdResultExportFileFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().StringVarP(&info.ResultExportFilePath, "outfile", "o", "", "specifies the file path where the result list is saved")
 }
 
 func init() {

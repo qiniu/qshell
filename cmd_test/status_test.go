@@ -3,10 +3,11 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestStatus(t *testing.T) {
@@ -76,6 +77,7 @@ func TestBatchStatus(t *testing.T) {
 
 	successLogPath := filepath.Join(resultDir, "batch_success.txt")
 	failLogPath := filepath.Join(resultDir, "batch_fail.txt")
+	resultLogPath := filepath.Join(resultDir, "batch_result.txt")
 
 	path, err := test.CreateFileWithContent("batch_status.txt", batchConfig)
 	if err != nil {
@@ -86,6 +88,7 @@ func TestBatchStatus(t *testing.T) {
 		"-i", path,
 		"--success-list", successLogPath,
 		"--failure-list", failLogPath,
+		"--outfile", resultLogPath,
 		"--worker", "4",
 		"--min-worker", "10",
 		"--worker-count-increase-period", "50",
@@ -93,6 +96,7 @@ func TestBatchStatus(t *testing.T) {
 	defer func() {
 		test.RemoveFile(successLogPath)
 		test.RemoveFile(failLogPath)
+		test.RemoveFile(resultLogPath)
 	}()
 
 	if !test.IsFileHasContent(successLogPath) {
@@ -101,6 +105,10 @@ func TestBatchStatus(t *testing.T) {
 
 	if !test.IsFileHasContent(failLogPath) {
 		t.Fatal("batch result: fail log  to file error: file empty")
+	}
+
+	if !test.IsFileHasContent(resultLogPath) {
+		t.Fatal("batch result: output  to file error: file empty")
 	}
 }
 

@@ -2,6 +2,11 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -12,10 +17,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const (
@@ -212,6 +213,7 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 
 			r, _ := result.(*download.PublicUrlToPrivateApiResult)
 			exporter.Success().Export(work.Data)
+			exporter.Result().ExportF(r.Url)
 			log.Alert(r.Url)
 		}).
 		OnWorkFail(func(work *flow.WorkInfo, err *data.CodeError) {
