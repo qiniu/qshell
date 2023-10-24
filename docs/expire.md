@@ -31,6 +31,6 @@ $ qshell expire --doc
 # 示例
 修改 `if-pbl` 空间中 `qiniu.png` 图片的过期时间为：`3天后自动删除`
 ```
-$ qshell chtype if-pbl qiniu.png 3
+$ qshell expire if-pbl qiniu.png 3
 ```
 输入该命令，后该文件就已经被修改为 3 天后自动删除了。
