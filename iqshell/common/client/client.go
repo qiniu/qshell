@@ -10,7 +10,6 @@ import (
 
 var defaultClient = storage.Client{
 	Client: &http.Client{
-		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
 			DialContext: (&net.Dialer{
@@ -20,6 +19,7 @@ var defaultClient = storage.Client{
 			ForceAttemptHTTP2:     true,
 			MaxIdleConns:          4000,
 			MaxIdleConnsPerHost:   1000,
+			ResponseHeaderTimeout: 60 * time.Second,
 			IdleConnTimeout:       10 * time.Second,
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
