@@ -1,13 +1,15 @@
 package flow
 
 import (
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/limit"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"sync"
-	"time"
 )
 
 type Info struct {
@@ -210,17 +212,28 @@ func (f *Flow) Start() {
 				f.tryChangeWorkGroupCount(workErr)
 
 				hitLimitCount := 0
+				hasTooManyFileError := false
 				for _, record := range workRecordList {
 					if (record.Result == nil || !record.Result.IsValid()) && record.Err == nil {
 						record.Err = workErr
 					}
+
 					f.handleWorkResult(record)
 					if f.isWorkResultHitLimit(record) {
 						hitLimitCount += 1
 					}
+
+					if !hasTooManyFileError &&
+						record.Err != nil &&
+						strings.Contains(record.Err.Error(), "too many open files") {
+						hasTooManyFileError = true
+					}
 				}
 				f.limitCountDecrease(hitLimitCount)
 
+				if hasTooManyFileError {
+					time.Sleep(5 * time.Second)
+				}
 				// 检测是否需要停止
 				if f.workErrorHappened && f.Info.StopWhenWorkError {
 					break

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 func TestMatch(t *testing.T) {
@@ -100,7 +101,7 @@ func TestBatchMatch(t *testing.T) {
 	}
 
 	objectPath := filepath.Join(resultDir, test.Key)
-	_, _ = test.RunCmdWithError("get", test.Bucket, test.Key, "--domain", test.BucketDomain,
+	_, _ = test.RunCmdWithError("get", test.Bucket, test.Key, "--domain", utils.Endpoint(false, test.BucketDomain),
 		"-o", objectPath, "")
 	defer test.RemoveFile(objectPath)
 

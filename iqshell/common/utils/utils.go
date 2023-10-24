@@ -5,12 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"net/url"
 	"os"
 	"strings"
 	"syscall"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	"github.com/qiniu/go-sdk/v7/storage"
 )
@@ -263,6 +264,11 @@ func SimpleUnescape(s *string) string {
 
 func Endpoint(useHttps bool, host string) string {
 	host = strings.TrimSpace(host)
+	host = strings.TrimSuffix(host, "/")
+	if strings.HasPrefix(host, "http://") || strings.HasPrefix(host, "https://") {
+		return host
+	}
+
 	host = RemoveUrlScheme(host)
 	if host == "" {
 		return ""

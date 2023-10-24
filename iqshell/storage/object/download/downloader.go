@@ -2,6 +2,14 @@ package download
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+	"sync"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/host"
@@ -9,12 +17,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"io"
-	"net/http"
-	"os"
-	"strings"
-	"sync"
 )
 
 type DownloadActionInfo struct {
@@ -304,6 +306,15 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 	}
 
 	response, err := dl.Download(info)
+	if response != nil && response.Body != nil {
+		defer response.Body.Close()
+		if info.Progress != nil {
+			info.Progress.SetFileSize(info.FileSize)
+			info.Progress.SendSize(info.RangeFromBytes)
+			info.Progress.Start()
+		}
+	}
+
 	if err != nil {
 		return data.NewEmptyError().AppendDesc(" Download error:" + err.Error())
 	}
@@ -315,15 +326,6 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 	}
 	if response.Body == nil {
 		return data.NewEmptyError().AppendDesc(" Download error: response body empty")
-	}
-
-	if response != nil && response.Body != nil {
-		if info.Progress != nil {
-			info.Progress.SetFileSize(info.FileSize)
-			info.Progress.SendSize(info.RangeFromBytes)
-			info.Progress.Start()
-		}
-		defer response.Body.Close()
 	}
 
 	var fErr error

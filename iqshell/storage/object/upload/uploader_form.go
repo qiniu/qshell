@@ -5,6 +5,7 @@ import (
 
 	"github.com/qiniu/go-sdk/v7/storage"
 
+	"github.com/qiniu/qshell/v2/iqshell/common/client"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
@@ -49,7 +50,8 @@ func (f *formUploader) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeErro
 		}
 	}
 
-	up := storage.NewFormUploader(f.cfg)
+	c := client.DefaultStorageClient()
+	up := storage.NewFormUploaderEx(f.cfg, &c)
 	if e := up.Put(workspace.GetContext(), &ret, token, info.SaveKey, file, fileStatus.Size(), f.ext); e != nil {
 		err = data.NewEmptyError().AppendDesc("form upload").AppendError(e)
 	} else {

@@ -2,6 +2,8 @@ package operations
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
@@ -11,7 +13,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
-	"time"
 )
 
 func NewWorkProvider(bucket, keyPrefix, inputFile, itemSeparate string, infoResetHandler apiInfoResetHandler) flow.WorkProvider {
@@ -101,13 +102,13 @@ func (w *workProvider) getWorkInfoFromFile() {
 
 		var keys []string
 		for {
-			if len(keys) == 10 {
+			if len(keys) == 300 {
 				w.getWorkInfoOfKeys(keys)
 				keys = nil
 			}
 
 			if keys == nil {
-				keys = make([]string, 0, 10)
+				keys = make([]string, 0, 300)
 			}
 
 			hasMore, workInfo, pErr := workPro.Provide()
@@ -200,6 +201,7 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) {
 				err: err,
 			}
 		}
+		time.Sleep(10 * time.Second)
 	}
 }
 

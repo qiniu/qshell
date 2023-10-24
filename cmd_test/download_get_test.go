@@ -3,10 +3,12 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 func TestGetImage(t *testing.T) {
@@ -130,7 +132,7 @@ func TestGetWithDomain(t *testing.T) {
 	}
 	path := filepath.Join(resultPath, test.Key)
 	_, errs := test.RunCmdWithError("get", test.Bucket, test.Key,
-		"--domain", test.BucketDomain,
+		"--domain", utils.Endpoint(false, test.BucketDomain),
 		"-o", path)
 	defer test.RemoveFile(path)
 
@@ -139,6 +141,27 @@ func TestGetWithDomain(t *testing.T) {
 	}
 	if !test.IsFileHasContent(path) {
 		t.Fatal("get file content can't be empty")
+	}
+}
+
+func TestGetWithErrorDomain(t *testing.T) {
+	TestCopy(t)
+
+	resultPath, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result path error:", err)
+	}
+	path := filepath.Join(resultPath, test.Key)
+	_, errs := test.RunCmdWithError("get", test.Bucket, test.Key,
+		"--domain", "error.qiniu.com",
+		"-o", path)
+	defer test.RemoveFile(path)
+
+	if len(errs) == 0 {
+		t.Fail()
+	}
+	if test.IsFileHasContent(path) {
+		t.Fatal("TestGetWithErrorDomain get file content should be empty")
 	}
 }
 
