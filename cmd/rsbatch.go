@@ -344,7 +344,7 @@ func setBatchCmdOverwriteFlags(cmd *cobra.Command, info *batch.Info) {
 	_ = cmd.Flags().MarkShorthandDeprecated("overwrite", "deprecated and use --overwrite instead")
 }
 func setBatchCmdResultExportFileFlags(cmd *cobra.Command, info *batch.Info) {
-	cmd.Flags().StringVarP(&info.ResultExportFilePath, "outfile", "o", "", "specifies the file path where the result list is saved")
+	cmd.Flags().StringVarP(&info.ResultExportFilePath, "outfile", "o", "", "specifies the file path where the results is saved")
 }
 
 func init() {
