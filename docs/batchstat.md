@@ -51,17 +51,24 @@ RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts
 
 - 使用如下命令进行批量查询
 ```
-$ qshell batchstat 7qiniu -i listFile
+$ qshell batchstat 7qiniu --silence -y -i listFile
 ```
 
-- 输出 Key、Fsize、Hash、MimeType、PutTime 以 `\t` 分隔：
+- 输出 Key、Fsize、Hash、MimeType、PutTime、User 以 `\t` 分隔：
 ```
-RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000000.ts 92308   Fk8Uf2SHbQ4S2-cXHINuRc_rooNA    video/mp2t  15003760414606314
-RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000001.ts 91556   FpJP2nfipuLVc6QGvvcb868Rd0pO    video/mp2t  15003760414789673
-RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000002.ts 92496   FvBjZPch6cf52t2x0ZQBngqS1KTp    video/mp2t  15003760417159000
-RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000003.ts 92308   FoEgsbzdrcLuj_Fo5FeTI3w1jFHJ    video/mp2t  15003760419154144
-RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000004.ts 92308   FkYNctlf1JOGcJa-WzWgxsqcBjX6    video/mp2t  15003760422258065
-RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts 92120   Fh4Fwhu3dMUGbd3jE5OmRtfVZLv4    video/mp2t  15003760423842522
+RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000000.ts 92308   Fk8Uf2SHbQ4S2-cXHINuRc_rooNA    video/mp2t  15003760414606314   0
+RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000001.ts 91556   FpJP2nfipuLVc6QGvvcb868Rd0pO    video/mp2t  15003760414789673   0
+RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000002.ts 92496   FvBjZPch6cf52t2x0ZQBngqS1KTp    video/mp2t  15003760417159000   0
+RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000003.ts 92308   FoEgsbzdrcLuj_Fo5FeTI3w1jFHJ    video/mp2t  15003760419154144   0
+RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000004.ts 92308   FkYNctlf1JOGcJa-WzWgxsqcBjX6    video/mp2t  15003760422258065   0
+RclviFDHaQAUl3aL46jKRskUWbg=/FpwH76F3yfYmFKoPDjoSNWzeLKYp/000005.ts 92120   Fh4Fwhu3dMUGbd3jE5OmRtfVZLv4    video/mp2t  15003760423842522   0
+--------------- Batch Result ---------------
+              Total:         6
+            Success:         6
+            Failure:         0
+            Skipped:         0
+           Duration:        1s
+--------------------------------------------
 ```
 
 # 注意
