@@ -338,7 +338,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 
 			// 本地文件和服务端文件均没有变化，则不需要重新上传
 			isServerFileNotChange := true
-			if uploadConfig.CheckHash {
+			if uploadConfig.CheckHash || uploadConfig.CheckSize {
 				// 检测 hash 需要调用 Stat 接口查询 hash，如果用户不检测 hash 则认为服务端文件没有变化。
 				stat, sErr := object.Status(object.StatusApiInfo{
 					Bucket:   uploadInfo.ToBucket,
@@ -348,7 +348,12 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				if sErr != nil {
 					return true, data.NewEmptyError().AppendDesc("get stat from server").AppendError(sErr)
 				}
-				isServerFileNotChange = stat.Hash == result.ServerFileHash
+
+				if uploadConfig.CheckHash {
+					isServerFileNotChange = stat.Hash == result.ServerFileHash
+				} else {
+					isServerFileNotChange = stat.FSize == result.ServerFileSize
+				}
 			}
 
 			// LocalFileModifyTime 单位是 100ns
