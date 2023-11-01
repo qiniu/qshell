@@ -296,9 +296,10 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 	if info.RangeFromBytes > 0 {
 		if info.RangeFromBytes > info.FileSize || info.RangeFromBytes > info.RangeToBytes {
 			errorDesc := "download, check fromBytes error: fromBytes bigger than file size, should remove temp file and retry."
-			log.Error(errorDesc)
-			_ = fInfo.cleanTempFile()
-			return data.NewEmptyError().AppendDesc(errorDesc)
+			log.Warning(errorDesc)
+			if e := fInfo.cleanTempFile(); e != nil {
+				return e.HeaderInsertDesc("download, clean temp file error:")
+			}
 		} else if info.RangeFromBytes == info.FileSize || info.RangeFromBytes == info.RangeToBytes {
 			// 已经完全下载，只不过未修改名称
 			return nil
