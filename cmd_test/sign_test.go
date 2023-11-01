@@ -3,8 +3,10 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"path/filepath"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestBatchSign(t *testing.T) {
@@ -13,13 +15,31 @@ func TestBatchSign(t *testing.T) {
 		t.Fatal("create batch sign config file error:", err)
 	}
 
-	result, errs := test.RunCmdWithError("batchsign", "-i", path)
+	resultDir, err := test.ResultPath()
+	if err != nil {
+		t.Fatal("get result dir error:", err)
+	}
+
+	resultLogPath := filepath.Join(resultDir, "batch_result.txt")
+
+	result, errs := test.RunCmdWithError("batchsign",
+		"-i", path,
+		"--outfile", resultLogPath,
+	)
 	if len(errs) > 0 {
 		t.Fail()
 	}
 
 	if len(result) == 0 {
 		t.Fail()
+	}
+
+	defer func() {
+		test.RemoveFile(resultLogPath)
+	}()
+
+	if !test.IsFileHasContent(resultLogPath) {
+		t.Fatal("batch result: output  to file error: file empty")
 	}
 }
 

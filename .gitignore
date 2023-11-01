@@ -10,6 +10,8 @@ src/test/
 src/.qshell
 marker.go
 marker_test.go
+build.sh
+build_local.sh
 
 # Folders
 _obj

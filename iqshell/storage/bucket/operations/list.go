@@ -2,6 +2,11 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -10,10 +15,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/internal/list"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type ListInfo struct {
@@ -120,11 +121,13 @@ func List(cfg *iqshell.Config, info ListInfo) {
 	startTime, err := info.getStartDate()
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatus(data.StatusError)
 		return
 	}
 	endTime, err := info.getEndDate()
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatus(data.StatusError)
 		return
 	}
 
@@ -159,6 +162,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 		AppendMode: info.AppendMode,
 		Readable:   info.Readable,
 	}, func(marker string, err *data.CodeError) {
+		data.SetCmdStatus(data.StatusError)
 		log.ErrorF("marker: %s", marker)
 		log.ErrorF("list bucket Error: %v", err)
 	})

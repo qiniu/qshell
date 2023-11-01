@@ -34,7 +34,7 @@ func TestFopNoExistBucket(t *testing.T) {
 
 func TestFopNoExistKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("pfop", test.Bucket, test.KeyNotExist, fopObjectValue)
-	if !strings.Contains(errs, "invalid_param") {
+	if !strings.Contains(errs, "NotFound") {
 		t.Fail()
 	}
 }
