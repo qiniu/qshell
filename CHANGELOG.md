@@ -1,7 +1,7 @@
 # 2.13.0
 ## 更新
 1. batchstat 和 batchsign 支持结果输出到文件
-2. get / qdwonload / qdownlaod2 当指定下载域名则仅使用此域名进行下载
+2. get / qdownload / qdownload2 当指定下载域名则仅使用此域名进行下载
 3. rput / qupload / qupload2 支持顺序读
 
 
