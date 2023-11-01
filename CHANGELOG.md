@@ -1,3 +1,10 @@
+# 2.13.0
+## 更新
+1. batchstat 和 batchsign 支持结果输出到文件
+2. get / qdwonload / qdownlaod2 当指定下载域名则仅使用此域名进行下载
+3. rput / qupload / qupload2 支持顺序读
+
+
 # 2.12.0
 ## 新增
 1. qdownload / qdownload2 / get 下载命令支持使用源站域名进行下载，用户可不对 bucket 绑定域名（qshell 内部自动查询源站域名 ，用户不用设置）
