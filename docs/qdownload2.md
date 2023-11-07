@@ -1,10 +1,11 @@
 # 简介
-`qdownload2` 功能和 `qdownload` 一致，不过 `qdownload2` 通过命令行的方式来指定各个需要的参数，例如：
+`qdownload2` 功能和 `qdownload` 一致，选项也是一一对应，不过 `qdownload2` 通过命令行的方式来指定各个需要的参数，例如：
 ```
 qshell qdownload2 --dest-dir=/home/jemy/temp --bucket=test
 ```
 
-注：
+## 注：
+- 使用 bucket 绑定的源站域名和七牛源站域名下载资源，这部分下载产生的流量会生成存储源站下载流量的计费，请注意，这部分计费不在七牛 CDN 免费 10G 流量覆盖范围，具体域名使用参考 qdownload 命令的同功能配置：domain 。
 - `Key` 中的 `/` 会被当做路径处理，也即任何以 `/` 结尾的 `Key` 均会被当做文件夹处理。
 - 如果使用的是 CDN 域名，且 CDN 域名开启了图片优化中的图片自动瘦身功能时，下载文件的信息和七牛服务端记录的文件信息不一致，此时下载不要使用 --check-size 和 --check-hash 选项，否则下载会失败。
 
