@@ -25,7 +25,7 @@ type ListInfo struct {
 	StartDate          string // list item 的 put time 区间的开始时间 【闭区间】 【可选】
 	EndDate            string // list item 的 put time 区间的终止时间 【闭区间】 【可选】
 	Suffixes           string // list item 必须包含后缀 【可选】
-	FileTypes          string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储 【可选】
+	FileTypes          string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储 4:归档直读存储【可选】
 	MimeTypes          string // list item Mimetype类型，多个使用逗号隔开 【可选】
 	MinFileSize        string // 文件最小值，单位: B 【可选】
 	MaxFileSize        string // 文件最大值，单位: B 【可选】

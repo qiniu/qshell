@@ -9,13 +9,13 @@
    * 大于  0: 设置相关的生命周期
 2. 生命周期时间大小规则如下（在相关生命周期时间值大于 0 时需满足）：
 ```
-转低频存储时间 < 转归档存储时间 < 转深度归档存储时间 
+转低频存储时间 < 转归档直读存储时间 < 转归档存储时间 < 转深度归档存储时间 
 ```
-3. 转低频存储时间、转归档存储时间、转深度归档存储时间 和 过期删除时间 至少配置一个
+3. 转低频存储时间、转归档直读存储时间、转归档存储时间、转深度归档存储时间 和 过期删除时间 至少配置一个
 
 # 格式
 ```
-qshell batchchlifecycle [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] [--to-ia-after-days <ToIAAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--delete-after-days <DeleteAfterDays>] <Bucket> <-i KeysFile> 
+qshell batchchlifecycle [--force] [--success-list <SuccessFileName>] [--failure-list <FailureFileName>] [--sep <Separator>]  [--worker <WorkerCount>] [--to-ia-after-days <ToIAAfterDays>] [--to-archive-ir-after-days <ToArchiveAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--delete-after-days <DeleteAfterDays>] <Bucket> <-i KeysFile> 
 ```
 
 # 帮助文档
@@ -44,9 +44,10 @@ $ qshell batchchlifecycle --doc
 <Key><Sep><Other> // <Key>：文件名，<Sep>：分割符，<Other> 其他无效内容
 ```
 - --to-ia-after-days：指定文件上传后并在设置的时间后转换到 `低频存储类型`；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的转 `低频存储` 的生命周期规则，单位：天【可选】
+- --to-archive-ir-after-days：指定文件上传后并在设置的时间后转换到 `归档直读存储类型`；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的转 `归档直读存储` 的生命周期规则，单位：天【可选】
 - --to-archive-after-days：指定文件上传后并在设置的时间后转换到 `归档存储类型`；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的转 `归档存储` 的生命周期规则，单位：天【可选】
 - --to-deep-archive-after-days：指定文件上传后并在设置的时间后转换到 `深度归档存储类型`；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的转 `深度归档存储` 的生命周期规则，单位：天【可选】
-  - --delete-after-days：指定文件上传后并在设置的时间后进行 `过期删除`，删除后不可恢复；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的 `过期删除` 的生命周期规则，单位：天【可选】
+- --delete-after-days：指定文件上传后并在设置的时间后进行 `过期删除`，删除后不可恢复；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的 `过期删除` 的生命周期规则，单位：天【可选】
 - -y/--force：该选项控制工具的默认行为。默认情况下，对于批量操作，工具会要求使用者输入一个验证码，确认下要进行批量文件操作了，避免操作失误的发生。如果不需要这个验证码的提示过程可以使用此选项。【可选】
 - -s/--success-list：该选项指定一个文件，程序会把操作成功的资源信息导入到该文件；默认不导出。【可选】
 - -e/--failure-list：该选项指定一个文件，程序会把操作失败的资源信息加上错误信息导入该文件；默认不导出。【可选】
@@ -58,7 +59,7 @@ $ qshell batchchlifecycle --doc
 - --record-redo-while-error：依赖于 --enable-record；命令重新执行时，命令中所有任务会从头到尾重新执行；每个任务执行前会根据记录先查看当前任务是否已经执行，如果任务已执行且失败，则再执行一次；默认为 false，当任务执行失败则跳过不再重新执行。 【可选】
 
 # 示例
-1 比如我们要将空间 `if-pbl` 里面一些文件的生命周期改为 30 天后转低频存储，60 天后转归档存储，180 天后转深度归档存储，365 天后过期删除；我们可以指定如下的 `KeysFile` 的内容：
+1 比如我们要将空间 `if-pbl` 里面一些文件的生命周期改为 30 天后转低频存储，60 天后转归档直读存储，120 天后转归档存储，180 天后转深度归档存储，365 天后过期删除；我们可以指定如下的 `KeysFile` 的内容：
 ```
 2015/03/22/qiniu.png
 2015/photo.jpg
@@ -68,7 +69,8 @@ $ qshell batchchlifecycle --doc
 ```
 $ qshell batchchlifecycle if-pbl -i lifecycle.txt \
  --to-ia-after-days 30 \
- --to-archive-after-days 60 \
+ --to-archive-ir-after-days 60 \
+ --to-archive-after-days 120 \
  --to-deep-archive-after-days 180 \
  --delete-after-days 365
 ```

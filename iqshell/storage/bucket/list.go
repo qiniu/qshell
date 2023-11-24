@@ -26,7 +26,7 @@ type ListApiInfo struct {
 	StartTime          time.Time // list item 的 put time 区间的开始时间 【闭区间】
 	EndTime            time.Time // list item 的 put time 区间的终止时间 【闭区间】
 	Suffixes           []string  // list item 必须包含后缀
-	FileTypes          []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
+	FileTypes          []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储 4:归档直读存储
 	MimeTypes          []string  // list item Mimetype类型，多个使用逗号隔开
 	MinFileSize        int64     // 文件最小值，单位: B
 	MaxFileSize        int64     // 文件最大值，单位: B

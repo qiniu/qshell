@@ -9,13 +9,13 @@
    * 大于  0: 设置相关的生命周期
 2. 生命周期时间大小规则如下（在相关生命周期时间值大于 0 时需满足）：
 ```
-转低频存储时间 < 转归档存储时间 < 转深度归档存储时间 
+转低频存储时间 < 转归档直读存储时间 < 转归档存储时间 < 转深度归档存储时间 
 ```
-3. 转低频存储时间、转归档存储时间、转深度归档存储时间 和 过期删除时间 至少配置一个
+3. 转低频存储时间、转归档直读存储时间、转归档存储时间、转深度归档存储时间 和 过期删除时间 至少配置一个
 
 # 格式
 ```
-qshell chlifecycle [--to-ia-after-days <ToIAAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--delete-after-days <DeleteAfterDays>] <Bucket> <Key> 
+qshell chlifecycle [--to-ia-after-days <ToIAAfterDays>] [--to-archive-ir-after-days <ToArchiveAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--delete-after-days <DeleteAfterDays>] <Bucket> <Key> 
 ```
 
 # 帮助文档
@@ -36,17 +36,19 @@ $ qshell chlifecycle --doc
 
 # 选项
 - --to-ia-after-days：指定文件上传后并在设置的时间后转换到 `低频存储类型`；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的转 `低频存储` 的生命周期规则，单位：天【可选】
+- --to-archive-ir-after-days：指定文件上传后并在设置的时间后转换到 `归档直读存储类型`；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的转 `归档直读存储` 的生命周期规则，单位：天【可选】
 - --to-archive-after-days：指定文件上传后并在设置的时间后转换到 `归档存储类型`；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的转 `归档存储` 的生命周期规则，单位：天【可选】
 - --to-deep-archive-after-days：指定文件上传后并在设置的时间后转换到 `深度归档存储类型`；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的转 `深度归档存储` 的生命周期规则，单位：天【可选】
 - --delete-after-days：指定文件上传后并在设置的时间后进行 `过期删除`，删除后不可恢复；值范围为 -1 或者大于 0，设置为 -1 表示取消已设置的 `过期删除` 的生命周期规则，单位：天【可选】
 
 
 # 示例
-1 比如我们要将空间 `if-pbl` 里面 `qiniu.png` 文件的生命周期改为 30 天后转低频存储，60 天后转归档存储，180 天后转深度归档存储，365 天后过期删除：
+1 比如我们要将空间 `if-pbl` 里面 `qiniu.png` 文件的生命周期改为 30 天后转低频存储，60 天后转归档直读存储，120 天后转归档存储，180 天后转深度归档存储，365 天后过期删除：
 ```
 $ qshell chlifecycle if-pbl qiniu.png \
  --to-ia-after-days 30 \
- --to-archive-after-days 60 \
+ --to-archive-ir-after-days 60 \
+ --to-archive-after-days 120 \
  --to-deep-archive-after-days 180 \
  --delete-after-days 365
 ```
@@ -64,7 +66,8 @@ PutTime:                 16768889367943931 -> 2023-02-20 18:28:56.7943931 +0800 
 MimeType:                text/plain
 Expiration:              1710518400 -> 2024-03-16 00:00:00 +0800 CST
 TransitionToIA:          1681574400 -> 2023-04-16 00:00:00 +0800 CST
-TransitionToArchive:     1684166400 -> 2023-05-16 00:00:00 +0800 CST
+TransitionToArchiveIR:   1684166400 -> 2023-05-16 00:00:00 +0800 CST
+TransitionToArchive:     1684166400 -> 2023-06-16 00:00:00 +0800 CST
 TransitionToDeepArchive: 1694534400 -> 2023-09-13 00:00:00 +0800 CST
 FileType:                0 -> 标准存储
 ```

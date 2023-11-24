@@ -2,6 +2,8 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -12,7 +14,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"path/filepath"
 )
 
 type ChangeLifecycleInfo object.ChangeLifecycleApiInfo
@@ -26,6 +27,7 @@ func (info *ChangeLifecycleInfo) Check() *data.CodeError {
 	}
 
 	if info.ToIAAfterDays == 0 &&
+		info.ToArchiveIRAfterDays == 0 &&
 		info.ToArchiveAfterDays == 0 &&
 		info.ToDeepArchiveAfterDays == 0 &&
 		info.DeleteAfterDays == 0 {
@@ -51,10 +53,10 @@ func ChangeLifecycle(cfg *iqshell.Config, info *ChangeLifecycleInfo) {
 	}
 
 	if result.IsSuccess() {
-		lifecycleValues := []int{info.ToIAAfterDays, info.ToArchiveAfterDays,
+		lifecycleValues := []int{info.ToIAAfterDays, info.ToArchiveIRAfterDays, info.ToArchiveAfterDays,
 			info.ToDeepArchiveAfterDays, info.DeleteAfterDays}
-		lifecycleDescs := []string{"to IA storage", "to archive storage",
-			"to deep archive storage", "delete"}
+		lifecycleDescs := []string{"to IA storage", "to ARCHIVE_IR storage", "to ARCHIVE storage",
+			"to DEEP_ARCHIVE storage", "delete"}
 		log.InfoF("Change lifecycle Success, [%s:%s]", info.Bucket, info.Key)
 		for i := 0; i < len(lifecycleValues); i++ {
 			lifecycleValue := lifecycleValues[i]
@@ -79,6 +81,7 @@ type BatchChangeLifecycleInfo struct {
 	BatchInfo              batch.Info //
 	Bucket                 string     //
 	ToIAAfterDays          int        // 转换到 低频存储类型，设置为 -1 表示取消
+	ToArchiveIRAfterDays   int        // 转换到 归档直读存储类型， 设置为 -1 表示取消
 	ToArchiveAfterDays     int        // 转换到 归档存储类型， 设置为 -1 表示取消
 	ToDeepArchiveAfterDays int        // 转换到 深度归档存储类型， 设置为 -1 表示取消
 	DeleteAfterDays        int        // 过期删除，删除后不可恢复，设置为 -1 表示取消
@@ -94,6 +97,7 @@ func (info *BatchChangeLifecycleInfo) Check() *data.CodeError {
 	}
 
 	if info.ToIAAfterDays == 0 &&
+		info.ToArchiveIRAfterDays == 0 &&
 		info.ToArchiveAfterDays == 0 &&
 		info.ToDeepArchiveAfterDays == 0 &&
 		info.DeleteAfterDays == 0 {
@@ -141,6 +145,7 @@ func BatchChangeLifecycle(cfg *iqshell.Config, info BatchChangeLifecycleInfo) {
 				Bucket:                 info.Bucket,
 				Key:                    listObject.Key,
 				ToIAAfterDays:          info.ToIAAfterDays,
+				ToArchiveIRAfterDays:   info.ToArchiveIRAfterDays,
 				ToArchiveAfterDays:     info.ToArchiveAfterDays,
 				ToDeepArchiveAfterDays: info.ToDeepArchiveAfterDays,
 				DeleteAfterDays:        info.DeleteAfterDays,
@@ -155,8 +160,8 @@ func BatchChangeLifecycle(cfg *iqshell.Config, info BatchChangeLifecycleInfo) {
 			}
 			in := (*ChangeLifecycleInfo)(apiInfo)
 			if result.IsSuccess() {
-				log.InfoF("Change lifecycle Success, [%s:%s] => '%d:%d:%d:%d'", in.Bucket, in.Key,
-					in.ToIAAfterDays, in.ToArchiveAfterDays, in.ToDeepArchiveAfterDays, in.DeleteAfterDays)
+				log.InfoF("Change lifecycle Success, [%s:%s] => '%d:%d:%d:%d:%d'", in.Bucket, in.Key,
+					in.ToIAAfterDays, in.ToArchiveIRAfterDays, in.ToArchiveAfterDays, in.ToDeepArchiveAfterDays, in.DeleteAfterDays)
 			} else {
 				data.SetCmdStatusError()
 				log.ErrorF("Change lifecycle Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)
