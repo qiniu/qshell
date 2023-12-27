@@ -2,7 +2,9 @@ package servers
 
 import (
 	"fmt"
+
 	"github.com/qiniu/go-sdk/v7/auth"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -48,7 +50,6 @@ func BucketInfoDetailDescriptionStringFormat() string {
 }
 
 type ListApiInfo struct {
-	Shared bool
 	Region string
 }
 
@@ -65,9 +66,9 @@ func allBuckets(cfg *config.Config, info ListApiInfo) ([]BucketInfo, *data.CodeE
 	}
 
 	ucHost := cfg.Hosts.GetOneUc()
-	reqURL := fmt.Sprintf("%s/v3/buckets?shared=%v", utils.Endpoint(cfg.UseHttps.Value(), ucHost), info.Shared)
+	reqURL := fmt.Sprintf("%s/v3/buckets", utils.Endpoint(cfg.UseHttps.Value(), ucHost))
 	if len(info.Region) > 0 {
-		reqURL = fmt.Sprintf("%s&region=%s", reqURL, info.Region)
+		reqURL = fmt.Sprintf("%s?region=%s", reqURL, info.Region)
 	}
 	var buckets []BucketInfo
 	e := bucketManager.Client.CredentialedCall(workspace.GetContext(), bucketManager.Mac, auth.TokenQiniu, &buckets, "POST", reqURL, nil)
