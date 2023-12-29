@@ -166,6 +166,7 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	}
 	lifecycleFieldAdder("Expiration", status.Expiration)
 	lifecycleFieldAdder("TransitionToIA", status.TransitionToIA)
+	lifecycleFieldAdder("TransitionToArchiveIR", status.TransitionToArchiveIR)
 	lifecycleFieldAdder("TransitionToArchive", status.TransitionToARCHIVE)
 	lifecycleFieldAdder("TransitionToDeepArchive", status.TransitionToDeepArchive)
 
@@ -174,7 +175,7 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	return statInfo
 }
 
-var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储"}
+var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储", "归档直读存储"}
 
 func getFileTypeDescription(fileTypes int) string {
 	typeString := "未知类型"

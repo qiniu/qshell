@@ -2,7 +2,9 @@ package object
 
 import (
 	"fmt"
+
 	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
@@ -14,6 +16,7 @@ type ChangeLifecycleApiInfo struct {
 	Bucket                 string `json:"bucket"`
 	Key                    string `json:"key"`
 	ToIAAfterDays          int    `json:"to_ia_after_days"`           // 转换到 低频存储类型，设置为 -1 表示取消
+	ToArchiveIRAfterDays   int    `json:"to_archive_ir_after_days"`   // 转换到 归档直读存储类型， 设置为 -1 表示取消
 	ToArchiveAfterDays     int    `json:"to_archive_after_days"`      // 转换到 归档存储类型， 设置为 -1 表示取消
 	ToDeepArchiveAfterDays int    `json:"to_deep_archive_after_days"` // 转换到 深度归档存储类型， 设置为 -1 表示取消
 	DeleteAfterDays        int    `json:"delete_after_days"`          // 过期删除，删除后不可恢复，设置为 -1 表示取消
@@ -31,6 +34,9 @@ func (l *ChangeLifecycleApiInfo) ToOperation() (string, *data.CodeError) {
 	lifecycleSetting := ""
 	if l.ToIAAfterDays != 0 {
 		lifecycleSetting += fmt.Sprintf("/toIAAfterDays/%d", l.ToIAAfterDays)
+	}
+	if l.ToArchiveIRAfterDays != 0 {
+		lifecycleSetting += fmt.Sprintf("/toArchiveIRAfterDays/%d", l.ToArchiveIRAfterDays)
 	}
 	if l.ToArchiveAfterDays != 0 {
 		lifecycleSetting += fmt.Sprintf("/toArchiveAfterDays/%d", l.ToArchiveAfterDays)

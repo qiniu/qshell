@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/operations"
-	"github.com/spf13/cobra"
 )
 
 var domainsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
@@ -136,7 +137,7 @@ var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.StartDate, "start", "s", "", "start date with format yyyy-mm-dd-hh-MM-ss, all files will be listed according to the prefix and then filtered.")
 	cmd.Flags().StringVarP(&info.EndDate, "end", "e", "", "end date with format yyyy-mm-dd-hh-MM-ss, all files will be listed according to the prefix and then filtered.")
 
-	cmd.Flags().StringVarP(&info.FileTypes, "file-types", "", "", "Specify storage type, separated by comma, all files will be listed according to the prefix and then filtered. 0:STANDARD storage, 1:IA storage, 2 means ARCHIVE storage. 3:DEEP_ARCHIVE storage")
+	cmd.Flags().StringVarP(&info.FileTypes, "file-types", "", "", "Specify storage type, separated by comma, all files will be listed according to the prefix and then filtered. 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage 4:ARCHIVE_IR storage")
 	cmd.Flags().StringVarP(&info.FileTypes, "storages", "", "", "Specify storage type, same to --file-types")
 	_ = cmd.Flags().MarkDeprecated("storages", "use --file-types instead") // 废弃 storages
 

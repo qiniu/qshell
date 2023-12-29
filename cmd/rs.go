@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
-	"github.com/spf13/cobra"
 )
 
 var statCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
@@ -88,8 +89,9 @@ var changeLifecycleCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().IntVarP(&info.ToIAAfterDays, "to-ia-after-days", "", 0, "to IA storage after some days. the range is -1 or bigger than 0. -1 means cancel to IA storage")
-	cmd.Flags().IntVarP(&info.ToArchiveAfterDays, "to-archive-after-days", "", 0, "to archive storage after some days. the range is -1 or bigger than 0. -1 means cancel to archive storage")
-	cmd.Flags().IntVarP(&info.ToDeepArchiveAfterDays, "to-deep-archive-after-days", "", 0, "to deep archive storage after some days. the range is -1 or bigger than 0. -1 means cancel to deep archive storage")
+	cmd.Flags().IntVarP(&info.ToArchiveIRAfterDays, "to-archive-ir-after-days", "", 0, "to ARCHIVE_IR storage after some days. the range is -1 or bigger than 0. -1 means cancel to ARCHIVE_IR storage")
+	cmd.Flags().IntVarP(&info.ToArchiveAfterDays, "to-archive-after-days", "", 0, "to ARCHIVE storage after some days. the range is -1 or bigger than 0. -1 means cancel to ARCHIVE storage")
+	cmd.Flags().IntVarP(&info.ToDeepArchiveAfterDays, "to-deep-archive-after-days", "", 0, "to DEEP_ARCHIVE storage after some days. the range is -1 or bigger than 0. -1 means cancel to DEEP_ARCHIVE storage")
 	cmd.Flags().IntVarP(&info.DeleteAfterDays, "delete-after-days", "", 0, "delete after some days. the range is -1 or bigger than 0. -1 means cancel to delete")
 	return cmd
 }
@@ -242,7 +244,8 @@ var changeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 And 0 means STANDARD storage, 
 while 1 means IA storage,
 while 2 means ARCHIVE storage.
-while 3 means DEEP_ARCHIVE storage.`,
+while 3 means DEEP_ARCHIVE storage.
+while 4 means ARCHIVE_IR storage.`,
 		Example: `change storage type of A.png(bucket:bucketA key:A.png) to ARCHIVE storage
 	qshell chtype bucketA A.png 2
 and you can check result by command:

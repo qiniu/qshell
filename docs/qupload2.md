@@ -28,7 +28,7 @@ Flags:
       --check-size                       check file size
   -e, --failure-list string              upload failure file list
       --file-list string                 file list to upload
-      --file-type int                    set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage
+      --file-type int                    set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage, 4:ARCHIVE_IR storage
   -h, --help                             help for qupload2
       --ignore-dir                       ignore the dir in the dest file key
       --key-prefix string                key prefix prepended to dest file key
