@@ -164,10 +164,6 @@ func (up *UploadConfig) Check() *data.CodeError {
 		}
 	}
 
-	if up.FileType < 0 || up.FileType > 3 {
-		return data.NewEmptyError().AppendDesc("wrong Filetype, It should be one of 0, 1, 2, 3")
-	}
-
 	if up.Policy != nil {
 		//if (up.Policy.CallbackURL == "" && up.Policy.CallbackHost != "") ||
 		//	(up.Policy.CallbackURL != "" && up.Policy.CallbackHost == "") {
