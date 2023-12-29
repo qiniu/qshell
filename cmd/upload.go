@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/spf13/cobra"
+
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
-	"github.com/spf13/cobra"
 )
 
 var uploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
@@ -71,6 +72,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.OverwriteExportFilePath, "overwrite-list", "w", "", "upload success (overwrite) file list")
 	cmd.Flags().IntVar(&info.Info.WorkerCount, "thread-count", 1, "multiple thread count")
 	cmd.Flags().IntVar(&info.UploadConfig.WorkerCount, "worker-count", 3, "the number of concurrently uploaded parts of a single file in resumable upload")
+	cmd.Flags().BoolVar(&info.UploadConfig.SequentialReadFile, "sequential-read-file", false, "File reading is sequential and does not involve skipping; when enabled, the uploading fragment data will be loaded into the memory. This option may increase file upload speed for mounted network filesystems.")
 
 	cmd.Flags().BoolVarP(&info.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
 	cmd.Flags().Int64Var(&info.ResumableAPIV2PartSize, "resumable-api-v2-part-size", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload")
@@ -96,7 +98,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&LogLevel, "log-level", "debug", "log level")
 	cmd.Flags().IntVar(&LogRotate, "log-rotate", 7, "log rotate days")
 
-	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
+	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage, 4:ARCHIVE_IR storage")
 	cmd.Flags().IntVarP(&info.FileType, "storage", "", 0, "set storage type of file, same to --file-type")
 	_ = cmd.Flags().MarkDeprecated("storage", "use --file-type instead") // 废弃 storage
 
@@ -133,7 +135,7 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().Int64VarP(&info.ChunkSize, "resumable-api-v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "upload host")
 
-	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
+	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage, 4:ARCHIVE_IR storage")
 	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, same to --file-type")
 	_ = cmd.Flags().MarkDeprecated("storage", "use --file-type instead") // 废弃 storage
 
@@ -167,7 +169,7 @@ var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "", false, "overwrite the file of same key in bucket")
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
 
-	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
+	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage, 4:ARCHIVE_IR storage")
 	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, same to --file-type")
 	_ = cmd.Flags().MarkDeprecated("storage", "use --file-type instead") // 废弃 storage
 
@@ -203,12 +205,13 @@ var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "", false, "overwrite the file of same key in bucket")
 	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().BoolVar(&info.SequentialReadFile, "sequential-read-file", false, "File reading is sequential and does not involve skipping; when enabled, the uploading fragment data will be loaded into the memory. This option may increase file upload speed for mounted network filesystems.")
 
 	cmd.Flags().Int64VarP(&info.ChunkSize, "resumable-api-v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
 	cmd.Flags().Int64VarP(&info.ChunkSize, "v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, same to --resumable-api-v2-part-size")
 	_ = cmd.Flags().MarkDeprecated("v2-part-size", "use --resumable-api-v2-part-size instead")
 
-	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage")
+	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "set storage type of file, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage, 4:ARCHIVE_IR storage")
 	cmd.Flags().IntVarP(&info.FileType, "storage", "s", 0, "set storage type of file, same to --file-type")
 	_ = cmd.Flags().MarkDeprecated("storage", "use --file-type instead") // 废弃 storage
 

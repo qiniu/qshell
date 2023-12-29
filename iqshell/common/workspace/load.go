@@ -1,10 +1,12 @@
 package workspace
 
 import (
+	"path/filepath"
+
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"path/filepath"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"

@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"encoding/hex"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
@@ -42,6 +43,9 @@ func AesDecrypt(crypted, key []byte) ([]byte, *data.CodeError) {
 
 	blockMode.CryptBlocks(origData, crypted)
 	origData = PKCS5UnPadding(origData)
+	if len(origData) == 0 {
+		return nil, data.NewEmptyError().AppendDesc("data format error")
+	}
 	return origData, nil
 }
 
@@ -56,5 +60,9 @@ func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 func PKCS5UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
+	if unpadding >= length {
+		return nil
+	}
+
 	return origData[:(length - unpadding)]
 }

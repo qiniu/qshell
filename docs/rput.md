@@ -10,7 +10,7 @@
 qshell rput [--overwrite] [--v2] [--mimetype <MimeType>] [--callback-urls <CallbackUrls>] [--callback-host <CallbackHost>] [--file-type <FileType> ] <Bucket> <Key> <LocalFile>
 ```
 
-其中 `Overwrite`，`MimeType`，`FileType` (0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储)参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
+其中 `Overwrite`，`MimeType`，`FileType` (0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储， 4: 归档直读存储)参数可根据需要指定一个或者多个，参数顺序随意，程序会自动识别。
 
 # 帮助文档
 可以在命令行输入如下命令获取帮助文档：
@@ -33,11 +33,12 @@ $ qshell rput --doc
 # 选项
 - --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
 - -t/--mimetype：指定文件的 MimeType 。【可选】
-- --file-type：文件存储类型；0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储；默认为`0`(标准存储）。 【可选】
+- --file-type：文件存储类型；0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储， 4: 归档直读存储；默认为`0`(标准存储）。 【可选】
 - -l/--callback-urls：上传回调地址，可以指定多个地址，以逗号分开。【可选】
 - -T/--callbackHost：上传回调HOST, 必须和 CallbackUrls 一起指定。 【可选】
 - --resumable-api-v2：使用分片上传 API V2 进行上传，默认为 `false`, 使用 V1 上传。【可选】
 - --resumable-api-v2-part-size：使用分片上传 API V2 进行上传时的分片大小，默认为 4M 。【可选】
+- --sequential-read-file: 文件读为顺序读，不涉及跳读；开启后，上传中的分片数据会被加载至内存。此选项可能会增加挂载网络文件系统的文件上传速度。默认是：false。【可选】
 
 # 示例
 1 上传本地文件 `/Users/jemy/Documents/qiniu.mp4` 到空间 `if-pbl` 里面。

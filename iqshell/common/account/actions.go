@@ -7,11 +7,12 @@ import (
 	"strings"
 
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/opt"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/opt"
 )
 
 // 保存账户信息到账户文件中
@@ -96,9 +97,9 @@ func SaveToDB(acc Account, accountOver bool) (err *data.CodeError) {
 }
 
 func getAccount(pt string) (account Account, err *data.CodeError) {
-	accountFh, openErr := os.Open(pt)
+	accountFh, openErr := os.OpenFile(info.AccountPath, os.O_RDWR, 0600)
 	if openErr != nil {
-		err = data.NewEmptyError().AppendDescF("Open account file error, %s, please use `account` to set Id and SecretKey first", openErr)
+		err = data.NewEmptyError().AppendDescF("Get account error, %s, please use `account` to set Id and SecretKey first", openErr)
 		return
 	}
 	defer accountFh.Close()
@@ -115,12 +116,48 @@ func getAccount(pt string) (account Account, err *data.CodeError) {
 	}
 
 	acc, dErr := decrypt(string(accountBytes))
-	if dErr != nil {
-		err = data.NewEmptyError().AppendDescF("Decrypt account bytes: %v", dErr)
+	if dErr == nil {
+		account = acc
 		return
 	}
-	account = acc
-	return
+
+	oldError := data.NewEmptyError().AppendDescF("Decrypt account bytes: %s, you can delete account file(%s) and use `account` command to reset the account", dErr, pt)
+	if len(acc.Name) == 0 {
+		return account, oldError
+	}
+
+	accounts, lErr := LookUp(acc.Name)
+	if lErr != nil || len(accounts) == 0 {
+		return account, oldError
+	}
+
+	account = accounts[0]
+
+	// 尝试替换错误缓存，失败也没关系
+	jsonStr, mErr := account.value()
+	if mErr != nil {
+		log.WarningF("get account, get json error:%s", mErr)
+		return account, nil
+	}
+
+	_, sErr := accountFh.Seek(0, io.SeekStart)
+	if sErr != nil {
+		log.WarningF("get account, file seek error:%s", sErr)
+		return account, nil
+	}
+
+	tErr := accountFh.Truncate(0)
+	if tErr != nil {
+		log.WarningF("get account, file truncate error:%s", tErr)
+		return account, nil
+	}
+
+	_, wErr := accountFh.WriteString(jsonStr)
+	if wErr != nil {
+		log.WarningF("get account, file write error:%s", wErr)
+	}
+
+	return account, nil
 }
 
 // qshell 会记录当前的user信息，当切换账户后， 老的账户信息会记录下来

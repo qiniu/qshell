@@ -1,9 +1,8 @@
-on: 
-    release:
-        types: [published,edited]
+on:
+  release:
+    types: [published]
 env:
   CGO_ENABLED: 0
-
 name: Release qshell
 jobs:
   releases-matrix:
@@ -12,6 +11,7 @@ jobs:
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     strategy:
+      max-parallel: 1
       matrix:
         include:
           # macOS targets
@@ -53,9 +53,16 @@ jobs:
     - uses: actions/checkout@v2
     - name: Set APP_VERSION env
       run: echo ::set-env name=APP_VERSION::$(cat ${GITHUB_EVENT_PATH} | jq -r .release.tag_name )
-    - name: Environment Printer
-      uses: managedkaos/print-env@v1.0
-
+    - name: Prepare qshell
+      run: |
+        set -e
+        wget -qLO /tmp/qshell-v2.11.0-linux-amd64.tar.gz https://devtools.qiniu.com/qshell-v2.11.0-linux-amd64.tar.gz
+        tar xf /tmp/qshell-v2.11.0-linux-amd64.tar.gz
+        rm /tmp/qshell-v2.11.0-linux-amd64.tar.gz
+        ./qshell account -- "$PUBLISH_ACCESS_KEY" "$PUBLISH_SECRET_KEY" default
+      env:
+        PUBLISH_ACCESS_KEY: ${{ secrets.PUBLISH_ACCESS_KEY }}
+        PUBLISH_SECRET_KEY: ${{ secrets.PUBLISH_SECRET_KEY }}
     - uses: wangyoucao577/go-release-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -64,3 +71,15 @@ jobs:
         goversion: "https://golang.org/dl/go1.20.1.linux-amd64.tar.gz"
         ldflags: -X "github.com/qiniu/qshell/v2/iqshell/common/version.version=${{ env.APP_VERSION }}" -extldflags "-static"
         project_path: "./main"
+        retry: '100'
+    - name: Upload Release Asset to Qiniu
+      run: |
+        set -e
+        cd ./main/build-artifacts-*
+        FILENAME="qshell-${{ env.APP_VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz"
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          FILENAME="qshell-${{ env.APP_VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.zip"
+        fi
+        ../../qshell rput --resumable-api-v2 --overwrite "$PUBLISH_BUCKET_NAME" "$FILENAME" "$FILENAME"
+      env:
+        PUBLISH_BUCKET_NAME: ${{ secrets.PUBLISH_BUCKET_NAME }}

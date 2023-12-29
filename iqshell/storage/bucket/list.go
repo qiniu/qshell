@@ -2,12 +2,6 @@ package bucket
 
 import (
 	"bufio"
-	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/file"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/internal/list"
 	"io"
 	"math"
 	"os"
@@ -15,6 +9,13 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/file"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/internal/list"
 )
 
 type ListApiInfo struct {
@@ -25,7 +26,7 @@ type ListApiInfo struct {
 	StartTime          time.Time // list item 的 put time 区间的开始时间 【闭区间】
 	EndTime            time.Time // list item 的 put time 区间的终止时间 【闭区间】
 	Suffixes           []string  // list item 必须包含后缀
-	FileTypes          []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储
+	FileTypes          []int     // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储 4:归档直读存储
 	MimeTypes          []string  // list item Mimetype类型，多个使用逗号隔开
 	MinFileSize        int64     // 文件最小值，单位: B
 	MaxFileSize        int64     // 文件最大值，单位: B
@@ -63,12 +64,14 @@ func List(info ListApiInfo,
 	objectHandler func(marker string, object ListObject) (shouldContinue bool, err *data.CodeError),
 	errorHandler func(marker string, err *data.CodeError)) {
 	if objectHandler == nil {
+		data.SetCmdStatus(data.StatusError)
 		log.Error(alert.CannotEmpty("list bucket: object handler", ""))
 		return
 	}
 
 	if errorHandler == nil {
 		errorHandler = func(marker string, err *data.CodeError) {
+			data.SetCmdStatus(data.StatusError)
 			log.ErrorF("marker: %s", info.Marker)
 			log.ErrorF("list bucket Error: %v", err)
 		}
@@ -258,6 +261,7 @@ type ListToFileApiInfo struct {
 func ListToFile(info ListToFileApiInfo, errorHandler func(marker string, err *data.CodeError)) {
 	if errorHandler == nil {
 		errorHandler = func(marker string, err *data.CodeError) {
+			data.SetCmdStatus(data.StatusError)
 			log.ErrorF("marker: %s", marker)
 			log.ErrorF("list bucket Error: %v", err)
 		}

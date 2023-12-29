@@ -4,6 +4,8 @@ package cmd
 
 import (
 	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+
 	"strings"
 	"testing"
 )
@@ -15,7 +17,7 @@ func TestAsyncFetch(t *testing.T) {
 	fetchKeys = append(fetchKeys, "hello10.json")
 	content := ""
 	for _, key := range fetchKeys {
-		content += "http://" + test.BucketDomain + "/" + key + "\t" + "0" + "\t" + "fetch_" + key + "\n"
+		content += utils.Endpoint(false, test.BucketDomain) + "/" + key + "\t" + "0" + "\t" + "fetch_" + key + "\n"
 	}
 	path, err := test.CreateFileWithContent("async_fetch.txt", content)
 	if err != nil {

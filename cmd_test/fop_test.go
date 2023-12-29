@@ -3,9 +3,10 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 const fopObjectKey = "test_mv.mp4"
@@ -19,7 +20,7 @@ func TestFop(t *testing.T) {
 
 	result = strings.ReplaceAll(result, "\n", "")
 	result, errs = test.RunCmdWithError("prefop", result)
-	if len(errs) > 0 && !strings.Contains(errs, "not_found") {
+	if len(errs) > 0 && !strings.Contains(errs, "400 Bad Request") {
 		t.Fail()
 	}
 }
@@ -33,7 +34,7 @@ func TestFopNoExistBucket(t *testing.T) {
 
 func TestFopNoExistKey(t *testing.T) {
 	_, errs := test.RunCmdWithError("pfop", test.Bucket, test.KeyNotExist, fopObjectValue)
-	if !strings.Contains(errs, "invalid_param") {
+	if !strings.Contains(errs, "NotFound") {
 		t.Fail()
 	}
 }

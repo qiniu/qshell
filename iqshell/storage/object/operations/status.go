@@ -2,6 +2,9 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -11,8 +14,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"path/filepath"
-	"time"
 )
 
 type StatusInfo object.StatusApiInfo
@@ -105,8 +106,10 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 			}
 			in := (*StatusInfo)(apiInfo)
 			if result.IsSuccess() {
-				log.InfoF("%s\t%d\t%s\t%s\t%d\t%d",
+				infoString := fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d",
 					in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
+				log.Alert(infoString)
+				exporter.Result().Export(infoString)
 			} else {
 				data.SetCmdStatusError()
 				log.ErrorF("Status Failed, [%s:%s], Code: %d, Error: %s", in.Bucket, in.Key, result.Code, result.Error)
@@ -163,6 +166,7 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	}
 	lifecycleFieldAdder("Expiration", status.Expiration)
 	lifecycleFieldAdder("TransitionToIA", status.TransitionToIA)
+	lifecycleFieldAdder("TransitionToArchiveIR", status.TransitionToArchiveIR)
 	lifecycleFieldAdder("TransitionToArchive", status.TransitionToARCHIVE)
 	lifecycleFieldAdder("TransitionToDeepArchive", status.TransitionToDeepArchive)
 
@@ -171,7 +175,7 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	return statInfo
 }
 
-var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储"}
+var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储", "归档直读存储"}
 
 func getFileTypeDescription(fileTypes int) string {
 	typeString := "未知类型"

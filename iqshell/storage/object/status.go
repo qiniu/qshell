@@ -3,8 +3,10 @@ package object
 import (
 	"context"
 	"fmt"
+
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
@@ -47,6 +49,8 @@ type StatusResult struct {
 	TransitionToIA int64 `json:"transitionToIA"`
 	// 文件生命周期中转为归档存储的日期，int64 类型，Unix 时间戳格式
 	TransitionToARCHIVE int64 `json:"transitionToARCHIVE"`
+	// 文件生命周期中转为归档存储的日期，int64 类型，Unix 时间戳格式
+	TransitionToArchiveIR int64 `json:"transitionToArchiveIR"`
 	// 文件生命周期中转为深度归档存储的日期，int64 类型，Unix 时间戳格式
 	TransitionToDeepArchive int64 `json:"transitionToDeepArchive"`
 }

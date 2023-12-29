@@ -2,13 +2,15 @@ package operations
 
 import (
 	"fmt"
-	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/qiniu/go-sdk/v7/storage"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 type UploadConfig struct {
@@ -41,6 +43,7 @@ type UploadConfig struct {
 	DisableForm            bool   `json:"disable_form,omitempty"`
 	WorkerCount            int    `json:"work_count,omitempty"` // 分片上传并发数
 	RecordRoot             string `json:"record_root,omitempty"`
+	SequentialReadFile     bool   `json:"sequential_read_file"` // 文件顺序读
 
 	Policy *storage.PutPolicy `json:"policy"`
 }
@@ -159,10 +162,6 @@ func (up *UploadConfig) Check() *data.CodeError {
 		if fileListInfo.IsDir() {
 			return data.NewEmptyError().AppendDescF("FileList should be a file: %s", up.FileList)
 		}
-	}
-
-	if up.FileType < 0 || up.FileType > 3 {
-		return data.NewEmptyError().AppendDesc("wrong Filetype, It should be one of 0, 1, 2, 3")
 	}
 
 	if up.Policy != nil {

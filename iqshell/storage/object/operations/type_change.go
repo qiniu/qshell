@@ -2,6 +2,9 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+	"strconv"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -11,8 +14,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"path/filepath"
-	"strconv"
 )
 
 type ChangeTypeInfo struct {
@@ -44,9 +45,6 @@ func (info *ChangeTypeInfo) getTypeOfInt() (int, *data.CodeError) {
 		return -1, data.NewEmptyError().AppendDesc("Parse type error:" + err.Error())
 	}
 
-	if ret < 0 || ret > 3 {
-		return -1, data.NewEmptyError().AppendDesc("type must be one of 0, 1, 2, 3")
-	}
 	return ret, nil
 }
 

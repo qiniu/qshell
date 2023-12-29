@@ -9,6 +9,7 @@ type FileExporter struct {
 	fail      Exporter
 	skip      Exporter
 	overwrite Exporter
+	result    Exporter
 }
 
 func (b *FileExporter) Success() Exporter {
@@ -27,6 +28,10 @@ func (b *FileExporter) Overwrite() Exporter {
 	return b.overwrite
 }
 
+func (b *FileExporter) Result() Exporter {
+	return b.result
+}
+
 func (b *FileExporter) Close() *data.CodeError {
 	errS := b.success.Close()
 	errF := b.fail.Close()
@@ -41,10 +46,11 @@ func (b *FileExporter) Close() *data.CodeError {
 }
 
 type FileExporterConfig struct {
-	SuccessExportFilePath   string
-	FailExportFilePath      string
-	SkipExportFilePath      string
-	OverwriteExportFilePath string
+	SuccessExportFilePath   string // 输入列表中的成功部分
+	FailExportFilePath      string // 输入列表中的失败部分
+	SkipExportFilePath      string // 输入列表中的跳过部分
+	OverwriteExportFilePath string // 输入列表中的覆盖部分
+	ResultExportFilePath    string // 结果输出
 }
 
 func NewFileExport(config FileExporterConfig) (export *FileExporter, err *data.CodeError) {
@@ -65,6 +71,11 @@ func NewFileExport(config FileExporterConfig) (export *FileExporter, err *data.C
 	}
 
 	export.overwrite, err = New(config.OverwriteExportFilePath)
+	if err != nil {
+		return
+	}
+
+	export.result, err = New(config.ResultExportFilePath)
 	return
 }
 
@@ -74,5 +85,6 @@ func EmptyFileExport() *FileExporter {
 	export.fail = empty()
 	export.skip = empty()
 	export.overwrite = empty()
+	export.result = empty()
 	return export
 }

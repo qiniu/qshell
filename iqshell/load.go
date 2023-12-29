@@ -2,8 +2,12 @@ package iqshell
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+
 	"github.com/qiniu/go-sdk/v7/client"
-	"github.com/qiniu/go-sdk/v7/storage"
+
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -11,9 +15,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/version"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"os"
-	"path/filepath"
-	"runtime"
 )
 
 type Config struct {
@@ -95,7 +96,7 @@ func loadBase(cfg *Config) (shouldContinue bool) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// 配置 user agent
-	storage.UserAgent = utils.UserAgent()
+	client.UserAgent = utils.UserAgent()
 
 	// 加载 log
 	logLevel := log.LevelInfo

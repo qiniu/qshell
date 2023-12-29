@@ -2,6 +2,11 @@ package operations
 
 import (
 	"fmt"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -10,10 +15,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket/internal/list"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type ListInfo struct {
@@ -24,7 +25,7 @@ type ListInfo struct {
 	StartDate          string // list item 的 put time 区间的开始时间 【闭区间】 【可选】
 	EndDate            string // list item 的 put time 区间的终止时间 【闭区间】 【可选】
 	Suffixes           string // list item 必须包含后缀 【可选】
-	FileTypes          string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储 【可选】
+	FileTypes          string // list item 存储类型，多个使用逗号隔开， 0:普通存储 1:低频存储 2:归档存储 3:深度归档存储 4:归档直读存储【可选】
 	MimeTypes          string // list item Mimetype类型，多个使用逗号隔开 【可选】
 	MinFileSize        string // 文件最小值，单位: B 【可选】
 	MaxFileSize        string // 文件最大值，单位: B 【可选】
@@ -120,11 +121,13 @@ func List(cfg *iqshell.Config, info ListInfo) {
 	startTime, err := info.getStartDate()
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatus(data.StatusError)
 		return
 	}
 	endTime, err := info.getEndDate()
 	if err != nil {
 		log.Error(err)
+		data.SetCmdStatus(data.StatusError)
 		return
 	}
 
@@ -159,6 +162,7 @@ func List(cfg *iqshell.Config, info ListInfo) {
 		AppendMode: info.AppendMode,
 		Readable:   info.Readable,
 	}, func(marker string, err *data.CodeError) {
+		data.SetCmdStatus(data.StatusError)
 		log.ErrorF("marker: %s", marker)
 		log.ErrorF("list bucket Error: %v", err)
 	})

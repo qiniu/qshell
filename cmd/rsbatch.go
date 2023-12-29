@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/operations"
-	"github.com/spf13/cobra"
 )
 
 var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
@@ -28,6 +29,7 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	setBatchCmdWorkerCountIncreasePeriodFlags(cmd, &info.BatchInfo)
 	setBatchCmdSuccessExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdFailExportFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdResultExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdForceFlags(cmd, &info.BatchInfo)
 	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
 	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
@@ -174,8 +176,9 @@ Lifecycle value must great than or equal to -1, unit: day.
 		},
 	}
 	cmd.Flags().IntVarP(&info.ToIAAfterDays, "to-ia-after-days", "", 0, "to IA storage after some days. the range is -1 or bigger than 0. -1 means cancel to IA storage")
-	cmd.Flags().IntVarP(&info.ToArchiveAfterDays, "to-archive-after-days", "", 0, "to archive storage after some days. the range is -1 or bigger than 0. -1 means cancel to archive storage")
-	cmd.Flags().IntVarP(&info.ToDeepArchiveAfterDays, "to-deep-archive-after-days", "", 0, "to deep archive storage after some days. the range is -1 or bigger than 0. -1 means cancel to deep archive storage")
+	cmd.Flags().IntVarP(&info.ToArchiveIRAfterDays, "to-archive-ir-after-days", "", 0, "to ARCHIVE_IR storage after some days. the range is -1 or bigger than 0. -1 means cancel to ARCHIVE_IR storage")
+	cmd.Flags().IntVarP(&info.ToArchiveAfterDays, "to-archive-after-days", "", 0, "to ARCHIVE storage after some days. the range is -1 or bigger than 0. -1 means cancel to ARCHIVE storage")
+	cmd.Flags().IntVarP(&info.ToDeepArchiveAfterDays, "to-deep-archive-after-days", "", 0, "to DEEP_ARCHIVE storage after some days. the range is -1 or bigger than 0. -1 means cancel to DEEP_ARCHIVE storage")
 	cmd.Flags().IntVarP(&info.DeleteAfterDays, "delete-after-days", "", 0, "delete after some days. the range is -1 or bigger than 0. -1 means cancel to delete")
 	setBatchCmdDefaultFlags(cmd, &info.BatchInfo)
 	return cmd
@@ -257,6 +260,7 @@ var batchSignCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	setBatchCmdInputFileFlags(cmd, &info.BatchInfo)
+	setBatchCmdResultExportFileFlags(cmd, &info.BatchInfo)
 	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
 	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
 	cmd.Flags().StringVarP(&info.Deadline, "deadline", "e", "3600", "deadline in seconds, default 3600")
@@ -339,6 +343,9 @@ func setBatchCmdFailExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 func setBatchCmdOverwriteFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "w", false, "overwrite mode")
 	_ = cmd.Flags().MarkShorthandDeprecated("overwrite", "deprecated and use --overwrite instead")
+}
+func setBatchCmdResultExportFileFlags(cmd *cobra.Command, info *batch.Info) {
+	cmd.Flags().StringVarP(&info.ResultExportFilePath, "outfile", "o", "", "specifies the file path where the results is saved")
 }
 
 func init() {
