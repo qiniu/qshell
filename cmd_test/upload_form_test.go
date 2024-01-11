@@ -3,9 +3,10 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestFormUpload(t *testing.T) {
@@ -19,7 +20,8 @@ func TestFormUpload(t *testing.T) {
 	result, errs := test.RunCmdWithError("fput", test.Bucket, "qshell_fput_1M", path,
 		"--mimetype", "image/jpg",
 		"--storage", "0",
-		"--file-type", "1")
+		"--file-type", "1",
+		"--end-user", "10")
 	if len(errs) > 0 {
 		t.Fail()
 	}

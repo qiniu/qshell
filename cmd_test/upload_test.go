@@ -4,11 +4,12 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/qiniu/qshell/v2/cmd_test/test"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/upload/operations"
 )
 
 func TestQUpload(t *testing.T) {
@@ -71,7 +72,6 @@ func TestQUpload(t *testing.T) {
 			DisableForm:            false,
 			WorkerCount:            4,
 			RecordRoot:             "",
-			Policy:                 nil,
 		},
 		LogFile:    logPath,
 		RecordRoot: recordPath,

@@ -3,6 +3,7 @@ package batch
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 )
@@ -58,6 +59,7 @@ type OperationResult struct {
 	PutTime  int64   `json:"putTime"`
 	MimeType string  `json:"mimeType"`
 	Type     int     `json:"type"`
+	EndUser  string  `json:"endUser"`
 	Error    string  `json:"error"`
 	Parts    []int64 `json:"parts"`
 }
