@@ -66,9 +66,9 @@ func allBuckets(cfg *config.Config, info ListApiInfo) ([]BucketInfo, *data.CodeE
 	}
 
 	ucHost := cfg.Hosts.GetOneUc()
-	reqURL := fmt.Sprintf("%s/v3/buckets", utils.Endpoint(cfg.UseHttps.Value(), ucHost))
+	reqURL := fmt.Sprintf("%s/v3/buckets?shared=rd", utils.Endpoint(cfg.UseHttps.Value(), ucHost))
 	if len(info.Region) > 0 {
-		reqURL = fmt.Sprintf("%s?region=%s", reqURL, info.Region)
+		reqURL = fmt.Sprintf("%s&region=%s", reqURL, info.Region)
 	}
 	var buckets []BucketInfo
 	e := bucketManager.Client.CredentialedCall(workspace.GetContext(), bucketManager.Mac, auth.TokenQiniu, &buckets, "POST", reqURL, nil)
