@@ -1,6 +1,8 @@
 package operations
 
 import (
+	"path/filepath"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -8,7 +10,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"path/filepath"
 )
 
 type SyncInfo UploadInfo
@@ -26,7 +27,7 @@ func (info *SyncInfo) Check() *data.CodeError {
 	if info.Overwrite && len(info.SaveKey) == 0 {
 		return alert.CannotEmptyError("Overwrite mode and Key", "")
 	}
-	return nil
+	return checkPolicy(&info.Policy)
 }
 
 func SyncFile(cfg *iqshell.Config, info SyncInfo) {
@@ -43,6 +44,8 @@ func SyncFile(cfg *iqshell.Config, info SyncInfo) {
 	}); !shouldContinue {
 		return
 	}
+
+	log.DebugF("upload config:%+v", info)
 
 	info.CacheDir = workspace.GetJobDir()
 	info.Progress = progress.NewPrintProgress(" 进度")

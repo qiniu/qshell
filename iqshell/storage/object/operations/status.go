@@ -147,6 +147,7 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	fieldAdder("Fsize", status.FSize, utils.FormatFileSize(status.FSize))
 	fieldAdder("PutTime", status.PutTime, time.Unix(0, status.PutTime*100).String())
 	fieldAdder("MimeType", status.MimeType, "")
+	fieldAdder("EndUser", status.EndUser, "")
 
 	fieldAdderWithValueDescs("Status", status.Status,
 		map[interface{}]string{1: "禁用"},

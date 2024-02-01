@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
@@ -21,8 +22,9 @@ import (
 
 type UploadInfo struct {
 	upload.ApiInfo
+
 	RelativePathToSrcPath string // 相对与上传文件夹的路径信息
-	Policy                *storage.PutPolicy
+	Policy                storage.PutPolicy
 	DeleteOnSuccess       bool
 }
 
@@ -39,11 +41,28 @@ func (info *UploadInfo) Check() *data.CodeError {
 	if utils.IsNetworkSource(info.FilePath) {
 		return alert.Error("file can't be network source", "")
 	}
-	return nil
+
+	return checkPolicy(&info.Policy)
 }
 
 func (info *UploadInfo) WorkId() string {
 	return fmt.Sprintf("%s:%s:%s", info.FilePath, info.ToBucket, info.SaveKey)
+}
+
+func checkPolicy(policy *storage.PutPolicy) *data.CodeError {
+	if policy.CallbackURL == "" {
+		return nil
+	}
+
+	callbackUrls := strings.Replace(policy.CallbackURL, ",", ";", -1)
+	policy.CallbackURL = callbackUrls
+	if len(policy.CallbackBody) == 0 {
+		policy.CallbackBody = "key=$(key)&hash=$(etag)"
+	}
+	if len(policy.CallbackBodyType) == 0 {
+		policy.CallbackBodyType = "application/x-www-form-urlencoded"
+	}
+	return nil
 }
 
 func UploadFile(cfg *iqshell.Config, info UploadInfo) {
@@ -60,6 +79,8 @@ func UploadFile(cfg *iqshell.Config, info UploadInfo) {
 	}); !shouldContinue {
 		return
 	}
+
+	log.DebugF("upload config:%+v", info)
 
 	info.CacheDir = workspace.GetJobDir()
 	info.Progress = progress.NewPrintProgress(" 进度")
@@ -126,7 +147,7 @@ func createTokenProvider(info *UploadInfo) (provider func() string, err *data.Co
 }
 
 func createTokenProviderWithMac(mac *qbox.Mac, info *UploadInfo) func() string {
-	policy := *info.Policy
+	policy := info.Policy
 	policy.Scope = info.ToBucket
 	policy.InsertOnly = 1 // 仅新增不覆盖
 	if info.Overwrite {

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/spf13/cobra"
 
 	"github.com/qiniu/qshell/v2/docs"
@@ -48,9 +47,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		LogRotate = 7
 	)
 	info := operations.BatchUpload2Info{
-		UploadConfig: operations.UploadConfig{
-			Policy: &storage.PutPolicy{},
-		},
+		UploadConfig: operations.UploadConfig{},
 	}
 	cmd := &cobra.Command{
 		Use:   "qupload2",
@@ -102,19 +99,34 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().IntVarP(&info.FileType, "storage", "", 0, "set storage type of file, same to --file-type")
 	_ = cmd.Flags().MarkDeprecated("storage", "use --file-type instead") // 废弃 storage
 
-	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
-	cmd.Flags().StringVarP(&info.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
 	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindUpIp, "bind-up-ip", "", "upload host ip to bind")
 	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindRsIp, "bind-rs-ip", "", "rs host ip to bind")
 	//cmd.Flags().StringVar(&cfg.CmdCfg.Up.BindNicIp, "bind-nic-ip", "", "local network interface card to bind")
 
+	cmd.Flags().StringVarP(&info.EndUser, "end-user", "", "", "Owner identification")
+	cmd.Flags().StringVarP(&info.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "upload callback host")
+	cmd.Flags().StringVarP(&info.CallbackBody, "callback-body", "", "", "upload callback body")
+	cmd.Flags().StringVarP(&info.CallbackBodyType, "callback-body-type", "", "", "upload callback body type")
+	cmd.Flags().StringVarP(&info.PersistentOps, "persistent-ops", "", "", "List of pre-transfer persistence processing instructions that are triggered after successful resource upload. This parameter is not supported when fileType=2 or 3 (upload archive storage or deep archive storage files). Supports magic variables and custom variables. Each directive is an API specification string, and multiple directives are separated by ;.")
+	cmd.Flags().StringVarP(&info.PersistentNotifyURL, "persistent-notify-url", "", "", "URL to receive notification of persistence processing results. It must be a valid URL that can make POST requests normally on the public Internet and respond successfully. The content obtained by this URL is consistent with the processing result of the persistence processing status query. To send a POST request whose body format is application/json, you need to read the body of the request in the form of a read stream to obtain it.")
+	cmd.Flags().StringVarP(&info.PersistentPipeline, "persistent-pipeline", "", "", "Transcoding queue name. After the resource is successfully uploaded, an independent queue is designated for transcoding when transcoding is triggered. If it is empty, it means that the public queue is used, and the processing speed is slower. It is recommended to use a dedicated queue.")
+	cmd.Flags().IntVarP(&info.DetectMime, "detect-mime", "", 0, `Turn on the MimeType detection function and perform detection according to the following rules; if the correct value cannot be detected, application/octet-stream will be used by default.
+If set to a value of 1, the file MimeType information passed by the uploader will be ignored, and the MimeType value will be detected in the following order:
+	1. Detection content;
+	2. Check the file extension;
+	3. Check the Key extension.
+The default value is set to 0.If the uploader specifies MimeType (except application/octet-stream), this value will be used directly. Otherwise, the MimeType value will be detected in the following order:
+	1. Check the file extension;
+	2. Check the Key extension;
+	3. Detect content.
+Set to a value of -1 and use this value regardless of what value is specified on the uploader.`)
+	cmd.Flags().Uint64VarP(&info.TrafficLimit, "traffic-limit", "", 0, "Upload request single link speed limit to control client bandwidth usage. The speed limit value range is 819200 ~ 838860800, and the unit is bit/s.")
 	return cmd
 }
 
 var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	info := operations.SyncInfo{
-		Policy: &storage.PutPolicy{},
-	}
+	info := operations.SyncInfo{}
 	cmd := &cobra.Command{
 		Use:   "sync <SrcResUrl> <Buckets> [-k <Key>]",
 		Short: "Sync big file to qiniu bucket",
@@ -141,13 +153,30 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "", false, "overwrite the file of same key in bucket")
 
+	cmd.Flags().StringVarP(&info.Policy.EndUser, "end-user", "", "", "Owner identification")
+	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
+	cmd.Flags().StringVarP(&info.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
+	cmd.Flags().StringVarP(&info.Policy.CallbackBody, "callback-body", "", "", "upload callback body")
+	cmd.Flags().StringVarP(&info.Policy.CallbackBodyType, "callback-body-type", "", "", "upload callback body type")
+	cmd.Flags().StringVarP(&info.Policy.PersistentOps, "persistent-ops", "", "", "List of pre-transfer persistence processing instructions that are triggered after successful resource upload. This parameter is not supported when fileType=2 or 3 (upload archive storage or deep archive storage files). Supports magic variables and custom variables. Each directive is an API specification string, and multiple directives are separated by ;.")
+	cmd.Flags().StringVarP(&info.Policy.PersistentNotifyURL, "persistent-notify-url", "", "", "URL to receive notification of persistence processing results. It must be a valid URL that can make POST requests normally on the public Internet and respond successfully. The content obtained by this URL is consistent with the processing result of the persistence processing status query. To send a POST request whose body format is application/json, you need to read the body of the request in the form of a read stream to obtain it.")
+	cmd.Flags().StringVarP(&info.Policy.PersistentPipeline, "persistent-pipeline", "", "", "Transcoding queue name. After the resource is successfully uploaded, an independent queue is designated for transcoding when transcoding is triggered. If it is empty, it means that the public queue is used, and the processing speed is slower. It is recommended to use a dedicated queue.")
+	cmd.Flags().IntVarP(&info.Policy.DetectMime, "detect-mime", "", 0, `Turn on the MimeType detection function and perform detection according to the following rules; if the correct value cannot be detected, application/octet-stream will be used by default.
+If set to a value of 1, the file MimeType information passed by the uploader will be ignored, and the MimeType value will be detected in the following order:
+	1. Detection content;
+	2. Check the file extension;
+	3. Check the Key extension.
+The default value is set to 0.If the uploader specifies MimeType (except application/octet-stream), this value will be used directly. Otherwise, the MimeType value will be detected in the following order:
+	1. Check the file extension;
+	2. Check the Key extension;
+	3. Detect content.
+Set to a value of -1 and use this value regardless of what value is specified on the uploader.`)
+	cmd.Flags().Uint64VarP(&info.Policy.TrafficLimit, "traffic-limit", "", 0, "Upload request single link speed limit to control client bandwidth usage. The speed limit value range is 819200 ~ 838860800, and the unit is bit/s.")
 	return cmd
 }
 
 var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	info := operations.UploadInfo{
-		Policy: &storage.PutPolicy{},
-	}
+	info := operations.UploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "fput <Bucket> <Key> <LocalFile>",
 		Short: "Form upload a local file",
@@ -174,15 +203,31 @@ var formUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	_ = cmd.Flags().MarkDeprecated("storage", "use --file-type instead") // 废弃 storage
 
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "uphost")
+
+	cmd.Flags().StringVarP(&info.Policy.EndUser, "end-user", "", "", "Owner identification")
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
+	cmd.Flags().StringVarP(&info.Policy.CallbackBody, "callback-body", "", "", "upload callback body")
+	cmd.Flags().StringVarP(&info.Policy.CallbackBodyType, "callback-body-type", "", "", "upload callback body type")
+	cmd.Flags().StringVarP(&info.Policy.PersistentOps, "persistent-ops", "", "", "List of pre-transfer persistence processing instructions that are triggered after successful resource upload. This parameter is not supported when fileType=2 or 3 (upload archive storage or deep archive storage files). Supports magic variables and custom variables. Each directive is an API specification string, and multiple directives are separated by ;.")
+	cmd.Flags().StringVarP(&info.Policy.PersistentNotifyURL, "persistent-notify-url", "", "", "URL to receive notification of persistence processing results. It must be a valid URL that can make POST requests normally on the public Internet and respond successfully. The content obtained by this URL is consistent with the processing result of the persistence processing status query. To send a POST request whose body format is application/json, you need to read the body of the request in the form of a read stream to obtain it.")
+	cmd.Flags().StringVarP(&info.Policy.PersistentPipeline, "persistent-pipeline", "", "", "Transcoding queue name. After the resource is successfully uploaded, an independent queue is designated for transcoding when transcoding is triggered. If it is empty, it means that the public queue is used, and the processing speed is slower. It is recommended to use a dedicated queue.")
+	cmd.Flags().IntVarP(&info.Policy.DetectMime, "detect-mime", "", 0, `Turn on the MimeType detection function and perform detection according to the following rules; if the correct value cannot be detected, application/octet-stream will be used by default.
+If set to a value of 1, the file MimeType information passed by the uploader will be ignored, and the MimeType value will be detected in the following order:
+	1. Detection content;
+	2. Check the file extension;
+	3. Check the Key extension.
+The default value is set to 0.If the uploader specifies MimeType (except application/octet-stream), this value will be used directly. Otherwise, the MimeType value will be detected in the following order:
+	1. Check the file extension;
+	2. Check the Key extension;
+	3. Detect content.
+Set to a value of -1 and use this value regardless of what value is specified on the uploader.`)
+	cmd.Flags().Uint64VarP(&info.Policy.TrafficLimit, "traffic-limit", "", 0, "Upload request single link speed limit to control client bandwidth usage. The speed limit value range is 819200 ~ 838860800, and the unit is bit/s.")
 	return cmd
 }
 
 var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	info := operations.UploadInfo{
-		Policy: &storage.PutPolicy{},
-	}
+	info := operations.UploadInfo{}
 	cmd := &cobra.Command{
 		Use:   "rput <Bucket> <Key> <LocalFile>",
 		Short: "Resumable upload a local file",
@@ -217,8 +262,26 @@ var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 	cmd.Flags().IntVarP(&info.ResumeWorkerCount, "worker", "c", 3, "worker count")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "uphost")
+
+	cmd.Flags().StringVarP(&info.Policy.EndUser, "end-user", "", "", "Owner identification")
 	cmd.Flags().StringVarP(&info.Policy.CallbackURL, "callback-urls", "l", "", "upload callback urls, separated by comma")
 	cmd.Flags().StringVarP(&info.Policy.CallbackHost, "callback-host", "T", "", "upload callback host")
+	cmd.Flags().StringVarP(&info.Policy.CallbackBody, "callback-body", "", "", "upload callback body")
+	cmd.Flags().StringVarP(&info.Policy.CallbackBodyType, "callback-body-type", "", "", "upload callback body type")
+	cmd.Flags().StringVarP(&info.Policy.PersistentOps, "persistent-ops", "", "", "List of pre-transfer persistence processing instructions that are triggered after successful resource upload. This parameter is not supported when fileType=2 or 3 (upload archive storage or deep archive storage files). Supports magic variables and custom variables. Each directive is an API specification string, and multiple directives are separated by ;.")
+	cmd.Flags().StringVarP(&info.Policy.PersistentNotifyURL, "persistent-notify-url", "", "", "URL to receive notification of persistence processing results. It must be a valid URL that can make POST requests normally on the public Internet and respond successfully. The content obtained by this URL is consistent with the processing result of the persistence processing status query. To send a POST request whose body format is application/json, you need to read the body of the request in the form of a read stream to obtain it.")
+	cmd.Flags().StringVarP(&info.Policy.PersistentPipeline, "persistent-pipeline", "", "", "Transcoding queue name. After the resource is successfully uploaded, an independent queue is designated for transcoding when transcoding is triggered. If it is empty, it means that the public queue is used, and the processing speed is slower. It is recommended to use a dedicated queue.")
+	cmd.Flags().IntVarP(&info.Policy.DetectMime, "detect-mime", "", 0, `Turn on the MimeType detection function and perform detection according to the following rules; if the correct value cannot be detected, application/octet-stream will be used by default.
+If set to a value of 1, the file MimeType information passed by the uploader will be ignored, and the MimeType value will be detected in the following order:
+	1. Detection content;
+	2. Check the file extension;
+	3. Check the Key extension.
+The default value is set to 0. If the uploader specifies MimeType (except application/octet-stream), this value will be used directly. Otherwise, the MimeType value will be detected in the following order:
+	1. Check the file extension;
+	2. Check the Key extension;
+	3. Detect content.
+Set to a value of -1 and use this value regardless of what value is specified on the uploader.`)
+	cmd.Flags().Uint64VarP(&info.Policy.TrafficLimit, "traffic-limit", "", 0, "Upload request single link speed limit to control client bandwidth usage. The speed limit value range is 819200 ~ 838860800, and the unit is bit/s.")
 	return cmd
 }
 

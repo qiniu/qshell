@@ -90,6 +90,27 @@ $ qshell qupload --doc
   - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qdownload/$jobId`
   - 注意 `jobId` 是根据上传任务动态生成；具体方式为 MD5("$SrcDir:$Bucket:$FileList")； `CurrentUserName` 当前用户的名称
 - worker_count：分片上传中单个文件并发上传的分片数；默认为 3。【可选】
+- callback_urls：上传回调地址，可以指定多个地址，以逗号分开。【可选】
+- callback_host：上传回调HOST, 必须和 CallbackUrls 一起指定。 【可选】
+- callback_body：上传成功后，七牛云向业务服务器发送 Content-Type: application/x-www-form-urlencoded 的 POST 请求。业务服务器可以通过直接读取请求的 query 来获得该字段，支持魔法变量和自定义变量。callbackBody 要求是合法的 url query string。例如key=$(key)&hash=$(etag)&w=$(imageInfo.width)&h=$(imageInfo.height)。如果callbackBodyType指定为application/json，则callbackBody应为json格式，例如:{“key”:"$(key)",“hash”:"$(etag)",“w”:"$(imageInfo.width)",“h”:"$(imageInfo.height)"}。【可选】
+- callback_body_type：上传成功后，七牛云向业务服务器发送回调通知 callbackBody 的 Content-Type。默认为 application/x-www-form-urlencoded，也可设置为 application/json。【可选】
+- end_user：上传成功后，七牛云向业务服务器发送回调通知 callbackBody 的 Content-Type。默认为 application/x-www-form-urlencoded，也可设置为 application/json。【可选】
+- persistent_ops：资源上传成功后触发执行的预转持久化处理指令列表。fileType=2或3（上传归档存储或深度归档存储文件）时，不支持使用该参数。支持魔法变量和自定义变量。每个指令是一个 API 规格字符串，多个指令用;分隔。【可选】
+- persistent_notify_url：接收持久化处理结果通知的 URL。必须是公网上可以正常进行 POST 请求并能成功响应的有效 URL。该 URL 获取的内容和持久化处理状态查询的处理结果一致。发送 body 格式是 Content-Type 为 application/json 的 POST 请求，需要按照读取流的形式读取请求的 body 才能获取。【可选】
+- persistent_pipeline：转码队列名。资源上传成功后，触发转码时指定独立的队列进行转码。为空则表示使用公用队列，处理速度比较慢。建议使用专用队列。【可选】
+- detect_mime：开启 MimeType 侦测功能，并按照下述规则进行侦测；如不能侦测出正确的值，会默认使用 application/octet-stream 。【可选】
+```
+    1. 设为 1 值，则忽略上传端传递的文件 MimeType 信息，并按如下顺序侦测 MimeType 值：
+        1) 侦测内容；
+        2) 检查文件扩展名；
+        3) 检查 Key 扩展名。
+    2. 默认设为 0 值，如上传端指定了 MimeType（application/octet-stream 除外）则直接使用该值，否则按如下顺序侦测 MimeType 值：
+        1) 检查文件扩展名；
+        2) 检查 Key 扩展名；
+        3) 侦测内容。
+    3. 设为 -1 值，无论上传端指定了何值直接使用该值。
+```  
+- traffic_limit：上传请求单链接速度限制，控制客户端带宽占用。限速值取值范围为 819200 ~ 838860800，单位为 bit/s。【可选】
 
 
 对于那么多的参数，我们可以分为几类来解释：

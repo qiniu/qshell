@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/qiniu/go-sdk/v7/storage"
-
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -45,7 +43,65 @@ type UploadConfig struct {
 	RecordRoot             string `json:"record_root,omitempty"`
 	SequentialReadFile     bool   `json:"sequential_read_file"` // 文件顺序读
 
-	Policy *storage.PutPolicy `json:"policy"`
+	// 唯一属主标识。特殊场景下非常有用，例如根据 App-Client 标识给图片或视频打水印。
+	EndUser string `json:"end_user,omitempty"`
+
+	// 上传成功后，七牛云向业务服务器发送 POST 请求的 URL。必须是公网上可以正常进行 POST 请求并能响应 HTTP/1.1 200 OK 的有效 URL。
+	// 另外，为了给客户端有一致的体验，我们要求 callbackUrl 返回包 Content-Type 为 “application/json”，即返回的内容必须是合法的
+	// JSON 文本。出于高可用的考虑，本字段允许设置多个 callbackUrl（用英文符号 ; 分隔），在前一个 callbackUrl 请求失败的时候会依次
+	// 重试下一个 callbackUrl。一个典型例子是：http://<ip1>/callback;http://<ip2>/callback，并同时指定下面的 callbackHost 字段。
+	// 在 callbackUrl 中使用 ip 的好处是减少对 dns 解析的依赖，可改善回调的性能和稳定性。指定 callbackUrl，必须指定 callbackbody，
+	// 且值不能为空。
+	CallbackURL string `json:"callback_url,omitempty"`
+
+	// 上传成功后，七牛云向业务服务器发送回调通知时的 Host 值。与 callbackUrl 配合使用，仅当设置了 callbackUrl 时才有效。
+	CallbackHost string `json:"callback_host,omitempty"`
+
+	// 上传成功后，七牛云向业务服务器发送 Content-Type: application/x-www-form-urlencoded 的 POST 请求。业务服务器可以通过直接读取
+	// 请求的 query 来获得该字段，支持魔法变量和自定义变量。callbackBody 要求是合法的 url query string。
+	// 例如key=$(key)&hash=$(etag)&w=$(imageInfo.width)&h=$(imageInfo.height)。如果callbackBodyType指定为application/json，
+	// 则callbackBody应为json格式，例如:{“key”:"$(key)",“hash”:"$(etag)",“w”:"$(imageInfo.width)",“h”:"$(imageInfo.height)"}。
+	CallbackBody string `json:"callback_body,omitempty"`
+
+	// 上传成功后，七牛云向业务服务器发送回调通知 callbackBody 的 Content-Type。默认为 application/x-www-form-urlencoded，也可设置
+	// 为 application/json。
+	CallbackBodyType string `json:"callback_body_type,omitempty"`
+
+	// 资源上传成功后触发执行的预转持久化处理指令列表。fileType=2或3（上传归档存储或深度归档存储文件）时，不支持使用该参数。支持魔法变量和自
+	// 定义变量。每个指令是一个 API 规格字符串，多个指令用;分隔。请参阅persistenOps详解与示例。同时添加 persistentPipeline 字段，使用专
+	// 用队列处理，请参阅persistentPipeline。
+	PersistentOps string `json:"persistent_ops,omitempty"`
+
+	// 接收持久化处理结果通知的 URL。必须是公网上可以正常进行 POST 请求并能响应 HTTP/1.1 200 OK 的有效 URL。该 URL 获取的内容和持久化处
+	// 理状态查询的处理结果一致。发送 body 格式是 Content-Type 为 application/json 的 POST 请求，需要按照读取流的形式读取请求的 body
+	// 才能获取。
+	PersistentNotifyURL string `json:"persistent_notify_url,omitempty"`
+
+	// 转码队列名。资源上传成功后，触发转码时指定独立的队列进行转码。为空则表示使用公用队列，处理速度比较慢。建议使用专用队列。
+	PersistentPipeline string `json:"persistent_pipeline,omitempty"`
+
+	// saveKey 的优先级设置。为 true 时，saveKey不能为空，会忽略客户端指定的key，强制使用saveKey进行文件命名。参数不设置时，
+	// 默认值为false
+	ForceSaveKey bool `json:"force_save_key,omitempty"`
+
+	// 开启 MimeType 侦测功能，并按照下述规则进行侦测；如不能侦测出正确的值，会默认使用 application/octet-stream 。
+	// 默认设为 0 时：如上传端指定了 MimeType 则直接使用该值，否则按如下顺序侦测 MimeType 值：
+	//		1. 检查文件扩展名；
+	//		2. 检查 Key 扩展名；
+	//		3. 侦测内容。
+	// 设为 1 时：则忽略上传端传递的文件 MimeType 信息，并按如下顺序侦测 MimeType 值：
+	//		1. 侦测内容；
+	//		2. 检查文件扩展名；
+	//		3. 检查 Key 扩展名。
+	// 设为 -1 时：无论上传端指定了何值直接使用该值。
+	DetectMime int `json:"detect_mime,omitempty"`
+
+	CallbackFetchKey uint8 `json:"callback_fetch_key,omitempty"`
+
+	DeleteAfterDays int `json:"delete_after_days,omitempty"`
+
+	// 上传单链接限速，单位：bit/s；范围：819200 - 838860800（即800Kb/s - 800Mb/s），如果超出该范围将返回 400 错误
+	TrafficLimit uint64 `json:"traffic_limit,omitempty"`
 }
 
 func DefaultUploadConfig() UploadConfig {
@@ -78,7 +134,6 @@ func DefaultUploadConfig() UploadConfig {
 		DisableForm:            false,
 		WorkerCount:            3,
 		RecordRoot:             "",
-		Policy:                 nil,
 	}
 }
 
@@ -164,21 +219,14 @@ func (up *UploadConfig) Check() *data.CodeError {
 		}
 	}
 
-	if up.Policy != nil {
-		//if (up.Policy.CallbackURL == "" && up.Policy.CallbackHost != "") ||
-		//	(up.Policy.CallbackURL != "" && up.Policy.CallbackHost == "") {
-		//	return data.NewEmptyError().AppendDesc("callbackUrls and callback must exist at the same time")
-		//}
-
-		if up.Policy.CallbackURL != "" {
-			callbackUrls := strings.Replace(up.Policy.CallbackURL, ",", ";", -1)
-			up.Policy.CallbackURL = callbackUrls
-			if len(up.Policy.CallbackBody) == 0 {
-				up.Policy.CallbackBody = "key=$(key)&hash=$(etag)"
-			}
-			if len(up.Policy.CallbackBodyType) == 0 {
-				up.Policy.CallbackBodyType = "application/x-www-form-urlencoded"
-			}
+	if up.CallbackURL != "" {
+		callbackUrls := strings.Replace(up.CallbackURL, ",", ";", -1)
+		up.CallbackURL = callbackUrls
+		if len(up.CallbackBody) == 0 {
+			up.CallbackBody = "key=$(key)&hash=$(etag)"
+		}
+		if len(up.CallbackBodyType) == 0 {
+			up.CallbackBodyType = "application/x-www-form-urlencoded"
 		}
 	}
 

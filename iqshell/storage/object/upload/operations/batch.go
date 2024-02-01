@@ -77,10 +77,8 @@ func BatchUpload(cfg *iqshell.Config, info BatchUploadInfo) {
 		EnableStdin:        info.EnableStdin,
 		UploadConfig:       DefaultUploadConfig(),
 	}
-	upload2Info.UploadConfig.Policy = &storage.PutPolicy{
-		CallbackURL:  info.CallbackUrl,
-		CallbackHost: info.CallbackHost,
-	}
+	upload2Info.UploadConfig.CallbackHost = info.CallbackHost
+	upload2Info.UploadConfig.CallbackURL = info.CallbackUrl
 
 	if err := utils.UnMarshalFromFile(info.UploadConfigFile, &upload2Info.UploadConfig); err != nil {
 		data.SetCmdStatusError()
@@ -122,9 +120,6 @@ func (info *BatchUpload2Info) Check() *data.CodeError {
 	}
 	if err := info.UploadConfig.Check(); err != nil {
 		return err
-	}
-	if info.UploadConfig.Policy == nil {
-		info.UploadConfig.Policy = &storage.PutPolicy{}
 	}
 	if len(info.ItemSeparate) == 0 {
 		info.ItemSeparate = data.DefaultLineSeparate
@@ -168,6 +163,7 @@ func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 
 func batchUpload(info BatchUpload2Info) {
 
+	log.DebugF("upload config:%+v", info)
 	dbPath := filepath.Join(workspace.GetJobDir(), ".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
 
@@ -288,8 +284,33 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 							Progress:            nil,
 						},
 						RelativePathToSrcPath: fileRelativePath,
-						Policy:                uploadConfig.Policy,
-						DeleteOnSuccess:       uploadConfig.DeleteOnSuccess,
+						Policy: storage.PutPolicy{
+							Scope:               "",
+							IsPrefixalScope:     0,
+							Expires:             0,
+							InsertOnly:          0,
+							EndUser:             uploadConfig.EndUser,
+							ReturnURL:           "",
+							ReturnBody:          "",
+							CallbackURL:         uploadConfig.CallbackURL,
+							CallbackHost:        uploadConfig.CallbackHost,
+							CallbackBody:        uploadConfig.CallbackBody,
+							CallbackBodyType:    uploadConfig.CallbackBodyType,
+							PersistentOps:       uploadConfig.PersistentOps,
+							PersistentNotifyURL: uploadConfig.PersistentNotifyURL,
+							PersistentPipeline:  uploadConfig.PersistentPipeline,
+							ForceSaveKey:        false,
+							SaveKey:             "",
+							FsizeMin:            0,
+							FsizeLimit:          0,
+							DetectMime:          uploadConfig.DetectMime,
+							MimeLimit:           "",
+							FileType:            uploadConfig.FileType,
+							CallbackFetchKey:    uploadConfig.CallbackFetchKey,
+							DeleteAfterDays:     uploadConfig.DeleteAfterDays,
+							TrafficLimit:        uploadConfig.TrafficLimit,
+						},
+						DeleteOnSuccess: uploadConfig.DeleteOnSuccess,
 					}
 					uploadInfo.TokenProvider = createTokenProviderWithMac(mac, uploadInfo)
 					return uploadInfo, nil
