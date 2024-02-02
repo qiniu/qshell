@@ -29,6 +29,11 @@ qshell 是利用 [七牛文档上公开的 API](http://developer.qiniu.com) 实�
 | Mac OS(10.12以上) amd64  | [下载](https://github.com/qiniu/qshell/releases/download/v2.13.0/qshell-v2.13.0-darwin-amd64.tar.gz) |
 | Mac OS arm64            | [下载](https://github.com/qiniu/qshell/releases/download/v2.13.0/qshell-v2.13.0-darwin-arm64.tar.gz) |
 
+如果您已经拥有 Go 语言的环境，那么你可以直接使用以下命令来下载，二进制将会被安装到 `$GOPATH/bin`
+
+```bash
+ go install github.com/qiniu/qshell/v2/qshell@latest
+```
 
 ## 安装
 
@@ -210,7 +215,6 @@ qshell 命令配置 > 账号配置 > 全局配置
 ```
 
 这样 qshell 会优先使用配置文件中配置的 ak/sk 信息，如果在这个配置文件中没有找到密钥信息，那么会去 qshell account 记录的本地数据库寻找.
-
 
 ## 命令列表
 - `v2.7.0 及以上版本，命令列表及命令使用详细文档说明，支持直接使用 qshell 自助查看。`
