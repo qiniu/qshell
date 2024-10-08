@@ -194,7 +194,7 @@ var once sync.Once
 func uploadSource(info *ApiInfo) (*ApiResult, *data.CodeError) {
 	once.Do(func() {
 		storage.SetSettings(&storage.Settings{
-			TaskQsize: 0,
+			TaskQsize: info.ResumeWorkerCount,
 			Workers:   info.ResumeWorkerCount,
 			ChunkSize: 0,
 			PartSize:  0,
