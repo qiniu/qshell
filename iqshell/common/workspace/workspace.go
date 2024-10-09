@@ -2,13 +2,16 @@ package workspace
 
 import (
 	"context"
+	"sync"
+
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/go-sdk/v7/storagev2/http_client"
+	"github.com/qiniu/go-sdk/v7/storagev2/region"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"sync"
 )
 
 const (
@@ -62,6 +65,20 @@ func GetStorageConfig() *storage.Config {
 		Zone:          r,
 		CentralRsHost: cfg.Hosts.GetOneRs(),
 	}
+}
+
+func GetHttpClientOptions() *http_client.Options {
+	var options http_client.Options
+	options.UseInsecureProtocol = !cfg.IsUseHttps()
+	if region := cfg.GetRegion(); region != nil {
+		options.Regions = region
+	}
+	ucHost := cfg.Hosts.GetOneUc()
+	if len(ucHost) > 0 {
+		log.DebugF("ucHost: %s", ucHost)
+		options.SetBucketHosts(region.Endpoints{Preferred: []string{ucHost}})
+	}
+	return &options
 }
 
 func GetAccount() (account.Account, *data.CodeError) {
