@@ -1,6 +1,8 @@
 package object
 
 import (
+	"context"
+
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/account"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
@@ -26,16 +28,18 @@ func PreFopStatus(info PreFopStatusApiInfo) (storage.PrefopRet, *data.CodeError)
 	return ret, data.ConvertError(e)
 }
 
-type PreFopApiInfo struct {
-	Bucket      string `json:"bucket"`
-	Key         string `json:"key"`
-	Fops        string `json:"fops"`
-	Pipeline    string `json:"pipeline"`
-	NotifyURL   string `json:"notify_url"`
-	NotifyForce bool   `json:"notify_force"`
+type PfopApiInfo struct {
+	Bucket             string
+	Key                string
+	Fops               string
+	Pipeline           string
+	NotifyURL          string
+	Force              bool
+	Type               int64
+	WorkflowTemplateID string
 }
 
-func PreFop(info PreFopApiInfo) (string, *data.CodeError) {
+func Pfop(info PfopApiInfo) (string, *data.CodeError) {
 	if len(info.Bucket) == 0 {
 		return "", alert.CannotEmptyError("bucket", "")
 	}
@@ -44,7 +48,7 @@ func PreFop(info PreFopApiInfo) (string, *data.CodeError) {
 		return "", alert.CannotEmptyError("key", "")
 	}
 
-	if len(info.Fops) == 0 {
+	if len(info.Fops) == 0 && len(info.WorkflowTemplateID) == 0 {
 		return "", alert.CannotEmptyError("fops", "")
 	}
 
@@ -52,8 +56,22 @@ func PreFop(info PreFopApiInfo) (string, *data.CodeError) {
 	if err != nil {
 		return "", err
 	}
-	persistentId, e := opManager.Pfop(info.Bucket, info.Key, info.Fops, info.Pipeline, info.NotifyURL, info.NotifyForce)
-	return persistentId, data.ConvertError(e)
+	force := int64(0)
+	if info.Force {
+		force = 1
+	}
+	pfopRequest := storage.PfopRequest{
+		BucketName:         info.Bucket,
+		ObjectName:         info.Key,
+		Fops:               info.Fops,
+		NotifyUrl:          info.NotifyURL,
+		Force:              force,
+		Type:               info.Type,
+		Pipeline:           info.Pipeline,
+		WorkflowTemplateID: info.WorkflowTemplateID,
+	}
+	pfopRet, e := opManager.PfopV2(context.Background(), &pfopRequest)
+	return pfopRet.PersistentID, data.ConvertError(e)
 }
 
 func getOperationManager(bucket string) (*storage.OperationManager, *data.CodeError) {

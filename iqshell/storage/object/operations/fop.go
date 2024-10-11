@@ -33,16 +33,16 @@ func PreFopStatus(cfg *iqshell.Config, info PreFopStatusInfo) {
 	})
 	if err != nil {
 		data.SetCmdStatusError()
-		log.ErrorF("pre fog status error:%v", err)
+		log.ErrorF("prefop status error:%v", err)
 		return
 	}
 
 	log.Alert(ret.String())
 }
 
-type PreFopInfo object.PreFopApiInfo
+type PfopInfo object.PfopApiInfo
 
-func (info *PreFopInfo) Check() *data.CodeError {
+func (info *PfopInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
@@ -51,23 +51,23 @@ func (info *PreFopInfo) Check() *data.CodeError {
 		return alert.CannotEmptyError("Key", "")
 	}
 
-	if len(info.Fops) == 0 {
+	if len(info.Fops) == 0 && len(info.WorkflowTemplateID) == 0 {
 		return alert.CannotEmptyError("Fops", "")
 	}
 	return nil
 }
 
-func PreFop(cfg *iqshell.Config, info PreFopInfo) {
+func Pfop(cfg *iqshell.Config, info PfopInfo) {
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
 		return
 	}
 
-	persistentId, err := object.PreFop(object.PreFopApiInfo(info))
+	persistentId, err := object.Pfop(object.PfopApiInfo(info))
 	if err != nil {
 		data.SetCmdStatusError()
-		log.ErrorF("pre fog error:%v", err)
+		log.ErrorF("pfop error:%v", err)
 		return
 	}
 	log.Alert(persistentId)

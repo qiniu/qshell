@@ -26,8 +26,8 @@ var preFopStatusCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
-var preFopCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.PreFopInfo{}
+var pfopCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	var info = operations.PfopInfo{}
 	var cmd = &cobra.Command{
 		Use:   "pfop <Bucket> <Key> <fopCommand>",
 		Short: "Issue a request to process file in bucket",
@@ -42,14 +42,17 @@ var preFopCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if len(args) > 2 {
 				info.Fops = args[2]
 			}
-			operations.PreFop(cfg, info)
+			operations.Pfop(cfg, info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.Pipeline, "pipeline", "p", "", "task pipeline")
 	cmd.Flags().StringVarP(&info.NotifyURL, "notify-url", "u", "", "notfiy url")
+	cmd.Flags().StringVarP(&info.WorkflowTemplateID, "workflow-template-id", "", "", "Workflow template ID")
 
-	cmd.Flags().BoolVarP(&info.NotifyForce, "force", "y", false, "force execute")
-	cmd.Flags().BoolVarP(&info.NotifyForce, "force-old", "f", false, "force execute, deprecated")
+	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force execute")
+	cmd.Flags().BoolVarP(&info.Force, "force-old", "f", false, "force execute, deprecated")
+
+	cmd.Flags().Int64VarP(&info.Type, "type", "", 0, "task type")
 	_ = cmd.Flags().MarkDeprecated("force-old", "use --force instead")
 
 	return cmd
@@ -61,7 +64,7 @@ func init() {
 
 func fopCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	superCmd.AddCommand(
-		preFopCmdBuilder(cfg),
+		pfopCmdBuilder(cfg),
 		preFopStatusCmdBuilder(cfg),
 	)
 }
