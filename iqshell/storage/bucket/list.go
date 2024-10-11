@@ -157,6 +157,13 @@ func List(info ListApiInfo,
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
 		lErr = nil
 		var hasMore = false
+		limit := info.V1Limit
+		if info.OutputLimit > 0 {
+			limit = info.OutputLimit - outputCount
+			if limit > info.V1Limit {
+				limit = info.V1Limit
+			}
+		}
 
 		if !workspace.IsCmdInterrupt() {
 			hasMore, lErr = list.ListBucket(workspace.GetContext(), list.ApiInfo{
@@ -166,7 +173,7 @@ func List(info ListApiInfo,
 				Prefix:     info.Prefix,
 				Delimiter:  info.Delimiter,
 				Marker:     info.Marker,
-				V1Limit:    info.V1Limit,
+				V1Limit:    limit,
 			}, func(marker string, dir string, listItem list.Item) (stop bool) {
 				if marker != info.Marker {
 					info.Marker = marker

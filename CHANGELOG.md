@@ -2,6 +2,9 @@
 ## 新增
 1. create-share / share-ls / share-cp 命令支持创建对文件夹的共享，列举和下载
 
+## 更新
+1. listbucket2 现在即使使用了 --limit 参数得到的 marker 也是精确的
+
 # 2.15.0
 ## 新增
 1. buckets 命令列举全量 bucket
