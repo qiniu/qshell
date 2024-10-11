@@ -14,7 +14,7 @@ qshell fput [--overwrite] [--callback-urls <CallbackUrls>] [--callback-host <Cal
 可以在命令行输入如下命令获取帮助文档：
 ```
 // 简单描述
-$ qshell fput -h 
+$ qshell fput -h
 
 // 详细文档（此文档）
 $ qshell fput --doc
@@ -27,8 +27,9 @@ $ qshell fput --doc
 - Bucket：空间名，可以为公开空间或私有空间【必选】
 - Key：文件保存在七牛空间的名称 【必选】
 - LocalFile：本地文件的路径【必选】
-  
+
 # 选项
+-    --accelerate：启用上传加速。【可选】
 -    --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
 - -t/--mimetype：指定文件的 MimeType。 【可选】
 -    --file-type：文件存储类型，默认为 `0`（标准存储），`1` 为低频存储，`2` 为归档存储，`3` 为深度归档存储，`4` 为归档直读存储。 【可选】
@@ -52,7 +53,7 @@ $ qshell fput --doc
         2) 检查 Key 扩展名；
         3) 侦测内容。
     3. 设为 -1 值，无论上传端指定了何值直接使用该值。
-```  
+```
 -    --traffic-limit：上传请求单链接速度限制，控制客户端带宽占用。限速值取值范围为 819200 ~ 838860800，单位为 bit/s。【可选】
 
 

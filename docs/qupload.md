@@ -11,7 +11,7 @@ qshell qupload [-c <ThreadCount>] [--success-list <SuccessFileName>] [--failure-
 可以在命令行输入如下命令获取帮助文档：
 ```
 // 简单描述
-$ qshell qupload -h 
+$ qshell qupload -h
 
 // 详细文档（此文档）
 $ qshell qupload --doc
@@ -25,6 +25,7 @@ $ qshell qupload --doc
 
 # 选项
 - -c/--worker：配置下载的并发协程数量（ThreadCount），默认为 1，即文件一个一个上传，对于大量小文件来说，可以通过提高该参数值来提升同步速度。关于 `ThreadCount` 的值，并不是越大越好，所以工具里面限制了范围 `[1, 2000]`（如果不在范围内则重置为 5），在实际情况下最好根据所拥有的上传带宽和文件的平均大小来计算下这个并发数，最简单的算法就是带宽除以平均文件大小即可得到并发数。 假设上传带宽有 10Mbps，文件平均大小 500KB，那么利用 10*1024/8/500 = 2.56，那么并发数差不多就是 3~6 左右。
+- --accelerate：启用上传加速
 - -s/--success-list：指定一个文件名字，导入上传成功的文件列表到该文件。
 - -e/--failure-list：指定一个文件名字， 导入上传失败的文件列表到该文件。
 - -w/--overwrite-list：指定一个文件名字， 导入存储空间中被覆盖的文件列表到该文件。
@@ -56,7 +57,8 @@ $ qshell qupload --doc
    "log_stdout"         :   true,
    "file_type"          :   0,
    "resumable_api_v2"   :   false,
-   "resumable_api_v2_part_size" : 4194304
+   "resumable_api_v2_part_size" : 4194304,
+   "uploading_acceleration" : true
 }
 ```
 参数说明：
@@ -83,10 +85,11 @@ $ qshell qupload --doc
 - delete_on_success：上传成功的文件，同时删除本地文件，以达到节约磁盘的目的，比如日志归档的场景，默认为 `false`，如果需要开启功能，设置为 `true` 即可。【可选】
 - resumable_api_v2：使用分片 V2 进行上传，默认为 `false` 使用分片 V1 。【可选】
 - resumable_api_v2_part_size：使用分片 V2 进行上传时定制分片大小，默认 4194304（4M） 。【可选】
+- uploading_acceleration：启用上传加速。【可选】
 - put_threshold：上传阈值，上传文件大小超过此值会使用分片上传，不超过使用表单上传；单位：B，默认为 8388608（8M） 。【可选】
 - sequential_read_file: 文件读为顺序读，不涉及跳读；开启后，上传中的分片数据会被加载至内存。此选项可能会增加挂载网络文件系统的文件上传速度。默认是：false。 【可选】
 - record_root：上传记录信息保存路径，包括日志文件和上传进度文件；默认为 `qshell` 上传目录；【可选】
-  - 通过 `-L` 指定工作目录时，`record_root` 则为此工作目录/qdownload/$jobId， 
+  - 通过 `-L` 指定工作目录时，`record_root` 则为此工作目录/qdownload/$jobId，
   - 未通过 `-L` 指定工作目录时为 `用户目录/.qshell/users/$CurrentUserName/qdownload/$jobId`
   - 注意 `jobId` 是根据上传任务动态生成；具体方式为 MD5("$SrcDir:$Bucket:$FileList")； `CurrentUserName` 当前用户的名称
 - worker_count：分片上传中单个文件并发上传的分片数；默认为 3。【可选】
@@ -109,7 +112,7 @@ $ qshell qupload --doc
         2) 检查 Key 扩展名；
         3) 侦测内容。
     3. 设为 -1 值，无论上传端指定了何值直接使用该值。
-```  
+```
 - traffic_limit：上传请求单链接速度限制，控制客户端带宽占用。限速值取值范围为 819200 ~ 838860800，单位为 bit/s。【可选】
 
 
@@ -184,9 +187,9 @@ See upload log at path /Users/jemy/.qshell/qupload/290438bcd0bcc7121bb22a56b1c95
   - 有，查看本地文件时间戳是否变化，检测服务文件修改时间是否变化，
     - 二者均未发生变化则认为文件未发生变化，不再上传
     - 本地/服务文件任一文件时间戳发生变化，则触发上传
-    
+
 上传
-- 是否配置检查文件是否存在（`check_exists`） 
+- 是否配置检查文件是否存在（`check_exists`）
   - 未配置，直接上传
   - 配置，查看文件是否配置检测 Hash（`check_hash`）。
       - 配置检测 Hash，则检查本地文件 Hash 是否和服务 Hash 一致
@@ -242,10 +245,10 @@ demo2.gif
 
 ### 默认的上传入口
 很多情况下，该工具的使用者的网络和七牛的网络都不是在一个内网，或者是机房或者是普通的办公网络和家庭网络。这种情况下，为了保证上传的速度和效率，必须走加速上传通道。目前本工具中使用的空间所在机房和对应的上传加速域名如下：
-- 华东: http://upload.qiniu.com 
-- 华北: http://upload-z1.qiniu.com 
-- 华南: http://upload-z2.qiniu.com 
-- 北美: http://upload-na0.qiniu.com 
+- 华东: http://upload.qiniu.com
+- 华北: http://upload-z1.qiniu.com
+- 华南: http://upload-z2.qiniu.com
+- 北美: http://upload-na0.qiniu.com
 - 东南亚: http://upload-as0.qiniup.com
 
 本工具会根据配置文件中指定的空间参数，自动获取所应该使用的默认加速域名，所以不需要担心是否需要额外设置上传域名。
@@ -255,10 +258,10 @@ demo2.gif
 - 华东
     - 上传加速域名：http(s)://upload.qiniup.com
     - 源站上传域名：http(s)://up.qiniup.com
-- 华北    
+- 华北
     - 上传加速域名：http(s)://upload-z1.qiniup.com
     - 源站上传域名：http(s)://up-z1.qiniup.com
-- 华南   
+- 华南
     - 上传加速域名：http(s)://upload-z2.qiniup.com
     - 源站上传域名：http(s)://up-z2.qiniup.com
 - 北美
@@ -325,7 +328,7 @@ demo2.gif
 
 命令格式：
 ```
-$ qshell qupload --success-list success.txt upload.conf 
+$ qshell qupload --success-list success.txt upload.conf
 ```
 特别提示：由于这些选项所指定的文件在每次运行命令时，如果文件已存在，则已有内容会被清空然后写入新的内容，所以注意每次命令运行指定不同的文件。
 

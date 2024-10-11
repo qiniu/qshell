@@ -41,7 +41,8 @@ type UploadConfig struct {
 	DisableForm            bool   `json:"disable_form,omitempty"`
 	WorkerCount            int    `json:"work_count,omitempty"` // 分片上传并发数
 	RecordRoot             string `json:"record_root,omitempty"`
-	SequentialReadFile     bool   `json:"sequential_read_file"` // 文件顺序读
+	SequentialReadFile     bool   `json:"sequential_read_file"`   // 文件顺序读
+	Accelerate             bool   `json:"uploading_acceleration"` // 开启上传加速
 
 	// 唯一属主标识。特殊场景下非常有用，例如根据 App-Client 标识给图片或视频打水印。
 	EndUser string `json:"end_user,omitempty"`

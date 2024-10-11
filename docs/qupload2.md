@@ -10,7 +10,7 @@ qshell qupload2 --src-dir=/home/jemy/temp --bucket=test
 `qupload2` 的 `--check-hash` 选项含义可参考 `qupload` 的 `check_hash` 配置；
 
 ```
-jemy•~» qshell qupload2 -h                                         
+jemy•~» qshell qupload2 -h
 ```
 
 ```
@@ -20,6 +20,7 @@ Usage:
   qshell qupload2 [flags]
 
 Flags:
+      --accelerate                       enable uploading acceleration
       --bucket string                    bucket
       --callback-body string             upload callback body
   -T, --callback-host string             upload callback host

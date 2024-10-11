@@ -1,6 +1,7 @@
 # 2.16.0
 ## 新增
 1. create-share / share-ls / share-cp 命令支持创建对文件夹的共享，列举和下载
+2. 上传命令支持额外的 accelerate 选项
 
 ## 更新
 1. listbucket2 现在即使使用了 --limit 参数得到的 marker 也是精确的

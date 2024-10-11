@@ -16,7 +16,7 @@ qshell sync <SrcResUrl> <Bucket> [-k <Key>]
 可以在命令行输入如下命令获取帮助文档：
 ```
 // 简单描述
-$ qshell sync -h 
+$ qshell sync -h
 
 // 详细文档（此文档）
 $ qshell sync --doc
@@ -30,6 +30,7 @@ $ qshell sync --doc
 - Bucket：空间名，可以为公开空间或者私有空间。 【必选】
 
 # 选项
+- --accelerate：启用上传加速。【可选】
 - -k/--key：该资源保存在空间中的 key，不配置时使用资源 Url 中文件名作为存储的 key。 【可选】
 - -u/--uphost：上传入口的 IP 地址，一般在大文件的情况下，可以指定上传入口的 IP 来减少 DNS 环节，提升同步速度。 【可选】
 - --file-type：文件存储类型，默认为 `0` (标准存储），`1` 为低频存储，`2` 为归档存储，`3` 为深度归档存储，`4` 为归档直读存储【可选】
@@ -44,7 +45,7 @@ $ qshell sync --doc
 -    --persistent-ops：资源上传成功后触发执行的预转持久化处理指令列表。fileType=2或3（上传归档存储或深度归档存储文件）时，不支持使用该参数。支持魔法变量和自定义变量。每个指令是一个 API 规格字符串，多个指令用;分隔。【可选】
 -    --persistent-notify-url：接收持久化处理结果通知的 URL。必须是公网上可以正常进行 POST 请求并能成功响应的有效 URL。该 URL 获取的内容和持久化处理状态查询的处理结果一致。发送 body 格式是 Content-Type 为 application/json 的 POST 请求，需要按照读取流的形式读取请求的 body 才能获取。【可选】
 -    --persistent-pipeline：转码队列名。资源上传成功后，触发转码时指定独立的队列进行转码。为空则表示使用公用队列，处理速度比较慢。建议使用专用队列。【可选】
--   --detect-mime：开启 MimeType 侦测功能，并按照下述规则进行侦测；如不能侦测出正确的值，会默认使用 application/octet-stream 。【可选】
+-    --detect-mime：开启 MimeType 侦测功能，并按照下述规则进行侦测；如不能侦测出正确的值，会默认使用 application/octet-stream 。【可选】
 ```
     1. 设为 1 值，则忽略上传端传递的文件 MimeType 信息，并按如下顺序侦测 MimeType 值：
         1) 侦测内容；
@@ -55,7 +56,7 @@ $ qshell sync --doc
         2) 检查 Key 扩展名；
         3) 侦测内容。
     3. 设为 -1 值，无论上传端指定了何值直接使用该值。
-```  
+```
 -    --traffic-limit：上传请求单链接速度限制，控制客户端带宽占用。限速值取值范围为 819200 ~ 838860800，单位为 bit/s。【可选】
 
 
