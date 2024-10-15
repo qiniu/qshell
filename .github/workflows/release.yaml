@@ -68,18 +68,18 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        goversion: "https://golang.org/dl/go1.20.1.linux-amd64.tar.gz"
+        goversion: "https://go.dev/dl/go1.23.2.linux-amd64.tar.gz"
         ldflags: -X "github.com/qiniu/qshell/v2/iqshell/common/version.version=${{ env.APP_VERSION }}" -extldflags "-static"
         project_path: "./main"
         retry: '100'
     - name: Upload Release Asset to Qiniu
       run: |
         set -e
-        cd ./main/build-artifacts-*
+        cd ./main/
         FILENAME="qshell-${{ env.APP_VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz"
         if [ "${{ matrix.goos }}" = "windows" ]; then
           FILENAME="qshell-${{ env.APP_VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.zip"
         fi
-        ../../qshell rput --resumable-api-v2 --overwrite "$PUBLISH_BUCKET_NAME" "$FILENAME" "$FILENAME"
+        ../qshell rput --resumable-api-v2 --overwrite "$PUBLISH_BUCKET_NAME" "$FILENAME" "$FILENAME"
       env:
         PUBLISH_BUCKET_NAME: ${{ secrets.PUBLISH_BUCKET_NAME }}
