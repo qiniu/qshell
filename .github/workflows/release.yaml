@@ -50,7 +50,7 @@ jobs:
           - goarch: arm64
             goos: windows
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set APP_VERSION env
       run: echo ::set-env name=APP_VERSION::$(cat ${GITHUB_EVENT_PATH} | jq -r .release.tag_name )
     - name: Prepare qshell
