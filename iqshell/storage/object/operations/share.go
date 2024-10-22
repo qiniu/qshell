@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	rand "math/rand/v2"
+	"math/rand"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -71,7 +71,7 @@ func createShare(cfg *iqshell.Config, info *CreateShareInfo) error {
 		bytes := []byte(randomExtractCodeChars)
 		extractCodeBytes := make([]byte, 0, 6)
 		for i := 0; i < 6; i++ {
-			n := rand.IntN(len(bytes))
+			n := rand.Intn(len(bytes))
 			extractCodeBytes = append(extractCodeBytes, bytes[n])
 		}
 		info.ExtractCode = string(extractCodeBytes)
