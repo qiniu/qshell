@@ -60,7 +60,7 @@ var listShareCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var copyShareCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = operations.CopyShareInfo{}
 	var cmd = &cobra.Command{
-		Use:   "share-cp --link=<Link> --to=<ToPath>",
+		Use:   "share-cp <Link> --to=<ToPath>",
 		Short: "Copy shared files",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.ShareCpType

@@ -411,7 +411,7 @@ func copyShare(cfg *iqshell.Config, info *CopyShareInfo) error {
 	} else {
 		downloadPath := toPath
 		if strings.HasSuffix(downloadPath, string(filepath.Separator)) {
-			offset := strings.LastIndex(downloadPath, "/")
+			offset := strings.LastIndex(fromPrefix, "/")
 			downloadPath += fromPrefix[(offset + 1):]
 		}
 		if err = os.MkdirAll(filepath.Dir(downloadPath), 0700); err != nil {
