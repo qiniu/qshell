@@ -32,7 +32,7 @@ var createShareCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&info.ExtractCode, "extract-code", "", "", "Specify extract code for the share, must consist of 6 alphabets and numbers")
-	cmd.Flags().Int64VarP(&info.DurationSeconds, "validity-period", "", 900, "Specify validity period in seconds, must be longer than 15 mintutes and shorter than 2 hours")
+	cmd.Flags().Int64VarP(&info.DurationSeconds, "validity-period", "", 900, "Specify validity period in seconds, must be longer than 1 mintutes and shorter than 2 hours")
 	cmd.Flags().StringVarP(&info.OutputPath, "output", "", "", "Specify path to save output")
 	return cmd
 }
@@ -73,6 +73,7 @@ var copyShareCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.ExtractCode, "extract-code", "", "", "Specify extract code for the share, must consist of 6 alphabets and numbers")
 	cmd.Flags().StringVarP(&info.FromPath, "from", "", "", "copy from path")
 	cmd.Flags().StringVarP(&info.ToPath, "to", "", "", "copy to path")
+	cmd.Flags().BoolVarP(&info.Recursive, "recursive", "r", false, "copy directories recursively")
 	return cmd
 }
 

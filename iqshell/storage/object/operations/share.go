@@ -150,6 +150,9 @@ func (info *ListShareInfo) Check() *data.CodeError {
 	if len(info.ExtractCode) == 0 {
 		return alert.CannotEmptyError("ExtractCode", "")
 	}
+	if info.Limit < 0 {
+		return alert.Error("Limit should not be negative", "")
+	}
 	return nil
 }
 
@@ -204,16 +207,15 @@ func listShare(cfg *iqshell.Config, info *ListShareInfo) error {
 	if err != nil {
 		return err
 	}
-	prefix := response.Prefix
-	if !strings.HasSuffix(prefix, "/") {
-		prefix += "/"
-	}
-	if info.Prefix != "" {
-		prefix += info.Prefix
+	prefix := info.Prefix
+	if prefix == "" {
+		prefix = response.Prefix
 	}
 	input := s3.ListObjectsV2Input{
 		Bucket: aws.String(response.BucketId),
-		Prefix: aws.String(prefix),
+	}
+	if prefix != "" {
+		input.Prefix = aws.String(prefix)
 	}
 	if info.Marker != "" {
 		input.ContinuationToken = aws.String(info.Marker)
@@ -233,15 +235,10 @@ func listShare(cfg *iqshell.Config, info *ListShareInfo) error {
 			return err
 		}
 		for _, s3Object := range listOutput.Contents {
-			relativePath := strings.TrimPrefix(aws.StringValue(s3Object.Key), prefix)
-			if relativePath == "" {
-				continue
-			}
 			if restListed > 0 {
 				restListed -= 1
 			}
-			s3Object.Key = aws.String(relativePath)
-			if strings.HasSuffix(relativePath, "/") && aws.Int64Value(s3Object.Size) == 0 {
+			if strings.HasSuffix(aws.StringValue(s3Object.Key), "/") && aws.Int64Value(s3Object.Size) == 0 {
 				printListedS3Directory(s3Object)
 				stats.directoryNumbers += 1
 			} else {
@@ -292,6 +289,7 @@ type CopyShareInfo struct {
 	ToPath      string
 	LinkURL     string
 	ExtractCode string
+	Recursive   bool
 }
 
 func (info *CopyShareInfo) Check() *data.CodeError {
@@ -365,12 +363,9 @@ func copyShare(cfg *iqshell.Config, info *CopyShareInfo) error {
 	}
 	s3Downloader := s3manager.NewDownloader(s3session)
 
-	fromPrefix := response.Prefix
-	if !strings.HasSuffix(fromPrefix, "/") {
-		fromPrefix += "/"
-	}
-	if info.FromPath != "" {
-		fromPrefix += info.FromPath
+	fromPrefix := info.FromPath
+	if fromPrefix == "" {
+		fromPrefix = response.Prefix
 	}
 
 	toPath := strings.TrimPrefix(info.ToPath, "file://")
@@ -378,10 +373,13 @@ func copyShare(cfg *iqshell.Config, info *CopyShareInfo) error {
 		return err
 	}
 
-	if strings.HasSuffix(fromPrefix, "/") {
+	if info.Recursive && strings.HasSuffix(fromPrefix, "/") {
+		fromParentDictionaryPrefix := fromPrefix[:strings.LastIndex(strings.TrimSuffix(fromPrefix, "/"), "/")+1]
 		input := s3.ListObjectsV2Input{
 			Bucket: aws.String(response.BucketId),
-			Prefix: aws.String(fromPrefix),
+		}
+		if fromPrefix != "" {
+			input.Prefix = aws.String(fromPrefix)
 		}
 		for {
 			listOutput, err := s3Svc.ListObjectsV2(&input)
@@ -389,15 +387,21 @@ func copyShare(cfg *iqshell.Config, info *CopyShareInfo) error {
 				return err
 			}
 			for _, s3Object := range listOutput.Contents {
-				relativePath := strings.TrimPrefix(aws.StringValue(s3Object.Key), fromPrefix)
-				if utils.IsWindowsOS() {
-					relativePath = strings.Replace(relativePath, "/", "\\", -1)
+				relativePath := strings.TrimPrefix(aws.StringValue(s3Object.Key), fromParentDictionaryPrefix)
+				if filepath.Separator != '/' {
+					relativePath = strings.Replace(relativePath, "/", string(filepath.Separator), -1)
 				}
-				downloadPath := filepath.Join(toPath, relativePath)
+				downloadPath := toPath
+				if relativePath != "" {
+					downloadPath = filepath.Join(toPath, relativePath)
+				}
 				if strings.HasSuffix(aws.StringValue(s3Object.Key), "/") && aws.Int64Value(s3Object.Size) == 0 {
 					err = os.MkdirAll(downloadPath, 0700)
 				} else {
-					err = s3DownloadToPath(s3Downloader, response.BucketId, aws.StringValue(s3Object.Key), downloadPath)
+					if err = os.MkdirAll(filepath.Dir(downloadPath), 0700); err != nil {
+						return err
+					}
+					err = s3DownloadObjectToPath(s3Downloader, response.BucketId, aws.StringValue(s3Object.Key), downloadPath)
 				}
 				if err != nil {
 					return err
@@ -409,16 +413,24 @@ func copyShare(cfg *iqshell.Config, info *CopyShareInfo) error {
 			input.ContinuationToken = listOutput.NextContinuationToken
 		}
 	} else {
+		if err = s3StatObject(s3Svc, response.BucketId, fromPrefix); err != nil {
+			return err
+		}
 		downloadPath := toPath
-		if strings.HasSuffix(downloadPath, string(filepath.Separator)) {
-			offset := strings.LastIndex(fromPrefix, "/")
-			downloadPath += fromPrefix[(offset + 1):]
-		}
-		if err = os.MkdirAll(filepath.Dir(downloadPath), 0700); err != nil {
-			return err
-		}
-		if err = s3DownloadToPath(s3Downloader, response.BucketId, fromPrefix, downloadPath); err != nil {
-			return err
+		onlyMkDir := strings.HasSuffix(fromPrefix, "/")
+		fromPrefix = strings.TrimSuffix(fromPrefix, "/")
+		downloadPath = filepath.Join(downloadPath, fromPrefix[(strings.LastIndex(fromPrefix, "/")+1):])
+		if onlyMkDir {
+			if err = os.MkdirAll(downloadPath, 0700); err != nil {
+				return err
+			}
+		} else {
+			if err = os.MkdirAll(filepath.Dir(downloadPath), 0700); err != nil {
+				return err
+			}
+			if err = s3DownloadObjectToPath(s3Downloader, response.BucketId, fromPrefix, downloadPath); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -444,7 +456,15 @@ func promptExtractCode() string {
 	return strings.TrimSpace(scanner.Text())
 }
 
-func s3DownloadToPath(downloader *s3manager.Downloader, fromBucketId, key, downloadPath string) error {
+func s3StatObject(s3Service *s3.S3, fromBucketId, key string) error {
+	_, err := s3Service.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(fromBucketId),
+		Key:    aws.String(key),
+	})
+	return err
+}
+
+func s3DownloadObjectToPath(downloader *s3manager.Downloader, fromBucketId, key, downloadPath string) error {
 	file, err := os.OpenFile(downloadPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
@@ -466,6 +486,11 @@ func getAwsConfig(response *verify_share.Response, cfg *iqshell.Config) *aws.Con
 	config.WithEndpoint(response.Endpoint)
 	config.WithRegion(response.Region)
 	config.WithCredentials(credentials.NewStaticCredentials(response.FederatedAk, response.FederatedSk, response.SessionToken))
+	if cfg.DebugEnable {
+		config.WithLogLevel(aws.LogDebug)
+	} else if cfg.DDebugEnable {
+		config.WithLogLevel(aws.LogDebugWithHTTPBody)
+	}
 	return config
 }
 

@@ -222,6 +222,7 @@ func List(info ListApiInfo,
 			errorHandler(info.Marker, lErr)
 
 			if workspace.IsCmdInterrupt() || // 取消
+				lErr.Code >= 300 && lErr.Code < 500 || // Bad Request
 				strings.Contains(lErr.Error(), "no such bucket") || // 空间不存在，直接结束
 				strings.Contains(lErr.Error(), "incorrect zone") || // 空间不正确
 				strings.Contains(lErr.Error(), "query region error") || // 查询空间错误
