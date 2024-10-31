@@ -71,7 +71,10 @@ func Pfop(info PfopApiInfo) (string, *data.CodeError) {
 		WorkflowTemplateID: info.WorkflowTemplateID,
 	}
 	pfopRet, e := opManager.PfopV2(context.Background(), &pfopRequest)
-	return pfopRet.PersistentID, data.ConvertError(e)
+	if e != nil {
+		return "", data.ConvertError(e)
+	}
+	return pfopRet.PersistentID, nil
 }
 
 func getOperationManager(bucket string) (*storage.OperationManager, *data.CodeError) {
