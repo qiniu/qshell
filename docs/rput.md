@@ -16,7 +16,7 @@ qshell rput [--overwrite] [--v2] [--mimetype <MimeType>] [--callback-urls <Callb
 可以在命令行输入如下命令获取帮助文档：
 ```
 // 简单描述
-$ qshell rput -h 
+$ qshell rput -h
 
 // 详细文档（此文档）
 $ qshell rput --doc
@@ -31,6 +31,7 @@ $ qshell rput --doc
 - LocalFile：本地文件的路径。 【必选】
 
 # 选项
+- --accelerate：启用上传加速。【可选】
 - --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
 - -t/--mimetype：指定文件的 MimeType 。【可选】
 - --file-type：文件存储类型；0: 标准存储， 1: 低频存储， 2: 归档存储， 3: 深度归档存储， 4: 归档直读存储；默认为`0`(标准存储）。 【可选】
@@ -56,7 +57,7 @@ $ qshell rput --doc
         2) 检查 Key 扩展名；
         3) 侦测内容。
     3. 设为 -1 值，无论上传端指定了何值直接使用该值。
-```  
+```
 -    --traffic-limit：上传请求单链接速度限制，控制客户端带宽占用。限速值取值范围为 819200 ~ 838860800，单位为 bit/s。【可选】
 
 # 示例

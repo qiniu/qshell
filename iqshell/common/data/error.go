@@ -27,6 +27,8 @@ func ConvertError(err error) *CodeError {
 	rErr := NewEmptyError().AppendError(err)
 	if errors.Is(err, context.Canceled) {
 		rErr.Code = ErrorCodeCancel
+	} else if hErr, ok := err.(interface{ HttpCode() int }); ok {
+		rErr.Code = hErr.HttpCode()
 	}
 	return rErr
 }

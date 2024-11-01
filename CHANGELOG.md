@@ -1,3 +1,12 @@
+# 2.16.0
+## 新增
+1. create-share / share-ls / share-cp 命令支持创建对文件夹的共享，列举和下载
+2. 上传命令支持额外的 --accelerate 选项
+3. fop 命令支持 --workflow-template-id 和 --type 选项
+
+## 更新
+1. listbucket2 现在即使使用了 --limit 参数得到的 marker 也是精确的
+
 # 2.15.0
 ## 新增
 1. buckets 命令列举全量 bucket
@@ -56,7 +65,7 @@
 # 2.9.0
 1. 新增 batchforbidden 命令，支持批量修改文件启用/禁用状态，具体参考命令使用说明
 2. qdownload 命令新增支持自定义文件本地存储路径， 具体参考命令使用说明
-4. stat 命令补充部分文件元数据信息，比如过期删除时间等 
+4. stat 命令补充部分文件元数据信息，比如过期删除时间等
 5. bucket 命令补充部分空间信息，比如可查看空间配置的 Refer 等
 6. 优化 qupload 关于上传流程中检测文件是否存在机制
 7. 优化 qdownload 关于下载流程中检测文件是否存在机制

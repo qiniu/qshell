@@ -32,52 +32,52 @@ linux: $(LINUX86).zip $(LINUX64).zip $(LINUXARM).zip $(LINUXARM64).zip $(LINUXMI
 windows: $(WIN86).zip $(WIN64).zip $(WINARM).zip $(WINARM64).zip
 
 qshell-$(VERSION)-darwin-%.zip: qshell-$(VERSION)-darwin-%
-	@zip $@ $<
+	zip $@ $<
 qshell-$(VERSION)-linux-%.zip: qshell-$(VERSION)-linux-%
-	@zip $@ $<
+	zip $@ $<
 qshell-$(VERSION)-windows-%.zip: qshell-$(VERSION)-windows-%.exe
-	@zip $@ $<
+	zip $@ $<
 
 $(DARWIN):
-	@GOOS=darwin GOARCH=amd64 $(GO) build -ldflags $(LDFLAGS) -o $(DARWIN) .
+	GOOS=darwin GOARCH=amd64 $(GO) build -ldflags $(LDFLAGS) -o $(DARWIN) ./main/
 $(DARWINARM64):
-	@GOOS=darwin GOARCH=arm64 $(GO) build -ldflags $(LDFLAGS) -o $(DARWINARM64) .
+	GOOS=darwin GOARCH=arm64 $(GO) build -ldflags $(LDFLAGS) -o $(DARWINARM64) ./main/
 $(LINUX86):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=386 $(GO) build -ldflags  $(LDFLAGS) -o $(LINUX86) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=386 $(GO) build -ldflags  $(LDFLAGS) -o $(LINUX86) ./main/
 $(LINUX64):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUX64) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUX64) ./main/
 $(LINUXARM):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=arm $(GO) build -ldflags $(LDFLAGS) -o $(LINUXARM) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm $(GO) build -ldflags $(LDFLAGS) -o $(LINUXARM) ./main/
 $(LINUXARM64):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUXARM64) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUXARM64) ./main/
 $(LINUXMIPS):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=mips $(GO) build -ldflags $(LDFLAGS) -o $(LINUXMIPS) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=mips $(GO) build -ldflags $(LDFLAGS) -o $(LINUXMIPS) ./main/
 $(LINUXMIPSLE):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=mipsle $(GO) build -ldflags $(LDFLAGS) -o $(LINUXMIPSLE) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=mipsle $(GO) build -ldflags $(LDFLAGS) -o $(LINUXMIPSLE) ./main/
 $(LINUXMIPS64):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=mips64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUXMIPS64) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUXMIPS64) ./main/
 $(LINUXMIPS64LE):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=mips64le $(GO) build -ldflags $(LDFLAGS) -o $(LINUXMIPS64LE) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le $(GO) build -ldflags $(LDFLAGS) -o $(LINUXMIPS64LE) ./main/
 $(LINUXLOONG64):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=loong64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUXLOONG64) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=loong64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUXLOONG64) ./main/
 $(LINUXRISCV64):
-	@CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUXRISCV64) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 $(GO) build -ldflags $(LDFLAGS) -o $(LINUXRISCV64) ./main/
 $(WIN86).exe:
-	@CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -ldflags $(LDFLAGS) -o $(WIN86).exe .
+	CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -ldflags $(LDFLAGS) -o $(WIN86).exe ./main/
 $(WIN64).exe:
-	@CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -ldflags $(LDFLAGS) -o $(WIN64).exe .
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -ldflags $(LDFLAGS) -o $(WIN64).exe ./main/
 $(WINARM).exe:
-	@CGO_ENABLED=0 GOOS=windows GOARCH=arm $(GO) build -ldflags $(LDFLAGS) -o $(WINARM).exe .
+	CGO_ENABLED=0 GOOS=windows GOARCH=arm $(GO) build -ldflags $(LDFLAGS) -o $(WINARM).exe ./main/
 $(WINARM64).exe:
-	@CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GO) build -ldflags $(LDFLAGS) -o $(WINARM64).exe .
+	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GO) build -ldflags $(LDFLAGS) -o $(WINARM64).exe ./main/
 
 .PHONY: cleanzip cleanbin clean upload
 
 cleanzip:
-	@rm -f qshell-$(VERSION)-*.zip
+	rm -f qshell-$(VERSION)-*.zip
 
 cleanbin:
-	@rm -f qshell-$(VERSION)-*
+	rm -f qshell-$(VERSION)-*
 
 clean: cleanzip cleanbin
 

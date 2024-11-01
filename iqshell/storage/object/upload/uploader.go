@@ -30,6 +30,7 @@ type ApiInfo struct {
 	CheckSize           bool              `json:"-"`                      // 是否检查文件大小，检查是会对比服务端文件大小
 	Overwrite           bool              `json:"-"`                      // 当遇到服务端文件已存在时，是否使用本地文件覆盖之服务端的文件
 	UpHost              string            `json:"up_host"`                // 上传使用的域名
+	Accelerate          bool              `json:"upload_acceleration"`    // 启用上传加速
 	TokenProvider       func() string     `json:"-"`                      // token provider
 	TryTimes            int               `json:"-"`                      // 失败时，最多重试次数【可选】
 	TryInterval         time.Duration     `json:"-"`                      // 重试间隔时间 【可选】
@@ -202,6 +203,7 @@ func uploadSource(info *ApiInfo) (*ApiResult, *data.CodeError) {
 		})
 	})
 	storageCfg := workspace.GetStorageConfig()
+	storageCfg.AccelerateUploading = info.Accelerate
 	var up Uploader
 	if utils.IsNetworkSource(info.FilePath) {
 		up = networkSourceUploader(info, storageCfg)

@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
@@ -25,6 +26,17 @@ func (c *Config) IsUseHttps() bool {
 
 func (c *Config) HasCredentials() bool {
 	return c.Credentials != nil && len(c.Credentials.AccessKey) > 0 && c.Credentials.SecretKey != nil
+}
+
+func (c *Config) GetPortalHost() string {
+	var portalHost string
+	if hosts := c.Hosts; hosts != nil {
+		portalHost = hosts.Portal
+	}
+	if portalHost == "" {
+		portalHost = "portal.qiniu.com"
+	}
+	return portalHost
 }
 
 func (c *Config) GetRegion() *storage.Region {

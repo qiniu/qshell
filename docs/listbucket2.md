@@ -20,7 +20,7 @@ qshell listbucket2 [-m|--marker <Marker>] [--limit <Limit>] [--prefix <Prefix> |
 可以在命令行输入如下命令获取帮助文档：
 ```
 // 简单描述
-$ qshell listbucket2 -h 
+$ qshell listbucket2 -h
 
 // 详细文档（此文档）
 $ qshell listbucket2 --doc
@@ -31,10 +31,10 @@ $ qshell listbucket2 --doc
 
 # 参数
 - Bucket：空间名，可以为私有空间或者公开空间名称。【必选】
-  
+
 # 选项
 - --prefix： 七牛空间中文件名的前缀，该参数为可选参数，如果不指定则获取空间中所有的文件列表。 【可选】
-- --limit：最多列条目的数量；当设置了此选项，输出的 marker 会有误差，不能使用； 默认输出所有条目。【可选】
+- --limit：最多列条目的数量；默认输出所有条目。【可选】
 - -o/--outfile：获取的文件列表保存在本地的文件名，如果不指定该参数，则会把结果输出到终端，一般可用于获取小规模文件列表测试使用。 【可选】
 - --output-file-max-lines：每个输出文件的最大行数，大于此行数会自动创建新的文件（新文件的文件名规律示例，源文件：/x/x/a.txt，新建文件为：/x/x/a-${index}.txt，index 为创建文件的序列号，从 0 开始），0：不限制单个输出文件的行数，默认：0。 【可选】
 - --output-file-max-size：每个输出文件的最大尺寸，大于此值会自动创建新的文件（新文件的文件名规律示例，源文件：/x/x/a.txt，新建文件为：/x/x/a-${index}.txt，index 为创建文件的序列号，从 0 开始），0：不限制单个输出文件的尺寸，单位：B，默认：0。 【可选】
@@ -60,7 +60,7 @@ $ qshell listbucket2 --doc
 ```
 qshell listbucket2 <Bucket> -o <ListBucketResultFile>
 ```
- 
+
 2 如果本地文件 `ListBucketResultFile` 已经存在，有上一次列举的内容，如果希望把新的列表添加到该文件中，需要使用选项 -a 开启 -o 选项的 append 模式
  ```
  qshell listbucket2 <Bucket> -a -o <ListBucketResultFile>
@@ -68,7 +68,7 @@ qshell listbucket2 <Bucket> -o <ListBucketResultFile>
 
 3 获取空间所有文件，输出到屏幕上(标准输出)
  ```
- qshell listbucket2 <Bucket> 
+ qshell listbucket2 <Bucket>
  ```
 
 4 获取空间中指定前缀的文件列表
@@ -80,7 +80,7 @@ qshell listbucket2 [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
  ```
  qshell listbucket2 [--prefix <Prefix>] <Bucket>
  ```
- 
+
 6 获取 `2018-10-30` 到 `2018-11-02` 上传的文件
  ```
  qshell listbucket2 --start 2018-10-30 --end 2018-11-03 <Bucket>
@@ -91,7 +91,7 @@ qshell listbucket2 [--prefix <Prefix>] <Bucket> -o <ListBucketResultFile>
  ```
  qshell listbucket2 --suffixes mp4,html <Bucket>
  ```
- 
+
 8 通常列举的文件的大小都是以字节显示，如果想以人工可读的方式 B, KB, MB 等显示，可以使用 -r 或者 --readable 选项
  ```
  qshell listbucket2 -r <Bucket>

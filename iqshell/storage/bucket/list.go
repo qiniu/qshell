@@ -157,6 +157,13 @@ func List(info ListApiInfo,
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
 		lErr = nil
 		var hasMore = false
+		limit := info.V1Limit
+		if info.OutputLimit > 0 {
+			limit = info.OutputLimit - outputCount
+			if limit > info.V1Limit {
+				limit = info.V1Limit
+			}
+		}
 
 		if !workspace.IsCmdInterrupt() {
 			hasMore, lErr = list.ListBucket(workspace.GetContext(), list.ApiInfo{
@@ -166,7 +173,7 @@ func List(info ListApiInfo,
 				Prefix:     info.Prefix,
 				Delimiter:  info.Delimiter,
 				Marker:     info.Marker,
-				V1Limit:    info.V1Limit,
+				V1Limit:    limit,
 			}, func(marker string, dir string, listItem list.Item) (stop bool) {
 				if marker != info.Marker {
 					info.Marker = marker
@@ -215,6 +222,7 @@ func List(info ListApiInfo,
 			errorHandler(info.Marker, lErr)
 
 			if workspace.IsCmdInterrupt() || // 取消
+				lErr.Code >= 300 && lErr.Code < 500 || // Bad Request
 				strings.Contains(lErr.Error(), "no such bucket") || // 空间不存在，直接结束
 				strings.Contains(lErr.Error(), "incorrect zone") || // 空间不正确
 				strings.Contains(lErr.Error(), "query region error") || // 查询空间错误
