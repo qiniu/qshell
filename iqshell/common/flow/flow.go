@@ -104,11 +104,14 @@ func (f *Flow) Start() {
 		workList := make([]*WorkInfo, 0, f.doWorkInfoListCount)
 		for {
 			hasMore, workInfo, err := f.WorkProvider.Provide()
+			log.DebugF("work producer get work, hasMore:%v, workInfo: %+v, err: %+v", hasMore, workInfo.Data, err)
 			if err != nil {
 				if err.Code == data.ErrorCodeParamMissing ||
 					err.Code == data.ErrorCodeLineHeader {
+					log.DebugF("work producer get work, skip:%s because:%s", workInfo.Data, err)
 					f.notifyWorkSkip(workInfo, nil, err)
 				} else {
+					log.DebugF("work producer get work fail, error:%s info:%s", err, workInfo.Data)
 					f.notifyWorkFail(workInfo, err)
 				}
 				continue
@@ -116,14 +119,17 @@ func (f *Flow) Start() {
 
 			if workInfo == nil || workInfo.Work == nil {
 				if !hasMore {
+					log.Info("work producer get work completed")
 					break
 				} else {
+					log.Info("work producer get work fail: work in empty")
 					continue
 				}
 			}
 
 			// 检测 work 是否需要过
 			if skip, cause := f.shouldWorkSkip(workInfo); skip {
+				log.DebugF("work producer get work, skip:%s cause:%s", workInfo.Data, cause)
 				f.notifyWorkSkip(workInfo, nil, cause)
 				continue
 			}
@@ -192,10 +198,14 @@ func (f *Flow) Start() {
 
 				workCount := len(workList)
 
+				log.InfoF("work consumer get works, count:%s", workCount)
+
 				_ = f.limitAcquire(workCount)
 				// workRecordList 有数据则长度和 workList 长度相同
 				workRecordList, workErr := worker.DoWork(workList)
 				f.limitRelease(workCount)
+
+				log.InfoF("work consumer handle works, count:%s error:%+v", workCount, workErr)
 
 				if len(workRecordList) == 0 && workErr != nil {
 					log.ErrorF("Do Worker Error:%+v", workErr)

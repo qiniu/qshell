@@ -103,7 +103,9 @@ func (w *workProvider) getWorkInfoFromFile() {
 		var keys []string
 		for {
 			if len(keys) == 300 {
-				w.getWorkInfoOfKeys(keys)
+				if !w.getWorkInfoOfKeys(keys) {
+					break
+				}
 				keys = nil
 			}
 
@@ -140,9 +142,9 @@ func (w *workProvider) getWorkInfoFromFile() {
 	}()
 }
 
-func (w *workProvider) getWorkInfoOfKeys(keys []string) {
+func (w *workProvider) getWorkInfoOfKeys(keys []string) bool {
 	if len(keys) == 0 {
-		return
+		return true
 	}
 
 	operations := make([]batch.Operation, 0, len(keys))
@@ -153,6 +155,11 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) {
 				Key:    key,
 			})
 		}
+	}
+
+	if len(operations) == 0 {
+		log.Error("get file info error: key invalid")
+		return false
 	}
 
 	results, err := batch.Some(operations)
@@ -203,6 +210,8 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) {
 		}
 		time.Sleep(10 * time.Second)
 	}
+
+	return true
 }
 
 func (w *workProvider) getWorkInfoFromBucket() {
