@@ -1,19 +1,11 @@
 name: ut-check
-on:
-  # Trigger the workflow on push or pull request,
-  # but only for the master branch
-  push:
-    paths-ignore:
-      - '**.md'
-  pull_request:
-    paths-ignore:
-      - '**.md'
+on: [push, pull_request]
 jobs:
   run:
     name: go test
     strategy:
       matrix:
-        go-version: [1.20.x]
+        go-version: [1.23.x]
     runs-on: ubuntu-latest
     steps:
       - name: Install Go

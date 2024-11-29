@@ -141,7 +141,7 @@ fi
 | ---- | -------------------------------------------------------------- |
 | --doc   | 查看命令使用手册 |
 | -d   | 设置是否输出 DEBUG 日志，如果指定这个选项，则输出 DEBUG 级别的日志 |
-| -D  |  设置是否输出更加详细的 DEBUG 日志，如果指定这个选项，则输出详细的 DEBUG 级别的日志 |                 
+| -D  |  设置是否输出更加详细的 DEBUG 日志，如果指定这个选项，则输出详细的 DEBUG 级别的日志 |
 | -h   | 打印命令列表帮助信息，遇到参数忘记的情况下，可以使用该命令     |
 | -v   | 打印工具版本，反馈问题的时候，请提前告知工具对应版本号         |
 | -C   | qshell配置文件, 其配置格式请看下一节                           |
@@ -215,20 +215,20 @@ qshell 命令配置 > 账号配置 > 全局配置
 ## 命令列表
 - `v2.7.0 及以上版本，命令列表及命令使用详细文档说明，支持直接使用 qshell 自助查看。`
     - `qshell -h，显示支持命令列表`
-    - `qshell <子命令> --doc 查看详细命令使用说明` 
-- 查看工具版本号请使用命令 qshell -v 
-                  
+    - `qshell <子命令> --doc 查看详细命令使用说明`
+- 查看工具版本号请使用命令 qshell -v
+
 ### 账号设置命令
 | 命令        | 类别   | 描述                                   | 详细                        |
 | ----------- | ------ |--------------------------------------| --------------------------- |
 | account     | 账号   | 设置或显示当前用户的 `AccessKey` 和 `SecretKey` | [文档](docs/account.md)     |
-| user     | 账号   | 列举账号信息，在各个账号之间切换, 删除账号               | [文档](docs/user.md)     |                
+| user     | 账号   | 列举账号信息，在各个账号之间切换, 删除账号               | [文档](docs/user.md)     |
 
 ### 存储相关命令
 | 命令               | 类别   | 描述                                      | 详细                          |
 |------------------|------|-----------------------------------------|-----------------------------|
 | mkbucket         | 创建   | 创建存储空间                                  | [文档](docs/mkbucket.md)      |
-| bucket           | 查看   | 查看存储空间信息                                | [文档](docs/bucket.md)        |  
+| bucket           | 查看   | 查看存储空间信息                                | [文档](docs/bucket.md)        |
 | batchdelete      | 删除   | 批量删除七牛空间中的文件，可以直接根据 `listbucket` 的结果来删除 | [文档](docs/batchdelete.md)   |
 | delete           | 删除   | 删除七牛空间中的一个文件                            | [文档](docs/delete.md)        |
 | batchchgm        | 修改   | 批量修改七牛空间中文件的MimeType                    | [文档](docs/batchchgm.md)     |
@@ -243,8 +243,8 @@ qshell 命令配置 > 账号配置 > 全局配置
 | move             | 移动   | 移动或重命名七牛空间中的一个文件                        | [文档](docs/move.md)          |
 | batchrename      | 重命名  | 批量重命名七牛空间中的文件                           | [文档](docs/batchrename.md)   |
 | rename           | 重命名  | 重命名七牛空间中的文件                             | [文档](docs/rename.md)        |
-| batchrestorear   | 解冻   | 批量解冻七牛空间中的归档/深度归档存储类型文件                 | [文档](docs/batchrestorear.md) |  
-| restorear        | 解冻   | 解冻七牛空间中的归档/深度归档存储类型文件                   | [文档](docs/restorear.md)     |               
+| batchrestorear   | 解冻   | 批量解冻七牛空间中的归档/深度归档存储类型文件                 | [文档](docs/batchrestorear.md) |
+| restorear        | 解冻   | 解冻七牛空间中的归档/深度归档存储类型文件                   | [文档](docs/restorear.md)     |
 | batchstat        | 查询   | 批量查询七牛空间中文件的基本信息                        | [文档](docs/batchstat.md)     |
 | stat             | 查询   | 查询七牛空间中一个文件的基本信息                        | [文档](docs/stat.md)          |
 | chlifecycle      | 修改   | 修改七牛空间中一个文件的生命周期                        | [文档](docs/chlifecycle.md)              |
@@ -268,6 +268,9 @@ qshell 命令配置 > 账号配置 > 全局配置
 | abfetch          | 抓取   | 异步抓取网络资源到七牛存储空间                         | [文档](docs/abfetch.md)       |
 | m3u8delete       | m3u8 | 根据流媒体播放列表文件删除七牛空间中的流媒体切片                | [文档](docs/m3u8delete.md)    |
 | m3u8replace      | m3u8 | 修改流媒体播放列表文件中的切片引用域名                     | [文档](docs/m3u8replace.md)   |
+| create-share     | 共享文件夹 | 需要分享的目录或前缀创建授权链接                   | [文档](docs/create-share.md)  |
+| share-cp         | 共享文件夹 | 从目录分享链接内下载单个文件或按目录批量下载文件      | [文档](docs/share-cp.md)    |
+| share-ls         | 共享文件夹 | 列举分享的目录和文件                             | [文档](docs/share-ls.md)    |
 | batchsign        | 其他   | 批量根据资源的公开外链生成资源的私有外链                    | [文档](docs/batchsign.md)     |
 | dircache         | 其他   | 输出本地指定路径下所有的文件列表                        | [文档](docs/dircache.md)      |
 | prefetch         | 其他   | 更新七牛空间中从源站镜像过来的文件                       | [文档](docs/prefetch.md)      |
