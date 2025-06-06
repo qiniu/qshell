@@ -104,14 +104,14 @@ func (f *Flow) Start() {
 		workList := make([]*WorkInfo, 0, f.doWorkInfoListCount)
 		for {
 			hasMore, workInfo, err := f.WorkProvider.Provide()
-			log.DebugF("work producer get work, hasMore:%v, workInfo: %+v, err: %+v", hasMore, workInfo.Data, err)
+			log.DebugF("work producer get work, hasMore:%v, workInfo: %+v, err: %+v", hasMore, workInfo, err)
 			if err != nil {
 				if err.Code == data.ErrorCodeParamMissing ||
 					err.Code == data.ErrorCodeLineHeader {
-					log.DebugF("work producer get work, skip:%s because:%s", workInfo.Data, err)
+					log.DebugF("work producer get work, skip:%s because:%s", workInfo, err)
 					f.notifyWorkSkip(workInfo, nil, err)
 				} else {
-					log.DebugF("work producer get work fail, error:%s info:%s", err, workInfo.Data)
+					log.DebugF("work producer get work fail, error:%s info:%s", err, workInfo)
 					f.notifyWorkFail(workInfo, err)
 				}
 				continue

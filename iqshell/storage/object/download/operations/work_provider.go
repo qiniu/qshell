@@ -158,7 +158,7 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) bool {
 	}
 
 	if len(operations) == 0 {
-		log.Error("get file info error: key invalid")
+		log.Error("get file info error: no valid key found")
 		return false
 	}
 
