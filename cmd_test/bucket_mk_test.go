@@ -3,9 +3,10 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestMkBucket(t *testing.T) {
@@ -15,7 +16,7 @@ func TestMkBucket(t *testing.T) {
 		t.Fatal("should return bucket exists")
 	}
 
-	if !strings.Contains(errs, "error:the bucket already exists") {
+	if !strings.Contains(errs, "the bucket already exists") {
 		t.Fatal("expected error:bucket exists, but:" + errs)
 	}
 
@@ -29,8 +30,8 @@ func TestMkBucketNotExistRegion(t *testing.T) {
 		t.Fatal("should return bucket exists")
 	}
 
-	if !strings.Contains(errs, "error:invalid region parameter") {
-		t.Fatal("expected error:error:invalid region parameter, but:" + errs)
+	if !strings.Contains(errs, "invalid region parameter") {
+		t.Fatal("expected error:invalid region parameter, but:" + errs)
 	}
 
 	return

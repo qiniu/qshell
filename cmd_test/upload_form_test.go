@@ -87,11 +87,6 @@ func TestFormUploadWithUploadHost(t *testing.T) {
 	if !strings.Contains(result, "MimeType: image/jpg") {
 		t.Fatal(result)
 	}
-
-	path, err = test.CreateTempFile(1*1024 + 1)
-	if err != nil {
-		t.Fatal("create form upload file error:", err)
-	}
 }
 
 func TestFormUploadWithWrongUploadHost(t *testing.T) {
