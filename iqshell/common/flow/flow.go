@@ -128,7 +128,7 @@ func (f *Flow) Start() {
 
 			if workInfo == nil || workInfo.Work == nil {
 				if !hasMore {
-					log.Info("work producer get work completed")
+					log.Debug("work producer get work completed")
 					break
 				} else {
 					log.Info("work producer get work fail: work in empty")
