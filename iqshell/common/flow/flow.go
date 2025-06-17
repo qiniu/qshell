@@ -123,7 +123,7 @@ func (f *Flow) Start() {
 
 			if workInfo == nil || workInfo.Work == nil {
 				if !hasMore {
-					log.Info("work producer get work completed")
+					log.Debug("work producer get work completed")
 					break
 				} else {
 					log.Info("work producer get work fail: work in empty")
@@ -201,13 +201,13 @@ func (f *Flow) Start() {
 				}
 
 				workCount := len(workList)
-				log.InfoF("work consumer get works, count:%s", workCount)
+				log.DebugF("work consumer get works, count:%d", workCount)
 
 				_ = f.limitAcquire(workCount)
 				// workRecordList 有数据则长度和 workList 长度相同
 				workRecordList, workErr := worker.DoWork(workList)
 				f.limitRelease(workCount)
-				log.InfoF("work consumer handle works, count:%s error:%+v", workCount, workErr)
+				log.DebugF("work consumer handle works, count:%d error:%+v", workCount, workErr)
 
 				if len(workRecordList) == 0 && workErr != nil {
 					log.ErrorF("Do Worker Error:%+v", workErr)
