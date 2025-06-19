@@ -85,7 +85,7 @@ func List(info ListApiInfo,
 	}
 
 	info.init()
-	log.DebugF("will list bucket:%s, suffixes:%s, prefix:%s", info.Bucket, info.Suffixes, info.Prefix)
+	log.DebugF("will list bucket:%s, suffixes:%s, prefix:%s start:%s end:%s", info.Bucket, info.Suffixes, info.Prefix, info.StartTime, info.EndTime)
 	shouldCheckPutTime := !info.StartTime.IsZero() || !info.EndTime.IsZero()
 	shouldCheckSuffixes := len(info.Suffixes) > 0
 	shouldCheckFileTypes := len(info.FileTypes) > 0

@@ -178,15 +178,20 @@ func parseDate(dateString string) (time.Time, *data.CodeError) {
 		return time.Time{}, data.NewEmptyError().AppendDescF("date format must be year-month-day-hour-minute-second")
 	}
 
-	var dateItems [6]int
-	for ind, field := range fields {
-		field, err := strconv.Atoi(field)
-		if err != nil {
-			return time.Time{}, data.NewEmptyError().AppendDescF("date format must be year-month-day-hour-minute-second, each field must be integer")
-		}
-		dateItems[ind] = field
+	layouts := []string{
+		"2006",
+		"2006-01",
+		"2006-01-02",
+		"2006-01-02-15",
+		"2006-01-02-15-04",
+		"2006-01-02-15-04-05",
 	}
-	return time.Date(dateItems[0], time.Month(dateItems[1]), dateItems[2], dateItems[3], dateItems[4], dateItems[5], 0, time.Local), nil
+	layout := layouts[len(fields)-1]
+	date, err := time.ParseInLocation(layout, dateString, time.Local)
+	if err != nil {
+		return time.Time{}, data.NewEmptyError().AppendDescF("date format invalid:%s parse date error:%s", dateString, err)
+	}
+	return date, nil
 }
 
 func (info *ListInfo) getStartDate() (time.Time, *data.CodeError) {
