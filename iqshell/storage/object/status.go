@@ -47,6 +47,8 @@ type StatusResult struct {
 	Expiration int64 `json:"expiration"`
 	// 文件生命周期中转为低频存储的日期，int64 类型，Unix 时间戳格式
 	TransitionToIA int64 `json:"transitionToIA"`
+	// 文件生命周期中转为智能分层存储的日期，int64 类型，Unix 时间戳格式
+	TransitionToIntelligentTiering int64 `json:"transitionToIntelligentTiering"`
 	// 文件生命周期中转为归档存储的日期，int64 类型，Unix 时间戳格式
 	TransitionToARCHIVE int64 `json:"transitionToARCHIVE"`
 	// 文件生命周期中转为归档存储的日期，int64 类型，Unix 时间戳格式

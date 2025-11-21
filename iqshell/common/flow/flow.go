@@ -106,16 +106,18 @@ func (f *Flow) Start() {
 			hasMore, workInfo, err := f.WorkProvider.Provide()
 			log.DebugF("work producer get work, hasMore:%v, workInfo: %+v, err: %+v", hasMore, workInfo, err)
 			if err != nil {
-				workInfoData := ""
-				if workInfo != nil {
-					workInfoData = workInfo.Data
-				}
 				if err.Code == data.ErrorCodeParamMissing ||
 					err.Code == data.ErrorCodeLineHeader {
-					log.DebugF("work producer get work, skip:%s because:%s", workInfoData, err)
+					log.DebugF("work producer get work, skip:%s because:%s", workInfo, err)
 					f.notifyWorkSkip(workInfo, nil, err)
 				} else {
-					log.DebugF("work producer get work fail, error:%s info:%s", err, workInfoData)
+					// 没有读到任何数据
+					if workInfo == nil || len(workInfo.Data) == 0 {
+						log.ErrorF("work producer get work fail: %s", err)
+						break
+					}
+
+					log.DebugF("work producer get work fail, error:%s info:%s", err, workInfo)
 					f.notifyWorkFail(workInfo, err)
 				}
 				continue

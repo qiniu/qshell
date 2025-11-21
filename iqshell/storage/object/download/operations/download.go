@@ -2,16 +2,18 @@ package operations
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/progress"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
-	"os"
-	"time"
 )
 
 type DownloadInfo struct {
@@ -50,6 +52,18 @@ func DownloadFile(cfg *iqshell.Config, info DownloadInfo) {
 	// 如果 ToFile 不存在则保存在当前文件录下，文件名为：key
 	if len(info.ToFile) == 0 {
 		info.ToFile = info.Key
+	}
+
+	if !info.IsPublic {
+		bucketInfo, err := bucket.GetBucketInfo(bucket.GetBucketApiInfo{
+			Bucket: info.Bucket,
+		})
+		if err != nil {
+			data.SetCmdStatusError()
+			log.ErrorF("get bucket info error:%v", err)
+			return
+		}
+		info.IsPublic = bucketInfo.Private == 0
 	}
 
 	fileStatus, err := object.Status(object.StatusApiInfo{

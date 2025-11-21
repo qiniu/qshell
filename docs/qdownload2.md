@@ -38,7 +38,6 @@ Flags:
       --log-level string                download log output level, optional values are debug,info,warn and error (default "debug")
       --log-rotate int                  the switching period of the download log file, the unit is day, (default 7)
       --prefix string                   only download files with the specified prefix
-      --public                          whether the space is a public space
       --record-root string              path to save download record information, including log files and download progress files; the default is download directory
       --referer string                  if the CDN domain name is configured with domain name whitelist anti-leech, you need to specify a referer address that allows access
       --remove-temp-while-error         when the download encounters an error, delete the previously downloaded part of the file cache

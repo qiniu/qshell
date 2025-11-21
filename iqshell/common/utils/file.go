@@ -2,10 +2,12 @@ package utils
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -129,8 +131,13 @@ func NetworkFileLength(srcResUrl string) (fileSize int64, err *data.CodeError) {
 }
 
 func GetNetworkFileInfo(srcResUrl string) (*NetworkFileInfo, *data.CodeError) {
-
-	resp, respErr := client.DefaultStorageClient().Head(srcResUrl)
+	// 为了对 CDN 友好，此处使用 GET 方法获取文件大小，可以进行缓存，防止有些链接反复回源（比如：图片瘦身）
+	request, err := http.NewRequest("GET", srcResUrl, nil)
+	if err != nil {
+		return nil, data.NewEmptyError().AppendDescF("create request error:%v", err)
+	}
+	request.Header.Set("Range", "bytes=0-0")
+	resp, respErr := client.DefaultStorageClient().Do(context.Background(), request)
 	if respErr != nil {
 		return nil, data.NewEmptyError().AppendDescF("New head request failed, %s", respErr.Error())
 	}
@@ -141,23 +148,34 @@ func GetNetworkFileInfo(srcResUrl string) (*NetworkFileInfo, *data.CodeError) {
 		}
 	}()
 
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusPartialContent && resp.StatusCode != http.StatusRequestedRangeNotSatisfiable {
+		return nil, data.NewError(resp.StatusCode, fmt.Sprintf("unexpected status code %d for get file info %s", resp.StatusCode, srcResUrl))
+	}
+
 	file := &NetworkFileInfo{
 		Size: -1,
 		Hash: "",
 	}
-	contentLength := resp.Header.Get("Content-Length")
-	if contentLength != "" {
-		if size, pErr := strconv.ParseInt(contentLength, 10, 64); pErr != nil {
-			return nil, data.NewEmptyError().AppendDescF("parse network file(%s) size error:%v", srcResUrl, pErr)
-		} else {
-			file.Size = size
-		}
+
+	if resp.StatusCode == http.StatusRequestedRangeNotSatisfiable {
+		// 文件 Range 超限
+		file.Size = 0
 	} else {
-		return file, data.NewEmptyError().AppendDescF("network file(%s) hasn't Content-Length", srcResUrl)
+		// 从Content-Range获取文件总大小
+		contentRange := resp.Header.Get("Content-Range")
+		if contentRange != "" {
+			// 解析Content-Range格式: bytes start-end/total
+			parts := strings.Split(contentRange, "/")
+			if len(parts) == 2 {
+				if total, pErr := strconv.ParseInt(parts[1], 10, 64); pErr == nil {
+					file.Size = total
+				}
+			}
+		}
 	}
 
 	etag := resp.Header.Get("ETag")
-	if contentLength != "" {
+	if etag != "" {
 		file.Hash = ParseEtag(etag)
 	} else {
 		return nil, data.NewEmptyError().AppendDescF("network file(%s) hasn't Etag", srcResUrl)

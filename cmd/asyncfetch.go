@@ -33,7 +33,7 @@ func asyncFetchCmdBuilder(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.CallbackBody, "callback-body", "b", "", "callback body")
 	cmd.Flags().StringVarP(&info.CallbackHost, "callback-host", "T", "", "callback HOST")
 
-	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "storage type, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage, 4:ARCHIVE_IR storage")
+	cmd.Flags().IntVarP(&info.FileType, "file-type", "", 0, "storage type, 0:STANDARD storage, 1:IA storage, 2:ARCHIVE storage, 3:DEEP_ARCHIVE storage, 4:ARCHIVE_IR storage, 5:INTELLIGENT_TIERING")
 	cmd.Flags().IntVarP(&info.FileType, "storage-type", "g", 0, "storage type, same to --file-type")
 	_ = cmd.Flags().MarkDeprecated("storage-type", "use --file-type instead") // 废弃 storage-type
 

@@ -15,6 +15,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 )
 
@@ -107,6 +108,18 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		Checker: &info,
 	}); !shouldContinue {
 		return
+	}
+
+	if !info.Public {
+		bucketInfo, err := bucket.GetBucketInfo(bucket.GetBucketApiInfo{
+			Bucket: info.Bucket,
+		})
+		if err != nil {
+			data.SetCmdStatusError()
+			log.ErrorF("get bucket info error:%v", err)
+			return
+		}
+		info.Public = bucketInfo.Private == 0
 	}
 
 	// 配置 locker

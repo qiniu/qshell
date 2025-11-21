@@ -281,6 +281,7 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 	if cErr != nil {
 		return cErr
 	}
+	log.DebugF("get file size: %s", downloadUrl)
 	if file, err := utils.GetNetworkFileInfo(downloadUrl); err != nil {
 		return err
 	} else if info.CheckHash && info.FileHash != file.Hash {

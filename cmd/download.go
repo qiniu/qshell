@@ -99,6 +99,9 @@ have already in local disk and need to skip download or not.`,
 	cmd.Flags().StringVarP(&LogFile, "log-file", "", "", "the output file of the download log is output to the file specified by record_root by default, and the specific file path can be seen in the terminal output")
 	cmd.Flags().IntVarP(&LogRotate, "log-rotate", "", 7, "the switching period of the download log file, the unit is day,")
 
+	// 标记废弃
+	_ = cmd.Flags().MarkDeprecated("public", "deprecated")
+
 	return cmd
 }
 
@@ -130,6 +133,10 @@ var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().Int64VarP(&info.SliceSize, "slice-size", "", 4*utils.MB, "slice size that download using slices. when you use --enable-slice option, the file will be cut into data blocks according to the slice size, then the data blocks will be downloaded concurrently, and finally these data blocks will be spliced into a file. Unit: B")
 	cmd.Flags().IntVarP(&info.SliceConcurrentCount, "slice-concurrent-count", "", 10, "the count of concurrently downloaded slices.")
 	cmd.Flags().BoolVarP(&info.RemoveTempWhileError, "remove-temp-while-error", "", false, "remove download temp file while error happened, default is false")
+
+	// 标记废弃
+	_ = cmd.Flags().MarkDeprecated("public", "deprecated")
+
 	return cmd
 }
 

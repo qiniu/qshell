@@ -13,13 +13,14 @@ import (
 // ChangeLifecycleApiInfo
 // 相关链接：https://developer.qiniu.com/kodo/8062/modify-object-life-cycle
 type ChangeLifecycleApiInfo struct {
-	Bucket                 string `json:"bucket"`
-	Key                    string `json:"key"`
-	ToIAAfterDays          int    `json:"to_ia_after_days"`           // 转换到 低频存储类型，设置为 -1 表示取消
-	ToArchiveIRAfterDays   int    `json:"to_archive_ir_after_days"`   // 转换到 归档直读存储类型， 设置为 -1 表示取消
-	ToArchiveAfterDays     int    `json:"to_archive_after_days"`      // 转换到 归档存储类型， 设置为 -1 表示取消
-	ToDeepArchiveAfterDays int    `json:"to_deep_archive_after_days"` // 转换到 深度归档存储类型， 设置为 -1 表示取消
-	DeleteAfterDays        int    `json:"delete_after_days"`          // 过期删除，删除后不可恢复，设置为 -1 表示取消
+	Bucket                        string `json:"bucket"`
+	Key                           string `json:"key"`
+	ToIAAfterDays                 int    `json:"to_ia_after_days"`                  // 转换到 低频存储类型，设置为 -1 表示取消
+	ToArchiveIRAfterDays          int    `json:"to_archive_ir_after_days"`          // 转换到 归档直读存储类型， 设置为 -1 表示取消
+	ToArchiveAfterDays            int    `json:"to_archive_after_days"`             // 转换到 归档存储类型， 设置为 -1 表示取消
+	ToDeepArchiveAfterDays        int    `json:"to_deep_archive_after_days"`        // 转换到 深度归档存储类型， 设置为 -1 表示取消
+	ToIntelligentTieringAfterDays int    `json:"to_intelligent_tiering_after_days"` // 转换到 智能分层存储类型， 设置为 -1 表示取消
+	DeleteAfterDays               int    `json:"delete_after_days"`                 // 过期删除，删除后不可恢复，设置为 -1 表示取消
 }
 
 func (l *ChangeLifecycleApiInfo) GetBucket() string {
@@ -43,6 +44,9 @@ func (l *ChangeLifecycleApiInfo) ToOperation() (string, *data.CodeError) {
 	}
 	if l.ToDeepArchiveAfterDays != 0 {
 		lifecycleSetting += fmt.Sprintf("/toDeepArchiveAfterDays/%d", l.ToDeepArchiveAfterDays)
+	}
+	if l.ToIntelligentTieringAfterDays != 0 {
+		lifecycleSetting += fmt.Sprintf("/toIntelligentTieringAfterDays/%d", l.ToIntelligentTieringAfterDays)
 	}
 	if l.DeleteAfterDays != 0 {
 		lifecycleSetting += fmt.Sprintf("/deleteAfterDays/%d", l.DeleteAfterDays)

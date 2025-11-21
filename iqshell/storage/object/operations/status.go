@@ -125,9 +125,9 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	statInfo := ""
 	fieldAdder := func(name string, value interface{}, desc string) {
 		if len(desc) == 0 {
-			statInfo += fmt.Sprintf("%-25s%v\r\n", name+":", value)
+			statInfo += fmt.Sprintf("%-35s%v\r\n", name+":", value)
 		} else {
-			statInfo += fmt.Sprintf("%-25s%v -> %s\r\n", name+":", value, desc)
+			statInfo += fmt.Sprintf("%-35s%v -> %s\r\n", name+":", value, desc)
 		}
 	}
 
@@ -167,6 +167,7 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	}
 	lifecycleFieldAdder("Expiration", status.Expiration)
 	lifecycleFieldAdder("TransitionToIA", status.TransitionToIA)
+	lifecycleFieldAdder("TransitionToIntelligentTiering", status.TransitionToIntelligentTiering)
 	lifecycleFieldAdder("TransitionToArchiveIR", status.TransitionToArchiveIR)
 	lifecycleFieldAdder("TransitionToArchive", status.TransitionToARCHIVE)
 	lifecycleFieldAdder("TransitionToDeepArchive", status.TransitionToDeepArchive)
@@ -176,7 +177,7 @@ func getResultInfo(bucket, key string, status object.StatusResult) string {
 	return statInfo
 }
 
-var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储", "归档直读存储"}
+var objectTypes = []string{"标准存储", "低频存储", "归档存储", "深度归档存储", "归档直读存储", "智能分层存储"}
 
 func getFileTypeDescription(fileTypes int) string {
 	typeString := "未知类型"
