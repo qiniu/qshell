@@ -53,9 +53,9 @@ func ChangeLifecycle(cfg *iqshell.Config, info *ChangeLifecycleInfo) {
 	}
 
 	if result.IsSuccess() {
-		lifecycleValues := []int{info.ToIAAfterDays, info.ToArchiveIRAfterDays, info.ToArchiveAfterDays,
+		lifecycleValues := []int{info.ToIAAfterDays, info.ToIntelligentTieringAfterDays, info.ToArchiveIRAfterDays, info.ToArchiveAfterDays,
 			info.ToDeepArchiveAfterDays, info.DeleteAfterDays}
-		lifecycleDescs := []string{"to IA storage", "to ARCHIVE_IR storage", "to ARCHIVE storage",
+		lifecycleDescs := []string{"to IA storage", "to IntelligentTiering storage", "to ARCHIVE_IR storage", "to ARCHIVE storage",
 			"to DEEP_ARCHIVE storage", "delete"}
 		log.InfoF("Change lifecycle Success, [%s:%s]", info.Bucket, info.Key)
 		for i := 0; i < len(lifecycleValues); i++ {
@@ -78,13 +78,14 @@ func ChangeLifecycle(cfg *iqshell.Config, info *ChangeLifecycleInfo) {
 }
 
 type BatchChangeLifecycleInfo struct {
-	BatchInfo              batch.Info //
-	Bucket                 string     //
-	ToIAAfterDays          int        // 转换到 低频存储类型，设置为 -1 表示取消
-	ToArchiveIRAfterDays   int        // 转换到 归档直读存储类型， 设置为 -1 表示取消
-	ToArchiveAfterDays     int        // 转换到 归档存储类型， 设置为 -1 表示取消
-	ToDeepArchiveAfterDays int        // 转换到 深度归档存储类型， 设置为 -1 表示取消
-	DeleteAfterDays        int        // 过期删除，删除后不可恢复，设置为 -1 表示取消
+	BatchInfo                     batch.Info //
+	Bucket                        string     //
+	ToIAAfterDays                 int        // 转换到 低频存储类型，设置为 -1 表示取消
+	ToArchiveIRAfterDays          int        // 转换到 归档直读存储类型， 设置为 -1 表示取消
+	ToArchiveAfterDays            int        // 转换到 归档存储类型， 设置为 -1 表示取消
+	ToDeepArchiveAfterDays        int        // 转换到 深度归档存储类型， 设置为 -1 表示取消
+	ToIntelligentTieringAfterDays int        // 转换到 智能分层存储类型， 设置为 -1 表示取消
+	DeleteAfterDays               int        // 过期删除，删除后不可恢复，设置为 -1 表示取消
 }
 
 func (info *BatchChangeLifecycleInfo) Check() *data.CodeError {
@@ -100,6 +101,7 @@ func (info *BatchChangeLifecycleInfo) Check() *data.CodeError {
 		info.ToArchiveIRAfterDays == 0 &&
 		info.ToArchiveAfterDays == 0 &&
 		info.ToDeepArchiveAfterDays == 0 &&
+		info.ToIntelligentTieringAfterDays == 0 &&
 		info.DeleteAfterDays == 0 {
 		return data.NewEmptyError().AppendDesc("must set at least one value of lifecycle")
 	}
@@ -109,8 +111,9 @@ func (info *BatchChangeLifecycleInfo) Check() *data.CodeError {
 
 func BatchChangeLifecycle(cfg *iqshell.Config, info BatchChangeLifecycleInfo) {
 	cfg.JobPathBuilder = func(cmdPath string) string {
-		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%d:%d:%d:%d:%s", cfg.CmdCfg.CmdId, info.Bucket,
-			info.ToIAAfterDays, info.ToArchiveAfterDays, info.ToDeepArchiveAfterDays, info.DeleteAfterDays,
+		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%d:%d:%d:%d:%d:%d:%s", cfg.CmdCfg.CmdId, info.Bucket,
+			info.ToIAAfterDays, info.ToArchiveIRAfterDays, info.ToArchiveAfterDays,
+			info.ToDeepArchiveAfterDays, info.ToIntelligentTieringAfterDays, info.DeleteAfterDays,
 			info.BatchInfo.InputFile))
 		return filepath.Join(cmdPath, jobId)
 	}
@@ -142,13 +145,14 @@ func BatchChangeLifecycle(cfg *iqshell.Config, info BatchChangeLifecycleInfo) {
 				return nil, alert.Error("key invalid", "")
 			}
 			return &object.ChangeLifecycleApiInfo{
-				Bucket:                 info.Bucket,
-				Key:                    listObject.Key,
-				ToIAAfterDays:          info.ToIAAfterDays,
-				ToArchiveIRAfterDays:   info.ToArchiveIRAfterDays,
-				ToArchiveAfterDays:     info.ToArchiveAfterDays,
-				ToDeepArchiveAfterDays: info.ToDeepArchiveAfterDays,
-				DeleteAfterDays:        info.DeleteAfterDays,
+				Bucket:                        info.Bucket,
+				Key:                           listObject.Key,
+				ToIAAfterDays:                 info.ToIAAfterDays,
+				ToArchiveIRAfterDays:          info.ToArchiveIRAfterDays,
+				ToArchiveAfterDays:            info.ToArchiveAfterDays,
+				ToDeepArchiveAfterDays:        info.ToDeepArchiveAfterDays,
+				ToIntelligentTieringAfterDays: info.ToIntelligentTieringAfterDays,
+				DeleteAfterDays:               info.DeleteAfterDays,
 			}, nil
 		}).
 		OnResult(func(operationInfo string, operation batch.Operation, result *batch.OperationResult) {

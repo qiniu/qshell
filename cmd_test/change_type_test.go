@@ -4,10 +4,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestChangeType(t *testing.T) {
@@ -100,6 +101,19 @@ func TestBatchChangeType(t *testing.T) {
 	defer func() {
 		test.RemoveFile(successLogPath)
 		test.RemoveFile(failLogPath)
+
+		//back
+		batchConfig = ""
+		for _, key := range test.Keys {
+			batchConfig += key + "\t" + "1" + "\n"
+		}
+
+		path, err = test.CreateFileWithContent("batch_chtype.txt", batchConfig)
+		if err != nil {
+			t.Fatal("create chtype config file error:", err)
+		}
+
+		test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
 	}()
 
 	if !test.IsFileHasContent(successLogPath) {
@@ -109,19 +123,6 @@ func TestBatchChangeType(t *testing.T) {
 	if !test.IsFileHasContent(failLogPath) {
 		t.Fatal("batch result: fail log  to file error: file empty")
 	}
-
-	//back
-	batchConfig = ""
-	for _, key := range test.Keys {
-		batchConfig += key + "\t" + "1" + "\n"
-	}
-
-	path, err = test.CreateFileWithContent("batch_chtype.txt", batchConfig)
-	if err != nil {
-		t.Fatal("create chtype config file error:", err)
-	}
-
-	test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
 }
 
 func TestBatchChangeTypeRecord(t *testing.T) {
@@ -138,6 +139,21 @@ func TestBatchChangeTypeRecord(t *testing.T) {
 	if err != nil {
 		t.Fatal("create batch move config file error:", err)
 	}
+
+	defer func() {
+		//back
+		batchConfig = ""
+		for _, key := range test.Keys {
+			batchConfig += key + "\t" + "1" + "\n"
+		}
+
+		path, err = test.CreateFileWithContent("batch_chtype.txt", batchConfig)
+		if err != nil {
+			t.Fatal("create chtype config file error:", err)
+		}
+
+		test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
+	}()
 
 	test.RunCmdWithError("batchchtype", test.Bucket,
 		"-i", path,
@@ -183,19 +199,6 @@ func TestBatchChangeTypeRecord(t *testing.T) {
 		fmt.Println("=========================== result   end ===========================")
 		t.Fatal("batch result: should redo because set --record-redo-while-error")
 	}
-
-	//back
-	batchConfig = ""
-	for _, key := range test.Keys {
-		batchConfig += key + "\t" + "1" + "\n"
-	}
-
-	path, err = test.CreateFileWithContent("batch_chtype.txt", batchConfig)
-	if err != nil {
-		t.Fatal("create chtype config file error:", err)
-	}
-
-	test.RunCmdWithError("batchchtype", test.Bucket, "-i", path, "-y")
 }
 
 func TestBatchChangeTypeDocument(t *testing.T) {

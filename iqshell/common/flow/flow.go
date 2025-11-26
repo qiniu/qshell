@@ -111,6 +111,12 @@ func (f *Flow) Start() {
 					log.DebugF("work producer get work, skip:%s because:%s", workInfo, err)
 					f.notifyWorkSkip(workInfo, nil, err)
 				} else {
+					// 没有读到任何数据
+					if workInfo == nil || len(workInfo.Data) == 0 {
+						log.ErrorF("work producer get work fail: %s", err)
+						break
+					}
+
 					log.DebugF("work producer get work fail, error:%s info:%s", err, workInfo)
 					f.notifyWorkFail(workInfo, err)
 				}
@@ -197,14 +203,12 @@ func (f *Flow) Start() {
 				}
 
 				workCount := len(workList)
-
 				log.DebugF("work consumer get works, count:%d", workCount)
 
 				_ = f.limitAcquire(workCount)
 				// workRecordList 有数据则长度和 workList 长度相同
 				workRecordList, workErr := worker.DoWork(workList)
 				f.limitRelease(workCount)
-
 				log.DebugF("work consumer handle works, count:%d error:%+v", workCount, workErr)
 
 				if len(workRecordList) == 0 && workErr != nil {

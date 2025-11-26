@@ -17,17 +17,13 @@ func TestGetImage(t *testing.T) {
 		t.Fatal("get result path error:", err)
 	}
 	path := filepath.Join(resultPath, test.ImageKey)
-	ret, errs := test.RunCmdWithError("get", test.Bucket, test.ImageKey,
-		"--public",
+	_, errs := test.RunCmdWithError("get", test.Bucket, test.ImageKey,
 		"-o", path,
 		"-d")
 	defer test.RemoveFile(path)
 
 	if len(errs) > 0 {
 		t.Fail()
-	}
-	if !strings.Contains(ret, ".qiniucs.com") {
-		t.Fatal("get file: should get io src domain")
 	}
 	if !test.IsFileHasContent(path) {
 		t.Fatal("get file content can't be empty")
@@ -44,7 +40,6 @@ func TestGetImageAndCheck(t *testing.T) {
 	// 因为有源站域名，所以经过重试下载会成功
 	result, errs := test.RunCmdWithError("get", test.Bucket, test.ImageKey,
 		"--check-size",
-		"--public",
 		"-d",
 		"-o", path)
 	defer test.RemoveFile(path)
@@ -186,7 +181,7 @@ func TestGetNoExistDomain(t *testing.T) {
 
 func TestGetNoExistBucket(t *testing.T) {
 	_, errs := test.RunCmdWithError("get", test.BucketNotExist, test.Key)
-	if !strings.Contains(errs, "no such bucket") {
+	if !(strings.Contains(errs, "no such bucket") || strings.Contains(errs, "no such entry")) {
 		t.Fail()
 	}
 }

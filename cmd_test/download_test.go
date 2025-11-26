@@ -33,7 +33,6 @@ func TestDownloadWithKeyFile(t *testing.T) {
 			Prefix:     "hell",
 			Suffixes:   ".json",
 			IoHost:     "",
-			Public:     true,
 			CheckHash:  true,
 			Referer:    "",
 			CdnDomain:  "",
@@ -73,7 +72,6 @@ func TestDownloadFromBucket(t *testing.T) {
 			Prefix:          "hello3,hello5,hello7",
 			Suffixes:        "",
 			IoHost:          utils.Endpoint(false, test.BucketDomain),
-			Public:          true,
 			CheckSize:       true,
 			Referer:         "",
 			CdnDomain:       "",
@@ -114,7 +112,6 @@ func TestDownloadWithDomain(t *testing.T) {
 			Prefix:          "hello3,hello5,hello7",
 			Suffixes:        "",
 			IoHost:          utils.Endpoint(false, test.BucketDomain),
-			Public:          true,
 			CheckSize:       true,
 			Referer:         "",
 			Domain:          utils.Endpoint(false, test.BucketDomain),
@@ -186,7 +183,6 @@ func TestDownloadNoDomain(t *testing.T) {
 			Bucket:     test.Bucket,
 			Prefix:     "hello3,hello5,hello7",
 			Suffixes:   "",
-			Public:     true,
 			CheckHash:  true,
 			Referer:    "",
 			CdnDomain:  "",
@@ -283,7 +279,6 @@ func TestDownload2AllFilesFromBucket(t *testing.T) {
 		"--bucket", test.Bucket,
 		"--dest-dir", destDir,
 		"--suffixes", ".json",
-		"--public",
 		"--log-file", logPath,
 		"--log-level", "info",
 		"-c", "4",
@@ -355,10 +350,6 @@ func TestDownload2WithKeyFile(t *testing.T) {
 	}
 
 	logContent := test.FileContent(logPath)
-	if !strings.Contains(logContent, "?e=") {
-		t.Fatal("download url should private")
-	}
-
 	if !strings.Contains(logContent, "work consumer 3 start") {
 		t.Fatal("download should have consumer 3")
 	}
@@ -397,7 +388,6 @@ func TestDownload2PublicWithKeyFile(t *testing.T) {
 		"--key-file", keysFilePath,
 		"--log-file", logPath,
 		"--log-level", "debug",
-		"--public",
 		"-c", "4",
 		"-d")
 	if test.FileCountInDir(destDir) < 2 {
@@ -406,11 +396,6 @@ func TestDownload2PublicWithKeyFile(t *testing.T) {
 
 	if !test.IsFileHasContent(logPath) {
 		t.Fatal("log file should has content")
-	}
-
-	logContent := test.FileContent(logPath)
-	if strings.Contains(logContent, "?e=") {
-		t.Fatal("download url should public")
 	}
 
 	return
@@ -445,7 +430,6 @@ func TestDownload2PublicWithDomain(t *testing.T) {
 		"--key-file", keysFilePath,
 		"--log-file", logPath,
 		"--log-level", "debug",
-		"--public",
 		"-c", "4",
 		"-d")
 	if test.FileCountInDir(destDir) < 2 {
@@ -454,11 +438,6 @@ func TestDownload2PublicWithDomain(t *testing.T) {
 
 	if !test.IsFileHasContent(logPath) {
 		t.Fatal("log file should has content")
-	}
-
-	logContent := test.FileContent(logPath)
-	if strings.Contains(logContent, "?e=") {
-		t.Fatal("download url should public")
 	}
 
 	return

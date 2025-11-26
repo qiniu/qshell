@@ -3,9 +3,10 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestBucketDomain(t *testing.T) {
@@ -15,7 +16,7 @@ func TestBucketDomain(t *testing.T) {
 	}
 
 	if !strings.Contains(result, test.BucketDomain) {
-		t.Fatal("no expected domain:%", test.BucketDomain)
+		t.Fatal("no expected domain:", result)
 	}
 
 	return

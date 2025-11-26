@@ -49,7 +49,6 @@ $ qshell qdownload --doc
     "check_hash"             :   false,
     "domain"                 :   "down.example.com",
     "referer"                :   "http://www.example.com",
-    "public"                 :   true,
     "remove_temp_while_error":   false,
     "log_file"               :   "download.log",
     "log_level"              :   "info",
@@ -70,7 +69,7 @@ $ qshell qdownload --doc
 - check_hash：是否验证 hash，如果开启可能会耗费较长时间，默认为 `false` 【可选】
 - domain：指定下载请求的域名，当指定了下载域名则仅使用此下载域名进行下载；默认为空，此时 qshell 下载使用域名的优先级：1.bucket 绑定的 CDN 域名(qshell 内部查询，无需配置) 2.bucket 绑定的源站域名(qshell 内部查询，无需配置) 3. 七牛源站域名(qshell 内部查询，无需配置)，当优先级高的域名下载失败后会尝试使用优先级低的域名进行下载。【可选】
 - referer：如果下载请求域名配置了域名白名单防盗链，需要指定一个允许访问的 referer 地址；默认为空 【可选】
-- public：空间是否为公开空间；为 `true` 时为公有空间，公有空间下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为 `false`（私有空间）【可选】
+- public：空间是否为公开空间；为 `true` 时为公有空间，公有空间下载时不会对下载 URL 进行签名，可以提升 CDN 域名性能，默认为 `false`（私有空间），已废弃【可选】
 - enable_slice: 是否开启切片下载，需要注意 `slice_file_size_threshold` 切片阈值选项的配置，只有开启切片下载，并且下载的文件大小大于切片阈值方会启动切片下载。默认不开启。【可选】
 - slice_size: 切片大小；当使用切片下载时，每个切片的大小；单位：B。默认为 4194304，也即 4MB。【可选】
 - slice_concurrent_count: 切片下载的并发度；默认为 10 【可选】

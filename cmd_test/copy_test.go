@@ -4,10 +4,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestCopy(t *testing.T) {
@@ -96,7 +97,6 @@ func TestBatchCopy(t *testing.T) {
 		"--worker", "4",
 		"--min-worker", "10",
 		"--worker-count-increase-period", "50",
-		"-w",
 		"-y")
 	defer func() {
 		test.RemoveFile(successLogPath)

@@ -117,7 +117,8 @@ type Uploader interface {
 func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	err = info.Check()
 	if err != nil {
-		log.WarningF("upload: info init error:%v", err)
+		log.ErrorF("upload: info init error:%v", err)
+		return nil, err
 	}
 
 	exist := false

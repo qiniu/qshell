@@ -111,6 +111,17 @@ func createDownloadUrl(info *DownloadApiInfo) (string, *data.CodeError) {
 		}
 		urlString = utils.Endpoint(useHttps, info.Host)
 		urlString = strings.Join([]string{urlString, "getfile", mac.AccessKey, info.Bucket, url.PathEscape(info.Key)}, "/")
+		// 源站域名需要签名
+		if !info.IsPublicBucket {
+			if u, e := PublicUrlToPrivate(PublicUrlToPrivateApiInfo{
+				PublicUrl: urlString,
+				Deadline:  time.Now().Add(60 * time.Minute).Unix(),
+			}); e != nil {
+				return "", e
+			} else {
+				urlString = u.Url
+			}
+		}
 	} else {
 		urlString = PublicUrl(UrlApiInfo{
 			BucketDomain: info.Host,

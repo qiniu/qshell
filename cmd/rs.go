@@ -70,7 +70,7 @@ var deleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var changeLifecycleCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info = &operations.ChangeLifecycleInfo{}
 	var cmd = &cobra.Command{
-		Use:   "chlifecycle <Bucket> <Key> [--to-ia-after-days <ToIAAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--delete-after-days <DeleteAfterDays>]",
+		Use:   "chlifecycle <Bucket> <Key> [--to-ia-after-days <ToIAAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--to-intelligent-tiering-after-days <ToIntelligentTieringAfterDays>] [--delete-after-days <DeleteAfterDays>]",
 		Short: "Set the lifecycle of a file.",
 		Long: `Set the lifecycle of a file. Lifecycle value must great than or equal to -1, unit: day.
 * less than  -1: there's no point and it won't trigger any effect
@@ -92,6 +92,7 @@ var changeLifecycleCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().IntVarP(&info.ToArchiveIRAfterDays, "to-archive-ir-after-days", "", 0, "to ARCHIVE_IR storage after some days. the range is -1 or bigger than 0. -1 means cancel to ARCHIVE_IR storage")
 	cmd.Flags().IntVarP(&info.ToArchiveAfterDays, "to-archive-after-days", "", 0, "to ARCHIVE storage after some days. the range is -1 or bigger than 0. -1 means cancel to ARCHIVE storage")
 	cmd.Flags().IntVarP(&info.ToDeepArchiveAfterDays, "to-deep-archive-after-days", "", 0, "to DEEP_ARCHIVE storage after some days. the range is -1 or bigger than 0. -1 means cancel to DEEP_ARCHIVE storage")
+	cmd.Flags().IntVarP(&info.ToIntelligentTieringAfterDays, "to-intelligent-tiering-after-days", "", 0, "to INTELLIGENT_TIERING storage after some days. the range is -1 or bigger than 0. -1 means cancel to INTELLIGENT_TIERING storage")
 	cmd.Flags().IntVarP(&info.DeleteAfterDays, "delete-after-days", "", 0, "delete after some days. the range is -1 or bigger than 0. -1 means cancel to delete")
 	return cmd
 }
@@ -245,7 +246,8 @@ And 0 means STANDARD storage,
 while 1 means IA storage,
 while 2 means ARCHIVE storage.
 while 3 means DEEP_ARCHIVE storage.
-while 4 means ARCHIVE_IR storage.`,
+while 4 means ARCHIVE_IR storage.
+while 5 means INTELLIGENT_TIERING storage`,
 		Example: `change storage type of A.png(bucket:bucketA key:A.png) to ARCHIVE storage
 	qshell chtype bucketA A.png 2
 and you can check result by command:

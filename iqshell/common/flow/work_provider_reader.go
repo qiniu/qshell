@@ -2,11 +2,12 @@ package flow
 
 import (
 	"bufio"
-	"github.com/qiniu/qshell/v2/iqshell/common/alert"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"strings"
 	"sync"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/alert"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 func NewReaderWorkProvider(reader io.Reader, creator WorkCreator) (WorkProvider, *data.CodeError) {
@@ -51,6 +52,9 @@ func (p *readerWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.
 			Data: line,
 			Work: w,
 		}, e
+	}
+	if sErr := p.scanner.Err(); sErr != nil {
+		return true, &WorkInfo{}, data.ConvertError(sErr)
 	}
 	return false, &WorkInfo{}, nil
 }
