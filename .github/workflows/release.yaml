@@ -63,7 +63,7 @@ jobs:
       env:
         PUBLISH_ACCESS_KEY: ${{ secrets.PUBLISH_ACCESS_KEY }}
         PUBLISH_SECRET_KEY: ${{ secrets.PUBLISH_SECRET_KEY }}
-    - uses: wangyoucao577/go-release-action@master
+    - uses: wangyoucao577/go-release-action@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
