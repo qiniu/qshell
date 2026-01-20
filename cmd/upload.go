@@ -71,7 +71,7 @@ var upload2CmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().IntVar(&info.UploadConfig.WorkerCount, "worker-count", 3, "the number of concurrently uploaded parts of a single file in resumable upload")
 	cmd.Flags().BoolVar(&info.UploadConfig.SequentialReadFile, "sequential-read-file", false, "File reading is sequential and does not involve skipping; when enabled, the uploading fragment data will be loaded into the memory. This option may increase file upload speed for mounted network filesystems.")
 
-	cmd.Flags().BoolVarP(&info.ResumableAPIV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().BoolVarP(&info.ResumableAPIV2, "resumable-api-v2", "", true, "use resumable upload v2 APIs to upload, default is true")
 	cmd.Flags().Int64Var(&info.ResumableAPIV2PartSize, "resumable-api-v2-part-size", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload")
 	cmd.Flags().BoolVar(&info.IgnoreDir, "ignore-dir", false, "ignore the dir in the dest file key")
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "", false, "overwrite the file of same key in bucket")
@@ -144,7 +144,7 @@ var syncCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&info.SaveKey, "key", "k", "", "save as <key> in bucket")
-	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", true, "use resumable upload v2 APIs to upload, default is true")
 	cmd.Flags().Int64VarP(&info.ChunkSize, "resumable-api-v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")
 	cmd.Flags().StringVarP(&info.UpHost, "up-host", "u", "", "upload host")
 	cmd.Flags().BoolVarP(&info.Accelerate, "accelerate", "", false, "enable uploading acceleration")
@@ -252,7 +252,7 @@ var resumeUploadCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 	cmd.Flags().StringVarP(&info.MimeType, "mimetype", "t", "", "file mime type")
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "", false, "overwrite the file of same key in bucket")
-	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", false, "use resumable upload v2 APIs to upload")
+	cmd.Flags().BoolVarP(&info.UseResumeV2, "resumable-api-v2", "", true, "use resumable upload v2 APIs to upload, default is true")
 	cmd.Flags().BoolVar(&info.SequentialReadFile, "sequential-read-file", false, "File reading is sequential and does not involve skipping; when enabled, the uploading fragment data will be loaded into the memory. This option may increase file upload speed for mounted network filesystems.")
 
 	cmd.Flags().Int64VarP(&info.ChunkSize, "resumable-api-v2-part-size", "", data.BLOCK_SIZE, "the part size when use resumable upload v2 APIs to upload, default 4M")

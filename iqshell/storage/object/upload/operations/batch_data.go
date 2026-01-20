@@ -120,7 +120,7 @@ func DefaultUploadConfig() UploadConfig {
 		SkipSuffixes:           "",
 		FileEncoding:           "",
 		Bucket:                 "",
-		ResumableAPIV2:         false,
+		ResumableAPIV2:         true,
 		ResumableAPIV2PartSize: 4 * 1024 * 1024,
 		PutThreshold:           8 * 1024 * 1024,
 		KeyPrefix:              "",
