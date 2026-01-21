@@ -1,12 +1,13 @@
 package operations
 
 import (
+	"os"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/m3u8"
-	"os"
 )
 
 type DeleteInfo m3u8.DeleteApiInfo

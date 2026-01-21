@@ -92,7 +92,7 @@ func ShowDocumentIfNeeded(cfg *Config) bool {
 }
 
 func loadBase(cfg *Config) (shouldContinue bool) {
-	//set cpu count
+	// set cpu count
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// 配置 user agent

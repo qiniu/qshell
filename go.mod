@@ -5,7 +5,7 @@ require (
 	github.com/astaxie/beego v1.12.3
 	github.com/aws/aws-sdk-go v1.37.31
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/qiniu/go-sdk/v7 v7.25.5
+	github.com/qiniu/go-sdk/v7 v7.25.6
 	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.1.3

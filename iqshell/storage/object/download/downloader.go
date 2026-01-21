@@ -334,7 +334,7 @@ func downloadTempFileWithDownloader(dl downloader, fInfo *fileInfo, info *Downlo
 	var tempFileHandle *os.File
 	isExist, _ := utils.ExistFile(fInfo.tempFile)
 	if isExist {
-		tempFileHandle, fErr = os.OpenFile(fInfo.tempFile, os.O_APPEND|os.O_WRONLY, 0655)
+		tempFileHandle, fErr = os.OpenFile(fInfo.tempFile, os.O_APPEND|os.O_WRONLY, 0o655)
 		log.DebugF("download %s => %s from:%d", downloadUrl, fInfo.toFile, info.RangeFromBytes)
 	} else {
 		tempFileHandle, fErr = os.Create(fInfo.tempFile)
@@ -397,7 +397,7 @@ func createDownloader(info *DownloadActionInfo) (downloader, *data.CodeError) {
 }
 
 func utf82GBK(text string) (string, *data.CodeError) {
-	var gbkEncoder = simplifiedchinese.GBK.NewEncoder()
+	gbkEncoder := simplifiedchinese.GBK.NewEncoder()
 	d, err := gbkEncoder.String(text)
 	return d, data.ConvertError(err)
 }

@@ -2,17 +2,20 @@ package locker
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"sync"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"os"
-	"path/filepath"
-	"sync"
 )
 
-var lockerPath string
-var locker sync.Mutex
+var (
+	lockerPath string
+	locker     sync.Mutex
+)
 
 func SetLockerPath(path string) {
 	if len(path) == 0 {

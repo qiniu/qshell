@@ -1,13 +1,14 @@
 package recorder
 
 import (
+	"os"
+	"path/filepath"
+	"sync"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"os"
-	"path/filepath"
-	"sync"
 )
 
 type dbRecorder struct {
@@ -15,8 +16,10 @@ type dbRecorder struct {
 	db       *leveldb.DB
 }
 
-var dbMap map[string]*dbRecorder
-var dbMapLock sync.Mutex
+var (
+	dbMap     map[string]*dbRecorder
+	dbMapLock sync.Mutex
+)
 
 func CreateDBRecorder(filePath string) (Recorder, *data.CodeError) {
 	dbMapLock.Lock()

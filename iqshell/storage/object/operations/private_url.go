@@ -204,7 +204,6 @@ func BatchPrivateUrl(cfg *iqshell.Config, info BatchPrivateUrlInfo) {
 				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 				log.DebugF("Skip line:%s because:%v", work.Data, err)
 			}
-
 		}).
 		OnWorkSuccess(func(work *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)

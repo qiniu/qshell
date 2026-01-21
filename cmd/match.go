@@ -8,8 +8,8 @@ import (
 )
 
 var matchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.MatchInfo{}
-	var cmd = &cobra.Command{
+	info := operations.MatchInfo{}
+	cmd := &cobra.Command{
 		Use:   "match <Bucket> <Key> <LocalFile>",
 		Short: "Verify that the local file matches the Qiniu cloud storage file",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -30,8 +30,8 @@ var matchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchMatchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchMatchInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchMatchInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchmatch <Bucket> <LocalFileDir>",
 		Short: "Batch Verify that the local file matches the Qiniu cloud storage file",
 		Run: func(cmd *cobra.Command, args []string) {

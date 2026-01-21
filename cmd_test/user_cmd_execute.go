@@ -3,8 +3,9 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"strings"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func addUser(userName, ak, sk string) (success bool, errorMsg string) {

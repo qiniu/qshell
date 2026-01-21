@@ -277,8 +277,8 @@ github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsT
 github.com/prometheus/procfs v0.1.3/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4OA4YeYWdaU=
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/qiniu/dyn v1.3.0/go.mod h1:E8oERcm8TtwJiZvkQPbcAh0RL8jO1G0VXJMW3FAWdkk=
-github.com/qiniu/go-sdk/v7 v7.25.5 h1:BZAZhrYC7vrw9NPnNbFi1K8xucoz29s7sEGWap77i2Q=
-github.com/qiniu/go-sdk/v7 v7.25.5/go.mod h1:dmKtJ2ahhPWFVi9o1D5GemmWoh/ctuB9peqTowyTO8o=
+github.com/qiniu/go-sdk/v7 v7.25.6 h1:89KQX16Bv2x7MxhwpzWGGvQBOPIlGpAcnPQyfS3tRok=
+github.com/qiniu/go-sdk/v7 v7.25.6/go.mod h1:dmKtJ2ahhPWFVi9o1D5GemmWoh/ctuB9peqTowyTO8o=
 github.com/qiniu/x v1.10.5/go.mod h1:03Ni9tj+N2h2aKnAz+6N0Xfl8FwMEDRC2PAlxekASDs=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=

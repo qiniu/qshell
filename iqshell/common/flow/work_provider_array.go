@@ -1,9 +1,10 @@
 package flow
 
 import (
+	"sync"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"sync"
 )
 
 func NewArrayWorkProvider(works []Work) (WorkProvider, *data.CodeError) {

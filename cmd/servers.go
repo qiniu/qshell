@@ -8,8 +8,8 @@ import (
 )
 
 var bucketsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ListInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ListInfo{}
+	cmd := &cobra.Command{
 		Use:   "buckets",
 		Short: "Get all buckets of the account",
 		Args:  cobra.ExactArgs(0),

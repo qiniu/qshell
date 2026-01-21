@@ -4,11 +4,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 const (

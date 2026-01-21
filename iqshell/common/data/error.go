@@ -15,9 +15,7 @@ var (
 	ErrorCodeAlreadyDone   = -15000
 )
 
-var (
-	CancelError = NewError(ErrorCodeCancel, "user cancel")
-)
+var CancelError = NewError(ErrorCodeCancel, "user cancel")
 
 func ConvertError(err error) *CodeError {
 	if err == nil {

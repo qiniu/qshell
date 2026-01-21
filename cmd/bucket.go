@@ -10,8 +10,8 @@ import (
 )
 
 var domainsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ListDomainInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ListDomainInfo{}
+	cmd := &cobra.Command{
 		Use:   "domains <Bucket>",
 		Short: "Get all domains of the bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -27,8 +27,8 @@ var domainsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var bucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.GetBucketInfo{}
-	var cmd = &cobra.Command{
+	info := operations.GetBucketInfo{}
+	cmd := &cobra.Command{
 		Use:   "bucket <Bucket>",
 		Short: "Get bucket info",
 		Long:  `Get bucket info`,
@@ -44,8 +44,8 @@ var bucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var mkBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.CreateInfo{}
-	var cmd = &cobra.Command{
+	info := operations.CreateInfo{}
+	cmd := &cobra.Command{
 		Use:   "mkbucket <Bucket>",
 		Short: "Create a bucket in region",
 		Long: `Create a bucket in region; 
@@ -65,7 +65,7 @@ The Bucket name is required to be unique within the scope of the object storage 
 }
 
 var listBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ListInfo{
+	info := operations.ListInfo{
 		Bucket:             "",
 		Prefix:             "",
 		Marker:             "",
@@ -90,7 +90,7 @@ var listBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		OutputFileMaxSize:  0,
 		EnableRecord:       false,
 	}
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "listbucket <Bucket>",
 		Short: "List all the files in the bucket",
 		Long:  "List all the files in the bucket to stdout if output file not specified. Each row of data information is displayed in the following order:\n Key\tSize\tHash\tPutTime\tMimeType\tFileType\tEndUser",
@@ -108,8 +108,8 @@ var listBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var listBucketCmd2Builder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ListInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ListInfo{}
+	cmd := &cobra.Command{
 		Use:   "listbucket2 <Bucket>",
 		Short: "List all the files in the bucket",
 		Long:  "List all the files in the bucket to stdout if output file not specified. Each row of data information is displayed in the following order by default:\n Key\tFileSize\tHash\tPutTime\tMimeType\tFileType\tEndUser",

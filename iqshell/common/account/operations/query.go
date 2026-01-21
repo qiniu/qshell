@@ -8,8 +8,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
-type UserInfo struct {
-}
+type UserInfo struct{}
 
 func (info *UserInfo) Check() *data.CodeError {
 	return nil
@@ -45,12 +44,12 @@ func List(cfg *iqshell.Config, info ListInfo) {
 
 	for index, acc := range accounts {
 		if info.OnlyListName {
-			log.AlertF(acc.Name)
+			log.Alert(acc.Name)
 		} else {
 			if index > 0 {
 				log.Alert(" ")
 			}
-			log.AlertF(acc.String())
+			log.Alert(acc.String())
 		}
 	}
 }
@@ -69,7 +68,7 @@ func Current(cfg *iqshell.Config) {
 		data.SetCmdStatusError()
 		return
 	}
-	log.AlertF(acc.String())
+	log.Alert(acc.String())
 }
 
 // LookUpInfo 查找某个用户
@@ -98,7 +97,7 @@ func LookUp(cfg *iqshell.Config, info LookUpInfo) {
 		return
 	}
 	for _, acc := range accounts {
-		log.AlertF(acc.String())
+		log.Alert(acc.String())
 		log.Alert("")
 	}
 

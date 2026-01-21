@@ -1,12 +1,13 @@
 package flow
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/limit"
 	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/limit"
 )
 
 type AutoLimitOption func(l *autoLimit)

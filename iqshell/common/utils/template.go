@@ -3,12 +3,13 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"html/template"
+	"path"
+
 	"github.com/Masterminds/sprig/v3"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"html/template"
-	"path"
 )
 
 type Template struct {

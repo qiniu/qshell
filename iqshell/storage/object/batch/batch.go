@@ -170,7 +170,6 @@ func (h *handler) Start() {
 	workerBuilder.
 		WorkerProvider(flow.NewWorkerProvider(func() (flow.Worker, *data.CodeError) {
 			return flow.NewWorker(func(workInfoList []*flow.WorkInfo) ([]*flow.WorkRecord, *data.CodeError) {
-
 				recordList := make([]*flow.WorkRecord, 0, len(workInfoList))
 				operationBucket := ""
 				operationStringList := make([]string, 0, len(workInfoList))

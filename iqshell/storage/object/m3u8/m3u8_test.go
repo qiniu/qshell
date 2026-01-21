@@ -104,7 +104,8 @@ func TestReplaceTsWithNewDomain(t *testing.T) {
 }
 
 func checkReplaceTsWithNewDomain(t *testing.T, line, newDomain string,
-	removeSparePreSlash bool, expected string) {
+	removeSparePreSlash bool, expected string,
+) {
 	newLine := replaceTsNewDomain(line, newDomain, removeSparePreSlash)
 	assert.Equal(t, expected, newLine)
 }

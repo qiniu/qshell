@@ -2,9 +2,10 @@ package progress
 
 import (
 	"fmt"
-	"github.com/schollz/progressbar/v3"
 	"sync"
 	"time"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 const (

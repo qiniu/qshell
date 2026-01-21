@@ -3,12 +3,13 @@ package docs
 import (
 	_ "embed"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 type ShowMethod int
@@ -18,8 +19,10 @@ const (
 	ShowMethodStdOut ShowMethod = 2
 )
 
-var stdout io.Writer = os.Stdout
-var showMethod = ShowMethodLess
+var (
+	stdout     io.Writer = os.Stdout
+	showMethod           = ShowMethodLess
+)
 
 func SetStdout(o io.Writer) {
 	stdout = o

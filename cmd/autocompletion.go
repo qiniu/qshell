@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"bytes"
+	"os"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func completeCmdBuilder(superCmd *cobra.Command, cfg *iqshell.Config) *cobra.Command {

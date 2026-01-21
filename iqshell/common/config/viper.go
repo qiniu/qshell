@@ -47,7 +47,7 @@ func getValueFromLocal(vipers []*viper.Viper, localKey []string, f func(value in
 		return
 	}
 
-	var stop = false
+	stop := false
 	var value interface{}
 	for _, key := range localKey {
 		for _, vip := range vipers {

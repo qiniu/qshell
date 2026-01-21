@@ -1,9 +1,10 @@
 package batch
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"sync"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
 type Metric struct {

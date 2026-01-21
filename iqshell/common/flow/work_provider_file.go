@@ -1,9 +1,10 @@
 package flow
 
 import (
+	"os"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"os"
 )
 
 func NewFileWorkProvider(filePath string, creator WorkCreator) (WorkProvider, *data.CodeError) {

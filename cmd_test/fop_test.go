@@ -9,8 +9,10 @@ import (
 	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
-const fopObjectKey = "test_mv.mp4"
-const fopObjectValue = "avthumb/mp4"
+const (
+	fopObjectKey   = "test_mv.mp4"
+	fopObjectValue = "avthumb/mp4"
+)
 
 func TestFop(t *testing.T) {
 	result, errs := test.RunCmdWithError("pfop", test.Bucket, fopObjectKey, fopObjectValue)

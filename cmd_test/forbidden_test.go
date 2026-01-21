@@ -4,10 +4,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestForbidden(t *testing.T) {
@@ -84,7 +85,7 @@ func TestBatchForbidden(t *testing.T) {
 		"--worker", "4",
 		"-y")
 	defer func() {
-		//back
+		// back
 		test.RunCmdWithError("batchforbidden", test.Bucket, "-i", path, "-y", "-r")
 
 		test.RemoveFile(successLogPath)
@@ -122,7 +123,7 @@ func TestBatchForbiddenRecord(t *testing.T) {
 		"-d",
 		"-y")
 	defer func() {
-		//back
+		// back
 		test.RunCmdWithError("batchforbidden", test.Bucket, "-i", path, "-y", "-r")
 	}()
 

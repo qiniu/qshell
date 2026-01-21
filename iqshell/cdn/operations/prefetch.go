@@ -1,13 +1,14 @@
 package operations
 
 import (
+	"strings"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/cdn"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"strings"
 )
 
 type PrefetchInfo struct {
@@ -78,7 +79,6 @@ func Prefetch(cfg *iqshell.Config, info PrefetchInfo) {
 }
 
 func prefetchWithQps(urlsToPrefetch []string) {
-
 	waiterIfNeeded()
 
 	log.DebugF("cdnPrefetch, url size: %d", len(urlsToPrefetch))

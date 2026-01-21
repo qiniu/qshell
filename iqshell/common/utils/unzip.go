@@ -2,18 +2,19 @@ package utils
 
 import (
 	"archive/zip"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"os"
 	"path/filepath"
 	"unicode/utf8"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
 func Gbk2Utf8(text string) (string, *data.CodeError) {
-	var gDecoder = simplifiedchinese.GBK.NewDecoder()
+	gDecoder := simplifiedchinese.GBK.NewDecoder()
 	utf8Dst := make([]byte, len(text)*3)
 	_, _, err := gDecoder.Transform(utf8Dst, []byte(text), true)
 	if err != nil {
@@ -39,12 +40,12 @@ func Unzip(zipFilePath string, unzipPath string) (err *data.CodeError) {
 
 	zipFiles := zipReader.File
 
-	//list dir
+	// list dir
 	for _, zipFile := range zipFiles {
 		fileInfo := zipFile.FileHeader.FileInfo()
 		fileName := zipFile.FileHeader.Name
 
-		//check charset utf8 or gbk
+		// check charset utf8 or gbk
 		if !utf8.Valid([]byte(fileName)) {
 			fileName, err = Gbk2Utf8(fileName)
 			if err != nil {
@@ -56,7 +57,7 @@ func Unzip(zipFilePath string, unzipPath string) (err *data.CodeError) {
 		fullPath := filepath.Join(unzipPath, fileName)
 		if fileInfo.IsDir() {
 			log.Debug("Mkdir", fullPath)
-			mErr := os.MkdirAll(fullPath, 0775)
+			mErr := os.MkdirAll(fullPath, 0o775)
 			if mErr != nil {
 				err = data.NewEmptyError().AppendDescF("Mkdir error, %s", mErr)
 				continue
@@ -64,12 +65,12 @@ func Unzip(zipFilePath string, unzipPath string) (err *data.CodeError) {
 		}
 	}
 
-	//list file
+	// list file
 	for _, zipFile := range zipFiles {
 		fileInfo := zipFile.FileHeader.FileInfo()
 		fileName := zipFile.FileHeader.Name
 
-		//check charset utf8 or gbk
+		// check charset utf8 or gbk
 		if !utf8.Valid([]byte(fileName)) {
 			fileName, err = Gbk2Utf8(fileName)
 			if err != nil {
@@ -80,9 +81,9 @@ func Unzip(zipFilePath string, unzipPath string) (err *data.CodeError) {
 
 		fullPath := filepath.Join(unzipPath, fileName)
 		if !fileInfo.IsDir() {
-			//to be compatible with pkzip(4.5)
+			// to be compatible with pkzip(4.5)
 			fullPathDir := filepath.Dir(fullPath)
-			mErr := os.MkdirAll(fullPathDir, 0755)
+			mErr := os.MkdirAll(fullPathDir, 0o755)
 			if mErr != nil {
 				err = data.NewEmptyError().AppendDescF("Mkdir error, %v", mErr)
 				continue

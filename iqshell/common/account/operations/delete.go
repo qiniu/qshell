@@ -8,8 +8,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
-type CleanInfo struct {
-}
+type CleanInfo struct{}
 
 func (info *CleanInfo) Check() *data.CodeError {
 	return nil

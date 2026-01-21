@@ -1,13 +1,14 @@
 package operations
 
 import (
+	"strings"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/cdn"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"strings"
 )
 
 type RefreshInfo struct {
@@ -23,7 +24,6 @@ func (info *RefreshInfo) Check() *data.CodeError {
 
 // Refresh 【cdnrefresh】刷新所有CDN节点
 func Refresh(cfg *iqshell.Config, info RefreshInfo) {
-
 	if shouldContinue := iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{
 		Checker: &info,
 	}); !shouldContinue {
@@ -72,7 +72,7 @@ func Refresh(cfg *iqshell.Config, info RefreshInfo) {
 		}
 	}
 
-	//check final items
+	// check final items
 	if len(itemsToRefresh) > 0 {
 		refreshWithQps(info, itemsToRefresh, true)
 	}

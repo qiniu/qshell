@@ -2,11 +2,12 @@ package test
 
 import (
 	"fmt"
-	"github.com/mitchellh/go-homedir"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/mitchellh/go-homedir"
 )
 
 func RootPath() (string, error) {
@@ -73,7 +74,7 @@ func CreateFileWithContent(fileName, content string) (string, error) {
 
 	filePath = filepath.Join(filePath, fileName)
 	_ = RemoveFile(filePath)
-	if f, OErr := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600); OErr != nil {
+	if f, OErr := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600); OErr != nil {
 		return "", OErr
 	} else {
 		_, err = f.Write([]byte(content))
@@ -110,7 +111,7 @@ func CreateTempFile(size int) (string, error) {
 		return "", err
 	}
 
-	f, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600)
+	f, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600)
 	if err != nil {
 		return "", err
 	}

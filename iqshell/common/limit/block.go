@@ -1,9 +1,10 @@
 package limit
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"sync"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 // BlockLimit 并发 + 限流

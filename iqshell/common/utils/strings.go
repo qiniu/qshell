@@ -34,7 +34,7 @@ func CreateRandString(num int) (rcode string) {
 
 func SplitString(line, sep string) []string {
 	if len(sep) == 0 {
-		//strings.TrimSpace(sep) == ""
+		// strings.TrimSpace(sep) == ""
 		return strings.Fields(line)
 	}
 	return strings.Split(line, sep)

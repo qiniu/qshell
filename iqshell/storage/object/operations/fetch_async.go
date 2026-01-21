@@ -115,8 +115,8 @@ func BatchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo) {
 }
 
 func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
-	exporter *export.FileExporter, fetchResultChan chan<- flow.Work) {
-
+	exporter *export.FileExporter, fetchResultChan chan<- flow.Work,
+) {
 	metric := &batch.Metric{}
 	metric.Start()
 
@@ -304,7 +304,8 @@ func batchAsyncFetch(cfg *iqshell.Config, info BatchAsyncFetchInfo,
 }
 
 func batchAsyncFetchCheck(cfg *iqshell.Config, info BatchAsyncFetchInfo,
-	exporter *export.FileExporter, fetchResultChan <-chan flow.Work) {
+	exporter *export.FileExporter, fetchResultChan <-chan flow.Work,
+) {
 	if info.DisableCheckFetchResult {
 		log.DebugF("batch async fetch check: disable")
 		for r := range fetchResultChan {
@@ -505,8 +506,10 @@ type asyncFetchResult struct {
 	Info     *object.AsyncFetchApiResult `json:"info"`
 }
 
-var _ flow.Work = (*asyncFetchResult)(nil)
-var _ flow.Result = (*asyncFetchResult)(nil)
+var (
+	_ flow.Work   = (*asyncFetchResult)(nil)
+	_ flow.Result = (*asyncFetchResult)(nil)
+)
 
 func (f *asyncFetchResult) String() string {
 	return fmt.Sprintf("%s => [%s:%s]", f.Url, f.Bucket, f.Key)

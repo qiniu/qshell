@@ -1,10 +1,11 @@
 package flow
 
 import (
+	"os"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"os"
 )
 
 const UnknownWorkCount = int64(-1)

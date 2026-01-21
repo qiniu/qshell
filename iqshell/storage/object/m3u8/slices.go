@@ -4,15 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 )
 
 type Slice struct {
@@ -41,7 +42,7 @@ func Slices(info SliceListApiInfo) ([]Slice, *data.CodeError) {
 		dnLink = urlResult.Url
 	}
 
-	//get m3u8 file content
+	// get m3u8 file content
 	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)
 	if reqErr != nil {
 		return nil, data.NewEmptyError().AppendDescF("new request for url %s error, %s", dnLink, reqErr)
@@ -62,7 +63,7 @@ func Slices(info SliceListApiInfo) ([]Slice, *data.CodeError) {
 		return nil, data.NewEmptyError().AppendDescF("read m3u8 file content error, %s", readErr.Error())
 	}
 
-	//check content
+	// check content
 	if !strings.HasPrefix(string(m3u8Bytes), "#EXTM3U") {
 		return nil, data.NewEmptyError().AppendDesc("invalid m3u8 file")
 	}
@@ -126,7 +127,7 @@ func downloadLink(info downloadLinkApiInfo) (dnLink string, err *data.CodeError)
 		}
 	}
 
-	//get first
+	// get first
 	if domain == "" && len(bucketDomains) > 0 {
 		domain = bucketDomains[0].Domain
 	}

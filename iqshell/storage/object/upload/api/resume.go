@@ -2,10 +2,11 @@ package api
 
 import (
 	"context"
+	"time"
+
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"time"
 )
 
 type Resume interface {

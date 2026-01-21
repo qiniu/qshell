@@ -1,11 +1,12 @@
 package operations
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/config"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"os"
-	"path/filepath"
 )
 
 func downloadCachePath(cfg *config.Config, downloadCfg *DownloadCfg) string {

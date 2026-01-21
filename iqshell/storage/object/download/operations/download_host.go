@@ -33,7 +33,6 @@ func getDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.Host
 }
 
 func defaultDownloadHosts(cfg *config.Config, downloadCfg *DownloadCfg) []*host.Host {
-
 	hosts := make([]*host.Host, 0)
 
 	// 1. 从 download 配置获取

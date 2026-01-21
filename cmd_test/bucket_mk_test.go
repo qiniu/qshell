@@ -10,7 +10,6 @@ import (
 )
 
 func TestMkBucket(t *testing.T) {
-
 	_, errs := test.RunCmdWithError("mkbucket", test.Bucket, "--region", "z1", "--private")
 	if len(errs) == 0 {
 		t.Fatal("should return bucket exists")
@@ -24,7 +23,6 @@ func TestMkBucket(t *testing.T) {
 }
 
 func TestMkBucketNotExistRegion(t *testing.T) {
-
 	_, errs := test.RunCmdWithError("mkbucket", test.Bucket, "--region", "z10", "--private")
 	if len(errs) == 0 {
 		t.Fatal("should return bucket exists")

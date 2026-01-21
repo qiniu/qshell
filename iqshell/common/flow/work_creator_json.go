@@ -2,6 +2,7 @@ package flow
 
 import (
 	"encoding/json"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 

@@ -15,7 +15,7 @@ const uploadConfigMouldJsonString = `{
 	"skip_suffixes": "",
 	"file_encoding": "",
 	"bucket": "",
-	"resumable_api_v2": "false",
+	"resumable_api_v2": "true",
 	"resumable_api_v2_part_size": 1048576,
 	"put_threshold": 16777216,
 	"key_prefix": "",

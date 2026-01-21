@@ -5,8 +5,10 @@ import (
 	"os"
 )
 
-var stdout io.WriteCloser = os.Stdout
-var stderr io.WriteCloser = os.Stderr
+var (
+	stdout io.WriteCloser = os.Stdout
+	stderr io.WriteCloser = os.Stderr
+)
 
 func Stdout() io.WriteCloser {
 	return stdout

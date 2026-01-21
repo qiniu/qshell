@@ -16,7 +16,6 @@ func Delete(info DeleteApiInfo) ([]*batch.OperationResult, *data.CodeError) {
 		Bucket: info.Bucket,
 		Key:    info.Key,
 	})
-
 	if err != nil {
 		return nil, data.NewEmptyError().AppendDesc("Get m3u8 file list error:" + err.Error())
 	}

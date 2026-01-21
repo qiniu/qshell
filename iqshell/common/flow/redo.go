@@ -3,7 +3,6 @@ package flow
 import "github.com/qiniu/qshell/v2/iqshell/common/data"
 
 type Redo interface {
-
 	// ShouldRedo
 	// @Description: 是否需要重新做
 	// @param work 工作信息

@@ -3,12 +3,13 @@ package utils
 import (
 	"bufio"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
@@ -19,12 +20,11 @@ import (
 // @param cacheResultFile - cache result file path
 // @return (fileCount, retErr) - total file count and any error meets
 func DirCache(cacheRootPath string, cacheResultFile string) (int64, *data.CodeError) {
-
 	log.DebugF("cacheRootPath:`%s`", cacheRootPath)
 	cacheRootPath = filepath.Join(cacheRootPath, "")
 	log.DebugF("cacheRootPath after disposed:`%s`", cacheRootPath)
 
-	//check dir
+	// check dir
 	rootPathFileInfo, statErr := os.Stat(cacheRootPath)
 	if statErr != nil {
 		log.ErrorF("Failed to stat path `%s`, %s", cacheRootPath, statErr)
@@ -47,7 +47,7 @@ func DirCache(cacheRootPath string, cacheResultFile string) (int64, *data.CodeEr
 			return 0, data.NewEmptyError().AppendError(mkErr)
 		}
 
-		//create result file
+		// create result file
 		cResultFh, createErr := os.Create(cacheResultFile)
 		if createErr != nil {
 			log.ErrorF("Failed to open cache file `%s`, %s", cacheResultFile, createErr)
@@ -60,7 +60,7 @@ func DirCache(cacheRootPath string, cacheResultFile string) (int64, *data.CodeEr
 	bWriter := bufio.NewWriter(cacheResultFh)
 	defer bWriter.Flush()
 
-	//walk start
+	// walk start
 	walkStart := time.Now()
 
 	log.DebugF("Walk `%s` start from %s", cacheRootPath, walkStart.String())
@@ -68,11 +68,11 @@ func DirCache(cacheRootPath string, cacheResultFile string) (int64, *data.CodeEr
 	var fileCount int64 = 0
 	filepath.Walk(cacheRootPath, func(path string, fi os.FileInfo, walkErr error) error {
 		var retErr error
-		//check error
+		// check error
 		if walkErr != nil {
 			log.ErrorF("Walk through `%s` error, %s", path, walkErr)
 
-			//skip this dir
+			// skip this dir
 			retErr = filepath.SkipDir
 		} else {
 			if fi.IsDir() {
@@ -87,7 +87,7 @@ func DirCache(cacheRootPath string, cacheResultFile string) (int64, *data.CodeEr
 				log.DebugF("cacheRootPath:`%s` path:`%s` relativePath:`%s`", cacheRootPath, path, relativePath)
 
 				fsize := fi.Size()
-				//Unit is 100ns
+				// Unit is 100ns
 				flmd := fi.ModTime().UnixNano() / 100
 
 				log.DebugF("Meet file `%s`, size: %d, modtime: %d", relativePath, fsize, flmd)

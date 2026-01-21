@@ -1,11 +1,12 @@
 package operations
 
 import (
+	"net/url"
+
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"net/url"
 )
 
 type UrlInfo struct {

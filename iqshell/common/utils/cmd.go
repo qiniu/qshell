@@ -2,9 +2,10 @@ package utils
 
 import (
 	"bytes"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"os"
 	"os/exec"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 func IsCmdExist(cmd string) bool {
