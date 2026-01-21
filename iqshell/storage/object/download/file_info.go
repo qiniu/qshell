@@ -2,10 +2,11 @@ package download
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 type fileInfo struct {
@@ -58,7 +59,7 @@ func (d *fileInfo) prepare() *data.CodeError {
 	d.fileDir = filepath.Dir(d.toAbsFile)
 	d.tempFile = fmt.Sprintf("%s.tmp", d.toAbsFile)
 
-	err = os.MkdirAll(d.fileDir, 0775)
+	err = os.MkdirAll(d.fileDir, 0o775)
 	if err != nil {
 		return data.NewEmptyError().AppendDesc("MkdirAll failed for " + d.fileDir + " error:" + err.Error())
 	}

@@ -396,9 +396,9 @@ func copyShare(cfg *iqshell.Config, info *CopyShareInfo) error {
 					downloadPath = filepath.Join(toPath, relativePath)
 				}
 				if strings.HasSuffix(aws.StringValue(s3Object.Key), "/") && aws.Int64Value(s3Object.Size) == 0 {
-					err = os.MkdirAll(downloadPath, 0700)
+					err = os.MkdirAll(downloadPath, 0o700)
 				} else {
-					if err = os.MkdirAll(filepath.Dir(downloadPath), 0700); err != nil {
+					if err = os.MkdirAll(filepath.Dir(downloadPath), 0o700); err != nil {
 						return err
 					}
 					err = s3DownloadObjectToPath(s3Downloader, response.BucketId, aws.StringValue(s3Object.Key), downloadPath)
@@ -421,11 +421,11 @@ func copyShare(cfg *iqshell.Config, info *CopyShareInfo) error {
 		fromPrefix = strings.TrimSuffix(fromPrefix, "/")
 		downloadPath = filepath.Join(downloadPath, fromPrefix[(strings.LastIndex(fromPrefix, "/")+1):])
 		if onlyMkDir {
-			if err = os.MkdirAll(downloadPath, 0700); err != nil {
+			if err = os.MkdirAll(downloadPath, 0o700); err != nil {
 				return err
 			}
 		} else {
-			if err = os.MkdirAll(filepath.Dir(downloadPath), 0700); err != nil {
+			if err = os.MkdirAll(filepath.Dir(downloadPath), 0o700); err != nil {
 				return err
 			}
 			if err = s3DownloadObjectToPath(s3Downloader, response.BucketId, fromPrefix, downloadPath); err != nil {
@@ -465,7 +465,7 @@ func s3StatObject(s3Service *s3.S3, fromBucketId, key string) error {
 }
 
 func s3DownloadObjectToPath(downloader *s3manager.Downloader, fromBucketId, key, downloadPath string) error {
-	file, err := os.OpenFile(downloadPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+	file, err := os.OpenFile(downloadPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}

@@ -17,8 +17,7 @@ type UserInfo struct {
 	Perm   *data.Int `json:"perm"`
 }
 
-type BucketQuota struct {
-}
+type BucketQuota struct{}
 
 type BucketInfo struct {
 	Name        *data.String `json:"name"`
@@ -27,14 +26,14 @@ type BucketInfo struct {
 	StorageSize *data.Int64  `json:"storage_size"`
 	Region      *data.String `json:"region"`
 
-	//CTime       *data.String `json:"ctime"`
-	//Global              *data.Bool   `json:"global"`
-	//Perm                *data.Int    `json:"perm"`
-	//ShareUsers          []*UserInfo  `json:"share_users"`
-	//Versioning          *data.Bool   `json:"versioning"`
-	//AllowNullKey        *data.Bool   `json:"allow_nullkey"`
-	//EncryptionEnabled   *data.Bool   `json:"encryption_enabled"`
-	//NotAllowAccessByTbl *data.Bool   `json:"not_allow_access_by_tbl"`
+	// CTime       *data.String `json:"ctime"`
+	// Global              *data.Bool   `json:"global"`
+	// Perm                *data.Int    `json:"perm"`
+	// ShareUsers          []*UserInfo  `json:"share_users"`
+	// Versioning          *data.Bool   `json:"versioning"`
+	// AllowNullKey        *data.Bool   `json:"allow_nullkey"`
+	// EncryptionEnabled   *data.Bool   `json:"encryption_enabled"`
+	// NotAllowAccessByTbl *data.Bool   `json:"not_allow_access_by_tbl"`
 }
 
 func (i *BucketInfo) BucketName() string {
@@ -48,6 +47,7 @@ func (i *BucketInfo) BucketName() string {
 
 	return ""
 }
+
 func (i *BucketInfo) DescriptionString() string {
 	return fmt.Sprintf("%s", i.BucketName())
 }

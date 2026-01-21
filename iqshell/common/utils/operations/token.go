@@ -4,6 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell"
@@ -11,11 +17,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"strings"
 )
 
 type TokenInfo struct {
@@ -137,7 +138,7 @@ func CreateUploadToken(cfg *iqshell.Config, info UploadTokenInfo) {
 		return
 	}
 
-	//remove UTF-8 BOM
+	// remove UTF-8 BOM
 	configData = bytes.TrimPrefix(configData, []byte("\xef\xbb\xbf"))
 
 	putPolicy := new(storage.PutPolicy)

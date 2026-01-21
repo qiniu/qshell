@@ -2,6 +2,7 @@ package log
 
 import (
 	"encoding/json"
+
 	"github.com/astaxie/beego/logs"
 )
 

@@ -4,15 +4,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
-var (
-	restoreKey = "restore_key.json"
-)
+var restoreKey = "restore_key.json"
 
 func TestRestoreArchive(t *testing.T) {
 	copyFile(t, test.OriginKeys[0], restoreKey)

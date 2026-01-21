@@ -10,8 +10,10 @@ import (
 	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
-var accessKey = test.AccessKey
-var secretKey = test.SecretKey
+var (
+	accessKey = test.AccessKey
+	secretKey = test.SecretKey
+)
 
 func TestUser(t *testing.T) {
 	defer func() {

@@ -10,8 +10,8 @@ import (
 )
 
 var createShareCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.CreateShareInfo{}
-	var cmd = &cobra.Command{
+	info := operations.CreateShareInfo{}
+	cmd := &cobra.Command{
 		Use:   "create-share [kodo://]<Bucket>/<Prefix>",
 		Short: "Share the specified directory",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -38,8 +38,8 @@ var createShareCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var listShareCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ListShareInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ListShareInfo{}
+	cmd := &cobra.Command{
 		Use:   "share-ls <Link>",
 		Short: "List shared files",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -58,8 +58,8 @@ var listShareCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var copyShareCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.CopyShareInfo{}
-	var cmd = &cobra.Command{
+	info := operations.CopyShareInfo{}
+	cmd := &cobra.Command{
 		Use:   "share-cp <Link> --to=<ToPath>",
 		Short: "Copy shared files",
 		Run: func(cmd *cobra.Command, args []string) {

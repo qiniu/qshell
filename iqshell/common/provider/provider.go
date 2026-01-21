@@ -1,9 +1,10 @@
 package provider
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"sync"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 type Provider interface {

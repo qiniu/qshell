@@ -1,12 +1,13 @@
 package workspace
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"os"
 	"os/signal"
 	"sync"
 	"sync/atomic"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
 var (

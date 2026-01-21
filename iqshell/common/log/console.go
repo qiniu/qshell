@@ -3,9 +3,10 @@ package log
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"strings"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	"github.com/astaxie/beego/logs"
 )
@@ -38,7 +39,7 @@ var colors = []brush{
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
 	Level    int  `json:"level"`
-	Colorful bool `json:"color"` //this filed is useful only when system's terminal supports color
+	Colorful bool `json:"color"` // this filed is useful only when system's terminal supports color
 }
 
 // NewConsole create ConsoleWriter returning as LoggerInterface.

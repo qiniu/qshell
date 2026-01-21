@@ -1,9 +1,10 @@
 package bucket
 
 import (
+	"os"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"os"
 )
 
 type cacheInfo struct {

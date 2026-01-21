@@ -6,7 +6,6 @@ import (
 )
 
 type Worker interface {
-
 	// DoWork 处理工作
 	// @Description: recordList 长度需和 workInfos 长度想等
 	// @param workInfos 工作列表

@@ -15,7 +15,7 @@ type UploadConfig struct {
 	UpHost    string `json:"up_host,omitempty"`
 	BindUpIp  string `json:"bind_up_ip,omitempty"`
 	BindRsIp  string `json:"bind_rs_ip,omitempty"`
-	BindNicIp string `json:"bind_nic_ip,omitempty"` //local network interface card config
+	BindNicIp string `json:"bind_nic_ip,omitempty"` // local network interface card config
 
 	SrcDir                 string `json:"src_dir,omitempty"`
 	FileList               string `json:"file_list,omitempty"`
@@ -235,9 +235,8 @@ func (up *UploadConfig) Check() *data.CodeError {
 }
 
 func (up *UploadConfig) HitByPathPrefixes(localFileRelativePath string) (hit bool, pathPrefix string) {
-
 	if len(up.SkipPathPrefixes) > 0 {
-		//unpack skip prefix
+		// unpack skip prefix
 		pathPrefixes := strings.Split(up.SkipPathPrefixes, ",")
 		for _, prefix := range pathPrefixes {
 			if strings.TrimSpace(prefix) == "" {
@@ -256,7 +255,7 @@ func (up *UploadConfig) HitByPathPrefixes(localFileRelativePath string) (hit boo
 
 func (up *UploadConfig) HitByFilePrefixes(localFileRelativePath string) (hit bool, filePrefix string) {
 	if len(up.SkipFilePrefixes) > 0 {
-		//unpack skip prefix
+		// unpack skip prefix
 		filePrefixes := strings.Split(up.SkipFilePrefixes, ",")
 		for _, prefix := range filePrefixes {
 			if strings.TrimSpace(prefix) == "" {
@@ -276,7 +275,7 @@ func (up *UploadConfig) HitByFilePrefixes(localFileRelativePath string) (hit boo
 
 func (up *UploadConfig) HitByFixesString(localFileRelativePath string) (hit bool, hitFixedStr string) {
 	if len(up.SkipFixedStrings) > 0 {
-		//unpack fixed strings
+		// unpack fixed strings
 		fixedStrings := strings.Split(up.SkipFixedStrings, ",")
 		for _, fixedStr := range fixedStrings {
 			if strings.TrimSpace(fixedStr) == "" {
@@ -291,7 +290,6 @@ func (up *UploadConfig) HitByFixesString(localFileRelativePath string) (hit bool
 		}
 	}
 	return
-
 }
 
 func (up *UploadConfig) HitBySuffixes(localFileRelativePath string) (hit bool, hitSuffix string) {

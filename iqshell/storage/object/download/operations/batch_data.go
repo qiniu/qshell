@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
@@ -24,7 +25,7 @@ type DownloadCfg struct {
 	SliceSize              int64  `json:"slice_size"`
 	SliceConcurrentCount   int    `json:"slice_concurrent_count"`
 
-	//down from cdn
+	// down from cdn
 	Referer   string `json:"referer,omitempty"`
 	CdnDomain string `json:"cdn_domain,omitempty"` // 废弃
 	Domain    string `json:"domain,omitempty"`

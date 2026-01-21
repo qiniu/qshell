@@ -298,11 +298,11 @@ func BatchDownload(cfg *iqshell.Config, info BatchDownloadInfo) {
 		ShouldSkip(func(workInfo *flow.WorkInfo) (skip bool, cause *data.CodeError) {
 			apiInfo, _ := workInfo.Work.(*download.DownloadActionInfo)
 			if filterPrefix(apiInfo.Key) {
-				//log.InfoF("Download Skip because key prefix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
+				// log.InfoF("Download Skip because key prefix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
 				return true, data.NewEmptyError().AppendDescF("[%s:%s], prefix filter not match", apiInfo.Bucket, apiInfo.Key)
 			}
 			if filterSuffixes(apiInfo.Key) {
-				//log.InfoF("Download Skip because key suffix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
+				// log.InfoF("Download Skip because key suffix doesn't match, [%s:%s]", apiInfo.Bucket, apiInfo.Key)
 				return true, data.NewEmptyError().AppendDescF("[%s:%s], suffix filter not match", apiInfo.Bucket, apiInfo.Key)
 			}
 			return false, nil

@@ -162,7 +162,6 @@ func BatchUpload2(cfg *iqshell.Config, info BatchUpload2Info) {
 }
 
 func batchUpload(info BatchUpload2Info) {
-
 	log.DebugF("upload config:%+v", info)
 	dbPath := filepath.Join(workspace.GetJobDir(), ".ldb")
 	log.InfoF("upload status db file path:%s", dbPath)
@@ -179,7 +178,7 @@ func batchUpload(info BatchUpload2Info) {
 		} else {
 			info.InputFile = filepath.Join(workspace.GetJobDir(), ".cache")
 			if _, statErr := os.Stat(info.InputFile); statErr == nil {
-				//file exists
+				// file exists
 				needScanLocal = info.IsRescanLocal()
 			} else {
 				needScanLocal = true
@@ -234,23 +233,23 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 				3,
 				func(items []string) (work flow.Work, err *data.CodeError) {
 					fileRelativePath := items[0]
-					//pack the upload file key
+					// pack the upload file key
 					fileSize, _ := strconv.ParseInt(items[1], 10, 64)
 					modifyTime, _ := strconv.ParseInt(items[2], 10, 64)
 					key := fileRelativePath
-					//check ignore dir
+					// check ignore dir
 					if uploadConfig.IsIgnoreDir() {
 						key = filepath.Base(key)
 					}
-					//check prefix
+					// check prefix
 					if data.NotEmpty(uploadConfig.KeyPrefix) {
 						key = strings.Join([]string{uploadConfig.KeyPrefix, key}, "")
 					}
-					//convert \ to / under windows
+					// convert \ to / under windows
 					if utils.IsWindowsOS() {
 						key = strings.Replace(key, "\\", "/", -1)
 					}
-					//check file encoding
+					// check file encoding
 					if data.NotEmpty(uploadConfig.FileEncoding) && utils.IsGBKEncoding(uploadConfig.FileEncoding) {
 						key, _ = utils.Gbk2Utf8(key)
 					}
@@ -480,8 +479,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 	}
 }
 
-type BatchUploadConfigMouldInfo struct {
-}
+type BatchUploadConfigMouldInfo struct{}
 
 func BatchUploadConfigMould(cfg *iqshell.Config, info BatchUploadConfigMouldInfo) {
 	log.Alert(uploadConfigMouldJsonString)

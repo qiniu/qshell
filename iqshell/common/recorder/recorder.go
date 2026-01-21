@@ -3,7 +3,6 @@ package recorder
 import "github.com/qiniu/qshell/v2/iqshell/common/data"
 
 type Recorder interface {
-
 	// Get 获取记录
 	Get(key string) (value string, err *data.CodeError)
 

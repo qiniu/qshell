@@ -3,6 +3,8 @@ package object
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
@@ -11,7 +13,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/bucket"
-	"strings"
 )
 
 type FetchApiInfo struct {
@@ -38,7 +39,6 @@ func (a *FetchResult) IsValid() bool {
 }
 
 func Fetch(info FetchApiInfo) (*FetchResult, *data.CodeError) {
-
 	if len(info.Bucket) == 0 {
 		return nil, alert.CannotEmptyError("bucket", "")
 	}

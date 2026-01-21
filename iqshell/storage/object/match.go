@@ -2,11 +2,12 @@ package object
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/flow"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"os"
 )
 
 const (

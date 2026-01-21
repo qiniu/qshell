@@ -8,8 +8,8 @@ import (
 )
 
 var m3u8ReplaceDomainCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ReplaceDomainInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ReplaceDomainInfo{}
+	cmd := &cobra.Command{
 		Use:   "m3u8replace <Bucket> <M3u8Key> [<NewDomain>]",
 		Short: "Replace m3u8 domain in the playlist",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -33,8 +33,8 @@ var m3u8ReplaceDomainCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var m3u8DeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.DeleteInfo{}
-	var cmd = &cobra.Command{
+	info := operations.DeleteInfo{}
+	cmd := &cobra.Command{
 		Use:   "m3u8delete <Bucket> <M3u8Key>",
 		Short: "Delete m3u8 playlist and the slices it references",
 		Run: func(cmd *cobra.Command, args []string) {

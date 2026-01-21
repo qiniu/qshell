@@ -62,7 +62,8 @@ type ListObject = list.Item
 // List list 某个 bucket 所有的文件
 func List(info ListApiInfo,
 	objectHandler func(marker string, object ListObject) (shouldContinue bool, err *data.CodeError),
-	errorHandler func(marker string, err *data.CodeError)) {
+	errorHandler func(marker string, err *data.CodeError),
+) {
 	if objectHandler == nil {
 		data.SetCmdStatus(data.StatusError)
 		log.Error(alert.CannotEmpty("list bucket: object handler", ""))
@@ -156,7 +157,7 @@ func List(info ListApiInfo,
 	var lErr *data.CodeError = nil
 	for !complete && (info.MaxRetry < 0 || retryCount <= info.MaxRetry) {
 		lErr = nil
-		var hasMore = false
+		hasMore := false
 		limit := info.V1Limit
 		if info.OutputLimit > 0 {
 			limit = info.OutputLimit - outputCount

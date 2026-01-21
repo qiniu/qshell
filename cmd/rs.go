@@ -9,8 +9,8 @@ import (
 )
 
 var statCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.StatusInfo{}
-	var cmd = &cobra.Command{
+	info := operations.StatusInfo{}
+	cmd := &cobra.Command{
 		Use:   "stat <Bucket> <Key>",
 		Short: "Get the basic info of a remote file",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -28,8 +28,8 @@ var statCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var forbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ForbiddenInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ForbiddenInfo{}
+	cmd := &cobra.Command{
 		Use:   "forbidden <Bucket> <Key>",
 		Short: "Forbidden file in qiniu bucket",
 		Long:  "Forbidden object in qiniu bucket, when used with -r option, unforbidden the object",
@@ -49,8 +49,8 @@ var forbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var deleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.DeleteInfo{}
-	var cmd = &cobra.Command{
+	info := operations.DeleteInfo{}
+	cmd := &cobra.Command{
 		Use:   "delete <Bucket> <Key>",
 		Short: "Delete a remote file in the bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -68,8 +68,8 @@ var deleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var changeLifecycleCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = &operations.ChangeLifecycleInfo{}
-	var cmd = &cobra.Command{
+	info := &operations.ChangeLifecycleInfo{}
+	cmd := &cobra.Command{
 		Use:   "chlifecycle <Bucket> <Key> [--to-ia-after-days <ToIAAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--to-intelligent-tiering-after-days <ToIntelligentTieringAfterDays>] [--delete-after-days <DeleteAfterDays>]",
 		Short: "Set the lifecycle of a file.",
 		Long: `Set the lifecycle of a file. Lifecycle value must great than or equal to -1, unit: day.
@@ -98,8 +98,8 @@ var changeLifecycleCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var deleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.DeleteAfterInfo{}
-	var cmd = &cobra.Command{
+	info := operations.DeleteAfterInfo{}
+	cmd := &cobra.Command{
 		Use:   "expire <Bucket> <Key> <DeleteAfterDays>",
 		Short: "Set the deleteAfterDays of a file. DeleteAfterDays:great than or equal to 0, 0: cancel expiration time, unit: day",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -120,8 +120,8 @@ var deleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var moveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.MoveInfo{}
-	var cmd = &cobra.Command{
+	info := operations.MoveInfo{}
+	cmd := &cobra.Command{
 		Use:   "move <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Move/Rename a file and save in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -149,8 +149,8 @@ var moveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var renameCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.RenameInfo{}
-	var cmd = &cobra.Command{
+	info := operations.RenameInfo{}
+	cmd := &cobra.Command{
 		Use:   "rename <SrcBucket> <SrcKey> <DestKey>",
 		Short: "Make a rename of a file and save in the bucket",
 		Example: `rename A.png(bucket:bucketA key:A.png) to B.png(bucket:bucketA key:B.png):
@@ -180,8 +180,8 @@ you can check if B.png has exists by:
 }
 
 var copyCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.CopyInfo{}
-	var cmd = &cobra.Command{
+	info := operations.CopyInfo{}
+	cmd := &cobra.Command{
 		Use:   "copy <SrcBucket> <SrcKey> <DestBucket> [-k <DestKey>]",
 		Short: "Make a copy of a file and save in bucket",
 		Example: `copy A.png(bucket:bucketA key:A.png) to B.png(bucket:bucketB key:B.png):
@@ -211,8 +211,8 @@ you can check if B.png has exists by:
 }
 
 var changeMimeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ChangeMimeInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ChangeMimeInfo{}
+	cmd := &cobra.Command{
 		Use:   "chgm <Bucket> <Key> <NewMimeType>",
 		Short: "Change the mime type of a file",
 		Example: `change mimetype of A.png(bucket:bucketA key:A.png) to image/jpeg
@@ -237,8 +237,8 @@ and you can check result by command:
 }
 
 var changeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ChangeTypeInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ChangeTypeInfo{}
+	cmd := &cobra.Command{
 		Use:   "chtype <Bucket> <Key> <FileType>",
 		Short: "Change the file type of a file",
 		Long: `Change the file type of a file, file type must be one of 0, 1, 2, 3. 
@@ -270,8 +270,8 @@ and you can check result by command:
 }
 
 var restoreArCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.RestoreArchiveInfo{}
-	var cmd = &cobra.Command{
+	info := operations.RestoreArchiveInfo{}
+	cmd := &cobra.Command{
 		Use:   "restorear <Bucket> <Key> <FreezeAfterDays>",
 		Short: `Unfreeze archive file and file freeze after <FreezeAfterDays> days, <FreezeAfterDays> value should be between 1 and 7, include 1 and 7`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -293,8 +293,8 @@ var restoreArCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var privateUrlCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.PrivateUrlInfo{}
-	var cmd = &cobra.Command{
+	info := operations.PrivateUrlInfo{}
+	cmd := &cobra.Command{
 		Use:   "privateurl <PublicUrl> [<Deadline>]",
 		Short: "Create private resource access url",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -312,8 +312,8 @@ var privateUrlCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var saveAsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.SaveAsInfo{}
-	var cmd = &cobra.Command{
+	info := operations.SaveAsInfo{}
+	cmd := &cobra.Command{
 		Use:   "saveas <PublicUrlWithFop> <SaveBucket> <SaveKey>",
 		Short: "Create a resource access url with fop and saveas",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -334,8 +334,8 @@ var saveAsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var mirrorUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.MirrorUpdateInfo{}
-	var cmd = &cobra.Command{
+	info := operations.MirrorUpdateInfo{}
+	cmd := &cobra.Command{
 		Use:   "mirrorupdate <Bucket> <Key>",
 		Short: "Fetch and update the file in bucket using mirror storage",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -353,8 +353,8 @@ var mirrorUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var prefetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.MirrorUpdateInfo{}
-	var cmd = &cobra.Command{
+	info := operations.MirrorUpdateInfo{}
+	cmd := &cobra.Command{
 		Use:   "prefetch <Bucket> <Key>",
 		Short: "Fetch and update the file in bucket using mirror storage",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -373,7 +373,7 @@ var prefetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 var fetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	var info operations.FetchInfo
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "fetch <RemoteResourceUrl> <Bucket> [-k <Key>]",
 		Short: "Fetch a remote resource by url and save in bucket",
 		Run: func(cmd *cobra.Command, args []string) {

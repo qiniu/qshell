@@ -2,8 +2,9 @@ package account
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"strings"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 )

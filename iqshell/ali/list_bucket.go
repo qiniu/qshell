@@ -3,12 +3,13 @@ package ali
 import (
 	"bufio"
 	"fmt"
+	"os"
+
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/qiniu/qshell/v2/iqshell"
 	"github.com/qiniu/qshell/v2/iqshell/common/alert"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"os"
 )
 
 type ListBucketInfo struct {
@@ -48,7 +49,7 @@ func ListBucket(cfg *iqshell.Config, info ListBucketInfo) {
 		return
 	}
 
-	//open result file
+	// open result file
 	fp, err := os.Create(info.SaveToFile)
 	if err != nil {
 		log.Error("create file error:", err)

@@ -5,11 +5,12 @@ package file
 import (
 	"errors"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 func testDir() (string, error) {

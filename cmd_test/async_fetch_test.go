@@ -3,11 +3,11 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 func TestAsyncFetch(t *testing.T) {

@@ -93,7 +93,6 @@ func (w *workProvider) getWorkInfoFromFile() {
 				}
 				return info, nil
 			}))
-
 		if err != nil {
 			log.ErrorF("download create work provider error:%v", err)
 			close(w.downloadItemChan)

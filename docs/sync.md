@@ -34,7 +34,7 @@ $ qshell sync --doc
 - -k/--key：该资源保存在空间中的 key，不配置时使用资源 Url 中文件名作为存储的 key。 【可选】
 - -u/--uphost：上传入口的 IP 地址，一般在大文件的情况下，可以指定上传入口的 IP 来减少 DNS 环节，提升同步速度。 【可选】
 - --file-type：文件存储类型，0:标准存储 1:低频存储 2:归档存储 3:深度归档 4:归档直读存储 5:智能分层存储；默认为 0【可选】
-- --resumable-api-v2：使用分片 v2 进行上传；默认使用 v1。 【可选】
+- --resumable-api-v2：使用分片 v2 进行上传，默认为 `true`；默认使用 v2。 【可选】
 - --resumable-api-v2-part-size：使用分片上传 API V2 进行上传时的分片大小，默认为 4M 。【可选】
 - --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
 - -l/--callback-urls：上传回调地址，可以指定多个地址，以逗号分开。【可选】
@@ -83,5 +83,5 @@ $ dig up-as0.qiniu.com
 # 示例
 使用分片 v2 抓取一个资源并以指定的文件名保存在七牛的空间里面：
 ```
-$ qshell sync http://if-pbl.qiniudn.com/test_big_movie.mp4 if-pbl test.mp4 --resumable-api-v2
+$ qshell sync http://if-pbl.qiniudn.com/test_big_movie.mp4 if-pbl test.mp4
 ```

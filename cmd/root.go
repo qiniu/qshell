@@ -67,7 +67,7 @@ var rootCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 func Execute() {
-	var cfg = &iqshell.Config{
+	cfg := &iqshell.Config{
 		Document:       false,
 		DebugEnable:    false,
 		DDebugEnable:   false,

@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"io/ioutil"
 	"os"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 func NewConfigWithPath(path string) (*Config, *data.CodeError) {
@@ -32,7 +33,7 @@ func NewConfigWithPath(path string) (*Config, *data.CodeError) {
 }
 
 func (c *Config) UpdateToLocal(path string) *data.CodeError {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0666)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0o666)
 	if err != nil || file == nil {
 		return data.NewEmptyError().AppendError(err)
 	}

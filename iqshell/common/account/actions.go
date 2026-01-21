@@ -17,14 +17,14 @@ import (
 
 // 保存账户信息到账户文件中
 func SetAccountToLocalFile(acc Account) (err *data.CodeError) {
-	accountFh, openErr := os.OpenFile(info.AccountPath, os.O_CREATE|os.O_RDWR, 0600)
+	accountFh, openErr := os.OpenFile(info.AccountPath, os.O_CREATE|os.O_RDWR, 0o600)
 	if openErr != nil {
 		err = data.NewEmptyError().AppendDescF("Open account file error: %s", openErr)
 		return
 	}
 	defer accountFh.Close()
 
-	oldAccountFh, openErr := os.OpenFile(info.OldAccountPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	oldAccountFh, openErr := os.OpenFile(info.OldAccountPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
 	if openErr != nil {
 		err = data.NewEmptyError().AppendDescF("Open account file error: %s", openErr)
 		return
@@ -97,7 +97,7 @@ func SaveToDB(acc Account, accountOver bool) (err *data.CodeError) {
 }
 
 func getAccount(pt string) (account Account, err *data.CodeError) {
-	accountFh, openErr := os.OpenFile(info.AccountPath, os.O_RDWR, 0600)
+	accountFh, openErr := os.OpenFile(info.AccountPath, os.O_RDWR, 0o600)
 	if openErr != nil {
 		err = data.NewEmptyError().AppendDescF("Get account error, %s, please use `account` to set Id and SecretKey first", openErr)
 		return
@@ -240,7 +240,6 @@ func ChUser(userName string) (name string, err *data.CodeError) {
 
 // 获取用户列表
 func GetUsers() (ret []*Account, err *data.CodeError) {
-
 	db, gErr := leveldb.OpenFile(info.AccountDBPath, nil)
 	if gErr != nil {
 		err = data.NewEmptyError().AppendDescF("open db: %v", err)

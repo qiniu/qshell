@@ -3,23 +3,21 @@ package ip
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
 )
 
-var (
-	// IP信息查询接口地址
-	aliIPParseUrls = []string{
-		"https://ip.taobao.com/outGetIpInfo",
-		"https://ip.taobao.com/service/getIpInfo.php",
-	}
-)
-
-type aliParser struct {
+// IP信息查询接口地址
+var aliIPParseUrls = []string{
+	"https://ip.taobao.com/outGetIpInfo",
+	"https://ip.taobao.com/service/getIpInfo.php",
 }
+
+type aliParser struct{}
 
 var _ Parser = (*aliParser)(nil)
 

@@ -13,7 +13,6 @@ type Data struct {
 }
 
 func TestData(t *testing.T) {
-
 	d := Data{
 		Can:  NewBool(true),
 		Age:  NewInt(10),

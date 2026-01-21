@@ -53,10 +53,14 @@ func ChangeLifecycle(cfg *iqshell.Config, info *ChangeLifecycleInfo) {
 	}
 
 	if result.IsSuccess() {
-		lifecycleValues := []int{info.ToIAAfterDays, info.ToIntelligentTieringAfterDays, info.ToArchiveIRAfterDays, info.ToArchiveAfterDays,
-			info.ToDeepArchiveAfterDays, info.DeleteAfterDays}
-		lifecycleDescs := []string{"to IA storage", "to IntelligentTiering storage", "to ARCHIVE_IR storage", "to ARCHIVE storage",
-			"to DEEP_ARCHIVE storage", "delete"}
+		lifecycleValues := []int{
+			info.ToIAAfterDays, info.ToIntelligentTieringAfterDays, info.ToArchiveIRAfterDays, info.ToArchiveAfterDays,
+			info.ToDeepArchiveAfterDays, info.DeleteAfterDays,
+		}
+		lifecycleDescs := []string{
+			"to IA storage", "to IntelligentTiering storage", "to ARCHIVE_IR storage", "to ARCHIVE storage",
+			"to DEEP_ARCHIVE storage", "delete",
+		}
 		log.InfoF("Change lifecycle Success, [%s:%s]", info.Bucket, info.Key)
 		for i := 0; i < len(lifecycleValues); i++ {
 			lifecycleValue := lifecycleValues[i]

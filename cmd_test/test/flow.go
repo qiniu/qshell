@@ -2,11 +2,12 @@ package test
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/qiniu/qshell/v2/cmd"
 	"github.com/qiniu/qshell/v2/docs"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"os"
-	"os/exec"
 )
 
 type testFlow struct {

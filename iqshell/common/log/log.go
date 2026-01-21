@@ -2,13 +2,18 @@ package log
 
 import (
 	"fmt"
+
 	"github.com/astaxie/beego/logs"
 )
 
 var progressLog *logs.BeeLogger
 
 func Debug(a ...interface{}) {
-	DebugF(fmt.Sprint(a...))
+	if progressLog != nil {
+		progressLog.Debug(fmt.Sprint(a...))
+	} else {
+		fmt.Println(a...)
+	}
 }
 
 func DebugF(format string, v ...interface{}) {
@@ -21,7 +26,11 @@ func DebugF(format string, v ...interface{}) {
 }
 
 func Info(a ...interface{}) {
-	InfoF(fmt.Sprint(a...))
+	if progressLog != nil {
+		progressLog.Info(fmt.Sprint(a...))
+	} else {
+		fmt.Println(a...)
+	}
 }
 
 func InfoF(format string, v ...interface{}) {
@@ -34,7 +43,11 @@ func InfoF(format string, v ...interface{}) {
 }
 
 func Warning(a ...interface{}) {
-	WarningF(fmt.Sprint(a...))
+	if progressLog != nil {
+		progressLog.Warn(fmt.Sprint(a...))
+	} else {
+		fmt.Println(a...)
+	}
 }
 
 func WarningF(format string, v ...interface{}) {
@@ -47,7 +60,11 @@ func WarningF(format string, v ...interface{}) {
 }
 
 func Error(a ...interface{}) {
-	ErrorF(fmt.Sprint(a...))
+	if progressLog != nil {
+		progressLog.Error(fmt.Sprint(a...))
+	} else {
+		fmt.Println(a...)
+	}
 }
 
 func ErrorF(format string, v ...interface{}) {
@@ -60,7 +77,11 @@ func ErrorF(format string, v ...interface{}) {
 }
 
 func Alert(a ...interface{}) {
-	AlertF(fmt.Sprint(a...))
+	if progressLog != nil {
+		progressLog.Alert(fmt.Sprint(a...))
+	} else {
+		fmt.Println(a...)
+	}
 }
 
 func AlertF(format string, v ...interface{}) {
@@ -70,5 +91,4 @@ func AlertF(format string, v ...interface{}) {
 		fmt.Printf(format, v...)
 		fmt.Println("")
 	}
-
 }

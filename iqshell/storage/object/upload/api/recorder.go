@@ -2,11 +2,12 @@ package api
 
 import (
 	"encoding/json"
+	"os"
+	"time"
+
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"os"
-	"time"
 )
 
 type ProgressRecorder struct {
@@ -30,9 +31,9 @@ func NewProgressRecorder(filePath string) *ProgressRecorder {
 
 func (p *ProgressRecorder) Recover() (err *data.CodeError) {
 	if statInfo, statErr := os.Stat(p.FilePath); statErr == nil {
-		//check file last modified time, if older than one week, ignore
+		// check file last modified time, if older than one week, ignore
 		if statInfo.ModTime().Add(time.Hour * 24 * 5).After(time.Now()) {
-			//try read old progress
+			// try read old progress
 			progressFh, openErr := os.Open(p.FilePath)
 			if openErr != nil {
 				err = data.NewEmptyError().AppendError(openErr)
@@ -54,8 +55,7 @@ func (p *ProgressRecorder) Reset() {
 }
 
 func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResumableV2 bool) {
-
-	//check offset valid or not
+	// check offset valid or not
 	if p.Offset%data.BLOCK_SIZE != 0 {
 		log.Info("Invalid offset from progress file,", p.Offset)
 		p.Reset()
@@ -64,7 +64,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 
 	// 分片 V1
 	if !isResumableV2 {
-		//check offset and blk ctxs
+		// check offset and blk ctxs
 		if p.Offset != 0 && p.BlkCtxs != nil && int(p.Offset/data.BLOCK_SIZE) != len(p.BlkCtxs) {
 
 			log.Info("Invalid offset and block info")
@@ -72,7 +72,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 			return
 		}
 
-		//check blk ctxs, when no progress found
+		// check blk ctxs, when no progress found
 		if p.Offset == 0 || p.BlkCtxs == nil {
 			p.Reset()
 			return
@@ -98,7 +98,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 	}
 
 	// 分片 V2
-	//check offset and blk ctxs
+	// check offset and blk ctxs
 	if p.Offset != 0 && p.Parts != nil && int(p.Offset/data.BLOCK_SIZE) != len(p.Parts) {
 
 		log.Info("Invalid offset and block info")
@@ -106,7 +106,7 @@ func (p *ProgressRecorder) CheckValid(fileSize int64, lastModified int, isResuma
 		return
 	}
 
-	//check blk ctxs, when no progress found
+	// check blk ctxs, when no progress found
 	if p.Offset == 0 || p.Parts == nil {
 		p.Reset()
 		return

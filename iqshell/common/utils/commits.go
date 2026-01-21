@@ -13,7 +13,6 @@ func JsonDataTrimComments(data []byte) (data1 []byte) {
 }
 
 func trimCommentsLine(line []byte) []byte {
-
 	var newLine []byte
 	var i, quoteCount int
 	lastIdx := len(line) - 1

@@ -8,9 +8,8 @@ import (
 )
 
 var accountCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-
 	var accountOver bool
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "account [<AccessKey> <SecretKey> <UserName>]",
 		Short: "Get/Set current user's AccessKey and SecretKey from local",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -42,7 +41,7 @@ var accountCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var userCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "user",
 		Short: "Manage local users",
 		Args:  cobra.MaximumNArgs(0),
@@ -56,8 +55,8 @@ var userCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 // 列举本地数据库记录的账户
 var userLsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ListInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ListInfo{}
+	cmd := &cobra.Command{
 		Use:     "ls",
 		Short:   "List all users registered of local",
 		Example: `qshell user ls`,
@@ -74,7 +73,7 @@ var userLsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 // 获取当前账户信息
 var userCurrentCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "current",
 		Short:   "Get current user info from local",
 		Example: `qshell user current`,
@@ -88,8 +87,8 @@ var userCurrentCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 // 查询用用户是否存在本地数据库中
 var userLookupCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.LookUpInfo{}
-	var cmd = &cobra.Command{
+	info := operations.LookUpInfo{}
+	cmd := &cobra.Command{
 		Use:     "lookup <UserName>",
 		Short:   "Lookup user info by user name of local",
 		Example: `qshell user lookup <UserName>`,
@@ -106,8 +105,8 @@ var userLookupCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 // 添加用户
 var userAddCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.AddInfo{}
-	var cmd = &cobra.Command{
+	info := operations.AddInfo{}
+	cmd := &cobra.Command{
 		Use:   "add",
 		Short: "Add user info to local",
 		Example: `qshell user add <AK> <SK> <UserName>
@@ -134,8 +133,8 @@ var userAddCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 // 切换用户
 var userChCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ChangeInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ChangeInfo{}
+	cmd := &cobra.Command{
 		Use:     "cu [<UserName>]",
 		Short:   "Change current user with UserName",
 		Example: `qshell user cu <UserName>`,
@@ -152,7 +151,7 @@ var userChCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 // 删除本地记录的数据库
 var userCleanCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "clean",
 		Short:   "Clean account db",
 		Long:    "Remove all users of local, just remove db, current user will not remove.",
@@ -167,8 +166,8 @@ var userCleanCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 // 删除用户
 var userRmCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.RemoveInfo{}
-	var cmd = &cobra.Command{
+	info := operations.RemoveInfo{}
+	cmd := &cobra.Command{
 		Use:     "remove <UserName>",
 		Short:   "Remove user info with user name, just remove db, not influence current user.",
 		Example: `qshell user remove <UserName>`,

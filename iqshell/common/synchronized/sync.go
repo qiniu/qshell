@@ -1,8 +1,9 @@
 package synchronized
 
 import (
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"sync"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 type Locker interface {

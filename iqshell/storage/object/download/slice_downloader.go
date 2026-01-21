@@ -3,16 +3,17 @@ package download
 import (
 	"errors"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 )
 
 type slice struct {
@@ -114,7 +115,6 @@ func (s *sliceDownloader) initDownloadStatus(info *DownloadApiInfo) *data.CodeEr
 
 // 并发下载
 func (s *sliceDownloader) download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {
-
 	from := s.currentReadSliceIndex * s.SliceSize
 	index := s.currentReadSliceIndex
 	go func() {
@@ -233,7 +233,6 @@ func (s *sliceDownloader) downloadSlice(info *DownloadApiInfo, sl slice) *data.C
 }
 
 func (s *sliceDownloader) Read(p []byte) (int, error) {
-
 	if s.getDownloadError() != nil {
 		return 0, s.downloadError
 	}

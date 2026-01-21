@@ -10,8 +10,8 @@ import (
 )
 
 var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchStatusInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchStatusInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchstat <Bucket> [-i <KeyListFile>]",
 		Short: "Batch stat files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -37,8 +37,8 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchForbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchChangeStatusInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchChangeStatusInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchforbidden <Bucket> [-i <KeyListFile>] [-r]",
 		Short: "Batch forbidden files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -64,8 +64,8 @@ var batchForbiddenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchDeleteInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchDeleteInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchdelete <Bucket> [-i <KeyListFile>]",
 		Short: "Batch delete files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -82,8 +82,8 @@ var batchDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchChangeMimeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchChangeMimeInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchChangeMimeInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchchgm <Bucket> [-i <KeyMimeMapFile>]",
 		Short: "Batch change the mime type of files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -100,8 +100,8 @@ var batchChangeMimeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchChangeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchChangeTypeInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchChangeTypeInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchchtype <Bucket> [-i <KeyFileTypeMapFile>]",
 		Short: "Batch change the file type of files in bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -118,8 +118,8 @@ var batchChangeTypeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchRestoreArCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchRestoreArchiveInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchRestoreArchiveInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchrestorear <Bucket> <FreezeAfterDays>",
 		Short: `Batch unfreeze archive file and file freeze after <FreezeAfterDays> days, <FreezeAfterDays> value should be between 1 and 7, include 1 and 7`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -139,8 +139,8 @@ var batchRestoreArCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchDeleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchDeleteInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchDeleteInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchexpire <Bucket> [-i <KeyDeleteAfterDaysMapFile>]",
 		Short: "Batch set the deleteAfterDays of the files in bucket. DeleteAfterDays:great than or equal to 0, 0: cancel expiration time, unit: day",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -157,8 +157,8 @@ var batchDeleteAfterCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchChangeLifecycleCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchChangeLifecycleInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchChangeLifecycleInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchchlifecycle <Bucket> [-i <KeyFile>] [--to-ia-after-days <ToIAAfterDays>] [--to-archive-after-days <ToArchiveAfterDays>] [--to-deep-archive-after-days <ToDeepArchiveAfterDays>] [--delete-after-days <DeleteAfterDays>]",
 		Short: "Set the lifecycle of some file.",
 		Long: `Set the lifecycle of some file. <KeyFile> contain all file keys that need to set. one key per line.
@@ -186,8 +186,8 @@ Lifecycle value must great than or equal to -1, unit: day.
 }
 
 var batchMoveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchMoveInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchMoveInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchmove <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
 		Short: "Batch move files from bucket to bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -208,8 +208,8 @@ var batchMoveCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchRenameCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchRenameInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchRenameInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchrename <Bucket> [-i <OldNewKeyMapFile>]",
 		Short: "Batch rename files in the bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -227,8 +227,8 @@ var batchRenameCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchCopyCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchCopyInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchCopyInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchcopy <SrcBucket> <DestBucket> [-i <SrcDestKeyMapFile>]",
 		Short: "Batch copy files from bucket to bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -249,8 +249,8 @@ var batchCopyCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchSignCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.BatchPrivateUrlInfo{}
-	var cmd = &cobra.Command{
+	info := operations.BatchPrivateUrlInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchsign [-i <ItemListFile>] [-e <Deadline>]",
 		Short: "Batch create the private url from the public url list file",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -269,9 +269,9 @@ var batchSignCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var batchFetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var upHost = ""
-	var info = operations.BatchFetchInfo{}
-	var cmd = &cobra.Command{
+	upHost := ""
+	info := operations.BatchFetchInfo{}
+	cmd := &cobra.Command{
 		Use:   "batchfetch <Bucket> [-i <FetchUrlsFile>] [-c <WorkerCount>]",
 		Short: "Batch fetch remoteUrls and save them in qiniu Bucket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -311,40 +311,52 @@ func setBatchCmdDefaultFlags(cmd *cobra.Command, info *batch.Info) {
 	setBatchCmdItemSeparateFlags(cmd, info)
 	setBatchCmdForceFlags(cmd, info)
 }
+
 func setBatchCmdInputFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.InputFile, "input-file", "i", "", "input file, read from stdin if not set")
 }
+
 func setBatchCmdForceFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Force, "force", "y", false, "force mode, default false")
 }
+
 func setBatchCmdWorkerCountFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().IntVarP(&info.WorkerCount, "worker", "c", 4, "worker count. 1 means the number of objects in one operation is 250 and if configured as 10 , the number of objects in one operation is 2500. This value needs to be consistent with the upper limit of Qiniu’s operation, otherwise unexpected errors will occur. Under normal circumstances you do not need to adjust this value and if you need please carefully.")
 }
+
 func setBatchCmdMinWorkerCountFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().IntVarP(&info.MinWorkerCount, "min-worker", "", 1, "min worker count. 1 means the number of objects in one operation is 1000 and if configured as 3 , the number of objects in one operation is 3000. for more, please refer to worker")
 }
+
 func setBatchCmdWorkerCountIncreasePeriodFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().IntVarP(&info.WorkerCountIncreasePeriod, "worker-count-increase-period", "", 60, "worker count increase period. when the worker count is too big, an overrun error will be triggered. In order to alleviate this problem, qshell will automatically reduce the worker count. In order to complete the operation as quickly as possible, qshell will periodically increase the worker count. unit: second")
 }
+
 func setBatchCmdItemSeparateFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.ItemSeparate, "sep", "F", "\t", "Separator used for split line fields, default is \\t (tab)")
 }
+
 func setBatchCmdEnableRecordFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.EnableRecord, "enable-record", "", false, "record work progress, and do from last progress while retry")
 }
+
 func setBatchCmdRecordRedoWhileErrorFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.RecordRedoWhileError, "record-redo-while-error", "", false, "when re-executing the command and checking the command task progress record, if a task has already been done and failed, the task will be re-executed. The default is false, and the task will not be re-executed when it detects that the task fails")
 }
+
 func setBatchCmdSuccessExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.SuccessExportFilePath, "success-list", "s", "", "specifies the file path where the successful file list is saved")
 }
+
 func setBatchCmdFailExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.FailExportFilePath, "failure-list", "e", "", "specifies the file path where the failure file list is saved")
 }
+
 func setBatchCmdOverwriteFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().BoolVarP(&info.Overwrite, "overwrite", "w", false, "overwrite mode")
 	_ = cmd.Flags().MarkShorthandDeprecated("overwrite", "deprecated and use --overwrite instead")
 }
+
 func setBatchCmdResultExportFileFlags(cmd *cobra.Command, info *batch.Info) {
 	cmd.Flags().StringVarP(&info.ResultExportFilePath, "outfile", "o", "", "specifies the file path where the results is saved")
 }

@@ -18,9 +18,11 @@ func TestStatus(t *testing.T) {
 		t.Fail()
 	}
 
-	items := []string{"Bucket", "Etag", "MD5", "Fsize", "PutTime",
+	items := []string{
+		"Bucket", "Etag", "MD5", "Fsize", "PutTime",
 		"MimeType", "Status", "Expiration", "TransitionToIA", "TransitionToArchive", "TransitionToDeepArchive",
-		"FileType"}
+		"FileType",
+	}
 	for _, item := range items {
 		if !strings.Contains(result, item) {
 			t.Fatal("no ", item)

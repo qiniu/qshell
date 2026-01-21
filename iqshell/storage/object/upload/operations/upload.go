@@ -122,7 +122,7 @@ func uploadFile(info *UploadInfo) (res *upload.ApiResult, err *data.CodeError) {
 	} else {
 		log.AlertF("Upload File success %s => [%s:%s] duration:%.2fs Speed:%s", info.FilePath, info.ToBucket, info.SaveKey, duration, speed)
 
-		//delete on success
+		// delete on success
 		if info.DeleteOnSuccess {
 			deleteErr := os.Remove(info.FilePath)
 			if deleteErr != nil {

@@ -8,8 +8,8 @@ import (
 )
 
 var preFopStatusCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.PreFopStatusInfo{}
-	var cmd = &cobra.Command{
+	info := operations.PreFopStatusInfo{}
+	cmd := &cobra.Command{
 		Use:   "prefop <PersistentId>",
 		Short: "Query the pfop status",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -27,8 +27,8 @@ var preFopStatusCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var pfopCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.PfopInfo{}
-	var cmd = &cobra.Command{
+	info := operations.PfopInfo{}
+	cmd := &cobra.Command{
 		Use:   "pfop <Bucket> <Key> <fopCommand>",
 		Short: "Issue a request to process file in bucket",
 		Run: func(cmd *cobra.Command, args []string) {

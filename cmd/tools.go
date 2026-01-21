@@ -9,8 +9,8 @@ import (
 )
 
 var rpcEncodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.RpcInfo{}
-	var cmd = &cobra.Command{
+	info := operations.RpcInfo{}
+	cmd := &cobra.Command{
 		Use:        "rpcencode <DataToEncode1> [<DataToEncode2> [...]]",
 		Short:      "RPC Encode of qiniu",
 		SuggestFor: []string{"rpc"},
@@ -24,8 +24,8 @@ var rpcEncodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var rpcDecodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.RpcInfo{}
-	var cmd = &cobra.Command{
+	info := operations.RpcInfo{}
+	cmd := &cobra.Command{
 		Use:        "rpcdecode [DataToEncode...]",
 		Short:      "RPC Decode of qiniu",
 		SuggestFor: []string{"rpc"},
@@ -39,8 +39,8 @@ var rpcDecodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var base64EncodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.Base64Info{}
-	var cmd = &cobra.Command{
+	info := operations.Base64Info{}
+	cmd := &cobra.Command{
 		Use:        "b64encode <DataToEncode>",
 		Short:      "Base64 Encode, default not url safe",
 		Long:       "Base64 encode of data, url safe base64 is not turn on by default. Use --safe flag to turn it on",
@@ -58,8 +58,8 @@ var base64EncodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var base64DecodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.Base64Info{}
-	var cmd = &cobra.Command{
+	info := operations.Base64Info{}
+	cmd := &cobra.Command{
 		Use:        "b64decode <DataToDecode>",
 		Short:      "Base64 Decode, default nor url safe",
 		Long:       "Base64 Decode of data, urlsafe base64 is not turn on by default. Use --safe flag to turn it on",
@@ -77,8 +77,8 @@ var base64DecodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var ts2dCmdCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.TimestampInfo{}
-	var cmd = &cobra.Command{
+	info := operations.TimestampInfo{}
+	cmd := &cobra.Command{
 		Use:   "ts2d <TimestampInSeconds>",
 		Short: "Convert timestamp in seconds to a date (TZ: Local)",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -93,8 +93,8 @@ var ts2dCmdCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var tms2dCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.TimestampInfo{}
-	var cmd = &cobra.Command{
+	info := operations.TimestampInfo{}
+	cmd := &cobra.Command{
 		Use:   "tms2d <TimestampInMilliSeconds>",
 		Short: "Convert timestamp in milliseconds to a date (TZ: Local)",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -109,8 +109,8 @@ var tms2dCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var tns2dCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.TimestampInfo{}
-	var cmd = &cobra.Command{
+	info := operations.TimestampInfo{}
+	cmd := &cobra.Command{
 		Use:   "tns2d <TimestampInNanoSeconds>",
 		Short: "Convert timestamp in Nanoseconds to a date (TZ: Local)",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -125,8 +125,8 @@ var tns2dCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var d2tsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.TimestampInfo{}
-	var cmd = &cobra.Command{
+	info := operations.TimestampInfo{}
+	cmd := &cobra.Command{
 		Use:   "d2ts <SecondsToNow>",
 		Short: "Create a timestamp of some seconds later, unit of timestamp is second",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -141,8 +141,8 @@ var d2tsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var urlEncodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.UrlInfo{}
-	var cmd = &cobra.Command{
+	info := operations.UrlInfo{}
+	cmd := &cobra.Command{
 		Use:   "urlencode <DataToEncode>",
 		Short: "Url Encode",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -157,8 +157,8 @@ var urlEncodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var urlDecodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.UrlInfo{}
-	var cmd = &cobra.Command{
+	info := operations.UrlInfo{}
+	cmd := &cobra.Command{
 		Use:   "urldecode <DataToDecode>",
 		Short: "Url Decode",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -173,8 +173,8 @@ var urlDecodeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var etagCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.EtagInfo{}
-	var cmd = &cobra.Command{
+	info := operations.EtagInfo{}
+	cmd := &cobra.Command{
 		Use:   "qetag <LocalFilePath>",
 		Short: "Calculate the hash of local file using the algorithm of qiniu qetag",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -189,8 +189,8 @@ var etagCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var unzipCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ZipInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ZipInfo{}
+	cmd := &cobra.Command{
 		Use:   "unzip <QiniuZipFilePath> [<UnzipToDir>]",
 		Short: "Unzip the archive file created by the qiniu mkzip API",
 		Long:  "Unzip to current workding directory by default, use -dir to specify a directory",
@@ -211,8 +211,8 @@ var unzipCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var reqIdCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.ReqIdInfo{}
-	var cmd = &cobra.Command{
+	info := operations.ReqIdInfo{}
+	cmd := &cobra.Command{
 		Use:   "reqid <ReqIdToDecode>",
 		Short: "Decode qiniu reqid",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -227,8 +227,8 @@ var reqIdCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var IpCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.IpQueryInfo{}
-	var cmd = &cobra.Command{
+	info := operations.IpQueryInfo{}
+	cmd := &cobra.Command{
 		Use:   "ip <Ip1> [<Ip2> [<Ip3> ...]]]",
 		Short: "Query the ip information",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -241,7 +241,7 @@ var IpCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var TokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "token",
 		Short: "Token related command",
 		Long:  "Create QBox token, Qiniu token and Upload token",
@@ -260,8 +260,8 @@ var TokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var QboxTokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.QBoxTokenInfo{}
-	var cmd = &cobra.Command{
+	info := operations.QBoxTokenInfo{}
+	cmd := &cobra.Command{
 		Use:   "qbox <Url>",
 		Short: "Create QBox token",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -282,8 +282,8 @@ var QboxTokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var QiniuTokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.QiniuTokenInfo{}
-	var cmd = &cobra.Command{
+	info := operations.QiniuTokenInfo{}
+	cmd := &cobra.Command{
 		Use:   "qiniu <Url>",
 		Short: "Create Qiniu Token",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -305,8 +305,8 @@ var QiniuTokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var UploadTokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.UploadTokenInfo{}
-	var cmd = &cobra.Command{
+	info := operations.UploadTokenInfo{}
+	cmd := &cobra.Command{
 		Use:   "upload <PutPolicyJsonFile>",
 		Short: "Create upload token using put policy",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -325,8 +325,8 @@ var UploadTokenCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var dirCacheCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.DirCacheInfo{}
-	var cmd = &cobra.Command{
+	info := operations.DirCacheInfo{}
+	cmd := &cobra.Command{
 		Use:   "dircache <DirCacheRootPath>",
 		Short: "Cache the directory structure of a file path",
 		Long:  "Cache the directory structure of a file path to a file, \nif <DirCacheResultFile> not specified, cache to stdout",
@@ -343,8 +343,8 @@ var dirCacheCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var funcCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.FuncCallInfo{}
-	var cmd = &cobra.Command{
+	info := operations.FuncCallInfo{}
+	cmd := &cobra.Command{
 		Use:   "func <ParamsJson> <FuncTemplate>",
 		Short: "qshell custom function call",
 		Run: func(cmd *cobra.Command, args []string) {

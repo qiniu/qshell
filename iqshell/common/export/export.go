@@ -3,9 +3,10 @@ package export
 import (
 	"bufio"
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"os"
 	"sync"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 type Exporter interface {

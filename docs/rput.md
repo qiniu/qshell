@@ -35,7 +35,7 @@ $ qshell rput --doc
 - --overwrite：是否覆盖空间已有文件，默认为 `false`。 【可选】
 - -t/--mimetype：指定文件的 MimeType 。【可选】
 - --file-type：文件存储类型；0:标准存储 1:低频存储 2:归档存储 3:深度归档 4:归档直读存储 5:智能分层存储；默认为 0。 【可选】
-- --resumable-api-v2：使用分片上传 API V2 进行上传，默认为 `false`, 使用 V1 上传。【可选】
+- --resumable-api-v2：使用分片上传 API V2 进行上传，默认为 `true`, 使用 V2 上传。【可选】
 - --resumable-api-v2-part-size：使用分片上传 API V2 进行上传时的分片大小，默认为 4M 。【可选】
 - --sequential-read-file: 文件读为顺序读，不涉及跳读；开启后，上传中的分片数据会被加载至内存。此选项可能会增加挂载网络文件系统的文件上传速度。默认是：false。【可选】
 - -l/--callback-urls：上传回调地址，可以指定多个地址，以逗号分开。【可选】
@@ -64,10 +64,10 @@ $ qshell rput --doc
 1 上传本地文件 `/Users/jemy/Documents/qiniu.mp4` 到空间 `if-pbl` 里面。
 ```
 // 使用使用分片上传 API V1
-$ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4
+$ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4 --resumable-api-v2=false
 
 // 使用使用分片上传 API V2
-$ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4 --resumable-api-v2
+$ qshell rput if-pbl qiniu.mp4 /Users/jemy/Documents/qiniu.mp4 
 ```
 
 2 上传本地文件 `/Users/jemy/Documents/qiniu.mp4` 到空间 `if-pbl` 里面，带前缀 `2015/01/18/`，并且指定 `MimeType` 参数为 `video/mp4`。

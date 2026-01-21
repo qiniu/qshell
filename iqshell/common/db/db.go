@@ -1,13 +1,14 @@
 package db
 
 import (
+	"os"
+	"path/filepath"
+	"sync"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"os"
-	"path/filepath"
-	"sync"
 )
 
 type DB struct {
@@ -15,8 +16,10 @@ type DB struct {
 	db       *leveldb.DB
 }
 
-var dbMap map[string]*DB
-var dbMapLock sync.Mutex
+var (
+	dbMap     map[string]*DB
+	dbMapLock sync.Mutex
+)
 
 func OpenDB(filePath string) (*DB, *data.CodeError) {
 	dbMapLock.Lock()

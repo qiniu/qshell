@@ -8,8 +8,8 @@ import (
 )
 
 var aliListBucketCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = ali.ListBucketInfo{}
-	var cmd = &cobra.Command{
+	info := ali.ListBucketInfo{}
+	cmd := &cobra.Command{
 		Use:   "alilistbucket <DataCenter> <Bucket> <AccessKeyId> <AccessKeySecret> [Prefix] <ListBucketResultFile>",
 		Short: "List all the file in the bucket of aliyun oss by prefix",
 		Run: func(cmd *cobra.Command, args []string) {

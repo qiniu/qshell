@@ -2,11 +2,12 @@ package bucket
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 const (
@@ -91,7 +92,7 @@ func getKeyItems(items []string) (bool, []string) {
 	}
 
 	var fields []string
-	var isKeys = true
+	isKeys := true
 	for _, item := range items {
 		field := listObjectField(item)
 		if len(field) == 0 {

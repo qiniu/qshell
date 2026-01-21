@@ -107,7 +107,7 @@ have already in local disk and need to skip download or not.`,
 
 var getCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.DownloadInfo{}
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "get <Bucket> <Key>",
 		Short: "Download a single file from bucket",
 		Run: func(cmd *cobra.Command, args []string) {

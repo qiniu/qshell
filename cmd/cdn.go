@@ -8,8 +8,8 @@ import (
 )
 
 var cdnPrefetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.PrefetchInfo{}
-	var cmd = &cobra.Command{
+	info := operations.PrefetchInfo{}
+	cmd := &cobra.Command{
 		Use:   "cdnprefetch [-i <ItemListFile>]",
 		Short: "Batch prefetch the urls in the url list file",
 		Long:  "Batch prefetch the urls in the url list file or from stdin if ItemListFile not specified",
@@ -28,8 +28,8 @@ var cdnPrefetchCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var cdnRefreshCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
-	var info = operations.RefreshInfo{}
-	var cmd = &cobra.Command{
+	info := operations.RefreshInfo{}
+	cmd := &cobra.Command{
 		Use:   "cdnrefresh [-i <ItemListFile>]",
 		Short: "Batch refresh the cdn cache by the url list file",
 		Long:  "Batch refresh the cdn cache by the url list file or from stdin if ItemListFile not specified",

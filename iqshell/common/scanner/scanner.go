@@ -2,10 +2,11 @@ package scanner
 
 import (
 	"bufio"
+	"os"
+
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/qiniu/qshell/v2/iqshell/common/log"
 	"github.com/qiniu/qshell/v2/iqshell/common/utils"
-	"os"
 )
 
 type Info struct {

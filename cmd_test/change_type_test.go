@@ -102,7 +102,7 @@ func TestBatchChangeType(t *testing.T) {
 		test.RemoveFile(successLogPath)
 		test.RemoveFile(failLogPath)
 
-		//back
+		// back
 		batchConfig = ""
 		for _, key := range test.Keys {
 			batchConfig += key + "\t" + "1" + "\n"
@@ -141,7 +141,7 @@ func TestBatchChangeTypeRecord(t *testing.T) {
 	}
 
 	defer func() {
-		//back
+		// back
 		batchConfig = ""
 		for _, key := range test.Keys {
 			batchConfig += key + "\t" + "1" + "\n"

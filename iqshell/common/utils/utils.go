@@ -166,7 +166,6 @@ func GetFileLineCount(filePath string) (totalCount int64) {
 //	:LinkId:RelPath
 //	:LinkId
 func Encode(uri string) string {
-
 	size := len(uri)
 	if size == 0 {
 		return ""
@@ -180,7 +179,6 @@ func Encode(uri string) string {
 }
 
 func Decode(encodedURI string) (uri string, err *data.CodeError) {
-
 	size := len(encodedURI)
 	if size == 0 {
 		return

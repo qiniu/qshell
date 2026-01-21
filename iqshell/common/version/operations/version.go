@@ -7,8 +7,7 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/version"
 )
 
-type VersionInfo struct {
-}
+type VersionInfo struct{}
 
 func (info *VersionInfo) Check() *data.CodeError {
 	return nil

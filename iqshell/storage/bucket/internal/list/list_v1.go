@@ -2,9 +2,10 @@ package list
 
 import (
 	"context"
+	"strings"
+
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"strings"
 )
 
 func listBucketByV1(ctx context.Context, info ApiInfo, handler Handler) (hasMore bool, err *data.CodeError) {

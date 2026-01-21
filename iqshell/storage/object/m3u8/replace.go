@@ -4,16 +4,17 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/qiniu/go-sdk/v7/storage"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/log"
-	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
-	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/log"
+	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
+	"github.com/qiniu/qshell/v2/iqshell/storage/object/download"
 )
 
 // replace and upload
@@ -30,7 +31,7 @@ func ReplaceDomain(info ReplaceDomainApiInfo) *data.CodeError {
 		Key:    info.Key,
 	})
 
-	//create download link
+	// create download link
 	if urlResult, e := download.PublicUrlToPrivate(download.PublicUrlToPrivateApiInfo{
 		PublicUrl: dnLink,
 		Deadline:  time.Now().Add(time.Second * 3600).Unix(),
@@ -40,7 +41,7 @@ func ReplaceDomain(info ReplaceDomainApiInfo) *data.CodeError {
 		dnLink = urlResult.Url
 	}
 
-	//get m3u8 file content
+	// get m3u8 file content
 	m3u8Req, reqErr := http.NewRequest("GET", dnLink, nil)
 	if reqErr != nil {
 		return data.NewEmptyError().AppendDescF("new request for url %s error, %s", dnLink, reqErr)
@@ -61,7 +62,7 @@ func ReplaceDomain(info ReplaceDomainApiInfo) *data.CodeError {
 		return data.NewEmptyError().AppendDescF("read m3u8 file content error, %s", readErr.Error())
 	}
 
-	//check content
+	// check content
 	if !strings.HasPrefix(string(m3u8Bytes), "#EXTM3U") {
 		return data.NewEmptyError().AppendDesc("invalid m3u8 file")
 	}
@@ -76,7 +77,7 @@ func ReplaceDomain(info ReplaceDomainApiInfo) *data.CodeError {
 		newM3u8Lines = append(newM3u8Lines, newLine)
 	}
 
-	//join and upload
+	// join and upload
 	newM3u8Data := []byte(strings.Join(newM3u8Lines, "\n"))
 	putPolicy := storage.PutPolicy{
 		Scope: fmt.Sprintf("%s:%s", info.Bucket, info.Key),

@@ -5,10 +5,11 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"time"
+
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	"github.com/syndtr/goleveldb/leveldb/errors"
-	"time"
 )
 
 type resumeV2 struct {

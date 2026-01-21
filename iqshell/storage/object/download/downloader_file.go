@@ -29,8 +29,7 @@ type DownloadApiInfo struct {
 	Progress       progress.Progress
 }
 
-type downloaderFile struct {
-}
+type downloaderFile struct{}
 
 func (d *downloaderFile) Download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {
 	for times := 0; times < 2; times++ {
@@ -88,7 +87,7 @@ func (d *downloaderFile) download(info *DownloadApiInfo) (response *http.Respons
 	}
 	response, rErr := client.DefaultStorageClient().DoRequest(workspace.GetContext(), "GET", info.downloadUrl, headers)
 	if info.CheckHash && len(info.FileHash) != 0 && response != nil && response.Header != nil {
-		etag := fmt.Sprintf(response.Header.Get("Etag"))
+		etag := response.Header.Get("Etag")
 		etag = utils.ParseEtag(etag)
 		if len(etag) > 0 && etag != info.FileHash {
 			return nil, data.NewEmptyError().AppendDescF("file has change, hash before:%s now:%s", info.FileHash, etag)

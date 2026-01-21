@@ -2,6 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"path/filepath"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/qiniu/qshell/v2/iqshell"
@@ -14,8 +17,6 @@ import (
 	"github.com/qiniu/qshell/v2/iqshell/common/workspace"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object"
 	"github.com/qiniu/qshell/v2/iqshell/storage/object/batch"
-	"path/filepath"
-	"time"
 )
 
 type FetchInfo struct {
@@ -68,7 +69,6 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 		FailExportFilePath:      info.BatchInfo.FailExportFilePath,
 		OverwriteExportFilePath: info.BatchInfo.OverwriteExportFilePath,
 	})
-
 	if err != nil {
 		log.ErrorF("get export error:%v", err)
 		data.SetCmdStatusError()
@@ -169,7 +169,6 @@ func Fetch(cfg *iqshell.Config, info FetchInfo) {
 				exporter.Fail().ExportF("%s%s%v", work.Data, flow.ErrorSeparate, err)
 				log.DebugF("Skip line:%s because:%v", work.Data, err)
 			}
-
 		}).
 		OnWorkSuccess(func(workInfo *flow.WorkInfo, result flow.Result) {
 			metric.AddCurrentCount(1)

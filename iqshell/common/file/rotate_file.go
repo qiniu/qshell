@@ -2,8 +2,6 @@ package file
 
 import (
 	"fmt"
-	"github.com/qiniu/qshell/v2/iqshell/common/data"
-	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 	"io"
 	"io/fs"
 	"os"
@@ -11,6 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
+	"github.com/qiniu/qshell/v2/iqshell/common/utils"
 )
 
 const (
@@ -51,7 +52,6 @@ func RotateOptionOnOpenFile(f func(filename string)) RotateOption {
 }
 
 func NewRotateFile(name string, options ...RotateOption) (io.WriteCloser, *data.CodeError) {
-
 	if n, aErr := filepath.Abs(name); aErr != nil {
 		return nil, data.ConvertError(aErr)
 	} else {
@@ -150,7 +150,6 @@ func (r *rotateFile) writeByRotateWithLock(p []byte) (n int, err error) {
 }
 
 func (r *rotateFile) writeByRotate(p []byte) (n int, err error) {
-
 	// 不滚动
 	if r.maxLine <= 0 && r.maxSize <= 0 {
 		return r.file.Write(p)
@@ -208,7 +207,7 @@ func (r *rotateFile) writeLine(isNew bool, line string) (n int, err error) {
 }
 
 func (r *rotateFile) createFile() error {
-	if mErr := os.MkdirAll(r.fileDir, 0766); mErr != nil {
+	if mErr := os.MkdirAll(r.fileDir, 0o766); mErr != nil {
 		return mErr
 	}
 
@@ -233,7 +232,7 @@ func (r *rotateFile) createFile() error {
 	}
 	newFileName = filepath.Join(r.fileDir, newFileName)
 
-	if file, err := os.OpenFile(newFileName, flag, 0666); err != nil {
+	if file, err := os.OpenFile(newFileName, flag, 0o666); err != nil {
 		return err
 	} else {
 		r.file = file
@@ -271,7 +270,6 @@ func (r *rotateFile) createFile() error {
 }
 
 func (r *rotateFile) getFileIndex() (index int, err *data.CodeError) {
-
 	// 找到最新的文件
 	wErr := filepath.WalkDir(r.fileDir, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() {

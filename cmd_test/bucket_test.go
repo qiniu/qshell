@@ -3,13 +3,13 @@
 package cmd
 
 import (
-	"github.com/qiniu/qshell/v2/cmd_test/test"
 	"strings"
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 func TestBucket(t *testing.T) {
-
 	ret, errs := test.RunCmdWithError("bucket", test.Bucket)
 	if len(errs) > 0 {
 		t.Fatal("get bucket info error:" + errs)
