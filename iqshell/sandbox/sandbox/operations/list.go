@@ -27,12 +27,19 @@ func List(info ListInfo) {
 	}
 
 	params := &sandbox.ListParams{}
-	if info.State != "" {
-		states := sbClient.ParseStates(info.State)
-		params.State = &states
+	// Default to "running" state if not specified (matches e2b CLI behavior)
+	stateStr := info.State
+	if stateStr == "" {
+		stateStr = sbClient.DefaultState
 	}
+	states := sbClient.ParseStates(stateStr)
+	params.State = &states
+
 	if info.Metadata != "" {
-		params.Metadata = &info.Metadata
+		m := sbClient.ParseMetadata(info.Metadata)
+		if m != "" {
+			params.Metadata = &m
+		}
 	}
 	if info.Limit > 0 {
 		params.Limit = &info.Limit
@@ -54,10 +61,10 @@ func List(info ListInfo) {
 		return
 	}
 
-	fmt.Printf("%-30s %-20s %-10s %-6s %-10s %-10s %s\n",
-		"SANDBOX ID", "TEMPLATE ID", "STATE", "CPU", "MEMORY", "DISK", "STARTED AT")
+	fmt.Printf("%-30s %-20s %-10s %-6s %-10s %-10s %-22s %s\n",
+		"SANDBOX ID", "TEMPLATE ID", "STATE", "CPU", "MEMORY", "DISK", "STARTED AT", "END AT")
 	for _, sb := range sandboxes {
-		fmt.Printf("%-30s %-20s %-10s %-6d %-10s %-10s %s\n",
+		fmt.Printf("%-30s %-20s %-10s %-6d %-10s %-10s %-22s %s\n",
 			sb.SandboxID,
 			sb.TemplateID,
 			sb.State,
@@ -65,6 +72,7 @@ func List(info ListInfo) {
 			fmt.Sprintf("%dMB", sb.MemoryMB),
 			fmt.Sprintf("%dMB", sb.DiskSizeMB),
 			sb.StartedAt.Format(time.RFC3339),
+			sb.EndAt.Format(time.RFC3339),
 		)
 	}
 }
