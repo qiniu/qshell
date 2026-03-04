@@ -34,10 +34,10 @@ var sandboxListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.List(info)
 		},
 	}
-	cmd.Flags().StringVar(&info.State, "state", "", "filter by state (comma-separated: running,paused)")
-	cmd.Flags().StringVar(&info.Metadata, "metadata", "", "filter by metadata (key=value)")
-	cmd.Flags().Int32Var(&info.Limit, "limit", 0, "maximum number of sandboxes to return")
-	cmd.Flags().StringVar(&info.Format, "format", "pretty", "output format: pretty or json")
+	cmd.Flags().StringVarP(&info.State, "state", "s", "", "filter by state (comma-separated: running,paused). Defaults to running")
+	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "filter by metadata (key1=value1,key2=value2)")
+	cmd.Flags().Int32VarP(&info.Limit, "limit", "l", 0, "maximum number of sandboxes to return")
+	cmd.Flags().StringVarP(&info.Format, "format", "f", "pretty", "output format: pretty or json")
 	return cmd
 }
 
@@ -100,9 +100,9 @@ var sandboxKillCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.Kill(info)
 		},
 	}
-	cmd.Flags().BoolVar(&info.All, "all", false, "kill all sandboxes")
-	cmd.Flags().StringVar(&info.State, "state", "", "filter by state when using --all (comma-separated: running,paused)")
-	cmd.Flags().StringVar(&info.Metadata, "metadata", "", "filter by metadata when using --all (key=value)")
+	cmd.Flags().BoolVarP(&info.All, "all", "a", false, "kill all sandboxes")
+	cmd.Flags().StringVarP(&info.State, "state", "s", "", "filter by state when using --all (comma-separated: running,paused). Defaults to running")
+	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "filter by metadata when using --all (key1=value1,key2=value2)")
 	return cmd
 }
 
@@ -125,9 +125,11 @@ var sandboxLogsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.Logs(info)
 		},
 	}
-	cmd.Flags().StringVar(&info.Level, "level", "", "filter by log level (INFO, WARN, ERROR, DEBUG)")
+	cmd.Flags().StringVar(&info.Level, "level", "INFO", "filter by log level (DEBUG, INFO, WARN, ERROR). Higher levels are also shown")
 	cmd.Flags().Int32Var(&info.Limit, "limit", 0, "maximum number of log entries to return")
 	cmd.Flags().StringVar(&info.Format, "format", "pretty", "output format: pretty or json")
+	cmd.Flags().BoolVarP(&info.Follow, "follow", "f", false, "keep streaming logs until the sandbox is closed")
+	cmd.Flags().StringVar(&info.Loggers, "loggers", "", "filter logs by loggers (comma-separated prefixes)")
 	return cmd
 }
 
@@ -151,6 +153,7 @@ var sandboxMetricsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&info.Format, "format", "pretty", "output format: pretty or json")
+	cmd.Flags().BoolVarP(&info.Follow, "follow", "f", false, "keep streaming metrics until the sandbox is closed")
 	return cmd
 }
 

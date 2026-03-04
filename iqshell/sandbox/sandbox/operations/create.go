@@ -3,6 +3,7 @@ package operations
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
@@ -30,11 +31,13 @@ func Create(info CreateInfo) {
 	}
 
 	ctx := context.Background()
+	timeout := info.Timeout
+	if timeout <= 0 {
+		timeout = sbClient.DefaultSandboxTimeout
+	}
 	params := sandbox.CreateParams{
 		TemplateID: info.TemplateID,
-	}
-	if info.Timeout > 0 {
-		params.Timeout = &info.Timeout
+		Timeout:    &timeout,
 	}
 
 	fmt.Printf("Creating sandbox from template %s...\n", info.TemplateID)
@@ -49,7 +52,10 @@ func Create(info CreateInfo) {
 	defer func() {
 		fmt.Printf("\nKilling sandbox %s...\n", sb.ID())
 		if kErr := sb.Kill(context.Background()); kErr != nil {
-			fmt.Printf("Warning: kill sandbox failed: %v\n", kErr)
+			// Ignore 404 errors: sandbox may have already been terminated by timeout
+			if !strings.Contains(kErr.Error(), "404") {
+				fmt.Printf("Warning: kill sandbox failed: %v\n", kErr)
+			}
 		}
 	}()
 

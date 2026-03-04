@@ -1,9 +1,9 @@
 # 简介
-`sandbox logs` 查看沙箱的日志。
+`sandbox logs` 查看沙箱的日志。支持按日志级别和 logger 过滤，支持持续跟踪模式。
 
 # 格式
 ```
-qshell sandbox logs <sandboxID> [--level <level>] [--limit <N>] [--format <pretty|json>]
+qshell sandbox logs <sandboxID> [--level <level>] [--limit <N>] [--format <pretty|json>] [-f] [--loggers <loggers>]
 ```
 
 # 帮助文档
@@ -17,22 +17,39 @@ $ qshell sandbox logs --doc
 
 # 参数
 - `sandboxID`：沙箱 ID（必填）
-- `--level`：按日志级别过滤（INFO, WARN, ERROR, DEBUG）
+- `--level`：按日志级别过滤（DEBUG, INFO, WARN, ERROR）。默认为 INFO。更高级别的日志也会显示
 - `--limit`：返回的最大日志条数
 - `--format`：输出格式，pretty（默认）或 json
+- `-f, --follow`：持续跟踪日志输出，直到沙箱关闭
+- `--loggers`：按 logger 名称前缀过滤（逗号分隔）
 
 # 示例
-1. 查看沙箱日志
+1. 查看沙箱日志（默认 INFO 及以上级别）
 ```
 $ qshell sandbox logs sb-xxxxxxxxxxxx
 ```
 
-2. 过滤 INFO 级别日志
+2. 查看所有级别的日志
 ```
-$ qshell sandbox logs sb-xxxxxxxxxxxx --level INFO
+$ qshell sandbox logs sb-xxxxxxxxxxxx --level DEBUG
 ```
 
-3. JSON 格式输出
+3. 只查看错误日志
+```
+$ qshell sandbox logs sb-xxxxxxxxxxxx --level ERROR
+```
+
+4. 持续跟踪日志
+```
+$ qshell sandbox logs sb-xxxxxxxxxxxx -f
+```
+
+5. 按 logger 过滤
+```
+$ qshell sandbox logs sb-xxxxxxxxxxxx --loggers envd,proxy
+```
+
+6. JSON 格式输出
 ```
 $ qshell sandbox logs sb-xxxxxxxxxxxx --format json
 ```

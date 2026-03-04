@@ -32,12 +32,19 @@ func Kill(info KillInfo) {
 	// If --all flag is set, list and kill all matching sandboxes
 	if info.All {
 		params := &sandbox.ListParams{}
-		if info.State != "" {
-			states := sbClient.ParseStates(info.State)
-			params.State = &states
+		// Default to "running" state when using --all (matches e2b CLI behavior)
+		stateStr := info.State
+		if stateStr == "" {
+			stateStr = sbClient.DefaultState
 		}
+		states := sbClient.ParseStates(stateStr)
+		params.State = &states
+
 		if info.Metadata != "" {
-			params.Metadata = &info.Metadata
+			m := sbClient.ParseMetadata(info.Metadata)
+			if m != "" {
+				params.Metadata = &m
+			}
 		}
 
 		sandboxes, lErr := client.List(ctx, params)

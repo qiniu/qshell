@@ -73,14 +73,17 @@ func runTerminalSession(ctx context.Context, sb *sandbox.Sandbox) {
 		}
 	}()
 
-	// Keep-alive: periodically refresh sandbox timeout
+	// Keep-alive: periodically refresh sandbox timeout.
+	// Matches e2b CLI: setInterval 5s, setTimeout 30s.
 	go func() {
-		ticker := time.NewTicker(30 * time.Second)
+		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
+		// Refresh immediately on session start
+		sb.SetTimeout(ptyCtx, 30*time.Second)
 		for {
 			select {
 			case <-ticker.C:
-				sb.SetTimeout(ptyCtx, 5*time.Minute)
+				sb.SetTimeout(ptyCtx, 30*time.Second)
 			case <-ptyCtx.Done():
 				return
 			}
