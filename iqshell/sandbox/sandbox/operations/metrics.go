@@ -30,7 +30,7 @@ func Metrics(info MetricsInfo) {
 	}
 
 	ctx := context.Background()
-	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: 10})
+	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
 	if err != nil {
 		fmt.Printf("Error: connect to sandbox %s failed: %v\n", info.SandboxID, err)
 		return
@@ -42,8 +42,8 @@ func Metrics(info MetricsInfo) {
 		return
 	}
 
-	if info.Format == "json" {
-		printJSON(metrics)
+	if info.Format == sbClient.FormatJSON {
+		sbClient.PrintJSON(metrics)
 		return
 	}
 

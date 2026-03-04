@@ -29,7 +29,7 @@ func Connect(info ConnectInfo) {
 	}
 
 	ctx := context.Background()
-	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: 300})
+	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutInteractive})
 	if err != nil {
 		fmt.Printf("Error: connect to sandbox %s failed: %v\n", info.SandboxID, err)
 		return

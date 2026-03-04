@@ -3,7 +3,7 @@ package operations
 import (
 	"context"
 	"fmt"
-	"strings"
+	"sync"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
@@ -33,14 +33,7 @@ func Kill(info KillInfo) {
 	if info.All {
 		params := &sandbox.ListParams{}
 		if info.State != "" {
-			parts := strings.Split(info.State, ",")
-			states := make([]sandbox.SandboxState, 0, len(parts))
-			for _, s := range parts {
-				s = strings.TrimSpace(s)
-				if s != "" {
-					states = append(states, sandbox.SandboxState(s))
-				}
-			}
+			states := sbClient.ParseStates(info.State)
 			params.State = &states
 		}
 		if info.Metadata != "" {
@@ -64,16 +57,23 @@ func Kill(info KillInfo) {
 		return
 	}
 
+	// Kill sandboxes concurrently
+	var wg sync.WaitGroup
 	for _, id := range sandboxIDs {
-		sb, cErr := client.Connect(ctx, id, sandbox.ConnectParams{Timeout: 10})
-		if cErr != nil {
-			fmt.Printf("Error: connect to sandbox %s failed: %v\n", id, cErr)
-			continue
-		}
-		if kErr := sb.Kill(ctx); kErr != nil {
-			fmt.Printf("Error: kill sandbox %s failed: %v\n", id, kErr)
-			continue
-		}
-		fmt.Printf("Killed sandbox %s\n", id)
+		wg.Add(1)
+		go func(sandboxID string) {
+			defer wg.Done()
+			sb, cErr := client.Connect(ctx, sandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
+			if cErr != nil {
+				fmt.Printf("Error: connect to sandbox %s failed: %v\n", sandboxID, cErr)
+				return
+			}
+			if kErr := sb.Kill(ctx); kErr != nil {
+				fmt.Printf("Error: kill sandbox %s failed: %v\n", sandboxID, kErr)
+				return
+			}
+			fmt.Printf("Killed sandbox %s\n", sandboxID)
+		}(id)
 	}
+	wg.Wait()
 }

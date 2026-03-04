@@ -3,6 +3,7 @@ package operations
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
@@ -32,7 +33,7 @@ func Logs(info LogsInfo) {
 	}
 
 	ctx := context.Background()
-	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: 10})
+	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
 	if err != nil {
 		fmt.Printf("Error: connect to sandbox %s failed: %v\n", info.SandboxID, err)
 		return
@@ -49,14 +50,14 @@ func Logs(info LogsInfo) {
 		return
 	}
 
-	if info.Format == "json" {
-		printJSON(logs)
+	if info.Format == sbClient.FormatJSON {
+		sbClient.PrintJSON(logs)
 		return
 	}
 
 	if len(logs.LogEntries) > 0 {
 		for _, entry := range logs.LogEntries {
-			if info.Level != "" && string(entry.Level) != info.Level {
+			if info.Level != "" && string(entry.Level) != strings.ToUpper(info.Level) {
 				continue
 			}
 			fmt.Printf("[%s] %s %s\n",

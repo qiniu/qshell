@@ -3,7 +3,6 @@ package operations
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -94,9 +93,7 @@ func runTerminalSession(ctx context.Context, sb *sandbox.Sandbox) {
 		for {
 			n, rErr := os.Stdin.Read(buf)
 			if rErr != nil {
-				if rErr != io.EOF {
-					ptyCancel()
-				}
+				ptyCancel()
 				return
 			}
 			if n > 0 {

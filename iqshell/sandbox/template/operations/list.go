@@ -2,7 +2,6 @@ package operations
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -28,8 +27,8 @@ func List(info ListInfo) {
 		return
 	}
 
-	if info.Format == "json" {
-		printJSON(templates)
+	if info.Format == sbClient.FormatJSON {
+		sbClient.PrintJSON(templates)
 		return
 	}
 
@@ -55,14 +54,4 @@ func List(info ListInfo) {
 			t.UpdatedAt.Format(time.RFC3339),
 		)
 	}
-}
-
-// printJSON outputs data as JSON to stdout.
-func printJSON(v any) {
-	data, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		fmt.Printf("Error: marshal JSON failed: %v\n", err)
-		return
-	}
-	fmt.Println(string(data))
 }

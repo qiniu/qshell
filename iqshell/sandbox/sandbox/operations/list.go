@@ -2,9 +2,7 @@ package operations
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
@@ -30,14 +28,7 @@ func List(info ListInfo) {
 
 	params := &sandbox.ListParams{}
 	if info.State != "" {
-		parts := strings.Split(info.State, ",")
-		states := make([]sandbox.SandboxState, 0, len(parts))
-		for _, s := range parts {
-			s = strings.TrimSpace(s)
-			if s != "" {
-				states = append(states, sandbox.SandboxState(s))
-			}
-		}
+		states := sbClient.ParseStates(info.State)
 		params.State = &states
 	}
 	if info.Metadata != "" {
@@ -53,8 +44,8 @@ func List(info ListInfo) {
 		return
 	}
 
-	if info.Format == "json" {
-		printJSON(sandboxes)
+	if info.Format == sbClient.FormatJSON {
+		sbClient.PrintJSON(sandboxes)
 		return
 	}
 
@@ -76,14 +67,4 @@ func List(info ListInfo) {
 			sb.StartedAt.Format(time.RFC3339),
 		)
 	}
-}
-
-// printJSON outputs data as JSON to stdout.
-func printJSON(v any) {
-	data, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		fmt.Printf("Error: marshal JSON failed: %v\n", err)
-		return
-	}
-	fmt.Println(string(data))
 }
