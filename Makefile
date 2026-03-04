@@ -71,6 +71,36 @@ $(WINARM).exe:
 $(WINARM64).exe:
 	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GO) build -ldflags $(LDFLAGS) -o $(WINARM64).exe ./main/
 
+# --- Test targets ---
+
+.PHONY: test test-unit test-integration test-sandbox test-sandbox-unit test-sandbox-integration
+
+# Run all unit tests (no build tags, safe to run without credentials)
+test:
+	$(GO) test -count=1 ./...
+
+# Run unit-tagged tests in cmd_test
+test-unit:
+	$(GO) test -count=1 -tags unit -v ./cmd_test/ ./iqshell/...
+
+# Run all integration tests (requires QINIU_API_KEY and related credentials)
+test-integration:
+	$(GO) test -count=1 -tags integration -v -timeout 600s ./cmd_test/ ./iqshell/...
+
+# Run sandbox unit tests only
+test-sandbox-unit:
+	$(GO) test -count=1 -v ./iqshell/sandbox/
+	$(GO) test -count=1 -tags unit -v ./cmd_test/ -run "TestSandbox"
+
+# Run sandbox integration tests (requires QINIU_API_KEY)
+test-sandbox-integration:
+	$(GO) test -count=1 -tags integration -v -timeout 300s ./iqshell/sandbox/
+
+# Run all sandbox tests (unit + integration)
+test-sandbox: test-sandbox-unit test-sandbox-integration
+
+# --- Build & release targets ---
+
 .PHONY: cleanzip cleanbin clean upload
 
 cleanzip:
