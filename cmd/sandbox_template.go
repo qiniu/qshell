@@ -66,24 +66,27 @@ var templateGetCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var templateDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.DeleteInfo{}
 	cmd := &cobra.Command{
-		Use:     "delete <templateID>",
+		Use:     "delete [templateIDs...]",
 		Aliases: []string{"dl"},
-		Short:   "Delete a template",
-		Example: `qshell sandbox template delete tmpl-xxxxxxxxxxxx -y`,
+		Short:   "Delete one or more templates",
+		Example: `  qshell sandbox template delete tmpl-xxxxxxxxxxxx -y
+  qshell sandbox template delete tmpl-aaa tmpl-bbb -y
+  qshell sandbox template delete -s`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateDeleteType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
 				return
 			}
-			if len(args) != 1 {
+			if len(args) == 0 && !info.Select {
 				_ = cmd.Usage()
 				return
 			}
-			info.TemplateID = args[0]
+			info.TemplateIDs = args
 			operations.Delete(info)
 		},
 	}
 	cmd.Flags().BoolVarP(&info.Yes, "yes", "y", false, "skip confirmation")
+	cmd.Flags().BoolVarP(&info.Select, "select", "s", false, "interactively select templates to delete")
 	return cmd
 }
 
@@ -122,7 +125,10 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wait
 
   # Rebuild an existing template
-  qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --from-image ubuntu:22.04`,
+  qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --from-image ubuntu:22.04
+
+  # Force rebuild without cache
+  qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --no-cache --wait`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateBuildType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -140,6 +146,86 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().Int32Var(&info.CPUCount, "cpu", 0, "sandbox CPU count")
 	cmd.Flags().Int32Var(&info.MemoryMB, "memory", 0, "sandbox memory size in MiB")
 	cmd.Flags().BoolVar(&info.Wait, "wait", false, "wait for build to complete")
+	cmd.Flags().BoolVar(&info.NoCache, "no-cache", false, "force full rebuild ignoring cache")
+	return cmd
+}
+
+var templatePublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	info := operations.PublishInfo{Public: true}
+	cmd := &cobra.Command{
+		Use:     "publish [templateIDs...]",
+		Aliases: []string{"pb"},
+		Short:   "Publish templates (make public)",
+		Example: `  qshell sandbox template publish tmpl-xxxxxxxxxxxx -y
+  qshell sandbox template publish -s`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.SandboxTemplatePublishType
+			if iqshell.ShowDocumentIfNeeded(cfg) {
+				return
+			}
+			if len(args) == 0 && !info.Select {
+				_ = cmd.Usage()
+				return
+			}
+			info.TemplateIDs = args
+			operations.Publish(info)
+		},
+	}
+	cmd.Flags().BoolVarP(&info.Yes, "yes", "y", false, "skip confirmation")
+	cmd.Flags().BoolVarP(&info.Select, "select", "s", false, "interactively select templates")
+	return cmd
+}
+
+var templateUnpublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	info := operations.PublishInfo{Public: false}
+	cmd := &cobra.Command{
+		Use:     "unpublish [templateIDs...]",
+		Aliases: []string{"upb"},
+		Short:   "Unpublish templates (make private)",
+		Example: `  qshell sandbox template unpublish tmpl-xxxxxxxxxxxx -y
+  qshell sandbox template unpublish -s`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.SandboxTemplateUnpublishType
+			if iqshell.ShowDocumentIfNeeded(cfg) {
+				return
+			}
+			if len(args) == 0 && !info.Select {
+				_ = cmd.Usage()
+				return
+			}
+			info.TemplateIDs = args
+			operations.Publish(info)
+		},
+	}
+	cmd.Flags().BoolVarP(&info.Yes, "yes", "y", false, "skip confirmation")
+	cmd.Flags().BoolVarP(&info.Select, "select", "s", false, "interactively select templates")
+	return cmd
+}
+
+var templateInitCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	info := operations.InitInfo{}
+	cmd := &cobra.Command{
+		Use:     "init",
+		Aliases: []string{"it"},
+		Short:   "Initialize a new template project",
+		Long:    "Scaffold a new template project with boilerplate files for the selected language.",
+		Example: `  # Interactive mode
+  qshell sandbox template init
+
+  # Non-interactive mode
+  qshell sandbox template init --name my-template --language go
+  qshell sandbox template init --name my-api --language typescript --path ./my-api`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.SandboxTemplateInitType
+			if iqshell.ShowDocumentIfNeeded(cfg) {
+				return
+			}
+			operations.Init(info)
+		},
+	}
+	cmd.Flags().StringVar(&info.Name, "name", "", "template project name")
+	cmd.Flags().StringVar(&info.Language, "language", "", "programming language (go, typescript, python)")
+	cmd.Flags().StringVar(&info.Path, "path", "", "output directory (defaults to ./<name>)")
 	return cmd
 }
 
@@ -152,6 +238,9 @@ func templateCmdLoader(parentCmd *cobra.Command, cfg *iqshell.Config) {
 		templateDeleteCmdBuilder(cfg),
 		templateBuildCmdBuilder(cfg),
 		templateBuildsCmdBuilder(cfg),
+		templatePublishCmdBuilder(cfg),
+		templateUnpublishCmdBuilder(cfg),
+		templateInitCmdBuilder(cfg),
 	)
 	parentCmd.AddCommand(templateCmd)
 }

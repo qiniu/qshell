@@ -5,19 +5,21 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/huh"
+	"github.com/qiniu/go-sdk/v7/sandbox"
 
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 )
 
-// DeleteInfo holds parameters for deleting templates.
-type DeleteInfo struct {
-	TemplateIDs []string // One or more template IDs to delete
+// PublishInfo holds parameters for publishing/unpublishing templates.
+type PublishInfo struct {
+	TemplateIDs []string // One or more template IDs
 	Yes         bool     // Skip confirmation
 	Select      bool     // Interactive multi-select from template list
+	Public      bool     // true = publish, false = unpublish
 }
 
-// Delete deletes one or more templates.
-func Delete(info DeleteInfo) {
+// Publish publishes or unpublishes one or more templates.
+func Publish(info PublishInfo) {
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
 		sbClient.PrintError("%v", err)
@@ -26,6 +28,11 @@ func Delete(info DeleteInfo) {
 
 	ctx := context.Background()
 	templateIDs := info.TemplateIDs
+
+	action := "publish"
+	if !info.Public {
+		action = "unpublish"
+	}
 
 	// Interactive selection mode
 	if info.Select {
@@ -45,6 +52,11 @@ func Delete(info DeleteInfo) {
 			if len(t.Aliases) > 0 {
 				label = fmt.Sprintf("%s (%s)", t.TemplateID, t.Aliases[0])
 			}
+			publicStr := "private"
+			if t.Public {
+				publicStr = "public"
+			}
+			label = fmt.Sprintf("%s [%s]", label, publicStr)
 			options = append(options, huh.NewOption(label, t.TemplateID))
 		}
 
@@ -52,7 +64,7 @@ func Delete(info DeleteInfo) {
 		form := huh.NewForm(
 			huh.NewGroup(
 				huh.NewMultiSelect[string]().
-					Title("Select templates to delete").
+					Title(fmt.Sprintf("Select templates to %s", action)).
 					Options(options...).
 					Value(&selected),
 			),
@@ -74,7 +86,7 @@ func Delete(info DeleteInfo) {
 	}
 
 	if !info.Yes {
-		fmt.Printf("Are you sure you want to delete %d template(s)? [y/N] ", len(templateIDs))
+		fmt.Printf("Are you sure you want to %s %d template(s)? [y/N] ", action, len(templateIDs))
 		var confirm string
 		fmt.Scanln(&confirm)
 		if confirm != "y" && confirm != "Y" {
@@ -84,10 +96,16 @@ func Delete(info DeleteInfo) {
 	}
 
 	for _, id := range templateIDs {
-		if dErr := client.DeleteTemplate(ctx, id); dErr != nil {
-			sbClient.PrintError("delete template %s failed: %v", id, dErr)
+		if uErr := client.UpdateTemplate(ctx, id, sandbox.UpdateTemplateParams{
+			Public: &info.Public,
+		}); uErr != nil {
+			sbClient.PrintError("%s template %s failed: %v", action, id, uErr)
 			continue
 		}
-		sbClient.PrintSuccess("Template %s deleted", id)
+		if info.Public {
+			sbClient.PrintSuccess("Template %s published", id)
+		} else {
+			sbClient.PrintSuccess("Template %s unpublished", id)
+		}
 	}
 }
