@@ -22,10 +22,6 @@ const (
 	ConnectTimeoutCommand int32 = 10
 )
 
-// DefaultSandboxTimeout is the default sandbox timeout in seconds when creating a sandbox
-// for interactive use. The server default is 300s (5 min) which is too short for terminal sessions.
-const DefaultSandboxTimeout int32 = 3600 // 1 hour
-
 // PrintJSON outputs data as formatted JSON to stdout.
 func PrintJSON(v any) {
 	data, err := json.MarshalIndent(v, "", "  ")

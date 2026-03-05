@@ -13,11 +13,11 @@ import (
 // CreateInfo holds parameters for creating a sandbox.
 type CreateInfo struct {
 	TemplateID string
-	Timeout    int32
 }
 
 // Create creates a new sandbox and connects to its terminal.
 // When the terminal session ends, the sandbox is killed.
+// The sandbox stays alive via keep-alive in the terminal session (matches e2b CLI behavior).
 func Create(info CreateInfo) {
 	if info.TemplateID == "" {
 		fmt.Println("Error: template ID is required")
@@ -31,13 +31,8 @@ func Create(info CreateInfo) {
 	}
 
 	ctx := context.Background()
-	timeout := info.Timeout
-	if timeout <= 0 {
-		timeout = sbClient.DefaultSandboxTimeout
-	}
 	params := sandbox.CreateParams{
 		TemplateID: info.TemplateID,
-		Timeout:    &timeout,
 	}
 
 	fmt.Printf("Creating sandbox from template %s...\n", info.TemplateID)
