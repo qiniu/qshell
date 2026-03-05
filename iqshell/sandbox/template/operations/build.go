@@ -38,6 +38,9 @@ type BuildInfo struct {
 
 	// Wait indicates whether to wait for build completion.
 	Wait bool
+
+	// NoCache forces a full rebuild ignoring cache.
+	NoCache bool
 }
 
 // Build creates or rebuilds a template.
@@ -46,7 +49,7 @@ type BuildInfo struct {
 func Build(info BuildInfo) {
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		sbClient.PrintError("%v", err)
 		return
 	}
 
@@ -57,7 +60,7 @@ func Build(info BuildInfo) {
 	if templateID == "" {
 		// Create a new template
 		if info.Name == "" {
-			fmt.Println("Error: template name (--name) or template ID (--template-id) is required")
+			sbClient.PrintError("template name (--name) or template ID (--template-id) is required")
 			return
 		}
 
@@ -74,23 +77,23 @@ func Build(info BuildInfo) {
 		fmt.Printf("Creating template %s...\n", info.Name)
 		resp, cErr := client.CreateTemplate(ctx, createParams)
 		if cErr != nil {
-			fmt.Printf("Error: create template failed: %v\n", cErr)
+			sbClient.PrintError("create template failed: %v", cErr)
 			return
 		}
 		templateID = resp.TemplateID
 		buildID = resp.BuildID
-		fmt.Printf("Template %s created (build ID: %s)\n", templateID, buildID)
+		sbClient.PrintSuccess("Template %s created (build ID: %s)", templateID, buildID)
 	} else {
 		// Get existing template to find latest build ID
 		tmpl, gErr := client.GetTemplate(ctx, templateID, nil)
 		if gErr != nil {
-			fmt.Printf("Error: get template failed: %v\n", gErr)
+			sbClient.PrintError("get template failed: %v", gErr)
 			return
 		}
 		if len(tmpl.Builds) > 0 {
 			buildID = tmpl.Builds[0].BuildID
 		} else {
-			fmt.Println("Error: no builds found for template, cannot rebuild")
+			sbClient.PrintError("no builds found for template, cannot rebuild")
 			return
 		}
 	}
@@ -109,10 +112,14 @@ func Build(info BuildInfo) {
 	if info.ReadyCmd != "" {
 		buildParams.ReadyCmd = &info.ReadyCmd
 	}
+	if info.NoCache {
+		force := true
+		buildParams.Force = &force
+	}
 
 	fmt.Printf("Starting build for template %s (build ID: %s)...\n", templateID, buildID)
 	if err := client.StartTemplateBuild(ctx, templateID, buildID, buildParams); err != nil {
-		fmt.Printf("Error: start build failed: %v\n", err)
+		sbClient.PrintError("start build failed: %v", err)
 		return
 	}
 
@@ -121,18 +128,44 @@ func Build(info BuildInfo) {
 		return
 	}
 
-	// Wait for build completion
+	// Stream build logs while waiting
 	fmt.Println("Waiting for build to complete...")
-	buildInfo, err := client.WaitForBuild(ctx, templateID, buildID,
-		sandbox.WithPollInterval(3*time.Second),
-	)
-	if err != nil {
-		fmt.Printf("Error: build failed: %v\n", err)
-		return
-	}
+	var cursor *int64
+	for {
+		logs, blErr := client.GetTemplateBuildLogs(ctx, templateID, buildID, &sandbox.GetBuildLogsParams{
+			Cursor: cursor,
+		})
+		if blErr == nil && logs != nil {
+			for _, entry := range logs.Logs {
+				fmt.Printf("[%s] %s %s\n",
+					sbClient.FormatTimestamp(entry.Timestamp),
+					sbClient.LogLevelBadge(string(entry.Level)),
+					entry.Message,
+				)
+				ts := entry.Timestamp.UnixMilli() + 1
+				cursor = &ts
+			}
+		}
 
-	fmt.Printf("Build completed!\n")
-	fmt.Printf("Template ID:  %s\n", buildInfo.TemplateID)
-	fmt.Printf("Build ID:     %s\n", buildInfo.BuildID)
-	fmt.Printf("Status:       %s\n", buildInfo.Status)
+		// Check build status
+		buildInfo, bErr := client.GetTemplateBuildStatus(ctx, templateID, buildID, nil)
+		if bErr != nil {
+			sbClient.PrintError("get build status failed: %v", bErr)
+			return
+		}
+
+		if buildInfo.Status == "ready" || buildInfo.Status == "error" {
+			if buildInfo.Status == "error" {
+				sbClient.PrintError("build failed")
+			} else {
+				sbClient.PrintSuccess("Build completed!")
+			}
+			fmt.Printf("Template ID:  %s\n", buildInfo.TemplateID)
+			fmt.Printf("Build ID:     %s\n", buildInfo.BuildID)
+			fmt.Printf("Status:       %s\n", buildInfo.Status)
+			return
+		}
+
+		time.Sleep(3 * time.Second)
+	}
 }

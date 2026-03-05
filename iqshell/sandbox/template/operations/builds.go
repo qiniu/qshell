@@ -16,23 +16,23 @@ type BuildsInfo struct {
 // Builds retrieves and displays the build status of a template.
 func Builds(info BuildsInfo) {
 	if info.TemplateID == "" {
-		fmt.Println("Error: template ID is required")
+		sbClient.PrintError("template ID is required")
 		return
 	}
 	if info.BuildID == "" {
-		fmt.Println("Error: build ID is required")
+		sbClient.PrintError("build ID is required")
 		return
 	}
 
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		sbClient.PrintError("%v", err)
 		return
 	}
 
 	buildInfo, err := client.GetTemplateBuildStatus(context.Background(), info.TemplateID, info.BuildID, nil)
 	if err != nil {
-		fmt.Printf("Error: get build status failed: %v\n", err)
+		sbClient.PrintError("get build status failed: %v", err)
 		return
 	}
 

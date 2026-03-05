@@ -27,13 +27,13 @@ type LogsInfo struct {
 // Logs retrieves and displays sandbox logs.
 func Logs(info LogsInfo) {
 	if info.SandboxID == "" {
-		fmt.Println("Error: sandbox ID is required")
+		sbClient.PrintError("sandbox ID is required")
 		return
 	}
 
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		sbClient.PrintError("%v", err)
 		return
 	}
 
@@ -51,7 +51,7 @@ func Logs(info LogsInfo) {
 
 	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
 	if err != nil {
-		fmt.Printf("Error: connect to sandbox %s failed: %v\n", info.SandboxID, err)
+		sbClient.PrintError("connect to sandbox %s failed: %v", info.SandboxID, err)
 		return
 	}
 
@@ -63,6 +63,27 @@ func Logs(info LogsInfo) {
 
 	// Parse logger filters
 	loggerPrefixes := sbClient.ParseLoggers(info.Loggers)
+
+	// Async sandbox-done monitoring (non-blocking, checks every 5s)
+	sandboxDone := make(chan struct{})
+	if info.Follow {
+		go func() {
+			ticker := time.NewTicker(5 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					running, _ := sb.IsRunning(ctx)
+					if !running {
+						close(sandboxDone)
+						return
+					}
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+	}
 
 	var start *int64
 
@@ -76,7 +97,7 @@ func Logs(info LogsInfo) {
 
 		logs, lErr := sb.GetLogs(ctx, params)
 		if lErr != nil {
-			fmt.Printf("Error: get sandbox logs failed: %v\n", lErr)
+			sbClient.PrintError("get sandbox logs failed: %v", lErr)
 			return
 		}
 
@@ -109,17 +130,13 @@ func Logs(info LogsInfo) {
 			start = &lastTs
 		}
 
-		// Check if sandbox is still running
-		running, rErr := sb.IsRunning(ctx)
-		if rErr != nil || !running {
+		// Check if sandbox is done or context cancelled
+		select {
+		case <-sandboxDone:
 			if info.Format != sbClient.FormatJSON {
 				fmt.Println("\nStopped printing logs — sandbox is closed")
 			}
 			return
-		}
-
-		// Check for context cancellation
-		select {
 		case <-ctx.Done():
 			return
 		default:
@@ -129,7 +146,7 @@ func Logs(info LogsInfo) {
 	}
 }
 
-// printLogEntries outputs log entries with level and logger filtering.
+// printLogEntries outputs log entries with level and logger filtering, and colored level badges.
 func printLogEntries(logs *sandbox.SandboxLogs, level string, loggerPrefixes []string) {
 	if len(logs.LogEntries) > 0 {
 		for _, entry := range logs.LogEntries {
@@ -137,17 +154,45 @@ func printLogEntries(logs *sandbox.SandboxLogs, level string, loggerPrefixes []s
 				continue
 			}
 			// Filter by logger if specified
+			logger := entry.Fields["logger"]
 			if len(loggerPrefixes) > 0 {
-				logger := entry.Fields["logger"]
 				if !sbClient.MatchesLoggerPrefix(logger, loggerPrefixes) {
 					continue
 				}
 			}
-			fmt.Printf("[%s] %-5s %s\n",
-				entry.Timestamp.Format(time.RFC3339),
-				strings.ToUpper(string(entry.Level)),
-				entry.Message,
+
+			// Clean logger name
+			cleanLogger := sbClient.CleanLoggerName(logger)
+
+			// Strip internal fields, keep user-relevant ones
+			userFields := sbClient.StripInternalFields(entry.Fields)
+
+			// Build output line
+			var parts []string
+			parts = append(parts,
+				fmt.Sprintf("[%s]", entry.Timestamp.Format(time.RFC3339)),
+				sbClient.LogLevelBadge(string(entry.Level)),
 			)
+			if cleanLogger != "" {
+				parts = append(parts, fmt.Sprintf("[%s]", cleanLogger))
+			}
+			parts = append(parts, entry.Message)
+
+			// Append user fields if any
+			if len(userFields) > 0 {
+				fieldParts := make([]string, 0, len(userFields))
+				for k, v := range userFields {
+					if k == "logger" {
+						continue
+					}
+					fieldParts = append(fieldParts, fmt.Sprintf("%s=%s", k, v))
+				}
+				if len(fieldParts) > 0 {
+					parts = append(parts, strings.Join(fieldParts, " "))
+				}
+			}
+
+			fmt.Println(strings.Join(parts, " "))
 		}
 	} else if len(logs.Logs) > 0 {
 		for _, l := range logs.Logs {

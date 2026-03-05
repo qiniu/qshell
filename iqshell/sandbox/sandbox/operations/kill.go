@@ -22,7 +22,7 @@ type KillInfo struct {
 func Kill(info KillInfo) {
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		sbClient.PrintError("%v", err)
 		return
 	}
 
@@ -49,7 +49,7 @@ func Kill(info KillInfo) {
 
 		sandboxes, lErr := client.List(ctx, params)
 		if lErr != nil {
-			fmt.Printf("Error: list sandboxes failed: %v\n", lErr)
+			sbClient.PrintError("list sandboxes failed: %v", lErr)
 			return
 		}
 
@@ -72,14 +72,14 @@ func Kill(info KillInfo) {
 			defer wg.Done()
 			sb, cErr := client.Connect(ctx, sandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
 			if cErr != nil {
-				fmt.Printf("Error: connect to sandbox %s failed: %v\n", sandboxID, cErr)
+				sbClient.PrintError("connect to sandbox %s failed: %v", sandboxID, cErr)
 				return
 			}
 			if kErr := sb.Kill(ctx); kErr != nil {
-				fmt.Printf("Error: kill sandbox %s failed: %v\n", sandboxID, kErr)
+				sbClient.PrintError("kill sandbox %s failed: %v", sandboxID, kErr)
 				return
 			}
-			fmt.Printf("Killed sandbox %s\n", sandboxID)
+			sbClient.PrintSuccess("Killed sandbox %s", sandboxID)
 		}(id)
 	}
 	wg.Wait()

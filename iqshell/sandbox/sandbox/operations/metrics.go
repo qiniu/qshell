@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
@@ -23,13 +24,13 @@ type MetricsInfo struct {
 // Metrics retrieves and displays sandbox resource metrics.
 func Metrics(info MetricsInfo) {
 	if info.SandboxID == "" {
-		fmt.Println("Error: sandbox ID is required")
+		sbClient.PrintError("sandbox ID is required")
 		return
 	}
 
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		sbClient.PrintError("%v", err)
 		return
 	}
 
@@ -47,12 +48,33 @@ func Metrics(info MetricsInfo) {
 
 	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
 	if err != nil {
-		fmt.Printf("Error: connect to sandbox %s failed: %v\n", info.SandboxID, err)
+		sbClient.PrintError("connect to sandbox %s failed: %v", info.SandboxID, err)
 		return
 	}
 
+	// Async sandbox-done monitoring (non-blocking, checks every 5s)
+	sandboxDone := make(chan struct{})
+	if info.Follow {
+		go func() {
+			ticker := time.NewTicker(5 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					running, _ := sb.IsRunning(ctx)
+					if !running {
+						close(sandboxDone)
+						return
+					}
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+	}
+
+	cyanLabel := color.New(color.FgCyan)
 	var lastTimestamp *time.Time
-	headerPrinted := false
 
 	for {
 		params := &sandbox.GetMetricsParams{}
@@ -63,7 +85,7 @@ func Metrics(info MetricsInfo) {
 
 		metrics, mErr := sb.GetMetrics(ctx, params)
 		if mErr != nil {
-			fmt.Printf("Error: get sandbox metrics failed: %v\n", mErr)
+			sbClient.PrintError("get sandbox metrics failed: %v", mErr)
 			return
 		}
 
@@ -86,19 +108,19 @@ func Metrics(info MetricsInfo) {
 				if lastTimestamp != nil && !m.Timestamp.After(*lastTimestamp) {
 					continue
 				}
-				if !headerPrinted {
-					fmt.Printf("%-6s %-10s %-15s %-15s %-15s %-15s %s\n",
-						"CPU", "CPU %", "MEM USED", "MEM TOTAL", "DISK USED", "DISK TOTAL", "TIMESTAMP")
-					headerPrinted = true
-				}
-				fmt.Printf("%-6d %-10.1f %-15s %-15s %-15s %-15s %s\n",
-					m.CPUCount,
-					m.CPUUsedPct,
-					formatBytes(m.MemUsed),
-					formatBytes(m.MemTotal),
-					formatBytes(m.DiskUsed),
-					formatBytes(m.DiskTotal),
+				// e2b inline format:
+				// [timestamp]  CPU:  12.5% / 2 Cores | Memory:  256 / 512 MiB | Disk:  100 / 1024 MiB
+				fmt.Printf("[%s]  %s  %.1f%% / %d Cores | %s  %s / %s | %s  %s / %s\n",
 					m.Timestamp.Format(time.RFC3339),
+					cyanLabel.Sprint("CPU:"),
+					m.CPUUsedPct,
+					m.CPUCount,
+					cyanLabel.Sprint("Memory:"),
+					sbClient.FormatBytes(m.MemUsed),
+					sbClient.FormatBytes(m.MemTotal),
+					cyanLabel.Sprint("Disk:"),
+					sbClient.FormatBytes(m.DiskUsed),
+					sbClient.FormatBytes(m.DiskTotal),
 				)
 				ts := m.Timestamp
 				lastTimestamp = &ts
@@ -109,17 +131,13 @@ func Metrics(info MetricsInfo) {
 			return
 		}
 
-		// Check if sandbox is still running
-		running, rErr := sb.IsRunning(ctx)
-		if rErr != nil || !running {
+		// Check if sandbox is done or context cancelled
+		select {
+		case <-sandboxDone:
 			if info.Format != sbClient.FormatJSON {
 				fmt.Println("\nStopped printing metrics — sandbox is closed")
 			}
 			return
-		}
-
-		// Check for context cancellation
-		select {
 		case <-ctx.Done():
 			return
 		default:
@@ -127,18 +145,4 @@ func Metrics(info MetricsInfo) {
 
 		time.Sleep(400 * time.Millisecond)
 	}
-}
-
-// formatBytes formats byte count to human-readable string.
-func formatBytes(b int64) string {
-	const unit = 1024
-	if b < unit {
-		return fmt.Sprintf("%d B", b)
-	}
-	div, exp := int64(unit), 0
-	for n := b / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }

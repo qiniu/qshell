@@ -16,19 +16,19 @@ type GetInfo struct {
 // Get retrieves and displays template details.
 func Get(info GetInfo) {
 	if info.TemplateID == "" {
-		fmt.Println("Error: template ID is required")
+		sbClient.PrintError("template ID is required")
 		return
 	}
 
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		sbClient.PrintError("%v", err)
 		return
 	}
 
 	tmpl, err := client.GetTemplate(context.Background(), info.TemplateID, nil)
 	if err != nil {
-		fmt.Printf("Error: get template failed: %v\n", err)
+		sbClient.PrintError("get template failed: %v", err)
 		return
 	}
 

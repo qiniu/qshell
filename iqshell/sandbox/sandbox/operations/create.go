@@ -20,13 +20,13 @@ type CreateInfo struct {
 // The sandbox stays alive via keep-alive in the terminal session (matches e2b CLI behavior).
 func Create(info CreateInfo) {
 	if info.TemplateID == "" {
-		fmt.Println("Error: template ID is required")
+		sbClient.PrintError("template ID is required")
 		return
 	}
 
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		sbClient.PrintError("%v", err)
 		return
 	}
 
@@ -38,10 +38,10 @@ func Create(info CreateInfo) {
 	fmt.Printf("Creating sandbox from template %s...\n", info.TemplateID)
 	sb, _, err := client.CreateAndWait(ctx, params)
 	if err != nil {
-		fmt.Printf("Error: create sandbox failed: %v\n", err)
+		sbClient.PrintError("create sandbox failed: %v", err)
 		return
 	}
-	fmt.Printf("Sandbox %s created, connecting...\n", sb.ID())
+	sbClient.PrintSuccess("Sandbox %s created, connecting...", sb.ID())
 
 	// When create session ends, kill the sandbox
 	defer func() {
@@ -49,7 +49,7 @@ func Create(info CreateInfo) {
 		if kErr := sb.Kill(context.Background()); kErr != nil {
 			// Ignore 404 errors: sandbox may have already been terminated by timeout
 			if !strings.Contains(kErr.Error(), "404") {
-				fmt.Printf("Warning: kill sandbox failed: %v\n", kErr)
+				sbClient.PrintWarn("kill sandbox failed: %v", kErr)
 			}
 		}
 	}()

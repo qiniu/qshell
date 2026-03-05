@@ -3,7 +3,7 @@ package operations
 import (
 	"context"
 	"fmt"
-	"time"
+	"os"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
@@ -22,7 +22,7 @@ type ListInfo struct {
 func List(info ListInfo) {
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		sbClient.PrintError("%v", err)
 		return
 	}
 
@@ -47,7 +47,7 @@ func List(info ListInfo) {
 
 	sandboxes, err := client.List(context.Background(), params)
 	if err != nil {
-		fmt.Printf("Error: list sandboxes failed: %v\n", err)
+		sbClient.PrintError("list sandboxes failed: %v", err)
 		return
 	}
 
@@ -61,18 +61,27 @@ func List(info ListInfo) {
 		return
 	}
 
-	fmt.Printf("%-30s %-20s %-10s %-6s %-10s %-10s %-22s %s\n",
-		"SANDBOX ID", "TEMPLATE ID", "STATE", "CPU", "MEMORY", "DISK", "STARTED AT", "END AT")
+	tw := sbClient.NewTable(os.Stdout)
+	fmt.Fprintf(tw, "SANDBOX ID\tTEMPLATE ID\tALIAS\tSTARTED AT\tEND AT\tSTATE\tvCPUs\tRAM MiB\tENVD VERSION\tMETADATA\n")
 	for _, sb := range sandboxes {
-		fmt.Printf("%-30s %-20s %-10s %-6d %-10s %-10s %-22s %s\n",
+		var metadata string
+		if sb.Metadata != nil {
+			metadata = sbClient.FormatMetadata(map[string]string(*sb.Metadata))
+		} else {
+			metadata = "-"
+		}
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%s\t%s\n",
 			sb.SandboxID,
 			sb.TemplateID,
+			sbClient.FormatOptionalString(sb.Alias),
+			sbClient.FormatTimestamp(sb.StartedAt),
+			sbClient.FormatTimestamp(sb.EndAt),
 			sb.State,
 			sb.CPUCount,
-			fmt.Sprintf("%dMB", sb.MemoryMB),
-			fmt.Sprintf("%dMB", sb.DiskSizeMB),
-			sb.StartedAt.Format(time.RFC3339),
-			sb.EndAt.Format(time.RFC3339),
+			sb.MemoryMB,
+			sb.EnvdVersion,
+			metadata,
 		)
 	}
+	tw.Flush()
 }

@@ -2,8 +2,6 @@ package operations
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
@@ -18,23 +16,23 @@ type ConnectInfo struct {
 // When the terminal session ends, the sandbox is kept running.
 func Connect(info ConnectInfo) {
 	if info.SandboxID == "" {
-		fmt.Println("Error: sandbox ID is required")
+		sbClient.PrintError("sandbox ID is required")
 		return
 	}
 
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		sbClient.PrintError("%v", err)
 		return
 	}
 
 	ctx := context.Background()
 	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutInteractive})
 	if err != nil {
-		fmt.Printf("Error: connect to sandbox %s failed: %v\n", info.SandboxID, err)
+		sbClient.PrintError("connect to sandbox %s failed: %v", info.SandboxID, err)
 		return
 	}
-	fmt.Printf("Connected to sandbox %s\n", sb.ID())
+	sbClient.PrintSuccess("Connected to sandbox %s", sb.ID())
 
 	runTerminalSession(ctx, sb)
 }
