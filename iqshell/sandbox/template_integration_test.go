@@ -88,3 +88,103 @@ func TestIntegrationTemplateBuildStatus(t *testing.T) {
 	}
 	t.Logf("build status: %s (logs: %d lines)", buildInfo.Status, len(buildInfo.Logs))
 }
+
+// TestIntegrationTemplatePublishUnpublish tests publish (make public) and unpublish (make private) operations.
+func TestIntegrationTemplatePublishUnpublish(t *testing.T) {
+	client := testSandboxClient(t)
+	templateID := findReadyTemplate(t, client)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Record original public state to restore at the end
+	tmpl, err := client.GetTemplate(ctx, templateID, nil)
+	if err != nil {
+		t.Fatalf("GetTemplate failed: %v", err)
+	}
+	originalPublic := tmpl.Public
+	t.Logf("template %s original public=%v", templateID, originalPublic)
+
+	t.Cleanup(func() {
+		// Restore original state
+		restoreCtx, restoreCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer restoreCancel()
+		if rErr := client.UpdateTemplate(restoreCtx, templateID, sandbox.UpdateTemplateParams{
+			Public: &originalPublic,
+		}); rErr != nil {
+			t.Logf("restore template public state failed: %v", rErr)
+		}
+	})
+
+	// Publish (set public=true)
+	pubTrue := true
+	if err := client.UpdateTemplate(ctx, templateID, sandbox.UpdateTemplateParams{
+		Public: &pubTrue,
+	}); err != nil {
+		t.Fatalf("publish (set public=true) failed: %v", err)
+	}
+
+	// Verify published
+	tmpl, err = client.GetTemplate(ctx, templateID, nil)
+	if err != nil {
+		t.Fatalf("GetTemplate after publish failed: %v", err)
+	}
+	if !tmpl.Public {
+		t.Error("template should be public after publish")
+	}
+	t.Logf("template %s published (public=true)", templateID)
+
+	// Unpublish (set public=false)
+	pubFalse := false
+	if err := client.UpdateTemplate(ctx, templateID, sandbox.UpdateTemplateParams{
+		Public: &pubFalse,
+	}); err != nil {
+		t.Fatalf("unpublish (set public=false) failed: %v", err)
+	}
+
+	// Verify unpublished
+	tmpl, err = client.GetTemplate(ctx, templateID, nil)
+	if err != nil {
+		t.Fatalf("GetTemplate after unpublish failed: %v", err)
+	}
+	if tmpl.Public {
+		t.Error("template should be private after unpublish")
+	}
+	t.Logf("template %s unpublished (public=false)", templateID)
+}
+
+// TestIntegrationTemplateBuildLogs tests retrieving build logs via GetTemplateBuildLogs.
+func TestIntegrationTemplateBuildLogs(t *testing.T) {
+	client := testSandboxClient(t)
+	templateID := findReadyTemplate(t, client)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	tmpl, err := client.GetTemplate(ctx, templateID, nil)
+	if err != nil {
+		t.Fatalf("GetTemplate failed: %v", err)
+	}
+	if len(tmpl.Builds) == 0 {
+		t.Skip("no builds found for template, skipping")
+	}
+
+	buildID := tmpl.Builds[0].BuildID
+	t.Logf("fetching build logs for template=%s, build=%s", templateID, buildID)
+
+	logs, err := client.GetTemplateBuildLogs(ctx, templateID, buildID, nil)
+	if err != nil {
+		if strings.Contains(err.Error(), "502") {
+			t.Skipf("GetTemplateBuildLogs returned 502 (server-side issue), skipping")
+		}
+		t.Fatalf("GetTemplateBuildLogs failed: %v", err)
+	}
+	t.Logf("got %d build log entries", len(logs.Logs))
+	for i, entry := range logs.Logs {
+		if i >= 3 {
+			t.Logf("  ... (%d more entries)", len(logs.Logs)-3)
+			break
+		}
+		t.Logf("  [%s] %s %s", entry.Timestamp.Format(time.RFC3339), entry.Level, entry.Message)
+	}
+}

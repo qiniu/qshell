@@ -22,6 +22,20 @@ $ qshell sandbox list --doc
 - `-l, --limit`：返回的最大数量
 - `-f, --format`：输出格式，pretty（默认）或 json
 
+# 输出列
+| 列名 | 说明 |
+|------|------|
+| SANDBOX ID | 沙箱 ID |
+| TEMPLATE ID | 模板 ID |
+| ALIAS | 沙箱别名 |
+| STARTED AT | 启动时间 |
+| END AT | 结束时间 |
+| STATE | 运行状态 |
+| vCPUs | CPU 核数 |
+| RAM MiB | 内存大小（MiB） |
+| ENVD VERSION | envd 版本 |
+| METADATA | 自定义元数据 |
+
 # 示例
 1. 列出运行中的沙箱（默认）
 ```

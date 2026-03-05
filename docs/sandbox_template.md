@@ -1,5 +1,5 @@
 # 简介
-`sandbox template`（别名 `tpl`）命令用于管理沙箱模板，支持列出、查看、删除、构建模板以及查看构建状态。
+`sandbox template`（别名 `tpl`）命令用于管理沙箱模板，支持列出、查看、删除、构建、发布模板以及初始化模板项目。
 
 # 格式
 ```
@@ -27,6 +27,9 @@ template 的子命令有：
 * delete（dl）：删除模板
 * build（bd）：创建并构建模板
 * builds（bds）：查看模板构建状态
+* publish（pb）：发布模板（设为公开）
+* unpublish（upb）：取消发布模板（设为私有）
+* init（it）：初始化模板项目脚手架
 
 # 示例
 1. 列出所有模板
@@ -57,4 +60,16 @@ qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --wait
 ```
 qshell sandbox template builds tmpl-xxxxxxxxxxxx build-xxxxxxxxxxxx
 qshell sbx tpl bds tmpl-xxxxxxxxxxxx build-xxxxxxxxxxxx
+```
+
+6. 发布/取消发布模板
+```
+qshell sandbox template publish tmpl-xxxxxxxxxxxx -y
+qshell sandbox template unpublish tmpl-xxxxxxxxxxxx -y
+```
+
+7. 初始化模板项目
+```
+qshell sandbox template init
+qshell sandbox template init --name my-template --language go
 ```

@@ -1,10 +1,10 @@
 # 简介
-`sandbox template build`（别名 `bd`）创建新模板并触发构建，或对已有模板重新构建。
+`sandbox template build`（别名 `bd`）创建新模板并触发构建，或对已有模板重新构建。支持 `--no-cache` 强制完整构建和 `--wait` 流式查看构建日志。
 
 # 格式
 ```
-qshell sandbox template build [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--wait]
-qshell sbx tpl bd [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--wait]
+qshell sandbox template build [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--wait] [--no-cache]
+qshell sbx tpl bd [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--wait] [--no-cache]
 ```
 
 # 帮助文档
@@ -25,7 +25,8 @@ $ qshell sandbox template build --doc
 - `--ready-cmd`：就绪检查命令
 - `--cpu`：沙箱 CPU 核数
 - `--memory`：沙箱内存大小（MiB）
-- `--wait`：等待构建完成
+- `--wait`：等待构建完成，实时流式显示构建日志（带彩色级别标签）
+- `--no-cache`：强制完整构建，忽略缓存
 
 # 示例
 1. 从 Docker 镜像创建并构建模板
@@ -39,7 +40,12 @@ $ qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --wait
 $ qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --from-image ubuntu:22.04
 ```
 
-3. 指定启动命令和资源配置
+3. 强制完整构建（忽略缓存）
+```
+$ qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --no-cache --wait
+```
+
+4. 指定启动命令和资源配置
 ```
 $ qshell sandbox template build --name my-app --from-image node:18 --start-cmd "npm start" --cpu 2 --memory 1024 --wait
 ```

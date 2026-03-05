@@ -110,6 +110,16 @@ func TestIntegrationSandboxList(t *testing.T) {
 		t.Fatalf("List failed: %v", err)
 	}
 	t.Logf("found %d running sandbox(es)", len(sandboxes))
+
+	// Verify new fields are accessible (Alias, EnvdVersion, Metadata)
+	for _, sb := range sandboxes {
+		t.Logf("  sandbox %s: alias=%v, envdVersion=%s, metadata=%v",
+			sb.SandboxID,
+			FormatOptionalString(sb.Alias),
+			sb.EnvdVersion,
+			sb.Metadata,
+		)
+	}
 }
 
 func TestIntegrationSandboxListJSON(t *testing.T) {
@@ -196,6 +206,28 @@ func TestIntegrationSandboxShared(t *testing.T) {
 			if !IsLogLevelIncluded(level, "DEBUG") {
 				t.Errorf("log entry level %q should be included at DEBUG minimum", level)
 			}
+
+			// Verify LogLevelBadge doesn't panic on real levels
+			badge := LogLevelBadge(level)
+			if badge == "" {
+				t.Errorf("LogLevelBadge(%q) returned empty string", level)
+			}
+
+			// Verify StripInternalFields on real data
+			if entry.Fields != nil {
+				stripped := StripInternalFields(entry.Fields)
+				for k := range stripped {
+					if InternalLogFields[k] {
+						t.Errorf("StripInternalFields left internal field %q", k)
+					}
+				}
+			}
+
+			// Verify CleanLoggerName on real logger names
+			if logger, ok := entry.Fields["logger"]; ok {
+				cleaned := CleanLoggerName(logger)
+				t.Logf("  logger: %q -> cleaned: %q", logger, cleaned)
+			}
 		}
 	})
 
@@ -222,7 +254,56 @@ func TestIntegrationSandboxShared(t *testing.T) {
 			}
 			t.Logf("latest metric: cpu=%d, cpuPct=%.1f%%, memUsed=%d, memTotal=%d",
 				m.CPUCount, m.CPUUsedPct, m.MemUsed, m.MemTotal)
+
+			// Verify FormatBytes works with real data
+			memUsedStr := FormatBytes(m.MemUsed)
+			memTotalStr := FormatBytes(m.MemTotal)
+			diskUsedStr := FormatBytes(m.DiskUsed)
+			diskTotalStr := FormatBytes(m.DiskTotal)
+			t.Logf("formatted: Memory: %s / %s | Disk: %s / %s",
+				memUsedStr, memTotalStr, diskUsedStr, diskTotalStr)
+
+			// Verify non-empty format output
+			if memTotalStr == "" || diskTotalStr == "" {
+				t.Error("FormatBytes should return non-empty strings for positive values")
+			}
 		}
+	})
+
+	t.Run("ListNewFields", func(t *testing.T) {
+		// Verify the shared sandbox's new fields are populated
+		listCtx, listCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer listCancel()
+
+		sandboxes, err := client.List(listCtx, nil)
+		if err != nil {
+			t.Fatalf("List failed: %v", err)
+		}
+		for _, s := range sandboxes {
+			if s.SandboxID == sb.ID() {
+				// Verify Alias field is accessible (may be nil)
+				t.Logf("sandbox %s alias=%s", s.SandboxID, FormatOptionalString(s.Alias))
+				// Verify EnvdVersion field
+				t.Logf("sandbox %s envdVersion=%s", s.SandboxID, s.EnvdVersion)
+				// Verify Metadata field
+				if s.Metadata != nil {
+					formatted := FormatMetadata(map[string]string(*s.Metadata))
+					t.Logf("sandbox %s metadata=%s", s.SandboxID, formatted)
+					if formatted == "-" {
+						t.Error("sandbox created with metadata should have non-empty formatted metadata")
+					}
+				}
+				// Verify FormatTimestamp
+				startedAt := FormatTimestamp(s.StartedAt)
+				endAt := FormatTimestamp(s.EndAt)
+				t.Logf("sandbox %s startedAt=%s, endAt=%s", s.SandboxID, startedAt, endAt)
+				if startedAt == "-" {
+					t.Error("running sandbox should have non-zero StartedAt")
+				}
+				return
+			}
+		}
+		t.Logf("shared sandbox %s not found in list (may have been killed)", sb.ID())
 	})
 
 	t.Run("SetTimeout", func(t *testing.T) {

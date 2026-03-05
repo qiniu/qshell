@@ -4,6 +4,8 @@ package cmd
 
 import (
 	"testing"
+
+	"github.com/qiniu/qshell/v2/cmd_test/test"
 )
 
 // === sandbox template document tests ===
@@ -30,4 +32,72 @@ func TestSandboxTemplateBuildDocument(t *testing.T) {
 
 func TestSandboxTemplateBuildsDocument(t *testing.T) {
 	testSubcommandDocument(t, "sandbox", "template", "builds")
+}
+
+func TestSandboxTemplatePublishDocument(t *testing.T) {
+	testSubcommandDocument(t, "sandbox", "template", "publish")
+}
+
+func TestSandboxTemplateUnpublishDocument(t *testing.T) {
+	testSubcommandDocument(t, "sandbox", "template", "unpublish")
+}
+
+func TestSandboxTemplateInitDocument(t *testing.T) {
+	testSubcommandDocument(t, "sandbox", "template", "init")
+}
+
+// === sandbox template missing args tests ===
+
+func TestSandboxTemplateDeleteNoArgs(t *testing.T) {
+	// delete without templateIDs and without --select should show usage, not panic
+	test.RunCmdWithError("sandbox", "template", "delete")
+}
+
+func TestSandboxTemplatePublishNoArgs(t *testing.T) {
+	test.RunCmdWithError("sandbox", "template", "publish")
+}
+
+func TestSandboxTemplateUnpublishNoArgs(t *testing.T) {
+	test.RunCmdWithError("sandbox", "template", "unpublish")
+}
+
+func TestSandboxTemplateGetNoArgs(t *testing.T) {
+	test.RunCmdWithError("sandbox", "template", "get")
+}
+
+func TestSandboxTemplateBuildNoArgs(t *testing.T) {
+	// build without --name or --template-id should print error, not panic
+	test.RunCmdWithError("sandbox", "template", "build")
+}
+
+func TestSandboxTemplateBuildsNoArgs(t *testing.T) {
+	test.RunCmdWithError("sandbox", "template", "builds")
+}
+
+func TestSandboxTemplateInitNoArgs(t *testing.T) {
+	// init without args triggers interactive prompt; in non-TTY test mode
+	// huh form fails immediately, which is handled gracefully
+	test.RunCmdWithError("sandbox", "template", "init")
+}
+
+// === sandbox template --doc with flags tests ===
+
+func TestSandboxTemplateDeleteDocumentWithFlags(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "delete"}, "--yes")
+}
+
+func TestSandboxTemplatePublishDocumentWithFlags(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "publish"}, "--yes")
+}
+
+func TestSandboxTemplateUnpublishDocumentWithFlags(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "unpublish"}, "--yes")
+}
+
+func TestSandboxTemplateBuildDocumentWithFlags(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "build"}, "--no-cache")
+}
+
+func TestSandboxTemplateInitDocumentWithFlags(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "init"}, "--name", "test")
 }

@@ -1,5 +1,5 @@
 # 简介
-`sandbox logs`（别名 `lg`）查看沙箱的日志。支持按日志级别和 logger 过滤，支持持续跟踪模式。
+`sandbox logs`（别名 `lg`）查看沙箱的日志。支持按日志级别和 logger 过滤，支持持续跟踪模式。日志输出带有彩色级别标签，内部字段（如 traceID、sandboxID）自动剥离。
 
 # 格式
 ```
@@ -23,6 +23,12 @@ $ qshell sandbox logs --doc
 - `--format`：输出格式，pretty（默认）或 json
 - `-f, --follow`：持续跟踪日志输出，直到沙箱关闭
 - `--loggers`：按 logger 名称前缀过滤（逗号分隔）
+
+# 输出特性
+- **彩色级别标签**：DEBUG（白色）、INFO（绿色）、WARN（黄色）、ERROR（红色）
+- **字段剥离**：自动隐藏内部字段（traceID、instanceID、teamID、source、service、envID、sandboxID、source_type）
+- **Logger 名称清理**：自动去除 "Svc" 后缀
+- **异步结束检测**：Follow 模式下通过后台 goroutine 检测沙箱是否结束，不阻塞日志轮询
 
 # 示例
 1. 查看沙箱日志（默认 INFO 及以上级别）

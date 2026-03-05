@@ -331,6 +331,9 @@ qshell 命令配置 > 账号配置 > 全局配置
 | sandbox template delete    | sbx tpl dl | 模板 | 删除模板                     | [文档](docs/sandbox_template_delete.md)   |
 | sandbox template build     | sbx tpl bd | 模板 | 创建并构建模板               | [文档](docs/sandbox_template_build.md)    |
 | sandbox template builds    | sbx tpl bds | 模板 | 查看模板构建状态             | [文档](docs/sandbox_template_builds.md)   |
+| sandbox template publish   | sbx tpl pb | 模板 | 发布模板（设为公开）         | [文档](docs/sandbox_template_publish.md)  |
+| sandbox template unpublish | sbx tpl upb | 模板 | 取消发布模板（设为私有）     | [文档](docs/sandbox_template_unpublish.md)|
+| sandbox template init      | sbx tpl it | 模板 | 初始化模板项目脚手架         | [文档](docs/sandbox_template_init.md)     |
 
 ## 问题反馈
 
