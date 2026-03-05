@@ -1,9 +1,10 @@
 # 简介
-`sandbox connect` 连接到一个已有的沙箱终端。当终端会话结束时，沙箱继续运行。
+`sandbox connect`（别名 `cn`）连接到一个已有的沙箱终端。当终端会话结束时，沙箱继续运行。
 
 # 格式
 ```
 qshell sandbox connect <sandboxID>
+qshell sbx cn <sandboxID>
 ```
 
 # 帮助文档
@@ -21,4 +22,5 @@ $ qshell sandbox connect --doc
 # 示例
 ```
 $ qshell sandbox connect sb-xxxxxxxxxxxx
+$ qshell sbx cn sb-xxxxxxxxxxxx
 ```

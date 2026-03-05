@@ -20,6 +20,7 @@ bin
 .DS_Store
 .idea
 .vscode
+.claude/settings.local.json
 
 # Architecture specific extensions/prefixes
 *.cgo1.go

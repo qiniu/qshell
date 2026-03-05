@@ -1,9 +1,10 @@
 # 简介
-`sandbox metrics` 查看沙箱的资源使用指标，包括 CPU、内存和磁盘使用情况。支持持续跟踪模式。
+`sandbox metrics`（别名 `mt`）查看沙箱的资源使用指标，包括 CPU、内存和磁盘使用情况。支持持续跟踪模式。
 
 # 格式
 ```
 qshell sandbox metrics <sandboxID> [--format <pretty|json>] [-f]
+qshell sbx mt <sandboxID> [--format <pretty|json>] [-f]
 ```
 
 # 帮助文档
@@ -24,11 +25,13 @@ $ qshell sandbox metrics --doc
 1. 查看沙箱指标
 ```
 $ qshell sandbox metrics sb-xxxxxxxxxxxx
+$ qshell sbx mt sb-xxxxxxxxxxxx
 ```
 
 2. 持续跟踪指标
 ```
 $ qshell sandbox metrics sb-xxxxxxxxxxxx -f
+$ qshell sbx mt sb-xxxxxxxxxxxx -f
 ```
 
 3. JSON 格式输出

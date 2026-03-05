@@ -1,9 +1,10 @@
 # 简介
-`sandbox template build` 创建新模板并触发构建，或对已有模板重新构建。
+`sandbox template build`（别名 `bd`）创建新模板并触发构建，或对已有模板重新构建。
 
 # 格式
 ```
 qshell sandbox template build [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--wait]
+qshell sbx tpl bd [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--wait]
 ```
 
 # 帮助文档
@@ -30,6 +31,7 @@ $ qshell sandbox template build --doc
 1. 从 Docker 镜像创建并构建模板
 ```
 $ qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wait
+$ qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --wait
 ```
 
 2. 重新构建已有模板

@@ -1,9 +1,10 @@
 # 简介
-`sandbox` 命令用于管理沙箱实例和模板，支持创建、连接、终止沙箱以及查看沙箱日志和指标。
+`sandbox`（别名 `sbx`）命令用于管理沙箱实例和模板，支持创建、连接、终止沙箱以及查看沙箱日志和指标。
 
 # 格式
 ```
 qshell sandbox <子命令>
+qshell sbx <子命令>
 ```
 
 # 帮助文档
@@ -25,31 +26,35 @@ $ qshell sandbox --doc
 
 # 子命令
 sandbox 的子命令有：
-* list：列出沙箱
-* create：创建沙箱并连接终端
-* connect：连接到已有沙箱终端
-* kill：终止沙箱
-* logs：查看沙箱日志
-* metrics：查看沙箱资源指标
-* template：管理沙箱模板
+* list（ls）：列出沙箱
+* create（cr）：创建沙箱并连接终端
+* connect（cn）：连接到已有沙箱终端
+* kill（kl）：终止沙箱
+* logs（lg）：查看沙箱日志
+* metrics（mt）：查看沙箱资源指标
+* template（tpl）：管理沙箱模板
 
 # 示例
 1. 列出所有运行中的沙箱
 ```
 qshell sandbox list --state running
+qshell sbx ls -s running
 ```
 
 2. 创建沙箱
 ```
 qshell sandbox create my-template
+qshell sbx cr my-template
 ```
 
 3. 连接到沙箱
 ```
 qshell sandbox connect sb-xxxxxxxxxxxx
+qshell sbx cn sb-xxxxxxxxxxxx
 ```
 
 4. 终止沙箱
 ```
 qshell sandbox kill sb-xxxxxxxxxxxx
+qshell sbx kl sb-xxxxxxxxxxxx
 ```

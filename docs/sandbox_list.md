@@ -1,9 +1,10 @@
 # 简介
-`sandbox list` 列出沙箱实例，支持按状态和元数据过滤。默认只列出运行中的沙箱。
+`sandbox list`（别名 `ls`）列出沙箱实例，支持按状态和元数据过滤。默认只列出运行中的沙箱。
 
 # 格式
 ```
 qshell sandbox list [-s <states>] [-m <metadata>] [-l <N>] [-f <pretty|json>]
+qshell sbx ls [-s <states>] [-m <metadata>] [-l <N>] [-f <pretty|json>]
 ```
 
 # 帮助文档
@@ -25,6 +26,7 @@ $ qshell sandbox list --doc
 1. 列出运行中的沙箱（默认）
 ```
 $ qshell sandbox list
+$ qshell sbx ls
 ```
 
 2. 列出所有状态的沙箱

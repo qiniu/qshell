@@ -1,9 +1,10 @@
 # 简介
-`sandbox template get` 查看模板的详细信息，包括构建记录。
+`sandbox template get`（别名 `gt`）查看模板的详细信息，包括构建记录。
 
 # 格式
 ```
 qshell sandbox template get <templateID>
+qshell sbx tpl gt <templateID>
 ```
 
 # 帮助文档
@@ -21,4 +22,5 @@ $ qshell sandbox template get --doc
 # 示例
 ```
 $ qshell sandbox template get tmpl-xxxxxxxxxxxx
+$ qshell sbx tpl gt tmpl-xxxxxxxxxxxx
 ```

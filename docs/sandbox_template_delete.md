@@ -1,9 +1,10 @@
 # 简介
-`sandbox template delete` 删除指定的沙箱模板。
+`sandbox template delete`（别名 `dl`）删除指定的沙箱模板。
 
 # 格式
 ```
 qshell sandbox template delete <templateID> [-y]
+qshell sbx tpl dl <templateID> [-y]
 ```
 
 # 帮助文档
@@ -28,4 +29,5 @@ $ qshell sandbox template delete tmpl-xxxxxxxxxxxx
 2. 直接删除（跳过确认）
 ```
 $ qshell sandbox template delete tmpl-xxxxxxxxxxxx -y
+$ qshell sbx tpl dl tmpl-xxxxxxxxxxxx -y
 ```

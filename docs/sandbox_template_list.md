@@ -1,9 +1,10 @@
 # 简介
-`sandbox template list` 列出所有沙箱模板。
+`sandbox template list`（别名 `ls`）列出所有沙箱模板。
 
 # 格式
 ```
 qshell sandbox template list [--format <pretty|json>]
+qshell sbx tpl ls [--format <pretty|json>]
 ```
 
 # 帮助文档
@@ -22,6 +23,7 @@ $ qshell sandbox template list --doc
 1. 列出所有模板
 ```
 $ qshell sandbox template list
+$ qshell sbx tpl ls
 ```
 
 2. JSON 格式输出
