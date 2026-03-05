@@ -10,8 +10,9 @@ import (
 
 var templateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "template",
-		Short: "Manage sandbox templates",
+		Use:     "template",
+		Aliases: []string{"tpl"},
+		Short:   "Manage sandbox templates",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateType
 			docs.ShowCmdDocument(docs.SandboxTemplateType)
@@ -24,6 +25,7 @@ var templateListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.ListInfo{}
 	cmd := &cobra.Command{
 		Use:     "list",
+		Aliases: []string{"ls"},
 		Short:   "List sandbox templates",
 		Example: `qshell sandbox template list --format json`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -41,6 +43,7 @@ var templateListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var templateGetCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "get <templateID>",
+		Aliases: []string{"gt"},
 		Short:   "Get template details",
 		Example: `qshell sandbox template get tmpl-xxxxxxxxxxxx`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -64,6 +67,7 @@ var templateDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.DeleteInfo{}
 	cmd := &cobra.Command{
 		Use:     "delete <templateID>",
+		Aliases: []string{"dl"},
 		Short:   "Delete a template",
 		Example: `qshell sandbox template delete tmpl-xxxxxxxxxxxx -y`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -86,6 +90,7 @@ var templateDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var templateBuildsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "builds <templateID> <buildID>",
+		Aliases: []string{"bds"},
 		Short:   "View template build status",
 		Example: `qshell sandbox template builds tmpl-xxxxxxxxxxxx build-xxxxxxxxxxxx`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -110,6 +115,7 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.BuildInfo{}
 	cmd := &cobra.Command{
 		Use:   "build",
+		Aliases: []string{"bd"},
 		Short: "Build a template",
 		Long:  "Create a new template and build it, or rebuild an existing template.",
 		Example: `  # Create and build a new template from a Docker image
