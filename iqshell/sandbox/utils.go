@@ -103,6 +103,40 @@ func MatchesLoggerPrefix(logger string, prefixes []string) bool {
 	return false
 }
 
+// InternalLogFields contains log entry field keys that should be stripped from user-facing output.
+var InternalLogFields = map[string]bool{
+	"traceID":     true,
+	"instanceID":  true,
+	"teamID":      true,
+	"source":      true,
+	"service":     true,
+	"envID":       true,
+	"sandboxID":   true,
+	"source_type": true,
+}
+
+// StripInternalFields returns a copy of fields with internal keys removed.
+func StripInternalFields(fields map[string]string) map[string]string {
+	if len(fields) == 0 {
+		return nil
+	}
+	result := make(map[string]string)
+	for k, v := range fields {
+		if !InternalLogFields[k] {
+			result[k] = v
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
+}
+
+// CleanLoggerName removes the "Svc" suffix from logger names.
+func CleanLoggerName(logger string) string {
+	return strings.TrimSuffix(logger, "Svc")
+}
+
 // ParseLoggers parses a comma-separated logger string into a slice of prefix strings.
 func ParseLoggers(raw string) []string {
 	if raw == "" {

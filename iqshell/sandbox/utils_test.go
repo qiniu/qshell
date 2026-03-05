@@ -231,6 +231,81 @@ func TestMatchesLoggerPrefix_EmptyPrefixes(t *testing.T) {
 	}
 }
 
+// === StripInternalFields tests ===
+
+func TestStripInternalFields_Nil(t *testing.T) {
+	if got := StripInternalFields(nil); got != nil {
+		t.Errorf("StripInternalFields(nil) = %v, want nil", got)
+	}
+}
+
+func TestStripInternalFields_Empty(t *testing.T) {
+	if got := StripInternalFields(map[string]string{}); got != nil {
+		t.Errorf("StripInternalFields(empty) = %v, want nil", got)
+	}
+}
+
+func TestStripInternalFields_AllInternal(t *testing.T) {
+	fields := map[string]string{
+		"traceID":   "abc",
+		"sandboxID": "sb-123",
+		"teamID":    "team-1",
+	}
+	if got := StripInternalFields(fields); got != nil {
+		t.Errorf("StripInternalFields(all internal) = %v, want nil", got)
+	}
+}
+
+func TestStripInternalFields_MixedFields(t *testing.T) {
+	fields := map[string]string{
+		"traceID":  "abc",
+		"logger":   "envd",
+		"custom":   "value",
+		"sandboxID": "sb-123",
+	}
+	got := StripInternalFields(fields)
+	if len(got) != 2 {
+		t.Fatalf("StripInternalFields(mixed) len = %d, want 2", len(got))
+	}
+	if got["logger"] != "envd" || got["custom"] != "value" {
+		t.Errorf("StripInternalFields(mixed) = %v, want {logger:envd, custom:value}", got)
+	}
+}
+
+func TestStripInternalFields_NoInternalFields(t *testing.T) {
+	fields := map[string]string{"logger": "envd", "custom": "val"}
+	got := StripInternalFields(fields)
+	if len(got) != 2 {
+		t.Errorf("StripInternalFields(no internal) len = %d, want 2", len(got))
+	}
+}
+
+// === CleanLoggerName tests ===
+
+func TestCleanLoggerName_WithSvcSuffix(t *testing.T) {
+	if got := CleanLoggerName("envdSvc"); got != "envd" {
+		t.Errorf("CleanLoggerName(\"envdSvc\") = %q, want \"envd\"", got)
+	}
+}
+
+func TestCleanLoggerName_WithoutSvcSuffix(t *testing.T) {
+	if got := CleanLoggerName("proxy"); got != "proxy" {
+		t.Errorf("CleanLoggerName(\"proxy\") = %q, want \"proxy\"", got)
+	}
+}
+
+func TestCleanLoggerName_Empty(t *testing.T) {
+	if got := CleanLoggerName(""); got != "" {
+		t.Errorf("CleanLoggerName(\"\") = %q, want \"\"", got)
+	}
+}
+
+func TestCleanLoggerName_SvcOnly(t *testing.T) {
+	if got := CleanLoggerName("Svc"); got != "" {
+		t.Errorf("CleanLoggerName(\"Svc\") = %q, want \"\"", got)
+	}
+}
+
 // === ParseLoggers tests ===
 
 func TestParseLoggers_Empty(t *testing.T) {
