@@ -400,6 +400,7 @@ func parseUnquoted(s string, pos int) (string, int) {
 
 // ParseCommand 解析 CMD 或 ENTRYPOINT 参数。
 // 支持 exec 格式 ["cmd", "arg1", ...] 和 shell 格式。
+// exec 格式中含 shell 特殊字符的参数会被单引号包裹以防止 bash 解析。
 func ParseCommand(rest string) string {
 	rest = strings.TrimSpace(rest)
 	if rest == "" {
@@ -413,13 +414,37 @@ func ParseCommand(rest string) string {
 			item = strings.TrimSpace(item)
 			item = strings.Trim(item, "\"'")
 			if item != "" {
-				parts = append(parts, item)
+				parts = append(parts, shellQuote(item))
 			}
 		}
 		return strings.Join(parts, " ")
 	}
 
 	return rest
+}
+
+// shellQuote 对含 shell 特殊字符的字符串用单引号包裹。
+// 若字符串仅含安全字符则原样返回。
+func shellQuote(s string) string {
+	for _, c := range s {
+		if !isShellSafe(c) {
+			// 用单引号包裹，其中已有的单引号用 '\'' 转义
+			return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'"
+		}
+	}
+	return s
+}
+
+// isShellSafe 判断字符是否对 shell 安全（无需引号）。
+func isShellSafe(c rune) bool {
+	if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' {
+		return true
+	}
+	switch c {
+	case '-', '_', '.', '/', ':', ',', '+', '=', '@', '%':
+		return true
+	}
+	return false
 }
 
 // StripHeredocMarkers 从字符串中移除 <<WORD 标记。

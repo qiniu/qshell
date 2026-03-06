@@ -718,7 +718,7 @@ CMD ["nginx", "-g", "daemon off;"]
 	require.NoError(t, err)
 
 	assert.Equal(t, "nginx:alpine", result.BaseImage)
-	assert.Equal(t, "nginx -g daemon off;", result.StartCmd)
+	assert.Equal(t, "nginx -g 'daemon off;'", result.StartCmd)
 
 	// EXPOSE、VOLUME、LABEL、HEALTHCHECK 被忽略，不生成步骤
 	// 步骤：USER root, WORKDIR /, COPY×2, USER user, WORKDIR /home/user
