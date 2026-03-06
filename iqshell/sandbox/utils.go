@@ -70,6 +70,27 @@ func ParseMetadata(raw string) string {
 	return strings.Join(parts, "&")
 }
 
+// ParseMetadataMap parses comma-separated key=value pairs into a map.
+// Input:  "key1=value1,key2=value2"
+// Output: map[string]string{"key1": "value1", "key2": "value2"}
+func ParseMetadataMap(raw string) map[string]string {
+	m := make(map[string]string)
+	if raw == "" {
+		return m
+	}
+	for _, pair := range strings.Split(raw, ",") {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+		kv := strings.SplitN(pair, "=", 2)
+		if len(kv) == 2 && strings.TrimSpace(kv[0]) != "" {
+			m[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		}
+	}
+	return m
+}
+
 // logLevelOrder maps log levels to numeric order for hierarchical filtering.
 // Higher levels include all lower levels (e.g., INFO includes INFO, WARN, ERROR).
 var logLevelOrder = map[string]int{

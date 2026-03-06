@@ -38,19 +38,30 @@ func List(info ListInfo) {
 	}
 
 	tw := sbClient.NewTable(os.Stdout)
-	fmt.Fprintf(tw, "TEMPLATE ID\tALIASES\tSTATUS\tvCPUs\tRAM MiB\tDISK MiB\tUPDATED AT\n")
+	fmt.Fprintf(tw, "TEMPLATE ID\tALIASES\tSTATUS\tPUBLIC\tvCPUs\tRAM MiB\tDISK MiB\tENVD VERSION\tCREATED AT\tUPDATED AT\n")
 	for _, t := range templates {
 		aliases := "-"
 		if len(t.Aliases) > 0 {
 			aliases = t.Aliases[0]
 		}
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%d\t%d\t%s\n",
+		public := "no"
+		if t.Public {
+			public = "yes"
+		}
+		envdVersion := t.EnvdVersion
+		if envdVersion == "" {
+			envdVersion = "-"
+		}
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%d\t%d\t%d\t%s\t%s\t%s\n",
 			t.TemplateID,
 			aliases,
 			t.BuildStatus,
+			public,
 			t.CPUCount,
 			t.MemoryMB,
 			t.DiskSizeMB,
+			envdVersion,
+			sbClient.FormatTimestamp(t.CreatedAt),
 			sbClient.FormatTimestamp(t.UpdatedAt),
 		)
 	}

@@ -13,6 +13,8 @@ import (
 // CreateInfo holds parameters for creating a sandbox.
 type CreateInfo struct {
 	TemplateID string
+	Timeout    int32
+	Metadata   string
 }
 
 // Create creates a new sandbox and connects to its terminal.
@@ -33,6 +35,13 @@ func Create(info CreateInfo) {
 	ctx := context.Background()
 	params := sandbox.CreateParams{
 		TemplateID: info.TemplateID,
+	}
+	if info.Timeout > 0 {
+		params.Timeout = &info.Timeout
+	}
+	if info.Metadata != "" {
+		meta := sandbox.Metadata(sbClient.ParseMetadataMap(info.Metadata))
+		params.Metadata = &meta
 	}
 
 	fmt.Printf("Creating sandbox from template %s...\n", info.TemplateID)

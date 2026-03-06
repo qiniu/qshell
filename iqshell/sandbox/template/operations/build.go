@@ -98,6 +98,12 @@ func Build(info BuildInfo) {
 		}
 	}
 
+	// Validate source
+	if info.FromImage == "" && info.FromTemplate == "" {
+		sbClient.PrintError("--from-image or --from-template is required")
+		return
+	}
+
 	// Start build
 	buildParams := sandbox.StartTemplateBuildParams{}
 	if info.FromImage != "" {

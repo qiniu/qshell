@@ -12,7 +12,7 @@ var templateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "template",
 		Aliases: []string{"tpl"},
-		Short:   "Manage sandbox templates",
+		Short:   "Manage sandbox templates (alias: tpl)",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateType
 			docs.ShowCmdDocument(docs.SandboxTemplateType)
@@ -26,8 +26,12 @@ var templateListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
-		Short:   "List sandbox templates",
-		Example: `qshell sandbox template list --format json`,
+		Short:   "List sandbox templates (alias: ls)",
+		Example: `  # List all templates
+  qshell sandbox template list
+
+  # Output as JSON
+  qshell sandbox template list --format json`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateListType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -44,8 +48,10 @@ var templateGetCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "get <templateID>",
 		Aliases: []string{"gt"},
-		Short:   "Get template details",
-		Example: `qshell sandbox template get tmpl-xxxxxxxxxxxx`,
+		Short:   "Get template details (alias: gt)",
+		Example: `  # Get template details
+  qshell sandbox template get tmpl-xxxxxxxxxxxx
+  qshell sbx tpl gt tmpl-xxxxxxxxxxxx`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateGetType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -68,7 +74,7 @@ var templateDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "delete [templateIDs...]",
 		Aliases: []string{"dl"},
-		Short:   "Delete one or more templates",
+		Short:   "Delete one or more templates (alias: dl)",
 		Example: `  qshell sandbox template delete tmpl-xxxxxxxxxxxx -y
   qshell sandbox template delete tmpl-aaa tmpl-bbb -y
   qshell sandbox template delete -s`,
@@ -94,8 +100,10 @@ var templateBuildsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "builds <templateID> <buildID>",
 		Aliases: []string{"bds"},
-		Short:   "View template build status",
-		Example: `qshell sandbox template builds tmpl-xxxxxxxxxxxx build-xxxxxxxxxxxx`,
+		Short:   "View template build status (alias: bds)",
+		Example: `  # View build status
+  qshell sandbox template builds tmpl-xxxxxxxxxxxx build-xxxxxxxxxxxx
+  qshell sbx tpl bds tmpl-xxxxxxxxxxxx build-xxxxxxxxxxxx`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateBuildsType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -119,7 +127,7 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "build",
 		Aliases: []string{"bd"},
-		Short: "Build a template",
+		Short: "Build a template (alias: bd)",
 		Long:  "Create a new template and build it, or rebuild an existing template.",
 		Example: `  # Create and build a new template from a Docker image
   qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wait
@@ -155,7 +163,7 @@ var templatePublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "publish [templateIDs...]",
 		Aliases: []string{"pb"},
-		Short:   "Publish templates (make public)",
+		Short:   "Publish templates (make public) (alias: pb)",
 		Example: `  qshell sandbox template publish tmpl-xxxxxxxxxxxx -y
   qshell sandbox template publish -s`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -181,7 +189,7 @@ var templateUnpublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "unpublish [templateIDs...]",
 		Aliases: []string{"upb"},
-		Short:   "Unpublish templates (make private)",
+		Short:   "Unpublish templates (make private) (alias: upb)",
 		Example: `  qshell sandbox template unpublish tmpl-xxxxxxxxxxxx -y
   qshell sandbox template unpublish -s`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -207,7 +215,7 @@ var templateInitCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "init",
 		Aliases: []string{"it"},
-		Short:   "Initialize a new template project",
+		Short:   "Initialize a new template project (alias: it)",
 		Long:    "Scaffold a new template project with boilerplate files for the selected language.",
 		Example: `  # Interactive mode
   qshell sandbox template init

@@ -12,7 +12,7 @@ var sandboxCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "sandbox",
 		Aliases: []string{"sbx"},
-		Short:   "Manage sandboxes",
+		Short:   "Manage sandboxes (alias: sbx)",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxType
 			docs.ShowCmdDocument(docs.SandboxType)
@@ -26,8 +26,18 @@ var sandboxListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
-		Short:   "List sandboxes",
-		Example: `qshell sandbox list --state running --limit 10`,
+		Short:   "List sandboxes (alias: ls)",
+		Example: `  # List running sandboxes
+  qshell sandbox list
+
+  # Filter by state and limit
+  qshell sandbox list --state running,paused --limit 10
+
+  # Filter by metadata
+  qshell sandbox list -m env=prod,team=backend
+
+  # Output as JSON
+  qshell sandbox list -f json`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxListType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -48,9 +58,16 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create [template]",
 		Aliases: []string{"cr"},
-		Short:   "Create a sandbox and connect to its terminal",
-		Example: `qshell sandbox create my-template`,
-		Args:    cobra.MaximumNArgs(1),
+		Short:   "Create a sandbox and connect to its terminal (alias: cr)",
+		Example: `  # Create a sandbox from a template
+  qshell sandbox create my-template
+
+  # Create with a timeout (seconds)
+  qshell sandbox create my-template --timeout 300
+
+  # Create with metadata
+  qshell sandbox create my-template -m env=dev,team=backend`,
+		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxCreateType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -62,6 +79,8 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			operations.Create(info)
 		},
 	}
+	cmd.Flags().Int32VarP(&info.Timeout, "timeout", "t", 0, "sandbox timeout in seconds")
+	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "metadata key=value pairs (comma-separated)")
 	return cmd
 }
 
@@ -69,8 +88,10 @@ var sandboxConnectCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "connect <sandboxID>",
 		Aliases: []string{"cn"},
-		Short:   "Connect to an existing sandbox terminal",
-		Example: `qshell sandbox connect sb-xxxxxxxxxxxx`,
+		Short:   "Connect to an existing sandbox terminal (alias: cn)",
+		Example: `  # Connect to a sandbox by ID
+  qshell sandbox connect sb-xxxxxxxxxxxx
+  qshell sbx cn sb-xxxxxxxxxxxx`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxConnectType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -93,8 +114,18 @@ var sandboxKillCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "kill [sandboxIDs...]",
 		Aliases: []string{"kl"},
-		Short:   "Kill one or more sandboxes",
-		Example: `qshell sandbox kill sb-xxxxxxxxxxxx`,
+		Short:   "Kill one or more sandboxes (alias: kl)",
+		Example: `  # Kill a single sandbox
+  qshell sandbox kill sb-xxxxxxxxxxxx
+
+  # Kill multiple sandboxes
+  qshell sandbox kill sb-aaa sb-bbb sb-ccc
+
+  # Kill all running sandboxes
+  qshell sandbox kill --all
+
+  # Kill all paused sandboxes with specific metadata
+  qshell sandbox kill --all -s paused -m env=dev`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxKillType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -115,8 +146,21 @@ var sandboxLogsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "logs <sandboxID>",
 		Aliases: []string{"lg"},
-		Short:   "View sandbox logs",
-		Example: `qshell sandbox logs sb-xxxxxxxxxxxx --level INFO`,
+		Short:   "View sandbox logs (alias: lg)",
+		Example: `  # View logs
+  qshell sandbox logs sb-xxxxxxxxxxxx
+
+  # Filter by level (WARN and above)
+  qshell sandbox logs sb-xxxxxxxxxxxx --level WARN
+
+  # Stream logs in follow mode
+  qshell sandbox logs sb-xxxxxxxxxxxx -f
+
+  # Filter by logger prefix
+  qshell sandbox logs sb-xxxxxxxxxxxx --loggers envd,process
+
+  # Output as JSON
+  qshell sandbox logs sb-xxxxxxxxxxxx --format json`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxLogsType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -143,8 +187,15 @@ var sandboxMetricsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "metrics <sandboxID>",
 		Aliases: []string{"mt"},
-		Short:   "View sandbox resource metrics",
-		Example: `qshell sandbox metrics sb-xxxxxxxxxxxx`,
+		Short:   "View sandbox resource metrics (alias: mt)",
+		Example: `  # View current metrics
+  qshell sandbox metrics sb-xxxxxxxxxxxx
+
+  # Stream metrics in follow mode
+  qshell sandbox metrics sb-xxxxxxxxxxxx -f
+
+  # Output as JSON
+  qshell sandbox metrics sb-xxxxxxxxxxxx --format json`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxMetricsType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
