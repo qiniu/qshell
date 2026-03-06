@@ -258,9 +258,9 @@ func TestStripInternalFields_AllInternal(t *testing.T) {
 
 func TestStripInternalFields_MixedFields(t *testing.T) {
 	fields := map[string]string{
-		"traceID":  "abc",
-		"logger":   "envd",
-		"custom":   "value",
+		"traceID":   "abc",
+		"logger":    "envd",
+		"custom":    "value",
 		"sandboxID": "sb-123",
 	}
 	got := StripInternalFields(fields)

@@ -125,9 +125,9 @@ var templateBuildsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.BuildInfo{}
 	cmd := &cobra.Command{
-		Use:   "build",
+		Use:     "build",
 		Aliases: []string{"bd"},
-		Short: "Build a template (alias: bd)",
+		Short:   "Build a template (alias: bd)",
 		Long: `Create a new template and build it, or rebuild an existing template.
 
 Supports three build modes:
