@@ -71,6 +71,18 @@ $(WINARM).exe:
 $(WINARM64).exe:
 	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GO) build -ldflags $(LDFLAGS) -o $(WINARM64).exe ./main/
 
+# --- Lint targets ---
+
+.PHONY: lint vet staticcheck
+
+lint: vet staticcheck
+
+vet:
+	$(GO) vet ./...
+
+staticcheck:
+	staticcheck ./...
+
 # --- Test targets ---
 
 .PHONY: test test-unit test-integration test-sandbox test-sandbox-unit test-sandbox-integration
