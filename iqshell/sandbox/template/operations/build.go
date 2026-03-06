@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"time"
 
@@ -100,7 +101,8 @@ func Build(info BuildInfo) {
 			return
 		}
 		if len(tmpl.Builds) > 0 {
-			buildID = tmpl.Builds[0].BuildID
+			// 使用最后一个 build（API 按时间升序返回，最新的在末尾）
+			buildID = tmpl.Builds[len(tmpl.Builds)-1].BuildID
 		} else {
 			sbClient.PrintError("no builds found for template, cannot rebuild")
 			return
@@ -149,8 +151,12 @@ func Build(info BuildInfo) {
 		return
 	}
 
-	// 流式输出构建日志
+	// 流式输出构建日志，支持 Ctrl+C 中断
 	fmt.Println("Waiting for build to complete...")
+
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	defer cancel()
+
 	var cursor *int64
 	for {
 		logs, blErr := client.GetTemplateBuildLogs(ctx, templateID, buildID, &sandbox.GetBuildLogsParams{
@@ -187,7 +193,12 @@ func Build(info BuildInfo) {
 			return
 		}
 
-		time.Sleep(3 * time.Second)
+		select {
+		case <-ctx.Done():
+			sbClient.PrintError("build watch cancelled")
+			return
+		case <-time.After(3 * time.Second):
+		}
 	}
 }
 
