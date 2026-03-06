@@ -128,9 +128,20 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:   "build",
 		Aliases: []string{"bd"},
 		Short: "Build a template (alias: bd)",
-		Long:  "Create a new template and build it, or rebuild an existing template.",
+		Long: `Create a new template and build it, or rebuild an existing template.
+
+Supports three build modes:
+  1. --from-image: Build from a base Docker image
+  2. --from-template: Build from an existing template
+  3. --dockerfile: Build from a Dockerfile (v2 build system)`,
 		Example: `  # Create and build a new template from a Docker image
   qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wait
+
+  # Build from a Dockerfile
+  qshell sandbox template build --name my-template --dockerfile ./Dockerfile --wait
+
+  # Build from a Dockerfile with a custom context directory
+  qshell sandbox template build --name my-template --dockerfile ./Dockerfile --path ./context --wait
 
   # Rebuild an existing template
   qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --from-image ubuntu:22.04
@@ -155,6 +166,8 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().Int32Var(&info.MemoryMB, "memory", 0, "sandbox memory size in MiB")
 	cmd.Flags().BoolVar(&info.Wait, "wait", false, "wait for build to complete")
 	cmd.Flags().BoolVar(&info.NoCache, "no-cache", false, "force full rebuild ignoring cache")
+	cmd.Flags().StringVar(&info.Dockerfile, "dockerfile", "", "path to Dockerfile (enables v2 build)")
+	cmd.Flags().StringVar(&info.Path, "path", "", "build context directory (defaults to Dockerfile's parent)")
 	return cmd
 }
 

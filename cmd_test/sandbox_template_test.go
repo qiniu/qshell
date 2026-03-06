@@ -98,6 +98,14 @@ func TestSandboxTemplateBuildDocumentWithFlags(t *testing.T) {
 	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "build"}, "--no-cache")
 }
 
+func TestSandboxTemplateBuildDocumentWithDockerfile(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "build"}, "--dockerfile", "./Dockerfile")
+}
+
+func TestSandboxTemplateBuildDocumentWithDockerfileAndPath(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "build"}, "--dockerfile", "./Dockerfile", "--path", "./context")
+}
+
 func TestSandboxTemplateInitDocumentWithFlags(t *testing.T) {
 	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "init"}, "--name", "test")
 }
