@@ -2,10 +2,29 @@ package sandbox
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 )
+
+// keepalivePingIntervalSec matches the JS SDK's KEEPALIVE_PING_INTERVAL_SEC (50s).
+// This header tells the envd server to send periodic keepalive pings on gRPC streams,
+// preventing proxies/load balancers from closing idle connections.
+const keepalivePingIntervalSec = "50"
+
+// keepalivePingHeader is the HTTP header name for the keepalive ping interval.
+const keepalivePingHeader = "Keepalive-Ping-Interval"
+
+// keepaliveTransport wraps an http.RoundTripper to inject the Keepalive-Ping-Interval header.
+type keepaliveTransport struct {
+	base http.RoundTripper
+}
+
+func (t *keepaliveTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set(keepalivePingHeader, keepalivePingIntervalSec)
+	return t.base.RoundTrip(req)
+}
 
 // Environment variable names for sandbox configuration.
 const (
@@ -37,5 +56,8 @@ func NewSandboxClient() (*sandbox.Client, error) {
 	return sandbox.NewClient(&sandbox.Config{
 		APIKey:   apiKey,
 		Endpoint: endpoint,
+		HTTPClient: &http.Client{
+			Transport: &keepaliveTransport{base: http.DefaultTransport},
+		},
 	})
 }

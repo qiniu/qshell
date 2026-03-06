@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/huh v0.8.0
 	github.com/fatih/color v1.18.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/qiniu/go-sdk/v7 v7.26.0
+	github.com/qiniu/go-sdk/v7 v7.26.3
 	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.1.3
