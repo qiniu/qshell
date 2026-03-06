@@ -107,13 +107,15 @@ ARG NAME
 	result, err := Convert(content)
 	require.NoError(t, err)
 
+	// ARG VERSION=1.0 有默认值，生成 ENV 步骤
 	argStep1 := result.Steps[2]
 	assert.Equal(t, "ENV", argStep1.Type)
 	assert.Equal(t, []string{"VERSION", "1.0"}, *argStep1.Args)
 
+	// ARG NAME 无默认值，不生成 ENV 步骤，下一个应该是默认追加的 USER user
 	argStep2 := result.Steps[3]
-	assert.Equal(t, "ENV", argStep2.Type)
-	assert.Equal(t, []string{"NAME", ""}, *argStep2.Args)
+	assert.Equal(t, "USER", argStep2.Type)
+	assert.Equal(t, []string{"user"}, *argStep2.Args)
 }
 
 func TestConvert_CMD_ShellForm(t *testing.T) {

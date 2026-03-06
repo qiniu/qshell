@@ -58,9 +58,9 @@ func Convert(content string) (*ConvertResult, error) {
 			fromCount++
 			if fromCount > 1 {
 				result.Warnings = append(result.Warnings,
-					"multi-stage build detected; only the last FROM stage will be used as base image")
+					"multi-stage build detected; using the last FROM stage as the runtime base image")
 			}
-			// 提取镜像名（第一个非 AS 的 token）
+			// 提取镜像名（第一个非 AS 的 token），多阶段构建取最后一个 FROM
 			result.BaseImage = extractImage(inst.Args)
 
 		case "RUN":
@@ -117,11 +117,14 @@ func Convert(content string) (*ConvertResult, error) {
 			})
 
 		case "ARG":
-			argArgs := parseArgValues(inst.Args)
-			steps = append(steps, sandbox.TemplateStep{
-				Type: "ENV",
-				Args: &argArgs,
-			})
+			argArgs, hasDefault := parseArgValues(inst.Args)
+			if hasDefault {
+				steps = append(steps, sandbox.TemplateStep{
+					Type: "ENV",
+					Args: &argArgs,
+				})
+			}
+			// 无默认值的 ARG 仅为构建时变量，不生成 ENV 步骤
 
 		case "CMD":
 			result.StartCmd = dfparser.ParseCommand(inst.Args)
@@ -185,9 +188,10 @@ func parseCopyArgs(args string, flags map[string]string) (user, src, dest string
 }
 
 // parseArgValues 将 ARG name[=default_value] 解析为 ["name", "value"]。
-func parseArgValues(rest string) []string {
-	key, value, _ := strings.Cut(rest, "=")
-	return []string{strings.TrimSpace(key), strings.TrimSpace(value)}
+// 返回解析结果和是否包含默认值（即是否有 = 号）。
+func parseArgValues(rest string) ([]string, bool) {
+	key, value, hasDefault := strings.Cut(rest, "=")
+	return []string{strings.TrimSpace(key), strings.TrimSpace(value)}, hasDefault
 }
 
 // makeStep 创建一个简单的 TemplateStep。

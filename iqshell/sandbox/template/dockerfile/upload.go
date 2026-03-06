@@ -3,7 +3,6 @@ package dockerfile
 import (
 	"archive/tar"
 	"bufio"
-	"bytes"
 	"compress/gzip"
 	"context"
 	"crypto/sha256"
@@ -40,57 +39,73 @@ func ComputeFilesHash(src, dest, contextPath string, ignorePatterns []string) (s
 		fmt.Fprintf(h, "%d", f.info.Mode())
 		fmt.Fprintf(h, "%d", f.info.Size())
 
-		data, err := os.ReadFile(f.absPath)
+		file, err := os.Open(f.absPath)
 		if err != nil {
 			return "", fmt.Errorf("read file %s: %w", f.absPath, err)
 		}
-		h.Write(data)
+		_, err = io.Copy(h, file)
+		file.Close()
+		if err != nil {
+			return "", fmt.Errorf("hash file %s: %w", f.absPath, err)
+		}
 	}
 
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// CollectAndUpload 收集源文件，创建 gzip tar 归档包，并上传到指定 URL。
+// CollectAndUpload 收集源文件，通过流式方式创建 gzip tar 归档包并上传到指定 URL。
+// 使用 io.Pipe 避免将整个归档加载到内存中。
 func CollectAndUpload(ctx context.Context, uploadURL, src, contextPath string, ignorePatterns []string) error {
 	files, err := collectFiles(src, contextPath, ignorePatterns)
 	if err != nil {
 		return fmt.Errorf("collect files: %w", err)
 	}
 
-	// 在内存中创建 tar.gz
-	var buf bytes.Buffer
-	gw := gzip.NewWriter(&buf)
-	tw := tar.NewWriter(gw)
+	// 使用 io.Pipe 流式创建 tar.gz 并直接上传
+	pr, pw := io.Pipe()
 
-	for _, f := range files {
-		header, err := tar.FileInfoHeader(f.info, "")
-		if err != nil {
-			return fmt.Errorf("create tar header for %s: %w", f.relPath, err)
-		}
-		header.Name = f.relPath
+	go func() {
+		gw := gzip.NewWriter(pw)
+		tw := tar.NewWriter(gw)
 
-		if err := tw.WriteHeader(header); err != nil {
-			return fmt.Errorf("write tar header for %s: %w", f.relPath, err)
+		var writeErr error
+		for _, f := range files {
+			header, err := tar.FileInfoHeader(f.info, "")
+			if err != nil {
+				writeErr = fmt.Errorf("create tar header for %s: %w", f.relPath, err)
+				break
+			}
+			header.Name = f.relPath
+
+			if err := tw.WriteHeader(header); err != nil {
+				writeErr = fmt.Errorf("write tar header for %s: %w", f.relPath, err)
+				break
+			}
+
+			file, err := os.Open(f.absPath)
+			if err != nil {
+				writeErr = fmt.Errorf("open file %s: %w", f.absPath, err)
+				break
+			}
+			_, err = io.Copy(tw, file)
+			file.Close()
+			if err != nil {
+				writeErr = fmt.Errorf("write file %s to tar: %w", f.relPath, err)
+				break
+			}
 		}
 
-		data, err := os.ReadFile(f.absPath)
-		if err != nil {
-			return fmt.Errorf("read file %s: %w", f.absPath, err)
+		tw.Close()
+		gw.Close()
+		if writeErr != nil {
+			pw.CloseWithError(writeErr)
+		} else {
+			pw.Close()
 		}
-		if _, err := tw.Write(data); err != nil {
-			return fmt.Errorf("write file %s to tar: %w", f.relPath, err)
-		}
-	}
-
-	if err := tw.Close(); err != nil {
-		return fmt.Errorf("close tar writer: %w", err)
-	}
-	if err := gw.Close(); err != nil {
-		return fmt.Errorf("close gzip writer: %w", err)
-	}
+	}()
 
 	// 通过 PUT 上传
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadURL, &buf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadURL, pr)
 	if err != nil {
 		return fmt.Errorf("create upload request: %w", err)
 	}
@@ -140,11 +155,26 @@ type fileEntry struct {
 
 // collectFiles 遍历构建上下文目录，匹配源 glob 模式，
 // 过滤忽略规则。结果按相对路径排序。
+// 会验证源路径不会逃逸出构建上下文目录。
 func collectFiles(src, contextPath string, ignorePatterns []string) ([]fileEntry, error) {
+	contextAbs, err := filepath.Abs(contextPath)
+	if err != nil {
+		return nil, fmt.Errorf("resolve context path: %w", err)
+	}
+
 	// 将源路径解析为相对于上下文的绝对路径
 	srcAbs := src
 	if !filepath.IsAbs(src) {
 		srcAbs = filepath.Join(contextPath, src)
+	}
+	srcAbs, err = filepath.Abs(srcAbs)
+	if err != nil {
+		return nil, fmt.Errorf("resolve source path: %w", err)
+	}
+
+	// 路径穿越检查：确保源路径在构建上下文内
+	if !isWithinContext(srcAbs, contextAbs) {
+		return nil, fmt.Errorf("path %q escapes build context %q", src, contextPath)
 	}
 
 	info, err := os.Stat(srcAbs)
@@ -197,7 +227,9 @@ func collectFiles(src, contextPath string, ignorePatterns []string) ([]fileEntry
 }
 
 // collectGlob 使用 glob 模式匹配收集文件。
+// 过滤掉逃逸出构建上下文的匹配结果。
 func collectGlob(pattern, contextPath string, ignorePatterns []string) ([]fileEntry, error) {
+	contextAbs, _ := filepath.Abs(contextPath)
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("invalid glob pattern %q: %w", pattern, err)
@@ -205,6 +237,10 @@ func collectGlob(pattern, contextPath string, ignorePatterns []string) ([]fileEn
 
 	var files []fileEntry
 	for _, match := range matches {
+		absMatch, _ := filepath.Abs(match)
+		if !isWithinContext(absMatch, contextAbs) {
+			continue
+		}
 		info, err := os.Stat(match)
 		if err != nil {
 			continue
@@ -230,12 +266,14 @@ func collectGlob(pattern, contextPath string, ignorePatterns []string) ([]fileEn
 	return files, nil
 }
 
-// isIgnored 检查路径是否匹配任何忽略规则。
+// isIgnored 检查路径是否匹配忽略规则。
+// 使用 last-match-wins 语义，与 Docker 的 .dockerignore 规范一致：
+// 否定规则（!pattern）可以重新包含之前被排除的文件。
 func isIgnored(relPath string, patterns []string) bool {
+	ignored := false
 	for _, p := range patterns {
-		negated := false
-		if strings.HasPrefix(p, "!") {
-			negated = true
+		negated := strings.HasPrefix(p, "!")
+		if negated {
 			p = p[1:]
 		}
 
@@ -247,9 +285,15 @@ func isIgnored(relPath string, patterns []string) bool {
 			// 也尝试匹配文件基名
 			matched, _ = filepath.Match(p, filepath.Base(relPath))
 		}
-		if matched && !negated {
-			return true
+		if matched {
+			ignored = !negated
 		}
 	}
-	return false
+	return ignored
+}
+
+// isWithinContext 检查路径是否在构建上下文目录内。
+func isWithinContext(path, contextAbs string) bool {
+	return strings.HasPrefix(path+string(filepath.Separator), contextAbs+string(filepath.Separator)) ||
+		path == contextAbs
 }

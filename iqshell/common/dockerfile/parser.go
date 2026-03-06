@@ -201,12 +201,14 @@ func joinContinuationLines(lines []string, escapeToken rune) []string {
 }
 
 // isEscapedEscape 检查末尾的转义字符本身是否被转义。
+// 使用 utf8.DecodeLastRuneInString 从末尾正确迭代 rune。
 func isEscapedEscape(s string, escapeToken rune) bool {
 	count := 0
-	for i := len(s) - 1; i >= 0; i-- {
-		r, _ := utf8.DecodeRuneInString(string(s[i]))
+	for len(s) > 0 {
+		r, size := utf8.DecodeLastRuneInString(s)
 		if r == escapeToken {
 			count++
+			s = s[:len(s)-size]
 		} else {
 			break
 		}
@@ -272,25 +274,27 @@ func splitInstruction(line string) (string, string) {
 }
 
 // extractFlags 从参数开头提取 --flag=value 标记。
+// 仅提取前导的 flag 标记，遇到第一个非 flag 参数后停止提取。
 // 返回提取的标志映射和剩余的参数字符串。
 func extractFlags(args string) (map[string]string, string) {
 	flags := make(map[string]string)
 	fields := strings.Fields(args)
-	var rest []string
 
-	for _, f := range fields {
-		if key, value, ok := strings.Cut(f, "="); ok && strings.HasPrefix(key, "--") {
+	i := 0
+	for i < len(fields) {
+		f := fields[i]
+		if !strings.HasPrefix(f, "--") {
+			break
+		}
+		if key, value, ok := strings.Cut(f, "="); ok {
 			flags[strings.TrimPrefix(key, "--")] = value
-			continue
+		} else {
+			flags[strings.TrimPrefix(f, "--")] = ""
 		}
-		if flagName, ok := strings.CutPrefix(f, "--"); ok {
-			flags[flagName] = ""
-			continue
-		}
-		rest = append(rest, f)
+		i++
 	}
 
-	return flags, strings.Join(rest, " ")
+	return flags, strings.Join(fields[i:], " ")
 }
 
 // ---------------------------------------------------------------------------

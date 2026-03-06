@@ -99,7 +99,8 @@ func TestIsIgnored(t *testing.T) {
 		{"无规则", "file.txt", nil, false},
 		{"匹配规则", "test.log", []string{"*.log"}, true},
 		{"不匹配规则", "app.py", []string{"*.log"}, false},
-		{"取反规则", "important.log", []string{"*.log", "!important.log"}, true},
+		{"取反规则重新包含", "important.log", []string{"*.log", "!important.log"}, false},
+		{"取反规则不影响其他", "other.log", []string{"*.log", "!important.log"}, true},
 		{"基名匹配", "dir/file.log", []string{"*.log"}, true},
 	}
 
