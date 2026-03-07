@@ -5,8 +5,8 @@
 
 # 格式
 ```
-qshell sandbox create [template]
-qshell sbx cr [template]
+qshell sandbox create <template> [-t <seconds>] [-m <metadata>]
+qshell sbx cr <template> [-t <seconds>] [-m <metadata>]
 ```
 
 # 帮助文档
@@ -20,9 +20,24 @@ $ qshell sandbox create --doc
 
 # 参数
 - `template`：模板 ID（必填）
+- `-t, --timeout`：沙箱超时时间（秒）
+- `-m, --metadata`：元数据键值对（格式：key1=value1,key2=value2）
 
 # 示例
+1. 创建沙箱
 ```
 $ qshell sandbox create my-template
 $ qshell sbx cr my-template
+```
+
+2. 设置超时时间
+```
+$ qshell sandbox create my-template --timeout 300
+$ qshell sbx cr my-template -t 300
+```
+
+3. 添加元数据
+```
+$ qshell sandbox create my-template -m env=dev,team=backend
+$ qshell sbx cr my-template -m env=dev,team=backend
 ```
