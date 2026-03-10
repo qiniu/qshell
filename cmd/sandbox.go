@@ -86,6 +86,10 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox create my-template --timeout 300
   qshell sbx cr my-template -t 300
 
+  # Create in detached mode (no terminal, sandbox stays alive)
+  qshell sandbox create my-template -t 300 -d
+  qshell sbx cr my-template -t 300 -d
+
   # Create with metadata
   qshell sandbox create my-template -m env=dev,team=backend
   qshell sbx cr my-template -m env=dev,team=backend`,
@@ -102,6 +106,7 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().Int32VarP(&info.Timeout, "timeout", "t", 0, "sandbox timeout in seconds")
+	cmd.Flags().BoolVarP(&info.Detach, "detach", "d", false, "create sandbox without connecting terminal (sandbox stays alive until timeout)")
 	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "metadata key=value pairs (comma-separated)")
 	return cmd
 }
@@ -248,6 +253,124 @@ var sandboxMetricsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var sandboxPauseCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	info := operations.PauseInfo{}
+	cmd := &cobra.Command{
+		Use:     "pause [sandboxIDs...]",
+		Aliases: []string{"ps"},
+		Short:   "Pause one or more sandboxes (alias: ps)",
+		Example: `  # Pause a single sandbox
+  qshell sandbox pause sb-xxxxxxxxxxxx
+  qshell sbx ps sb-xxxxxxxxxxxx
+
+  # Pause multiple sandboxes
+  qshell sandbox pause sb-aaa sb-bbb sb-ccc
+  qshell sbx ps sb-aaa sb-bbb sb-ccc
+
+  # Pause all running sandboxes
+  qshell sandbox pause --all
+  qshell sbx ps -a
+
+  # Pause all with specific metadata
+  qshell sandbox pause --all -m env=dev
+  qshell sbx ps -a -m env=dev`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.SandboxPauseType
+			if iqshell.ShowDocumentIfNeeded(cfg) {
+				return
+			}
+			info.SandboxIDs = args
+			operations.Pause(info)
+		},
+	}
+	cmd.Flags().BoolVarP(&info.All, "all", "a", false, "pause all sandboxes")
+	cmd.Flags().StringVarP(&info.State, "state", "s", "", "filter by state when using --all (comma-separated: running,paused). Defaults to running")
+	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "filter by metadata when using --all (key1=value1,key2=value2)")
+	return cmd
+}
+
+var sandboxResumeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	info := operations.ResumeInfo{}
+	cmd := &cobra.Command{
+		Use:     "resume [sandboxIDs...]",
+		Aliases: []string{"rs"},
+		Short:   "Resume one or more paused sandboxes (alias: rs)",
+		Example: `  # Resume a paused sandbox
+  qshell sandbox resume sb-xxxxxxxxxxxx
+  qshell sbx rs sb-xxxxxxxxxxxx
+
+  # Resume multiple sandboxes
+  qshell sandbox resume sb-aaa sb-bbb sb-ccc
+  qshell sbx rs sb-aaa sb-bbb sb-ccc
+
+  # Resume all paused sandboxes
+  qshell sandbox resume --all
+  qshell sbx rs -a
+
+  # Resume all with specific metadata
+  qshell sandbox resume --all -m env=staging
+  qshell sbx rs -a -m env=staging`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.SandboxResumeType
+			if iqshell.ShowDocumentIfNeeded(cfg) {
+				return
+			}
+			info.SandboxIDs = args
+			operations.Resume(info)
+		},
+	}
+	cmd.Flags().BoolVarP(&info.All, "all", "a", false, "resume all paused sandboxes")
+	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "filter by metadata when using --all (key1=value1,key2=value2)")
+	return cmd
+}
+
+var sandboxExecCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	info := operations.ExecInfo{}
+	cmd := &cobra.Command{
+		Use:     "exec <sandboxID> -- <command...>",
+		Aliases: []string{"ex"},
+		Short:   "Execute a command in a sandbox (alias: ex)",
+		Example: `  # Run a command in a sandbox
+  qshell sandbox exec sb-xxxxxxxxxxxx -- ls -la
+  qshell sbx ex sb-xxxxxxxxxxxx -- ls -la
+
+  # Run in background (print PID and return)
+  qshell sandbox exec sb-xxxxxxxxxxxx -b -- python server.py
+  qshell sbx ex sb-xxxxxxxxxxxx -b -- python server.py
+
+  # Specify working directory and user
+  qshell sandbox exec sb-xxxxxxxxxxxx -c /app -u root -- npm install
+
+  # Set environment variables
+  qshell sandbox exec sb-xxxxxxxxxxxx -e PORT=3000 -e NODE_ENV=production -- node app.js`,
+		Args:               cobra.MinimumNArgs(1),
+		DisableFlagParsing: false,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.SandboxExecType
+			if iqshell.ShowDocumentIfNeeded(cfg) {
+				return
+			}
+			if len(args) < 1 {
+				_ = cmd.Usage()
+				return
+			}
+			info.SandboxID = args[0]
+			// args after the sandbox ID are the command (cobra handles -- separator)
+			if dash := cmd.ArgsLenAtDash(); dash >= 0 {
+				info.Command = args[dash:]
+			} else if len(args) > 1 {
+				info.Command = args[1:]
+			}
+			operations.Exec(info)
+		},
+	}
+	cmd.Flags().BoolVarP(&info.Background, "background", "b", false, "run command in background (print PID and return)")
+	cmd.Flags().StringVarP(&info.Cwd, "cwd", "c", "", "working directory for the command")
+	cmd.Flags().StringVarP(&info.User, "user", "u", "", "user to run the command as")
+	cmd.Flags().StringArrayVarP(&info.Envs, "env", "e", nil, "environment variables (KEY=VALUE, can be specified multiple times)")
+	return cmd
+}
+
 func init() {
 	registerLoader(sandboxCmdLoader)
 }
@@ -259,6 +382,9 @@ func sandboxCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 		sandboxCreateCmdBuilder(cfg),
 		sandboxConnectCmdBuilder(cfg),
 		sandboxKillCmdBuilder(cfg),
+		sandboxPauseCmdBuilder(cfg),
+		sandboxResumeCmdBuilder(cfg),
+		sandboxExecCmdBuilder(cfg),
 		sandboxLogsCmdBuilder(cfg),
 		sandboxMetricsCmdBuilder(cfg),
 	)

@@ -1,0 +1,144 @@
+package operations
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+
+	"github.com/qiniu/go-sdk/v7/sandbox"
+
+	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
+)
+
+// ExecInfo holds parameters for executing a command in a sandbox.
+type ExecInfo struct {
+	SandboxID  string
+	Command    []string
+	Background bool
+	Cwd        string
+	User       string
+	Envs       []string // KEY=VALUE pairs
+}
+
+// Exec executes a command in a sandbox.
+// In foreground mode, stdout/stderr are streamed in real time and the exit code is propagated.
+// In background mode, the process PID is printed and the command returns immediately.
+func Exec(info ExecInfo) {
+	if info.SandboxID == "" {
+		sbClient.PrintError("sandbox ID is required")
+		return
+	}
+	if len(info.Command) == 0 {
+		sbClient.PrintError("command is required")
+		return
+	}
+
+	client, err := sbClient.NewSandboxClient()
+	if err != nil {
+		sbClient.PrintError("%v", err)
+		return
+	}
+
+	ctx := context.Background()
+	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
+	if err != nil {
+		sbClient.PrintError("connect to sandbox %s failed: %v", info.SandboxID, err)
+		return
+	}
+
+	// Build command string
+	cmd := strings.Join(info.Command, " ")
+
+	// Build command options
+	var opts []sandbox.CommandOption
+	if info.Cwd != "" {
+		opts = append(opts, sandbox.WithCwd(info.Cwd))
+	}
+	if info.User != "" {
+		opts = append(opts, sandbox.WithCommandUser(info.User))
+	}
+	if len(info.Envs) > 0 {
+		envMap := parseEnvPairs(info.Envs)
+		if len(envMap) > 0 {
+			opts = append(opts, sandbox.WithEnvs(envMap))
+		}
+	}
+
+	if info.Background {
+		execBackground(ctx, sb, cmd, opts)
+	} else {
+		execForeground(ctx, sb, cmd, opts)
+	}
+}
+
+// execForeground runs a command with real-time streaming output and propagates the exit code.
+func execForeground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts []sandbox.CommandOption) {
+	opts = append(opts,
+		sandbox.WithOnStdout(func(data []byte) { os.Stdout.Write(data) }),
+		sandbox.WithOnStderr(func(data []byte) { os.Stderr.Write(data) }),
+	)
+
+	handle, err := sb.Commands().Start(ctx, cmd, opts...)
+	if err != nil {
+		sbClient.PrintError("exec failed: %v", err)
+		os.Exit(1)
+	}
+
+	// Wait for PID before setting up signal handling
+	pid, err := handle.WaitPID(ctx)
+	if err != nil {
+		sbClient.PrintError("waiting for process start: %v", err)
+		os.Exit(1)
+	}
+
+	// Forward SIGINT/SIGTERM to the remote process
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		for range sigCh {
+			_ = sb.Commands().Kill(ctx, pid)
+		}
+	}()
+
+	result, err := handle.Wait()
+	signal.Stop(sigCh)
+	if err != nil {
+		sbClient.PrintError("exec failed: %v", err)
+		os.Exit(1)
+	}
+	if result.Error != "" {
+		sbClient.PrintError("%s", result.Error)
+	}
+	os.Exit(result.ExitCode)
+}
+
+// execBackground starts a command in the background and prints the PID.
+func execBackground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts []sandbox.CommandOption) {
+	handle, err := sb.Commands().Start(ctx, cmd, opts...)
+	if err != nil {
+		sbClient.PrintError("exec failed: %v", err)
+		return
+	}
+
+	pid, err := handle.WaitPID(ctx)
+	if err != nil {
+		sbClient.PrintError("waiting for process start: %v", err)
+		return
+	}
+	fmt.Printf("PID: %d\n", pid)
+}
+
+// parseEnvPairs parses KEY=VALUE pairs into a map.
+func parseEnvPairs(pairs []string) map[string]string {
+	envs := make(map[string]string, len(pairs))
+	for _, pair := range pairs {
+		kv := strings.SplitN(pair, "=", 2)
+		if len(kv) == 2 && kv[0] != "" {
+			envs[kv[0]] = kv[1]
+		}
+	}
+	return envs
+}

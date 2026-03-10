@@ -5,8 +5,10 @@ require (
 	github.com/astaxie/beego v1.12.3
 	github.com/aws/aws-sdk-go v1.37.31
 	github.com/charmbracelet/huh v0.8.0
+	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/fatih/color v1.18.0
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/muesli/termenv v0.16.0
 	github.com/qiniu/go-sdk/v7 v7.26.3
 	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/cast v1.3.1
@@ -30,7 +32,6 @@ require (
 	github.com/charmbracelet/bubbles v0.21.1-0.20250623103423-23b8fd6302d7 // indirect
 	github.com/charmbracelet/bubbletea v1.3.6 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
-	github.com/charmbracelet/lipgloss v1.1.0 // indirect
 	github.com/charmbracelet/x/ansi v0.9.3 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0 // indirect
@@ -51,7 +52,6 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/oapi-codegen/runtime v1.1.2 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
@@ -80,7 +80,7 @@ require (
 	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/subosito/gotenv v1.2.0 // indirect
+	github.com/subosito/gotenv v1.2.0
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
@@ -94,3 +94,5 @@ require (
 go 1.24.0
 
 toolchain go1.24.1
+
+replace github.com/qiniu/go-sdk/v7 => ../go-sdk

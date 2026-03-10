@@ -15,6 +15,7 @@ type CreateInfo struct {
 	TemplateID string
 	Timeout    int32
 	Metadata   string
+	Detach     bool
 }
 
 // Create creates a new sandbox and connects to its terminal.
@@ -50,6 +51,17 @@ func Create(info CreateInfo) {
 		sbClient.PrintError("create sandbox failed: %v", err)
 		return
 	}
+	if info.Detach {
+		sbClient.PrintSuccess("Sandbox %s created", sb.ID())
+		fmt.Printf("Sandbox ID:   %s\n", sb.ID())
+		fmt.Printf("Template ID:  %s\n", sb.TemplateID())
+		fmt.Println()
+		fmt.Printf("Connect:  qshell sandbox connect %s\n", sb.ID())
+		fmt.Printf("Exec:     qshell sandbox exec %s -- <command>\n", sb.ID())
+		fmt.Printf("Kill:     qshell sandbox kill %s\n", sb.ID())
+		return
+	}
+
 	sbClient.PrintSuccess("Sandbox %s created, connecting...", sb.ID())
 
 	// When create session ends, kill the sandbox

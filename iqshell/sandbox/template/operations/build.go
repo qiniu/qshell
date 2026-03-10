@@ -190,6 +190,10 @@ func Build(info BuildInfo) {
 			fmt.Printf("Template ID:  %s\n", buildInfo.TemplateID)
 			fmt.Printf("Build ID:     %s\n", buildInfo.BuildID)
 			fmt.Printf("Status:       %s\n", buildInfo.Status)
+
+			if buildInfo.Status == "ready" {
+				printSDKExamples(buildInfo.TemplateID)
+			}
 			return
 		}
 
@@ -297,4 +301,22 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 	}
 
 	return nil
+}
+
+// printSDKExamples prints SDK usage examples for the given template ID.
+func printSDKExamples(templateID string) {
+	fmt.Println()
+	sbClient.PrintSuccessBox("Template is ready! Use it with the SDK:")
+
+	fmt.Printf("\n%s\n", sbClient.ColorInfo.Sprint("Go:"))
+	fmt.Println(sbClient.HighlightCode(fmt.Sprintf(`sb, _ := client.CreateAndWait(ctx, sandbox.CreateParams{
+    TemplateID: "%s",
+})`, templateID), "go"))
+
+	fmt.Printf("\n%s\n", sbClient.ColorInfo.Sprint("Python:"))
+	fmt.Println(sbClient.HighlightCode(fmt.Sprintf(`sandbox = client.sandboxes.create("%s")`, templateID), "python"))
+
+	fmt.Printf("\n%s\n", sbClient.ColorInfo.Sprint("TypeScript:"))
+	fmt.Println(sbClient.HighlightCode(fmt.Sprintf(`const sandbox = await client.sandboxes.create("%s")`, templateID), "typescript"))
+	fmt.Println()
 }

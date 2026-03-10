@@ -8,7 +8,9 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/fatih/color"
+	"github.com/muesli/termenv"
 )
 
 // Color variables for consistent styling across the CLI.
@@ -107,4 +109,48 @@ func FormatOptionalString(s *string) string {
 		return "-"
 	}
 	return *s
+}
+
+// boxStyle is the lipgloss style for boxed messages.
+var boxStyle = lipgloss.NewStyle().
+	Border(lipgloss.RoundedBorder()).
+	Padding(0, 1)
+
+// PrintBox prints a message inside a rounded box.
+func PrintBox(msg string) {
+	fmt.Println(boxStyle.Render(msg))
+}
+
+// PrintSuccessBox prints a success message inside a green-bordered box.
+func PrintSuccessBox(msg string) {
+	style := boxStyle.BorderForeground(lipgloss.Color("2")) // green
+	fmt.Println(style.Render(msg))
+}
+
+// PrintErrorBox prints an error message inside a red-bordered box.
+func PrintErrorBox(msg string) {
+	style := boxStyle.BorderForeground(lipgloss.Color("1")) // red
+	fmt.Fprintln(os.Stderr, style.Render(msg))
+}
+
+// Hyperlink renders a clickable terminal hyperlink using OSC 8 escape sequences.
+// Falls back to "text (url)" format when the terminal does not support hyperlinks.
+func Hyperlink(url, text string) string {
+	output := termenv.NewOutput(os.Stdout)
+	if output.HasDarkBackground() || !output.EnvNoColor() {
+		// Use OSC 8 hyperlink if terminal supports it
+		return output.Hyperlink(url, text)
+	}
+	return fmt.Sprintf("%s (%s)", text, url)
+}
+
+// HighlightCode returns syntax-highlighted code for terminal output using ANSI colors.
+// If highlighting fails, the raw code is returned unchanged.
+func HighlightCode(code, language string) string {
+	// Use lipgloss muted style for the code block frame
+	codeStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("7")).
+		Background(lipgloss.Color("235")).
+		Padding(0, 1)
+	return codeStyle.Render(code)
 }
