@@ -16,6 +16,8 @@ type CreateInfo struct {
 	Timeout    int32
 	Metadata   string
 	Detach     bool
+	EnvVars    []string // KEY=VALUE pairs
+	AutoPause  bool
 }
 
 // Create creates a new sandbox and connects to its terminal.
@@ -43,6 +45,15 @@ func Create(info CreateInfo) {
 	if info.Metadata != "" {
 		meta := sandbox.Metadata(sbClient.ParseMetadataMap(info.Metadata))
 		params.Metadata = &meta
+	}
+	if len(info.EnvVars) > 0 {
+		envMap := parseEnvPairs(info.EnvVars)
+		if len(envMap) > 0 {
+			params.EnvVars = &envMap
+		}
+	}
+	if info.AutoPause {
+		params.AutoPause = &info.AutoPause
 	}
 
 	fmt.Printf("Creating sandbox from template %s...\n", info.TemplateID)
