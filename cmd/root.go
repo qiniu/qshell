@@ -57,7 +57,7 @@ var rootCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.PersistentFlags().BoolVarP(&cfg.StdoutColorful, "colorful", "", false, "console colorful mode")
 	cmd.PersistentFlags().BoolVarP(&cfg.Silence, "silence", "", false, "silence mode, The console only outputs warnings、errors and some important information")
-	cmd.PersistentFlags().BoolVar(&cfg.DebugEnable, "debug", false, "debug mode")
+	cmd.PersistentFlags().BoolVarP(&cfg.DebugEnable, "debug", "d", false, "debug mode")
 	// ddebug 开启 client debug
 	cmd.PersistentFlags().BoolVarP(&cfg.DDebugEnable, "ddebug", "D", false, "deep debug mode")
 	cmd.PersistentFlags().StringVarP(&cfg.ConfigFilePath, "config", "C", "", "set config file (default is $HOME/.qshell.json)")
