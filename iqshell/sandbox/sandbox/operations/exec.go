@@ -67,6 +67,11 @@ func Exec(info ExecInfo) {
 		}
 	}
 
+	// Enable stdin forwarding if input is piped
+	if isPipedStdin() {
+		opts = append(opts, sandbox.WithStdin())
+	}
+
 	if info.Background {
 		execBackground(ctx, sb, cmd, opts)
 	} else {
@@ -76,11 +81,6 @@ func Exec(info ExecInfo) {
 
 // execForeground runs a command with real-time streaming output and propagates the exit code.
 func execForeground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts []sandbox.CommandOption) {
-	hasPipedStdin := isPipedStdin()
-	if hasPipedStdin {
-		opts = append(opts, sandbox.WithStdin())
-	}
-
 	opts = append(opts,
 		sandbox.WithOnStdout(func(data []byte) { os.Stdout.Write(data) }),
 		sandbox.WithOnStderr(func(data []byte) { os.Stderr.Write(data) }),
@@ -109,7 +109,7 @@ func execForeground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts [
 	}()
 
 	// Forward piped stdin to the sandbox process
-	if hasPipedStdin {
+	if isPipedStdin() {
 		go sendStdinToSandbox(ctx, sb, pid)
 	}
 
@@ -127,11 +127,6 @@ func execForeground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts [
 
 // execBackground starts a command in the background and prints the PID.
 func execBackground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts []sandbox.CommandOption) {
-	hasPipedStdin := isPipedStdin()
-	if hasPipedStdin {
-		opts = append(opts, sandbox.WithStdin())
-	}
-
 	handle, err := sb.Commands().Start(ctx, cmd, opts...)
 	if err != nil {
 		sbClient.PrintError("exec failed: %v", err)
@@ -146,7 +141,7 @@ func execBackground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts [
 	fmt.Printf("PID: %d\n", pid)
 
 	// Background mode: send stdin data then return immediately
-	if hasPipedStdin {
+	if isPipedStdin() {
 		sendStdinToSandbox(ctx, sb, pid)
 	}
 }
