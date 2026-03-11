@@ -87,8 +87,8 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sbx cr my-template -t 300
 
   # Create in detached mode (no terminal, sandbox stays alive)
-  qshell sandbox create my-template -t 300 -d
-  qshell sbx cr my-template -t 300 -d
+  qshell sandbox create my-template -t 300 --detach
+  qshell sbx cr my-template -t 300 --detach
 
   # Create with environment variables
   qshell sandbox create my-template -e FOO=bar -e BAZ=qux
@@ -114,7 +114,7 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		},
 	}
 	cmd.Flags().Int32VarP(&info.Timeout, "timeout", "t", 0, "sandbox timeout in seconds")
-	cmd.Flags().BoolVarP(&info.Detach, "detach", "d", false, "create sandbox without connecting terminal (sandbox stays alive until timeout)")
+	cmd.Flags().BoolVar(&info.Detach, "detach", false, "create sandbox without connecting terminal (sandbox stays alive until timeout)")
 	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "metadata key=value pairs (comma-separated)")
 	cmd.Flags().StringArrayVarP(&info.EnvVars, "env-var", "e", nil, "environment variables (KEY=VALUE, can be specified multiple times)")
 	cmd.Flags().BoolVar(&info.AutoPause, "auto-pause", false, "automatically pause sandbox when timeout expires (instead of killing)")
