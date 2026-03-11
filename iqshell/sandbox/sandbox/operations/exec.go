@@ -76,6 +76,11 @@ func Exec(info ExecInfo) {
 
 // execForeground runs a command with real-time streaming output and propagates the exit code.
 func execForeground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts []sandbox.CommandOption) {
+	hasPipedStdin := isPipedStdin()
+	if hasPipedStdin {
+		opts = append(opts, sandbox.WithStdin())
+	}
+
 	opts = append(opts,
 		sandbox.WithOnStdout(func(data []byte) { os.Stdout.Write(data) }),
 		sandbox.WithOnStderr(func(data []byte) { os.Stderr.Write(data) }),
@@ -103,6 +108,11 @@ func execForeground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts [
 		}
 	}()
 
+	// Forward piped stdin to the sandbox process
+	if hasPipedStdin {
+		go sendStdinToSandbox(ctx, sb, pid)
+	}
+
 	result, err := handle.Wait()
 	signal.Stop(sigCh)
 	if err != nil {
@@ -117,6 +127,11 @@ func execForeground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts [
 
 // execBackground starts a command in the background and prints the PID.
 func execBackground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts []sandbox.CommandOption) {
+	hasPipedStdin := isPipedStdin()
+	if hasPipedStdin {
+		opts = append(opts, sandbox.WithStdin())
+	}
+
 	handle, err := sb.Commands().Start(ctx, cmd, opts...)
 	if err != nil {
 		sbClient.PrintError("exec failed: %v", err)
@@ -129,6 +144,41 @@ func execBackground(ctx context.Context, sb *sandbox.Sandbox, cmd string, opts [
 		return
 	}
 	fmt.Printf("PID: %d\n", pid)
+
+	// Background mode: send stdin data then return immediately
+	if hasPipedStdin {
+		sendStdinToSandbox(ctx, sb, pid)
+	}
+}
+
+const stdinChunkSize = 64 * 1024 // 64KB, consistent with E2B CLI
+
+// isPipedStdin checks if stdin is a pipe or file redirection (non-interactive terminal).
+func isPipedStdin() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeCharDevice == 0
+}
+
+// sendStdinToSandbox reads from local stdin and forwards to the sandbox process.
+// After reading all data, it calls CloseStdin to signal EOF.
+func sendStdinToSandbox(ctx context.Context, sb *sandbox.Sandbox, pid uint32) {
+	buf := make([]byte, stdinChunkSize)
+	for {
+		n, err := os.Stdin.Read(buf)
+		if n > 0 {
+			if sendErr := sb.Commands().SendStdin(ctx, pid, buf[:n]); sendErr != nil {
+				return
+			}
+		}
+		if err != nil {
+			break
+		}
+	}
+	// Signal EOF, ignore errors (process may have exited, or server may not support CloseStdin yet)
+	_ = sb.Commands().CloseStdin(ctx, pid)
 }
 
 // parseEnvPairs parses KEY=VALUE pairs into a map.

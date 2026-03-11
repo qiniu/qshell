@@ -344,6 +344,10 @@ var sandboxExecCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox exec sb-xxxxxxxxxxxx -- ls -la
   qshell sbx ex sb-xxxxxxxxxxxx -- ls -la
 
+  # Pipe stdin to a command
+  echo "hello world" | qshell sbx ex sb-xxxxxxxxxxxx -- cat
+  cat file.txt | qshell sbx ex sb-xxxxxxxxxxxx -- wc -l
+
   # Run in background (print PID and return)
   qshell sandbox exec sb-xxxxxxxxxxxx -b -- python server.py
   qshell sbx ex sb-xxxxxxxxxxxx -b -- python server.py
