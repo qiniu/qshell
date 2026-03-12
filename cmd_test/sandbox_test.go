@@ -59,6 +59,19 @@ func TestSandboxKillDocument(t *testing.T) {
 	testSubcommandDocument(t, "sandbox", "kill")
 }
 
+func TestSandboxPauseDocument(t *testing.T) {
+	testSubcommandDocument(t, "sandbox", "pause")
+}
+
+func TestSandboxResumeDocument(t *testing.T) {
+	testSubcommandDocument(t, "sandbox", "resume")
+}
+
+func TestSandboxExecDocument(t *testing.T) {
+	// exec uses cobra.MinimumNArgs(1), so we must pass a sandboxID for --doc to work
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "exec"}, "sb-test")
+}
+
 func TestSandboxLogsDocument(t *testing.T) {
 	testSubcommandDocument(t, "sandbox", "logs")
 }
@@ -90,10 +103,50 @@ func TestSandboxCreateNoArgs(t *testing.T) {
 	test.RunCmdWithError("sandbox", "create")
 }
 
+func TestSandboxPauseNoArgs(t *testing.T) {
+	test.RunCmdWithError("sandbox", "pause")
+}
+
+func TestSandboxResumeNoArgs(t *testing.T) {
+	test.RunCmdWithError("sandbox", "resume")
+}
+
 // === sandbox --doc with flags tests ===
 
 func TestSandboxListDocumentWithFlags(t *testing.T) {
 	testSubcommandDocumentWithFlags(t, []string{"sandbox", "list"}, "--state", "running")
+}
+
+func TestSandboxCreateDocumentWithFlags(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "create"}, "--timeout", "300", "--detach", "--auto-pause")
+}
+
+func TestSandboxCreateDocumentWithEnvVar(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "create"}, "-e", "FOO=bar", "-e", "BAZ=qux")
+}
+
+func TestSandboxKillDocumentWithAll(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "kill"}, "--all")
+}
+
+func TestSandboxPauseDocumentWithAll(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "pause"}, "--all")
+}
+
+func TestSandboxPauseDocumentWithFlags(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "pause"}, "--all", "-s", "running", "-m", "env=dev")
+}
+
+func TestSandboxResumeDocumentWithAll(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "resume"}, "--all")
+}
+
+func TestSandboxResumeDocumentWithFlags(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "resume"}, "--all", "-m", "env=staging")
+}
+
+func TestSandboxExecDocumentWithFlags(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "exec"}, "sb-test", "-b", "-c", "/app", "-u", "root")
 }
 
 func TestSandboxLogsDocumentWithFlags(t *testing.T) {
@@ -102,8 +155,4 @@ func TestSandboxLogsDocumentWithFlags(t *testing.T) {
 
 func TestSandboxMetricsDocumentWithFollow(t *testing.T) {
 	testSubcommandDocumentWithFlags(t, []string{"sandbox", "metrics"}, "--follow")
-}
-
-func TestSandboxKillDocumentWithAll(t *testing.T) {
-	testSubcommandDocumentWithFlags(t, []string{"sandbox", "kill"}, "--all")
 }

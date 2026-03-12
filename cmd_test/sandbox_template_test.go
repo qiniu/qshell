@@ -82,6 +82,10 @@ func TestSandboxTemplateInitNoArgs(t *testing.T) {
 
 // === sandbox template --doc with flags tests ===
 
+func TestSandboxTemplateListDocumentWithFormat(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "list"}, "--format", "json")
+}
+
 func TestSandboxTemplateDeleteDocumentWithFlags(t *testing.T) {
 	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "delete"}, "--yes")
 }
