@@ -309,14 +309,14 @@ func printSDKExamples(templateID string) {
 	sbClient.PrintSuccessBox("Template is ready! Use it with the SDK:")
 
 	fmt.Printf("\n%s\n", sbClient.ColorInfo.Sprint("Go:"))
-	fmt.Println(sbClient.HighlightCode(fmt.Sprintf(`sb, _ := client.CreateAndWait(ctx, sandbox.CreateParams{
+	fmt.Println(sbClient.FormatCodeBlock(fmt.Sprintf(`sb, _ := client.CreateAndWait(ctx, sandbox.CreateParams{
     TemplateID: "%s",
 })`, templateID), "go"))
 
 	fmt.Printf("\n%s\n", sbClient.ColorInfo.Sprint("Python:"))
-	fmt.Println(sbClient.HighlightCode(fmt.Sprintf(`sandbox = client.sandboxes.create("%s")`, templateID), "python"))
+	fmt.Println(sbClient.FormatCodeBlock(fmt.Sprintf(`sandbox = client.sandboxes.create("%s")`, templateID), "python"))
 
 	fmt.Printf("\n%s\n", sbClient.ColorInfo.Sprint("TypeScript:"))
-	fmt.Println(sbClient.HighlightCode(fmt.Sprintf(`const sandbox = await client.sandboxes.create("%s")`, templateID), "typescript"))
+	fmt.Println(sbClient.FormatCodeBlock(fmt.Sprintf(`const sandbox = await client.sandboxes.create("%s")`, templateID), "typescript"))
 	fmt.Println()
 }

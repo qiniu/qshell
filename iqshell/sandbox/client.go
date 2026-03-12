@@ -69,17 +69,9 @@ func loadDotEnv() {
 func NewSandboxClient() (*sandbox.Client, error) {
 	loadDotEnv()
 
-	apiKey := os.Getenv(EnvQiniuAPIKey)
-	if apiKey == "" {
-		apiKey = os.Getenv(EnvE2BAPIKey)
-	}
+	apiKey, endpoint := resolveConfig()
 	if apiKey == "" {
 		return nil, fmt.Errorf("API key not configured, please set %s or %s environment variable", EnvQiniuAPIKey, EnvE2BAPIKey)
-	}
-
-	endpoint := os.Getenv(EnvQiniuSandboxAPIURL)
-	if endpoint == "" {
-		endpoint = os.Getenv(EnvE2BAPIURL)
 	}
 
 	return sandbox.NewClient(&sandbox.Config{

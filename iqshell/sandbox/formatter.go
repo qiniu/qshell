@@ -144,9 +144,8 @@ func Hyperlink(url, text string) string {
 	return fmt.Sprintf("%s (%s)", text, url)
 }
 
-// HighlightCode returns syntax-highlighted code for terminal output using ANSI colors.
-// If highlighting fails, the raw code is returned unchanged.
-func HighlightCode(code, language string) string {
+// FormatCodeBlock returns a styled block for displaying code snippets in terminal output.
+func FormatCodeBlock(code, language string) string {
 	// Use lipgloss muted style for the code block frame
 	codeStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("7")).
