@@ -335,6 +335,50 @@ qshell 命令配置 > 账号配置 > 全局配置
 | sandbox template unpublish | sbx tpl upb | 模板 | 取消发布模板（设为私有）     | [文档](docs/sandbox_template_unpublish.md)|
 | sandbox template init      | sbx tpl it | 模板 | 初始化模板项目脚手架         | [文档](docs/sandbox_template_init.md)     |
 
+## AI Skill
+
+qshell 内置了 AI Skill 定义文件，位于 `skills/qshell/` 目录。AI 编程助手（如 Claude Code、Cursor 等）可以通过加载该 Skill 来获得 qshell 全部命令的使用能力，实现自然语言驱动的七牛云资源操作。
+
+### 功能覆盖
+
+Skill 覆盖 qshell 全部 98 个命令，分为 15 大类：
+
+| 类别 | 说明 |
+|------|------|
+| 账号与 Bucket 管理 | account、user、buckets、bucket、mkbucket、domains |
+| 文件查询 | stat、listbucket2、batchstat、match、batchmatch |
+| 文件上传 | fput、rput、qupload、qupload2 |
+| 文件下载 | get、qdownload、qdownload2 |
+| 文件操作 | copy、move、delete、rename、fetch、sync、mirrorupdate、batch* |
+| 文件属性修改 | chgm、chtype、expire、forbidden、restorear、chlifecycle、batch* |
+| CDN 操作 | cdnrefresh、cdnprefetch、prefetch |
+| 数据处理 | pfop、prefop |
+| 私有链接与签名 | privateurl、saveas、batchsign、token |
+| 工具命令 | reqid、qetag、b64encode/decode、urlencode/decode、rpcencode/decode、d2ts、tms2d、tns2d、ts2d、ip、dircache、func、unzip、version |
+| 异步抓取与云迁移 | abfetch、acheck、awslist、awsfetch、alilistbucket |
+| 文件分享 | create-share、share-ls、share-cp |
+| M3U8 操作 | m3u8delete、m3u8replace |
+| 沙箱管理 | sandbox list/create/connect/exec/kill/pause/resume/logs/metrics |
+| 沙箱模板管理 | sandbox template list/get/delete/build/builds/publish/unpublish/init |
+
+### 目录结构
+
+```
+skills/qshell/
+├── SKILL.md                 # 主 Skill 定义文件（命令速查、意图映射、安全规则、输出格式等）
+└── references/
+    └── install.md           # 安装指南（自动检测平台并下载安装 qshell）
+```
+
+### 使用方式
+
+将 `skills/qshell/` 目录配置到 AI 编程助手的 Skill 搜索路径中，助手即可根据自然语言意图自动调用 qshell 命令。例如：
+
+- "列一下 my-bucket 里的文件" → `qshell listbucket2 my-bucket`
+- "上传 test.png 到 my-bucket" → `qshell fput my-bucket test.png ./test.png`
+- "创建一个沙箱" → `qshell sandbox create <template>`
+- "刷新 CDN 缓存" → `qshell cdnrefresh -i <urls.txt>`
+
 ## 问题反馈
 
 如果您有任何问题，请写在[ISSUE列表](https://github.com/qiniu/qshell/issues)里面，我们会尽快回复您。
