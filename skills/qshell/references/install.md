@@ -4,9 +4,13 @@
 
 ### 1. 获取最新版本号
 
-从七牛官方文档页面获取最新版本号：
+通过 GitHub API 获取最新版本号：
 ```bash
-VERSION=$(curl -sL -e https://developer.qiniu.com "https://developer.qiniu.com/kodo/1302/qshell" | grep -oE 'qshell-v[0-9]+\.[0-9]+\.[0-9]+' | head -1 | sed 's/^qshell-v//')
+VERSION=$(curl -s "https://api.github.com/repos/qiniu/qshell/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+if [ -z "$VERSION" ]; then
+  echo "Error: Failed to detect latest version. Please check https://github.com/qiniu/qshell/releases manually." >&2
+  exit 1
+fi
 echo "最新版本: v${VERSION}"
 ```
 
@@ -34,26 +38,33 @@ elif [ "$OS" = "linux" ]; then
   fi
 fi
 
+if [ -z "$SUFFIX" ]; then
+  echo "Error: Unsupported platform: $OS/$ARCH" >&2
+  echo "Please download manually from https://github.com/qiniu/qshell/releases" >&2
+  exit 1
+fi
+
 URL="https://kodo-toolbox-new.qiniu.com/qshell-v${VERSION}-${SUFFIX}.tar.gz"
 curl -sL -e https://developer.qiniu.com -o /tmp/qshell.tar.gz "$URL"
 ```
 
-### 3. 解压并安装到系统 PATH
+### 3. 解压并安装到用户目录
 
 ```bash
 tar -xzf /tmp/qshell.tar.gz -C /tmp/
 chmod +x /tmp/qshell
 
-# 安装到用户可写的 PATH 目录
-if [ -d "$HOME/.local/bin" ]; then
-  mv /tmp/qshell "$HOME/.local/bin/qshell"
-elif [ -d "/usr/local/bin" ] && [ -w "/usr/local/bin" ]; then
-  mv /tmp/qshell /usr/local/bin/qshell
-else
-  sudo mv /tmp/qshell /usr/local/bin/qshell
-fi
+# 安装到用户目录
+mkdir -p "$HOME/.local/bin"
+mv /tmp/qshell "$HOME/.local/bin/qshell"
 
 rm -f /tmp/qshell.tar.gz
+```
+
+如果 `$HOME/.local/bin` 不在 PATH 中，需要将其添加到 shell 配置文件：
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc   # bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc    # zsh
 ```
 
 ### 4. 验证安装
@@ -87,4 +98,4 @@ qshell user cu <Name>
 
 ## 更新 qshell
 
-重新执行上述安装步骤即可覆盖更新，会自动从官方文档获取最新版本。
+重新执行上述安装步骤即可覆盖更新，会自动获取最新版本。

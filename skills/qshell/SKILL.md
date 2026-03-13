@@ -208,7 +208,7 @@ qshell batchrename <Bucket> -i <OldNewKeyMapFile>              # 每行: OldKey\
 qshell batchfetch <Bucket> -i <URLKeyMapFile>                  # 每行: URL\tKey
 ```
 
-> **安全提示：** 批量删除/移动操作需加 `-y` 强制执行。执行前务必确认操作范围。
+> **安全提示：** 批量删除/移动操作默认需要输入验证码确认，可加 `-y` 跳过确认直接执行。执行前务必确认操作范围。
 > 建议先用 `--success-list` 和 `--failure-list` 记录结果。
 
 ### 6. 文件属性修改
@@ -337,15 +337,13 @@ qshell func <ParamsJson> <FuncTemplate>
 # 查看版本
 qshell version
 
-# 文件匹配测试
-qshell match <Bucket> <Key> <LocalFile>
 ```
 
 ### 11. 异步抓取与云迁移
 
 ```bash
 # 异步批量抓取远程资源
-qshell abfetch <Bucket> -i <URLKeyFile>
+qshell abfetch -i <URLKeyFile> <Bucket>
 
 # 查询异步抓取状态
 qshell acheck <Bucket> <Id> --zone <Zone>
@@ -510,7 +508,7 @@ qshell sandbox template init --name my-api --language typescript --path ./my-api
 | "有哪些 bucket" | `qshell buckets` |
 | "创建 bucket" | `qshell mkbucket` |
 | "这个 bucket 绑定了什么域名" | `qshell domains <Bucket>` |
-| "批量删除" | `qshell batchdelete`（需确认后加 `-y`） |
+| "批量删除" | `qshell batchdelete`（默认需验证码确认，`-y` 跳过） |
 | "转码这个视频" | `qshell pfop` |
 | "查一下处理进度" | `qshell prefop` |
 | "同步一个大文件到七牛" | `qshell sync` |
