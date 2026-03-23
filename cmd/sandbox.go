@@ -406,5 +406,8 @@ func sandboxCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	// Add template as a subcommand of sandbox
 	templateCmdLoader(sandboxCmd, cfg)
 
+	// Add transform-rule as a subcommand of sandbox
+	transformRuleCmdLoader(sandboxCmd, cfg)
+
 	superCmd.AddCommand(sandboxCmd)
 }
