@@ -101,7 +101,7 @@ func (w *workProvider) getWorkInfoFromFile() {
 
 		var keys []string
 		for {
-			if len(keys) == 300 {
+			if len(keys) == 250 {
 				if !w.getWorkInfoOfKeys(keys) {
 					break
 				}
@@ -109,7 +109,7 @@ func (w *workProvider) getWorkInfoFromFile() {
 			}
 
 			if keys == nil {
-				keys = make([]string, 0, 300)
+				keys = make([]string, 0, 250)
 			}
 
 			hasMore, workInfo, pErr := workPro.Provide()
@@ -196,21 +196,33 @@ func (w *workProvider) getWorkInfoOfKeys(keys []string) bool {
 			}
 			w.downloadItemChan <- downItem
 		}
-	} else if err != nil {
-		for _, operation := range operations {
-			item := operation.(object.StatusApiInfo)
-			w.downloadItemChan <- &downloadItem{
-				workInfo: &flow.WorkInfo{
-					Data: item.Key,
-					Work: item,
-				},
-				err: err,
-			}
-		}
-		time.Sleep(10 * time.Second)
+		return true
 	}
 
-	return true
+	if err == nil {
+		err = data.NewError(data.ErrorCodeUnknown, "unknown error")
+	}
+
+	for i, operation := range operations {
+		var iErr *data.CodeError
+		if i < len(results) {
+			result := results[i]
+			iErr = data.NewError(result.Code, result.Error)
+		} else {
+			iErr = err
+		}
+
+		item := operation.(object.StatusApiInfo)
+		w.downloadItemChan <- &downloadItem{
+			workInfo: &flow.WorkInfo{
+				Data: item.Key,
+				Work: item,
+			},
+			err: iErr,
+		}
+	}
+
+	return false
 }
 
 func (w *workProvider) getWorkInfoFromBucket() {

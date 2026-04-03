@@ -21,7 +21,7 @@ func Some(operations []Operation) ([]*OperationResult, *data.CodeError) {
 		Info: flow.Info{
 			Force:             true,
 			WorkerCount:       1,
-			StopWhenWorkError: true,
+			StopWhenWorkError: false,
 		},
 		WorkList:                 works,
 		OperationCountPerRequest: defaultOperationCountPerRequest,
