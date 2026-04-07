@@ -2,7 +2,8 @@
 ## 新增
 1. 支持沙箱（`sandbox`）管理功能，包括沙箱实例的列举（`list`）、创建（`create`）、连接（`connect`）、执行命令（`exec`）、终止（`kill`）、暂停（`pause`）、恢复（`resume`），以及查看日志（`logs`）和资源指标（`metrics`）
 2. 支持沙箱模板（`template`）管理功能，包括模板的初始化（`init`）、构建（`build`）、查看构建状态（`builds`）、发布（`publish`）、取消发布（`unpublish`）、列举（`list`）、获取详情（`get`）、删除（`delete`）
-3. 支持沙箱密钥转换规则（`transform-rule`）管理功能，包括转换规则的列举（`list`）、查看详情（`get`）、创建（`create`）、更新（`update`）、删除（`delete`）
+3. 支持沙箱注入规则（`injection-rule`）管理功能，包括注入规则的列举（`list`）、查看详情（`get`）、创建（`create`）、更新（`update`）、删除（`delete`）
+4. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.8`，沙箱规则管理同步切换到新的 Injection APIs
 
 # 2.18.0
 ## 调整

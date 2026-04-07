@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	"golang.org/x/term"
@@ -23,6 +22,11 @@ type batchedWriter struct {
 	sendFn func(ctx context.Context, data []byte) error
 	ctx    context.Context
 	done   chan struct{}
+}
+
+type terminalSize struct {
+	width  int
+	height int
 }
 
 // newBatchedWriter creates a batchedWriter that flushes at the given interval.
@@ -77,6 +81,17 @@ func (bw *batchedWriter) stop() {
 	close(bw.done)
 }
 
+func detectResize(previous terminalSize, width, height int, err error) (terminalSize, bool) {
+	if err != nil {
+		return previous, false
+	}
+	current := terminalSize{width: width, height: height}
+	if current == previous {
+		return previous, false
+	}
+	return current, true
+}
+
 // runTerminalSession creates a PTY session and handles stdin/stdout bridging.
 func runTerminalSession(ctx context.Context, sb *sandbox.Sandbox) {
 	// Get terminal size
@@ -117,25 +132,18 @@ func runTerminalSession(ctx context.Context, sb *sandbox.Sandbox) {
 
 	// Handle terminal resize
 	sigWinch := make(chan os.Signal, 1)
-	signal.Notify(sigWinch, syscall.SIGWINCH)
+	notifyTerminalResize(ptyCtx, sigWinch)
 	defer signal.Stop(sigWinch)
 
-	go func() {
-		for {
-			select {
-			case <-sigWinch:
-				w, h, sErr := term.GetSize(int(os.Stdin.Fd()))
-				if sErr == nil {
-					sb.Pty().Resize(ptyCtx, pid, sandbox.PtySize{
-						Cols: uint32(w),
-						Rows: uint32(h),
-					})
-				}
-			case <-ptyCtx.Done():
-				return
-			}
-		}
-	}()
+	currentSize := terminalSize{width: width, height: height}
+	startTerminalResizeMonitor(ptyCtx, sigWinch, currentSize, func() (int, int, error) {
+		return term.GetSize(int(os.Stdin.Fd()))
+	}, func(w, h int) {
+		sb.Pty().Resize(ptyCtx, pid, sandbox.PtySize{
+			Cols: uint32(w),
+			Rows: uint32(h),
+		})
+	})
 
 	// Keep-alive: periodically refresh sandbox timeout.
 	// Matches e2b CLI: setInterval 5s, setTimeout 30s.
@@ -176,4 +184,29 @@ func runTerminalSession(ctx context.Context, sb *sandbox.Sandbox) {
 
 	// Wait for PTY to exit
 	handle.Wait()
+}
+
+func startTerminalResizeMonitor(
+	ctx context.Context,
+	sigWinch <-chan os.Signal,
+	initialSize terminalSize,
+	getSize func() (int, int, error),
+	resize func(width, height int),
+) {
+	go func() {
+		size := initialSize
+		for {
+			select {
+			case <-sigWinch:
+				w, h, sErr := getSize()
+				next, changed := detectResize(size, w, h, sErr)
+				if changed {
+					size = next
+					resize(w, h)
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
 }

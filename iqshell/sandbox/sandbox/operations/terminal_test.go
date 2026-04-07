@@ -2,6 +2,7 @@ package operations
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -151,5 +152,39 @@ func TestBatchedWriter_MultipleWritesBatched(t *testing.T) {
 	}
 	if total != 10 {
 		t.Errorf("total flushed bytes = %d, want 10", total)
+	}
+}
+
+func TestDetectResize_NoChange(t *testing.T) {
+	prev := terminalSize{width: 80, height: 24}
+	current, changed := detectResize(prev, 80, 24, nil)
+	if changed {
+		t.Fatal("detectResize() should not report change for same size")
+	}
+	if current != prev {
+		t.Fatalf("detectResize() size = %+v, want %+v", current, prev)
+	}
+}
+
+func TestDetectResize_Change(t *testing.T) {
+	prev := terminalSize{width: 80, height: 24}
+	current, changed := detectResize(prev, 120, 40, nil)
+	if !changed {
+		t.Fatal("detectResize() should report change for new size")
+	}
+	want := terminalSize{width: 120, height: 40}
+	if current != want {
+		t.Fatalf("detectResize() size = %+v, want %+v", current, want)
+	}
+}
+
+func TestDetectResize_ErrorKeepsPrevious(t *testing.T) {
+	prev := terminalSize{width: 80, height: 24}
+	current, changed := detectResize(prev, 0, 0, errors.New("boom"))
+	if changed {
+		t.Fatal("detectResize() should not report change when get size fails")
+	}
+	if current != prev {
+		t.Fatalf("detectResize() size = %+v, want %+v", current, prev)
 	}
 }

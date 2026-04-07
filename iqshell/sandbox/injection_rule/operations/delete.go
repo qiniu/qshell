@@ -9,14 +9,14 @@ import (
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 )
 
-// DeleteInfo holds parameters for deleting transform rules.
+// DeleteInfo holds parameters for deleting injection rules.
 type DeleteInfo struct {
-	RuleIDs []string // 一个或多个规则 ID
-	Yes     bool     // 跳过确认
-	Select  bool     // 交互式多选
+	RuleIDs []string
+	Yes     bool
+	Select  bool
 }
 
-// Delete deletes one or more transform rules.
+// Delete deletes one or more injection rules.
 func Delete(info DeleteInfo) {
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
@@ -27,15 +27,14 @@ func Delete(info DeleteInfo) {
 	ctx := context.Background()
 	ruleIDs := info.RuleIDs
 
-	// 交互式选择模式
 	if info.Select {
-		rules, lErr := client.ListTransformRules(ctx)
+		rules, lErr := client.ListInjectionRules(ctx)
 		if lErr != nil {
-			sbClient.PrintError("list transform rules failed: %v", lErr)
+			sbClient.PrintError("list injection rules failed: %v", lErr)
 			return
 		}
 		if len(rules) == 0 {
-			fmt.Println("No transform rules found")
+			fmt.Println("No injection rules found")
 			return
 		}
 
@@ -49,7 +48,7 @@ func Delete(info DeleteInfo) {
 		form := huh.NewForm(
 			huh.NewGroup(
 				huh.NewMultiSelect[string]().
-					Title("Select transform rules to delete").
+					Title("Select injection rules to delete").
 					Options(options...).
 					Value(&selected),
 			),
@@ -59,7 +58,7 @@ func Delete(info DeleteInfo) {
 			return
 		}
 		if len(selected) == 0 {
-			fmt.Println("No transform rules selected")
+			fmt.Println("No injection rules selected")
 			return
 		}
 		ruleIDs = selected
@@ -71,7 +70,7 @@ func Delete(info DeleteInfo) {
 	}
 
 	if !info.Yes {
-		fmt.Printf("Are you sure you want to delete %d transform rule(s)? [y/N] ", len(ruleIDs))
+		fmt.Printf("Are you sure you want to delete %d injection rule(s)? [y/N] ", len(ruleIDs))
 		var confirm string
 		fmt.Scanln(&confirm)
 		if confirm != "y" && confirm != "Y" {
@@ -81,10 +80,10 @@ func Delete(info DeleteInfo) {
 	}
 
 	for _, id := range ruleIDs {
-		if dErr := client.DeleteTransformRule(ctx, id); dErr != nil {
-			sbClient.PrintError("delete transform rule %s failed: %v", id, dErr)
+		if dErr := client.DeleteInjectionRule(ctx, id); dErr != nil {
+			sbClient.PrintError("delete injection rule %s failed: %v", id, dErr)
 			continue
 		}
-		sbClient.PrintSuccess("Transform rule %s deleted", id)
+		sbClient.PrintSuccess("Injection rule %s deleted", id)
 	}
 }
