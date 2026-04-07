@@ -70,10 +70,15 @@ func Delete(info DeleteInfo) {
 	}
 
 	if !info.Yes {
-		fmt.Printf("Are you sure you want to delete %d injection rule(s)? [y/N] ", len(ruleIDs))
-		var confirm string
-		fmt.Scanln(&confirm)
-		if confirm != "y" && confirm != "Y" {
+		var confirm bool
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					Title(fmt.Sprintf("Are you sure you want to delete %d injection rule(s)?", len(ruleIDs))).
+					Value(&confirm),
+			),
+		)
+		if fErr := form.Run(); fErr != nil || !confirm {
 			fmt.Println("Aborted")
 			return
 		}

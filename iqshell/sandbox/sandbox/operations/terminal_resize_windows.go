@@ -4,13 +4,12 @@ package operations
 
 import (
 	"context"
-	"os"
 	"time"
 )
 
 const windowsResizePollInterval = 200 * time.Millisecond
 
-func notifyTerminalResize(ctx context.Context, sigWinch chan<- os.Signal) {
+func notifyTerminalResize(ctx context.Context, resizeEvents chan<- struct{}) {
 	go func() {
 		ticker := time.NewTicker(windowsResizePollInterval)
 		defer ticker.Stop()
@@ -18,7 +17,7 @@ func notifyTerminalResize(ctx context.Context, sigWinch chan<- os.Signal) {
 			select {
 			case <-ticker.C:
 				select {
-				case sigWinch <- os.Interrupt:
+				case resizeEvents <- struct{}{}:
 				default:
 				}
 			case <-ctx.Done():

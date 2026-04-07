@@ -61,6 +61,15 @@ func TestBuildInjectionSpecRejectsHTTPWithoutBaseURL(t *testing.T) {
 	}
 }
 
+func TestBuildInjectionSpecRejectsHTTPWithInvalidScheme(t *testing.T) {
+	if _, err := buildInjectionSpec(injectionInput{
+		Type:    injectionTypeHTTP,
+		BaseURL: "file:///tmp/secret",
+	}); err == nil {
+		t.Fatal("expected HTTP injection with invalid scheme to fail")
+	}
+}
+
 func TestFormatInjectionSummaryOpenAI(t *testing.T) {
 	spec := sandbox.InjectionSpec{
 		OpenAI: &sandbox.OpenAIInjection{},

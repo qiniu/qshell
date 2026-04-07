@@ -111,9 +111,11 @@ var injectionRuleCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&info.Name, "name", "", "rule name (required, unique per user)")
 	cmd.Flags().StringVar(&info.Type, "type", "", "injection type: openai, anthropic, gemini, http")
-	cmd.Flags().StringVar(&info.APIKey, "api-key", "", "API key for openai/anthropic/gemini injection types")
+	cmd.Flags().StringVar(&info.APIKey, "api-key", "", "API key for openai/anthropic/gemini injection types (warning: passing secrets via CLI may leak through shell history or process lists)")
 	cmd.Flags().StringVar(&info.BaseURL, "base-url", "", "override base URL or target base URL for http injection")
 	cmd.Flags().StringVar(&info.Headers, "headers", "", "HTTP headers for custom http injection (comma-separated key=value pairs)")
+	_ = cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("type")
 	return cmd
 }
 
@@ -147,7 +149,7 @@ var injectionRuleUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&info.Name, "name", "", "new rule name")
 	cmd.Flags().StringVar(&info.Type, "type", "", "new injection type: openai, anthropic, gemini, http")
-	cmd.Flags().StringVar(&info.APIKey, "api-key", "", "new API key for openai/anthropic/gemini injection types")
+	cmd.Flags().StringVar(&info.APIKey, "api-key", "", "new API key for openai/anthropic/gemini injection types (warning: passing secrets via CLI may leak through shell history or process lists)")
 	cmd.Flags().StringVar(&info.BaseURL, "base-url", "", "new base URL or target base URL for http injection")
 	cmd.Flags().StringVar(&info.Headers, "headers", "", "new HTTP headers for custom http injection (comma-separated key=value pairs)")
 	return cmd

@@ -3,7 +3,6 @@ package operations
 import (
 	"context"
 	"os"
-	"os/signal"
 	"sync"
 	"time"
 
@@ -131,12 +130,11 @@ func runTerminalSession(ctx context.Context, sb *sandbox.Sandbox) {
 	}
 
 	// Handle terminal resize
-	sigWinch := make(chan os.Signal, 1)
-	notifyTerminalResize(ptyCtx, sigWinch)
-	defer signal.Stop(sigWinch)
+	resizeEvents := make(chan struct{}, 1)
+	notifyTerminalResize(ptyCtx, resizeEvents)
 
 	currentSize := terminalSize{width: width, height: height}
-	startTerminalResizeMonitor(ptyCtx, sigWinch, currentSize, func() (int, int, error) {
+	startTerminalResizeMonitor(ptyCtx, resizeEvents, currentSize, func() (int, int, error) {
 		return term.GetSize(int(os.Stdin.Fd()))
 	}, func(w, h int) {
 		sb.Pty().Resize(ptyCtx, pid, sandbox.PtySize{
@@ -188,7 +186,7 @@ func runTerminalSession(ctx context.Context, sb *sandbox.Sandbox) {
 
 func startTerminalResizeMonitor(
 	ctx context.Context,
-	sigWinch <-chan os.Signal,
+	resizeEvents <-chan struct{},
 	initialSize terminalSize,
 	getSize func() (int, int, error),
 	resize func(width, height int),
@@ -197,7 +195,7 @@ func startTerminalResizeMonitor(
 		size := initialSize
 		for {
 			select {
-			case <-sigWinch:
+			case <-resizeEvents:
 				w, h, sErr := getSize()
 				next, changed := detectResize(size, w, h, sErr)
 				if changed {

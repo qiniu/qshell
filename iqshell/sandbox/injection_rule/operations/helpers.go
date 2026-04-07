@@ -2,6 +2,7 @@ package operations
 
 import (
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -48,12 +49,17 @@ func buildInjectionSpec(input injectionInput) (sandbox.InjectionSpec, error) {
 			},
 		}, nil
 	case injectionTypeHTTP:
-		if strings.TrimSpace(input.BaseURL) == "" {
+		baseURL := strings.TrimSpace(input.BaseURL)
+		if baseURL == "" {
 			return sandbox.InjectionSpec{}, fmt.Errorf("--base-url is required when --type=http")
+		}
+		parsedURL, err := url.Parse(baseURL)
+		if err != nil || parsedURL.Host == "" || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
+			return sandbox.InjectionSpec{}, fmt.Errorf("--base-url must be a valid http/https URL")
 		}
 		headers := sbClient.ParseMetadataMap(input.Headers)
 		httpInjection := &sandbox.HTTPInjection{
-			BaseURL: strings.TrimSpace(input.BaseURL),
+			BaseURL: baseURL,
 		}
 		if len(headers) > 0 {
 			httpInjection.Headers = &headers

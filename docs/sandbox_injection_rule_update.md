@@ -18,9 +18,11 @@ $ qshell sandbox injection-rule update --doc
 - `ruleID`：注入规则 ID
 - `--name`：新的规则名称
 - `--type`：新的注入类型；当需要更新注入配置时必须指定
-- `--api-key`：新的 API Key
-- `--base-url`：新的基础 URL
-- `--headers`：新的自定义 HTTP 请求头，使用逗号分隔的 `key=value` 形式
+- `--api-key`：新的 API Key；更新注入配置时必须与 `--type` 一同指定
+- `--base-url`：新的基础 URL；更新注入配置时必须与 `--type` 一同指定
+- `--headers`：新的自定义 HTTP 请求头，使用逗号分隔的 `key=value` 形式；更新时必须与 `--type http` 一同指定
+
+说明：如果只传 `--api-key`、`--base-url` 或 `--headers` 而不传 `--type`，命令会报错，因为当前实现无法从已有规则自动推断要更新的注入类型。
 
 ## 使用示例
 

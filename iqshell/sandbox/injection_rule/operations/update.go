@@ -25,12 +25,14 @@ func Update(info UpdateInfo) {
 		return
 	}
 
-	if info.Name == "" && !shouldUpdateInjection(injectionInput{
+	input := injectionInput{
 		Type:    info.Type,
 		APIKey:  info.APIKey,
 		BaseURL: info.BaseURL,
 		Headers: info.Headers,
-	}) {
+	}
+
+	if info.Name == "" && !shouldUpdateInjection(input) {
 		sbClient.PrintError("at least one of --name, --type, --api-key, --base-url, or --headers is required")
 		return
 	}
@@ -45,18 +47,8 @@ func Update(info UpdateInfo) {
 	if info.Name != "" {
 		params.Name = &info.Name
 	}
-	if shouldUpdateInjection(injectionInput{
-		Type:    info.Type,
-		APIKey:  info.APIKey,
-		BaseURL: info.BaseURL,
-		Headers: info.Headers,
-	}) {
-		spec, err := buildInjectionSpec(injectionInput{
-			Type:    info.Type,
-			APIKey:  info.APIKey,
-			BaseURL: info.BaseURL,
-			Headers: info.Headers,
-		})
+	if shouldUpdateInjection(input) {
+		spec, err := buildInjectionSpec(input)
 		if err != nil {
 			sbClient.PrintError("%v", err)
 			return

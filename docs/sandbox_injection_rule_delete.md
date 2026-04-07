@@ -24,8 +24,10 @@ $ qshell sandbox injection-rule delete --doc
 删除单个规则：
 
 ```bash
-$ qshell sandbox injection-rule delete rule-xxxxxxxxxxxx
+$ qshell sandbox injection-rule delete rule-xxxxxxxxxxxx -y
 ```
+
+不加 `-y` 时，命令会交互式询问确认。
 
 跳过确认直接删除：
 
