@@ -1,14 +1,3 @@
-# 2.19.2
-## 更新
-1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.8`，沙箱注入规则与最新 Injection APIs 对齐
-2. `sandbox create` 支持通过 `--injection-rule` 引用已存在的注入规则，也支持通过 `--inline-injection` 直接传入内联注入配置
-
-## 修复
-1. 修复 Windows 平台发布构建中 `syscall.SIGWINCH` 导致的编译失败，完善跨平台终端 resize 处理
-
-## 文档
-1. 补充 `sandbox create` 注入相关文档与示例脚本
-
 # 2.19.1
 ## 优化
 1. 优化批量下载
