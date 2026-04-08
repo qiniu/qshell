@@ -100,7 +100,15 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
   # Create with metadata
   qshell sandbox create my-template -m env=dev,team=backend
-  qshell sbx cr my-template -m env=dev,team=backend`,
+  qshell sbx cr my-template -m env=dev,team=backend
+
+  # Create with injection rules
+  qshell sandbox create my-template --injection-rule rule-openai --injection-rule rule-http
+  qshell sbx cr my-template --injection-rule rule-openai --injection-rule rule-http
+
+  # Create with inline injections
+  qshell sandbox create my-template --inline-injection 'type=openai,api-key=sk-xxx' --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
+  qshell sbx cr my-template --inline-injection 'type=openai,api-key=sk-xxx'`,
 		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxCreateType
@@ -118,6 +126,8 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "metadata key=value pairs (comma-separated)")
 	cmd.Flags().StringArrayVarP(&info.EnvVars, "env-var", "e", nil, "environment variables (KEY=VALUE, can be specified multiple times)")
 	cmd.Flags().BoolVar(&info.AutoPause, "auto-pause", false, "automatically pause sandbox when timeout expires (instead of killing)")
+	cmd.Flags().StringArrayVar(&info.InjectionRuleID, "injection-rule", nil, "injection rule IDs to apply when creating the sandbox (can be specified multiple times)")
+	cmd.Flags().StringArrayVar(&info.InlineInjection, "inline-injection", nil, "inline injection spec to apply when creating the sandbox (can be specified multiple times, format: type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>)")
 	return cmd
 }
 
