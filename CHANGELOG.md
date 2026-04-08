@@ -1,6 +1,6 @@
 # 2.19.2
 ## 更新
-1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.8`，沙箱注入规则与最新 Injection APIs 对齐
+1. 沙箱注入规则与最新 Injection APIs 对齐
 2. `sandbox create` 支持通过 `--injection-rule` 引用已存在的注入规则，也支持通过 `--inline-injection` 直接传入内联注入配置
 
 ## 修复
