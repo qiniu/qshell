@@ -3,7 +3,6 @@ package operations
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
@@ -127,57 +126,31 @@ func buildSandboxInjections(ruleIDs, inlineSpecs []string) ([]sandbox.SandboxInj
 
 func parseInlineSandboxInjection(spec string) (sandbox.SandboxInjectionSpec, error) {
 	fields := parseInlineInjectionFields(spec)
-	typ := strings.ToLower(strings.TrimSpace(fields["type"]))
-	apiKey := optionalInlineString(fields["api-key"])
-	baseURL := strings.TrimSpace(fields["base-url"])
-
-	switch typ {
-	case "openai":
-		return sandbox.SandboxInjectionSpec{
-			OpenAI: &sandbox.OpenAIInjection{
-				APIKey:  apiKey,
-				BaseURL: optionalInlineString(baseURL),
-			},
-		}, nil
-	case "anthropic":
-		return sandbox.SandboxInjectionSpec{
-			Anthropic: &sandbox.AnthropicInjection{
-				APIKey:  apiKey,
-				BaseURL: optionalInlineString(baseURL),
-			},
-		}, nil
-	case "gemini":
-		return sandbox.SandboxInjectionSpec{
-			Gemini: &sandbox.GeminiInjection{
-				APIKey:  apiKey,
-				BaseURL: optionalInlineString(baseURL),
-			},
-		}, nil
-	case "http":
-		if baseURL == "" {
-			return sandbox.SandboxInjectionSpec{}, fmt.Errorf("inline injection type=http requires base-url")
-		}
-		parsedURL, err := url.Parse(baseURL)
-		if err != nil || parsedURL.Host == "" || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
-			return sandbox.SandboxInjectionSpec{}, fmt.Errorf("inline injection base-url must be a valid http/https URL")
-		}
-		headers := parseInlineHeaders(fields["headers"])
-		httpInjection := &sandbox.HTTPInjection{
-			BaseURL: baseURL,
-		}
-		if len(headers) > 0 {
-			httpInjection.Headers = &headers
-		}
-		return sandbox.SandboxInjectionSpec{HTTP: httpInjection}, nil
-	case "":
-		return sandbox.SandboxInjectionSpec{}, fmt.Errorf("inline injection spec requires type")
-	default:
-		return sandbox.SandboxInjectionSpec{}, fmt.Errorf("unsupported inline injection type %q", typ)
+	parts, err := sbClient.BuildInjectionParts(fields["type"], fields["api-key"], fields["base-url"], parseInlineHeaders(fields["headers"]))
+	if err != nil {
+		return sandbox.SandboxInjectionSpec{}, fmt.Errorf("invalid inline injection spec: %w", err)
 	}
+	return sandbox.SandboxInjectionSpec{
+		OpenAI:    parts.OpenAI,
+		Anthropic: parts.Anthropic,
+		Gemini:    parts.Gemini,
+		HTTP:      parts.HTTP,
+	}, nil
 }
 
 func parseInlineInjectionFields(spec string) map[string]string {
+	const headersKey = "headers="
+
 	fields := make(map[string]string)
+	headersSpec := ""
+	if idx := strings.Index(spec, ","+headersKey); idx >= 0 {
+		headersSpec = spec[idx+len(","+headersKey):]
+		spec = spec[:idx]
+	}
+	if strings.HasPrefix(spec, headersKey) {
+		headersSpec = spec[len(headersKey):]
+		spec = ""
+	}
 	for _, part := range strings.Split(spec, ",") {
 		key, value, ok := strings.Cut(part, "=")
 		if !ok {
@@ -190,30 +163,12 @@ func parseInlineInjectionFields(spec string) map[string]string {
 		}
 		fields[key] = value
 	}
+	if strings.TrimSpace(headersSpec) != "" {
+		fields["headers"] = headersSpec
+	}
 	return fields
 }
 
 func parseInlineHeaders(raw string) map[string]string {
-	headers := make(map[string]string)
-	for _, part := range strings.Split(raw, ";") {
-		key, value, ok := strings.Cut(part, "=")
-		if !ok {
-			continue
-		}
-		key = strings.TrimSpace(key)
-		value = strings.TrimSpace(value)
-		if key == "" || value == "" {
-			continue
-		}
-		headers[key] = value
-	}
-	return headers
-}
-
-func optionalInlineString(value string) *string {
-	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
-		return nil
-	}
-	return &trimmed
+	return sbClient.ParseMetadataMap(raw)
 }

@@ -3,6 +3,7 @@ package sandbox
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 
 	sdkSandbox "github.com/qiniu/go-sdk/v7/sandbox"
@@ -89,6 +90,69 @@ func ParseMetadataMap(raw string) map[string]string {
 		}
 	}
 	return m
+}
+
+// InjectionParts describes a provider-specific injection payload.
+type InjectionParts struct {
+	OpenAI    *sdkSandbox.OpenAIInjection
+	Anthropic *sdkSandbox.AnthropicInjection
+	Gemini    *sdkSandbox.GeminiInjection
+	HTTP      *sdkSandbox.HTTPInjection
+}
+
+// BuildInjectionParts builds a provider-specific injection payload from the given inputs.
+func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string) (InjectionParts, error) {
+	switch strings.ToLower(strings.TrimSpace(typ)) {
+	case "openai":
+		return InjectionParts{
+			OpenAI: &sdkSandbox.OpenAIInjection{
+				APIKey:  optionalString(apiKey),
+				BaseURL: optionalString(baseURL),
+			},
+		}, nil
+	case "anthropic":
+		return InjectionParts{
+			Anthropic: &sdkSandbox.AnthropicInjection{
+				APIKey:  optionalString(apiKey),
+				BaseURL: optionalString(baseURL),
+			},
+		}, nil
+	case "gemini":
+		return InjectionParts{
+			Gemini: &sdkSandbox.GeminiInjection{
+				APIKey:  optionalString(apiKey),
+				BaseURL: optionalString(baseURL),
+			},
+		}, nil
+	case "http":
+		trimmedBaseURL := strings.TrimSpace(baseURL)
+		if trimmedBaseURL == "" {
+			return InjectionParts{}, fmt.Errorf("base URL is required when injection type is http")
+		}
+		parsedURL, err := url.Parse(trimmedBaseURL)
+		if err != nil || parsedURL.Host == "" || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
+			return InjectionParts{}, fmt.Errorf("base URL must be a valid http/https URL")
+		}
+		httpInjection := &sdkSandbox.HTTPInjection{
+			BaseURL: trimmedBaseURL,
+		}
+		if len(headers) > 0 {
+			httpInjection.Headers = &headers
+		}
+		return InjectionParts{HTTP: httpInjection}, nil
+	case "":
+		return InjectionParts{}, fmt.Errorf("injection type is required and must be one of: openai, anthropic, gemini, http")
+	default:
+		return InjectionParts{}, fmt.Errorf("unsupported injection type %q, must be one of: openai, anthropic, gemini, http", typ)
+	}
+}
+
+func optionalString(value string) *string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
 }
 
 // logLevelOrder maps log levels to numeric order for hierarchical filtering.

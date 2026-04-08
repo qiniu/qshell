@@ -51,7 +51,7 @@ func TestBuildSandboxInjections_WithInlineOpenAI(t *testing.T) {
 }
 
 func TestBuildSandboxInjections_WithInlineHTTP(t *testing.T) {
-	injections, err := buildSandboxInjections(nil, []string{"type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod"})
+	injections, err := buildSandboxInjections(nil, []string{"type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod"})
 	if err != nil {
 		t.Fatalf("buildSandboxInjections() error = %v", err)
 	}
@@ -88,5 +88,17 @@ func TestBuildSandboxInjections_WithRulesAndInline(t *testing.T) {
 func TestBuildSandboxInjections_RejectsInvalidInlineSpec(t *testing.T) {
 	if _, err := buildSandboxInjections(nil, []string{"api-key=sk-test"}); err == nil {
 		t.Fatal("expected inline injection without type to fail")
+	}
+}
+
+func TestBuildSandboxInjections_RejectsInvalidInlineHTTPURL(t *testing.T) {
+	if _, err := buildSandboxInjections(nil, []string{"type=http,base-url=not-a-url"}); err == nil {
+		t.Fatal("expected inline http injection with invalid URL to fail")
+	}
+}
+
+func TestBuildSandboxInjections_RejectsUnsupportedInlineType(t *testing.T) {
+	if _, err := buildSandboxInjections(nil, []string{"type=unknown"}); err == nil {
+		t.Fatal("expected unsupported inline injection type to fail")
 	}
 }

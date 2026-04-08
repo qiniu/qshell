@@ -26,13 +26,14 @@ $ qshell sandbox create --doc
 - `-d, --detach`：创建沙箱但不连接终端，沙箱保持存活直到超时
 - `-m, --metadata`：元数据键值对（格式：key1=value1,key2=value2）
 - `--injection-rule`：创建沙箱时附加的注入规则 ID，可多次指定
-- `--inline-injection`：创建沙箱时附加的内联注入配置，可多次指定，格式为 `type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>`
+- `--inline-injection`：创建沙箱时附加的内联注入配置，可多次指定，格式为 `type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1,k2=v2>`
 
 内联注入说明：
 - `type` 支持 `openai`、`anthropic`、`gemini`、`http`
 - `api-key` 可用于 `openai`、`anthropic`、`gemini`
 - `base-url` 可用于覆盖默认目标地址；`type=http` 时必填
-- `headers` 仅用于 `type=http`，多个请求头使用分号分隔，例如 `headers=Authorization=Bearer token;X-Env=prod`
+- `headers` 仅用于 `type=http`，多个请求头使用逗号分隔，例如 `headers=Authorization=Bearer token,X-Env=prod`
+- `headers` 建议放在内联配置的最后一个字段，避免和其他顶层字段分隔符冲突
 
 # 示例
 1. 创建沙箱
@@ -67,6 +68,6 @@ $ qshell sbx cr my-template --injection-rule rule-openai --injection-rule rule-h
 
 6. 创建时附加内联注入配置
 ```
-$ qshell sandbox create my-template --inline-injection 'type=openai,api-key=sk-xxx' --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
+$ qshell sandbox create my-template --inline-injection 'type=openai,api-key=sk-xxx' --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod'
 $ qshell sbx cr my-template --inline-injection 'type=gemini,api-key=sk-gem'
 ```

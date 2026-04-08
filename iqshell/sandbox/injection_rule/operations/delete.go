@@ -3,6 +3,7 @@ package operations
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/charmbracelet/huh"
 
@@ -84,11 +85,16 @@ func Delete(info DeleteInfo) {
 		}
 	}
 
+	hasError := false
 	for _, id := range ruleIDs {
 		if dErr := client.DeleteInjectionRule(ctx, id); dErr != nil {
 			sbClient.PrintError("delete injection rule %s failed: %v", id, dErr)
+			hasError = true
 			continue
 		}
 		sbClient.PrintSuccess("Injection rule %s deleted", id)
+	}
+	if hasError {
+		os.Exit(1)
 	}
 }

@@ -66,16 +66,13 @@ var injectionRuleGetCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:     "get <ruleID>",
 		Aliases: []string{"gt"},
 		Short:   "Get injection rule details (alias: gt)",
+		Args:    cobra.ExactArgs(1),
 		Example: `  # Get injection rule details
   qshell sandbox injection-rule get rule-xxxxxxxxxxxx
   qshell sbx ir gt rule-xxxxxxxxxxxx`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxInjectionRuleGetType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
-				return
-			}
-			if len(args) != 1 {
-				_ = cmd.Usage()
 				return
 			}
 			operations.Get(operations.GetInfo{
@@ -125,6 +122,7 @@ var injectionRuleUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:     "update <ruleID>",
 		Aliases: []string{"up"},
 		Short:   "Update an injection rule (alias: up)",
+		Args:    cobra.ExactArgs(1),
 		Example: `  # Update rule name
   qshell sandbox injection-rule update rule-xxxxxxxxxxxx --name new-name
   qshell sbx ir up rule-xxxxxxxxxxxx --name new-name
@@ -137,10 +135,6 @@ var injectionRuleUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxInjectionRuleUpdateType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
-				return
-			}
-			if len(args) != 1 {
-				_ = cmd.Usage()
 				return
 			}
 			info.RuleID = args[0]

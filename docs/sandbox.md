@@ -57,7 +57,7 @@ qshell sbx cr my-template --injection-rule rule-openai --injection-rule rule-htt
 4. 创建沙箱时附加内联注入配置
 ```
 qshell sandbox create my-template --inline-injection 'type=openai,api-key=sk-xxx'
-qshell sbx cr my-template --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
+qshell sbx cr my-template --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod'
 ```
 
 5. 管理注入规则

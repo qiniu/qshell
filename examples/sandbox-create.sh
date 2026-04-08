@@ -27,10 +27,10 @@ echo "${QSHELL} sbx cr ${TEMPLATE_ID} --inline-injection 'type=openai,api-key=sk
 
 echo ""
 echo "=== 示例 4: 创建时附加多个内联注入配置 ==="
-echo "${QSHELL} sbx cr ${TEMPLATE_ID} --inline-injection 'type=gemini,api-key=sk-gem' --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'"
+echo "${QSHELL} sbx cr ${TEMPLATE_ID} --inline-injection 'type=gemini,api-key=sk-gem' --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod'"
 # ${QSHELL} sbx cr "${TEMPLATE_ID}" \
 #   --inline-injection 'type=gemini,api-key=sk-gem' \
-#   --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
+#   --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod'
 
 echo ""
 echo "取消注释上述命令即可执行，或设置 QSHELL/TEMPLATE_ID 环境变量："

@@ -1,8 +1,6 @@
 package operations
 
 import (
-	"fmt"
-	"net/url"
 	"slices"
 	"strings"
 
@@ -26,62 +24,20 @@ type injectionInput struct {
 }
 
 func buildInjectionSpec(input injectionInput) (sandbox.InjectionSpec, error) {
-	switch strings.ToLower(strings.TrimSpace(input.Type)) {
-	case injectionTypeOpenAI:
-		return sandbox.InjectionSpec{
-			OpenAI: &sandbox.OpenAIInjection{
-				APIKey:  optionalString(input.APIKey),
-				BaseURL: optionalString(input.BaseURL),
-			},
-		}, nil
-	case injectionTypeAnthropic:
-		return sandbox.InjectionSpec{
-			Anthropic: &sandbox.AnthropicInjection{
-				APIKey:  optionalString(input.APIKey),
-				BaseURL: optionalString(input.BaseURL),
-			},
-		}, nil
-	case injectionTypeGemini:
-		return sandbox.InjectionSpec{
-			Gemini: &sandbox.GeminiInjection{
-				APIKey:  optionalString(input.APIKey),
-				BaseURL: optionalString(input.BaseURL),
-			},
-		}, nil
-	case injectionTypeHTTP:
-		baseURL := strings.TrimSpace(input.BaseURL)
-		if baseURL == "" {
-			return sandbox.InjectionSpec{}, fmt.Errorf("--base-url is required when --type=http")
-		}
-		parsedURL, err := url.Parse(baseURL)
-		if err != nil || parsedURL.Host == "" || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
-			return sandbox.InjectionSpec{}, fmt.Errorf("--base-url must be a valid http/https URL")
-		}
-		headers := sbClient.ParseMetadataMap(input.Headers)
-		httpInjection := &sandbox.HTTPInjection{
-			BaseURL: baseURL,
-		}
-		if len(headers) > 0 {
-			httpInjection.Headers = &headers
-		}
-		return sandbox.InjectionSpec{HTTP: httpInjection}, nil
-	case "":
-		return sandbox.InjectionSpec{}, fmt.Errorf("--type is required and must be one of: %s, %s, %s, %s", injectionTypeOpenAI, injectionTypeAnthropic, injectionTypeGemini, injectionTypeHTTP)
-	default:
-		return sandbox.InjectionSpec{}, fmt.Errorf("unsupported injection type %q, must be one of: %s, %s, %s, %s", input.Type, injectionTypeOpenAI, injectionTypeAnthropic, injectionTypeGemini, injectionTypeHTTP)
+	parts, err := sbClient.BuildInjectionParts(input.Type, input.APIKey, input.BaseURL, sbClient.ParseMetadataMap(input.Headers))
+	if err != nil {
+		return sandbox.InjectionSpec{}, err
 	}
+	return sandbox.InjectionSpec{
+		OpenAI:    parts.OpenAI,
+		Anthropic: parts.Anthropic,
+		Gemini:    parts.Gemini,
+		HTTP:      parts.HTTP,
+	}, nil
 }
 
 func shouldUpdateInjection(input injectionInput) bool {
 	return strings.TrimSpace(input.Type) != "" || strings.TrimSpace(input.APIKey) != "" || strings.TrimSpace(input.BaseURL) != "" || strings.TrimSpace(input.Headers) != ""
-}
-
-func optionalString(value string) *string {
-	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
-		return nil
-	}
-	return &trimmed
 }
 
 func formatInjectionType(spec sandbox.InjectionSpec) string {
