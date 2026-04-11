@@ -250,7 +250,7 @@ func (up *UploadConfig) HitByPathPrefixes(localFileRelativePath string) (hit boo
 			}
 		}
 	}
-	return
+	return hit, pathPrefix
 }
 
 func (up *UploadConfig) HitByFilePrefixes(localFileRelativePath string) (hit bool, filePrefix string) {
@@ -270,7 +270,7 @@ func (up *UploadConfig) HitByFilePrefixes(localFileRelativePath string) (hit boo
 			}
 		}
 	}
-	return
+	return hit, filePrefix
 }
 
 func (up *UploadConfig) HitByFixesString(localFileRelativePath string) (hit bool, hitFixedStr string) {
@@ -289,7 +289,7 @@ func (up *UploadConfig) HitByFixesString(localFileRelativePath string) (hit bool
 			}
 		}
 	}
-	return
+	return hit, hitFixedStr
 }
 
 func (up *UploadConfig) HitBySuffixes(localFileRelativePath string) (hit bool, hitSuffix string) {
@@ -307,5 +307,5 @@ func (up *UploadConfig) HitBySuffixes(localFileRelativePath string) (hit bool, h
 			}
 		}
 	}
-	return
+	return hit, hitSuffix
 }

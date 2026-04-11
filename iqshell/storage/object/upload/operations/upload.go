@@ -105,13 +105,13 @@ func uploadFile(info *UploadInfo) (res *upload.ApiResult, err *data.CodeError) {
 	}
 	if err != nil {
 		log.ErrorF("Upload  failed because get token provider error:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
-		return
+		return res, err
 	}
 
 	res, err = upload.Upload(&info.ApiInfo)
 	if err != nil {
 		log.ErrorF("Upload  failed:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
-		return
+		return res, err
 	}
 	endTime := time.Now().UnixNano() / 1e6
 
@@ -143,7 +143,7 @@ func createTokenProvider(info *UploadInfo) (provider func() string, err *data.Co
 	}
 
 	provider = createTokenProviderWithMac(mac, info)
-	return
+	return provider, err
 }
 
 func createTokenProviderWithMac(mac *qbox.Mac, info *UploadInfo) func() string {

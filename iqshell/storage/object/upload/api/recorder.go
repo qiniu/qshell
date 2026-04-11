@@ -37,14 +37,14 @@ func (p *ProgressRecorder) Recover() (err *data.CodeError) {
 			progressFh, openErr := os.Open(p.FilePath)
 			if openErr != nil {
 				err = data.NewEmptyError().AppendError(openErr)
-				return
+				return err
 			}
 			decoder := json.NewDecoder(progressFh)
 			decoder.Decode(p)
 			progressFh.Close()
 		}
 	}
-	return
+	return err
 }
 
 func (p *ProgressRecorder) Reset() {
@@ -133,14 +133,14 @@ func (p *ProgressRecorder) RecordProgress() (err *data.CodeError) {
 	fh, openErr := os.Create(p.FilePath)
 	if openErr != nil {
 		err = data.NewEmptyError().AppendDescF("Open progress file %s error, %s", p.FilePath, openErr.Error())
-		return
+		return err
 	}
 	defer fh.Close()
 
 	jsonBytes, mErr := json.Marshal(p)
 	if mErr != nil {
 		err = data.NewEmptyError().AppendDescF("Marshal sync progress error, %s", mErr.Error())
-		return
+		return err
 	}
 
 	_, wErr := fh.Write(jsonBytes)
@@ -148,5 +148,5 @@ func (p *ProgressRecorder) RecordProgress() (err *data.CodeError) {
 		err = data.NewEmptyError().AppendDescF("Write sync progress error, %s", wErr.Error())
 	}
 
-	return
+	return err
 }

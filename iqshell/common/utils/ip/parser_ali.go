@@ -32,7 +32,7 @@ func (a *aliParser) Parse(ip string) (result ParserResult, err *data.CodeError) 
 			break
 		}
 	}
-	return
+	return result, err
 }
 
 func (a *aliParser) parse(ip string, fromUrl string) (ParserResult, *data.CodeError) {

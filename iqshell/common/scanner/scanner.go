@@ -57,7 +57,7 @@ func (b *lineScanner) ScanLine() (line string, success bool) {
 		line = b.scanner.Text()
 	}
 	log.DebugF("scan line:%s success:%t", line, success)
-	return
+	return line, success
 }
 
 func (b *lineScanner) Close() error {

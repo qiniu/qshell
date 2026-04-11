@@ -46,5 +46,5 @@ func checkConfig(cfg *config.Config) (err *data.CodeError) {
 	if configHostCount != 0 && configHostCount != 5 {
 		err = data.NewEmptyError().AppendDesc("hosts: api/rs/rsf/io/up should config all")
 	}
-	return
+	return err
 }

@@ -66,12 +66,12 @@ func (a *DownloadActionResult) IsValid() bool {
 func Download(info *DownloadActionInfo) (res *DownloadActionResult, err *data.CodeError) {
 	if len(info.ToFile) == 0 {
 		err = data.NewEmptyError().AppendDesc("the filename saved after downloading is empty")
-		return
+		return res, err
 	}
 
 	f, err := createDownloadFiles(info.ToFile, info.FileEncoding)
 	if err != nil {
-		return
+		return res, err
 	}
 
 	res = &DownloadActionResult{
@@ -133,7 +133,7 @@ func Download(info *DownloadActionInfo) (res *DownloadActionResult, err *data.Co
 				} else {
 					res.FileModifyTime = fileModifyTime
 				}
-				return
+				return res, err
 			}
 		}
 	} else if tempFileStatus != nil && tempFileStatus.Size() > 0 {
@@ -161,7 +161,7 @@ func Download(info *DownloadActionInfo) (res *DownloadActionResult, err *data.Co
 	// 下载
 	err = download(f, info)
 	if err != nil {
-		return
+		return res, err
 	}
 
 	if fStatus, sErr := os.Stat(f.toAbsFile); sErr != nil {

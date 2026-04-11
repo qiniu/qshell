@@ -113,23 +113,23 @@ func CheckAsyncFetchStatus(toBucket, id string) (ret *AsyncFetchApiResult, err *
 	bm, gErr := bucket.GetBucketManager()
 	if gErr != nil {
 		err = gErr
-		return
+		return ret, err
 	}
 
 	reqUrl, aErr := bm.ApiReqHost(toBucket)
 	if aErr != nil {
 		err = data.ConvertError(aErr)
-		return
+		return ret, err
 	}
 
 	mac, gErr := workspace.GetMac()
 	if gErr != nil {
 		err = gErr
-		return
+		return ret, err
 	}
 
 	reqUrl += ("/sisyphus/fetch?id=" + id)
 	ctx := auth.WithCredentialsType(workspace.GetContext(), mac, auth.TokenQiniu)
 	err = data.ConvertError(bm.Client.Call(ctx, ret, "GET", reqUrl, nil))
-	return
+	return ret, err
 }

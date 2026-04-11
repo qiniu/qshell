@@ -103,18 +103,18 @@ func downloadLink(info downloadLinkApiInfo) (dnLink string, err *data.CodeError)
 	_, sErr := m.Stat(info.Bucket, info.Key)
 	if sErr != nil {
 		err = data.NewEmptyError().AppendDescF("stat m3u8 file error, %s", sErr)
-		return
+		return dnLink, err
 	}
 
 	bucketDomains, bErr := m.ListBucketDomains(info.Bucket)
 	if bErr != nil {
 		err = data.NewEmptyError().AppendDescF("get domain of bucket failed, %s", bErr.Error())
-		return
+		return dnLink, err
 	}
 
 	if len(bucketDomains) == 0 {
 		err = data.NewEmptyError().AppendDesc("no domain found for the bucket")
-		return
+		return dnLink, err
 	}
 
 	var domain string
@@ -133,9 +133,9 @@ func downloadLink(info downloadLinkApiInfo) (dnLink string, err *data.CodeError)
 	}
 
 	if domain == "" {
-		return
+		return dnLink, err
 	}
 
 	dnLink = fmt.Sprintf("http://%s/%s", domain, info.Key)
-	return
+	return dnLink, err
 }

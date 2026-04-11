@@ -13,14 +13,14 @@ func GetBucketManager() (manager *storage.BucketManager, err *data.CodeError) {
 	acc, gErr := workspace.GetAccount()
 	if gErr != nil {
 		err = data.NewEmptyError().AppendDescF("GetBucketManager: get current account error:%v", gErr)
-		return
+		return manager, err
 	}
 
 	mac := qbox.NewMac(acc.AccessKey, acc.SecretKey)
 	cfg := workspace.GetStorageConfig()
 	c := client.DefaultStorageClient()
 	manager = storage.NewBucketManagerEx(mac, cfg, &c)
-	return
+	return manager, err
 }
 
 type GetBucketApiInfo struct {

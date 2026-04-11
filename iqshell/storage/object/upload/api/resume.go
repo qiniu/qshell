@@ -61,7 +61,7 @@ func (r retryResume) InitServer(ctx context.Context) (err *data.CodeError) {
 		}
 
 		if retryTimes >= r.retryMax {
-			return
+			return err
 		}
 
 		time.Sleep(r.retryInterval)
@@ -76,7 +76,7 @@ func (r retryResume) UploadBlock(ctx context.Context, index int, data []byte) (e
 	for {
 		err = r.resume.UploadBlock(ctx, index, data)
 		if err != nil && retryTimes >= r.retryMax {
-			return
+			return err
 		}
 		if err == nil {
 			break
@@ -94,7 +94,7 @@ func (r retryResume) Complete(ctx context.Context, ret interface{}) (err *data.C
 		err = r.resume.Complete(ctx, &ret)
 		if err != nil && retryTimes >= r.retryMax {
 			err = data.NewEmptyError().AppendDescF("resume api complete error:%v", err)
-			return
+			return err
 		}
 		if err == nil {
 			break

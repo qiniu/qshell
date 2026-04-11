@@ -53,7 +53,7 @@ func (l *listProvider) Provide() (item Item, err *data.CodeError) {
 	if item == nil {
 		err = data.NewEmptyError().AppendDesc("no item found")
 	}
-	return
+	return item, err
 }
 
 func (l *listProvider) Freeze(item Item) {

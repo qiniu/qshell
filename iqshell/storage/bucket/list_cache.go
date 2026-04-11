@@ -41,7 +41,7 @@ func (l *listCache) loadCache() (info *cacheInfo, err *data.CodeError) {
 
 	info = &cacheInfo{}
 	err = utils.UnMarshalFromFile(l.cachePath, info)
-	return
+	return info, err
 }
 
 func (l *listCache) removeCache() *data.CodeError {

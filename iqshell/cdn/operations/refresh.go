@@ -101,7 +101,7 @@ func refreshWithQps(info RefreshInfo, items []string, force bool) (isRefresh boo
 		log.Error(err)
 		data.SetCmdStatusError()
 	}
-	return
+	return isRefresh
 }
 
 type refreshWork struct {

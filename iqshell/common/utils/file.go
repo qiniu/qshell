@@ -37,7 +37,7 @@ func FormatFileSize(size int64) (result string) {
 	} else {
 		result = fmt.Sprintf("%dB", size)
 	}
-	return
+	return result
 }
 
 func MarshalToFile(filePath string, v interface{}) *data.CodeError {
@@ -213,7 +213,7 @@ func FileLineCounts(filePath string) (count int64, err *data.CodeError) {
 	for bScanner.Scan() {
 		count += 1
 	}
-	return
+	return count, err
 }
 
 func CreateFileIfNotExist(path string) *data.CodeError {

@@ -64,7 +64,7 @@ func PublicUrlToPrivate(info PublicUrlToPrivateApiInfo) (result *PublicUrlToPriv
 	srcUri, pErr := url.Parse(info.PublicUrl)
 	if pErr != nil {
 		err = data.ConvertError(pErr)
-		return
+		return result, err
 	}
 
 	h := hmac.New(sha1.New, m.Mac.SecretKey)
@@ -95,7 +95,7 @@ func PrivateUrl(info UrlApiInfo) (fileUrl string) {
 	if result != nil {
 		fileUrl = result.Url
 	}
-	return
+	return fileUrl
 }
 
 // 下载 Url

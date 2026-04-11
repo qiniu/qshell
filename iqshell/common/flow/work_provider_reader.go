@@ -37,7 +37,7 @@ func (p *readerWorkProvider) Provide() (hasMore bool, work *WorkInfo, err *data.
 	p.mu.Lock()
 	hasMore, work, err = p.provide()
 	p.mu.Unlock()
-	return
+	return hasMore, work, err
 }
 
 func (p *readerWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.CodeError) {

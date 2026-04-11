@@ -57,26 +57,26 @@ func NewFileExport(config FileExporterConfig) (export *FileExporter, err *data.C
 	export = &FileExporter{}
 	export.success, err = New(config.SuccessExportFilePath)
 	if err != nil {
-		return
+		return export, err
 	}
 
 	export.fail, err = New(config.FailExportFilePath)
 	if err != nil {
-		return
+		return export, err
 	}
 
 	export.skip, err = New(config.SkipExportFilePath)
 	if err != nil {
-		return
+		return export, err
 	}
 
 	export.overwrite, err = New(config.OverwriteExportFilePath)
 	if err != nil {
-		return
+		return export, err
 	}
 
 	export.result, err = New(config.ResultExportFilePath)
-	return
+	return export, err
 }
 
 func EmptyFileExport() *FileExporter {

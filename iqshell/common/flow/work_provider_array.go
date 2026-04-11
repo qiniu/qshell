@@ -32,7 +32,7 @@ func (p *arrayWorkProvider) Provide() (hasMore bool, work *WorkInfo, err *data.C
 	p.mu.Lock()
 	hasMore, work, err = p.provide()
 	p.mu.Unlock()
-	return
+	return hasMore, work, err
 }
 
 func (p *arrayWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.CodeError) {
@@ -42,7 +42,7 @@ func (p *arrayWorkProvider) provide() (hasMore bool, work *WorkInfo, err *data.C
 	hasMore = true
 	work = p.works[p.readOffset]
 	p.readOffset++
-	return
+	return hasMore, work, err
 }
 
 func createWorkInfoListWithWorkList(works []Work) []*WorkInfo {

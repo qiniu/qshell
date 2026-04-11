@@ -61,13 +61,13 @@ func Status(info StatusApiInfo) (res StatusResult, err *data.CodeError) {
 	bucketManager, err := bucket.GetBucketManager()
 	if err != nil {
 		err = data.NewEmptyError().AppendDescF("status object [%s:%s] error:%v", info.Bucket, info.Key, err.Error())
-		return
+		return res, err
 	}
 
 	reqHost, reqErr := bucketManager.RsReqHost(info.Bucket)
 	if reqErr != nil {
 		err = data.ConvertError(reqErr)
-		return
+		return res, err
 	}
 
 	needParts := "false"
@@ -78,7 +78,7 @@ func Status(info StatusApiInfo) (res StatusResult, err *data.CodeError) {
 	cErr := bucketManager.Client.CredentialedCall(context.Background(), bucketManager.Mac, auth.TokenQiniu, &res, "POST", reqURL, nil)
 	if cErr != nil {
 		err = data.NewEmptyError().AppendDescF("status object [%s:%s] status error:%v", info.Bucket, info.Key, cErr.Error())
-		return
+		return res, err
 	}
 	return res, nil
 }

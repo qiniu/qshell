@@ -26,19 +26,19 @@ type LoadInfo struct {
 func Load(info LoadInfo) (err *data.CodeError) {
 	err = info.initInfo()
 	if err != nil {
-		return
+		return err
 	}
 
 	err = config.LoadGlobalConfig(info.globalConfigPath)
 	if err != nil {
 		log.ErrorF("load config error:%v", err)
-		return
+		return err
 	}
 
 	// 检查工作目录
 	if len(info.WorkspacePath) == 0 {
 		err = data.NewEmptyError().AppendDesc("can't get home dir")
-		return
+		return err
 	}
 	workspaceDir = info.WorkspacePath
 	log.Debug("workspace:" + workspaceDir)
@@ -46,7 +46,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 	err = utils.CreateDirIfNotExist(workspaceDir)
 	if err != nil {
 		log.ErrorF("create workspace dir error:%v", err)
-		return
+		return err
 	}
 
 	// 加载账户
@@ -60,7 +60,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 	})
 	if err != nil {
 		log.ErrorF("load account error:%v", err)
-		return
+		return err
 	}
 
 	if len(info.UserConfigPath) > 0 {
@@ -68,7 +68,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 		err = config.LoadUserConfig(info.UserConfigPath)
 		if err != nil {
 			log.ErrorF("load config error:%v", err)
-			return
+			return err
 		}
 
 		loadUserInfo()
@@ -79,7 +79,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 		err = config.LoadUserConfig(info.UserConfigPath)
 		if err != nil {
 			log.ErrorF("load config error:%v", err)
-			return
+			return err
 		}
 	}
 
@@ -98,7 +98,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 
 	err = checkConfig(cfg)
 	if err != nil {
-		return
+		return err
 	}
 
 	// 配置 Job path
@@ -118,7 +118,7 @@ func Load(info LoadInfo) (err *data.CodeError) {
 	// 在工作区加载之后监听
 	observerCmdInterrupt()
 
-	return
+	return err
 }
 
 func (w *LoadInfo) initInfo() *data.CodeError {

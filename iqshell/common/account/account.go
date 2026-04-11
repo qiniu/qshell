@@ -26,10 +26,10 @@ func (acc *Account) encrypt() (s string, err *data.CodeError) {
 	encryptedKey, eErr := encryptSecretKey(acc.AccessKey, acc.SecretKey)
 	if eErr != nil {
 		err = eErr
-		return
+		return s, err
 	}
 	s = strings.Join([]string{acc.Name, acc.AccessKey, encryptedKey}, ":")
-	return
+	return s, err
 }
 
 // 对SecretKey加密， 形成最后的数据格式
@@ -37,10 +37,10 @@ func (acc *Account) value() (v string, err *data.CodeError) {
 	encryptedKey, eErr := encryptSecretKey(acc.AccessKey, acc.SecretKey)
 	if eErr != nil {
 		err = eErr
-		return
+		return v, err
 	}
 	v = encrypt(acc.AccessKey, encryptedKey, acc.Name)
-	return
+	return v, err
 }
 
 func (acc *Account) String() string {

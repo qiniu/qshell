@@ -15,7 +15,7 @@ qshell 是七牛云官方命令行工具，模块路径 `github.com/qiniu/qshell
 | `cmd/` | Cobra 命令定义（每个文件对应一组命令） |
 | `cmd_test/` | 命令层集成/单元测试 |
 | `iqshell/` | 核心业务逻辑 |
-| `docs/` | 命令文档（约 200 个文件） |
+| `docs/` | 命令文档（`.md` 文件）和文档注册（`docs.go`） |
 | `examples/` | 使用示例脚本 |
 | `.github/` | Issue/PR 模板、CI 工作流 |
 
@@ -209,7 +209,7 @@ make lint
 1. 在 `cmd/<功能>.go` 中定义 Cobra 命令和 flag
 2. 在 `iqshell/<模块>/` 中实现业务逻辑
 3. 在 `cmd/root.go` 中注册命令加载器
-4. 在 `docs/` 中添加命令文档
+4. 在 `docs/` 中添加命令文档（`.md` 文件），并在 `docs/docs.go` 中添加 embed 声明和注册
 5. 在 `cmd_test/` 中添加测试
 6. 更新 `CHANGELOG.md`
 

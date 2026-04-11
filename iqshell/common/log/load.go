@@ -22,7 +22,7 @@ func LoadConsole(cfg Config) (err *data.CodeError) {
 		return data.NewEmptyError().AppendDesc("load console error when del logger").AppendError(e)
 	}
 
-	return
+	return err
 }
 
 func LoadFileLogger(cfg Config) (err *data.CodeError) {
@@ -37,5 +37,5 @@ func LoadFileLogger(cfg Config) (err *data.CodeError) {
 			WarningF("disable stdout error:%v", dErr)
 		}
 	}
-	return
+	return err
 }

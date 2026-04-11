@@ -12,26 +12,26 @@ func GetStorageV2() (storageClient *apis.Storage, err *data.CodeError) {
 	acc, gErr := workspace.GetAccount()
 	if gErr != nil {
 		err = data.NewEmptyError().AppendDescF("GetStorageV2: get current account error:%v", gErr)
-		return
+		return storageClient, err
 	}
 
 	mac := qbox.NewMac(acc.AccessKey, acc.SecretKey)
 	options := workspace.GetHttpClientOptions()
 	options.Credentials = mac
 	storageClient = apis.NewStorage(options)
-	return
+	return storageClient, err
 }
 
 func GetHttpClient() (httpClient *http_client.Client, err *data.CodeError) {
 	acc, gErr := workspace.GetAccount()
 	if gErr != nil {
 		err = data.NewEmptyError().AppendDescF("GetStorageV2: get current account error:%v", gErr)
-		return
+		return httpClient, err
 	}
 
 	mac := qbox.NewMac(acc.AccessKey, acc.SecretKey)
 	options := workspace.GetHttpClientOptions()
 	options.Credentials = mac
 	httpClient = http_client.NewClient(options)
-	return
+	return httpClient, err
 }

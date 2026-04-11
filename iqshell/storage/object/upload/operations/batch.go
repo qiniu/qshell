@@ -410,7 +410,7 @@ func batchUploadFlow(info BatchUpload2Info, uploadConfig UploadConfig, dbPath st
 			if hit, suffix := uploadConfig.HitBySuffixes(uploadInfo.RelativePathToSrcPath); hit {
 				return true, data.NewEmptyError().AppendDescF("Skip by suffix `%s` for local file `%s`", suffix, uploadInfo.RelativePathToSrcPath)
 			}
-			return
+			return skip, cause
 		}).
 		OnWorkSkip(func(workInfo *flow.WorkInfo, result flow.Result, err *data.CodeError) {
 			metric.AddCurrentCount(1)

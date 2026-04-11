@@ -66,5 +66,5 @@ func (l *LogSetting) GetLogLevel() (logLevel int) {
 	default:
 		logLevel = log.LevelNone
 	}
-	return
+	return logLevel
 }

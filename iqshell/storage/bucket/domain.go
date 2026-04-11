@@ -17,12 +17,12 @@ func DomainOfBucket(bucket string) (domain string, err *data.CodeError) {
 	domainsOfBucket, gErr := AllDomainsOfBucket(bucket)
 	if gErr != nil {
 		err = data.NewEmptyError().AppendDescF("Get domains of bucket error: %v", gErr)
-		return
+		return domain, err
 	}
 
 	if len(domainsOfBucket) == 0 {
 		err = data.NewEmptyError().AppendDescF("No domains found for bucket: %s", bucket)
-		return
+		return domain, err
 	}
 	return domainsOfBucket[0].Domain.Value(), nil
 }

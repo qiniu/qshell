@@ -63,7 +63,7 @@ func (c *consoleWriter) Init(jsonConfig string) error {
 // WriteMsg write message in console.
 func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) (err error) {
 	if level > c.Level {
-		return
+		return err
 	}
 	// alert 去除标识
 	msg = strings.Replace(msg, "[A]  ", "", 1)
@@ -75,7 +75,7 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) (err err
 	} else {
 		_, err = fmt.Fprintln(data.Stdout(), msg)
 	}
-	return
+	return err
 }
 
 // Destroy implementing method. empty.

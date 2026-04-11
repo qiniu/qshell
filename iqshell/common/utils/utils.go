@@ -139,14 +139,14 @@ func GetLineCount(reader io.Reader) (totalCount int64) {
 	for bScanner.Scan() {
 		totalCount += 1
 	}
-	return
+	return totalCount
 }
 
 // GetFileLineCount 获取文件行数
 func GetFileLineCount(filePath string) (totalCount int64) {
 	fp, openErr := os.Open(filePath)
 	if openErr != nil {
-		return
+		return totalCount
 	}
 	defer fp.Close()
 
@@ -181,18 +181,18 @@ func Encode(uri string) string {
 func Decode(encodedURI string) (uri string, err *data.CodeError) {
 	size := len(encodedURI)
 	if size == 0 {
-		return
+		return uri, err
 	}
 
 	if c := encodedURI[0]; c == '!' || c == ':' || (size > 16 && encodedURI[16] == ':') || (size > 5 && (encodedURI[4] == ':' || encodedURI[5] == ':')) {
 		uri, err = decode(encodedURI)
 		if err != nil {
-			return
+			return uri, err
 		}
 		if c == '!' {
 			uri = uri[1:]
 		}
-		return
+		return uri, err
 	}
 
 	b := make([]byte, base64.URLEncoding.DecodedLen(len(encodedURI)))
@@ -207,25 +207,25 @@ func GetAkBucketFromUploadToken(token string) (ak, bucket string, err *data.Code
 	items := strings.Split(token, ":")
 	if len(items) != 3 {
 		err = data.NewEmptyError().AppendDesc("invalid upload token, format error")
-		return
+		return ak, bucket, err
 	}
 
 	ak = items[0]
 	policyBytes, dErr := base64.URLEncoding.DecodeString(items[2])
 	if dErr != nil {
 		err = data.NewEmptyError().AppendDesc("invalid upload token, invalid put policy")
-		return
+		return ak, bucket, err
 	}
 
 	putPolicy := storage.PutPolicy{}
 	uErr := json.Unmarshal(policyBytes, &putPolicy)
 	if uErr != nil {
 		err = data.NewEmptyError().AppendDesc("invalid upload token, invalid put policy")
-		return
+		return ak, bucket, err
 	}
 
 	bucket = strings.Split(putPolicy.Scope, ":")[0]
-	return
+	return ak, bucket, err
 }
 
 // KeyFromUrl 从URL中获取文件名字
@@ -233,7 +233,7 @@ func KeyFromUrl(uri string) (key string, err *data.CodeError) {
 	u, pErr := url.Parse(uri)
 	if pErr != nil {
 		err = data.NewEmptyError().AppendError(pErr)
-		return
+		return key, err
 	}
 	for _, c := range u.Path {
 		if c != '/' {
@@ -241,7 +241,7 @@ func KeyFromUrl(uri string) (key string, err *data.CodeError) {
 		}
 		key = u.Path[1:]
 	}
-	return
+	return key, err
 }
 
 // BytesToReadable 将字节转化为人工可读的字符串

@@ -20,12 +20,12 @@ func getCdnManager() (cdnManager *cdn.CdnManager, err *data.CodeError) {
 	acc, gErr := workspace.GetAccount()
 	if gErr != nil {
 		err = data.NewEmptyError().AppendDescF("GetCdnManager error: %v\n", gErr)
-		return
+		return cdnManager, err
 	}
 
 	mac := qbox.NewMac(acc.AccessKey, acc.SecretKey)
 	cdnManager = cdn.NewCdnManager(mac)
-	return
+	return cdnManager, err
 }
 
 func Prefetch(urls []string) *data.CodeError {

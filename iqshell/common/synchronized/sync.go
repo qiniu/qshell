@@ -43,11 +43,11 @@ func (s *synchronized) Do(fn func()) {
 
 func (s *synchronized) DoError(fn func() *data.CodeError) (err *data.CodeError) {
 	if fn == nil {
-		return
+		return err
 	}
 
 	s.locker.Lock()
 	err = fn()
 	s.locker.Unlock()
-	return
+	return err
 }

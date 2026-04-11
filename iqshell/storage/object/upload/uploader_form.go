@@ -29,14 +29,14 @@ func (f *formUploader) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeErro
 	file, oErr := os.Open(info.FilePath)
 	if oErr != nil {
 		err = data.NewEmptyError().AppendDesc("form upload: open file:").AppendError(oErr)
-		return
+		return ret, err
 	}
 	defer file.Close()
 
 	fileStatus, sErr := file.Stat()
 	if sErr != nil {
 		err = data.NewEmptyError().AppendDesc("form upload: get file status").AppendError(sErr)
-		return
+		return ret, err
 	}
 
 	token := info.TokenProvider()
@@ -60,5 +60,5 @@ func (f *formUploader) upload(info *ApiInfo) (ret *ApiResult, err *data.CodeErro
 		}
 	}
 
-	return
+	return ret, err
 }

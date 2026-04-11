@@ -102,11 +102,11 @@ func GetMac() (mac *qbox.Mac, err *data.CodeError) {
 	acc, gErr := GetAccount()
 	if gErr != nil {
 		err = gErr
-		return
+		return mac, err
 	}
 
 	mac = qbox.NewMac(acc.AccessKey, acc.SecretKey)
-	return
+	return mac, err
 }
 
 // GetContext 统一使用一个 context

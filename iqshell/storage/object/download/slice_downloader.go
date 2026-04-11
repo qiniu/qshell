@@ -54,7 +54,7 @@ func (s *sliceDownloader) setDownloadError(err *data.CodeError) {
 func (s *sliceDownloader) Download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {
 	err = s.initDownloadStatus(info)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	return s.download(info)

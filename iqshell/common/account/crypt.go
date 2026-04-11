@@ -22,23 +22,23 @@ func decrypt(joinStr string) (acc Account, err *data.CodeError) {
 
 	if len(ss) != 3 {
 		err = data.NewEmptyError().AppendDescF("account json style format error")
-		return
+		return acc, err
 	}
 
 	name, accessKey, encryptedKey := ss[0], ss[1], ss[2]
 	if name == "" || accessKey == "" || encryptedKey == "" {
 		err = data.NewEmptyError().AppendDescF("name, accessKey and encryptedKey should not be empty")
-		return
+		return acc, err
 	}
 	secretKey, dErr := decryptSecretKey(accessKey, encryptedKey)
 	if dErr != nil {
 		err = data.NewEmptyError().AppendDescF("DecryptSecretKey: %v", dErr)
-		return
+		return acc, err
 	}
 	acc.Name = name
 	acc.AccessKey = accessKey
 	acc.SecretKey = secretKey
-	return
+	return acc, err
 }
 
 // 保存在account.json文件中的数据格式

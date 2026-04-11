@@ -56,7 +56,7 @@ func (w *workProvider) Provide() (hasMore bool, workInfo *flow.WorkInfo, err *da
 		err = item.err
 		break
 	}
-	return
+	return hasMore, workInfo, err
 }
 
 func (w *workProvider) getWorkInfoFromFile() {

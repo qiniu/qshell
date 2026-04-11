@@ -16,7 +16,7 @@ func addUser(userName, ak, sk string) (success bool, errorMsg string) {
 		errorMsg = "add error"
 	}).Run()
 	success = len(result) == 0
-	return
+	return success, errorMsg
 }
 
 func addUserWithLongOptions(userName, ak, sk string) (success bool, errorMsg string) {
@@ -27,7 +27,7 @@ func addUserWithLongOptions(userName, ak, sk string) (success bool, errorMsg str
 		errorMsg = "add with long options error"
 	}).Run()
 	success = len(result) == 0
-	return
+	return success, errorMsg
 }
 
 func cleanUser() (success bool, errorMsg string) {
@@ -38,7 +38,7 @@ func cleanUser() (success bool, errorMsg string) {
 		errorMsg = "clean user error"
 	}).Run()
 	success = len(result) == 0
-	return
+	return success, errorMsg
 }
 
 func deleteUser(userName string) (success bool, errorMsg string) {
@@ -49,7 +49,7 @@ func deleteUser(userName string) (success bool, errorMsg string) {
 		errorMsg = "add user error"
 	}).Run()
 	success = len(result) == 0
-	return
+	return success, errorMsg
 }
 
 func changeCurrentUser(userName string) (success bool, errorMsg string) {
@@ -60,7 +60,7 @@ func changeCurrentUser(userName string) (success bool, errorMsg string) {
 		errorMsg = "change current error"
 	}).Run()
 	success = strings.Contains(result, "success")
-	return
+	return success, errorMsg
 }
 
 func currentUserIs(userName string) (isUser bool, errorMsg string) {
@@ -72,7 +72,7 @@ func currentUserIs(userName string) (isUser bool, errorMsg string) {
 	}).Run()
 
 	isUser = strings.Contains(result, userName)
-	return
+	return isUser, errorMsg
 }
 
 func lookupUser(userName string) (isFound bool, errorMsg string) {
@@ -83,7 +83,7 @@ func lookupUser(userName string) (isFound bool, errorMsg string) {
 		errorMsg = "lookup user error"
 	}).Run()
 	isFound = strings.Contains(result, userName)
-	return
+	return isFound, errorMsg
 }
 
 func containUser(userName string) (contain bool, errorMsg string) {
@@ -95,7 +95,7 @@ func containUser(userName string) (contain bool, errorMsg string) {
 	}).Run()
 
 	contain = strings.Contains(result, userName)
-	return
+	return contain, errorMsg
 }
 
 func hasUser() (hasUser bool, errorMsg string) {
@@ -106,5 +106,5 @@ func hasUser() (hasUser bool, errorMsg string) {
 		errorMsg = "ls error"
 	}).Run()
 	hasUser = len(result) > 0
-	return
+	return hasUser, errorMsg
 }

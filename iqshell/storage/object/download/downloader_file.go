@@ -54,7 +54,7 @@ func (d *downloaderFile) Download(info *DownloadApiInfo) (response *http.Respons
 			break
 		}
 	}
-	return
+	return response, err
 }
 
 func (d *downloaderFile) download(info *DownloadApiInfo) (response *http.Response, err *data.CodeError) {

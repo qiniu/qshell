@@ -14,14 +14,14 @@ const (
 func CreateRandString(num int) (rcode string) {
 	if num <= 0 || num > len(alphaList) {
 		rcode = ""
-		return
+		return rcode
 	}
 
 	buffer := make([]byte, num)
 	_, err := rand.Read(buffer)
 	if err != nil {
 		rcode = ""
-		return
+		return rcode
 	}
 
 	for _, b := range buffer {
@@ -29,7 +29,7 @@ func CreateRandString(num int) (rcode string) {
 		rcode += string(alphaList[index])
 	}
 
-	return
+	return rcode
 }
 
 func SplitString(line, sep string) []string {

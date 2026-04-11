@@ -172,7 +172,7 @@ func Upload(info *ApiInfo) (res *ApiResult, err *data.CodeError) {
 	log.DebugF("upload:   end upload:%s => [%s:%s] error:%v", info.FilePath, info.ToBucket, info.SaveKey, err)
 	if err != nil {
 		err = data.NewEmptyError().AppendDesc("upload source").AppendError(err)
-		return
+		return res, err
 	}
 
 	if info.CheckHash {
@@ -228,7 +228,7 @@ func localSourceUploader(info *ApiInfo, storageCfg *storage.Config) (up Uploader
 	} else {
 		up = newResumeV1Uploader(storageCfg)
 	}
-	return
+	return up
 }
 
 func networkSourceUploader(info *ApiInfo, storageCfg *storage.Config) (up Uploader) {

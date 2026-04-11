@@ -34,7 +34,7 @@ func Unzip(zipFilePath string, unzipPath string) (err *data.CodeError) {
 	zipReader, zipErr := zip.OpenReader(zipFilePath)
 	if zipErr != nil {
 		err = data.NewEmptyError().AppendDescF("Open zip file error, %s", zipErr)
-		return
+		return err
 	}
 	defer zipReader.Close()
 
@@ -111,5 +111,5 @@ func Unzip(zipFilePath string, unzipPath string) (err *data.CodeError) {
 			}
 		}
 	}
-	return
+	return err
 }

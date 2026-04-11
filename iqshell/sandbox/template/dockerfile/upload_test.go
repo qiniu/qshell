@@ -15,8 +15,8 @@ import (
 func TestComputeFilesHash(t *testing.T) {
 	// 创建包含测试文件的临时目录
 	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "a.txt"), []byte("hello"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "b.txt"), []byte("world"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "a.txt"), []byte("hello"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "b.txt"), []byte("world"), 0o644))
 
 	hash1, err := ComputeFilesHash(".", "/app/", dir, nil)
 	require.NoError(t, err)
@@ -35,7 +35,7 @@ func TestComputeFilesHash(t *testing.T) {
 
 func TestComputeFilesHash_SingleFile(t *testing.T) {
 	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "app.py"), []byte("print('hello')"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "app.py"), []byte("print('hello')"), 0o644))
 
 	hash, err := ComputeFilesHash("app.py", "/app/", dir, nil)
 	require.NoError(t, err)
@@ -44,8 +44,8 @@ func TestComputeFilesHash_SingleFile(t *testing.T) {
 
 func TestComputeFilesHash_WithIgnore(t *testing.T) {
 	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "app.py"), []byte("code"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "test.log"), []byte("log data"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "app.py"), []byte("code"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "test.log"), []byte("log data"), 0o644))
 
 	hashWithLog, err := ComputeFilesHash(".", "/app/", dir, nil)
 	require.NoError(t, err)
@@ -58,7 +58,7 @@ func TestComputeFilesHash_WithIgnore(t *testing.T) {
 
 func TestCollectAndUpload(t *testing.T) {
 	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "file.txt"), []byte("content"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "file.txt"), []byte("content"), 0o644))
 
 	var received bool
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +83,7 @@ func TestReadDockerignore(t *testing.T) {
 
 	// 创建 .dockerignore
 	content := "*.log\n# comment\n\nnode_modules\n"
-	require.NoError(t, os.WriteFile(filepath.Join(dir, ".dockerignore"), []byte(content), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, ".dockerignore"), []byte(content), 0o644))
 
 	patterns = ReadDockerignore(dir)
 	assert.Equal(t, []string{"*.log", "node_modules"}, patterns)
@@ -144,11 +144,11 @@ func TestIsWithinContext(t *testing.T) {
 func TestCollectFiles_PathTraversal(t *testing.T) {
 	// 构建上下文目录
 	ctx := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(ctx, "app.go"), []byte("package main"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(ctx, "app.go"), []byte("package main"), 0o644))
 
 	// 在上下文之外创建文件
 	outside := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(outside, "secret.txt"), []byte("secret"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(outside, "secret.txt"), []byte("secret"), 0o644))
 
 	// ../ 相对路径逃逸应被拒绝
 	relEscape := "../" + filepath.Base(outside) + "/secret.txt"
@@ -170,8 +170,8 @@ func TestCollectFiles_PathTraversal(t *testing.T) {
 
 func TestCollectGlob_FiltersEscapedMatches(t *testing.T) {
 	ctx := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(ctx, "a.txt"), []byte("a"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(ctx, "b.txt"), []byte("b"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(ctx, "a.txt"), []byte("a"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(ctx, "b.txt"), []byte("b"), 0o644))
 
 	// glob 匹配上下文内的文件
 	pattern := filepath.Join(ctx, "*.txt")

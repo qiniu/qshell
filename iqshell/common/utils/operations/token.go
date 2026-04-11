@@ -173,7 +173,7 @@ func getMacAndRequest(info TokenInfo) (mac *qbox.Mac, req *http.Request, err *da
 		mac, mErr = account.GetMac()
 		if mErr != nil {
 			err = data.NewEmptyError().AppendDescF("get mac: %v\n", mErr)
-			return
+			return mac, req, err
 		}
 	}
 
@@ -188,11 +188,11 @@ func getMacAndRequest(info TokenInfo) (mac *qbox.Mac, req *http.Request, err *da
 	req, rErr = http.NewRequest(info.Method, info.Url, httpBody)
 	if rErr != nil {
 		err = data.NewEmptyError().AppendDescF("create request: %v\n", rErr)
-		return
+		return mac, req, err
 	}
 	headers := http.Header{}
 	headers.Add("Content-Type", info.ContentType)
 	req.Header = headers
 
-	return
+	return mac, req, err
 }

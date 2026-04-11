@@ -49,7 +49,7 @@ func scaffold(name, language, targetDir string) error {
 	data := scaffoldData{Name: name}
 
 	// Create target directory if needed
-	if err := os.MkdirAll(targetDir, 0755); err != nil {
+	if err := os.MkdirAll(targetDir, 0o755); err != nil {
 		return fmt.Errorf("create directory: %w", err)
 	}
 
@@ -70,7 +70,7 @@ func scaffold(name, language, targetDir string) error {
 		}
 
 		outPath := filepath.Join(targetDir, f.output)
-		if wErr := os.WriteFile(outPath, buf.Bytes(), 0644); wErr != nil {
+		if wErr := os.WriteFile(outPath, buf.Bytes(), 0o644); wErr != nil {
 			return fmt.Errorf("write %s: %w", outPath, wErr)
 		}
 		sbClient.PrintSuccess("  Created %s", outPath)

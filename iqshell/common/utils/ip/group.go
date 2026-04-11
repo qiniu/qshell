@@ -28,5 +28,5 @@ func (g *groupIPParser) Parse(ip string) (result ParserResult, err *data.CodeErr
 			break
 		}
 	}
-	return
+	return result, err
 }
