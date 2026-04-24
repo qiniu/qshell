@@ -73,3 +73,17 @@ $ qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --dockerfile ./D
 ```
 $ qshell sandbox template build --name my-app --from-image node:18 --start-cmd "npm start" --cpu 2 --memory 1024 --wait
 ```
+
+## 配置文件支持
+
+`build` 命令支持从 `qshell.sandbox.toml` 读取参数。详见
+[qshell.sandbox.toml 文档](./sandbox_template_config.md)。
+
+示例：
+```bash
+# 当前目录有 qshell.sandbox.toml
+qshell sandbox template build --wait
+
+# 显式指定路径
+qshell sandbox template build --config ./configs/prod.toml --wait
+```

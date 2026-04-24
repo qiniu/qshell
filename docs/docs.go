@@ -361,6 +361,9 @@ var sandboxTemplatePublishDocument string
 //go:embed sandbox_template_unpublish.md
 var sandboxTemplateUnpublishDocument string
 
+//go:embed sandbox_template_config.md
+var sandboxTemplateConfigDocument string
+
 //go:embed saveas.md
 var saveAsDocument string
 
@@ -494,6 +497,7 @@ const (
 	SandboxTemplateListType        = "sandbox_template_list"
 	SandboxTemplatePublishType     = "sandbox_template_publish"
 	SandboxTemplateUnpublishType   = "sandbox_template_unpublish"
+	SandboxTemplateConfigType      = "sandbox_template_config"
 	SaveAsType                     = "saveas"
 	ShareCpType                    = "share-cp"
 	ShareLsType                    = "share-ls"
@@ -602,6 +606,7 @@ func init() {
 	addCmdDocumentInfo(SandboxTemplateListType, sandboxTemplateListDocument)
 	addCmdDocumentInfo(SandboxTemplatePublishType, sandboxTemplatePublishDocument)
 	addCmdDocumentInfo(SandboxTemplateUnpublishType, sandboxTemplateUnpublishDocument)
+	addCmdDocumentInfo(SandboxTemplateConfigType, sandboxTemplateConfigDocument)
 	addCmdDocumentInfo(SaveAsType, saveAsDocument)
 	addCmdDocumentInfo(ShareCpType, shareCpDocument)
 	addCmdDocumentInfo(ShareLsType, shareLsDocument)

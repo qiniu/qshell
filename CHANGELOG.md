@@ -1,3 +1,10 @@
+# Unreleased
+## 新增
+1. `qshell sandbox template` 系列命令支持 `qshell.sandbox.toml` 配置文件，可持久化构建参数（name、dockerfile、from_image、cpu_count、memory_mb 等）
+2. `build` 命令新增 `--config` 参数用于显式指定配置文件路径
+3. 首次构建成功后，qshell 自动把新模板的 `template_id` 回写到配置文件，实现后续幂等重建
+4. `get` / `delete` / `publish` 命令在未传入 template_id 时，自动从当前目录 `qshell.sandbox.toml` 读取
+
 # 2.19.3
 ## 更新
 1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.9`
