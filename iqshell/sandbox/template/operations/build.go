@@ -94,19 +94,38 @@ func Build(info BuildInfo) {
 		buildID = resp.BuildID
 		sbClient.PrintSuccess("Template %s created (build ID: %s)", templateID, buildID)
 	} else {
-		// 获取已有模板以查找最新的 build ID
-		tmpl, gErr := client.GetTemplate(ctx, templateID, nil)
-		if gErr != nil {
-			sbClient.PrintError("get template failed: %v", gErr)
+		// 对已有模板申请新的 waiting build（对齐 E2B CLI 的 rebuild 流程）：
+		// RebuildTemplate → StartTemplateBuild → WaitForBuild。
+		// 直接复用历史 build ID 会导致 400 "build is not in waiting state"。
+		dockerfileContent, dErr := dockerfileForRebuild(info)
+		if dErr != nil {
+			sbClient.PrintError("%v", dErr)
 			return
 		}
-		if len(tmpl.Builds) > 0 {
-			// 使用最后一个 build（API 按时间升序返回，最新的在末尾）
-			buildID = tmpl.Builds[len(tmpl.Builds)-1].BuildID
-		} else {
-			sbClient.PrintError("no builds found for template, cannot rebuild")
+		rebuildParams := sandbox.RebuildTemplateParams{
+			Dockerfile: dockerfileContent,
+		}
+		if info.CPUCount > 0 {
+			rebuildParams.CPUCount = &info.CPUCount
+		}
+		if info.MemoryMB > 0 {
+			rebuildParams.MemoryMB = &info.MemoryMB
+		}
+		if info.StartCmd != "" {
+			rebuildParams.StartCmd = &info.StartCmd
+		}
+		if info.ReadyCmd != "" {
+			rebuildParams.ReadyCmd = &info.ReadyCmd
+		}
+
+		fmt.Printf("Requesting new build for template %s...\n", templateID)
+		resp, rErr := client.RebuildTemplate(ctx, templateID, rebuildParams)
+		if rErr != nil {
+			sbClient.PrintError("rebuild template failed: %v", rErr)
 			return
 		}
+		buildID = resp.BuildID
+		sbClient.PrintSuccess("New build requested (build ID: %s)", buildID)
 	}
 
 	if info.Dockerfile != "" {
@@ -301,6 +320,19 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 	}
 
 	return nil
+}
+
+// dockerfileForRebuild 返回 rebuild 请求所需的 Dockerfile 文本。
+// E2B v1 rebuild API 必须在请求体中携带 Dockerfile 内容。
+func dockerfileForRebuild(info BuildInfo) (string, error) {
+	if info.Dockerfile == "" {
+		return "", fmt.Errorf("rebuild requires --dockerfile to provide Dockerfile content")
+	}
+	content, err := os.ReadFile(info.Dockerfile)
+	if err != nil {
+		return "", fmt.Errorf("read Dockerfile: %w", err)
+	}
+	return string(content), nil
 }
 
 // printSDKExamples prints SDK usage examples for the given template ID.

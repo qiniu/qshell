@@ -9,7 +9,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/termenv v0.16.0
-	github.com/qiniu/go-sdk/v7 v7.26.9
+	github.com/qiniu/go-sdk/v7 v7.26.10
 	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.1.3
