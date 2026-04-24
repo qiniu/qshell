@@ -11,6 +11,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
+	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/config"
 	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/dockerfile"
 )
 
@@ -51,12 +52,73 @@ type BuildInfo struct {
 
 	// Path 是构建上下文目录（默认为 Dockerfile 所在目录）。
 	Path string
+
+	// ConfigPath 是 qshell.sandbox.toml 的显式路径。
+	// 为空时自动在当前工作目录查找。
+	ConfigPath string
 }
 
 // Build 创建或重新构建模板。
 // 如果提供了 TemplateID，则对已有模板启动新构建。
 // 否则，使用给定的 Name 创建新模板并启动构建。
 func Build(info BuildInfo) {
+	// 在合并配置前捕获"CLI 未提供 TemplateID"，以便后续判断是否需要回写。
+	noIDBeforeMerge := info.TemplateID == ""
+
+	// 加载配置文件并合并（CLI > file > default）
+	var cfg *config.FileConfig
+	if info.ConfigPath != "" {
+		loaded, cErr := config.Load(info.ConfigPath)
+		if cErr != nil {
+			sbClient.PrintError("load config: %v", cErr)
+			return
+		}
+		if loaded == nil {
+			sbClient.PrintError("config file not found: %s", info.ConfigPath)
+			return
+		}
+		cfg = loaded
+	} else {
+		loaded, cErr := config.LoadFromCwd()
+		if cErr != nil {
+			sbClient.PrintError("load config: %v", cErr)
+			return
+		}
+		cfg = loaded
+	}
+
+	if cfg != nil {
+		fields := config.BuildFields{
+			TemplateID:   info.TemplateID,
+			Name:         info.Name,
+			Dockerfile:   info.Dockerfile,
+			Path:         info.Path,
+			FromImage:    info.FromImage,
+			FromTemplate: info.FromTemplate,
+			StartCmd:     info.StartCmd,
+			ReadyCmd:     info.ReadyCmd,
+			CPUCount:     info.CPUCount,
+			MemoryMB:     info.MemoryMB,
+			NoCache:      info.NoCache,
+		}
+		overrides := cfg.ApplyTo(&fields)
+		info.TemplateID = fields.TemplateID
+		info.Name = fields.Name
+		info.Dockerfile = fields.Dockerfile
+		info.Path = fields.Path
+		info.FromImage = fields.FromImage
+		info.FromTemplate = fields.FromTemplate
+		info.StartCmd = fields.StartCmd
+		info.ReadyCmd = fields.ReadyCmd
+		info.CPUCount = fields.CPUCount
+		info.MemoryMB = fields.MemoryMB
+		info.NoCache = fields.NoCache
+
+		for _, key := range overrides {
+			fmt.Fprintf(os.Stderr, "[config] CLI overrides %s from %s\n", key, cfg.SourcePath())
+		}
+	}
+
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
 		sbClient.PrintError("%v", err)
@@ -93,6 +155,17 @@ func Build(info BuildInfo) {
 		templateID = resp.TemplateID
 		buildID = resp.BuildID
 		sbClient.PrintSuccess("Template %s created (build ID: %s)", templateID, buildID)
+		// 如果配置文件存在、CLI 未提供 TemplateID，则回写。
+		if cfg != nil && noIDBeforeMerge && cfg.SourcePath() != "" {
+			if wErr := config.WriteTemplateID(cfg.SourcePath(), templateID); wErr != nil {
+				// 回写失败仅警告，不中断构建
+				fmt.Fprintf(os.Stderr, "[config] warning: failed to write template_id to %s: %v\n",
+					cfg.SourcePath(), wErr)
+			} else {
+				sbClient.PrintSuccess("Written template_id to %s (please commit this file)",
+					cfg.SourcePath())
+			}
+		}
 	} else {
 		// 对已有模板申请新的 waiting build（对齐 E2B CLI 的 rebuild 流程）：
 		// RebuildTemplate → StartTemplateBuild → WaitForBuild。
