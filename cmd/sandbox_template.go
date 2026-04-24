@@ -155,10 +155,13 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short:   "Build a template (alias: bd)",
 		Long: `Create a new template and build it, or rebuild an existing template.
 
-Supports three build modes:
+Creating a new template supports three build modes:
   1. --from-image: Build from a base Docker image
   2. --from-template: Build from an existing template
-  3. --dockerfile: Build from a Dockerfile (v2 build system)`,
+  3. --dockerfile: Build from a Dockerfile (v2 build system)
+
+Rebuilding an existing template (--template-id) requires --dockerfile
+because the rebuild API must carry the Dockerfile content in the request body.`,
 		Example: `  # Create and build a new template from a Docker image
   qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wait
   qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --wait
@@ -171,13 +174,13 @@ Supports three build modes:
   qshell sandbox template build --name my-template --dockerfile ./Dockerfile --path ./context --wait
   qshell sbx tpl bd --name my-template --dockerfile ./Dockerfile --path ./context --wait
 
-  # Rebuild an existing template
-  qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --from-image ubuntu:22.04
-  qshell sbx tpl bd --template-id tmpl-xxxxxxxxxxxx --from-image ubuntu:22.04
+  # Rebuild an existing template (Dockerfile required)
+  qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --wait
+  qshell sbx tpl bd --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --wait
 
   # Force rebuild without cache
-  qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --no-cache --wait
-  qshell sbx tpl bd --template-id tmpl-xxxxxxxxxxxx --no-cache --wait`,
+  qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --no-cache --wait
+  qshell sbx tpl bd --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --no-cache --wait`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateBuildType
 			if iqshell.ShowDocumentIfNeeded(cfg) {

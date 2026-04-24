@@ -323,10 +323,12 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 }
 
 // dockerfileForRebuild 返回 rebuild 请求所需的 Dockerfile 文本。
-// E2B v1 rebuild API 必须在请求体中携带 Dockerfile 内容。
+// E2B v1 rebuild API（POST /templates/{id}）强制要求在请求体中携带
+// Dockerfile 内容，因此 --template-id 场景必须同时提供 --dockerfile；
+// --from-image / --from-template 仅适用于新建模板。
 func dockerfileForRebuild(info BuildInfo) (string, error) {
 	if info.Dockerfile == "" {
-		return "", fmt.Errorf("rebuild requires --dockerfile to provide Dockerfile content")
+		return "", fmt.Errorf("--dockerfile is required when rebuilding an existing template (--template-id); --from-image and --from-template only apply to new templates")
 	}
 	content, err := os.ReadFile(info.Dockerfile)
 	if err != nil {
