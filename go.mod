@@ -1,6 +1,7 @@
 module github.com/qiniu/qshell/v2
 
 require (
+	github.com/BurntSushi/toml v1.3.2
 	github.com/aliyun/aliyun-oss-go-sdk v2.1.6+incompatible
 	github.com/astaxie/beego v1.12.3
 	github.com/aws/aws-sdk-go v1.37.31
@@ -21,7 +22,6 @@ require (
 
 require (
 	connectrpc.com/connect v1.18.1 // indirect
-	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/alex-ant/gomath v0.0.0-20160516115720-89013a210a82 // indirect
