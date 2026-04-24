@@ -16,7 +16,14 @@ type GetInfo struct {
 // Get retrieves and displays template details.
 func Get(info GetInfo) {
 	if info.TemplateID == "" {
-		sbClient.PrintError("template ID is required")
+		id, ok := templateIDFromCwdConfig()
+		if !ok {
+			return
+		}
+		info.TemplateID = id
+	}
+	if info.TemplateID == "" {
+		sbClient.PrintError("template ID is required (positional arg or qshell.sandbox.toml)")
 		return
 	}
 

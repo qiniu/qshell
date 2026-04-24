@@ -18,6 +18,20 @@ type DeleteInfo struct {
 
 // Delete deletes one or more templates.
 func Delete(info DeleteInfo) {
+	if len(info.TemplateIDs) == 0 && !info.Select {
+		id, ok := templateIDFromCwdConfig()
+		if !ok {
+			return
+		}
+		if id != "" {
+			info.TemplateIDs = []string{id}
+		}
+	}
+	if len(info.TemplateIDs) == 0 && !info.Select {
+		sbClient.PrintError("at least one template ID is required (positional args, --select, or qshell.sandbox.toml)")
+		return
+	}
+
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
 		sbClient.PrintError("%v", err)
