@@ -21,6 +21,7 @@ bin
 .idea
 .vscode
 .claude/settings.local.json
+.claude/plans/
 
 # Architecture specific extensions/prefixes
 *.cgo1.go
