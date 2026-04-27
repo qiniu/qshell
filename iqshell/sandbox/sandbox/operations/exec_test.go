@@ -43,3 +43,23 @@ func TestParseEnvPairs_MixedValidInvalid(t *testing.T) {
 	result := parseEnvPairs([]string{"GOOD=value", "BAD", "=empty_key", "ALSO_GOOD=123"})
 	assert.Equal(t, map[string]string{"GOOD": "value", "ALSO_GOOD": "123"}, result)
 }
+
+func TestShellQuoteArgs_PreservesSimpleCommand(t *testing.T) {
+	result := shellQuoteArgs([]string{"ls", "-la", "/tmp"})
+	assert.Equal(t, "ls -la /tmp", result)
+}
+
+func TestShellQuoteArgs_QuotesShellCommandString(t *testing.T) {
+	result := shellQuoteArgs([]string{"sh", "-lc", "cat /etc/os-release | head -5"})
+	assert.Equal(t, "sh -lc 'cat /etc/os-release | head -5'", result)
+}
+
+func TestShellQuoteArgs_EscapesSingleQuote(t *testing.T) {
+	result := shellQuoteArgs([]string{"printf", "it's ok"})
+	assert.Equal(t, "printf 'it'\\''s ok'", result)
+}
+
+func TestShellQuoteArgs_QuotesEmptyArg(t *testing.T) {
+	result := shellQuoteArgs([]string{"printf", ""})
+	assert.Equal(t, "printf ''", result)
+}

@@ -49,8 +49,9 @@ func Exec(info ExecInfo) {
 		return
 	}
 
-	// Build command string
-	cmd := strings.Join(info.Command, " ")
+	// Build command string. The SDK command API accepts a shell command string,
+	// so quote argv-style inputs before joining to preserve spaces and metacharacters.
+	cmd := shellQuoteArgs(info.Command)
 
 	// Build command options
 	var opts []sandbox.CommandOption
@@ -186,4 +187,41 @@ func parseEnvPairs(pairs []string) map[string]string {
 		}
 	}
 	return envs
+}
+
+func shellQuoteArgs(args []string) string {
+	quoted := make([]string, 0, len(args))
+	for _, arg := range args {
+		quoted = append(quoted, shellQuoteArg(arg))
+	}
+	return strings.Join(quoted, " ")
+}
+
+func shellQuoteArg(arg string) string {
+	if arg == "" {
+		return "''"
+	}
+	for _, r := range arg {
+		if !isShellSafeRune(r) {
+			return "'" + strings.ReplaceAll(arg, "'", "'\\''") + "'"
+		}
+	}
+	return arg
+}
+
+func isShellSafeRune(r rune) bool {
+	switch {
+	case r >= 'a' && r <= 'z':
+		return true
+	case r >= 'A' && r <= 'Z':
+		return true
+	case r >= '0' && r <= '9':
+		return true
+	}
+	switch r {
+	case '_', '-', '.', '/', ':', '=', '@', '%', '+', ',':
+		return true
+	default:
+		return false
+	}
 }

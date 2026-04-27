@@ -27,8 +27,8 @@ $ qshell sandbox template build --doc
 # 参数
 - `--name`：模板名称（创建新模板时使用，与 --template-id 二选一）
 - `--template-id`：已有模板 ID（重新构建时使用，与 --name 二选一，必须同时提供 `--dockerfile`）
-- `--from-image`：基础 Docker 镜像
-- `--from-template`：基础模板
+- `--from-image`：基础 Docker 镜像，仅创建新模板时可用
+- `--from-template`：基础模板，仅创建新模板时可用
 - `--dockerfile`：Dockerfile 路径（启用 v2 构建系统，自动解析 FROM/RUN/COPY 等指令；可与 --from-template 或 --from-image 组合叠加增量步骤）
 - `--path`：构建上下文目录（默认为 Dockerfile 所在目录，与 --dockerfile 配合使用）
 - `--start-cmd`：构建完成后执行的启动命令（Dockerfile 模式下可从 CMD/ENTRYPOINT 自动提取）

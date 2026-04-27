@@ -401,6 +401,9 @@ func validateBuildSourceSelection(info BuildInfo) error {
 	if info.FromImage != "" && info.FromTemplate != "" {
 		return fmt.Errorf("cannot specify both --from-image and --from-template")
 	}
+	if info.TemplateID != "" && (info.FromImage != "" || info.FromTemplate != "") {
+		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template (--template-id)")
+	}
 	if info.Dockerfile == "" && info.FromImage == "" && info.FromTemplate == "" {
 		return fmt.Errorf("--from-image, --from-template, or --dockerfile is required")
 	}

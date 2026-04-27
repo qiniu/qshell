@@ -225,8 +225,8 @@ because the rebuild API must carry the Dockerfile content in the request body.
 	}
 	cmd.Flags().StringVar(&info.Name, "name", "", "template name (for creating a new template)")
 	cmd.Flags().StringVar(&info.TemplateID, "template-id", "", "existing template ID (for rebuilding)")
-	cmd.Flags().StringVar(&info.FromImage, "from-image", "", "base Docker image")
-	cmd.Flags().StringVar(&info.FromTemplate, "from-template", "", "base template")
+	cmd.Flags().StringVar(&info.FromImage, "from-image", "", "base Docker image (for creating a new template)")
+	cmd.Flags().StringVar(&info.FromTemplate, "from-template", "", "base template (for creating a new template)")
 	cmd.Flags().StringVar(&info.StartCmd, "start-cmd", "", "command to run after build")
 	cmd.Flags().StringVar(&info.ReadyCmd, "ready-cmd", "", "readiness check command")
 	cmd.Flags().Int32Var(&info.CPUCount, "cpu", 0, "sandbox CPU count")
