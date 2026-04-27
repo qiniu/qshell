@@ -30,6 +30,7 @@ template 的子命令有：
 * publish（pb）：发布模板（设为公开）
 * unpublish（upb）：取消发布模板（设为私有）
 * init（it）：初始化模板项目脚手架
+* config（cfg）：查看 `qshell.sandbox.toml` 配置文件说明
 
 # 示例
 1. 列出所有模板
@@ -84,4 +85,10 @@ qshell sandbox template unpublish tmpl-xxxxxxxxxxxx -y
 ```
 qshell sandbox template init
 qshell sandbox template init --name my-template --language go
+```
+
+10. 查看配置文件说明
+```
+qshell sandbox template config
+qshell sbx tpl cfg
 ```

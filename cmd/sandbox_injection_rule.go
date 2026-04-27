@@ -13,6 +13,7 @@ var injectionRuleCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:     "injection-rule",
 		Aliases: []string{"ir"},
 		Short:   "Manage sandbox injection rules (alias: ir)",
+		Args:    cobra.NoArgs,
 		Example: `  # View injection-rule subcommands
   qshell sandbox injection-rule -h
   qshell sbx ir -h

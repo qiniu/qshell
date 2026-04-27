@@ -1,9 +1,24 @@
-# qshell.sandbox.toml — 模板配置文件
+# 简介
+`sandbox template config`（别名 `cfg`）展示 `qshell.sandbox.toml` 模板配置文件说明。该命令只输出文档，不会读取、创建或修改本地配置文件。
+
+# 格式
+```
+qshell sandbox template config
+qshell sbx tpl cfg
+```
+
+# 帮助文档
+```
+$ qshell sandbox template config -h
+$ qshell sandbox template config --doc
+```
+
+# qshell.sandbox.toml
 
 `qshell sandbox template` 系列命令支持从项目根目录读取 `qshell.sandbox.toml`，
 持久化模板参数并自动管理 `template_id`，方便团队协作与 CI 集成。
 
-## 完整字段说明
+# 完整字段说明
 
 ```toml
 # 模板身份（template_id 由 qshell 首次构建后自动回写，勿手动修改）
@@ -42,13 +57,13 @@ no_cache = false
 | memory_mb | int | 内存（MiB） |
 | no_cache | bool | 强制忽略缓存 |
 
-## 优先级
+# 优先级
 
 `CLI flag > 配置文件 > 内置默认值`
 
 同时提供时，CLI 会覆盖配置文件，并在 stderr 打印一次覆盖提示。
 
-## 构建输入组合
+# 构建输入组合
 
 `from_image` 和 `from_template` 二选一，不能同时设置。
 
@@ -59,13 +74,13 @@ no_cache = false
 
 `from_template + dockerfile` 适合在统一基础模板上叠加少量依赖，例如多个 agent 模板共用一个 `agents-base`。
 
-## 查找规则
+# 查找规则
 
 1. `--config <path>` 显式指定路径（仅 `build` 命令支持）
 2. 当前工作目录下的 `qshell.sandbox.toml`
 3. 未找到时按纯 CLI 模式运行（向后兼容）
 
-## 自动回写行为
+# 自动回写行为
 
 - 首次构建（配置文件存在、`template_id` 为空）成功后，qshell 自动把新的 `template_id` 写入文件
 - 未指定 `--wait` 时，在构建成功启动后回写；指定 `--wait` 时，在构建完成且状态为 `ready` 后回写
@@ -73,14 +88,14 @@ no_cache = false
 - 注释、字段顺序、空白均保留
 - 回写完成后 stdout 打印：`Written template_id to <path> (please commit this file)`
 
-## 团队协作约定
+# 团队协作约定
 
 将 `qshell.sandbox.toml` 加入版本控制：
 - 团队成员克隆仓库后直接 `qshell sandbox template build` 即可重建同一模板
 - CI 脚本只需一行命令，无需维护散落的参数
 - 首次 commit 由构建者完成；后续通常无需修改（除非切换模板）
 
-## 示例：最小项目
+# 示例：最小项目
 
 ```
 my-template/

@@ -67,7 +67,7 @@ qshell sandbox create my-template \
 5. 管理注入规则
 ```
 qshell sandbox injection-rule list
-qshell sbx ir create --name openai-default --type openai --api-key sk-xxx
+qshell sbx ir cr --name openai-default --type openai --api-key sk-xxx
 ```
 
 6. 连接到沙箱

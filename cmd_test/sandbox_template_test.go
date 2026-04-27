@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/qiniu/qshell/v2/cmd_test/test"
@@ -44,6 +45,10 @@ func TestSandboxTemplateUnpublishDocument(t *testing.T) {
 
 func TestSandboxTemplateInitDocument(t *testing.T) {
 	testSubcommandDocument(t, "sandbox", "template", "init")
+}
+
+func TestSandboxTemplateConfigDocument(t *testing.T) {
+	testSubcommandDocument(t, "sandbox", "template", "config")
 }
 
 // === sandbox template missing args tests ===
@@ -112,4 +117,11 @@ func TestSandboxTemplateBuildDocumentWithDockerfileAndPath(t *testing.T) {
 
 func TestSandboxTemplateInitDocumentWithFlags(t *testing.T) {
 	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "init"}, "--name", "test")
+}
+
+func TestSandboxTemplateConfigDocumentWithAlias(t *testing.T) {
+	result, _ := test.RunCmdWithError("sbx", "tpl", "cfg", test.DocumentOption)
+	if !strings.Contains(result, "`sandbox template config`") {
+		t.Fatalf("document test fail for sbx tpl cfg, got prefix: %.80s", result)
+	}
 }

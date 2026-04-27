@@ -13,6 +13,7 @@ var templateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:     "template",
 		Aliases: []string{"tpl"},
 		Short:   "Manage sandbox templates (alias: tpl)",
+		Args:    cobra.NoArgs,
 		Example: `  # View template subcommands
   qshell sandbox template -h
   qshell sbx tpl -h
@@ -67,7 +68,7 @@ var templateListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 var templateGetCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "get <templateID>",
+		Use:     "get [templateID]",
 		Aliases: []string{"gt"},
 		Short:   "Get template details (alias: gt)",
 		Example: `  # Get template details
@@ -332,6 +333,27 @@ var templateInitCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	return cmd
 }
 
+var templateConfigCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "config",
+		Aliases: []string{"cfg"},
+		Short:   "Show qshell.sandbox.toml configuration reference (alias: cfg)",
+		Args:    cobra.NoArgs,
+		Example: `  # Show qshell.sandbox.toml configuration reference
+  qshell sandbox template config
+  qshell sbx tpl cfg
+
+  # Show detailed documentation
+  qshell sandbox template config --doc
+  qshell sbx tpl cfg --doc`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg.CmdCfg.CmdId = docs.SandboxTemplateConfigType
+			docs.ShowCmdDocument(docs.SandboxTemplateConfigType)
+		},
+	}
+	return cmd
+}
+
 // templateCmdLoader adds the template command and its subcommands to the given parent command.
 func templateCmdLoader(parentCmd *cobra.Command, cfg *iqshell.Config) {
 	templateCmd := templateCmdBuilder(cfg)
@@ -344,6 +366,7 @@ func templateCmdLoader(parentCmd *cobra.Command, cfg *iqshell.Config) {
 		templatePublishCmdBuilder(cfg),
 		templateUnpublishCmdBuilder(cfg),
 		templateInitCmdBuilder(cfg),
+		templateConfigCmdBuilder(cfg),
 	)
 	parentCmd.AddCommand(templateCmd)
 }
