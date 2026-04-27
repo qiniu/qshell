@@ -66,6 +66,8 @@ type BuildInfo struct {
 func Build(info BuildInfo) {
 	// 在合并配置前捕获"CLI 未提供 TemplateID"，以便后续判断是否需要回写。
 	noIDBeforeMerge := info.TemplateID == ""
+	cliFromImage := info.FromImage != ""
+	cliFromTemplate := info.FromTemplate != ""
 
 	// 加载配置文件并合并（CLI > file > default）
 	var cfg *config.FileConfig
@@ -122,6 +124,10 @@ func Build(info BuildInfo) {
 		}
 	}
 
+	if err := normalizeRebuildSourceSelection(&info, cliFromImage, cliFromTemplate); err != nil {
+		sbClient.PrintError("%v", err)
+		return
+	}
 	if err := validateBuildSourceSelection(info); err != nil {
 		sbClient.PrintError("%v", err)
 		return
@@ -401,12 +407,21 @@ func validateBuildSourceSelection(info BuildInfo) error {
 	if info.FromImage != "" && info.FromTemplate != "" {
 		return fmt.Errorf("cannot specify both --from-image and --from-template")
 	}
-	if info.TemplateID != "" && (info.FromImage != "" || info.FromTemplate != "") {
-		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template (--template-id)")
-	}
 	if info.Dockerfile == "" && info.FromImage == "" && info.FromTemplate == "" {
 		return fmt.Errorf("--from-image, --from-template, or --dockerfile is required")
 	}
+	return nil
+}
+
+func normalizeRebuildSourceSelection(info *BuildInfo, cliFromImage, cliFromTemplate bool) error {
+	if info.TemplateID == "" || (info.FromImage == "" && info.FromTemplate == "") {
+		return nil
+	}
+	if cliFromImage || cliFromTemplate {
+		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template (--template-id)")
+	}
+	info.FromImage = ""
+	info.FromTemplate = ""
 	return nil
 }
 

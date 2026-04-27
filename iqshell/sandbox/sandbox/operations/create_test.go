@@ -51,7 +51,7 @@ func TestBuildSandboxInjections_WithInlineOpenAI(t *testing.T) {
 }
 
 func TestBuildSandboxInjections_WithInlineHTTP(t *testing.T) {
-	injections, err := buildSandboxInjections(nil, []string{"type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod"})
+	injections, err := buildSandboxInjections(nil, []string{"type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod"})
 	if err != nil {
 		t.Fatalf("buildSandboxInjections() error = %v", err)
 	}
@@ -120,18 +120,38 @@ func TestBuildSandboxInjections_WithInlineQiniu(t *testing.T) {
 }
 
 func TestParseInlineInjectionFields_HeadersOnly(t *testing.T) {
-	fields := parseInlineInjectionFields("headers=Authorization=Bearer token,X-Env=prod")
-	if got := fields["headers"]; got != "Authorization=Bearer token,X-Env=prod" {
-		t.Fatalf("headers = %q, want %q", got, "Authorization=Bearer token,X-Env=prod")
+	fields := parseInlineInjectionFields("headers=Authorization=Bearer token;X-Env=prod")
+	if got := fields["headers"]; got != "Authorization=Bearer token;X-Env=prod" {
+		t.Fatalf("headers = %q, want %q", got, "Authorization=Bearer token;X-Env=prod")
 	}
 }
 
 func TestParseInlineInjectionFields_HeadersWithOtherFields(t *testing.T) {
-	fields := parseInlineInjectionFields("type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod")
+	fields := parseInlineInjectionFields("type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod")
 	if fields["type"] != "http" || fields["base-url"] != "https://api.example.com" {
 		t.Fatalf("fields = %v, want type and base-url parsed", fields)
 	}
-	if got := fields["headers"]; got != "Authorization=Bearer token,X-Env=prod" {
-		t.Fatalf("headers = %q, want %q", got, "Authorization=Bearer token,X-Env=prod")
+	if got := fields["headers"]; got != "Authorization=Bearer token;X-Env=prod" {
+		t.Fatalf("headers = %q, want %q", got, "Authorization=Bearer token;X-Env=prod")
+	}
+}
+
+func TestParseInlineHeaders_SemicolonSeparated(t *testing.T) {
+	headers := parseInlineHeaders("Authorization=Bearer token;X-Env=prod")
+	if len(headers) != 2 {
+		t.Fatalf("headers = %v, want 2 headers", headers)
+	}
+	if headers["Authorization"] != "Bearer token" || headers["X-Env"] != "prod" {
+		t.Fatalf("headers = %v, want parsed headers", headers)
+	}
+}
+
+func TestParseInlineHeaders_CommaFallback(t *testing.T) {
+	headers := parseInlineHeaders("Authorization=Bearer token,X-Env=prod")
+	if len(headers) != 2 {
+		t.Fatalf("headers = %v, want 2 headers", headers)
+	}
+	if headers["Authorization"] != "Bearer token" || headers["X-Env"] != "prod" {
+		t.Fatalf("headers = %v, want parsed headers", headers)
 	}
 }

@@ -171,5 +171,28 @@ func parseInlineInjectionFields(spec string) map[string]string {
 }
 
 func parseInlineHeaders(raw string) map[string]string {
-	return sbClient.ParseMetadataMap(raw)
+	m := make(map[string]string)
+	if raw == "" {
+		return m
+	}
+	separator := ";"
+	if !strings.Contains(raw, separator) {
+		separator = ","
+	}
+	for _, pair := range strings.Split(raw, separator) {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+		key, value, ok := strings.Cut(pair, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		if key == "" {
+			continue
+		}
+		m[key] = strings.TrimSpace(value)
+	}
+	return m
 }

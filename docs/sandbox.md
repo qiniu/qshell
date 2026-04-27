@@ -61,7 +61,7 @@ qshell sbx cr my-template --injection-rule rule-openai --injection-rule rule-htt
 ```
 qshell sandbox create my-template \
   --inline-injection 'type=openai,api-key=sk-xxx' \
-  --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod'
+  --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
 ```
 
 5. 管理注入规则

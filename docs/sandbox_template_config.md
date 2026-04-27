@@ -87,6 +87,7 @@ no_cache = false
 - 回写会替换已有的 `template_id` 赋值行（无论原值是否为空），或在文件头插入一行
 - 注释、字段顺序、空白均保留
 - 回写完成后 stdout 打印：`Written template_id to <path> (please commit this file)`
+- `template_id` 存在后再次执行 build 会进入 rebuild 流程，配置文件中保留的 `from_image` / `from_template` 仅作为首次创建记录保留，不参与 rebuild
 
 # 团队协作约定
 

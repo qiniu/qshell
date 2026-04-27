@@ -42,7 +42,7 @@ $ qshell sandbox template build --doc
 # 配置文件
 `sandbox template build` 会按 `CLI flag > 配置文件 > 内置默认值` 合并参数。配置文件可提供 `template_id`、`name`、`dockerfile`、`path`、`from_image`、`from_template`、`start_cmd`、`ready_cmd`、`cpu_count`、`memory_mb` 和 `no_cache`。
 
-首次构建成功且配置文件存在、`template_id` 为空时，命令会自动把新模板 ID 回写到配置文件。更多字段说明见 `docs/sandbox_template_config.md`。
+首次构建成功且配置文件存在、`template_id` 为空时，命令会自动把新模板 ID 回写到配置文件。后续再次运行同一配置文件会进入 rebuild 流程；此时配置文件中保留的 `from_image` / `from_template` 会被忽略，rebuild 只使用 `template_id`、`dockerfile`、资源规格和启动/就绪命令等参数。更多字段说明见 `docs/sandbox_template_config.md`。
 
 # 示例
 1. 从 Docker 镜像创建并构建模板

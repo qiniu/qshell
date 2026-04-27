@@ -63,28 +63,58 @@ func TestValidateBuildSourceSelection_AllowsDockerfileWithFromTemplate(t *testin
 	assert.NoError(t, err)
 }
 
-func TestValidateBuildSourceSelection_RejectsRebuildWithFromImage(t *testing.T) {
-	err := validateBuildSourceSelection(BuildInfo{
+func TestNormalizeRebuildSourceSelection_RejectsCLIFromImage(t *testing.T) {
+	info := BuildInfo{
 		TemplateID: "tmpl-xxxxxxxxxxxx",
 		Dockerfile: "./Dockerfile",
 		FromImage:  "ubuntu:22.04",
-	})
+	}
+	err := normalizeRebuildSourceSelection(&info, true, false)
 
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "when rebuilding")
 	}
 }
 
-func TestValidateBuildSourceSelection_RejectsRebuildWithFromTemplate(t *testing.T) {
-	err := validateBuildSourceSelection(BuildInfo{
+func TestNormalizeRebuildSourceSelection_RejectsCLIFromTemplate(t *testing.T) {
+	info := BuildInfo{
 		TemplateID:   "tmpl-xxxxxxxxxxxx",
 		Dockerfile:   "./Dockerfile",
 		FromTemplate: "agents-base",
-	})
+	}
+	err := normalizeRebuildSourceSelection(&info, false, true)
 
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "when rebuilding")
 	}
+}
+
+func TestNormalizeRebuildSourceSelection_IgnoresConfigFromImage(t *testing.T) {
+	info := BuildInfo{
+		TemplateID: "tmpl-xxxxxxxxxxxx",
+		Dockerfile: "./Dockerfile",
+		FromImage:  "ubuntu:22.04",
+	}
+
+	err := normalizeRebuildSourceSelection(&info, false, false)
+
+	assert.NoError(t, err)
+	assert.Empty(t, info.FromImage)
+	assert.Empty(t, info.FromTemplate)
+}
+
+func TestNormalizeRebuildSourceSelection_IgnoresConfigFromTemplate(t *testing.T) {
+	info := BuildInfo{
+		TemplateID:   "tmpl-xxxxxxxxxxxx",
+		Dockerfile:   "./Dockerfile",
+		FromTemplate: "agents-base",
+	}
+
+	err := normalizeRebuildSourceSelection(&info, false, false)
+
+	assert.NoError(t, err)
+	assert.Empty(t, info.FromImage)
+	assert.Empty(t, info.FromTemplate)
 }
 
 func TestValidateBuildSourceSelection_RequiresSource(t *testing.T) {

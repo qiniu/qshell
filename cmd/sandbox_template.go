@@ -71,6 +71,7 @@ var templateGetCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:     "get [templateID]",
 		Aliases: []string{"gt"},
 		Short:   "Get template details (alias: gt)",
+		Args:    cobra.MaximumNArgs(1),
 		Example: `  # Get template details
   qshell sandbox template get tmpl-xxxxxxxxxxxx
   qshell sbx tpl gt tmpl-xxxxxxxxxxxx
@@ -81,10 +82,6 @@ var templateGetCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateGetType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
-				return
-			}
-			if len(args) > 1 {
-				_ = cmd.Usage()
 				return
 			}
 			id := ""
