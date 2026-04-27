@@ -46,6 +46,8 @@ type BuildInfo struct {
 
 	// NoCache 强制完整构建，忽略缓存。
 	NoCache bool
+	// NoCacheChanged 表示 CLI 是否显式设置了 --no-cache。
+	NoCacheChanged bool
 
 	// Dockerfile 是 Dockerfile 的路径（启用 v2 Dockerfile 构建）。
 	Dockerfile string
@@ -89,17 +91,18 @@ func Build(info BuildInfo) {
 
 	if cfg != nil {
 		fields := config.BuildFields{
-			TemplateID:   info.TemplateID,
-			Name:         info.Name,
-			Dockerfile:   info.Dockerfile,
-			Path:         info.Path,
-			FromImage:    info.FromImage,
-			FromTemplate: info.FromTemplate,
-			StartCmd:     info.StartCmd,
-			ReadyCmd:     info.ReadyCmd,
-			CPUCount:     info.CPUCount,
-			MemoryMB:     info.MemoryMB,
-			NoCache:      info.NoCache,
+			TemplateID:     info.TemplateID,
+			Name:           info.Name,
+			Dockerfile:     info.Dockerfile,
+			Path:           info.Path,
+			FromImage:      info.FromImage,
+			FromTemplate:   info.FromTemplate,
+			StartCmd:       info.StartCmd,
+			ReadyCmd:       info.ReadyCmd,
+			CPUCount:       info.CPUCount,
+			MemoryMB:       info.MemoryMB,
+			NoCache:        info.NoCache,
+			NoCacheChanged: info.NoCacheChanged,
 		}
 		overrides := cfg.ApplyTo(&fields)
 		info.TemplateID = fields.TemplateID
@@ -160,17 +163,6 @@ func Build(info BuildInfo) {
 		templateID = resp.TemplateID
 		buildID = resp.BuildID
 		sbClient.PrintSuccess("Template %s created (build ID: %s)", templateID, buildID)
-		// 如果配置文件存在、CLI 未提供 TemplateID，则回写。
-		if cfg != nil && noIDBeforeMerge && cfg.SourcePath() != "" {
-			if wErr := config.WriteTemplateID(cfg.SourcePath(), templateID); wErr != nil {
-				// 回写失败仅警告，不中断构建
-				fmt.Fprintf(os.Stderr, "[config] warning: failed to write template_id to %s: %v\n",
-					cfg.SourcePath(), wErr)
-			} else {
-				sbClient.PrintSuccess("Written template_id to %s (please commit this file)",
-					cfg.SourcePath())
-			}
-		}
 	} else {
 		// 对已有模板申请新的 waiting build（对齐 E2B CLI 的 rebuild 流程）：
 		// RebuildTemplate → StartTemplateBuild → WaitForBuild。
@@ -238,6 +230,7 @@ func Build(info BuildInfo) {
 	}
 
 	if !info.Wait {
+		writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge, templateID)
 		fmt.Printf("Build started. Use 'qshell sandbox template builds %s %s' to check status.\n", templateID, buildID)
 		return
 	}
@@ -277,6 +270,7 @@ func Build(info BuildInfo) {
 				sbClient.PrintError("build failed")
 			} else {
 				sbClient.PrintSuccess("Build completed!")
+				writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge, templateID)
 			}
 			fmt.Printf("Template ID:  %s\n", buildInfo.TemplateID)
 			fmt.Printf("Build ID:     %s\n", buildInfo.BuildID)
@@ -295,6 +289,18 @@ func Build(info BuildInfo) {
 		case <-time.After(3 * time.Second):
 		}
 	}
+}
+
+func writeTemplateIDToConfigIfNeeded(cfg *config.FileConfig, noIDBeforeMerge bool, templateID string) {
+	if cfg == nil || !noIDBeforeMerge || cfg.SourcePath() == "" {
+		return
+	}
+	if wErr := config.WriteTemplateID(cfg.SourcePath(), templateID); wErr != nil {
+		fmt.Fprintf(os.Stderr, "[config] warning: failed to write template_id to %s: %v\n",
+			cfg.SourcePath(), wErr)
+		return
+	}
+	sbClient.PrintSuccess("Written template_id to %s (please commit this file)", cfg.SourcePath())
 }
 
 // buildFromDockerfile 处理 v2 Dockerfile 构建流程：

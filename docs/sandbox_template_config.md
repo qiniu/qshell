@@ -59,11 +59,6 @@ no_cache = false
 
 `from_template + dockerfile` 适合在统一基础模板上叠加少量依赖，例如多个 agent 模板共用一个 `agents-base`。
 
-### bool 字段的已知限制
-
-Go flag 无法区分「用户显式传入 `--flag=false`」和「用户没传 `--flag`」。如果配置文件中
-`no_cache = true`，仅通过 CLI 无法把它重置为 false——需要直接修改配置文件。
-
 ## 查找规则
 
 1. `--config <path>` 显式指定路径（仅 `build` 命令支持）
@@ -73,6 +68,7 @@ Go flag 无法区分「用户显式传入 `--flag=false`」和「用户没传 `-
 ## 自动回写行为
 
 - 首次构建（配置文件存在、`template_id` 为空）成功后，qshell 自动把新的 `template_id` 写入文件
+- 未指定 `--wait` 时，在构建成功启动后回写；指定 `--wait` 时，在构建完成且状态为 `ready` 后回写
 - 回写会替换已有的 `template_id` 赋值行（无论原值是否为空），或在文件头插入一行
 - 注释、字段顺序、空白均保留
 - 回写完成后 stdout 打印：`Written template_id to <path> (please commit this file)`

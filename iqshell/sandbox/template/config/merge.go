@@ -26,6 +26,8 @@ type BuildFields struct {
 	MemoryMB int32
 	// NoCache 强制完整构建，忽略缓存。
 	NoCache bool
+	// NoCacheChanged 表示 CLI 是否显式设置了 --no-cache。
+	NoCacheChanged bool
 }
 
 // ApplyTo 将 FileConfig 的值合并到 dst 中：仅当 dst 字段为零值时才采用 file 值。
@@ -65,9 +67,10 @@ func (c *FileConfig) ApplyTo(dst *BuildFields) []string {
 		if *dstVal == fileVal {
 			return
 		}
-		// 文件值与 dst 不同。由于 Go flag 无法区分 "CLI 显式传 false" 与
-		// "未传默认 false"，策略为：dst 为零值时采用文件值；dst 为 true 时
-		// CLI 胜出并报告覆盖。
+		if dst.NoCacheChanged {
+			overrides = append(overrides, key)
+			return
+		}
 		if !*dstVal {
 			*dstVal = fileVal
 			return

@@ -25,7 +25,7 @@ template 的子命令有：
 * list（ls）：列出模板
 * get（gt）：查看模板详情
 * delete（dl）：删除模板
-* build（bd）：创建并构建模板
+* build（bd）：创建并构建模板，支持 `qshell.sandbox.toml` 配置文件
 * builds（bds）：查看模板构建状态
 * publish（pb）：发布模板（设为公开）
 * unpublish（upb）：取消发布模板（设为私有）
@@ -56,19 +56,31 @@ qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wai
 qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --wait
 ```
 
-5. 查看构建状态
+5. 使用当前目录的 `qshell.sandbox.toml` 构建模板
+```
+qshell sandbox template build --wait
+qshell sbx tpl bd --wait
+```
+
+6. 查看配置文件中的模板详情
+```
+qshell sandbox template get
+qshell sbx tpl gt
+```
+
+7. 查看构建状态
 ```
 qshell sandbox template builds tmpl-xxxxxxxxxxxx build-xxxxxxxxxxxx
 qshell sbx tpl bds tmpl-xxxxxxxxxxxx build-xxxxxxxxxxxx
 ```
 
-6. 发布/取消发布模板
+8. 发布/取消发布模板
 ```
 qshell sandbox template publish tmpl-xxxxxxxxxxxx -y
 qshell sandbox template unpublish tmpl-xxxxxxxxxxxx -y
 ```
 
-7. 初始化模板项目
+9. 初始化模板项目
 ```
 qshell sandbox template init
 qshell sandbox template init --name my-template --language go

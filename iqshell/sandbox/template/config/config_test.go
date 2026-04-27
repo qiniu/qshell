@@ -133,7 +133,7 @@ func TestApplyTo_IdenticalValuesNoOverrideReport(t *testing.T) {
 func TestApplyTo_BoolDefinedFillsZero(t *testing.T) {
 	// 文件显式定义 no_cache = true，dst 为零值 → 应用文件值
 	cfg := &FileConfig{NoCache: true, defined: map[string]bool{"no_cache": true}}
-	dst := BuildFields{NoCache: false}
+	dst := BuildFields{NoCache: false, NoCacheChanged: false}
 	overrides := cfg.ApplyTo(&dst)
 	assert.True(t, dst.NoCache)
 	assert.Empty(t, overrides)
@@ -151,9 +151,18 @@ func TestApplyTo_BoolNotDefinedIgnored(t *testing.T) {
 func TestApplyTo_BoolDefinedCLITrueWins(t *testing.T) {
 	// 文件 no_cache = false，CLI no_cache = true → CLI 胜出并报告覆盖
 	cfg := &FileConfig{NoCache: false, defined: map[string]bool{"no_cache": true}}
-	dst := BuildFields{NoCache: true}
+	dst := BuildFields{NoCache: true, NoCacheChanged: true}
 	overrides := cfg.ApplyTo(&dst)
 	assert.True(t, dst.NoCache)
+	assert.ElementsMatch(t, []string{"no_cache"}, overrides)
+}
+
+func TestApplyTo_BoolDefinedCLIFalseWins(t *testing.T) {
+	// 文件 no_cache = true，CLI 显式 no_cache=false → CLI 胜出并报告覆盖。
+	cfg := &FileConfig{NoCache: true, defined: map[string]bool{"no_cache": true}}
+	dst := BuildFields{NoCache: false, NoCacheChanged: true}
+	overrides := cfg.ApplyTo(&dst)
+	assert.False(t, dst.NoCache)
 	assert.ElementsMatch(t, []string{"no_cache"}, overrides)
 }
 
@@ -217,7 +226,7 @@ name = "demo"
 func TestWriteTemplateID_PreservesIndentation(t *testing.T) {
 	dir := t.TempDir()
 	p := filepath.Join(dir, "qshell.sandbox.toml")
-	orig := "[section]\n    template_id = \"old\"\n    name = \"demo\"\n"
+	orig := "    template_id = \"old\"\nname = \"demo\"\n"
 	require.NoError(t, os.WriteFile(p, []byte(orig), 0644))
 
 	err := WriteTemplateID(p, "tmpl-new")
@@ -226,6 +235,20 @@ func TestWriteTemplateID_PreservesIndentation(t *testing.T) {
 	got, err := os.ReadFile(p)
 	require.NoError(t, err)
 	assert.Contains(t, string(got), "    template_id = \"tmpl-new\"")
+}
+
+func TestWriteTemplateID_DoesNotReplaceTableField(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "qshell.sandbox.toml")
+	orig := "[section]\n    template_id = \"section-value\"\nname = \"demo\"\n"
+	require.NoError(t, os.WriteFile(p, []byte(orig), 0644))
+
+	err := WriteTemplateID(p, "tmpl-new")
+	require.NoError(t, err)
+
+	got, err := os.ReadFile(p)
+	require.NoError(t, err)
+	assert.Equal(t, "template_id = \"tmpl-new\"\n[section]\n    template_id = \"section-value\"\nname = \"demo\"\n", string(got))
 }
 
 func TestWriteTemplateID_PreservesCRLF(t *testing.T) {

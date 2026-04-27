@@ -35,9 +35,14 @@ func WriteTemplateID(path, templateID string) error {
 	var out bytes.Buffer
 	scanner := bufio.NewScanner(bytes.NewReader(data))
 	replaced := false
+	inRootTable := true
 	for scanner.Scan() {
 		line := scanner.Text()
-		if !replaced && templateIDLineRegex.MatchString(line) && !isCommentLine(line) {
+		trimmed := strings.TrimSpace(line)
+		if !isCommentLine(line) && strings.HasPrefix(trimmed, "[") {
+			inRootTable = false
+		}
+		if inRootTable && !replaced && templateIDLineRegex.MatchString(line) && !isCommentLine(line) {
 			// 保留原行的前导缩进
 			idx := strings.Index(line, "template_id")
 			indent := ""

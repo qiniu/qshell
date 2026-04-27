@@ -204,6 +204,7 @@ because the rebuild API must carry the Dockerfile content in the request body.
 			if iqshell.ShowDocumentIfNeeded(cfg) {
 				return
 			}
+			info.NoCacheChanged = cmd.Flags().Changed("no-cache")
 			operations.Build(info)
 		},
 	}
