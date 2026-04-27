@@ -27,7 +27,15 @@ var sandboxCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
   # Connect to a sandbox
   qshell sandbox connect sb-xxxxxxxxxxxx
-  qshell sbx cn sb-xxxxxxxxxxxx`,
+  qshell sbx cn sb-xxxxxxxxxxxx
+
+  # Execute a command in a sandbox
+  qshell sandbox exec sb-xxxxxxxxxxxx -- ls -la
+  qshell sbx ex sb-xxxxxxxxxxxx -- ls -la
+
+  # Pause and resume a sandbox
+  qshell sandbox pause sb-xxxxxxxxxxxx
+  qshell sandbox resume sb-xxxxxxxxxxxx`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxType
 			docs.ShowCmdDocument(docs.SandboxType)
@@ -107,8 +115,11 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sbx cr my-template --injection-rule rule-openai --injection-rule rule-http
 
   # Create with inline injections
-  qshell sandbox create my-template --inline-injection 'type=openai,api-key=sk-xxx' --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
-  qshell sbx cr my-template --inline-injection 'type=openai,api-key=sk-xxx'`,
+  qshell sandbox create my-template \
+    --inline-injection 'type=openai,api-key=sk-xxx' \
+    --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod'
+  qshell sbx cr my-template \
+    --inline-injection 'type=openai,api-key=sk-xxx'`,
 		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxCreateType
@@ -357,6 +368,9 @@ var sandboxExecCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   # Pipe stdin to a command
   echo "hello world" | qshell sbx ex sb-xxxxxxxxxxxx -- cat
   cat file.txt | qshell sbx ex sb-xxxxxxxxxxxx -- wc -l
+
+  # Run a shell pipeline inside the sandbox
+  qshell sandbox exec sb-xxxxxxxxxxxx -- sh -lc 'cat /etc/os-release | head -5'
 
   # Run in background (print PID and return)
   qshell sandbox exec sb-xxxxxxxxxxxx -b -- python server.py

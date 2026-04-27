@@ -25,7 +25,7 @@ template 的子命令有：
 * list（ls）：列出模板
 * get（gt）：查看模板详情
 * delete（dl）：删除模板
-* build（bd）：创建并构建模板，支持 `qshell.sandbox.toml` 配置文件
+* build（bd）：创建并构建模板，或重新构建已有模板，支持 `qshell.sandbox.toml` 配置文件
 * builds（bds）：查看模板构建状态
 * publish（pb）：发布模板（设为公开）
 * unpublish（upb）：取消发布模板（设为私有）

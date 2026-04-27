@@ -1,23 +1,25 @@
+# 简介
 `sandbox injection-rule list`（别名 `ls`）列出所有注入规则。
 
-## 命令格式
+# 格式
 
 ```bash
 qshell sandbox injection-rule list [--format <pretty|json>]
+qshell sbx ir ls [--format <pretty|json>]
 ```
 
-## 查看帮助
+# 帮助文档
 
 ```bash
 $ qshell sandbox injection-rule list -h
 $ qshell sandbox injection-rule list --doc
 ```
 
-## 参数说明
+# 参数
 
 - `--format`：输出格式，支持 `pretty` 和 `json`，默认 `pretty`
 
-## 使用示例
+# 示例
 
 默认表格输出：
 

@@ -33,21 +33,27 @@ $ qshell sbx ex sb-xxxxxxxxxxxx -- ls -la
 
 2. 执行带管道的复杂命令
 ```
-$ qshell sandbox exec sb-xxxxxxxxxxxx -- cat /etc/os-release | head -5
+$ qshell sandbox exec sb-xxxxxxxxxxxx -- sh -lc 'cat /etc/os-release | head -5'
 ```
 
-3. 后台运行命令
+3. 将本地标准输入传给沙箱命令
+```
+$ echo "hello world" | qshell sbx ex sb-xxxxxxxxxxxx -- cat
+$ cat file.txt | qshell sbx ex sb-xxxxxxxxxxxx -- wc -l
+```
+
+4. 后台运行命令
 ```
 $ qshell sandbox exec sb-xxxxxxxxxxxx -b -- python server.py
 $ qshell sbx ex sb-xxxxxxxxxxxx -b -- python server.py
 ```
 
-4. 指定工作目录和用户
+5. 指定工作目录和用户
 ```
 $ qshell sandbox exec sb-xxxxxxxxxxxx -c /app -u root -- npm install
 ```
 
-5. 设置环境变量
+6. 设置环境变量
 ```
 $ qshell sandbox exec sb-xxxxxxxxxxxx -e PORT=3000 -e NODE_ENV=production -- node app.js
 ```

@@ -27,7 +27,11 @@ var templateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
   # Get template details
   qshell sandbox template get tmpl-xxxxxxxxxxxx
-  qshell sbx tpl gt tmpl-xxxxxxxxxxxx`,
+  qshell sbx tpl gt tmpl-xxxxxxxxxxxx
+
+  # Build with qshell.sandbox.toml in the current directory
+  qshell sandbox template build --wait
+  qshell sbx tpl bd --wait`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateType
 			docs.ShowCmdDocument(docs.SandboxTemplateType)
@@ -68,7 +72,11 @@ var templateGetCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short:   "Get template details (alias: gt)",
 		Example: `  # Get template details
   qshell sandbox template get tmpl-xxxxxxxxxxxx
-  qshell sbx tpl gt tmpl-xxxxxxxxxxxx`,
+  qshell sbx tpl gt tmpl-xxxxxxxxxxxx
+
+  # Get template details from qshell.sandbox.toml in the current directory
+  qshell sandbox template get
+  qshell sbx tpl gt`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateGetType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -106,7 +114,11 @@ var templateDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
   # Interactively select templates to delete
   qshell sandbox template delete -s
-  qshell sbx tpl dl -s`,
+  qshell sbx tpl dl -s
+
+  # Delete the template recorded in qshell.sandbox.toml
+  qshell sandbox template delete -y
+  qshell sbx tpl dl -y`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateDeleteType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -196,9 +208,11 @@ because the rebuild API must carry the Dockerfile content in the request body.
 
   # 使用 qshell.sandbox.toml（当前目录）
   qshell sandbox template build --wait
+  qshell sbx tpl bd --wait
 
   # 显式指定配置文件
-  qshell sandbox template build --config ./configs/prod.toml --wait`,
+  qshell sandbox template build --config ./configs/prod.toml --wait
+  qshell sbx tpl bd --config ./configs/prod.toml --wait`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateBuildType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -236,7 +250,11 @@ var templatePublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
   # Interactively select templates to publish
   qshell sandbox template publish -s
-  qshell sbx tpl pb -s`,
+  qshell sbx tpl pb -s
+
+  # Publish the template recorded in qshell.sandbox.toml
+  qshell sandbox template publish -y
+  qshell sbx tpl pb -y`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplatePublishType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -263,7 +281,11 @@ var templateUnpublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
   # Interactively select templates to unpublish
   qshell sandbox template unpublish -s
-  qshell sbx tpl upb -s`,
+  qshell sbx tpl upb -s
+
+  # Unpublish the template recorded in qshell.sandbox.toml
+  qshell sandbox template unpublish -y
+  qshell sbx tpl upb -y`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxTemplateUnpublishType
 			if iqshell.ShowDocumentIfNeeded(cfg) {

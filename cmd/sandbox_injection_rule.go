@@ -97,7 +97,12 @@ var injectionRuleCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox injection-rule create --name anthropic-proxy --type anthropic --api-key sk-ant --base-url https://anthropic-proxy.example.com
 
   # Create a custom HTTP injection rule
-  qshell sandbox injection-rule create --name api-auth --type http --base-url https://api.example.com --headers "Authorization=Bearer token123,X-Env=prod"`,
+  qshell sandbox injection-rule create --name api-auth --type http --base-url https://api.example.com --headers "Authorization=Bearer token123,X-Env=prod"
+  qshell sbx ir cr --name api-auth --type http --base-url https://api.example.com --headers "Authorization=Bearer token123,X-Env=prod"
+
+  # Create a Qiniu AI API injection rule
+  qshell sandbox injection-rule create --name qiniu-ai --type qiniu --api-key ak-xxx
+  qshell sbx ir cr --name qiniu-ai --type qiniu --api-key ak-xxx`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxInjectionRuleCreateType
 			if iqshell.ShowDocumentIfNeeded(cfg) {
@@ -129,9 +134,15 @@ var injectionRuleUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
   # Update to a Gemini injection with custom base URL
   qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type gemini --api-key sk-gem --base-url https://gemini-proxy.example.com
+  qshell sbx ir up rule-xxxxxxxxxxxx --type gemini --api-key sk-gem --base-url https://gemini-proxy.example.com
 
   # Update custom HTTP headers
-  qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type http --base-url https://api.example.com --headers "Authorization=Bearer newtoken"`,
+  qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type http --base-url https://api.example.com --headers "Authorization=Bearer newtoken"
+  qshell sbx ir up rule-xxxxxxxxxxxx --type http --base-url https://api.example.com --headers "Authorization=Bearer newtoken"
+
+  # Update to a Qiniu AI API injection
+  qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type qiniu --api-key ak-new
+  qshell sbx ir up rule-xxxxxxxxxxxx --type qiniu --api-key ak-new`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxInjectionRuleUpdateType
 			if iqshell.ShowDocumentIfNeeded(cfg) {

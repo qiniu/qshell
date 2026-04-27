@@ -1,5 +1,5 @@
 # 简介
-`sandbox`（别名 `sbx`）命令用于管理沙箱实例和模板，支持创建、连接、终止沙箱以及查看沙箱日志和指标。
+`sandbox`（别名 `sbx`）命令用于管理沙箱实例、模板和注入规则，支持创建、连接、执行命令、暂停、恢复、终止沙箱，以及查看沙箱日志和指标。
 
 # 格式
 ```
@@ -28,12 +28,15 @@ $ qshell sandbox --doc
 sandbox 的子命令有：
 * list（ls）：列出沙箱
 * create（cr）：创建沙箱并连接终端
-* injection-rule（ir）：管理沙箱注入规则
 * connect（cn）：连接到已有沙箱终端
 * kill（kl）：终止沙箱
+* pause（ps）：暂停沙箱
+* resume（rs）：恢复已暂停的沙箱
+* exec（ex）：在沙箱中执行命令
 * logs（lg）：查看沙箱日志
 * metrics（mt）：查看沙箱资源指标
 * template（tpl）：管理沙箱模板
+* injection-rule（ir）：管理沙箱注入规则
 
 # 示例
 1. 列出所有运行中的沙箱
@@ -56,8 +59,9 @@ qshell sbx cr my-template --injection-rule rule-openai --injection-rule rule-htt
 
 4. 创建沙箱时附加内联注入配置
 ```
-qshell sandbox create my-template --inline-injection 'type=openai,api-key=sk-xxx'
-qshell sbx cr my-template --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod'
+qshell sandbox create my-template \
+  --inline-injection 'type=openai,api-key=sk-xxx' \
+  --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod'
 ```
 
 5. 管理注入规则
@@ -72,7 +76,19 @@ qshell sandbox connect sb-xxxxxxxxxxxx
 qshell sbx cn sb-xxxxxxxxxxxx
 ```
 
-7. 终止沙箱
+7. 在沙箱中执行命令
+```
+qshell sandbox exec sb-xxxxxxxxxxxx -- ls -la
+qshell sbx ex sb-xxxxxxxxxxxx -- ls -la
+```
+
+8. 暂停并恢复沙箱
+```
+qshell sandbox pause sb-xxxxxxxxxxxx
+qshell sandbox resume sb-xxxxxxxxxxxx
+```
+
+9. 终止沙箱
 ```
 qshell sandbox kill sb-xxxxxxxxxxxx
 qshell sbx kl sb-xxxxxxxxxxxx
