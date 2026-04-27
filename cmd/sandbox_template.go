@@ -160,6 +160,10 @@ Creating a new template supports three build modes:
   2. --from-template: Build from an existing template
   3. --dockerfile: Build from a Dockerfile (v2 build system)
 
+--dockerfile can also be combined with --from-template or --from-image to apply
+Dockerfile RUN/COPY/ENV steps on top of the selected base. When combined with
+--from-template, the Dockerfile FROM line is parsed but ignored as the base.
+
 Rebuilding an existing template (--template-id) requires --dockerfile
 because the rebuild API must carry the Dockerfile content in the request body.
 
@@ -177,6 +181,10 @@ because the rebuild API must carry the Dockerfile content in the request body.
   # Build from a Dockerfile with a custom context directory
   qshell sandbox template build --name my-template --dockerfile ./Dockerfile --path ./context --wait
   qshell sbx tpl bd --name my-template --dockerfile ./Dockerfile --path ./context --wait
+
+  # Build from an existing template and apply Dockerfile steps on top
+  qshell sandbox template build --name claude --from-template agents-base --dockerfile ./Dockerfile --wait
+  qshell sbx tpl bd --name claude --from-template agents-base --dockerfile ./Dockerfile --wait
 
   # Rebuild an existing template (Dockerfile required)
   qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --wait

@@ -119,6 +119,11 @@ func Build(info BuildInfo) {
 		}
 	}
 
+	if err := validateBuildSourceSelection(info); err != nil {
+		sbClient.PrintError("%v", err)
+		return
+	}
+
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
 		sbClient.PrintError("%v", err)
@@ -207,12 +212,6 @@ func Build(info BuildInfo) {
 			return
 		}
 	} else {
-		// 验证构建来源
-		if info.FromImage == "" && info.FromTemplate == "" {
-			sbClient.PrintError("--from-image, --from-template, or --dockerfile is required")
-			return
-		}
-
 		buildParams := sandbox.StartTemplateBuildParams{}
 		if info.FromImage != "" {
 			buildParams.FromImage = &info.FromImage
@@ -360,10 +359,7 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 	}
 
 	// 构建参数
-	buildParams := sandbox.StartTemplateBuildParams{
-		FromImage: &result.BaseImage,
-		Steps:     &result.Steps,
-	}
+	buildParams := buildParamsFromDockerfileResult(result, info)
 
 	// 应用来自 Dockerfile 或 CLI 覆盖的启动/就绪命令
 	startCmd := result.StartCmd
@@ -393,6 +389,33 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 	}
 
 	return nil
+}
+
+func validateBuildSourceSelection(info BuildInfo) error {
+	if info.FromImage != "" && info.FromTemplate != "" {
+		return fmt.Errorf("cannot specify both --from-image and --from-template")
+	}
+	if info.Dockerfile == "" && info.FromImage == "" && info.FromTemplate == "" {
+		return fmt.Errorf("--from-image, --from-template, or --dockerfile is required")
+	}
+	return nil
+}
+
+func buildParamsFromDockerfileResult(result *dockerfile.ConvertResult, info BuildInfo) sandbox.StartTemplateBuildParams {
+	buildParams := sandbox.StartTemplateBuildParams{
+		Steps: &result.Steps,
+	}
+
+	switch {
+	case info.FromTemplate != "":
+		buildParams.FromTemplate = &info.FromTemplate
+	case info.FromImage != "":
+		buildParams.FromImage = &info.FromImage
+	default:
+		buildParams.FromImage = &result.BaseImage
+	}
+
+	return buildParams
 }
 
 // dockerfileForRebuild 返回 rebuild 请求所需的 Dockerfile 文本。

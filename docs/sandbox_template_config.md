@@ -10,7 +10,7 @@
 template_id = "tmpl-xxxxxxxxxxxx"
 name        = "claude"
 
-# 构建输入（dockerfile / from_image / from_template 三选一）
+# 构建输入
 dockerfile    = "./Dockerfile"
 path          = "."
 from_image    = ""
@@ -47,6 +47,17 @@ no_cache = false
 `CLI flag > 配置文件 > 内置默认值`
 
 同时提供时，CLI 会覆盖配置文件，并在 stderr 打印一次覆盖提示。
+
+## 构建输入组合
+
+`from_image` 和 `from_template` 二选一，不能同时设置。
+
+`dockerfile` 可以单独使用，也可以和 `from_image` 或 `from_template` 组合使用：
+- 只有 `dockerfile`：使用 Dockerfile 中的 `FROM` 作为基础镜像。
+- `from_image + dockerfile`：使用 `from_image` 作为基础镜像，Dockerfile 中的 `FROM` 会被覆盖。
+- `from_template + dockerfile`：使用 `from_template` 作为基础模板，Dockerfile 中的 `FROM` 会被解析但不会作为真实基础镜像。
+
+`from_template + dockerfile` 适合在统一基础模板上叠加少量依赖，例如多个 agent 模板共用一个 `agents-base`。
 
 ### bool 字段的已知限制
 
