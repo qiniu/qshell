@@ -437,15 +437,23 @@ func validateBuildSourceSelection(info BuildInfo) error {
 	return nil
 }
 
+// normalizeRebuildSourceSelection 校验 rebuild 路径下的 from-* 来源。
+//
+// 仅在 CLI 显式提供 --from-image / --from-template 同时又走 rebuild 时报错，
+// 因为这两个参数仅适用于新建模板。
+//
+// 之前的实现会在 rebuild 时把 info.FromImage / info.FromTemplate 清空，
+// 这会丢掉来自 qshell.sandbox.toml 的 from_template，导致下游
+// buildFromDockerfile 回退到 Dockerfile 中的 `FROM scratch`，
+// 触发 "image 'scratch' not found"。
+// 现在保留 TOML 来源的值原样透传，让模板继续基于声明的父模板构建。
 func normalizeRebuildSourceSelection(info *BuildInfo, cliFromImage, cliFromTemplate bool) error {
-	if info.TemplateID == "" || (info.FromImage == "" && info.FromTemplate == "") {
+	if info.TemplateID == "" {
 		return nil
 	}
 	if cliFromImage || cliFromTemplate {
 		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template (--template-id)")
 	}
-	info.FromImage = ""
-	info.FromTemplate = ""
 	return nil
 }
 

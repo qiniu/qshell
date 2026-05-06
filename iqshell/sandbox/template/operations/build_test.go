@@ -89,7 +89,9 @@ func TestNormalizeRebuildSourceSelection_RejectsCLIFromTemplate(t *testing.T) {
 	}
 }
 
-func TestNormalizeRebuildSourceSelection_IgnoresConfigFromImage(t *testing.T) {
+// TOML 配置中声明的 from_image 在 rebuild 时必须保留，
+// 否则下游 buildFromDockerfile 会回退到 Dockerfile 的 FROM 行。
+func TestNormalizeRebuildSourceSelection_PreservesConfigFromImage(t *testing.T) {
 	info := BuildInfo{
 		TemplateID: "tmpl-xxxxxxxxxxxx",
 		Dockerfile: "./Dockerfile",
@@ -99,22 +101,26 @@ func TestNormalizeRebuildSourceSelection_IgnoresConfigFromImage(t *testing.T) {
 	err := normalizeRebuildSourceSelection(&info, false, false)
 
 	assert.NoError(t, err)
-	assert.Empty(t, info.FromImage)
+	assert.Equal(t, "ubuntu:22.04", info.FromImage)
 	assert.Empty(t, info.FromTemplate)
 }
 
-func TestNormalizeRebuildSourceSelection_IgnoresConfigFromTemplate(t *testing.T) {
+// TOML 配置中声明的 from_template 在 rebuild 时必须保留，
+// 这是修复 "image 'scratch' not found" 的关键场景：
+// agents-base 等模板基于 from_template = "base" 构建，
+// rebuild 时若被清空会让 Dockerfile 中的 FROM scratch 直接送到 builder。
+func TestNormalizeRebuildSourceSelection_PreservesConfigFromTemplate(t *testing.T) {
 	info := BuildInfo{
 		TemplateID:   "tmpl-xxxxxxxxxxxx",
 		Dockerfile:   "./Dockerfile",
-		FromTemplate: "agents-base",
+		FromTemplate: "base",
 	}
 
 	err := normalizeRebuildSourceSelection(&info, false, false)
 
 	assert.NoError(t, err)
 	assert.Empty(t, info.FromImage)
-	assert.Empty(t, info.FromTemplate)
+	assert.Equal(t, "base", info.FromTemplate)
 }
 
 func TestValidateBuildSourceSelection_RequiresSource(t *testing.T) {
