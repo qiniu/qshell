@@ -142,6 +142,25 @@ func Build(info BuildInfo) {
 	ctx := context.Background()
 	templateID := info.TemplateID
 	buildID := ""
+	// foundByName 表示当前模板是通过 name 在远端查到的；这种情况下
+	// name 已经能稳定定位模板，不再把 template_id 回写进 toml，
+	// 让配置文件保持环境无关。
+	foundByName := false
+
+	// 未提供 --template-id 时，先按 name 在远端查一次：命中即 rebuild，
+	// 未命中再 create。这样多环境切换时无需手工同步 template_id。
+	if templateID == "" && info.Name != "" {
+		existingID, lookupErr := lookupTemplateIDByName(ctx, client, info.Name)
+		if lookupErr != nil {
+			sbClient.PrintError("lookup template by name %q: %v", info.Name, lookupErr)
+			return
+		}
+		if existingID != "" {
+			templateID = existingID
+			foundByName = true
+			fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (rebuild)\n", info.Name, templateID)
+		}
+	}
 
 	if templateID == "" {
 		// 创建新模板
@@ -236,7 +255,7 @@ func Build(info BuildInfo) {
 	}
 
 	if !info.Wait {
-		writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge, templateID)
+		writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge && !foundByName, templateID)
 		fmt.Printf("Build started. Use 'qshell sandbox template builds %s %s' to check status.\n", templateID, buildID)
 		return
 	}
@@ -276,7 +295,7 @@ func Build(info BuildInfo) {
 				sbClient.PrintError("build failed")
 			} else {
 				sbClient.PrintSuccess("Build completed!")
-				writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge, templateID)
+				writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge && !foundByName, templateID)
 			}
 			fmt.Printf("Template ID:  %s\n", buildInfo.TemplateID)
 			fmt.Printf("Build ID:     %s\n", buildInfo.BuildID)
