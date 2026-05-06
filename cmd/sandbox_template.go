@@ -173,8 +173,14 @@ Rebuilding an existing template (--template-id) requires --dockerfile
 because the rebuild API must carry the Dockerfile content in the request body.
 
 参数可通过 qshell.sandbox.toml 持久化；CLI flag 优先于配置文件。
-首次构建成功后，qshell 会自动把 template_id 回写到配置文件，
-后续重建只需 qshell sandbox template build 即可完成幂等重建。`,
+
+模板按 name 定位（同环境内 name 全局唯一）：未提供 --template-id 时，
+qshell 会先按 name 在远端查找；命中即对已有模板触发 rebuild，未命中再创建新模板。
+因此 qshell.sandbox.toml 只需写 name，无需写 template_id，
+配置文件可在多个环境间复用。
+
+向后兼容：toml 中已有 template_id 仍然生效；首次按 --name 创建新模板时，
+qshell 仍会把 template_id 回写到配置文件以备旧脚本使用。`,
 		Example: `  # Create and build a new template from a Docker image
   qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wait
   qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --wait

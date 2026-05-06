@@ -7,6 +7,8 @@
 
 **重新构建已有模板**（`--template-id`）必须提供 `--dockerfile`——服务端 rebuild 接口要求在请求体中携带 Dockerfile 内容。
 
+未提供 `--template-id` 但提供了 `--name` 时，命令会先在当前环境按 name 查找远端模板；命中则进入 rebuild，未命中才创建新模板。这样 `qshell.sandbox.toml` 可以只保存 `name`，在不同环境中自动定位各自的模板。
+
 支持 `qshell.sandbox.toml` 配置文件、`--config` 显式指定配置文件、`--no-cache` 强制完整构建和 `--wait` 流式查看构建日志。
 
 # 格式
@@ -25,7 +27,7 @@ $ qshell sandbox template build --doc
 需要配置 `QINIU_API_KEY` 或 `E2B_API_KEY` 环境变量。
 
 # 参数
-- `--name`：模板名称（创建新模板时使用，与 --template-id 二选一）
+- `--name`：模板名称。未提供 `--template-id` 时，先按 name 查找远端模板；命中则 rebuild，未命中则创建新模板
 - `--template-id`：已有模板 ID（重新构建时使用，与 --name 二选一，必须同时提供 `--dockerfile`）
 - `--from-image`：基础 Docker 镜像，仅创建新模板时可用
 - `--from-template`：基础模板，仅创建新模板时可用
@@ -42,7 +44,9 @@ $ qshell sandbox template build --doc
 # 配置文件
 `sandbox template build` 会按 `CLI flag > 配置文件 > 内置默认值` 合并参数。配置文件可提供 `template_id`、`name`、`dockerfile`、`path`、`from_image`、`from_template`、`start_cmd`、`ready_cmd`、`cpu_count`、`memory_mb` 和 `no_cache`。
 
-首次构建成功且配置文件存在、`template_id` 为空时，命令会自动把新模板 ID 回写到配置文件。后续再次运行同一配置文件会进入 rebuild 流程；此时配置文件中保留的 `from_image` / `from_template` 会被忽略，rebuild 只使用 `template_id`、`dockerfile`、资源规格和启动/就绪命令等参数。更多字段说明见 `docs/sandbox_template_config.md`。
+未提供 `template_id` 时，如果配置文件或 CLI 中有 `name`，命令会先按 name 在远端查找模板；命中即进入 rebuild，未命中再创建新模板。按 name 命中的 rebuild 不会把 `template_id` 回写到配置文件，便于同一份配置在多个环境复用。
+
+首次创建成功且配置文件存在、`template_id` 为空时，命令会自动把新模板 ID 回写到配置文件，以兼容已有脚本。后续通过 `template_id` 或按 name 命中进入 rebuild 时，配置文件中保留的 `from_image` / `from_template` 会被忽略；如果这两个参数来自 CLI，则命令会报错。更多字段说明见 `docs/sandbox_template_config.md`。
 
 # 示例
 1. 从 Docker 镜像创建并构建模板
