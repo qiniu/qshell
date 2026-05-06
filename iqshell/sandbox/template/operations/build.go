@@ -157,8 +157,13 @@ func Build(info BuildInfo) {
 		}
 		if existingID != "" {
 			templateID = existingID
+			info.TemplateID = existingID
 			foundByName = true
 			fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (rebuild)\n", info.Name, templateID)
+			if err := normalizeRebuildSourceSelection(&info, cliFromImage, cliFromTemplate); err != nil {
+				sbClient.PrintError("%v", err)
+				return
+			}
 		}
 	}
 

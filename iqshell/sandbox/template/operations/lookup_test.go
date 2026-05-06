@@ -1,49 +1,33 @@
 package operations
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFindTemplateIDByAlias_Hit(t *testing.T) {
-	templates := []sandbox.Template{
-		{TemplateID: "id-base", Aliases: []string{"agents-base"}},
-		{TemplateID: "id-claude", Aliases: []string{"claude"}},
-		{TemplateID: "id-codex", Aliases: []string{"codex"}},
-	}
+func TestIsTemplateAliasNotFound_APIError404(t *testing.T) {
+	err := &sandbox.APIError{StatusCode: 404}
 
-	assert.Equal(t, "id-claude", findTemplateIDByAlias(templates, "claude"))
-	assert.Equal(t, "id-base", findTemplateIDByAlias(templates, "agents-base"))
+	assert.True(t, isTemplateAliasNotFound(err))
 }
 
-func TestFindTemplateIDByAlias_MultipleAliases(t *testing.T) {
-	templates := []sandbox.Template{
-		{TemplateID: "id-claude", Aliases: []string{"claude", "claude-stable"}},
-	}
+func TestIsTemplateAliasNotFound_OtherAPIError(t *testing.T) {
+	err := &sandbox.APIError{StatusCode: 500}
 
-	assert.Equal(t, "id-claude", findTemplateIDByAlias(templates, "claude-stable"))
+	assert.False(t, isTemplateAliasNotFound(err))
 }
 
-func TestFindTemplateIDByAlias_Miss(t *testing.T) {
-	templates := []sandbox.Template{
-		{TemplateID: "id-base", Aliases: []string{"agents-base"}},
-	}
+func TestIsTemplateAliasNotFound_WrappedAPIError404(t *testing.T) {
+	err := fmt.Errorf("lookup template: %w", &sandbox.APIError{StatusCode: 404})
 
-	assert.Equal(t, "", findTemplateIDByAlias(templates, "claude"))
+	assert.True(t, isTemplateAliasNotFound(err))
 }
 
-func TestFindTemplateIDByAlias_EmptyName(t *testing.T) {
-	templates := []sandbox.Template{
-		{TemplateID: "id-base", Aliases: []string{"agents-base"}},
-	}
+func TestIsTemplateAliasNotFound_OtherError(t *testing.T) {
+	err := fmt.Errorf("network error")
 
-	// 防御性：空 name 不应匹配任何模板，避免误返回第一个 alias 为空字符串的模板。
-	assert.Equal(t, "", findTemplateIDByAlias(templates, ""))
-}
-
-func TestFindTemplateIDByAlias_EmptyTemplates(t *testing.T) {
-	assert.Equal(t, "", findTemplateIDByAlias(nil, "claude"))
-	assert.Equal(t, "", findTemplateIDByAlias([]sandbox.Template{}, "claude"))
+	assert.False(t, isTemplateAliasNotFound(err))
 }
