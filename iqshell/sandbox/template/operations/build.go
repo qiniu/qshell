@@ -452,7 +452,7 @@ func normalizeRebuildSourceSelection(info *BuildInfo, cliFromImage, cliFromTempl
 		return nil
 	}
 	if cliFromImage || cliFromTemplate {
-		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template (--template-id)")
+		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template")
 	}
 	return nil
 }

@@ -46,7 +46,7 @@ $ qshell sandbox template build --doc
 
 未提供 `template_id` 时，如果配置文件或 CLI 中有 `name`，命令会先按 name 在远端查找模板；命中即进入 rebuild，未命中再创建新模板。按 name 命中的 rebuild 不会把 `template_id` 回写到配置文件，便于同一份配置在多个环境复用。
 
-首次创建成功且配置文件存在、`template_id` 为空时，命令会自动把新模板 ID 回写到配置文件，以兼容已有脚本。后续通过 `template_id` 或按 name 命中进入 rebuild 时，配置文件中保留的 `from_image` / `from_template` 会被忽略；如果这两个参数来自 CLI，则命令会报错。更多字段说明见 `docs/sandbox_template_config.md`。
+首次创建成功且配置文件存在、`template_id` 为空时，命令会自动把新模板 ID 回写到配置文件，以兼容已有脚本。后续通过 `template_id` 或按 name 命中进入 rebuild 时，配置文件中保留的 `from_image` / `from_template` 会继续参与构建；如果这两个参数来自 CLI，则命令会报错。更多字段说明见 `docs/sandbox_template_config.md`。
 
 # 示例
 1. 从 Docker 镜像创建并构建模板
