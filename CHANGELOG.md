@@ -3,6 +3,7 @@
 1. `qshell sandbox` 系列命令接入 qshell 账号体系：执行前自动加载工作区，AK/SK 优先取自 `qshell user` 配置的当前账号，环境变量 `QINIU_ACCESS_KEY` / `QINIU_SECRET_KEY` 作为兜底
 2. `qshell sandbox injection-rule` 子命令现在使用 AK/SK 鉴权（与 go-sdk 设计对齐），`sandbox` / `template` 子命令仍使用 API Key；当所需凭据缺失时给出明确提示
 3. `qshell sandbox` 系列删除 / 发布 / 取消发布命令的确认提示在非 TTY 环境（CI、AI Agent、管道、后台）下立即报错退出，避免进程挂起；自动化场景需显式传入 `--yes`
+4. `qshell sandbox template` 支持按 `name` 自动定位模板：未提供 `template_id` 时，`build` 会先按 name 查找远端模板，命中则 rebuild，未命中再创建；`get` / `publish` / `delete` / `unpublish` 也可从 `qshell.sandbox.toml` 的 `name` 定位模板，便于同一份配置跨环境复用
 
 ## 移除
 1. 移除 `qshell sandbox` 系列命令中的 `huh` 交互式 TUI 依赖以及 `--select` 多选标志：`injection-rule delete` / `template delete` / `template publish` / `template unpublish` 仅接受显式 ID 参数；`template init` 必须显式传入 `--name` 和 `--language`。批量操作请配合 `list` 与 shell pipeline 完成（见各命令文档示例）
