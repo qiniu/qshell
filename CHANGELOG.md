@@ -1,6 +1,6 @@
 # 2.19.6
 ## 修复
-1. 修复 `qshell sandbox template build` 在 rebuild 路径下清空 `qshell.sandbox.toml` 中 `from_image` / `from_template` 的问题，避免配置了父模板的 Dockerfile 回退到 `FROM scratch` 后构建失败；CLI 显式传入 `--from-image` / `--from-template` 时仍会在 rebuild 场景报错
+1. 修复 `qshell sandbox template build` 在 rebuild 场景下清空 `qshell.sandbox.toml` 中 `from_image` / `from_template` 的问题，避免配置了父模板的 Dockerfile 回退到 `FROM scratch` 后构建失败；CLI 显式传入 `--from-image` / `--from-template` 时仍会在 rebuild 场景报错
 
 # 2.19.5
 ## 更新
