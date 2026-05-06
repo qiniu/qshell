@@ -1,3 +1,7 @@
+# 2.19.6
+## 修复
+1. 修复 `qshell sandbox template build` 在 rebuild 场景下清空 `qshell.sandbox.toml` 中 `from_image` / `from_template` 的问题，避免配置了父模板的 Dockerfile 回退到 `FROM scratch` 后构建失败；CLI 显式传入 `--from-image` / `--from-template` 时仍会在 rebuild 场景报错
+
 # 2.19.5
 ## 更新
 1. `qshell sandbox` 系列命令接入 qshell 账号体系：执行前自动加载工作区，AK/SK 优先取自 `qshell user` 配置的当前账号，环境变量 `QINIU_ACCESS_KEY` / `QINIU_SECRET_KEY` 作为兜底
