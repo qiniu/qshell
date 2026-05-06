@@ -63,42 +63,42 @@ func TestValidateBuildSourceSelection_AllowsDockerfileWithFromTemplate(t *testin
 	assert.NoError(t, err)
 }
 
-func TestNormalizeRebuildSourceSelection_RejectsCLIFromImage(t *testing.T) {
+func TestValidateRebuildSourceSelection_RejectsCLIFromImage(t *testing.T) {
 	info := BuildInfo{
 		TemplateID: "tmpl-xxxxxxxxxxxx",
 		Dockerfile: "./Dockerfile",
 		FromImage:  "ubuntu:22.04",
 	}
-	err := normalizeRebuildSourceSelection(&info, true, false)
+	err := validateRebuildSourceSelection(info, true, false)
 
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "when rebuilding")
+		assert.Contains(t, err.Error(), "--from-image")
 	}
 }
 
-func TestNormalizeRebuildSourceSelection_RejectsCLIFromTemplate(t *testing.T) {
+func TestValidateRebuildSourceSelection_RejectsCLIFromTemplate(t *testing.T) {
 	info := BuildInfo{
 		TemplateID:   "tmpl-xxxxxxxxxxxx",
 		Dockerfile:   "./Dockerfile",
 		FromTemplate: "agents-base",
 	}
-	err := normalizeRebuildSourceSelection(&info, false, true)
+	err := validateRebuildSourceSelection(info, false, true)
 
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "when rebuilding")
+		assert.Contains(t, err.Error(), "--from-template")
 	}
 }
 
 // TOML 配置中声明的 from_image 在 rebuild 时必须保留，
 // 否则下游 buildFromDockerfile 会回退到 Dockerfile 的 FROM 行。
-func TestNormalizeRebuildSourceSelection_PreservesConfigFromImage(t *testing.T) {
+func TestValidateRebuildSourceSelection_PreservesConfigFromImage(t *testing.T) {
 	info := BuildInfo{
 		TemplateID: "tmpl-xxxxxxxxxxxx",
 		Dockerfile: "./Dockerfile",
 		FromImage:  "ubuntu:22.04",
 	}
 
-	err := normalizeRebuildSourceSelection(&info, false, false)
+	err := validateRebuildSourceSelection(info, false, false)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "ubuntu:22.04", info.FromImage)
@@ -109,14 +109,14 @@ func TestNormalizeRebuildSourceSelection_PreservesConfigFromImage(t *testing.T) 
 // 这是修复 "image 'scratch' not found" 的关键场景：
 // agents-base 等模板基于 from_template = "base" 构建，
 // rebuild 时若被清空会让 Dockerfile 中的 FROM scratch 直接送到 builder。
-func TestNormalizeRebuildSourceSelection_PreservesConfigFromTemplate(t *testing.T) {
+func TestValidateRebuildSourceSelection_PreservesConfigFromTemplate(t *testing.T) {
 	info := BuildInfo{
 		TemplateID:   "tmpl-xxxxxxxxxxxx",
 		Dockerfile:   "./Dockerfile",
 		FromTemplate: "base",
 	}
 
-	err := normalizeRebuildSourceSelection(&info, false, false)
+	err := validateRebuildSourceSelection(info, false, false)
 
 	assert.NoError(t, err)
 	assert.Empty(t, info.FromImage)

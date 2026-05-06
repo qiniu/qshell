@@ -124,7 +124,7 @@ func Build(info BuildInfo) {
 		}
 	}
 
-	if err := normalizeRebuildSourceSelection(&info, cliFromImage, cliFromTemplate); err != nil {
+	if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
 		sbClient.PrintError("%v", err)
 		return
 	}
@@ -160,7 +160,7 @@ func Build(info BuildInfo) {
 			info.TemplateID = existingID
 			foundByName = true
 			fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (rebuild)\n", info.Name, templateID)
-			if err := normalizeRebuildSourceSelection(&info, cliFromImage, cliFromTemplate); err != nil {
+			if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
 				sbClient.PrintError("%v", err)
 				return
 			}
@@ -437,7 +437,7 @@ func validateBuildSourceSelection(info BuildInfo) error {
 	return nil
 }
 
-// normalizeRebuildSourceSelection 校验 rebuild 路径下的 from-* 来源。
+// validateRebuildSourceSelection 校验 rebuild 路径下的 from-* 来源。
 //
 // 仅在 CLI 显式提供 --from-image / --from-template 同时又走 rebuild 时报错，
 // 因为这两个参数仅适用于新建模板。
@@ -447,12 +447,15 @@ func validateBuildSourceSelection(info BuildInfo) error {
 // buildFromDockerfile 回退到 Dockerfile 中的 `FROM scratch`，
 // 触发 "image 'scratch' not found"。
 // 现在保留 TOML 来源的值原样透传，让模板继续基于声明的父模板构建。
-func normalizeRebuildSourceSelection(info *BuildInfo, cliFromImage, cliFromTemplate bool) error {
+func validateRebuildSourceSelection(info BuildInfo, cliFromImage, cliFromTemplate bool) error {
 	if info.TemplateID == "" {
 		return nil
 	}
-	if cliFromImage || cliFromTemplate {
-		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template")
+	if cliFromImage {
+		return fmt.Errorf("cannot specify --from-image when rebuilding an existing template")
+	}
+	if cliFromTemplate {
+		return fmt.Errorf("cannot specify --from-template when rebuilding an existing template")
 	}
 	return nil
 }
