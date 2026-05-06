@@ -451,11 +451,8 @@ func validateRebuildSourceSelection(info BuildInfo, cliFromImage, cliFromTemplat
 	if info.TemplateID == "" {
 		return nil
 	}
-	if cliFromImage {
-		return fmt.Errorf("cannot specify --from-image when rebuilding an existing template")
-	}
-	if cliFromTemplate {
-		return fmt.Errorf("cannot specify --from-template when rebuilding an existing template")
+	if cliFromImage || cliFromTemplate {
+		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template")
 	}
 	return nil
 }

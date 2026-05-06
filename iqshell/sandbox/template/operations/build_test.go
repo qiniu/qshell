@@ -73,6 +73,7 @@ func TestValidateRebuildSourceSelection_RejectsCLIFromImage(t *testing.T) {
 
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "--from-image")
+		assert.Contains(t, err.Error(), "--from-template")
 	}
 }
 
@@ -85,6 +86,7 @@ func TestValidateRebuildSourceSelection_RejectsCLIFromTemplate(t *testing.T) {
 	err := validateRebuildSourceSelection(info, false, true)
 
 	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "--from-image")
 		assert.Contains(t, err.Error(), "--from-template")
 	}
 }
