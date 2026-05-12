@@ -258,3 +258,40 @@ func TestBuildSandboxResources_Multiple(t *testing.T) {
 		t.Fatalf("buildSandboxResources() len = %d, want 2", len(resources))
 	}
 }
+
+func TestBuildSandboxResources_MultipleSameToken(t *testing.T) {
+	resources, err := buildSandboxResources([]string{
+		"url=https://github.com/owner/a.git,mount-path=/workspace/a,token=ghp-shared",
+		"url=https://github.com/owner/b.git,mount-path=/workspace/b,token=ghp-shared",
+	})
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	if len(resources) != 2 {
+		t.Fatalf("buildSandboxResources() len = %d, want 2", len(resources))
+	}
+}
+
+func TestBuildSandboxResources_MultipleMixedEmptyAndSetToken(t *testing.T) {
+	// 部分资源省略 token（继承沙箱级 github 注入），不应触发不一致校验
+	resources, err := buildSandboxResources([]string{
+		"url=https://github.com/owner/a.git,mount-path=/workspace/a",
+		"url=https://github.com/owner/b.git,mount-path=/workspace/b,token=ghp-shared",
+	})
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	if len(resources) != 2 {
+		t.Fatalf("buildSandboxResources() len = %d, want 2", len(resources))
+	}
+}
+
+func TestBuildSandboxResources_RejectsConflictingTokens(t *testing.T) {
+	_, err := buildSandboxResources([]string{
+		"url=https://github.com/owner/a.git,mount-path=/workspace/a,token=ghp-A",
+		"url=https://github.com/owner/b.git,mount-path=/workspace/b,token=ghp-B",
+	})
+	if err == nil {
+		t.Fatal("expected conflicting tokens across --resource to fail")
+	}
+}

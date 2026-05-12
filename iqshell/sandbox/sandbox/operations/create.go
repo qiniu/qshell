@@ -188,10 +188,21 @@ func buildSandboxResources(resourceSpecs []string) ([]sandbox.SandboxResourceSpe
 		return nil, nil
 	}
 	resources := make([]sandbox.SandboxResourceSpec, 0, len(resourceSpecs))
+	// 同一沙箱内多个 GitHub 仓库资源当前必须共用同一 token（go-sdk 注释明示约束）；
+	// 提前在 CLI 层校验，避免等到平台克隆阶段才返回不易理解的错误。
+	var seenToken string
 	for _, spec := range resourceSpecs {
 		resource, err := parseSandboxResource(spec)
 		if err != nil {
 			return nil, err
+		}
+		if gr := resource.GitRepository; gr != nil && gr.AuthorizationToken != nil {
+			switch token := *gr.AuthorizationToken; {
+			case seenToken == "":
+				seenToken = token
+			case token != seenToken:
+				return nil, fmt.Errorf("inconsistent --resource tokens: a sandbox can carry only one GitHub token across all repository resources")
+			}
 		}
 		resources = append(resources, resource)
 	}
