@@ -3,6 +3,7 @@ package operations
 import (
 	"context"
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
@@ -220,6 +221,10 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 		}
 		if mountPath == "" {
 			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: mount-path is required for github_repository", spec)
+		}
+		// 沙箱内部使用 POSIX 路径；用 path.IsAbs 而非 filepath.IsAbs，避免 Windows 主机上把 /workspace 误判为相对
+		if !path.IsAbs(mountPath) {
+			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: mount-path %q must be an absolute path", spec, mountPath)
 		}
 		res := &sandbox.GitRepositoryResource{
 			Type:      sandbox.GitRepositoryTypeGithub,

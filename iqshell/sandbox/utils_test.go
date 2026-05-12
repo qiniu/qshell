@@ -464,3 +464,15 @@ func TestBuildInjectionParts_GithubEmptyToken(t *testing.T) {
 		t.Fatalf("github token = %v, want nil", parts.Github.Token)
 	}
 }
+
+func TestBuildInjectionParts_GithubRejectsBaseURL(t *testing.T) {
+	if _, err := BuildInjectionParts("github", "ghp-x", "https://api.github.com", nil); err == nil {
+		t.Fatal("expected BuildInjectionParts(github, base-url) to fail")
+	}
+}
+
+func TestBuildInjectionParts_GithubRejectsHeaders(t *testing.T) {
+	if _, err := BuildInjectionParts("github", "ghp-x", "", map[string]string{"X": "y"}); err == nil {
+		t.Fatal("expected BuildInjectionParts(github, headers) to fail")
+	}
+}

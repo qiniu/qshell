@@ -234,6 +234,12 @@ func TestBuildSandboxResources_RejectsMissingMountPath(t *testing.T) {
 	}
 }
 
+func TestBuildSandboxResources_RejectsRelativeMountPath(t *testing.T) {
+	if _, err := buildSandboxResources([]string{"url=https://github.com/owner/repo.git,mount-path=workspace/repo"}); err == nil {
+		t.Fatal("expected relative mount-path to fail")
+	}
+}
+
 func TestBuildSandboxResources_RejectsUnsupportedType(t *testing.T) {
 	if _, err := buildSandboxResources([]string{"type=gitlab_repository,url=https://gitlab.com/owner/repo.git,mount-path=/workspace"}); err == nil {
 		t.Fatal("expected unsupported resource type to fail")

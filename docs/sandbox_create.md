@@ -94,7 +94,7 @@ $ qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-
 $ qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'
 ```
 
-10. 创建时挂载 GitHub 仓库资源（沙箱启动前由平台克隆并挂载到指定路径）
+10. 创建时挂载 GitHub 仓库资源（沙箱启动前由平台拉取仓库快照并挂载到指定路径）
 ```
 $ qshell sandbox create my-template \
     --resource 'type=github_repository,url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'

@@ -140,7 +140,14 @@ func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string)
 			},
 		}, nil
 	case "github":
-		// GitHub 注入用 api-key 字段承载 token；token 仅用于平台克隆与请求注入，沙箱内不可见明文
+		// GitHub 注入仅接受 token（经 api-key 字段承载），目标固定为 github.com / api.github.com；
+		// 显式拒绝 base-url / headers，避免 typo 看起来配置成功却被静默丢弃
+		if strings.TrimSpace(baseURL) != "" {
+			return InjectionParts{}, fmt.Errorf("base URL is not supported for injection type github; target is fixed to github.com / api.github.com")
+		}
+		if len(headers) > 0 {
+			return InjectionParts{}, fmt.Errorf("headers are not supported for injection type github")
+		}
 		return InjectionParts{
 			Github: &sdkSandbox.GithubInjection{
 				Token: optionalString(apiKey),
