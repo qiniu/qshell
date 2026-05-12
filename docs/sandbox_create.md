@@ -31,9 +31,9 @@ $ qshell sandbox create --doc
 - `--inline-injection`：创建沙箱时附加的内联注入配置，可多次指定，格式为 `type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>`
 
 内联注入说明：
-- `type` 支持 `openai`、`anthropic`、`gemini`、`qiniu`、`http`
-- `api-key` 可用于 `openai`、`anthropic`、`gemini`、`qiniu`
-- `base-url` 可用于覆盖默认目标地址；`type=http` 时必填，`type=qiniu` 默认目标地址为 `api.qnaigc.com`
+- `type` 支持 `openai`、`anthropic`、`gemini`、`qiniu`、`github`、`http`
+- `api-key` 用于 `openai`、`anthropic`、`gemini`、`qiniu` 的 API Key，以及 `github` 的访问 token（token 仅平台可见，沙箱内不可见明文）
+- `base-url` 可用于覆盖默认目标地址；`type=http` 时必填，`type=qiniu` 默认目标地址为 `api.qnaigc.com`；`type=github` 固定匹配 `github.com` / `api.github.com`，不支持配置
 - `headers` 仅用于 `type=http`，多个请求头使用分号分隔，例如 `headers=Authorization=Bearer token;X-Env=prod`
 
 # 示例
@@ -85,4 +85,10 @@ $ qshell sandbox create my-template \
     --inline-injection 'type=openai,api-key=sk-xxx' \
     --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
 $ qshell sbx cr my-template --inline-injection 'type=gemini,api-key=sk-gem'
+```
+
+9. 创建时附加 GitHub 凭证注入（token 通过 `api-key` 传入）
+```
+$ qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx'
+$ qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'
 ```

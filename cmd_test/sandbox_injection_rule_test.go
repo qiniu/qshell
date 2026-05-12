@@ -35,7 +35,7 @@ func TestSandboxInjectionRuleCreateDocumentWithQiniu(t *testing.T) {
 	testInjectionRuleDocContains(
 		t,
 		[]string{"sandbox", "injection-rule", "create"},
-		"--type <openai|anthropic|gemini|qiniu|http>",
+		"--type <openai|anthropic|gemini|qiniu|github|http>",
 		"--name", "qiniu-default",
 		"--type", "qiniu",
 	)

@@ -120,7 +120,11 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
     --inline-injection 'type=openai,api-key=sk-xxx' \
     --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
   qshell sbx cr my-template \
-    --inline-injection 'type=openai,api-key=sk-xxx'`,
+    --inline-injection 'type=openai,api-key=sk-xxx'
+
+  # Create with a GitHub credential inline injection (token passed via api-key)
+  qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx'
+  qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'`,
 		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxCreateType

@@ -131,6 +131,42 @@ func TestFormatInjectionTargetQiniuDefault(t *testing.T) {
 	}
 }
 
+func TestFormatInjectionSummaryGithub(t *testing.T) {
+	token := "ghp-token"
+	spec := sandbox.InjectionSpec{
+		Github: &sandbox.GithubInjection{Token: &token},
+	}
+
+	if got := formatInjectionType(spec); got != "github" {
+		t.Fatalf("formatInjectionType() = %q, want %q", got, "github")
+	}
+	if got := formatInjectionTarget(spec); got != "github.com, api.github.com" {
+		t.Fatalf("formatInjectionTarget() = %q, want %q", got, "github.com, api.github.com")
+	}
+	if got := formatInjectionHeaders(spec); got != "-" {
+		t.Fatalf("formatInjectionHeaders() = %q, want %q", got, "-")
+	}
+	if !hasAPIKey(spec) {
+		t.Fatal("hasAPIKey() = false, want true for github with token")
+	}
+}
+
+func TestBuildInjectionSpecGithub(t *testing.T) {
+	spec, err := buildInjectionSpec(injectionInput{
+		Type:   injectionTypeGithub,
+		APIKey: "ghp-token",
+	})
+	if err != nil {
+		t.Fatalf("buildInjectionSpec(github) error = %v", err)
+	}
+	if spec.Github == nil {
+		t.Fatal("expected Github injection to be set")
+	}
+	if spec.Github.Token == nil || *spec.Github.Token != "ghp-token" {
+		t.Fatalf("Github token = %v, want %q", spec.Github.Token, "ghp-token")
+	}
+}
+
 func TestShouldUpdateInjection(t *testing.T) {
 	if shouldUpdateInjection(injectionInput{}) {
 		t.Fatal("shouldUpdateInjection() = true, want false")

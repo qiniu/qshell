@@ -438,3 +438,29 @@ func TestBuildInjectionParts_QiniuEmptyOptionalFields(t *testing.T) {
 		t.Fatalf("qiniu optional fields = %+v, want nil pointers", parts.Qiniu)
 	}
 }
+
+func TestBuildInjectionParts_Github(t *testing.T) {
+	parts, err := BuildInjectionParts("github", " ghp-token ", "", nil)
+	if err != nil {
+		t.Fatalf("BuildInjectionParts(github) error = %v", err)
+	}
+	if parts.Github == nil {
+		t.Fatal("BuildInjectionParts(github) did not build github injection")
+	}
+	if parts.Github.Token == nil || *parts.Github.Token != "ghp-token" {
+		t.Fatalf("github token = %v, want ghp-token", parts.Github.Token)
+	}
+}
+
+func TestBuildInjectionParts_GithubEmptyToken(t *testing.T) {
+	parts, err := BuildInjectionParts("github", "", "", nil)
+	if err != nil {
+		t.Fatalf("BuildInjectionParts(github) error = %v", err)
+	}
+	if parts.Github == nil {
+		t.Fatal("BuildInjectionParts(github) did not build github injection")
+	}
+	if parts.Github.Token != nil {
+		t.Fatalf("github token = %v, want nil", parts.Github.Token)
+	}
+}

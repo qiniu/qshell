@@ -135,6 +135,7 @@ func parseInlineSandboxInjection(spec string) (sandbox.SandboxInjectionSpec, err
 		Anthropic: parts.Anthropic,
 		Gemini:    parts.Gemini,
 		Qiniu:     parts.Qiniu,
+		Github:    parts.Github,
 		HTTP:      parts.HTTP,
 	}, nil
 }

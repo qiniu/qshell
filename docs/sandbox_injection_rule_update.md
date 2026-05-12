@@ -4,8 +4,8 @@
 # 格式
 
 ```bash
-qshell sandbox injection-rule update <ruleID> [--name <name>] [--type <openai|anthropic|gemini|qiniu|http>] [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
-qshell sbx ir up <ruleID> [--name <name>] [--type <openai|anthropic|gemini|qiniu|http>] [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
+qshell sandbox injection-rule update <ruleID> [--name <name>] [--type <openai|anthropic|gemini|qiniu|github|http>] [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
+qshell sbx ir up <ruleID> [--name <name>] [--type <openai|anthropic|gemini|qiniu|github|http>] [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
 ```
 
 # 帮助文档
@@ -50,4 +50,10 @@ $ qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type qiniu --api-key 
 
 ```bash
 $ qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type http --base-url https://api.example.com --headers "Authorization=Bearer newtoken"
+```
+
+更新为 GitHub 凭证注入（token 通过 `--api-key` 传入）：
+
+```bash
+$ qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type github --api-key ghp-new
 ```

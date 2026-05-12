@@ -98,10 +98,11 @@ type InjectionParts struct {
 	Anthropic *sdkSandbox.AnthropicInjection
 	Gemini    *sdkSandbox.GeminiInjection
 	Qiniu     *sdkSandbox.QiniuInjection
+	Github    *sdkSandbox.GithubInjection
 	HTTP      *sdkSandbox.HTTPInjection
 }
 
-const supportedInjectionTypes = "openai, anthropic, gemini, qiniu, http"
+const supportedInjectionTypes = "openai, anthropic, gemini, qiniu, github, http"
 
 // BuildInjectionParts builds a provider-specific injection payload from the given inputs.
 func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string) (InjectionParts, error) {
@@ -136,6 +137,13 @@ func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string)
 			Qiniu: &sdkSandbox.QiniuInjection{
 				APIKey:  optionalString(apiKey),
 				BaseURL: optionalString(validatedBaseURL),
+			},
+		}, nil
+	case "github":
+		// GitHub 注入用 api-key 字段承载 token；token 仅用于平台克隆与请求注入，沙箱内不可见明文
+		return InjectionParts{
+			Github: &sdkSandbox.GithubInjection{
+				Token: optionalString(apiKey),
 			},
 		}, nil
 	case "http":
