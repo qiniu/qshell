@@ -167,6 +167,13 @@ func TestBuildInjectionSpecGithub(t *testing.T) {
 	}
 }
 
+// 空 token 的 github 规则无意义，需要在 CLI 层提前拒绝
+func TestBuildInjectionSpecGithubRequiresToken(t *testing.T) {
+	if _, err := buildInjectionSpec(injectionInput{Type: injectionTypeGithub}); err == nil {
+		t.Fatal("expected buildInjectionSpec(github) without api-key to fail")
+	}
+}
+
 func TestShouldUpdateInjection(t *testing.T) {
 	if shouldUpdateInjection(injectionInput{}) {
 		t.Fatal("shouldUpdateInjection() = true, want false")

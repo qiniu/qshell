@@ -226,9 +226,14 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: url is required for github_repository", spec)
 		}
 		mountPath := fields["mount-path"]
+		mountAlias := fields["mount"]
+		// 同时给出 mount-path= 与 mount= 且取值不一致时直接报错，避免静默忽略其中一项造成误解
+		if mountPath != "" && mountAlias != "" && mountPath != mountAlias {
+			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: mount-path %q and mount %q conflict, specify only one", spec, mountPath, mountAlias)
+		}
 		if mountPath == "" {
 			// 兼容 mount= 简写
-			mountPath = fields["mount"]
+			mountPath = mountAlias
 		}
 		if mountPath == "" {
 			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: mount-path is required for github_repository", spec)

@@ -148,6 +148,10 @@ func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string)
 		if len(headers) > 0 {
 			return InjectionParts{}, fmt.Errorf("headers are not supported for injection type github")
 		}
+		// GitHub 注入只有 token 这一项配置；空 token 等同于无效注入，提前在 CLI 层报错
+		if strings.TrimSpace(apiKey) == "" {
+			return InjectionParts{}, fmt.Errorf("api-key (GitHub token) is required for injection type github")
+		}
 		return InjectionParts{
 			Github: &sdkSandbox.GithubInjection{
 				Token: optionalString(apiKey),

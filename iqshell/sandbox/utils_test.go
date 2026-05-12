@@ -453,15 +453,11 @@ func TestBuildInjectionParts_Github(t *testing.T) {
 }
 
 func TestBuildInjectionParts_GithubEmptyToken(t *testing.T) {
-	parts, err := BuildInjectionParts("github", "", "", nil)
-	if err != nil {
-		t.Fatalf("BuildInjectionParts(github) error = %v", err)
+	if _, err := BuildInjectionParts("github", "", "", nil); err == nil {
+		t.Fatal("expected BuildInjectionParts(github) without token to fail")
 	}
-	if parts.Github == nil {
-		t.Fatal("BuildInjectionParts(github) did not build github injection")
-	}
-	if parts.Github.Token != nil {
-		t.Fatalf("github token = %v, want nil", parts.Github.Token)
+	if _, err := BuildInjectionParts("github", "   ", "", nil); err == nil {
+		t.Fatal("expected BuildInjectionParts(github) with whitespace-only token to fail")
 	}
 }
 

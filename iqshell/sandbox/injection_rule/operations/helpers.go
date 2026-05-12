@@ -18,6 +18,11 @@ const (
 	injectionTypeHTTP      = "http"
 )
 
+// githubInjectionTarget 描述 GitHub 注入由平台侧匹配的目标域名集合。
+// 当前平台行为固定为 github.com / api.github.com；若后续 SDK 支持自托管 GitHub Enterprise，
+// 需要随 SDK 暴露的常量一起同步更新此处。
+const githubInjectionTarget = "github.com, api.github.com"
+
 type injectionInput struct {
 	Type    string
 	APIKey  string
@@ -74,8 +79,7 @@ func formatInjectionTarget(spec sandbox.InjectionSpec) string {
 	case spec.Qiniu != nil:
 		return optionalValue(spec.Qiniu.BaseURL, "api.qnaigc.com")
 	case spec.Github != nil:
-		// GitHub 注入的目标固定为 github.com / api.github.com，由平台侧匹配，无可配置 base URL
-		return "github.com, api.github.com"
+		return githubInjectionTarget
 	case spec.HTTP != nil:
 		return spec.HTTP.BaseURL
 	default:

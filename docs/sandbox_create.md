@@ -29,7 +29,13 @@ $ qshell sandbox create --doc
 - `--auto-pause`：超时后自动暂停沙箱，而不是终止沙箱
 - `--injection-rule`：创建沙箱时附加的注入规则 ID，可多次指定
 - `--inline-injection`：创建沙箱时附加的内联注入配置，可多次指定，格式为 `type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>`
-- `--resource`：沙箱启动前挂载的资源规约，可多次指定，格式为 `type=github_repository,url=<url>,mount-path=<absPath>,token=<token>`（`type` 默认为 `github_repository`，`mount-path` 也可写作 `mount`）
+- `--resource`：沙箱启动前挂载的资源规约，可多次指定，格式为 `type=github_repository,url=<url>,mount-path=<absPath>,token=<token>`（`type` 默认为 `github_repository`，`mount-path` 也可写作 `mount`）。注意：通过 CLI 传递 token 可能泄露到 Shell 历史或进程列表
+
+资源说明：
+- `url` 推荐使用 HTTPS 形式（如 `https://github.com/owner/repo.git`），SSH 形式因含 `,` / `:` 等保留字符无法正确解析
+- `mount-path` 必须是沙箱内的绝对路径（POSIX），不接受相对路径；同时给出 `mount-path` 与 `mount` 时两者取值必须一致
+- 同一沙箱内多条 `--resource github_repository` 当前必须共用同一 `token`（受 SDK 侧约束）
+- `--resource` 与 `--inline-injection type=github` 之间的 token 一致性由平台侧校验，CLI 不做跨参数比较
 
 内联注入说明：
 - `type` 支持 `openai`、`anthropic`、`gemini`、`qiniu`、`github`、`http`

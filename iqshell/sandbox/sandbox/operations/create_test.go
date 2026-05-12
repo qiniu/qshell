@@ -274,3 +274,25 @@ func TestBuildSandboxResources_RejectsConflictingTokens(t *testing.T) {
 		t.Fatal("expected conflicting tokens across --resource to fail")
 	}
 }
+
+func TestBuildSandboxResources_RejectsConflictingMountAliases(t *testing.T) {
+	// 同时给出 mount-path 与 mount 且不一致时，不能静默丢弃任意一项
+	if _, err := buildSandboxResources([]string{
+		"url=https://github.com/owner/a.git,mount-path=/workspace/a,mount=/workspace/b,token=ghp",
+	}); err == nil {
+		t.Fatal("expected conflicting mount-path and mount aliases to fail")
+	}
+}
+
+func TestBuildSandboxResources_AcceptsAgreeingMountAliases(t *testing.T) {
+	// 两个别名取值相同时视为冗余，仍接受
+	resources, err := buildSandboxResources([]string{
+		"url=https://github.com/owner/a.git,mount-path=/workspace/a,mount=/workspace/a,token=ghp",
+	})
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	if got := resources[0].GitRepository.MountPath; got != "/workspace/a" {
+		t.Fatalf("mount path = %q, want /workspace/a", got)
+	}
+}
