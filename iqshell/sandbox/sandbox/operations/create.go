@@ -197,6 +197,9 @@ func buildSandboxResources(resourceSpecs []string) ([]sandbox.SandboxResourceSpe
 			return nil, err
 		}
 		if gr := resource.GitRepository; gr != nil {
+			if gr.AuthorizationToken == nil {
+				return nil, fmt.Errorf("invalid resource spec %q: token is required for github_repository", spec)
+			}
 			switch token := *gr.AuthorizationToken; {
 			case seenToken == "":
 				seenToken = token
