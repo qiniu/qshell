@@ -20,7 +20,7 @@ $ qshell sandbox injection-rule update --doc
 - `ruleID`：注入规则 ID
 - `--name`：新的规则名称
 - `--type`：新的注入类型；当需要更新注入配置时必须指定
-- `--api-key`：新的 API Key；更新注入配置时必须与 `--type` 一同指定。注意：通过 CLI 传递密钥可能泄露到 Shell 历史或进程列表
+- `--api-key`：新的 API Key；更新注入配置时必须与 `--type` 一同指定，且 `type=github` 时必填。注意：通过 CLI 传递密钥可能泄露到 Shell 历史或进程列表
 - `--base-url`：新的基础 URL；更新注入配置时必须与 `--type` 一同指定
 - `--headers`：新的自定义 HTTP 请求头，使用逗号分隔的 `key=value` 形式；更新时必须与 `--type http` 一同指定
 

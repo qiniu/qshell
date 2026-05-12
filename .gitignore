@@ -49,6 +49,7 @@ coverage.txt
 
 .env
 .env.*
+!.env.example
 
 # Dependency directories (remove the comment below to include it)
 # vendor/

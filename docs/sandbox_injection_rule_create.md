@@ -19,7 +19,7 @@ $ qshell sandbox injection-rule create --doc
 
 - `--name`：规则名称，必填，同一用户下唯一
 - `--type`：注入类型，必填，支持 `openai`、`anthropic`、`gemini`、`qiniu`、`github`、`http`
-- `--api-key`：`openai`、`anthropic`、`gemini`、`qiniu` 类型使用的 API Key，`github` 类型使用的访问 token。注意：通过 CLI 传递密钥可能泄露到 Shell 历史或进程列表
+- `--api-key`：`openai`、`anthropic`、`gemini`、`qiniu` 类型使用的 API Key，`github` 类型使用的访问 token；`type=github` 时必填。注意：通过 CLI 传递密钥可能泄露到 Shell 历史或进程列表
 - `--base-url`：覆盖默认目标地址，或 `http` 类型的目标基础 URL；`qiniu` 默认为 `api.qnaigc.com`；`github` 类型固定匹配 `github.com` / `api.github.com`，不支持配置
 - `--headers`：`http` 类型的请求头，使用逗号分隔的 `key=value` 形式
 
