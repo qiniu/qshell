@@ -196,7 +196,7 @@ func buildSandboxResources(resourceSpecs []string) ([]sandbox.SandboxResourceSpe
 		if err != nil {
 			return nil, err
 		}
-		if gr := resource.GitRepository; gr != nil && gr.AuthorizationToken != nil {
+		if gr := resource.GitRepository; gr != nil {
 			switch token := *gr.AuthorizationToken; {
 			case seenToken == "":
 				seenToken = token
@@ -210,7 +210,7 @@ func buildSandboxResources(resourceSpecs []string) ([]sandbox.SandboxResourceSpe
 }
 
 // parseSandboxResource 解析单条 --resource 规约。
-// 支持格式：type=github_repository,url=<url>,mount-path=<absPath>[,token=<token>]
+// 支持格式：type=github_repository,url=<url>,mount-path=<absPath>,token=<token>
 func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 	fields := sbClient.ParseMetadataMap(spec)
 
@@ -237,13 +237,15 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 		if !path.IsAbs(mountPath) {
 			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: mount-path %q must be an absolute path", spec, mountPath)
 		}
-		res := &sandbox.GitRepositoryResource{
-			Type:      sandbox.GitRepositoryTypeGithub,
-			URL:       url,
-			MountPath: mountPath,
+		token := fields["token"]
+		if token == "" {
+			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: token is required for github_repository", spec)
 		}
-		if token := fields["token"]; token != "" {
-			res.AuthorizationToken = &token
+		res := &sandbox.GitRepositoryResource{
+			Type:               sandbox.GitRepositoryTypeGithub,
+			URL:                url,
+			MountPath:          mountPath,
+			AuthorizationToken: &token,
 		}
 		return sandbox.SandboxResourceSpec{GitRepository: res}, nil
 	default:

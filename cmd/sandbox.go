@@ -150,7 +150,7 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVar(&info.AutoPause, "auto-pause", false, "automatically pause sandbox when timeout expires (instead of killing)")
 	cmd.Flags().StringArrayVar(&info.InjectionRuleID, "injection-rule", nil, "injection rule IDs to apply when creating the sandbox (can be specified multiple times)")
 	cmd.Flags().StringArrayVar(&info.InlineInjection, "inline-injection", nil, "inline injection spec to apply when creating the sandbox (can be specified multiple times, format: type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>)")
-	cmd.Flags().StringArrayVar(&info.Resources, "resource", nil, "resource to mount before sandbox starts (can be specified multiple times, format: type=github_repository,url=<url>,mount-path=<absPath>[,token=<token>])")
+	cmd.Flags().StringArrayVar(&info.Resources, "resource", nil, "resource to mount before sandbox starts (can be specified multiple times, format: type=github_repository,url=<url>,mount-path=<absPath>,token=<token>)")
 	return cmd
 }
 

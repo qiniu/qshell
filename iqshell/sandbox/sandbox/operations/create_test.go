@@ -202,7 +202,7 @@ func TestBuildSandboxResources_GithubRepository(t *testing.T) {
 
 func TestBuildSandboxResources_DefaultsTypeAndAcceptsMountAlias(t *testing.T) {
 	resources, err := buildSandboxResources([]string{
-		"url=https://github.com/owner/repo.git,mount=/workspace/repo",
+		"url=https://github.com/owner/repo.git,mount=/workspace/repo,token=ghp-xxx",
 	})
 	if err != nil {
 		t.Fatalf("buildSandboxResources() error = %v", err)
@@ -217,8 +217,8 @@ func TestBuildSandboxResources_DefaultsTypeAndAcceptsMountAlias(t *testing.T) {
 	if got.MountPath != "/workspace/repo" {
 		t.Fatalf("mount path via mount= alias = %q, want /workspace/repo", got.MountPath)
 	}
-	if got.AuthorizationToken != nil {
-		t.Fatalf("token = %v, want nil when not provided", got.AuthorizationToken)
+	if got.AuthorizationToken == nil || *got.AuthorizationToken != "ghp-xxx" {
+		t.Fatalf("token = %v, want ghp-xxx", got.AuthorizationToken)
 	}
 }
 
@@ -229,53 +229,32 @@ func TestBuildSandboxResources_RejectsMissingURL(t *testing.T) {
 }
 
 func TestBuildSandboxResources_RejectsMissingMountPath(t *testing.T) {
-	if _, err := buildSandboxResources([]string{"type=github_repository,url=https://github.com/owner/repo.git"}); err == nil {
+	if _, err := buildSandboxResources([]string{"type=github_repository,url=https://github.com/owner/repo.git,token=ghp-xxx"}); err == nil {
 		t.Fatal("expected missing mount-path to fail")
 	}
 }
 
+func TestBuildSandboxResources_RejectsMissingToken(t *testing.T) {
+	if _, err := buildSandboxResources([]string{"type=github_repository,url=https://github.com/owner/repo.git,mount-path=/workspace"}); err == nil {
+		t.Fatal("expected missing token to fail")
+	}
+}
+
 func TestBuildSandboxResources_RejectsRelativeMountPath(t *testing.T) {
-	if _, err := buildSandboxResources([]string{"url=https://github.com/owner/repo.git,mount-path=workspace/repo"}); err == nil {
+	if _, err := buildSandboxResources([]string{"url=https://github.com/owner/repo.git,mount-path=workspace/repo,token=ghp-xxx"}); err == nil {
 		t.Fatal("expected relative mount-path to fail")
 	}
 }
 
 func TestBuildSandboxResources_RejectsUnsupportedType(t *testing.T) {
-	if _, err := buildSandboxResources([]string{"type=gitlab_repository,url=https://gitlab.com/owner/repo.git,mount-path=/workspace"}); err == nil {
+	if _, err := buildSandboxResources([]string{"type=gitlab_repository,url=https://gitlab.com/owner/repo.git,mount-path=/workspace,token=ghp-xxx"}); err == nil {
 		t.Fatal("expected unsupported resource type to fail")
 	}
 }
 
 func TestBuildSandboxResources_Multiple(t *testing.T) {
 	resources, err := buildSandboxResources([]string{
-		"url=https://github.com/owner/a.git,mount-path=/workspace/a",
-		"url=https://github.com/owner/b.git,mount-path=/workspace/b",
-	})
-	if err != nil {
-		t.Fatalf("buildSandboxResources() error = %v", err)
-	}
-	if len(resources) != 2 {
-		t.Fatalf("buildSandboxResources() len = %d, want 2", len(resources))
-	}
-}
-
-func TestBuildSandboxResources_MultipleSameToken(t *testing.T) {
-	resources, err := buildSandboxResources([]string{
 		"url=https://github.com/owner/a.git,mount-path=/workspace/a,token=ghp-shared",
-		"url=https://github.com/owner/b.git,mount-path=/workspace/b,token=ghp-shared",
-	})
-	if err != nil {
-		t.Fatalf("buildSandboxResources() error = %v", err)
-	}
-	if len(resources) != 2 {
-		t.Fatalf("buildSandboxResources() len = %d, want 2", len(resources))
-	}
-}
-
-func TestBuildSandboxResources_MultipleMixedEmptyAndSetToken(t *testing.T) {
-	// 部分资源省略 token（继承沙箱级 github 注入），不应触发不一致校验
-	resources, err := buildSandboxResources([]string{
-		"url=https://github.com/owner/a.git,mount-path=/workspace/a",
 		"url=https://github.com/owner/b.git,mount-path=/workspace/b,token=ghp-shared",
 	})
 	if err != nil {
