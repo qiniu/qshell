@@ -98,10 +98,11 @@ type InjectionParts struct {
 	Anthropic *sdkSandbox.AnthropicInjection
 	Gemini    *sdkSandbox.GeminiInjection
 	Qiniu     *sdkSandbox.QiniuInjection
+	Github    *sdkSandbox.GithubInjection
 	HTTP      *sdkSandbox.HTTPInjection
 }
 
-const supportedInjectionTypes = "openai, anthropic, gemini, qiniu, http"
+const supportedInjectionTypes = "openai, anthropic, gemini, qiniu, github, http"
 
 // BuildInjectionParts builds a provider-specific injection payload from the given inputs.
 func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string) (InjectionParts, error) {
@@ -136,6 +137,24 @@ func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string)
 			Qiniu: &sdkSandbox.QiniuInjection{
 				APIKey:  optionalString(apiKey),
 				BaseURL: optionalString(validatedBaseURL),
+			},
+		}, nil
+	case "github":
+		// GitHub 注入仅接受 token（经 api-key 字段承载），目标固定为 github.com / api.github.com；
+		// 显式拒绝 base-url / headers，避免 typo 看起来配置成功却被静默丢弃
+		if strings.TrimSpace(baseURL) != "" {
+			return InjectionParts{}, fmt.Errorf("base URL is not supported for injection type github; target is fixed to github.com / api.github.com")
+		}
+		if len(headers) > 0 {
+			return InjectionParts{}, fmt.Errorf("headers are not supported for injection type github")
+		}
+		// GitHub 注入只有 token 这一项配置；空 token 等同于无效注入，提前在 CLI 层报错
+		if strings.TrimSpace(apiKey) == "" {
+			return InjectionParts{}, fmt.Errorf("api-key (GitHub token) is required for injection type github")
+		}
+		return InjectionParts{
+			Github: &sdkSandbox.GithubInjection{
+				Token: optionalString(apiKey),
 			},
 		}, nil
 	case "http":

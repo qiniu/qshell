@@ -1,3 +1,11 @@
+# 2.19.7
+## 新增
+1. `qshell sandbox injection-rule create` / `update` 与 `qshell sandbox create --inline-injection` 新增 `github` 注入类型：通过 `--api-key` / `api-key=` 传入 GitHub Token；平台克隆仓库及匹配 `github.com` / `api.github.com` 出站请求时自动注入 token，沙箱内不可见明文
+2. `qshell sandbox create` 新增 `--resource` 参数，支持在沙箱启动前由平台拉取 GitHub 仓库快照并挂载到指定路径，格式 `type=github_repository,url=<url>,mount-path=<absPath>,token=<token>`（`type` 可省略，`mount-path` 也可写作 `mount`；同一沙箱内多条 `--resource` 必须共用同一 token）
+
+## 更新
+1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.12`，附带修复其内部 `Commands.Connect` 重复关闭 channel 引发的 panic，并对 `GitRepositoryResource` 必填字段进行 SDK 侧校验
+
 # 2.19.6
 ## 修复
 1. 修复 `qshell sandbox template build` 在 rebuild 场景下清空 `qshell.sandbox.toml` 中 `from_image` / `from_template` 的问题，避免配置了父模板的 Dockerfile 回退到 `FROM scratch` 后构建失败；CLI 显式传入 `--from-image` / `--from-template` 时仍会在 rebuild 场景报错

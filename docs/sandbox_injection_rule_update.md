@@ -4,8 +4,8 @@
 # 格式
 
 ```bash
-qshell sandbox injection-rule update <ruleID> [--name <name>] [--type <openai|anthropic|gemini|qiniu|http>] [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
-qshell sbx ir up <ruleID> [--name <name>] [--type <openai|anthropic|gemini|qiniu|http>] [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
+qshell sandbox injection-rule update <ruleID> [--name <name>] [--type <openai|anthropic|gemini|qiniu|github|http>] [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
+qshell sbx ir up <ruleID> [--name <name>] [--type <openai|anthropic|gemini|qiniu|github|http>] [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
 ```
 
 # 帮助文档
@@ -20,7 +20,7 @@ $ qshell sandbox injection-rule update --doc
 - `ruleID`：注入规则 ID
 - `--name`：新的规则名称
 - `--type`：新的注入类型；当需要更新注入配置时必须指定
-- `--api-key`：新的 API Key；更新注入配置时必须与 `--type` 一同指定。注意：通过 CLI 传递密钥可能泄露到 Shell 历史或进程列表
+- `--api-key`：新的 API Key；更新注入配置时必须与 `--type` 一同指定，且 `type=github` 时必填。注意：通过 CLI 传递密钥可能泄露到 Shell 历史或进程列表
 - `--base-url`：新的基础 URL；更新注入配置时必须与 `--type` 一同指定
 - `--headers`：新的自定义 HTTP 请求头，使用逗号分隔的 `key=value` 形式；更新时必须与 `--type http` 一同指定
 
@@ -50,4 +50,10 @@ $ qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type qiniu --api-key 
 
 ```bash
 $ qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type http --base-url https://api.example.com --headers "Authorization=Bearer newtoken"
+```
+
+更新为 GitHub 凭证注入（token 通过 `--api-key` 传入）：
+
+```bash
+$ qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type github --api-key ghp-new
 ```

@@ -438,3 +438,37 @@ func TestBuildInjectionParts_QiniuEmptyOptionalFields(t *testing.T) {
 		t.Fatalf("qiniu optional fields = %+v, want nil pointers", parts.Qiniu)
 	}
 }
+
+func TestBuildInjectionParts_Github(t *testing.T) {
+	parts, err := BuildInjectionParts("github", " ghp-token ", "", nil)
+	if err != nil {
+		t.Fatalf("BuildInjectionParts(github) error = %v", err)
+	}
+	if parts.Github == nil {
+		t.Fatal("BuildInjectionParts(github) did not build github injection")
+	}
+	if parts.Github.Token == nil || *parts.Github.Token != "ghp-token" {
+		t.Fatalf("github token = %v, want ghp-token", parts.Github.Token)
+	}
+}
+
+func TestBuildInjectionParts_GithubEmptyToken(t *testing.T) {
+	if _, err := BuildInjectionParts("github", "", "", nil); err == nil {
+		t.Fatal("expected BuildInjectionParts(github) without token to fail")
+	}
+	if _, err := BuildInjectionParts("github", "   ", "", nil); err == nil {
+		t.Fatal("expected BuildInjectionParts(github) with whitespace-only token to fail")
+	}
+}
+
+func TestBuildInjectionParts_GithubRejectsBaseURL(t *testing.T) {
+	if _, err := BuildInjectionParts("github", "ghp-x", "https://api.github.com", nil); err == nil {
+		t.Fatal("expected BuildInjectionParts(github, base-url) to fail")
+	}
+}
+
+func TestBuildInjectionParts_GithubRejectsHeaders(t *testing.T) {
+	if _, err := BuildInjectionParts("github", "ghp-x", "", map[string]string{"X": "y"}); err == nil {
+		t.Fatal("expected BuildInjectionParts(github, headers) to fail")
+	}
+}

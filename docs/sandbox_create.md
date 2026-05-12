@@ -7,8 +7,8 @@
 
 # 格式
 ```
-qshell sandbox create [template] [-t <seconds>] [--detach] [-m <metadata>] [-e <KEY=VALUE>...] [--auto-pause] [--injection-rule <ruleID>...] [--inline-injection <spec>...]
-qshell sbx cr [template] [-t <seconds>] [--detach] [-m <metadata>] [-e <KEY=VALUE>...] [--auto-pause] [--injection-rule <ruleID>...] [--inline-injection <spec>...]
+qshell sandbox create [template] [-t <seconds>] [--detach] [-m <metadata>] [-e <KEY=VALUE>...] [--auto-pause] [--injection-rule <ruleID>...] [--inline-injection <spec>...] [--resource <spec>...]
+qshell sbx cr [template] [-t <seconds>] [--detach] [-m <metadata>] [-e <KEY=VALUE>...] [--auto-pause] [--injection-rule <ruleID>...] [--inline-injection <spec>...] [--resource <spec>...]
 ```
 
 # 帮助文档
@@ -29,11 +29,18 @@ $ qshell sandbox create --doc
 - `--auto-pause`：超时后自动暂停沙箱，而不是终止沙箱
 - `--injection-rule`：创建沙箱时附加的注入规则 ID，可多次指定
 - `--inline-injection`：创建沙箱时附加的内联注入配置，可多次指定，格式为 `type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>`
+- `--resource`：沙箱启动前挂载的资源规约，可多次指定，格式为 `type=github_repository,url=<url>,mount-path=<absPath>,token=<token>`（`type` 默认为 `github_repository`，`mount-path` 也可写作 `mount`）。注意：通过 CLI 传递 token 可能泄露到 Shell 历史或进程列表
+
+资源说明：
+- `url` 推荐使用 HTTPS 形式（如 `https://github.com/owner/repo.git`）；若 URL 本身包含逗号，当前键值串格式无法正确表达
+- `mount-path` 必须是沙箱内的绝对路径（POSIX），不接受相对路径；同时给出 `mount-path` 与 `mount` 时两者取值必须一致
+- 同一沙箱内多条 `--resource github_repository` 当前必须共用同一 `token`（受 SDK 侧约束）
+- `--resource` 与 `--inline-injection type=github` 之间的 token 一致性由平台侧校验，CLI 不做跨参数比较
 
 内联注入说明：
-- `type` 支持 `openai`、`anthropic`、`gemini`、`qiniu`、`http`
-- `api-key` 可用于 `openai`、`anthropic`、`gemini`、`qiniu`
-- `base-url` 可用于覆盖默认目标地址；`type=http` 时必填，`type=qiniu` 默认目标地址为 `api.qnaigc.com`
+- `type` 支持 `openai`、`anthropic`、`gemini`、`qiniu`、`github`、`http`
+- `api-key` 用于 `openai`、`anthropic`、`gemini`、`qiniu` 的 API Key，以及 `github` 的访问 token（token 仅平台可见，沙箱内不可见明文）
+- `base-url` 可用于覆盖默认目标地址；`type=http` 时必填，`type=qiniu` 默认目标地址为 `api.qnaigc.com`；`type=github` 固定匹配 `github.com` / `api.github.com`，不支持配置
 - `headers` 仅用于 `type=http`，多个请求头使用分号分隔，例如 `headers=Authorization=Bearer token;X-Env=prod`
 
 # 示例
@@ -86,3 +93,19 @@ $ qshell sandbox create my-template \
     --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
 $ qshell sbx cr my-template --inline-injection 'type=gemini,api-key=sk-gem'
 ```
+
+9. 创建时附加 GitHub 凭证注入（token 通过 `api-key` 传入）
+```
+$ qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx'
+$ qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'
+```
+
+10. 创建时挂载 GitHub 仓库资源（沙箱启动前由平台拉取仓库快照并挂载到指定路径）
+```
+$ qshell sandbox create my-template \
+    --resource 'type=github_repository,url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'
+$ qshell sbx cr my-template \
+    --resource 'url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'
+```
+
+> 同一沙箱内多个 `--resource github_repository` 当前必须共用同一 `token`。

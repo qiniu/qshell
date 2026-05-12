@@ -14,8 +14,14 @@ const (
 	injectionTypeAnthropic = "anthropic"
 	injectionTypeGemini    = "gemini"
 	injectionTypeQiniu     = "qiniu"
+	injectionTypeGithub    = "github"
 	injectionTypeHTTP      = "http"
 )
+
+// githubInjectionTarget 描述 GitHub 注入由平台侧匹配的目标域名集合。
+// 当前平台行为固定为 github.com / api.github.com；若后续 SDK 支持自托管 GitHub Enterprise，
+// 需要随 SDK 暴露的常量一起同步更新此处。
+const githubInjectionTarget = "github.com, api.github.com"
 
 type injectionInput struct {
 	Type    string
@@ -34,6 +40,7 @@ func buildInjectionSpec(input injectionInput) (sandbox.InjectionSpec, error) {
 		Anthropic: parts.Anthropic,
 		Gemini:    parts.Gemini,
 		Qiniu:     parts.Qiniu,
+		Github:    parts.Github,
 		HTTP:      parts.HTTP,
 	}, nil
 }
@@ -52,6 +59,8 @@ func formatInjectionType(spec sandbox.InjectionSpec) string {
 		return injectionTypeGemini
 	case spec.Qiniu != nil:
 		return injectionTypeQiniu
+	case spec.Github != nil:
+		return injectionTypeGithub
 	case spec.HTTP != nil:
 		return injectionTypeHTTP
 	default:
@@ -69,6 +78,8 @@ func formatInjectionTarget(spec sandbox.InjectionSpec) string {
 		return optionalValue(spec.Gemini.BaseURL, "generativelanguage.googleapis.com")
 	case spec.Qiniu != nil:
 		return optionalValue(spec.Qiniu.BaseURL, "api.qnaigc.com")
+	case spec.Github != nil:
+		return githubInjectionTarget
 	case spec.HTTP != nil:
 		return spec.HTTP.BaseURL
 	default:
@@ -98,6 +109,8 @@ func hasAPIKey(spec sandbox.InjectionSpec) bool {
 		return spec.Gemini.APIKey != nil && strings.TrimSpace(*spec.Gemini.APIKey) != ""
 	case spec.Qiniu != nil:
 		return spec.Qiniu.APIKey != nil && strings.TrimSpace(*spec.Qiniu.APIKey) != ""
+	case spec.Github != nil:
+		return spec.Github.Token != nil && strings.TrimSpace(*spec.Github.Token) != ""
 	default:
 		return false
 	}

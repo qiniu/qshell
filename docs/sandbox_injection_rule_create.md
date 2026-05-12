@@ -4,8 +4,8 @@
 # 格式
 
 ```bash
-qshell sandbox injection-rule create --name <name> --type <openai|anthropic|gemini|qiniu|http> [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
-qshell sbx ir cr --name <name> --type <openai|anthropic|gemini|qiniu|http> [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
+qshell sandbox injection-rule create --name <name> --type <openai|anthropic|gemini|qiniu|github|http> [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
+qshell sbx ir cr --name <name> --type <openai|anthropic|gemini|qiniu|github|http> [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
 ```
 
 # 帮助文档
@@ -18,9 +18,9 @@ $ qshell sandbox injection-rule create --doc
 # 参数
 
 - `--name`：规则名称，必填，同一用户下唯一
-- `--type`：注入类型，必填，支持 `openai`、`anthropic`、`gemini`、`qiniu`、`http`
-- `--api-key`：`openai`、`anthropic`、`gemini`、`qiniu` 类型使用的 API Key。注意：通过 CLI 传递密钥可能泄露到 Shell 历史或进程列表
-- `--base-url`：覆盖默认目标地址，或 `http` 类型的目标基础 URL；`qiniu` 默认为 `api.qnaigc.com`
+- `--type`：注入类型，必填，支持 `openai`、`anthropic`、`gemini`、`qiniu`、`github`、`http`
+- `--api-key`：`openai`、`anthropic`、`gemini`、`qiniu` 类型使用的 API Key，`github` 类型使用的访问 token；`type=github` 时必填。注意：通过 CLI 传递密钥可能泄露到 Shell 历史或进程列表
+- `--base-url`：覆盖默认目标地址，或 `http` 类型的目标基础 URL；`qiniu` 默认为 `api.qnaigc.com`；`github` 类型固定匹配 `github.com` / `api.github.com`，不支持配置
 - `--headers`：`http` 类型的请求头，使用逗号分隔的 `key=value` 形式
 
 # 示例
@@ -47,4 +47,10 @@ $ qshell sandbox injection-rule create --name api-auth --type http --base-url ht
 
 ```bash
 $ qshell sandbox injection-rule create --name qiniu-ai --type qiniu --api-key ak-xxx
+```
+
+创建 GitHub 凭证注入规则（token 通过 `--api-key` 传入，沙箱内不可见明文）：
+
+```bash
+$ qshell sandbox injection-rule create --name github-default --type github --api-key ghp-xxx
 ```
