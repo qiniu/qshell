@@ -29,6 +29,7 @@ $ qshell sandbox create --doc
 - `--auto-pause`：超时后自动暂停沙箱，而不是终止沙箱
 - `--injection-rule`：创建沙箱时附加的注入规则 ID，可多次指定
 - `--inline-injection`：创建沙箱时附加的内联注入配置，可多次指定，格式为 `type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>`
+- `--resource`：沙箱启动前挂载的资源规约，可多次指定，格式为 `type=github_repository,url=<url>,mount-path=<absPath>[,token=<token>]`（`type` 默认为 `github_repository`，`mount-path` 也可写作 `mount`）
 
 内联注入说明：
 - `type` 支持 `openai`、`anthropic`、`gemini`、`qiniu`、`github`、`http`
@@ -92,3 +93,13 @@ $ qshell sbx cr my-template --inline-injection 'type=gemini,api-key=sk-gem'
 $ qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx'
 $ qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'
 ```
+
+10. 创建时挂载 GitHub 仓库资源（沙箱启动前由平台克隆并挂载到指定路径）
+```
+$ qshell sandbox create my-template \
+    --resource 'type=github_repository,url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'
+$ qshell sbx cr my-template \
+    --resource 'url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'
+```
+
+> 同一沙箱内多个 `--resource github_repository` 当前必须共用同一 `token`；若已通过 `--inline-injection type=github,api-key=...` 配置 GitHub 凭证，资源处可省略 `token`。

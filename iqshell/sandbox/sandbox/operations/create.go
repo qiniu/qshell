@@ -20,6 +20,8 @@ type CreateInfo struct {
 	AutoPause       bool
 	InjectionRuleID []string
 	InlineInjection []string
+	// Resources 沙箱启动前挂载的资源规约（如 GitHub 仓库），格式参见 parseSandboxResource
+	Resources []string
 }
 
 // Create creates a new sandbox and connects to its terminal.
@@ -64,6 +66,14 @@ func Create(info CreateInfo) {
 	}
 	if len(injections) > 0 {
 		params.Injections = &injections
+	}
+	resources, err := buildSandboxResources(info.Resources)
+	if err != nil {
+		sbClient.PrintError("%v", err)
+		return
+	}
+	if len(resources) > 0 {
+		params.Resources = &resources
 	}
 
 	fmt.Printf("Creating sandbox from template %s...\n", info.TemplateID)
@@ -169,6 +179,60 @@ func parseInlineInjectionFields(spec string) map[string]string {
 		fields["headers"] = headersSpec
 	}
 	return fields
+}
+
+// buildSandboxResources 把命令行传入的 --resource 规约转换为 SDK 的资源列表。
+func buildSandboxResources(resourceSpecs []string) ([]sandbox.SandboxResourceSpec, error) {
+	if len(resourceSpecs) == 0 {
+		return nil, nil
+	}
+	resources := make([]sandbox.SandboxResourceSpec, 0, len(resourceSpecs))
+	for _, spec := range resourceSpecs {
+		resource, err := parseSandboxResource(spec)
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, resource)
+	}
+	return resources, nil
+}
+
+// parseSandboxResource 解析单条 --resource 规约。
+// 支持格式：type=github_repository,url=<url>,mount-path=<absPath>[,token=<token>]
+func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
+	fields := sbClient.ParseMetadataMap(spec)
+
+	typ := strings.ToLower(fields["type"])
+	if typ == "" {
+		typ = string(sandbox.GitRepositoryTypeGithub)
+	}
+
+	switch typ {
+	case string(sandbox.GitRepositoryTypeGithub):
+		url := fields["url"]
+		if url == "" {
+			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: url is required for github_repository", spec)
+		}
+		mountPath := fields["mount-path"]
+		if mountPath == "" {
+			// 兼容 mount= 简写
+			mountPath = fields["mount"]
+		}
+		if mountPath == "" {
+			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: mount-path is required for github_repository", spec)
+		}
+		res := &sandbox.GitRepositoryResource{
+			Type:      sandbox.GitRepositoryTypeGithub,
+			URL:       url,
+			MountPath: mountPath,
+		}
+		if token := fields["token"]; token != "" {
+			res.AuthorizationToken = &token
+		}
+		return sandbox.SandboxResourceSpec{GitRepository: res}, nil
+	default:
+		return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: unsupported type %q (supported: github_repository)", spec, typ)
+	}
 }
 
 func parseInlineHeaders(raw string) map[string]string {

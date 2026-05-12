@@ -124,7 +124,13 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
   # Create with a GitHub credential inline injection (token passed via api-key)
   qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx'
-  qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'`,
+  qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'
+
+  # Create with a GitHub repository resource mounted into the sandbox
+  qshell sandbox create my-template \
+    --resource 'type=github_repository,url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'
+  qshell sbx cr my-template \
+    --resource 'url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'`,
 		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxCreateType
@@ -144,6 +150,7 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVar(&info.AutoPause, "auto-pause", false, "automatically pause sandbox when timeout expires (instead of killing)")
 	cmd.Flags().StringArrayVar(&info.InjectionRuleID, "injection-rule", nil, "injection rule IDs to apply when creating the sandbox (can be specified multiple times)")
 	cmd.Flags().StringArrayVar(&info.InlineInjection, "inline-injection", nil, "inline injection spec to apply when creating the sandbox (can be specified multiple times, format: type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>)")
+	cmd.Flags().StringArrayVar(&info.Resources, "resource", nil, "resource to mount before sandbox starts (can be specified multiple times, format: type=github_repository,url=<url>,mount-path=<absPath>[,token=<token>])")
 	return cmd
 }
 

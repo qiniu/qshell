@@ -1,6 +1,10 @@
 package operations
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/qiniu/go-sdk/v7/sandbox"
+)
 
 func TestBuildSandboxInjections_Empty(t *testing.T) {
 	injections, err := buildSandboxInjections(nil, nil)
@@ -153,5 +157,98 @@ func TestParseInlineHeaders_CommaFallback(t *testing.T) {
 	}
 	if headers["Authorization"] != "Bearer token" || headers["X-Env"] != "prod" {
 		t.Fatalf("headers = %v, want parsed headers", headers)
+	}
+}
+
+// === buildSandboxResources tests ===
+
+func TestBuildSandboxResources_Empty(t *testing.T) {
+	resources, err := buildSandboxResources(nil)
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	if resources != nil {
+		t.Fatalf("buildSandboxResources() = %v, want nil", resources)
+	}
+}
+
+func TestBuildSandboxResources_GithubRepository(t *testing.T) {
+	resources, err := buildSandboxResources([]string{
+		"type=github_repository,url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx",
+	})
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	if len(resources) != 1 {
+		t.Fatalf("buildSandboxResources() len = %d, want 1", len(resources))
+	}
+	got := resources[0].GitRepository
+	if got == nil {
+		t.Fatalf("resource = %+v, want GitRepository set", resources[0])
+	}
+	if got.Type != sandbox.GitRepositoryTypeGithub {
+		t.Fatalf("type = %q, want %q", got.Type, sandbox.GitRepositoryTypeGithub)
+	}
+	if got.URL != "https://github.com/owner/repo.git" {
+		t.Fatalf("url = %q, want %q", got.URL, "https://github.com/owner/repo.git")
+	}
+	if got.MountPath != "/workspace/repo" {
+		t.Fatalf("mount path = %q, want %q", got.MountPath, "/workspace/repo")
+	}
+	if got.AuthorizationToken == nil || *got.AuthorizationToken != "ghp-xxx" {
+		t.Fatalf("token = %v, want ghp-xxx", got.AuthorizationToken)
+	}
+}
+
+func TestBuildSandboxResources_DefaultsTypeAndAcceptsMountAlias(t *testing.T) {
+	resources, err := buildSandboxResources([]string{
+		"url=https://github.com/owner/repo.git,mount=/workspace/repo",
+	})
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	got := resources[0].GitRepository
+	if got == nil {
+		t.Fatal("resource GitRepository = nil, want set when type omitted")
+	}
+	if got.Type != sandbox.GitRepositoryTypeGithub {
+		t.Fatalf("type defaulted = %q, want %q", got.Type, sandbox.GitRepositoryTypeGithub)
+	}
+	if got.MountPath != "/workspace/repo" {
+		t.Fatalf("mount path via mount= alias = %q, want /workspace/repo", got.MountPath)
+	}
+	if got.AuthorizationToken != nil {
+		t.Fatalf("token = %v, want nil when not provided", got.AuthorizationToken)
+	}
+}
+
+func TestBuildSandboxResources_RejectsMissingURL(t *testing.T) {
+	if _, err := buildSandboxResources([]string{"type=github_repository,mount-path=/workspace"}); err == nil {
+		t.Fatal("expected missing url to fail")
+	}
+}
+
+func TestBuildSandboxResources_RejectsMissingMountPath(t *testing.T) {
+	if _, err := buildSandboxResources([]string{"type=github_repository,url=https://github.com/owner/repo.git"}); err == nil {
+		t.Fatal("expected missing mount-path to fail")
+	}
+}
+
+func TestBuildSandboxResources_RejectsUnsupportedType(t *testing.T) {
+	if _, err := buildSandboxResources([]string{"type=gitlab_repository,url=https://gitlab.com/owner/repo.git,mount-path=/workspace"}); err == nil {
+		t.Fatal("expected unsupported resource type to fail")
+	}
+}
+
+func TestBuildSandboxResources_Multiple(t *testing.T) {
+	resources, err := buildSandboxResources([]string{
+		"url=https://github.com/owner/a.git,mount-path=/workspace/a",
+		"url=https://github.com/owner/b.git,mount-path=/workspace/b",
+	})
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	if len(resources) != 2 {
+		t.Fatalf("buildSandboxResources() len = %d, want 2", len(resources))
 	}
 }
