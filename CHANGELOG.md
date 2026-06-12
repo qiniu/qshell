@@ -1,4 +1,4 @@
-# 2.19.7 (2026-05-12)
+# 2.19.8 (2026-06-12)
 ## 新增
 1. `qshell sandbox injection-rule create` / `update` 与 `qshell sandbox create --inline-injection` 新增 `github` 注入类型：通过 `--api-key` / `api-key=` 传入 GitHub Token；平台克隆仓库及匹配 `github.com` / `api.github.com` 出站请求时自动注入 token，沙箱内不可见明文
 2. `qshell sandbox create` 新增 `--resource` 参数，支持在沙箱启动前由平台拉取 GitHub 仓库快照并挂载到指定路径，格式 `type=github_repository,url=<url>,mount-path=<absPath>,token=<token>`（`type` 可省略，`mount-path` 也可写作 `mount`；同一沙箱内多条 `--resource` 必须共用同一 token）
