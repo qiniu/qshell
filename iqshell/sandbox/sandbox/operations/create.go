@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
@@ -21,7 +22,7 @@ type CreateInfo struct {
 	AutoPause       bool
 	InjectionRuleID []string
 	InlineInjection []string
-	// Resources 沙箱启动前挂载的资源规约（如 GitHub 仓库），格式参见 parseSandboxResource
+	// Resources 沙箱启动前挂载的资源规约（如 GitHub 仓库、Kodo bucket），格式参见 parseSandboxResource
 	Resources []string
 }
 
@@ -213,7 +214,9 @@ func buildSandboxResources(resourceSpecs []string) ([]sandbox.SandboxResourceSpe
 }
 
 // parseSandboxResource 解析单条 --resource 规约。
-// 支持格式：type=github_repository,url=<url>,mount-path=<absPath>,token=<token>
+// 支持格式：
+//   - type=github_repository,url=<url>,mount-path=<absPath>,token=<token>
+//   - type=kodo,bucket=<bucket>,mount-path=<absPath>[,prefix=<prefix>][,read-only=<bool>]
 func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 	fields := sbClient.ParseMetadataMap(spec)
 
@@ -228,22 +231,9 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 		if url == "" {
 			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: url is required for github_repository", spec)
 		}
-		mountPath := fields["mount-path"]
-		mountAlias := fields["mount"]
-		// 同时给出 mount-path= 与 mount= 且取值不一致时直接报错，避免静默忽略其中一项造成误解
-		if mountPath != "" && mountAlias != "" && mountPath != mountAlias {
-			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: mount-path %q and mount %q conflict, specify only one", spec, mountPath, mountAlias)
-		}
-		if mountPath == "" {
-			// 兼容 mount= 简写
-			mountPath = mountAlias
-		}
-		if mountPath == "" {
-			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: mount-path is required for github_repository", spec)
-		}
-		// 沙箱内部使用 POSIX 路径；用 path.IsAbs 而非 filepath.IsAbs，避免 Windows 主机上把 /workspace 误判为相对
-		if !path.IsAbs(mountPath) {
-			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: mount-path %q must be an absolute path", spec, mountPath)
+		mountPath, err := parseSandboxResourceMountPath(spec, fields, "github_repository")
+		if err != nil {
+			return sandbox.SandboxResourceSpec{}, err
 		}
 		token := fields["token"]
 		if token == "" {
@@ -256,9 +246,62 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 			AuthorizationToken: &token,
 		}
 		return sandbox.SandboxResourceSpec{GitRepository: res}, nil
+	case "kodo":
+		bucket := fields["bucket"]
+		if bucket == "" {
+			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: bucket is required for kodo", spec)
+		}
+		mountPath, err := parseSandboxResourceMountPath(spec, fields, "kodo")
+		if err != nil {
+			return sandbox.SandboxResourceSpec{}, err
+		}
+		res := &sandbox.KodoResource{
+			Bucket:    bucket,
+			MountPath: mountPath,
+		}
+		if prefix := fields["prefix"]; prefix != "" {
+			res.Prefix = &prefix
+		}
+		readOnly := fields["read-only"]
+		readOnlyAlias := fields["readonly"]
+		if readOnly != "" && readOnlyAlias != "" && readOnly != readOnlyAlias {
+			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: read-only %q and readonly %q conflict, specify only one", spec, readOnly, readOnlyAlias)
+		}
+		if readOnly == "" {
+			readOnly = readOnlyAlias
+		}
+		if readOnly != "" {
+			value, err := strconv.ParseBool(readOnly)
+			if err != nil {
+				return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: read-only %q must be a boolean", spec, readOnly)
+			}
+			res.ReadOnly = &value
+		}
+		return sandbox.SandboxResourceSpec{Kodo: res}, nil
 	default:
-		return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: unsupported type %q (supported: github_repository)", spec, typ)
+		return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: unsupported type %q (supported: github_repository, kodo)", spec, typ)
 	}
+}
+
+func parseSandboxResourceMountPath(spec string, fields map[string]string, resourceType string) (string, error) {
+	mountPath := fields["mount-path"]
+	mountAlias := fields["mount"]
+	// 同时给出 mount-path= 与 mount= 且取值不一致时直接报错，避免静默忽略其中一项造成误解
+	if mountPath != "" && mountAlias != "" && mountPath != mountAlias {
+		return "", fmt.Errorf("invalid resource spec %q: mount-path %q and mount %q conflict, specify only one", spec, mountPath, mountAlias)
+	}
+	if mountPath == "" {
+		// 兼容 mount= 简写
+		mountPath = mountAlias
+	}
+	if mountPath == "" {
+		return "", fmt.Errorf("invalid resource spec %q: mount-path is required for %s", spec, resourceType)
+	}
+	// 沙箱内部使用 POSIX 路径；用 path.IsAbs 而非 filepath.IsAbs，避免 Windows 主机上把 /workspace 误判为相对
+	if !path.IsAbs(mountPath) {
+		return "", fmt.Errorf("invalid resource spec %q: mount-path %q must be an absolute path", spec, mountPath)
+	}
+	return mountPath, nil
 }
 
 func parseInlineHeaders(raw string) map[string]string {
