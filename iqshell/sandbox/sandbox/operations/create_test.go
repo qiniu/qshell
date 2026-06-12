@@ -311,6 +311,12 @@ func TestBuildSandboxResources_RejectsKodoInvalidReadOnly(t *testing.T) {
 	}
 }
 
+func TestBuildSandboxResources_RejectsConflictingReadOnlyAliases(t *testing.T) {
+	if _, err := buildSandboxResources([]string{"type=kodo,bucket=test-bucket,mount-path=/mnt/kodo,read-only=true,readonly=false"}); err == nil {
+		t.Fatal("expected conflicting read-only aliases to fail")
+	}
+}
+
 func TestBuildSandboxResources_RejectsUnsupportedType(t *testing.T) {
 	if _, err := buildSandboxResources([]string{"type=gitlab_repository,url=https://gitlab.com/owner/repo.git,mount-path=/workspace,token=ghp-xxx"}); err == nil {
 		t.Fatal("expected unsupported resource type to fail")

@@ -263,8 +263,12 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 			res.Prefix = &prefix
 		}
 		readOnly := fields["read-only"]
+		readOnlyAlias := fields["readonly"]
+		if readOnly != "" && readOnlyAlias != "" && readOnly != readOnlyAlias {
+			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: read-only %q and readonly %q conflict, specify only one", spec, readOnly, readOnlyAlias)
+		}
 		if readOnly == "" {
-			readOnly = fields["readonly"]
+			readOnly = readOnlyAlias
 		}
 		if readOnly != "" {
 			value, err := strconv.ParseBool(readOnly)
