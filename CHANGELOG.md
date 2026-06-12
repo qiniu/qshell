@@ -1,12 +1,20 @@
+# 2.19.8 (2026-06-12)
+## 新增
+1. `qshell sandbox create --resource` 支持挂载 Kodo bucket 资源，格式 `type=kodo,bucket=<bucket>,mount-path=<absPath>[,prefix=<prefix>][,read-only=<bool>]`
+
+## 更新
+1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.13`，跟进 SDK 的 Kodo bucket resource 支持
+
+## 修复
+1. 修复 `qshell sandbox create --resource type=kodo` 同时传入 `read-only` / `readonly` 且取值不一致时静默覆盖的问题，现在会直接报错提示参数冲突
+
 # 2.19.7 (2026-05-12)
 ## 新增
 1. `qshell sandbox injection-rule create` / `update` 与 `qshell sandbox create --inline-injection` 新增 `github` 注入类型：通过 `--api-key` / `api-key=` 传入 GitHub Token；平台克隆仓库及匹配 `github.com` / `api.github.com` 出站请求时自动注入 token，沙箱内不可见明文
 2. `qshell sandbox create` 新增 `--resource` 参数，支持在沙箱启动前由平台拉取 GitHub 仓库快照并挂载到指定路径，格式 `type=github_repository,url=<url>,mount-path=<absPath>,token=<token>`（`type` 可省略，`mount-path` 也可写作 `mount`；同一沙箱内多条 `--resource` 必须共用同一 token）
-3. `qshell sandbox create --resource` 支持挂载 Kodo bucket 资源，格式 `type=kodo,bucket=<bucket>,mount-path=<absPath>[,prefix=<prefix>][,read-only=<bool>]`
 
 ## 更新
 1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.12`，附带修复其内部 `Commands.Connect` 重复关闭 channel 引发的 panic，并对 `GitRepositoryResource` 必填字段进行 SDK 侧校验
-2. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.13`，跟进 SDK 的 Kodo bucket resource 支持
 
 # 2.19.6
 ## 修复
