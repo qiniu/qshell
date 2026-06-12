@@ -222,6 +222,53 @@ func TestBuildSandboxResources_DefaultsTypeAndAcceptsMountAlias(t *testing.T) {
 	}
 }
 
+func TestBuildSandboxResources_Kodo(t *testing.T) {
+	resources, err := buildSandboxResources([]string{
+		"type=kodo,bucket=test-bucket,mount-path=/mnt/kodo,prefix=datasets/,read-only=true",
+	})
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	if len(resources) != 1 {
+		t.Fatalf("buildSandboxResources() len = %d, want 1", len(resources))
+	}
+	got := resources[0].Kodo
+	if got == nil {
+		t.Fatalf("resource = %+v, want Kodo set", resources[0])
+	}
+	if got.Bucket != "test-bucket" {
+		t.Fatalf("bucket = %q, want test-bucket", got.Bucket)
+	}
+	if got.MountPath != "/mnt/kodo" {
+		t.Fatalf("mount path = %q, want /mnt/kodo", got.MountPath)
+	}
+	if got.Prefix == nil || *got.Prefix != "datasets/" {
+		t.Fatalf("prefix = %v, want datasets/", got.Prefix)
+	}
+	if got.ReadOnly == nil || !*got.ReadOnly {
+		t.Fatalf("read-only = %v, want true", got.ReadOnly)
+	}
+}
+
+func TestBuildSandboxResources_KodoAcceptsMountAliasAndReadonlyAlias(t *testing.T) {
+	resources, err := buildSandboxResources([]string{
+		"type=kodo,bucket=test-bucket,mount=/mnt/kodo,readonly=false",
+	})
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	got := resources[0].Kodo
+	if got == nil {
+		t.Fatal("resource Kodo = nil, want set")
+	}
+	if got.MountPath != "/mnt/kodo" {
+		t.Fatalf("mount path via mount= alias = %q, want /mnt/kodo", got.MountPath)
+	}
+	if got.ReadOnly == nil || *got.ReadOnly {
+		t.Fatalf("readonly alias = %v, want false", got.ReadOnly)
+	}
+}
+
 func TestBuildSandboxResources_RejectsMissingURL(t *testing.T) {
 	if _, err := buildSandboxResources([]string{"type=github_repository,mount-path=/workspace"}); err == nil {
 		t.Fatal("expected missing url to fail")
@@ -243,6 +290,24 @@ func TestBuildSandboxResources_RejectsMissingToken(t *testing.T) {
 func TestBuildSandboxResources_RejectsRelativeMountPath(t *testing.T) {
 	if _, err := buildSandboxResources([]string{"url=https://github.com/owner/repo.git,mount-path=workspace/repo,token=ghp-xxx"}); err == nil {
 		t.Fatal("expected relative mount-path to fail")
+	}
+}
+
+func TestBuildSandboxResources_RejectsKodoMissingBucket(t *testing.T) {
+	if _, err := buildSandboxResources([]string{"type=kodo,mount-path=/mnt/kodo"}); err == nil {
+		t.Fatal("expected missing kodo bucket to fail")
+	}
+}
+
+func TestBuildSandboxResources_RejectsKodoMissingMountPath(t *testing.T) {
+	if _, err := buildSandboxResources([]string{"type=kodo,bucket=test-bucket"}); err == nil {
+		t.Fatal("expected missing kodo mount-path to fail")
+	}
+}
+
+func TestBuildSandboxResources_RejectsKodoInvalidReadOnly(t *testing.T) {
+	if _, err := buildSandboxResources([]string{"type=kodo,bucket=test-bucket,mount-path=/mnt/kodo,read-only=maybe"}); err == nil {
+		t.Fatal("expected invalid kodo read-only to fail")
 	}
 }
 

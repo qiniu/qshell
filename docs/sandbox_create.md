@@ -20,6 +20,8 @@ $ qshell sandbox create --doc
 # 鉴权
 需要配置 `QINIU_API_KEY` 或 `E2B_API_KEY` 环境变量，或在当前目录 `.env` 文件中设置。
 
+使用 `--resource type=kodo` 挂载 Kodo bucket 时，还需要 qshell 能获取七牛 AK/SK 凭据（优先使用 `qshell user` 当前账号，环境变量 `QINIU_ACCESS_KEY` / `QINIU_SECRET_KEY` 作为兜底）。
+
 # 参数
 - `template`：模板 ID（实际创建时必填；命令参数层最多接受 1 个模板参数）
 - `-t, --timeout`：沙箱超时时间（秒）
@@ -29,12 +31,13 @@ $ qshell sandbox create --doc
 - `--auto-pause`：超时后自动暂停沙箱，而不是终止沙箱
 - `--injection-rule`：创建沙箱时附加的注入规则 ID，可多次指定
 - `--inline-injection`：创建沙箱时附加的内联注入配置，可多次指定，格式为 `type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>`
-- `--resource`：沙箱启动前挂载的资源规约，可多次指定，格式为 `type=github_repository,url=<url>,mount-path=<absPath>,token=<token>`（`type` 默认为 `github_repository`，`mount-path` 也可写作 `mount`）。注意：通过 CLI 传递 token 可能泄露到 Shell 历史或进程列表
+- `--resource`：沙箱启动前挂载的资源规约，可多次指定。GitHub 仓库格式为 `type=github_repository,url=<url>,mount-path=<absPath>,token=<token>`（`type` 默认为 `github_repository`）；Kodo bucket 格式为 `type=kodo,bucket=<bucket>,mount-path=<absPath>[,prefix=<prefix>][,read-only=<bool>]`；`mount-path` 也可写作 `mount`。注意：通过 CLI 传递 token 可能泄露到 Shell 历史或进程列表
 
 资源说明：
 - `url` 推荐使用 HTTPS 形式（如 `https://github.com/owner/repo.git`）；若 URL 本身包含逗号，当前键值串格式无法正确表达
 - `mount-path` 必须是沙箱内的绝对路径（POSIX），不接受相对路径；同时给出 `mount-path` 与 `mount` 时两者取值必须一致
 - 同一沙箱内多条 `--resource github_repository` 当前必须共用同一 `token`（受 SDK 侧约束）
+- `type=kodo` 使用 `bucket` 指定 Kodo bucket，可用 `prefix` 限制挂载的对象名前缀，可用 `read-only=true` 显式只读挂载
 - `--resource` 与 `--inline-injection type=github` 之间的 token 一致性由平台侧校验，CLI 不做跨参数比较
 
 内联注入说明：
@@ -109,3 +112,11 @@ $ qshell sbx cr my-template \
 ```
 
 > 同一沙箱内多个 `--resource github_repository` 当前必须共用同一 `token`。
+
+11. 创建时挂载 Kodo bucket 资源（沙箱启动前由平台通过 NFS 代理挂载到指定路径）
+```
+$ qshell sandbox create my-template \
+    --resource 'type=kodo,bucket=my-bucket,mount-path=/mnt/kodo,prefix=datasets/,read-only=true'
+$ qshell sbx cr my-template \
+    --resource 'type=kodo,bucket=my-bucket,mount=/mnt/kodo'
+```

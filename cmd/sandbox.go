@@ -130,7 +130,11 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox create my-template \
     --resource 'type=github_repository,url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'
   qshell sbx cr my-template \
-    --resource 'url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'`,
+    --resource 'url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'
+
+  # Create with a Kodo bucket resource mounted into the sandbox
+  qshell sandbox create my-template \
+    --resource 'type=kodo,bucket=my-bucket,mount-path=/mnt/kodo,prefix=datasets/,read-only=true'`,
 		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxCreateType
@@ -150,7 +154,7 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVar(&info.AutoPause, "auto-pause", false, "automatically pause sandbox when timeout expires (instead of killing)")
 	cmd.Flags().StringArrayVar(&info.InjectionRuleID, "injection-rule", nil, "injection rule IDs to apply when creating the sandbox (can be specified multiple times)")
 	cmd.Flags().StringArrayVar(&info.InlineInjection, "inline-injection", nil, "inline injection spec to apply when creating the sandbox (can be specified multiple times, format: type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>)")
-	cmd.Flags().StringArrayVar(&info.Resources, "resource", nil, "resource to mount before sandbox starts (can be specified multiple times, format: type=github_repository,url=<url>,mount-path=<absPath>,token=<token>; warning: passing tokens via CLI may leak through shell history or process lists)")
+	cmd.Flags().StringArrayVar(&info.Resources, "resource", nil, "resource to mount before sandbox starts (can be specified multiple times, formats: type=github_repository,url=<url>,mount-path=<absPath>,token=<token> or type=kodo,bucket=<bucket>,mount-path=<absPath>,prefix=<prefix>,read-only=<bool>; warning: passing tokens via CLI may leak through shell history or process lists)")
 	return cmd
 }
 
