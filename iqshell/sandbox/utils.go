@@ -105,27 +105,33 @@ type InjectionParts struct {
 const supportedInjectionTypes = "openai, anthropic, gemini, qiniu, github, http"
 
 // BuildInjectionParts builds a provider-specific injection payload from the given inputs.
-func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string) (InjectionParts, error) {
+func BuildInjectionParts(typ, apiKey, baseURL string, headers, ifHeaders, ifQueries map[string]string) (InjectionParts, error) {
 	switch strings.ToLower(strings.TrimSpace(typ)) {
 	case "openai":
 		return InjectionParts{
 			OpenAI: &sdkSandbox.OpenAIInjection{
-				APIKey:  optionalString(apiKey),
-				BaseURL: optionalString(baseURL),
+				APIKey:    optionalString(apiKey),
+				BaseURL:   optionalString(baseURL),
+				IfHeaders: optionalMap(ifHeaders),
+				IfQueries: optionalMap(ifQueries),
 			},
 		}, nil
 	case "anthropic":
 		return InjectionParts{
 			Anthropic: &sdkSandbox.AnthropicInjection{
-				APIKey:  optionalString(apiKey),
-				BaseURL: optionalString(baseURL),
+				APIKey:    optionalString(apiKey),
+				BaseURL:   optionalString(baseURL),
+				IfHeaders: optionalMap(ifHeaders),
+				IfQueries: optionalMap(ifQueries),
 			},
 		}, nil
 	case "gemini":
 		return InjectionParts{
 			Gemini: &sdkSandbox.GeminiInjection{
-				APIKey:  optionalString(apiKey),
-				BaseURL: optionalString(baseURL),
+				APIKey:    optionalString(apiKey),
+				BaseURL:   optionalString(baseURL),
+				IfHeaders: optionalMap(ifHeaders),
+				IfQueries: optionalMap(ifQueries),
 			},
 		}, nil
 	case "qiniu":
@@ -135,15 +141,16 @@ func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string)
 		}
 		return InjectionParts{
 			Qiniu: &sdkSandbox.QiniuInjection{
-				APIKey:  optionalString(apiKey),
-				BaseURL: optionalString(validatedBaseURL),
+				APIKey:    optionalString(apiKey),
+				BaseURL:   optionalString(validatedBaseURL),
+				IfHeaders: optionalMap(ifHeaders),
+				IfQueries: optionalMap(ifQueries),
 			},
 		}, nil
 	case "github":
-		// GitHub 注入仅接受 token（经 api-key 字段承载），目标固定为 github.com / api.github.com；
-		// 显式拒绝 base-url / headers，避免 typo 看起来配置成功却被静默丢弃
-		if strings.TrimSpace(baseURL) != "" {
-			return InjectionParts{}, fmt.Errorf("base URL is not supported for injection type github; target is fixed to github.com / api.github.com")
+		validatedBaseURL, err := validateGithubBaseURL(baseURL)
+		if err != nil {
+			return InjectionParts{}, err
 		}
 		if len(headers) > 0 {
 			return InjectionParts{}, fmt.Errorf("headers are not supported for injection type github")
@@ -154,7 +161,10 @@ func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string)
 		}
 		return InjectionParts{
 			Github: &sdkSandbox.GithubInjection{
-				Token: optionalString(apiKey),
+				BaseURL:   optionalString(validatedBaseURL),
+				IfHeaders: optionalMap(ifHeaders),
+				IfQueries: optionalMap(ifQueries),
+				Token:     optionalString(apiKey),
 			},
 		}, nil
 	case "http":
@@ -168,12 +178,30 @@ func BuildInjectionParts(typ, apiKey, baseURL string, headers map[string]string)
 		if len(headers) > 0 {
 			httpInjection.Headers = &headers
 		}
+		httpInjection.IfHeaders = optionalMap(ifHeaders)
+		httpInjection.IfQueries = optionalMap(ifQueries)
 		return InjectionParts{HTTP: httpInjection}, nil
 	case "":
 		return InjectionParts{}, fmt.Errorf("injection type is required and must be one of: %s", supportedInjectionTypes)
 	default:
 		return InjectionParts{}, fmt.Errorf("unsupported injection type %q, must be one of: %s", typ, supportedInjectionTypes)
 	}
+}
+
+func validateGithubBaseURL(baseURL string) (string, error) {
+	trimmedBaseURL := strings.TrimSpace(baseURL)
+	if trimmedBaseURL == "" {
+		return "", nil
+	}
+	if _, err := validateBaseURL(trimmedBaseURL, false); err != nil {
+		return "", err
+	}
+	parsedURL, _ := url.Parse(trimmedBaseURL)
+	host := strings.ToLower(parsedURL.Hostname())
+	if host != "github.com" && host != "api.github.com" {
+		return "", fmt.Errorf("base URL for injection type github must use github.com or api.github.com")
+	}
+	return trimmedBaseURL, nil
 }
 
 func validateBaseURL(baseURL string, required bool) (string, error) {
@@ -197,6 +225,13 @@ func optionalString(value string) *string {
 		return nil
 	}
 	return &trimmed
+}
+
+func optionalMap(value map[string]string) *map[string]string {
+	if len(value) == 0 {
+		return nil
+	}
+	return &value
 }
 
 // logLevelOrder maps log levels to numeric order for hierarchical filtering.

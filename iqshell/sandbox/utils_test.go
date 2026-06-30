@@ -360,7 +360,7 @@ func TestParseMetadataMap_MixedPairs(t *testing.T) {
 // === BuildInjectionParts tests ===
 
 func TestBuildInjectionParts_Qiniu(t *testing.T) {
-	parts, err := BuildInjectionParts("qiniu", "sk-qiniu", " https://api.qnaigc.com ", nil)
+	parts, err := BuildInjectionParts("qiniu", "sk-qiniu", " https://api.qnaigc.com ", nil, nil, nil)
 	if err != nil {
 		t.Fatalf("BuildInjectionParts(qiniu) error = %v", err)
 	}
@@ -377,7 +377,7 @@ func TestBuildInjectionParts_Qiniu(t *testing.T) {
 
 func TestBuildInjectionParts_HTTPWithHeaders(t *testing.T) {
 	headers := map[string]string{"Authorization": "Bearer token"}
-	parts, err := BuildInjectionParts("http", "", "https://api.example.com", headers)
+	parts, err := BuildInjectionParts("http", "", "https://api.example.com", headers, nil, nil)
 	if err != nil {
 		t.Fatalf("BuildInjectionParts(http) error = %v", err)
 	}
@@ -390,31 +390,31 @@ func TestBuildInjectionParts_HTTPWithHeaders(t *testing.T) {
 }
 
 func TestBuildInjectionParts_HTTPRejectsInvalidURL(t *testing.T) {
-	if _, err := BuildInjectionParts("http", "", "file:///tmp/a", nil); err == nil {
+	if _, err := BuildInjectionParts("http", "", "file:///tmp/a", nil, nil, nil); err == nil {
 		t.Fatal("BuildInjectionParts(http invalid url) expected error, got nil")
 	}
 }
 
 func TestBuildInjectionParts_QiniuRejectsInvalidURL(t *testing.T) {
-	if _, err := BuildInjectionParts("qiniu", "", "file:///tmp/a", nil); err == nil {
+	if _, err := BuildInjectionParts("qiniu", "", "file:///tmp/a", nil, nil, nil); err == nil {
 		t.Fatal("BuildInjectionParts(qiniu invalid url) expected error, got nil")
 	}
 }
 
 func TestBuildInjectionParts_RejectsMissingType(t *testing.T) {
-	if _, err := BuildInjectionParts("", "", "", nil); err == nil {
+	if _, err := BuildInjectionParts("", "", "", nil, nil, nil); err == nil {
 		t.Fatal("BuildInjectionParts(missing type) expected error, got nil")
 	}
 }
 
 func TestBuildInjectionParts_RejectsUnknownType(t *testing.T) {
-	if _, err := BuildInjectionParts("unknown", "", "", nil); err == nil {
+	if _, err := BuildInjectionParts("unknown", "", "", nil, nil, nil); err == nil {
 		t.Fatal("BuildInjectionParts(unknown type) expected error, got nil")
 	}
 }
 
 func TestBuildInjectionParts_OpenAIEmptyOptionalFields(t *testing.T) {
-	parts, err := BuildInjectionParts("openai", "", "", nil)
+	parts, err := BuildInjectionParts("openai", "", "", nil, nil, nil)
 	if err != nil {
 		t.Fatalf("BuildInjectionParts(openai) error = %v", err)
 	}
@@ -427,7 +427,7 @@ func TestBuildInjectionParts_OpenAIEmptyOptionalFields(t *testing.T) {
 }
 
 func TestBuildInjectionParts_QiniuEmptyOptionalFields(t *testing.T) {
-	parts, err := BuildInjectionParts("qiniu", "", "", nil)
+	parts, err := BuildInjectionParts("qiniu", "", "", nil, nil, nil)
 	if err != nil {
 		t.Fatalf("BuildInjectionParts(qiniu) error = %v", err)
 	}
@@ -440,7 +440,7 @@ func TestBuildInjectionParts_QiniuEmptyOptionalFields(t *testing.T) {
 }
 
 func TestBuildInjectionParts_Github(t *testing.T) {
-	parts, err := BuildInjectionParts("github", " ghp-token ", "", nil)
+	parts, err := BuildInjectionParts("github", " ghp-token ", "", nil, nil, nil)
 	if err != nil {
 		t.Fatalf("BuildInjectionParts(github) error = %v", err)
 	}
@@ -453,22 +453,50 @@ func TestBuildInjectionParts_Github(t *testing.T) {
 }
 
 func TestBuildInjectionParts_GithubEmptyToken(t *testing.T) {
-	if _, err := BuildInjectionParts("github", "", "", nil); err == nil {
+	if _, err := BuildInjectionParts("github", "", "", nil, nil, nil); err == nil {
 		t.Fatal("expected BuildInjectionParts(github) without token to fail")
 	}
-	if _, err := BuildInjectionParts("github", "   ", "", nil); err == nil {
+	if _, err := BuildInjectionParts("github", "   ", "", nil, nil, nil); err == nil {
 		t.Fatal("expected BuildInjectionParts(github) with whitespace-only token to fail")
 	}
 }
 
-func TestBuildInjectionParts_GithubRejectsBaseURL(t *testing.T) {
-	if _, err := BuildInjectionParts("github", "ghp-x", "https://api.github.com", nil); err == nil {
-		t.Fatal("expected BuildInjectionParts(github, base-url) to fail")
+func TestBuildInjectionParts_GithubBaseURL(t *testing.T) {
+	parts, err := BuildInjectionParts("github", "ghp-x", "https://api.github.com/repos/qiniu/*", nil, nil, nil)
+	if err != nil {
+		t.Fatalf("BuildInjectionParts(github, base-url) error = %v", err)
+	}
+	if parts.Github.BaseURL == nil || *parts.Github.BaseURL != "https://api.github.com/repos/qiniu/*" {
+		t.Fatalf("github base URL = %v, want https://api.github.com/repos/qiniu/*", parts.Github.BaseURL)
+	}
+}
+
+func TestBuildInjectionParts_GithubRejectsUnsupportedBaseURLHost(t *testing.T) {
+	if _, err := BuildInjectionParts("github", "ghp-x", "https://git.example.com", nil, nil, nil); err == nil {
+		t.Fatal("expected BuildInjectionParts(github, unsupported base-url host) to fail")
 	}
 }
 
 func TestBuildInjectionParts_GithubRejectsHeaders(t *testing.T) {
-	if _, err := BuildInjectionParts("github", "ghp-x", "", map[string]string{"X": "y"}); err == nil {
+	if _, err := BuildInjectionParts("github", "ghp-x", "", map[string]string{"X": "y"}, nil, nil); err == nil {
 		t.Fatal("expected BuildInjectionParts(github, headers) to fail")
+	}
+}
+
+func TestBuildInjectionParts_HTTPWithMatchConditions(t *testing.T) {
+	ifHeaders := map[string]string{"X-Env": "prod"}
+	ifQueries := map[string]string{"inject": "true"}
+	parts, err := BuildInjectionParts("http", "", "https://api.example.com/v1/*", nil, ifHeaders, ifQueries)
+	if err != nil {
+		t.Fatalf("BuildInjectionParts(http, conditions) error = %v", err)
+	}
+	if parts.HTTP == nil {
+		t.Fatal("BuildInjectionParts(http, conditions) did not build http injection")
+	}
+	if parts.HTTP.IfHeaders == nil || (*parts.HTTP.IfHeaders)["X-Env"] != "prod" {
+		t.Fatalf("http if headers = %v, want X-Env=prod", parts.HTTP.IfHeaders)
+	}
+	if parts.HTTP.IfQueries == nil || (*parts.HTTP.IfQueries)["inject"] != "true" {
+		t.Fatalf("http if queries = %v, want inject=true", parts.HTTP.IfQueries)
 	}
 }
