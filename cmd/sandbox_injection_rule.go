@@ -101,13 +101,19 @@ var injectionRuleCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox injection-rule create --name api-auth --type http --base-url https://api.example.com --headers "Authorization=Bearer token123,X-Env=prod"
   qshell sbx ir cr --name api-auth --type http --base-url https://api.example.com --headers "Authorization=Bearer token123,X-Env=prod"
 
+  # Create a scoped HTTP injection rule
+  qshell sandbox injection-rule create --name api-auth-scoped --type http --base-url https://api.example.com --headers "Authorization=Bearer token123" --if-headers "X-Env=prod" --if-queries "inject=true"
+
   # Create a Qiniu AI API injection rule
   qshell sandbox injection-rule create --name qiniu-ai --type qiniu --api-key ak-xxx
   qshell sbx ir cr --name qiniu-ai --type qiniu --api-key ak-xxx
 
   # Create a GitHub credential injection rule (token passed via --api-key)
   qshell sandbox injection-rule create --name github-default --type github --api-key ghp-xxx
-  qshell sbx ir cr --name github-default --type github --api-key ghp-xxx`,
+  qshell sbx ir cr --name github-default --type github --api-key ghp-xxx
+
+  # Create a GitHub credential injection limited to GitHub API repository paths
+  qshell sandbox injection-rule create --name github-api --type github --api-key ghp-xxx --base-url https://api.github.com/repos/qiniu/*`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxInjectionRuleCreateType
 			if !iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{}) {
@@ -119,8 +125,10 @@ var injectionRuleCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&info.Name, "name", "", "rule name (required, unique per user)")
 	cmd.Flags().StringVar(&info.Type, "type", "", "injection type: openai, anthropic, gemini, qiniu, github, http")
 	cmd.Flags().StringVar(&info.APIKey, "api-key", "", "API key for openai/anthropic/gemini/qiniu, or token for github (warning: passing secrets via CLI may leak through shell history or process lists)")
-	cmd.Flags().StringVar(&info.BaseURL, "base-url", "", "override base URL or target base URL for http injection")
+	cmd.Flags().StringVar(&info.BaseURL, "base-url", "", "override base URL or target base URL for http/github injection")
 	cmd.Flags().StringVar(&info.Headers, "headers", "", "HTTP headers for custom http injection (comma-separated key=value pairs)")
+	cmd.Flags().StringVar(&info.IfHeaders, "if-headers", "", "request headers that must already match before injection applies (comma-separated key=value pairs)")
+	cmd.Flags().StringVar(&info.IfQueries, "if-queries", "", "query parameters that must already match before injection applies (comma-separated key=value pairs)")
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("type")
 	return cmd
@@ -145,13 +153,19 @@ var injectionRuleUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type http --base-url https://api.example.com --headers "Authorization=Bearer newtoken"
   qshell sbx ir up rule-xxxxxxxxxxxx --type http --base-url https://api.example.com --headers "Authorization=Bearer newtoken"
 
+  # Update custom HTTP matching conditions
+  qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type http --base-url https://api.example.com --headers "Authorization=Bearer newtoken" --if-headers "X-Env=prod" --if-queries "inject=true"
+
   # Update to a Qiniu AI API injection
   qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type qiniu --api-key ak-new
   qshell sbx ir up rule-xxxxxxxxxxxx --type qiniu --api-key ak-new
 
   # Update to a GitHub credential injection (token passed via --api-key)
   qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type github --api-key ghp-new
-  qshell sbx ir up rule-xxxxxxxxxxxx --type github --api-key ghp-new`,
+  qshell sbx ir up rule-xxxxxxxxxxxx --type github --api-key ghp-new
+
+  # Limit GitHub credential injection to GitHub API repository paths
+  qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type github --api-key ghp-new --base-url https://api.github.com/repos/qiniu/*`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.CmdCfg.CmdId = docs.SandboxInjectionRuleUpdateType
 			if !iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{}) {
@@ -164,8 +178,10 @@ var injectionRuleUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&info.Name, "name", "", "new rule name")
 	cmd.Flags().StringVar(&info.Type, "type", "", "new injection type: openai, anthropic, gemini, qiniu, github, http")
 	cmd.Flags().StringVar(&info.APIKey, "api-key", "", "new API key for openai/anthropic/gemini/qiniu, or token for github (warning: passing secrets via CLI may leak through shell history or process lists)")
-	cmd.Flags().StringVar(&info.BaseURL, "base-url", "", "new base URL or target base URL for http injection")
+	cmd.Flags().StringVar(&info.BaseURL, "base-url", "", "new base URL or target base URL for http/github injection")
 	cmd.Flags().StringVar(&info.Headers, "headers", "", "new HTTP headers for custom http injection (comma-separated key=value pairs)")
+	cmd.Flags().StringVar(&info.IfHeaders, "if-headers", "", "new request headers that must already match before injection applies (comma-separated key=value pairs)")
+	cmd.Flags().StringVar(&info.IfQueries, "if-queries", "", "new query parameters that must already match before injection applies (comma-separated key=value pairs)")
 	return cmd
 }
 

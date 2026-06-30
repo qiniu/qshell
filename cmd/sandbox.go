@@ -118,12 +118,12 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   # Create with inline injections
   qshell sandbox create my-template \
     --inline-injection 'type=openai,api-key=sk-xxx' \
-    --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
+    --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod,if-headers=X-Scope=demo,if-queries=inject=true'
   qshell sbx cr my-template \
     --inline-injection 'type=openai,api-key=sk-xxx'
 
   # Create with a GitHub credential inline injection (token passed via api-key)
-  qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx'
+  qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx,base-url=https://api.github.com/repos/qiniu/*'
   qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'
 
   # Create with a GitHub repository resource mounted into the sandbox
@@ -153,7 +153,7 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringArrayVarP(&info.EnvVars, "env-var", "e", nil, "environment variables (KEY=VALUE, can be specified multiple times)")
 	cmd.Flags().BoolVar(&info.AutoPause, "auto-pause", false, "automatically pause sandbox when timeout expires (instead of killing)")
 	cmd.Flags().StringArrayVar(&info.InjectionRuleID, "injection-rule", nil, "injection rule IDs to apply when creating the sandbox (can be specified multiple times)")
-	cmd.Flags().StringArrayVar(&info.InlineInjection, "inline-injection", nil, "inline injection spec to apply when creating the sandbox (can be specified multiple times, format: type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>)")
+	cmd.Flags().StringArrayVar(&info.InlineInjection, "inline-injection", nil, "inline injection spec to apply when creating the sandbox (can be specified multiple times, format: type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>,if-headers=<k=v>,if-queries=<k=v>)")
 	cmd.Flags().StringArrayVar(&info.Resources, "resource", nil, "resource to mount before sandbox starts (can be specified multiple times, formats: type=github_repository,url=<url>,mount-path=<absPath>,token=<token> or type=kodo,bucket=<bucket>,mount-path=<absPath>,prefix=<prefix>,read-only=<bool>; warning: passing tokens via CLI may leak through shell history or process lists)")
 	return cmd
 }

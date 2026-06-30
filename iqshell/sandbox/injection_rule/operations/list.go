@@ -38,14 +38,15 @@ func List(info ListInfo) {
 	}
 
 	tw := sbClient.NewTable(os.Stdout)
-	fmt.Fprintf(tw, "RULE ID\tNAME\tTYPE\tTARGET\tHEADERS\tCREATED AT\tUPDATED AT\n")
+	fmt.Fprintf(tw, "RULE ID\tNAME\tTYPE\tTARGET\tHEADERS\tCONDITIONS\tCREATED AT\tUPDATED AT\n")
 	for _, r := range rules {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 			r.RuleID,
 			r.Name,
 			formatInjectionType(r.Injection),
 			formatInjectionTarget(r.Injection),
 			formatInjectionHeaders(r.Injection),
+			formatInjectionConditions(r.Injection),
 			sbClient.FormatTimestamp(r.CreatedAt),
 			sbClient.FormatTimestamp(r.UpdatedAt),
 		)

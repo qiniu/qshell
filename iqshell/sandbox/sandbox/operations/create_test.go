@@ -55,7 +55,7 @@ func TestBuildSandboxInjections_WithInlineOpenAI(t *testing.T) {
 }
 
 func TestBuildSandboxInjections_WithInlineHTTP(t *testing.T) {
-	injections, err := buildSandboxInjections(nil, []string{"type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod"})
+	injections, err := buildSandboxInjections(nil, []string{"type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod,if-headers=X-Scope=demo,if-queries=inject=true"})
 	if err != nil {
 		t.Fatalf("buildSandboxInjections() error = %v", err)
 	}
@@ -67,6 +67,12 @@ func TestBuildSandboxInjections_WithInlineHTTP(t *testing.T) {
 	}
 	if injections[0].HTTP.Headers == nil || len(*injections[0].HTTP.Headers) != 2 {
 		t.Fatalf("http headers = %v, want 2 headers", injections[0].HTTP.Headers)
+	}
+	if injections[0].HTTP.IfHeaders == nil || (*injections[0].HTTP.IfHeaders)["X-Scope"] != "demo" {
+		t.Fatalf("http if headers = %v, want X-Scope=demo", injections[0].HTTP.IfHeaders)
+	}
+	if injections[0].HTTP.IfQueries == nil || (*injections[0].HTTP.IfQueries)["inject"] != "true" {
+		t.Fatalf("http if queries = %v, want inject=true", injections[0].HTTP.IfQueries)
 	}
 }
 
@@ -131,12 +137,41 @@ func TestParseInlineInjectionFields_HeadersOnly(t *testing.T) {
 }
 
 func TestParseInlineInjectionFields_HeadersWithOtherFields(t *testing.T) {
-	fields := parseInlineInjectionFields("type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod")
+	fields := parseInlineInjectionFields("type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod,if-headers=X-Scope=demo,if-queries=inject=true")
 	if fields["type"] != "http" || fields["base-url"] != "https://api.example.com" {
 		t.Fatalf("fields = %v, want type and base-url parsed", fields)
 	}
 	if got := fields["headers"]; got != "Authorization=Bearer token;X-Env=prod" {
 		t.Fatalf("headers = %q, want %q", got, "Authorization=Bearer token;X-Env=prod")
+	}
+	if got := fields["if-headers"]; got != "X-Scope=demo" {
+		t.Fatalf("if-headers = %q, want %q", got, "X-Scope=demo")
+	}
+	if got := fields["if-queries"]; got != "inject=true" {
+		t.Fatalf("if-queries = %q, want %q", got, "inject=true")
+	}
+}
+
+func TestParseInlineInjectionFields_CommaSeparatedHeadersWithFollowingCondition(t *testing.T) {
+	fields := parseInlineInjectionFields("type=http,base-url=https://api.example.com,headers=Authorization=Bearer token,X-Env=prod,if-headers=X-Scope=demo")
+	if got := fields["headers"]; got != "Authorization=Bearer token,X-Env=prod" {
+		t.Fatalf("headers = %q, want %q", got, "Authorization=Bearer token,X-Env=prod")
+	}
+	if got := fields["if-headers"]; got != "X-Scope=demo" {
+		t.Fatalf("if-headers = %q, want %q", got, "X-Scope=demo")
+	}
+}
+
+func TestParseInlineInjectionFields_UnknownKeyDoesNotPolluteScalarField(t *testing.T) {
+	fields := parseInlineInjectionFields("type=http,unknown=value,base-url=https://api.example.com")
+	if got := fields["type"]; got != "http" {
+		t.Fatalf("type = %q, want %q", got, "http")
+	}
+	if got := fields["base-url"]; got != "https://api.example.com" {
+		t.Fatalf("base-url = %q, want %q", got, "https://api.example.com")
+	}
+	if _, ok := fields["unknown"]; ok {
+		t.Fatalf("unknown field should be ignored, got fields=%v", fields)
 	}
 }
 

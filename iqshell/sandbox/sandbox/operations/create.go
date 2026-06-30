@@ -138,7 +138,14 @@ func buildSandboxInjections(ruleIDs, inlineSpecs []string) ([]sandbox.SandboxInj
 
 func parseInlineSandboxInjection(spec string) (sandbox.SandboxInjectionSpec, error) {
 	fields := parseInlineInjectionFields(spec)
-	parts, err := sbClient.BuildInjectionParts(fields["type"], fields["api-key"], fields["base-url"], parseInlineHeaders(fields["headers"]))
+	parts, err := sbClient.BuildInjectionParts(
+		fields["type"],
+		fields["api-key"],
+		fields["base-url"],
+		parseInlineHeaders(fields["headers"]),
+		parseInlineHeaders(fields["if-headers"]),
+		parseInlineHeaders(fields["if-queries"]),
+	)
 	if err != nil {
 		return sandbox.SandboxInjectionSpec{}, fmt.Errorf("invalid inline injection spec: %w", err)
 	}
@@ -153,21 +160,14 @@ func parseInlineSandboxInjection(spec string) (sandbox.SandboxInjectionSpec, err
 }
 
 func parseInlineInjectionFields(spec string) map[string]string {
-	const headersKey = "headers="
-
 	fields := make(map[string]string)
-	headersSpec := ""
-	if idx := strings.Index(spec, ","+headersKey); idx >= 0 {
-		headersSpec = spec[idx+len(","+headersKey):]
-		spec = spec[:idx]
-	}
-	if strings.HasPrefix(spec, headersKey) {
-		headersSpec = spec[len(headersKey):]
-		spec = ""
-	}
+	currentKey := ""
 	for _, part := range strings.Split(spec, ",") {
 		key, value, ok := strings.Cut(part, "=")
 		if !ok {
+			if currentKey != "" && fields[currentKey] != "" {
+				fields[currentKey] += "," + strings.TrimSpace(part)
+			}
 			continue
 		}
 		key = strings.TrimSpace(key)
@@ -175,12 +175,34 @@ func parseInlineInjectionFields(spec string) map[string]string {
 		if key == "" || value == "" {
 			continue
 		}
+		if !isInlineInjectionFieldKey(key) {
+			if isInlineInjectionMapField(currentKey) {
+				fields[currentKey] += "," + strings.TrimSpace(part)
+			}
+			continue
+		}
 		fields[key] = value
-	}
-	if strings.TrimSpace(headersSpec) != "" {
-		fields["headers"] = headersSpec
+		currentKey = key
 	}
 	return fields
+}
+
+func isInlineInjectionMapField(key string) bool {
+	switch key {
+	case "headers", "if-headers", "if-queries":
+		return true
+	default:
+		return false
+	}
+}
+
+func isInlineInjectionFieldKey(key string) bool {
+	switch key {
+	case "type", "api-key", "base-url", "headers", "if-headers", "if-queries":
+		return true
+	default:
+		return false
+	}
 }
 
 // buildSandboxResources 把命令行传入的 --resource 规约转换为 SDK 的资源列表。

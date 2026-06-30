@@ -10,11 +10,13 @@ import (
 
 // CreateInfo holds parameters for creating an injection rule.
 type CreateInfo struct {
-	Name    string
-	Type    string
-	APIKey  string
-	BaseURL string
-	Headers string
+	Name      string
+	Type      string
+	APIKey    string
+	BaseURL   string
+	Headers   string
+	IfHeaders string
+	IfQueries string
 }
 
 // Create creates a new injection rule.
@@ -25,10 +27,12 @@ func Create(info CreateInfo) {
 	}
 
 	spec, err := buildInjectionSpec(injectionInput{
-		Type:    info.Type,
-		APIKey:  info.APIKey,
-		BaseURL: info.BaseURL,
-		Headers: info.Headers,
+		Type:      info.Type,
+		APIKey:    info.APIKey,
+		BaseURL:   info.BaseURL,
+		Headers:   info.Headers,
+		IfHeaders: info.IfHeaders,
+		IfQueries: info.IfQueries,
 	})
 	if err != nil {
 		sbClient.PrintError("%v", err)

@@ -10,12 +10,14 @@ import (
 
 // UpdateInfo holds parameters for updating an injection rule.
 type UpdateInfo struct {
-	RuleID  string
-	Name    string
-	Type    string
-	APIKey  string
-	BaseURL string
-	Headers string
+	RuleID    string
+	Name      string
+	Type      string
+	APIKey    string
+	BaseURL   string
+	Headers   string
+	IfHeaders string
+	IfQueries string
 }
 
 // Update updates an existing injection rule.
@@ -26,14 +28,16 @@ func Update(info UpdateInfo) {
 	}
 
 	input := injectionInput{
-		Type:    info.Type,
-		APIKey:  info.APIKey,
-		BaseURL: info.BaseURL,
-		Headers: info.Headers,
+		Type:      info.Type,
+		APIKey:    info.APIKey,
+		BaseURL:   info.BaseURL,
+		Headers:   info.Headers,
+		IfHeaders: info.IfHeaders,
+		IfQueries: info.IfQueries,
 	}
 
 	if info.Name == "" && !shouldUpdateInjection(input) {
-		sbClient.PrintError("at least one of --name, --type, --api-key, --base-url, or --headers is required")
+		sbClient.PrintError("at least one of --name, --type, --api-key, --base-url, --headers, --if-headers, or --if-queries is required")
 		return
 	}
 

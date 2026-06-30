@@ -31,9 +31,11 @@ func TestBuildInjectionSpecOpenAI(t *testing.T) {
 
 func TestBuildInjectionSpecHTTP(t *testing.T) {
 	spec, err := buildInjectionSpec(injectionInput{
-		Type:    injectionTypeHTTP,
-		BaseURL: "https://api.example.com",
-		Headers: "Authorization=Bearer token,X-Env=prod",
+		Type:      injectionTypeHTTP,
+		BaseURL:   "https://api.example.com",
+		Headers:   "Authorization=Bearer token,X-Env=prod",
+		IfHeaders: "X-Scope=demo",
+		IfQueries: "inject=true",
 	})
 	if err != nil {
 		t.Fatalf("buildInjectionSpec() error = %v", err)
@@ -46,6 +48,12 @@ func TestBuildInjectionSpecHTTP(t *testing.T) {
 	}
 	if spec.HTTP.Headers == nil || len(*spec.HTTP.Headers) != 2 {
 		t.Fatalf("HTTP headers = %v, want 2 headers", spec.HTTP.Headers)
+	}
+	if spec.HTTP.IfHeaders == nil || (*spec.HTTP.IfHeaders)["X-Scope"] != "demo" {
+		t.Fatalf("HTTP if headers = %v, want X-Scope=demo", spec.HTTP.IfHeaders)
+	}
+	if spec.HTTP.IfQueries == nil || (*spec.HTTP.IfQueries)["inject"] != "true" {
+		t.Fatalf("HTTP if queries = %v, want inject=true", spec.HTTP.IfQueries)
 	}
 }
 
@@ -91,10 +99,14 @@ func TestFormatInjectionSummaryHTTP(t *testing.T) {
 		"Authorization": "Bearer token",
 		"X-Trace":       "true",
 	}
+	ifHeaders := map[string]string{"X-Scope": "demo"}
+	ifQueries := map[string]string{"inject": "true"}
 	spec := sandbox.InjectionSpec{
 		HTTP: &sandbox.HTTPInjection{
-			BaseURL: "https://api.example.com",
-			Headers: &headers,
+			BaseURL:   "https://api.example.com",
+			Headers:   &headers,
+			IfHeaders: &ifHeaders,
+			IfQueries: &ifQueries,
 		},
 	}
 
@@ -107,6 +119,9 @@ func TestFormatInjectionSummaryHTTP(t *testing.T) {
 	got := formatInjectionHeaders(spec)
 	if got != "Authorization, X-Trace" && got != "X-Trace, Authorization" {
 		t.Fatalf("formatInjectionHeaders() = %q, want header key list", got)
+	}
+	if got := formatInjectionConditions(spec); got != "headers: X-Scope; queries: inject" {
+		t.Fatalf("formatInjectionConditions() = %q, want condition key list", got)
 	}
 }
 
@@ -133,15 +148,16 @@ func TestFormatInjectionTargetQiniuDefault(t *testing.T) {
 
 func TestFormatInjectionSummaryGithub(t *testing.T) {
 	token := "ghp-token"
+	baseURL := "https://api.github.com/repos/qiniu/*"
 	spec := sandbox.InjectionSpec{
-		Github: &sandbox.GithubInjection{Token: &token},
+		Github: &sandbox.GithubInjection{BaseURL: &baseURL, Token: &token},
 	}
 
 	if got := formatInjectionType(spec); got != "github" {
 		t.Fatalf("formatInjectionType() = %q, want %q", got, "github")
 	}
-	if got := formatInjectionTarget(spec); got != "github.com, api.github.com" {
-		t.Fatalf("formatInjectionTarget() = %q, want %q", got, "github.com, api.github.com")
+	if got := formatInjectionTarget(spec); got != "https://api.github.com/repos/qiniu/*" {
+		t.Fatalf("formatInjectionTarget() = %q, want %q", got, "https://api.github.com/repos/qiniu/*")
 	}
 	if got := formatInjectionHeaders(spec); got != "-" {
 		t.Fatalf("formatInjectionHeaders() = %q, want %q", got, "-")
@@ -153,8 +169,10 @@ func TestFormatInjectionSummaryGithub(t *testing.T) {
 
 func TestBuildInjectionSpecGithub(t *testing.T) {
 	spec, err := buildInjectionSpec(injectionInput{
-		Type:   injectionTypeGithub,
-		APIKey: "ghp-token",
+		Type:      injectionTypeGithub,
+		APIKey:    "ghp-token",
+		BaseURL:   "https://api.github.com/repos/qiniu/*",
+		IfHeaders: "X-GitHub-Api-Version=2022-11-28",
 	})
 	if err != nil {
 		t.Fatalf("buildInjectionSpec(github) error = %v", err)
@@ -164,6 +182,12 @@ func TestBuildInjectionSpecGithub(t *testing.T) {
 	}
 	if spec.Github.Token == nil || *spec.Github.Token != "ghp-token" {
 		t.Fatalf("Github token = %v, want %q", spec.Github.Token, "ghp-token")
+	}
+	if spec.Github.BaseURL == nil || *spec.Github.BaseURL != "https://api.github.com/repos/qiniu/*" {
+		t.Fatalf("Github base URL = %v, want https://api.github.com/repos/qiniu/*", spec.Github.BaseURL)
+	}
+	if spec.Github.IfHeaders == nil || (*spec.Github.IfHeaders)["X-GitHub-Api-Version"] != "2022-11-28" {
+		t.Fatalf("Github if headers = %v, want version header", spec.Github.IfHeaders)
 	}
 }
 
@@ -183,6 +207,9 @@ func TestShouldUpdateInjection(t *testing.T) {
 	}
 	if !shouldUpdateInjection(injectionInput{APIKey: "sk"}) {
 		t.Fatal("shouldUpdateInjection() = false, want true when api key is set")
+	}
+	if !shouldUpdateInjection(injectionInput{IfHeaders: "X-Scope=demo"}) {
+		t.Fatal("shouldUpdateInjection() = false, want true when if headers are set")
 	}
 }
 

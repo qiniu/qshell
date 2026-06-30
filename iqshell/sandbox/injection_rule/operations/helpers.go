@@ -24,14 +24,23 @@ const (
 const githubInjectionTarget = "github.com, api.github.com"
 
 type injectionInput struct {
-	Type    string
-	APIKey  string
-	BaseURL string
-	Headers string
+	Type      string
+	APIKey    string
+	BaseURL   string
+	Headers   string
+	IfHeaders string
+	IfQueries string
 }
 
 func buildInjectionSpec(input injectionInput) (sandbox.InjectionSpec, error) {
-	parts, err := sbClient.BuildInjectionParts(input.Type, input.APIKey, input.BaseURL, sbClient.ParseMetadataMap(input.Headers))
+	parts, err := sbClient.BuildInjectionParts(
+		input.Type,
+		input.APIKey,
+		input.BaseURL,
+		sbClient.ParseMetadataMap(input.Headers),
+		sbClient.ParseMetadataMap(input.IfHeaders),
+		sbClient.ParseMetadataMap(input.IfQueries),
+	)
 	if err != nil {
 		return sandbox.InjectionSpec{}, err
 	}
@@ -46,7 +55,12 @@ func buildInjectionSpec(input injectionInput) (sandbox.InjectionSpec, error) {
 }
 
 func shouldUpdateInjection(input injectionInput) bool {
-	return strings.TrimSpace(input.Type) != "" || strings.TrimSpace(input.APIKey) != "" || strings.TrimSpace(input.BaseURL) != "" || strings.TrimSpace(input.Headers) != ""
+	return strings.TrimSpace(input.Type) != "" ||
+		strings.TrimSpace(input.APIKey) != "" ||
+		strings.TrimSpace(input.BaseURL) != "" ||
+		strings.TrimSpace(input.Headers) != "" ||
+		strings.TrimSpace(input.IfHeaders) != "" ||
+		strings.TrimSpace(input.IfQueries) != ""
 }
 
 func formatInjectionType(spec sandbox.InjectionSpec) string {
@@ -79,7 +93,7 @@ func formatInjectionTarget(spec sandbox.InjectionSpec) string {
 	case spec.Qiniu != nil:
 		return optionalValue(spec.Qiniu.BaseURL, "api.qnaigc.com")
 	case spec.Github != nil:
-		return githubInjectionTarget
+		return optionalValue(spec.Github.BaseURL, githubInjectionTarget)
 	case spec.HTTP != nil:
 		return spec.HTTP.BaseURL
 	default:
@@ -91,8 +105,46 @@ func formatInjectionHeaders(spec sandbox.InjectionSpec) string {
 	if spec.HTTP == nil || spec.HTTP.Headers == nil || len(*spec.HTTP.Headers) == 0 {
 		return "-"
 	}
-	keys := make([]string, 0, len(*spec.HTTP.Headers))
-	for k := range *spec.HTTP.Headers {
+	return formatMapKeys(*spec.HTTP.Headers)
+}
+
+func formatInjectionConditions(spec sandbox.InjectionSpec) string {
+	headers, queries := injectionConditions(spec)
+	parts := make([]string, 0, 2)
+	if headers != nil && len(*headers) > 0 {
+		parts = append(parts, "headers: "+formatMapKeys(*headers))
+	}
+	if queries != nil && len(*queries) > 0 {
+		parts = append(parts, "queries: "+formatMapKeys(*queries))
+	}
+	if len(parts) == 0 {
+		return "-"
+	}
+	return strings.Join(parts, "; ")
+}
+
+func injectionConditions(spec sandbox.InjectionSpec) (*map[string]string, *map[string]string) {
+	switch {
+	case spec.OpenAI != nil:
+		return spec.OpenAI.IfHeaders, spec.OpenAI.IfQueries
+	case spec.Anthropic != nil:
+		return spec.Anthropic.IfHeaders, spec.Anthropic.IfQueries
+	case spec.Gemini != nil:
+		return spec.Gemini.IfHeaders, spec.Gemini.IfQueries
+	case spec.Qiniu != nil:
+		return spec.Qiniu.IfHeaders, spec.Qiniu.IfQueries
+	case spec.Github != nil:
+		return spec.Github.IfHeaders, spec.Github.IfQueries
+	case spec.HTTP != nil:
+		return spec.HTTP.IfHeaders, spec.HTTP.IfQueries
+	default:
+		return nil, nil
+	}
+}
+
+func formatMapKeys(m map[string]string) string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
 		keys = append(keys, k)
 	}
 	slices.Sort(keys)

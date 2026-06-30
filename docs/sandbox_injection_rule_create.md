@@ -4,8 +4,8 @@
 # 格式
 
 ```bash
-qshell sandbox injection-rule create --name <name> --type <openai|anthropic|gemini|qiniu|github|http> [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
-qshell sbx ir cr --name <name> --type <openai|anthropic|gemini|qiniu|github|http> [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>]
+qshell sandbox injection-rule create --name <name> --type <openai|anthropic|gemini|qiniu|github|http> [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>] [--if-headers <headers>] [--if-queries <queries>]
+qshell sbx ir cr --name <name> --type <openai|anthropic|gemini|qiniu|github|http> [--api-key <apiKey>] [--base-url <baseURL>] [--headers <headers>] [--if-headers <headers>] [--if-queries <queries>]
 ```
 
 # 帮助文档
@@ -20,8 +20,10 @@ $ qshell sandbox injection-rule create --doc
 - `--name`：规则名称，必填，同一用户下唯一
 - `--type`：注入类型，必填，支持 `openai`、`anthropic`、`gemini`、`qiniu`、`github`、`http`
 - `--api-key`：`openai`、`anthropic`、`gemini`、`qiniu` 类型使用的 API Key，`github` 类型使用的访问 token；`type=github` 时必填。注意：通过 CLI 传递密钥可能泄露到 Shell 历史或进程列表
-- `--base-url`：覆盖默认目标地址，或 `http` 类型的目标基础 URL；`qiniu` 默认为 `api.qnaigc.com`；`github` 类型固定匹配 `github.com` / `api.github.com`，不支持配置
+- `--base-url`：覆盖默认目标地址，或 `http` 类型的目标基础 URL；`qiniu` 默认为 `api.qnaigc.com`；`github` 类型未指定时匹配 `github.com` / `api.github.com`，指定时 host 必须为 `github.com` 或 `api.github.com`
 - `--headers`：`http` 类型的请求头，使用逗号分隔的 `key=value` 形式
+- `--if-headers`：请求 Header 匹配条件，使用逗号分隔的 `key=value` 形式；仅当请求中已存在这些 Header 且值精确匹配时才注入
+- `--if-queries`：请求 query 匹配条件，使用逗号分隔的 `key=value` 形式；仅当请求 URL 中已存在这些 query 参数且值精确匹配时才注入
 
 # 示例
 
@@ -43,6 +45,12 @@ $ qshell sandbox injection-rule create --name anthropic-proxy --type anthropic -
 $ qshell sandbox injection-rule create --name api-auth --type http --base-url https://api.example.com --headers "Authorization=Bearer token123,X-Env=prod"
 ```
 
+创建带匹配条件的自定义 HTTP 注入规则：
+
+```bash
+$ qshell sandbox injection-rule create --name api-auth-scoped --type http --base-url https://api.example.com --headers "Authorization=Bearer token123" --if-headers "X-Scope=demo" --if-queries "inject=true"
+```
+
 创建七牛 AI API 注入规则：
 
 ```bash
@@ -53,4 +61,10 @@ $ qshell sandbox injection-rule create --name qiniu-ai --type qiniu --api-key ak
 
 ```bash
 $ qshell sandbox injection-rule create --name github-default --type github --api-key ghp-xxx
+```
+
+创建仅匹配 GitHub API 仓库路径的 GitHub 凭证注入规则：
+
+```bash
+$ qshell sandbox injection-rule create --name github-api --type github --api-key ghp-xxx --base-url https://api.github.com/repos/qiniu/*
 ```

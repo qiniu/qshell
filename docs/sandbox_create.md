@@ -30,7 +30,7 @@ $ qshell sandbox create --doc
 - `-e, --env-var`：环境变量（KEY=VALUE 格式，可多次指定）
 - `--auto-pause`：超时后自动暂停沙箱，而不是终止沙箱
 - `--injection-rule`：创建沙箱时附加的注入规则 ID，可多次指定
-- `--inline-injection`：创建沙箱时附加的内联注入配置，可多次指定，格式为 `type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>`
+- `--inline-injection`：创建沙箱时附加的内联注入配置，可多次指定，格式为 `type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>,if-headers=<k=v>,if-queries=<k=v>`
 - `--resource`：沙箱启动前挂载的资源规约，可多次指定。GitHub 仓库格式为 `type=github_repository,url=<url>,mount-path=<absPath>,token=<token>`（`type` 默认为 `github_repository`）；Kodo bucket 格式为 `type=kodo,bucket=<bucket>,mount-path=<absPath>[,prefix=<prefix>][,read-only=<bool>]`；`mount-path` 也可写作 `mount`。注意：通过 CLI 传递 token 可能泄露到 Shell 历史或进程列表
 
 资源说明：
@@ -43,8 +43,9 @@ $ qshell sandbox create --doc
 内联注入说明：
 - `type` 支持 `openai`、`anthropic`、`gemini`、`qiniu`、`github`、`http`
 - `api-key` 用于 `openai`、`anthropic`、`gemini`、`qiniu` 的 API Key，以及 `github` 的访问 token（token 仅平台可见，沙箱内不可见明文）
-- `base-url` 可用于覆盖默认目标地址；`type=http` 时必填，`type=qiniu` 默认目标地址为 `api.qnaigc.com`；`type=github` 固定匹配 `github.com` / `api.github.com`，不支持配置
+- `base-url` 可用于覆盖默认目标地址；`type=http` 时必填，`type=qiniu` 默认目标地址为 `api.qnaigc.com`；`type=github` 未指定时匹配 `github.com` / `api.github.com`，指定时 host 必须为 `github.com` 或 `api.github.com`
 - `headers` 仅用于 `type=http`，多个请求头使用分号分隔，例如 `headers=Authorization=Bearer token;X-Env=prod`
+- `if-headers` 表示请求 Header 匹配条件，`if-queries` 表示 query 参数匹配条件；多个键值使用分号分隔，例如 `if-headers=X-Scope=demo;X-Env=prod,if-queries=inject=true`
 
 # 示例
 1. 创建沙箱
@@ -93,13 +94,13 @@ $ qshell sbx cr my-template --injection-rule rule-openai --injection-rule rule-h
 ```
 $ qshell sandbox create my-template \
     --inline-injection 'type=openai,api-key=sk-xxx' \
-    --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod'
+    --inline-injection 'type=http,base-url=https://api.example.com,headers=Authorization=Bearer token;X-Env=prod,if-headers=X-Scope=demo,if-queries=inject=true'
 $ qshell sbx cr my-template --inline-injection 'type=gemini,api-key=sk-gem'
 ```
 
 9. 创建时附加 GitHub 凭证注入（token 通过 `api-key` 传入）
 ```
-$ qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx'
+$ qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx,base-url=https://api.github.com/repos/qiniu/*'
 $ qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'
 ```
 

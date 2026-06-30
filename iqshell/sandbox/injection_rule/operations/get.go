@@ -37,6 +37,7 @@ func Get(info GetInfo) {
 	fmt.Printf("Target:       %s\n", formatInjectionTarget(rule.Injection))
 	fmt.Printf("API Key:      %s\n", yesNo(hasAPIKey(rule.Injection)))
 	fmt.Printf("Headers:      %s\n", formatInjectionHeaders(rule.Injection))
+	fmt.Printf("Conditions:   %s\n", formatInjectionConditions(rule.Injection))
 	fmt.Printf("Created At:   %s\n", sbClient.FormatTimestamp(rule.CreatedAt))
 	fmt.Printf("Updated At:   %s\n", sbClient.FormatTimestamp(rule.UpdatedAt))
 }

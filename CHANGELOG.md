@@ -1,3 +1,12 @@
+# 2.19.9 (unreleased)
+## 新增
+1. `qshell sandbox injection-rule create` / `update` 新增 `--if-headers` 与 `--if-queries` 参数，用于限制请求注入规则的匹配范围
+2. `qshell sandbox create --inline-injection` 支持 `if-headers=` / `if-queries=` 匹配条件
+3. `github` 注入类型支持通过 `--base-url` / `base-url=` 限制匹配范围，指定时 host 必须为 `github.com` 或 `api.github.com`
+
+## 更新
+1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.14`，跟进 SDK 的请求注入匹配条件与 GitHub base URL 支持
+
 # 2.19.8 (2026-06-12)
 ## 新增
 1. `qshell sandbox create --resource` 支持挂载 Kodo bucket 资源，格式 `type=kodo,bucket=<bucket>,mount-path=<absPath>[,prefix=<prefix>][,read-only=<bool>]`
