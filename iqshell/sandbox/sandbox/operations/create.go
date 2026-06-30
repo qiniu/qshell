@@ -165,8 +165,9 @@ func parseInlineInjectionFields(spec string) map[string]string {
 	for _, part := range strings.Split(spec, ",") {
 		key, value, ok := strings.Cut(part, "=")
 		if !ok {
-			if currentKey != "" && fields[currentKey] != "" {
-				fields[currentKey] += "," + strings.TrimSpace(part)
+			trimmed := strings.TrimSpace(part)
+			if trimmed != "" && isInlineInjectionMapField(currentKey) && fields[currentKey] != "" {
+				fields[currentKey] += "," + trimmed
 			}
 			continue
 		}

@@ -175,6 +175,13 @@ func TestParseInlineInjectionFields_UnknownKeyDoesNotPolluteScalarField(t *testi
 	}
 }
 
+func TestParseInlineInjectionFields_TrailingCommaDoesNotPolluteScalarField(t *testing.T) {
+	fields := parseInlineInjectionFields("type=http,")
+	if got := fields["type"]; got != "http" {
+		t.Fatalf("type = %q, want %q", got, "http")
+	}
+}
+
 func TestParseInlineHeaders_SemicolonSeparated(t *testing.T) {
 	headers := parseInlineHeaders("Authorization=Bearer token;X-Env=prod")
 	if len(headers) != 2 {
