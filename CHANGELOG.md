@@ -1,4 +1,4 @@
-# 2.19.9 (unreleased)
+# 2.19.9 (2026-06-30)
 ## 新增
 1. `qshell sandbox injection-rule create` / `update` 新增 `--if-headers` 与 `--if-queries` 参数，用于限制请求注入规则的匹配范围
 2. `qshell sandbox create --inline-injection` 支持 `if-headers=` / `if-queries=` 匹配条件
