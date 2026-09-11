@@ -1,3 +1,13 @@
+# 2.19.13 (2026-09-10)
+## 新增
+1. 新增 `sandbox resource list`，支持查询沙箱挂载资源
+2. 新增 `sandbox resource update`，支持更新 Git 仓库资源的授权 Token
+3. `sandbox create --resource` 支持为 Kodo 资源直接指定 `access-key` 和 `secret-key`
+4. `sandbox template build` 支持通过 `--disk-size` 指定新模板的构建磁盘大小，并在构建失败时输出完整构建日志
+
+## 更新
+1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.28.1`
+
 # 2.19.12 (2026-08-11)
 ## 新增
 1. `qshell sandbox create` 与 `qshell sandbox connect` 新增 `--user` / `-u` 参数，用于指定终端的运行用户；未指定时使用沙箱默认用户，`create` 搭配 `--detach` 时该参数不生效（不连接终端）

@@ -49,12 +49,6 @@ func Logs(info LogsInfo) {
 	}()
 	defer signal.Stop(sigCh)
 
-	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
-	if err != nil {
-		sbClient.PrintError("connect to sandbox %s failed: %v", info.SandboxID, err)
-		return
-	}
-
 	// Default level to INFO (matches e2b CLI)
 	level := info.Level
 	if level == "" {
@@ -73,8 +67,8 @@ func Logs(info LogsInfo) {
 			for {
 				select {
 				case <-ticker.C:
-					running, _ := sb.IsRunning(ctx)
-					if !running {
+					sandboxInfo, infoErr := client.GetInfo(ctx, info.SandboxID)
+					if infoErr == nil && sandboxInfo.State != sandbox.StateRunning {
 						close(sandboxDone)
 						return
 					}
@@ -95,7 +89,7 @@ func Logs(info LogsInfo) {
 			params.Limit = &info.Limit
 		}
 
-		logs, lErr := sb.GetLogs(ctx, params)
+		logs, lErr := client.GetLogs(ctx, info.SandboxID, params)
 		if lErr != nil {
 			sbClient.PrintError("get sandbox logs failed: %v", lErr)
 			return

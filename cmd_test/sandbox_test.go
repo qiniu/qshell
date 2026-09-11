@@ -51,6 +51,18 @@ func TestSandboxCreateDocument(t *testing.T) {
 	testSubcommandDocument(t, "sandbox", "create")
 }
 
+func TestSandboxResourceDocument(t *testing.T) {
+	testSubcommandDocument(t, "sandbox", "resource")
+}
+
+func TestSandboxResourceListDocument(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "resource", "list"}, "sb-test", "--format", "json")
+}
+
+func TestSandboxResourceUpdateDocument(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "resource", "update"}, "sb-test", "res-test", "--token", "token")
+}
+
 func TestSandboxConnectDocument(t *testing.T) {
 	testSubcommandDocument(t, "sandbox", "connect")
 }

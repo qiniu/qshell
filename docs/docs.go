@@ -295,6 +295,15 @@ var sandboxConnectDocument string
 //go:embed sandbox_create.md
 var sandboxCreateDocument string
 
+//go:embed sandbox_resource.md
+var sandboxResourceDocument string
+
+//go:embed sandbox_resource_list.md
+var sandboxResourceListDocument string
+
+//go:embed sandbox_resource_update.md
+var sandboxResourceUpdateDocument string
+
 //go:embed sandbox_exec.md
 var sandboxExecDocument string
 
@@ -476,6 +485,9 @@ const (
 	SandboxConnectType             = "sandbox_connect"
 	SandboxCreateType              = "sandbox_create"
 	SandboxExecType                = "sandbox_exec"
+	SandboxResourceType            = "sandbox_resource"
+	SandboxResourceListType        = "sandbox_resource_list"
+	SandboxResourceUpdateType      = "sandbox_resource_update"
 	SandboxInjectionRuleType       = "sandbox_injection_rule"
 	SandboxInjectionRuleCreateType = "sandbox_injection_rule_create"
 	SandboxInjectionRuleDeleteType = "sandbox_injection_rule_delete"
@@ -585,6 +597,9 @@ func init() {
 	addCmdDocumentInfo(SandboxConnectType, sandboxConnectDocument)
 	addCmdDocumentInfo(SandboxCreateType, sandboxCreateDocument)
 	addCmdDocumentInfo(SandboxExecType, sandboxExecDocument)
+	addCmdDocumentInfo(SandboxResourceType, sandboxResourceDocument)
+	addCmdDocumentInfo(SandboxResourceListType, sandboxResourceListDocument)
+	addCmdDocumentInfo(SandboxResourceUpdateType, sandboxResourceUpdateDocument)
 	addCmdDocumentInfo(SandboxInjectionRuleType, sandboxInjectionRuleDocument)
 	addCmdDocumentInfo(SandboxInjectionRuleCreateType, sandboxInjectionRuleCreateDocument)
 	addCmdDocumentInfo(SandboxInjectionRuleDeleteType, sandboxInjectionRuleDeleteDocument)

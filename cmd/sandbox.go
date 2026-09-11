@@ -137,6 +137,10 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox create my-template \
     --resource 'type=kodo,bucket=my-bucket,mount-path=/mnt/kodo,prefix=datasets/,read-only=true'
 
+  # Create with explicit Kodo credentials
+  qshell sandbox create my-template \
+    --resource 'type=kodo,bucket=my-bucket,mount-path=/mnt/kodo,access-key=ak-xxx,secret-key=sk-xxx'
+
   # Create and connect to the terminal as a specific user
   qshell sandbox create my-template -u root
   qshell sbx cr my-template -u root`,
@@ -164,7 +168,7 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().BoolVar(&info.AutoPause, "auto-pause", false, "automatically pause sandbox when timeout expires (instead of killing)")
 	cmd.Flags().StringArrayVar(&info.InjectionRuleID, "injection-rule", nil, "injection rule IDs to apply when creating the sandbox (can be specified multiple times)")
 	cmd.Flags().StringArrayVar(&info.InlineInjection, "inline-injection", nil, "inline injection spec to apply when creating the sandbox (can be specified multiple times, format: type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>,if-headers=<k=v>,if-queries=<k=v>)")
-	cmd.Flags().StringArrayVar(&info.Resources, "resource", nil, "resource to mount before sandbox starts (can be specified multiple times, formats: type=github_repository,url=<url>,mount-path=<absPath>,token=<token> or type=kodo,bucket=<bucket>,mount-path=<absPath>,prefix=<prefix>,read-only=<bool>; warning: passing tokens via CLI may leak through shell history or process lists)")
+	cmd.Flags().StringArrayVar(&info.Resources, "resource", nil, "resource to mount before sandbox starts (can be specified multiple times, formats: type=github_repository,url=<url>,mount-path=<absPath>,token=<token> or type=kodo,bucket=<bucket>,mount-path=<absPath>,prefix=<prefix>,read-only=<bool>,access-key=<ak>,secret-key=<sk>; warning: passing tokens or credentials via CLI may leak through shell history or process lists)")
 	return cmd
 }
 
@@ -467,6 +471,9 @@ func sandboxCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 
 	// Add injection-rule as a subcommand of sandbox
 	injectionRuleCmdLoader(sandboxCmd, cfg)
+
+	// Add resource as a subcommand of sandbox
+	resourceCmdLoader(sandboxCmd, cfg)
 
 	superCmd.AddCommand(sandboxCmd)
 }

@@ -229,6 +229,7 @@ qshell 仍会把 template_id 回写到配置文件以备旧脚本使用。`,
 	cmd.Flags().StringVar(&info.ReadyCmd, "ready-cmd", "", "readiness check command")
 	cmd.Flags().Int32Var(&info.CPUCount, "cpu", 0, "sandbox CPU count")
 	cmd.Flags().Int32Var(&info.MemoryMB, "memory", 0, "sandbox memory size in MiB")
+	cmd.Flags().Int32Var(&info.DiskSizeMB, "disk-size", 0, "template build disk size in MiB (minimum 10240; create only)")
 	cmd.Flags().BoolVar(&info.Wait, "wait", false, "wait for build to complete")
 	cmd.Flags().BoolVar(&info.NoCache, "no-cache", false, "force full rebuild ignoring cache")
 	cmd.Flags().StringVar(&info.Dockerfile, "dockerfile", "", "path to Dockerfile (enables v2 build)")

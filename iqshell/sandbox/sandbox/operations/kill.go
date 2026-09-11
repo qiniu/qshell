@@ -70,12 +70,7 @@ func Kill(info KillInfo) {
 		wg.Add(1)
 		go func(sandboxID string) {
 			defer wg.Done()
-			sb, cErr := client.Connect(ctx, sandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
-			if cErr != nil {
-				sbClient.PrintError("connect to sandbox %s failed: %v", sandboxID, cErr)
-				return
-			}
-			if kErr := sb.Kill(ctx); kErr != nil {
+			if kErr := client.Kill(ctx, sandboxID); kErr != nil {
 				sbClient.PrintError("kill sandbox %s failed: %v", sandboxID, kErr)
 				return
 			}

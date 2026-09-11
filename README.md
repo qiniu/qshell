@@ -320,6 +320,8 @@ qshell 命令配置 > 账号配置 > 全局配置
 
 | 命令                       | 别名 | 类别 | 描述                         | 详细                                      |
 |----------------------------|------|------|------------------------------|-------------------------------------------|
+| sandbox resource list      | sbx resource ls | 沙箱 | 列出沙箱挂载资源             | [文档](docs/sandbox_resource_list.md) |
+| sandbox resource update    | sbx resource up | 沙箱 | 更新 Git 资源授权 Token      | [文档](docs/sandbox_resource_update.md) |
 | sandbox list               | sbx ls | 沙箱 | 列出沙箱实例                 | [文档](docs/sandbox_list.md)              |
 | sandbox create             | sbx cr | 沙箱 | 创建沙箱并连接终端           | [文档](docs/sandbox_create.md)            |
 | sandbox connect            | sbx cn | 沙箱 | 连接到已有沙箱终端           | [文档](docs/sandbox_connect.md)           |

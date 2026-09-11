@@ -13,8 +13,8 @@
 
 # 格式
 ```
-qshell sandbox template build [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--dockerfile <path>] [--path <dir>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--wait] [--no-cache] [--config <path>]
-qshell sbx tpl bd [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--dockerfile <path>] [--path <dir>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--wait] [--no-cache] [--config <path>]
+qshell sandbox template build [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--dockerfile <path>] [--path <dir>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--disk-size <N>] [--wait] [--no-cache] [--config <path>]
+qshell sbx tpl bd [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--dockerfile <path>] [--path <dir>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--disk-size <N>] [--wait] [--no-cache] [--config <path>]
 ```
 
 # 帮助文档
@@ -37,12 +37,13 @@ $ qshell sandbox template build --doc
 - `--ready-cmd`：就绪检查命令（Dockerfile 模式下默认为 "sleep 20"）
 - `--cpu`：沙箱 CPU 核数
 - `--memory`：沙箱内存大小（MiB）
+- `--disk-size`：构建磁盘大小（MiB），最小值为 10240；仅创建新模板时生效，重新构建已有模板时忽略
 - `--wait`：等待构建完成，实时流式显示构建日志（带彩色级别标签）
 - `--no-cache`：强制完整构建，忽略缓存
 - `--config`：显式指定 `qshell.sandbox.toml` 配置文件路径；未指定时，如果当前目录存在 `qshell.sandbox.toml`，命令会自动读取
 
 # 配置文件
-`sandbox template build` 会按 `CLI flag > 配置文件 > 内置默认值` 合并参数。配置文件可提供 `template_id`、`name`、`dockerfile`、`path`、`from_image`、`from_template`、`start_cmd`、`ready_cmd`、`cpu_count`、`memory_mb` 和 `no_cache`。
+`sandbox template build` 会按 `CLI flag > 配置文件 > 内置默认值` 合并参数。配置文件可提供 `template_id`、`name`、`dockerfile`、`path`、`from_image`、`from_template`、`start_cmd`、`ready_cmd`、`cpu_count`、`memory_mb`、`disk_size_mb` 和 `no_cache`。
 
 未提供 `template_id` 时，如果配置文件或 CLI 中有 `name`，命令会先按 name 在远端查找模板；命中即进入 rebuild，未命中再创建新模板。按 name 命中的 rebuild 不会把 `template_id` 回写到配置文件，便于同一份配置在多个环境复用。
 
@@ -73,34 +74,39 @@ $ qshell sandbox template build --name claude --from-template agents-base --dock
 
 这种模式下实际 base 来自 `agents-base`，Dockerfile 里的 `FROM` 仅用于兼容 Dockerfile 解析，不会触发基础镜像拉取。
 
-5. 重新构建已有模板（rebuild 必须提供 Dockerfile）
+5. 创建新模板时指定 20 GiB 构建磁盘
+```
+$ qshell sandbox template build --name my-template --from-image ubuntu:22.04 --disk-size 20480 --wait
+```
+
+6. 重新构建已有模板（rebuild 必须提供 Dockerfile）
 ```
 $ qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --wait
 ```
 
-6. 使用 Dockerfile 重新构建已有模板（忽略缓存）
+7. 使用 Dockerfile 重新构建已有模板（忽略缓存）
 ```
 $ qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --no-cache --wait
 ```
 
-7. 强制完整构建（忽略缓存）
+8. 强制完整构建（忽略缓存）
 ```
 $ qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --no-cache --wait
 ```
 
-8. 使用当前目录的 `qshell.sandbox.toml`
+9. 使用当前目录的 `qshell.sandbox.toml`
 ```
 $ qshell sandbox template build --wait
 $ qshell sbx tpl bd --wait
 ```
 
-9. 显式指定配置文件
+10. 显式指定配置文件
 ```
 $ qshell sandbox template build --config ./configs/prod.toml --wait
 $ qshell sbx tpl bd --config ./configs/prod.toml --wait
 ```
 
-10. 指定启动命令和资源配置
+11. 指定启动命令和资源配置
 ```
 $ qshell sandbox template build --name my-app --from-image node:18 --start-cmd "npm start" --cpu 2 --memory 1024 --wait
 ```

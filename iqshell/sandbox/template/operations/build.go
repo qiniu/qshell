@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
@@ -40,6 +41,9 @@ type BuildInfo struct {
 
 	// MemoryMB 是沙箱内存大小（MiB）。
 	MemoryMB int32
+
+	// DiskSizeMB 是模板构建磁盘大小（MiB），仅创建新模板时生效。
+	DiskSizeMB int32
 
 	// Wait 指示是否等待构建完成。
 	Wait bool
@@ -103,6 +107,7 @@ func Build(info BuildInfo) {
 			ReadyCmd:       info.ReadyCmd,
 			CPUCount:       info.CPUCount,
 			MemoryMB:       info.MemoryMB,
+			DiskSizeMB:     info.DiskSizeMB,
 			NoCache:        info.NoCache,
 			NoCacheChanged: info.NoCacheChanged,
 		}
@@ -117,6 +122,7 @@ func Build(info BuildInfo) {
 		info.ReadyCmd = fields.ReadyCmd
 		info.CPUCount = fields.CPUCount
 		info.MemoryMB = fields.MemoryMB
+		info.DiskSizeMB = fields.DiskSizeMB
 		info.NoCache = fields.NoCache
 
 		for _, key := range overrides {
@@ -174,15 +180,7 @@ func Build(info BuildInfo) {
 			return
 		}
 
-		createParams := sandbox.CreateTemplateParams{
-			Name: &info.Name,
-		}
-		if info.CPUCount > 0 {
-			createParams.CPUCount = &info.CPUCount
-		}
-		if info.MemoryMB > 0 {
-			createParams.MemoryMB = &info.MemoryMB
-		}
+		createParams := createTemplateParams(info)
 
 		fmt.Printf("Creating template %s...\n", info.Name)
 		resp, cErr := client.CreateTemplate(ctx, createParams)
@@ -298,6 +296,7 @@ func Build(info BuildInfo) {
 		if buildInfo.Status == "ready" || buildInfo.Status == "error" {
 			if buildInfo.Status == "error" {
 				sbClient.PrintError("build failed")
+				fmt.Print(formatBuildFailureLogs(buildInfo.Logs))
 			} else {
 				sbClient.PrintSuccess("Build completed!")
 				writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge && !foundByName, templateID)
@@ -319,6 +318,35 @@ func Build(info BuildInfo) {
 		case <-time.After(3 * time.Second):
 		}
 	}
+}
+
+func formatBuildFailureLogs(logs []string) string {
+	if len(logs) == 0 {
+		return ""
+	}
+
+	var builder strings.Builder
+	builder.WriteString("\nBuild Logs:\n")
+	for _, log := range logs {
+		fmt.Fprintf(&builder, "  %s\n", log)
+	}
+	return builder.String()
+}
+
+func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {
+	params := sandbox.CreateTemplateParams{
+		Name: &info.Name,
+	}
+	if info.CPUCount > 0 {
+		params.CPUCount = &info.CPUCount
+	}
+	if info.MemoryMB > 0 {
+		params.MemoryMB = &info.MemoryMB
+	}
+	if info.DiskSizeMB > 0 {
+		params.DiskSizeMB = &info.DiskSizeMB
+	}
+	return params
 }
 
 func writeTemplateIDToConfigIfNeeded(cfg *config.FileConfig, noIDBeforeMerge bool, templateID string) {

@@ -70,12 +70,7 @@ func Pause(info PauseInfo) {
 		wg.Add(1)
 		go func(sandboxID string) {
 			defer wg.Done()
-			sb, cErr := client.Connect(ctx, sandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
-			if cErr != nil {
-				sbClient.PrintError("connect to sandbox %s failed: %v", sandboxID, cErr)
-				return
-			}
-			if pErr := sb.Pause(ctx); pErr != nil {
+			if pErr := client.Pause(ctx, sandboxID); pErr != nil {
 				sbClient.PrintError("pause sandbox %s failed: %v", sandboxID, pErr)
 				return
 			}

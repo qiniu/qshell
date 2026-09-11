@@ -220,9 +220,6 @@ func buildSandboxResources(resourceSpecs []string) ([]sandbox.SandboxResourceSpe
 		return nil, nil
 	}
 	resources := make([]sandbox.SandboxResourceSpec, 0, len(resourceSpecs))
-	// 同一沙箱内多个 GitHub 仓库资源当前必须共用同一 token（go-sdk 注释明示约束）；
-	// 提前在 CLI 层校验，避免等到平台克隆阶段才返回不易理解的错误。
-	var seenToken string
 	for _, spec := range resourceSpecs {
 		resource, err := parseSandboxResource(spec)
 		if err != nil {
@@ -231,12 +228,6 @@ func buildSandboxResources(resourceSpecs []string) ([]sandbox.SandboxResourceSpe
 		if gr := resource.GitRepository; gr != nil {
 			if gr.AuthorizationToken == nil {
 				return nil, fmt.Errorf("invalid resource spec %q: token is required for github_repository", spec)
-			}
-			switch token := *gr.AuthorizationToken; {
-			case seenToken == "":
-				seenToken = token
-			case token != seenToken:
-				return nil, fmt.Errorf("inconsistent --resource tokens: a sandbox can carry only one GitHub token across all repository resources")
 			}
 		}
 		resources = append(resources, resource)
@@ -247,7 +238,7 @@ func buildSandboxResources(resourceSpecs []string) ([]sandbox.SandboxResourceSpe
 // parseSandboxResource 解析单条 --resource 规约。
 // 支持格式：
 //   - type=github_repository,url=<url>,mount-path=<absPath>,token=<token>
-//   - type=kodo,bucket=<bucket>,mount-path=<absPath>[,prefix=<prefix>][,read-only=<bool>]
+//   - type=kodo,bucket=<bucket>,mount-path=<absPath>[,prefix=<prefix>][,read-only=<bool>][,access-key=<ak>,secret-key=<sk>]
 func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 	fields := sbClient.ParseMetadataMap(spec)
 
@@ -260,7 +251,7 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 	case string(sandbox.GitRepositoryTypeGithub):
 		url := fields["url"]
 		if url == "" {
-			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: url is required for github_repository", spec)
+			return sandbox.SandboxResourceSpec{}, invalidSandboxResourceSpec(spec, "url is required for github_repository")
 		}
 		mountPath, err := parseSandboxResourceMountPath(spec, fields, "github_repository")
 		if err != nil {
@@ -268,7 +259,7 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 		}
 		token := fields["token"]
 		if token == "" {
-			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: token is required for github_repository", spec)
+			return sandbox.SandboxResourceSpec{}, invalidSandboxResourceSpec(spec, "token is required for github_repository")
 		}
 		res := &sandbox.GitRepositoryResource{
 			Type:               sandbox.GitRepositoryTypeGithub,
@@ -280,7 +271,7 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 	case "kodo":
 		bucket := fields["bucket"]
 		if bucket == "" {
-			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: bucket is required for kodo", spec)
+			return sandbox.SandboxResourceSpec{}, invalidSandboxResourceSpec(spec, "bucket is required for kodo")
 		}
 		mountPath, err := parseSandboxResourceMountPath(spec, fields, "kodo")
 		if err != nil {
@@ -290,13 +281,27 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 			Bucket:    bucket,
 			MountPath: mountPath,
 		}
+		accessKey, hasAccessKey := fields["access-key"]
+		secretKey, hasSecretKey := fields["secret-key"]
+		if hasAccessKey || hasSecretKey {
+			if !hasAccessKey || !hasSecretKey {
+				return sandbox.SandboxResourceSpec{}, invalidSandboxResourceSpec(spec, "access-key and secret-key must be specified together")
+			}
+			accessKey = strings.TrimSpace(accessKey)
+			secretKey = strings.TrimSpace(secretKey)
+			if accessKey == "" || secretKey == "" {
+				return sandbox.SandboxResourceSpec{}, invalidSandboxResourceSpec(spec, "access-key and secret-key must not be empty")
+			}
+			res.AccessKey = &accessKey
+			res.SecretKey = &secretKey
+		}
 		if prefix := fields["prefix"]; prefix != "" {
 			res.Prefix = &prefix
 		}
 		readOnly := fields["read-only"]
 		readOnlyAlias := fields["readonly"]
 		if readOnly != "" && readOnlyAlias != "" && readOnly != readOnlyAlias {
-			return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: read-only %q and readonly %q conflict, specify only one", spec, readOnly, readOnlyAlias)
+			return sandbox.SandboxResourceSpec{}, invalidSandboxResourceSpec(spec, fmt.Sprintf("read-only %q and readonly %q conflict, specify only one", readOnly, readOnlyAlias))
 		}
 		if readOnly == "" {
 			readOnly = readOnlyAlias
@@ -304,14 +309,34 @@ func parseSandboxResource(spec string) (sandbox.SandboxResourceSpec, error) {
 		if readOnly != "" {
 			value, err := strconv.ParseBool(readOnly)
 			if err != nil {
-				return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: read-only %q must be a boolean", spec, readOnly)
+				return sandbox.SandboxResourceSpec{}, invalidSandboxResourceSpec(spec, fmt.Sprintf("read-only %q must be a boolean", readOnly))
 			}
 			res.ReadOnly = &value
 		}
 		return sandbox.SandboxResourceSpec{Kodo: res}, nil
 	default:
-		return sandbox.SandboxResourceSpec{}, fmt.Errorf("invalid resource spec %q: unsupported type %q (supported: github_repository, kodo)", spec, typ)
+		return sandbox.SandboxResourceSpec{}, invalidSandboxResourceSpec(spec, fmt.Sprintf("unsupported type %q (supported: github_repository, kodo)", typ))
 	}
+}
+
+func invalidSandboxResourceSpec(spec, reason string) error {
+	return fmt.Errorf("invalid resource spec %q: %s", redactSandboxResourceSpec(spec), reason)
+}
+
+func redactSandboxResourceSpec(spec string) string {
+	parts := strings.Split(spec, ",")
+	for i, part := range parts {
+		key, _, ok := strings.Cut(part, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		switch strings.ToLower(key) {
+		case "token", "authorization-token", "access-key", "secret-key", "access_key", "secret_key", "authorization_token":
+			parts[i] = key + "=<redacted>"
+		}
+	}
+	return strings.Join(parts, ",")
 }
 
 func parseSandboxResourceMountPath(spec string, fields map[string]string, resourceType string) (string, error) {
@@ -319,18 +344,18 @@ func parseSandboxResourceMountPath(spec string, fields map[string]string, resour
 	mountAlias := fields["mount"]
 	// 同时给出 mount-path= 与 mount= 且取值不一致时直接报错，避免静默忽略其中一项造成误解
 	if mountPath != "" && mountAlias != "" && mountPath != mountAlias {
-		return "", fmt.Errorf("invalid resource spec %q: mount-path %q and mount %q conflict, specify only one", spec, mountPath, mountAlias)
+		return "", invalidSandboxResourceSpec(spec, fmt.Sprintf("mount-path %q and mount %q conflict, specify only one", mountPath, mountAlias))
 	}
 	if mountPath == "" {
 		// 兼容 mount= 简写
 		mountPath = mountAlias
 	}
 	if mountPath == "" {
-		return "", fmt.Errorf("invalid resource spec %q: mount-path is required for %s", spec, resourceType)
+		return "", invalidSandboxResourceSpec(spec, fmt.Sprintf("mount-path is required for %s", resourceType))
 	}
 	// 沙箱内部使用 POSIX 路径；用 path.IsAbs 而非 filepath.IsAbs，避免 Windows 主机上把 /workspace 误判为相对
 	if !path.IsAbs(mountPath) {
-		return "", fmt.Errorf("invalid resource spec %q: mount-path %q must be an absolute path", spec, mountPath)
+		return "", invalidSandboxResourceSpec(spec, fmt.Sprintf("mount-path %q must be an absolute path", mountPath))
 	}
 	return mountPath, nil
 }

@@ -26,6 +26,7 @@ name = "demo"
 dockerfile = "./Dockerfile"
 cpu_count = 2
 memory_mb = 2048
+disk_size_mb = 20480
 no_cache = true
 `
 	require.NoError(t, os.WriteFile(p, []byte(content), 0644))
@@ -38,6 +39,7 @@ no_cache = true
 	assert.Equal(t, "./Dockerfile", cfg.Dockerfile)
 	assert.Equal(t, int32(2), cfg.CPUCount)
 	assert.Equal(t, int32(2048), cfg.MemoryMB)
+	assert.Equal(t, int32(20480), cfg.DiskSizeMB)
 	assert.True(t, cfg.NoCache)
 	assert.Equal(t, p, cfg.SourcePath())
 }
@@ -76,6 +78,7 @@ func TestApplyTo_FileOnly(t *testing.T) {
 		Dockerfile: "./Dockerfile",
 		CPUCount:   2,
 		MemoryMB:   2048,
+		DiskSizeMB: 20480,
 		NoCache:    true,
 		defined:    map[string]bool{"no_cache": true},
 	}
@@ -86,26 +89,30 @@ func TestApplyTo_FileOnly(t *testing.T) {
 	assert.Equal(t, "./Dockerfile", dst.Dockerfile)
 	assert.Equal(t, int32(2), dst.CPUCount)
 	assert.Equal(t, int32(2048), dst.MemoryMB)
+	assert.Equal(t, int32(20480), dst.DiskSizeMB)
 	assert.True(t, dst.NoCache)
 	assert.Empty(t, overrides)
 }
 
 func TestApplyTo_CLIOverride(t *testing.T) {
 	cfg := &FileConfig{
-		Name:     "from-file",
-		CPUCount: 2,
-		NoCache:  false,
+		Name:       "from-file",
+		CPUCount:   2,
+		DiskSizeMB: 20480,
+		NoCache:    false,
 	}
 	dst := BuildFields{
-		Name:     "from-cli",
-		CPUCount: 4,
-		NoCache:  true,
+		Name:       "from-cli",
+		CPUCount:   4,
+		DiskSizeMB: 40960,
+		NoCache:    true,
 	}
 	overrides := cfg.ApplyTo(&dst)
 	assert.Equal(t, "from-cli", dst.Name)
 	assert.Equal(t, int32(4), dst.CPUCount)
+	assert.Equal(t, int32(40960), dst.DiskSizeMB)
 	assert.True(t, dst.NoCache)
-	assert.ElementsMatch(t, []string{"name", "cpu_count"}, overrides)
+	assert.ElementsMatch(t, []string{"name", "cpu_count", "disk_size_mb"}, overrides)
 }
 
 func TestApplyTo_MixedFill(t *testing.T) {

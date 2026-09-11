@@ -43,6 +43,31 @@ func TestBuildParamsFromDockerfileResult_FromImageOverridesDockerfileBase(t *tes
 	assert.Nil(t, params.FromTemplate)
 }
 
+func TestCreateTemplateParamsIncludesDiskSize(t *testing.T) {
+	params := createTemplateParams(BuildInfo{
+		Name:       "demo",
+		CPUCount:   2,
+		MemoryMB:   2048,
+		DiskSizeMB: 20480,
+	})
+
+	assert.NotNil(t, params.Name)
+	assert.Equal(t, "demo", *params.Name)
+	assert.NotNil(t, params.CPUCount)
+	assert.NotNil(t, params.MemoryMB)
+	assert.NotNil(t, params.DiskSizeMB)
+	assert.Equal(t, int32(20480), *params.DiskSizeMB)
+}
+
+func TestFormatBuildFailureLogs(t *testing.T) {
+	got := formatBuildFailureLogs([]string{"step 1 failed", "command exited with status 1"})
+	assert.Equal(t, "\nBuild Logs:\n  step 1 failed\n  command exited with status 1\n", got)
+}
+
+func TestFormatBuildFailureLogs_Empty(t *testing.T) {
+	assert.Empty(t, formatBuildFailureLogs(nil))
+}
+
 func TestValidateBuildSourceSelection_RejectsFromImageAndFromTemplate(t *testing.T) {
 	err := validateBuildSourceSelection(BuildInfo{
 		FromImage:    "ubuntu:22.04",

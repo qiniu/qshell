@@ -19,7 +19,7 @@ const (
 const (
 	// ConnectTimeoutInteractive is the timeout for interactive PTY sessions.
 	ConnectTimeoutInteractive int32 = 300
-	// ConnectTimeoutCommand is the timeout for non-interactive operations (kill, logs, metrics).
+	// ConnectTimeoutCommand is the timeout for non-interactive operations that require a sandbox connection, such as exec.
 	ConnectTimeoutCommand int32 = 10
 )
 

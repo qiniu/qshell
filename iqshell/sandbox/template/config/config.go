@@ -37,6 +37,9 @@ type FileConfig struct {
 	// MemoryMB 是沙箱内存大小（MiB）。
 	MemoryMB int32 `toml:"memory_mb"`
 
+	// DiskSizeMB 是模板构建磁盘大小（MiB）。
+	DiskSizeMB int32 `toml:"disk_size_mb"`
+
 	// NoCache 强制完整构建，忽略缓存。
 	NoCache bool `toml:"no_cache"`
 

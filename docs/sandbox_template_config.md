@@ -40,6 +40,7 @@ ready_cmd = ""
 # 资源
 cpu_count = 2
 memory_mb = 2048
+disk_size_mb = 20480
 
 # 构建选项
 no_cache = false
@@ -57,6 +58,7 @@ no_cache = false
 | ready_cmd | string | 就绪检查命令 |
 | cpu_count | int | CPU 核数 |
 | memory_mb | int | 内存（MiB） |
+| disk_size_mb | int | 构建磁盘大小（MiB），最小值为 10240；仅创建新模板时生效 |
 | no_cache | bool | 强制忽略缓存 |
 
 # 优先级
@@ -120,6 +122,7 @@ name = "my-template"
 dockerfile = "./Dockerfile"
 cpu_count = 2
 memory_mb = 2048
+disk_size_mb = 20480
 ```
 
 运行：

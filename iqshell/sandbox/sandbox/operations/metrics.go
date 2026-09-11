@@ -46,12 +46,6 @@ func Metrics(info MetricsInfo) {
 	}()
 	defer signal.Stop(sigCh)
 
-	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
-	if err != nil {
-		sbClient.PrintError("connect to sandbox %s failed: %v", info.SandboxID, err)
-		return
-	}
-
 	// Async sandbox-done monitoring (non-blocking, checks every 5s)
 	sandboxDone := make(chan struct{})
 	if info.Follow {
@@ -61,8 +55,8 @@ func Metrics(info MetricsInfo) {
 			for {
 				select {
 				case <-ticker.C:
-					running, _ := sb.IsRunning(ctx)
-					if !running {
+					sandboxInfo, infoErr := client.GetInfo(ctx, info.SandboxID)
+					if infoErr == nil && sandboxInfo.State != sandbox.StateRunning {
 						close(sandboxDone)
 						return
 					}
@@ -83,7 +77,7 @@ func Metrics(info MetricsInfo) {
 			params.Start = &start
 		}
 
-		metrics, mErr := sb.GetMetrics(ctx, params)
+		metrics, mErr := client.GetMetrics(ctx, info.SandboxID, params)
 		if mErr != nil {
 			sbClient.PrintError("get sandbox metrics failed: %v", mErr)
 			return

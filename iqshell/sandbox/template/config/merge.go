@@ -24,6 +24,8 @@ type BuildFields struct {
 	CPUCount int32
 	// MemoryMB 是沙箱内存大小（MiB）。
 	MemoryMB int32
+	// DiskSizeMB 是模板构建磁盘大小（MiB）。
+	DiskSizeMB int32
 	// NoCache 强制完整构建，忽略缓存。
 	NoCache bool
 	// NoCacheChanged 表示 CLI 是否显式设置了 --no-cache。
@@ -88,6 +90,7 @@ func (c *FileConfig) ApplyTo(dst *BuildFields) []string {
 	applyString(c.ReadyCmd, &dst.ReadyCmd, "ready_cmd")
 	applyInt32(c.CPUCount, &dst.CPUCount, "cpu_count")
 	applyInt32(c.MemoryMB, &dst.MemoryMB, "memory_mb")
+	applyInt32(c.DiskSizeMB, &dst.DiskSizeMB, "disk_size_mb")
 	applyBool(c.NoCache, &dst.NoCache, "no_cache")
 
 	return overrides

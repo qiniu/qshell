@@ -1,5 +1,5 @@
 # 简介
-`sandbox`（别名 `sbx`）命令用于管理沙箱实例、模板和注入规则，支持创建、连接、执行命令、暂停、恢复、终止沙箱，以及查看沙箱日志和指标。
+`sandbox`（别名 `sbx`）命令用于管理沙箱实例、模板、注入规则和已挂载资源，支持创建、连接、执行命令、暂停、恢复、终止沙箱，以及查看沙箱日志、指标和资源信息。
 
 # 格式
 ```
@@ -22,7 +22,7 @@ sandbox 命令同时支持两套凭据，按子命令所需自动选择：
 
 | 子命令 | 鉴权方式 |
 | --- | --- |
-| `sandbox` 实例操作（list/create/connect/exec/...）、`template` 系列 | API Key |
+| `sandbox` 实例操作（list/create/connect/exec/...）、`resource`、`template` 系列 | API Key |
 | `injection-rule` 系列（list/create/get/update/delete） | AK/SK |
 
 ## API Key
@@ -48,6 +48,7 @@ sandbox 的子命令有：
 * exec（ex）：在沙箱中执行命令
 * logs（lg）：查看沙箱日志
 * metrics（mt）：查看沙箱资源指标
+* resource（resources）：管理沙箱已挂载资源
 * template（tpl）：管理沙箱模板
 * injection-rule（ir）：管理沙箱注入规则
 
@@ -105,4 +106,30 @@ qshell sandbox resume sb-xxxxxxxxxxxx
 ```
 qshell sandbox kill sb-xxxxxxxxxxxx
 qshell sbx kl sb-xxxxxxxxxxxx
+```
+
+10. 查询沙箱已挂载资源
+```
+qshell sandbox resource list sb-xxxxxxxxxxxx
+qshell sbx resource ls sb-xxxxxxxxxxxx --format json
+```
+
+11. 更新 Git 仓库资源令牌
+```
+qshell sandbox resource update sb-xxxxxxxxxxxx res-xxxxxxxxxxxx --token ghp-xxx
+qshell sbx resource up sb-xxxxxxxxxxxx res-xxxxxxxxxxxx -t ghp-xxx
+```
+
+12. 构建模板
+```
+qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wait
+qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --wait
+
+# 创建模板时指定 20 GiB 构建磁盘（--disk-size 单位为 MiB）
+qshell sandbox template build --name my-template --from-image ubuntu:22.04 --disk-size 20480 --wait
+qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --disk-size 20480 --wait
+
+# 使用当前目录的 qshell.sandbox.toml 构建模板
+qshell sandbox template build --wait
+qshell sbx tpl bd --wait
 ```
