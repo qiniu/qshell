@@ -125,11 +125,16 @@ qshell sbx resource up sb-xxxxxxxxxxxx res-xxxxxxxxxxxx -t ghp-xxx
 qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wait
 qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --wait
 
-# 创建模板时指定 20 GiB 构建磁盘（--disk-size 单位为 MiB）
-qshell sandbox template build --name my-template --from-image ubuntu:22.04 --disk-size 20480 --wait
-qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --disk-size 20480 --wait
+# 创建模板时保证构建后至少有 5 GiB 可用空间（--min-free-disk 单位为 MiB）
+qshell sandbox template build --name my-template --from-image ubuntu:22.04 --min-free-disk 5120 --wait
+qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --min-free-disk 5120 --wait
 
 # 使用当前目录的 qshell.sandbox.toml 构建模板
 qshell sandbox template build --wait
 qshell sbx tpl bd --wait
 ```
+- `sandbox snapshot create`：创建持久快照，要求显式提供 `--idempotency-key`。
+- `sandbox snapshot list`：按名称和来源沙箱分页查询快照。
+- `sandbox template tags`：查询模板标签与对应构建。
+
+快照 ID 可以传给 `sandbox create`；仅文件系统快照会冷启动。详见 `qshell sandbox snapshot --doc`。

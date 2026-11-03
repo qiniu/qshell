@@ -30,6 +30,8 @@ type injectionInput struct {
 	Headers   string
 	IfHeaders string
 	IfQueries string
+	Body      string
+	IfBody    string
 }
 
 func buildInjectionSpec(input injectionInput) (sandbox.InjectionSpec, error) {
@@ -42,6 +44,9 @@ func buildInjectionSpec(input injectionInput) (sandbox.InjectionSpec, error) {
 		sbClient.ParseMetadataMap(input.IfQueries),
 	)
 	if err != nil {
+		return sandbox.InjectionSpec{}, err
+	}
+	if err := sbClient.ApplyHTTPBodyFields(&parts, input.Body, input.IfBody); err != nil {
 		return sandbox.InjectionSpec{}, err
 	}
 	return sandbox.InjectionSpec{
@@ -60,7 +65,9 @@ func shouldUpdateInjection(input injectionInput) bool {
 		strings.TrimSpace(input.BaseURL) != "" ||
 		strings.TrimSpace(input.Headers) != "" ||
 		strings.TrimSpace(input.IfHeaders) != "" ||
-		strings.TrimSpace(input.IfQueries) != ""
+		strings.TrimSpace(input.IfQueries) != "" ||
+		strings.TrimSpace(input.Body) != "" ||
+		strings.TrimSpace(input.IfBody) != ""
 }
 
 func formatInjectionType(spec sandbox.InjectionSpec) string {
@@ -110,12 +117,15 @@ func formatInjectionHeaders(spec sandbox.InjectionSpec) string {
 
 func formatInjectionConditions(spec sandbox.InjectionSpec) string {
 	headers, queries := injectionConditions(spec)
-	parts := make([]string, 0, 2)
+	parts := make([]string, 0, 3)
 	if headers != nil && len(*headers) > 0 {
 		parts = append(parts, "headers: "+formatMapKeys(*headers))
 	}
 	if queries != nil && len(*queries) > 0 {
 		parts = append(parts, "queries: "+formatMapKeys(*queries))
+	}
+	if spec.HTTP != nil && spec.HTTP.IfBody != nil && len(*spec.HTTP.IfBody) > 0 {
+		parts = append(parts, "body: "+formatMapKeys(*spec.HTTP.IfBody))
 	}
 	if len(parts) == 0 {
 		return "-"

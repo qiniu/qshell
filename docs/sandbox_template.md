@@ -92,3 +92,5 @@ qshell sandbox template init --name my-template --language go
 qshell sandbox template config
 qshell sbx tpl cfg
 ```
+
+`qshell sandbox template tags <templateID>` 查询标签的最新构建分配，支持 `--format json`。

@@ -128,6 +128,8 @@ var injectionRuleCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&info.BaseURL, "base-url", "", "override base URL or target base URL for http/github injection")
 	cmd.Flags().StringVar(&info.Headers, "headers", "", "HTTP headers for custom http injection (comma-separated key=value pairs)")
 	cmd.Flags().StringVar(&info.IfHeaders, "if-headers", "", "request headers that must already match before injection applies (comma-separated key=value pairs)")
+	cmd.Flags().StringVar(&info.Body, "body", "", "top-level JSON string fields to inject, as a JSON object (http only; contains secrets)")
+	cmd.Flags().StringVar(&info.IfBody, "if-body", "", "top-level JSON string fields that must match, as a JSON object (http only)")
 	cmd.Flags().StringVar(&info.IfQueries, "if-queries", "", "query parameters that must already match before injection applies (comma-separated key=value pairs)")
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("type")
@@ -181,6 +183,8 @@ var injectionRuleUpdateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVar(&info.BaseURL, "base-url", "", "new base URL or target base URL for http/github injection")
 	cmd.Flags().StringVar(&info.Headers, "headers", "", "new HTTP headers for custom http injection (comma-separated key=value pairs)")
 	cmd.Flags().StringVar(&info.IfHeaders, "if-headers", "", "new request headers that must already match before injection applies (comma-separated key=value pairs)")
+	cmd.Flags().StringVar(&info.Body, "body", "", "top-level JSON string fields to inject, as a JSON object (http only; contains secrets)")
+	cmd.Flags().StringVar(&info.IfBody, "if-body", "", "top-level JSON string fields that must match, as a JSON object (http only)")
 	cmd.Flags().StringVar(&info.IfQueries, "if-queries", "", "new query parameters that must already match before injection applies (comma-separated key=value pairs)")
 	return cmd
 }

@@ -43,20 +43,21 @@ func TestBuildParamsFromDockerfileResult_FromImageOverridesDockerfileBase(t *tes
 	assert.Nil(t, params.FromTemplate)
 }
 
-func TestCreateTemplateParamsIncludesDiskSize(t *testing.T) {
+func TestCreateTemplateParamsIncludesMinFreeDisk(t *testing.T) {
+	minFreeDiskMB := int32(20480)
 	params := createTemplateParams(BuildInfo{
-		Name:       "demo",
-		CPUCount:   2,
-		MemoryMB:   2048,
-		DiskSizeMB: 20480,
+		Name:          "demo",
+		CPUCount:      2,
+		MemoryMB:      2048,
+		MinFreeDiskMB: &minFreeDiskMB,
 	})
 
 	assert.NotNil(t, params.Name)
 	assert.Equal(t, "demo", *params.Name)
 	assert.NotNil(t, params.CPUCount)
 	assert.NotNil(t, params.MemoryMB)
-	assert.NotNil(t, params.DiskSizeMB)
-	assert.Equal(t, int32(20480), *params.DiskSizeMB)
+	assert.NotNil(t, params.MinFreeDiskMB)
+	assert.Equal(t, int32(20480), *params.MinFreeDiskMB)
 }
 
 func TestFormatBuildFailureLogs(t *testing.T) {

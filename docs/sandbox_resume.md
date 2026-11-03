@@ -43,3 +43,5 @@ $ qshell sbx rs -a
 ```
 $ qshell sandbox resume -a -m env=staging
 ```
+
+恢复使用 SDK 的 v2 Connect 接口，未指定超时时间时采用服务端默认 300 秒。仅保存文件系统的暂停恢复后会冷启动。

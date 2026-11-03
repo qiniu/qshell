@@ -11,6 +11,7 @@ import (
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/config"
 	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/dockerfile"
@@ -42,8 +43,8 @@ type BuildInfo struct {
 	// MemoryMB 是沙箱内存大小（MiB）。
 	MemoryMB int32
 
-	// DiskSizeMB 是模板构建磁盘大小（MiB），仅创建新模板时生效。
-	DiskSizeMB int32
+	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），仅新建模板时生效。
+	MinFreeDiskMB *int32
 
 	// Wait 指示是否等待构建完成。
 	Wait bool
@@ -107,7 +108,7 @@ func Build(info BuildInfo) {
 			ReadyCmd:       info.ReadyCmd,
 			CPUCount:       info.CPUCount,
 			MemoryMB:       info.MemoryMB,
-			DiskSizeMB:     info.DiskSizeMB,
+			MinFreeDiskMB:  info.MinFreeDiskMB,
 			NoCache:        info.NoCache,
 			NoCacheChanged: info.NoCacheChanged,
 		}
@@ -122,7 +123,7 @@ func Build(info BuildInfo) {
 		info.ReadyCmd = fields.ReadyCmd
 		info.CPUCount = fields.CPUCount
 		info.MemoryMB = fields.MemoryMB
-		info.DiskSizeMB = fields.DiskSizeMB
+		info.MinFreeDiskMB = fields.MinFreeDiskMB
 		info.NoCache = fields.NoCache
 
 		for _, key := range overrides {
@@ -139,6 +140,11 @@ func Build(info BuildInfo) {
 		return
 	}
 
+	if info.MinFreeDiskMB != nil && *info.MinFreeDiskMB < 0 {
+		data.SetCmdStatusError()
+		sbClient.PrintError("--min-free-disk / min_free_disk_mb must be non-negative")
+		return
+	}
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
 		sbClient.PrintError("%v", err)
@@ -173,6 +179,9 @@ func Build(info BuildInfo) {
 		}
 	}
 
+	if templateID != "" && info.MinFreeDiskMB != nil {
+		sbClient.PrintWarn("--min-free-disk / min_free_disk_mb only applies when creating a new template; the existing template will be rebuilt without changing this setting")
+	}
 	if templateID == "" {
 		// 创建新模板
 		if info.Name == "" {
@@ -343,8 +352,8 @@ func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {
 	if info.MemoryMB > 0 {
 		params.MemoryMB = &info.MemoryMB
 	}
-	if info.DiskSizeMB > 0 {
-		params.DiskSizeMB = &info.DiskSizeMB
+	if info.MinFreeDiskMB != nil {
+		params.MinFreeDiskMB = info.MinFreeDiskMB
 	}
 	return params
 }

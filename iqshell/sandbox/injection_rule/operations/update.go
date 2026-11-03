@@ -5,6 +5,7 @@ import (
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 )
 
@@ -18,6 +19,8 @@ type UpdateInfo struct {
 	Headers   string
 	IfHeaders string
 	IfQueries string
+	Body      string
+	IfBody    string
 }
 
 // Update updates an existing injection rule.
@@ -34,10 +37,12 @@ func Update(info UpdateInfo) {
 		Headers:   info.Headers,
 		IfHeaders: info.IfHeaders,
 		IfQueries: info.IfQueries,
+		Body:      info.Body,
+		IfBody:    info.IfBody,
 	}
 
 	if info.Name == "" && !shouldUpdateInjection(input) {
-		sbClient.PrintError("at least one of --name, --type, --api-key, --base-url, --headers, --if-headers, or --if-queries is required")
+		sbClient.PrintError("at least one of --name, --type, --api-key, --base-url, --headers, --if-headers, --if-queries, --body, or --if-body is required")
 		return
 	}
 
@@ -54,6 +59,7 @@ func Update(info UpdateInfo) {
 	if shouldUpdateInjection(input) {
 		spec, err := buildInjectionSpec(input)
 		if err != nil {
+			data.SetCmdStatusError()
 			sbClient.PrintError("%v", err)
 			return
 		}

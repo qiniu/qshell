@@ -40,7 +40,7 @@ ready_cmd = ""
 # 资源
 cpu_count = 2
 memory_mb = 2048
-disk_size_mb = 20480
+min_free_disk_mb = 5120
 
 # 构建选项
 no_cache = false
@@ -58,7 +58,7 @@ no_cache = false
 | ready_cmd | string | 就绪检查命令 |
 | cpu_count | int | CPU 核数 |
 | memory_mb | int | 内存（MiB） |
-| disk_size_mb | int | 构建磁盘大小（MiB），最小值为 10240；仅创建新模板时生效 |
+| min_free_disk_mb | int | 构建后的最小剩余空间（MiB）；仅创建新模板时生效，可设为 0 |
 | no_cache | bool | 强制忽略缓存 |
 
 # 优先级
@@ -122,7 +122,7 @@ name = "my-template"
 dockerfile = "./Dockerfile"
 cpu_count = 2
 memory_mb = 2048
-disk_size_mb = 20480
+min_free_disk_mb = 5120
 ```
 
 运行：
@@ -135,3 +135,5 @@ qshell sandbox template build --wait
 ```bash
 qshell sandbox template build --wait  # 按 name 命中后 rebuild，不再 409
 ```
+
+`min_free_disk_mb`：创建模板时构建后的最小剩余空间（MiB），可设为 0。省略时使用团队默认值；CLI 的 `--min-free-disk`（含显式 0）优先。已有模板重新构建时不会改变此设置。

@@ -44,3 +44,10 @@ $ qshell sbx ps -a
 ```
 $ qshell sandbox pause -a -m user=alice
 ```
+
+# 仅保存文件系统
+`--memory` 默认 true，保留进程和内存状态。使用 `--memory=false` 时仅保存文件系统，恢复会冷启动，进程和内存状态丢失，且不能通过流量自动恢复：
+```shell
+qshell sandbox pause <sandboxID> --memory=false
+```
+此参数同样适用于批量暂停和 `--all`。

@@ -13,8 +13,8 @@
 
 # 格式
 ```
-qshell sandbox template build [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--dockerfile <path>] [--path <dir>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--disk-size <N>] [--wait] [--no-cache] [--config <path>]
-qshell sbx tpl bd [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--dockerfile <path>] [--path <dir>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--disk-size <N>] [--wait] [--no-cache] [--config <path>]
+qshell sandbox template build [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--dockerfile <path>] [--path <dir>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--min-free-disk <N>] [--wait] [--no-cache] [--config <path>]
+qshell sbx tpl bd [--name <name>] [--template-id <id>] [--from-image <image>] [--from-template <template>] [--dockerfile <path>] [--path <dir>] [--start-cmd <cmd>] [--ready-cmd <cmd>] [--cpu <N>] [--memory <N>] [--min-free-disk <N>] [--wait] [--no-cache] [--config <path>]
 ```
 
 # 帮助文档
@@ -37,13 +37,13 @@ $ qshell sandbox template build --doc
 - `--ready-cmd`：就绪检查命令（Dockerfile 模式下默认为 "sleep 20"）
 - `--cpu`：沙箱 CPU 核数
 - `--memory`：沙箱内存大小（MiB）
-- `--disk-size`：构建磁盘大小（MiB），最小值为 10240；仅创建新模板时生效，重新构建已有模板时忽略
+- `--min-free-disk`：构建后最小剩余空间（MiB）；仅创建新模板时生效，重新构建已有模板时忽略
 - `--wait`：等待构建完成，实时流式显示构建日志（带彩色级别标签）
 - `--no-cache`：强制完整构建，忽略缓存
 - `--config`：显式指定 `qshell.sandbox.toml` 配置文件路径；未指定时，如果当前目录存在 `qshell.sandbox.toml`，命令会自动读取
 
 # 配置文件
-`sandbox template build` 会按 `CLI flag > 配置文件 > 内置默认值` 合并参数。配置文件可提供 `template_id`、`name`、`dockerfile`、`path`、`from_image`、`from_template`、`start_cmd`、`ready_cmd`、`cpu_count`、`memory_mb`、`disk_size_mb` 和 `no_cache`。
+`sandbox template build` 会按 `CLI flag > 配置文件 > 内置默认值` 合并参数。配置文件可提供 `template_id`、`name`、`dockerfile`、`path`、`from_image`、`from_template`、`start_cmd`、`ready_cmd`、`cpu_count`、`memory_mb`、`min_free_disk_mb` 和 `no_cache`。
 
 未提供 `template_id` 时，如果配置文件或 CLI 中有 `name`，命令会先按 name 在远端查找模板；命中即进入 rebuild，未命中再创建新模板。按 name 命中的 rebuild 不会把 `template_id` 回写到配置文件，便于同一份配置在多个环境复用。
 
@@ -74,9 +74,9 @@ $ qshell sandbox template build --name claude --from-template agents-base --dock
 
 这种模式下实际 base 来自 `agents-base`，Dockerfile 里的 `FROM` 仅用于兼容 Dockerfile 解析，不会触发基础镜像拉取。
 
-5. 创建新模板时指定 20 GiB 构建磁盘
+5. 创建新模板时保证至少有 5 GiB 构建后剩余空间
 ```
-$ qshell sandbox template build --name my-template --from-image ubuntu:22.04 --disk-size 20480 --wait
+$ qshell sandbox template build --name my-template --from-image ubuntu:22.04 --min-free-disk 5120 --wait
 ```
 
 6. 重新构建已有模板（rebuild 必须提供 Dockerfile）
@@ -110,3 +110,10 @@ $ qshell sbx tpl bd --config ./configs/prod.toml --wait
 ```
 $ qshell sandbox template build --name my-app --from-image node:18 --start-cmd "npm start" --cpu 2 --memory 1024 --wait
 ```
+
+# 构建后的最小剩余空间
+`--min-free-disk <MiB>` 仅在创建新模板时生效，表示构建后的最小剩余空间，不是磁盘总大小。省略时使用团队默认值；显式指定 `--min-free-disk=0` 表示不为剩余空间扩容，已有文件系统不会缩小。重新构建已有模板时此参数不生效，并输出提示。
+```shell
+qshell sandbox template build --name demo --from-image ubuntu:22.04 --min-free-disk 5120 --wait
+```
+也可在 qshell.sandbox.toml 中配置 `min_free_disk_mb = 5120`。CLI 显式指定的值（包括 0）优先于配置文件。

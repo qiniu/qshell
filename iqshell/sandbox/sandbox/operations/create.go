@@ -9,6 +9,7 @@ import (
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 )
 
@@ -23,6 +24,8 @@ type CreateInfo struct {
 	Detach          bool
 	EnvVars         []string // KEY=VALUE pairs
 	AutoPause       bool
+	AutoPauseMemory *bool
+	AutoResume      *bool
 	InjectionRuleID []string
 	InlineInjection []string
 	// Resources 沙箱启动前挂载的资源规约（如 GitHub 仓库、Kodo bucket），格式参见 parseSandboxResource
@@ -61,11 +64,14 @@ func Create(info CreateInfo) {
 			params.EnvVars = &envMap
 		}
 	}
-	if info.AutoPause {
-		params.AutoPause = &info.AutoPause
+	if err := applyLifecycleParams(info, &params); err != nil {
+		data.SetCmdStatusError()
+		sbClient.PrintError("%v", err)
+		return
 	}
 	injections, err := buildSandboxInjections(info.InjectionRuleID, info.InlineInjection)
 	if err != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("%v", err)
 		return
 	}
@@ -157,6 +163,9 @@ func parseInlineSandboxInjection(spec string) (sandbox.SandboxInjectionSpec, err
 	if err != nil {
 		return sandbox.SandboxInjectionSpec{}, fmt.Errorf("invalid inline injection spec: %w", err)
 	}
+	if err := sbClient.ApplyHTTPBodyFields(&parts, fields["body"], fields["if-body"]); err != nil {
+		return sandbox.SandboxInjectionSpec{}, fmt.Errorf("invalid inline injection spec: %w", err)
+	}
 	return sandbox.SandboxInjectionSpec{
 		OpenAI:    parts.OpenAI,
 		Anthropic: parts.Anthropic,
@@ -170,7 +179,7 @@ func parseInlineSandboxInjection(spec string) (sandbox.SandboxInjectionSpec, err
 func parseInlineInjectionFields(spec string) map[string]string {
 	fields := make(map[string]string)
 	currentKey := ""
-	for _, part := range strings.Split(spec, ",") {
+	for _, part := range splitInlineInjectionFields(spec) {
 		key, value, ok := strings.Cut(part, "=")
 		if !ok {
 			trimmed := strings.TrimSpace(part)
@@ -198,7 +207,7 @@ func parseInlineInjectionFields(spec string) map[string]string {
 
 func isInlineInjectionMapField(key string) bool {
 	switch key {
-	case "headers", "if-headers", "if-queries":
+	case "headers", "if-headers", "if-queries", "body", "if-body":
 		return true
 	default:
 		return false
@@ -207,7 +216,7 @@ func isInlineInjectionMapField(key string) bool {
 
 func isInlineInjectionFieldKey(key string) bool {
 	switch key {
-	case "type", "api-key", "base-url", "headers", "if-headers", "if-queries":
+	case "type", "api-key", "base-url", "headers", "if-headers", "if-queries", "body", "if-body":
 		return true
 	default:
 		return false
@@ -385,4 +394,18 @@ func parseInlineHeaders(raw string) map[string]string {
 		m[key] = strings.TrimSpace(value)
 	}
 	return m
+}
+
+func applyLifecycleParams(info CreateInfo, params *sandbox.CreateParams) error {
+	if info.AutoResume != nil && *info.AutoResume && info.AutoPauseMemory != nil && !*info.AutoPauseMemory {
+		return fmt.Errorf("--auto-resume cannot be enabled with --auto-pause-memory=false")
+	}
+	if info.AutoPause {
+		params.AutoPause = &info.AutoPause
+	}
+	params.AutoPauseMemory = info.AutoPauseMemory
+	if info.AutoResume != nil {
+		params.AutoResume = &sandbox.AutoResumeConfig{Enabled: *info.AutoResume}
+	}
+	return nil
 }

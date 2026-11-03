@@ -83,6 +83,7 @@ var sandboxListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.CreateInfo{}
+	var autoPauseMemory, autoResume bool
 	retryMax := 0
 	cmd := &cobra.Command{
 		Use:     "create [template]",
@@ -156,6 +157,12 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if cmd.Flags().Changed("retry-max") {
 				info.RetryMax = &retryMax
 			}
+			if cmd.Flags().Changed("auto-pause-memory") {
+				info.AutoPauseMemory = &autoPauseMemory
+			}
+			if cmd.Flags().Changed("auto-resume") {
+				info.AutoResume = &autoResume
+			}
 			operations.Create(info)
 		},
 	}
@@ -165,9 +172,11 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&info.User, "user", "u", "", "user to run the terminal as (default: sandbox default user; ignored with --detach)")
 	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "metadata key=value pairs (comma-separated)")
 	cmd.Flags().StringArrayVarP(&info.EnvVars, "env-var", "e", nil, "environment variables (KEY=VALUE, can be specified multiple times)")
+	cmd.Flags().BoolVar(&autoPauseMemory, "auto-pause-memory", true, "preserve memory on auto-pause; false cold-boots on resume and cannot be combined with --auto-resume")
+	cmd.Flags().BoolVar(&autoResume, "auto-resume", false, "automatically resume a paused sandbox when traffic arrives")
 	cmd.Flags().BoolVar(&info.AutoPause, "auto-pause", false, "automatically pause sandbox when timeout expires (instead of killing)")
 	cmd.Flags().StringArrayVar(&info.InjectionRuleID, "injection-rule", nil, "injection rule IDs to apply when creating the sandbox (can be specified multiple times)")
-	cmd.Flags().StringArrayVar(&info.InlineInjection, "inline-injection", nil, "inline injection spec to apply when creating the sandbox (can be specified multiple times, format: type=<type>,api-key=<key>,base-url=<url>,headers=<k1=v1;k2=v2>,if-headers=<k=v>,if-queries=<k=v>)")
+	cmd.Flags().StringArrayVar(&info.InlineInjection, "inline-injection", nil, "inline injection spec (type,api-key,base-url,headers,if-headers,if-queries,body,if-body); body and if-body accept JSON objects and may contain commas")
 	cmd.Flags().StringArrayVar(&info.Resources, "resource", nil, "resource to mount before sandbox starts (can be specified multiple times, formats: type=github_repository,url=<url>,mount-path=<absPath>,token=<token> or type=kodo,bucket=<bucket>,mount-path=<absPath>,prefix=<prefix>,read-only=<bool>,access-key=<ak>,secret-key=<sk>; warning: passing tokens or credentials via CLI may leak through shell history or process lists)")
 	return cmd
 }
@@ -325,6 +334,7 @@ var sandboxMetricsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 var sandboxPauseCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.PauseInfo{}
+	memory := true
 	cmd := &cobra.Command{
 		Use:     "pause [sandboxIDs...]",
 		Aliases: []string{"ps"},
@@ -350,12 +360,16 @@ var sandboxPauseCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 				return
 			}
 			info.SandboxIDs = args
+			if cmd.Flags().Changed("memory") {
+				info.Memory = &memory
+			}
 			operations.Pause(info)
 		},
 	}
 	cmd.Flags().BoolVarP(&info.All, "all", "a", false, "pause all sandboxes")
 	cmd.Flags().StringVarP(&info.State, "state", "s", "", "filter by state when using --all (comma-separated: running,paused). Defaults to running")
 	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "filter by metadata when using --all (key1=value1,key2=value2)")
+	cmd.Flags().BoolVar(&memory, "memory", true, "preserve memory; false retains only the filesystem and loses running processes")
 	return cmd
 }
 
@@ -456,6 +470,7 @@ func sandboxCmdLoader(superCmd *cobra.Command, cfg *iqshell.Config) {
 	sandboxCmd := sandboxCmdBuilder(cfg)
 	sandboxCmd.AddCommand(
 		sandboxListCmdBuilder(cfg),
+		sandboxSnapshotCmdBuilder(cfg),
 		sandboxCreateCmdBuilder(cfg),
 		sandboxConnectCmdBuilder(cfg),
 		sandboxKillCmdBuilder(cfg),

@@ -26,7 +26,7 @@ name = "demo"
 dockerfile = "./Dockerfile"
 cpu_count = 2
 memory_mb = 2048
-disk_size_mb = 20480
+min_free_disk_mb = 20480
 no_cache = true
 `
 	require.NoError(t, os.WriteFile(p, []byte(content), 0644))
@@ -39,7 +39,8 @@ no_cache = true
 	assert.Equal(t, "./Dockerfile", cfg.Dockerfile)
 	assert.Equal(t, int32(2), cfg.CPUCount)
 	assert.Equal(t, int32(2048), cfg.MemoryMB)
-	assert.Equal(t, int32(20480), cfg.DiskSizeMB)
+	require.NotNil(t, cfg.MinFreeDiskMB)
+	assert.Equal(t, int32(20480), *cfg.MinFreeDiskMB)
 	assert.True(t, cfg.NoCache)
 	assert.Equal(t, p, cfg.SourcePath())
 }
@@ -72,15 +73,16 @@ func TestFindInCwd_NotFound(t *testing.T) {
 }
 
 func TestApplyTo_FileOnly(t *testing.T) {
+	minFreeDiskMB := int32(20480)
 	cfg := &FileConfig{
-		TemplateID: "tmpl-x",
-		Name:       "demo",
-		Dockerfile: "./Dockerfile",
-		CPUCount:   2,
-		MemoryMB:   2048,
-		DiskSizeMB: 20480,
-		NoCache:    true,
-		defined:    map[string]bool{"no_cache": true},
+		TemplateID:    "tmpl-x",
+		Name:          "demo",
+		Dockerfile:    "./Dockerfile",
+		CPUCount:      2,
+		MemoryMB:      2048,
+		MinFreeDiskMB: &minFreeDiskMB,
+		NoCache:       true,
+		defined:       map[string]bool{"no_cache": true},
 	}
 	dst := BuildFields{}
 	overrides := cfg.ApplyTo(&dst)
@@ -89,30 +91,34 @@ func TestApplyTo_FileOnly(t *testing.T) {
 	assert.Equal(t, "./Dockerfile", dst.Dockerfile)
 	assert.Equal(t, int32(2), dst.CPUCount)
 	assert.Equal(t, int32(2048), dst.MemoryMB)
-	assert.Equal(t, int32(20480), dst.DiskSizeMB)
+	require.NotNil(t, dst.MinFreeDiskMB)
+	assert.Equal(t, int32(20480), *dst.MinFreeDiskMB)
 	assert.True(t, dst.NoCache)
 	assert.Empty(t, overrides)
 }
 
 func TestApplyTo_CLIOverride(t *testing.T) {
+	fileMinFreeDiskMB := int32(20480)
+	cliMinFreeDiskMB := int32(40960)
 	cfg := &FileConfig{
-		Name:       "from-file",
-		CPUCount:   2,
-		DiskSizeMB: 20480,
-		NoCache:    false,
+		Name:          "from-file",
+		CPUCount:      2,
+		MinFreeDiskMB: &fileMinFreeDiskMB,
+		NoCache:       false,
 	}
 	dst := BuildFields{
-		Name:       "from-cli",
-		CPUCount:   4,
-		DiskSizeMB: 40960,
-		NoCache:    true,
+		Name:          "from-cli",
+		CPUCount:      4,
+		MinFreeDiskMB: &cliMinFreeDiskMB,
+		NoCache:       true,
 	}
 	overrides := cfg.ApplyTo(&dst)
 	assert.Equal(t, "from-cli", dst.Name)
 	assert.Equal(t, int32(4), dst.CPUCount)
-	assert.Equal(t, int32(40960), dst.DiskSizeMB)
+	require.NotNil(t, dst.MinFreeDiskMB)
+	assert.Equal(t, int32(40960), *dst.MinFreeDiskMB)
 	assert.True(t, dst.NoCache)
-	assert.ElementsMatch(t, []string{"name", "cpu_count", "disk_size_mb"}, overrides)
+	assert.ElementsMatch(t, []string{"name", "cpu_count", "min_free_disk_mb"}, overrides)
 }
 
 func TestApplyTo_MixedFill(t *testing.T) {

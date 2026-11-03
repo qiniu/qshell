@@ -337,6 +337,15 @@ var sandboxLogsDocument string
 //go:embed sandbox_metrics.md
 var sandboxMetricsDocument string
 
+//go:embed sandbox_snapshot.md
+var sandboxSnapshotDocument string
+
+//go:embed sandbox_snapshot_create.md
+var sandboxSnapshotCreateDocument string
+
+//go:embed sandbox_snapshot_list.md
+var sandboxSnapshotListDocument string
+
 //go:embed sandbox_pause.md
 var sandboxPauseDocument string
 
@@ -345,6 +354,9 @@ var sandboxResumeDocument string
 
 //go:embed sandbox_template.md
 var sandboxTemplateDocument string
+
+//go:embed sandbox_template_tags.md
+var sandboxTemplateTagsDocument string
 
 //go:embed sandbox_template_build.md
 var sandboxTemplateBuildDocument string
@@ -498,9 +510,13 @@ const (
 	SandboxListType                = "sandbox_list"
 	SandboxLogsType                = "sandbox_logs"
 	SandboxMetricsType             = "sandbox_metrics"
+	SandboxSnapshotType            = "sandbox_snapshot"
+	SandboxSnapshotCreateType      = "sandbox_snapshot_create"
+	SandboxSnapshotListType        = "sandbox_snapshot_list"
 	SandboxPauseType               = "sandbox_pause"
 	SandboxResumeType              = "sandbox_resume"
 	SandboxTemplateType            = "sandbox_template"
+	SandboxTemplateTagsType        = "sandbox_template_tags"
 	SandboxTemplateBuildType       = "sandbox_template_build"
 	SandboxTemplateBuildsType      = "sandbox_template_builds"
 	SandboxTemplateDeleteType      = "sandbox_template_delete"
@@ -610,9 +626,13 @@ func init() {
 	addCmdDocumentInfo(SandboxListType, sandboxListDocument)
 	addCmdDocumentInfo(SandboxLogsType, sandboxLogsDocument)
 	addCmdDocumentInfo(SandboxMetricsType, sandboxMetricsDocument)
+	addCmdDocumentInfo(SandboxSnapshotType, sandboxSnapshotDocument)
+	addCmdDocumentInfo(SandboxSnapshotCreateType, sandboxSnapshotCreateDocument)
+	addCmdDocumentInfo(SandboxSnapshotListType, sandboxSnapshotListDocument)
 	addCmdDocumentInfo(SandboxPauseType, sandboxPauseDocument)
 	addCmdDocumentInfo(SandboxResumeType, sandboxResumeDocument)
 	addCmdDocumentInfo(SandboxTemplateType, sandboxTemplateDocument)
+	addCmdDocumentInfo(SandboxTemplateTagsType, sandboxTemplateTagsDocument)
 	addCmdDocumentInfo(SandboxTemplateBuildType, sandboxTemplateBuildDocument)
 	addCmdDocumentInfo(SandboxTemplateBuildsType, sandboxTemplateBuildsDocument)
 	addCmdDocumentInfo(SandboxTemplateDeleteType, sandboxTemplateDeleteDocument)

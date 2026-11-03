@@ -71,3 +71,10 @@ $ qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type github --api-key
 ```bash
 $ qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type github --api-key ghp-new --base-url https://api.github.com/repos/qiniu/*
 ```
+
+# JSON body 注入
+HTTP 类型支持 `--if-body` 和 `--body`，均使用 JSON 字符串对象，最多 20 个字段。`--if-body` 精确匹配顶层字符串字段；`--body` 覆盖或新增顶层字符串字段，密钥值不从接口返回。
+```shell
+qshell sandbox injection-rule update rule-xxxxxxxxxxxx --type http --base-url https://api.example.com --if-body '{"model":"demo"}' --body '{"api_key":"secret"}'
+```
+非字符串值、null、数组和其他注入类型会报错。body 中的秘密会出现在命令行历史与进程参数中，请妥善处理。请求需为未压缩、最大 1 MiB 的 application/json。更新时替换整个 injection 配置，需提供完整类型和目标信息。
