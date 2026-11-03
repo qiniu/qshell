@@ -8,6 +8,20 @@
 ## 更新
 1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.28.1`
 
+# 未发布
+## 新增
+1. Sandbox 持久快照创建与分页查询命令，创建时要求显式提供幂等键以安全重试；模板标签查询命令。
+2. 沙箱创建支持自动恢复配置和超时暂停的内存保留选项；暂停支持仅保存文件系统，恢复统一使用 SDK v2 Connect。
+3. 模板创建支持 `--min-free-disk` / `min_free_disk_mb`，表示构建后最小剩余空间，显式 0 可禁用剩余空间扩容。
+4. HTTP 注入支持顶层 JSON body 条件与字符串字段注入，保存规则及 inline 配置均可使用。
+
+## 更新
+1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.30.0`。
+2. 模板创建磁盘参数改为 `--min-free-disk` / `min_free_disk_mb`，从最小剩余空间描述构建需求。
+
+## 不兼容变更
+1. 移除旧的 `--disk-size` / `disk_size_mb`，改用 `--min-free-disk` / `min_free_disk_mb`。
+
 # 2.19.12 (2026-08-11)
 ## 新增
 1. `qshell sandbox create` 与 `qshell sandbox connect` 新增 `--user` / `-u` 参数，用于指定终端的运行用户；未指定时使用沙箱默认用户，`create` 搭配 `--detach` 时该参数不生效（不连接终端）

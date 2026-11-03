@@ -7,6 +7,7 @@ import (
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 )
 
@@ -18,9 +19,8 @@ type ResumeInfo struct {
 }
 
 // Resume resumes one or more paused sandboxes.
-// Uses the POST /sandboxes/{id}/resume API endpoint.
+// 使用 SDK v2 Connect 恢复沙箱，省略超时时间时采用服务端默认值。
 func Resume(info ResumeInfo) {
-	// Still need the SDK client for --all listing
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
 		sbClient.PrintError("%v", err)
@@ -67,7 +67,8 @@ func Resume(info ResumeInfo) {
 		wg.Add(1)
 		go func(sandboxID string) {
 			defer wg.Done()
-			if rErr := sbClient.ResumeSandbox(sandboxID, nil); rErr != nil {
+			if _, rErr := client.Connect(ctx, sandboxID, sandbox.ConnectParams{}); rErr != nil {
+				data.SetCmdStatusError()
 				sbClient.PrintError("resume sandbox %s failed: %v", sandboxID, rErr)
 				return
 			}

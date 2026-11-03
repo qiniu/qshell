@@ -5,6 +5,7 @@ import (
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 )
 
@@ -17,6 +18,8 @@ type CreateInfo struct {
 	Headers   string
 	IfHeaders string
 	IfQueries string
+	Body      string
+	IfBody    string
 }
 
 // Create creates a new injection rule.
@@ -33,8 +36,11 @@ func Create(info CreateInfo) {
 		Headers:   info.Headers,
 		IfHeaders: info.IfHeaders,
 		IfQueries: info.IfQueries,
+		Body:      info.Body,
+		IfBody:    info.IfBody,
 	})
 	if err != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("%v", err)
 		return
 	}

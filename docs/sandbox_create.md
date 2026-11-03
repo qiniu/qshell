@@ -140,3 +140,17 @@ $ qshell sandbox create my-template \
 $ qshell sandbox create my-template -u root
 $ qshell sbx cr my-template --user root
 ```
+
+# 自动恢复与快照方式
+`--auto-resume` 启用暂停后的流量自动恢复。`--auto-pause-memory` 默认 true；设为 false 时，超时暂停只保存文件系统，恢复会冷启动，不能与 `--auto-resume` 同时启用。
+
+```shell
+qshell sandbox create base --detach --auto-pause --auto-resume
+qshell sandbox create base --detach --auto-pause --auto-pause-memory=false
+```
+
+HTTP inline 注入新增 `body` 和 `if-body`，值是 JSON 字符串对象：
+```shell
+qshell sandbox create base --detach --inline-injection 'type=http,base-url=https://api.example.com,if-body={"model":"demo"},body={"api_key":"secret"}'
+```
+密钥参数会出现在 shell 历史和进程参数中，请妥善处理。只支持未压缩、最大 1 MiB 的 application/json 请求；只匹配或覆盖顶层字符串字段。

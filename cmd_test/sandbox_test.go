@@ -176,3 +176,16 @@ func TestSandboxLogsDocumentWithFlags(t *testing.T) {
 func TestSandboxMetricsDocumentWithFollow(t *testing.T) {
 	testSubcommandDocumentWithFlags(t, []string{"sandbox", "metrics"}, "--follow")
 }
+
+func TestSandboxSnapshotDocuments(t *testing.T) {
+	testSubcommandDocument(t, "sandbox", "snapshot")
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "snapshot", "create"}, "sb-doc", "--idempotency-key", "doc-key")
+	testSubcommandDocument(t, "sandbox", "snapshot", "list")
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "tags"}, "tmpl-doc")
+}
+
+func TestSandboxNewLifecycleFlagsDocument(t *testing.T) {
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "create"}, "--auto-pause", "--auto-pause-memory=false", "--auto-resume=false")
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "pause"}, "--memory=false")
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "build"}, "--min-free-disk=0")
+}
