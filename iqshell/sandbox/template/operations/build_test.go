@@ -6,8 +6,52 @@ import (
 	"github.com/qiniu/go-sdk/v7/sandbox"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/config"
 	templatedockerfile "github.com/qiniu/qshell/v2/iqshell/sandbox/template/dockerfile"
 )
+
+func TestShouldRecreateForDisk_RecreatesResolvedNameWithFreeDisk(t *testing.T) {
+	minFree := int32(20480)
+
+	assert.True(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &minFree}, true))
+}
+
+func TestShouldRecreateForDisk_KeepsRebuildWithoutDiskSetting(t *testing.T) {
+	zero := int32(0)
+	minFree := int32(20480)
+
+	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base"}, true))
+	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &zero}, true))
+	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &minFree}, false))
+	assert.False(t, shouldRecreateForDisk(BuildInfo{MinFreeDiskMB: &minFree}, true))
+}
+
+func TestOwnershipError_RejectsForeignPublicTemplate(t *testing.T) {
+	err := ownershipError("agents-base", "cbz63h4i1xiux811uoux", false)
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "belongs to another team")
+		assert.Contains(t, err.Error(), "unique template name")
+	}
+}
+
+func TestOwnershipError_AllowsOwnedTemplate(t *testing.T) {
+	assert.NoError(t, ownershipError("demo", "tmpl-x", true))
+}
+
+func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
+	legacy := int32(20480)
+
+	warning := legacyDiskSizeWarning(&config.FileConfig{DiskSizeMB: &legacy})
+
+	assert.Contains(t, warning, "disk_size_mb = 20480")
+	assert.Contains(t, warning, "min_free_disk_mb")
+}
+
+func TestLegacyDiskSizeWarning_QuietWithoutLegacyField(t *testing.T) {
+	assert.Empty(t, legacyDiskSizeWarning(nil))
+	assert.Empty(t, legacyDiskSizeWarning(&config.FileConfig{}))
+}
 
 func TestBuildParamsFromDockerfileResult_UsesFromTemplateAsBase(t *testing.T) {
 	result := &templatedockerfile.ConvertResult{

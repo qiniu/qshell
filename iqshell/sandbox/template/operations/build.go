@@ -130,6 +130,9 @@ func Build(info BuildInfo) {
 			fmt.Fprintf(os.Stderr, "[config] CLI overrides %s from %s\n", key, cfg.SourcePath())
 		}
 	}
+	if warning := legacyDiskSizeWarning(cfg); warning != "" {
+		sbClient.PrintWarn("%s", warning)
+	}
 
 	if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
 		sbClient.PrintError("%v", err)
@@ -171,15 +174,26 @@ func Build(info BuildInfo) {
 			templateID = existingID
 			info.TemplateID = existingID
 			foundByName = true
-			fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (rebuild)\n", info.Name, templateID)
-			if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
-				sbClient.PrintError("%v", err)
-				return
+			recreate := shouldRecreateForDisk(info, foundByName)
+			if recreate {
+				fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s; re-creating with the same name to apply min_free_disk_mb\n", info.Name, templateID)
+				if err := ensureTemplateOwned(ctx, client, info.Name, templateID); err != nil {
+					sbClient.PrintError("%v", err)
+					return
+				}
+				templateID = ""
+				info.TemplateID = ""
+			} else {
+				fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (rebuild)\n", info.Name, templateID)
+				if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
+					sbClient.PrintError("%v", err)
+					return
+				}
 			}
 		}
 	}
 
-	if templateID != "" && info.MinFreeDiskMB != nil {
+	if templateID != "" && info.MinFreeDiskMB != nil && *info.MinFreeDiskMB > 0 {
 		sbClient.PrintWarn("--min-free-disk / min_free_disk_mb only applies when creating a new template; the existing template will be rebuilt without changing this setting")
 	}
 	if templateID == "" {
@@ -340,6 +354,58 @@ func formatBuildFailureLogs(logs []string) string {
 		fmt.Fprintf(&builder, "  %s\n", log)
 	}
 	return builder.String()
+}
+
+// shouldRecreateForDisk 判断是否应把「按 name 命中的 rebuild」改成同名创建请求。
+//
+// 模板磁盘只在创建时确定：rebuild 请求没有任何磁盘字段，所以配置了
+// min_free_disk_mb 的模板必须重新走创建接口才能生效。这里只对按 name
+// 解析到的模板生效；显式 --template-id / 配置文件 template_id 仍然走
+// rebuild，由调用方给出无法调整磁盘的告警。
+func shouldRecreateForDisk(info BuildInfo, resolvedByName bool) bool {
+	return resolvedByName &&
+		info.Name != "" &&
+		info.MinFreeDiskMB != nil &&
+		*info.MinFreeDiskMB > 0
+}
+
+// ensureTemplateOwned 校验按 name 命中的模板是否属于当前团队。
+//
+// alias 解析可能命中其他团队的公共模板：此时 v3 创建会落在自己团队下，
+// 但后续按 name 解析仍指向那个公共模板，构建结果不可达。提前失败比
+// 「构建成功但沙箱用旧模板」更容易排查。
+func ensureTemplateOwned(ctx context.Context, client *sandbox.Client, name, templateID string) error {
+	tmpl, err := client.GetTemplate(ctx, templateID, nil)
+	if err != nil {
+		return fmt.Errorf("verify template %q ownership: %w", name, err)
+	}
+	if tmpl == nil {
+		return nil
+	}
+	return ownershipError(name, templateID, tmpl.IsOwner)
+}
+
+// ownershipError 返回模板归属校验失败时的错误；属于当前团队时返回 nil。
+func ownershipError(name, templateID string, isOwner bool) error {
+	if isOwner {
+		return nil
+	}
+	return fmt.Errorf("template %q (%s) belongs to another team and is only visible as public; "+
+		"choose a unique template name owned by your team so min_free_disk_mb can be applied", name, templateID)
+}
+
+// legacyDiskSizeWarning 返回 qshell.sandbox.toml 中已废弃 disk_size_mb 的迁移提示。
+//
+// go-sdk v7.30.0 起，创建模板请求移除了 diskSizeMB，改为 minFreeDiskMb
+// （构建后的最小剩余空间）。若继续接受旧字段却不提示，配置会静默失效，
+// 用户会得到一个实际仍使用团队默认磁盘的模板。
+func legacyDiskSizeWarning(cfg *config.FileConfig) string {
+	if cfg == nil || cfg.DiskSizeMB == nil {
+		return ""
+	}
+	return fmt.Sprintf("qshell.sandbox.toml 中的 disk_size_mb = %d 已废弃："+
+		"模板 API 移除了磁盘大小参数，该配置不会生效；"+
+		"请改用 min_free_disk_mb（构建后的最小剩余空间，单位 MiB）", *cfg.DiskSizeMB)
 }
 
 func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {

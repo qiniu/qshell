@@ -59,6 +59,7 @@ no_cache = false
 | cpu_count | int | CPU 核数 |
 | memory_mb | int | 内存（MiB） |
 | min_free_disk_mb | int | 构建后的最小剩余空间（MiB）；仅创建新模板时生效，可设为 0 |
+| disk_size_mb | int | **已废弃**：模板 API 移除了磁盘大小参数，该字段不再生效，`build` 会在 stderr 给出迁移提示 |
 | no_cache | bool | 强制忽略缓存 |
 
 # 优先级
@@ -136,4 +137,6 @@ qshell sandbox template build --wait
 qshell sandbox template build --wait  # 按 name 命中后 rebuild，不再 409
 ```
 
-`min_free_disk_mb`：创建模板时构建后的最小剩余空间（MiB），可设为 0。省略时使用团队默认值；CLI 的 `--min-free-disk`（含显式 0）优先。已有模板重新构建时不会改变此设置。
+`min_free_disk_mb`：创建模板时构建后的最小剩余空间（MiB），可设为 0。省略时使用团队默认值；CLI 的 `--min-free-disk`（含显式 0）优先。
+
+该设置只在创建模板时生效，rebuild 无法调整磁盘。因此当它大于 0 且按 name 命中已有模板时，`sandbox template build` 会改用 v3 创建接口以同名提交（对齐 E2B `Template.build` 的行为），由服务端更新该模板并应用磁盘设置，模板 ID 保持不变；若命中的是其他团队的公共模板则直接报错。显式 `template_id` / `--template-id` 仍走 rebuild，磁盘不变。
