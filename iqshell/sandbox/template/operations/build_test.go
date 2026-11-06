@@ -26,6 +26,19 @@ func TestShouldRecreateForDisk_KeepsRebuildWithoutDiskSetting(t *testing.T) {
 	assert.False(t, shouldRecreateForDisk(BuildInfo{MinFreeDiskMB: &minFree}, true))
 }
 
+func TestOwnershipError_RejectsForeignPublicTemplate(t *testing.T) {
+	err := ownershipError("agents-base", "cbz63h4i1xiux811uoux", false)
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "belongs to another team")
+		assert.Contains(t, err.Error(), "unique template name")
+	}
+}
+
+func TestOwnershipError_AllowsOwnedTemplate(t *testing.T) {
+	assert.NoError(t, ownershipError("demo", "tmpl-x", true))
+}
+
 func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
 	legacy := int32(20480)
 
