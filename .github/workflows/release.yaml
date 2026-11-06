@@ -83,7 +83,7 @@ jobs:
           OUT="${OUT}.exe"
         fi
         GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} GO111MODULE=on \
-          go build -ldflags "-X github.com/qiniu/qshell/v2/iqshell/common/version.version=${APP_VERSION} -extldflags '-static'" \
+          go build -ldflags "-s -w -X github.com/qiniu/qshell/v2/iqshell/common/version.version=${APP_VERSION} -extldflags '-static'" \
           -o "${OUT}" ./main
 
   publish:
@@ -150,7 +150,7 @@ jobs:
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
         goversion: "https://go.dev/dl/go1.23.2.linux-amd64.tar.gz"
-        ldflags: -X "github.com/qiniu/qshell/v2/iqshell/common/version.version=${{ env.APP_VERSION }}" -extldflags "-static"
+        ldflags: -s -w -X "github.com/qiniu/qshell/v2/iqshell/common/version.version=${{ env.APP_VERSION }}" -extldflags "-static"
         project_path: "./main"
         retry: '100'
     - name: Upload Release Asset to Qiniu

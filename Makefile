@@ -18,7 +18,7 @@ WIN64=qshell-$(VERSION)-windows-x64
 WINARM=qshell-$(VERSION)-windows-arm
 WINARM64=qshell-$(VERSION)-windows-arm64
 
-LDFLAGS='-X 'github.com/qiniu/qshell/v2/iqshell/common/version.version=$(VERSION)' -extldflags '-static''
+LDFLAGS='-s -w -X 'github.com/qiniu/qshell/v2/iqshell/common/version.version=$(VERSION)' -extldflags '-static''
 GO=GO111MODULE=on go
 
 all: linux windows darwin
