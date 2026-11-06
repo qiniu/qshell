@@ -45,6 +45,18 @@ no_cache = true
 	assert.Equal(t, p, cfg.SourcePath())
 }
 
+func TestLoad_KeepsLegacyDiskSizeForMigrationWarning(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(p, []byte("name = \"demo\"\ndisk_size_mb = 20480\n"), 0644))
+
+	cfg, err := Load(p)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	require.NotNil(t, cfg.DiskSizeMB)
+	assert.Equal(t, int32(20480), *cfg.DiskSizeMB)
+}
+
 func TestLoad_InvalidTOML(t *testing.T) {
 	dir := t.TempDir()
 	p := filepath.Join(dir, "qshell.sandbox.toml")

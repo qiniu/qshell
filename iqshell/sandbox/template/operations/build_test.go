@@ -6,8 +6,23 @@ import (
 	"github.com/qiniu/go-sdk/v7/sandbox"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/config"
 	templatedockerfile "github.com/qiniu/qshell/v2/iqshell/sandbox/template/dockerfile"
 )
+
+func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
+	legacy := int32(20480)
+
+	warning := legacyDiskSizeWarning(&config.FileConfig{DiskSizeMB: &legacy})
+
+	assert.Contains(t, warning, "disk_size_mb = 20480")
+	assert.Contains(t, warning, "min_free_disk_mb")
+}
+
+func TestLegacyDiskSizeWarning_QuietWithoutLegacyField(t *testing.T) {
+	assert.Empty(t, legacyDiskSizeWarning(nil))
+	assert.Empty(t, legacyDiskSizeWarning(&config.FileConfig{}))
+}
 
 func TestBuildParamsFromDockerfileResult_UsesFromTemplateAsBase(t *testing.T) {
 	result := &templatedockerfile.ConvertResult{

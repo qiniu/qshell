@@ -59,6 +59,7 @@ no_cache = false
 | cpu_count | int | CPU 核数 |
 | memory_mb | int | 内存（MiB） |
 | min_free_disk_mb | int | 构建后的最小剩余空间（MiB）；仅创建新模板时生效，可设为 0 |
+| disk_size_mb | int | **已废弃**：模板 API 移除了磁盘大小参数，该字段不再生效，`build` 会在 stderr 给出迁移提示 |
 | no_cache | bool | 强制忽略缓存 |
 
 # 优先级

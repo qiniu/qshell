@@ -130,6 +130,9 @@ func Build(info BuildInfo) {
 			fmt.Fprintf(os.Stderr, "[config] CLI overrides %s from %s\n", key, cfg.SourcePath())
 		}
 	}
+	if warning := legacyDiskSizeWarning(cfg); warning != "" {
+		sbClient.PrintWarn("%s", warning)
+	}
 
 	if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
 		sbClient.PrintError("%v", err)
@@ -340,6 +343,20 @@ func formatBuildFailureLogs(logs []string) string {
 		fmt.Fprintf(&builder, "  %s\n", log)
 	}
 	return builder.String()
+}
+
+// legacyDiskSizeWarning 返回 qshell.sandbox.toml 中已废弃 disk_size_mb 的迁移提示。
+//
+// go-sdk v7.30.0 起，创建模板请求移除了 diskSizeMB，改为 minFreeDiskMb
+// （构建后的最小剩余空间）。若继续接受旧字段却不提示，配置会静默失效，
+// 用户会得到一个实际仍使用团队默认磁盘的模板。
+func legacyDiskSizeWarning(cfg *config.FileConfig) string {
+	if cfg == nil || cfg.DiskSizeMB == nil {
+		return ""
+	}
+	return fmt.Sprintf("qshell.sandbox.toml 中的 disk_size_mb = %d 已废弃："+
+		"模板 API 移除了磁盘大小参数，该配置不会生效；"+
+		"请改用 min_free_disk_mb（构建后的最小剩余空间，单位 MiB）", *cfg.DiskSizeMB)
 }
 
 func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {

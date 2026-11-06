@@ -40,6 +40,11 @@ type FileConfig struct {
 	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），nil 使用团队默认值，0 表示不为剩余空间扩容。
 	MinFreeDiskMB *int32 `toml:"min_free_disk_mb"`
 
+	// DiskSizeMB 是已废弃的构建磁盘大小字段（MiB）。
+	// 新版本模板 API 已移除该参数，这里仅保留解析能力，
+	// 以便 build 时给出明确迁移提示，而不是静默忽略用户配置。
+	DiskSizeMB *int32 `toml:"disk_size_mb"`
+
 	// NoCache 强制完整构建，忽略缓存。
 	NoCache bool `toml:"no_cache"`
 
