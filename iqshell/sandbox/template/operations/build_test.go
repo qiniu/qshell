@@ -10,6 +10,22 @@ import (
 	templatedockerfile "github.com/qiniu/qshell/v2/iqshell/sandbox/template/dockerfile"
 )
 
+func TestShouldRecreateForDisk_RecreatesResolvedNameWithFreeDisk(t *testing.T) {
+	minFree := int32(20480)
+
+	assert.True(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &minFree}, true))
+}
+
+func TestShouldRecreateForDisk_KeepsRebuildWithoutDiskSetting(t *testing.T) {
+	zero := int32(0)
+	minFree := int32(20480)
+
+	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base"}, true))
+	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &zero}, true))
+	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &minFree}, false))
+	assert.False(t, shouldRecreateForDisk(BuildInfo{MinFreeDiskMB: &minFree}, true))
+}
+
 func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
 	legacy := int32(20480)
 

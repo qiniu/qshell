@@ -47,6 +47,8 @@ $ qshell sandbox template build --doc
 
 未提供 `template_id` 时，如果配置文件或 CLI 中有 `name`，命令会先按 name 在远端查找模板；命中即进入 rebuild，未命中再创建新模板。按 name 命中的 rebuild 不会把 `template_id` 回写到配置文件，便于同一份配置在多个环境复用。
 
+例外：配置了 `min_free_disk_mb > 0`（或 `--min-free-disk` 大于 0）且按 name 命中已有模板时，命令不会 rebuild，而是用同名创建新模板，由服务端把 alias 指到新模板，旧模板保留为历史版本。模板磁盘只在创建时确定，rebuild 请求没有磁盘字段，只有新建才能应用该设置。显式传入 `--template-id` 或配置文件中存在 `template_id` 时仍走 rebuild，磁盘不会改变，并会打印告警。
+
 首次创建成功且配置文件存在、`template_id` 为空时，命令会自动把新模板 ID 回写到配置文件，以兼容已有脚本。后续通过 `template_id` 或按 name 命中进入 rebuild 时，配置文件中保留的 `from_image` / `from_template` 会继续参与构建；如果这两个参数来自 CLI，则命令会报错。更多字段说明见 `docs/sandbox_template_config.md`。
 
 # 示例

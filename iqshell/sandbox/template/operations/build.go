@@ -174,15 +174,30 @@ func Build(info BuildInfo) {
 			templateID = existingID
 			info.TemplateID = existingID
 			foundByName = true
-			fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (rebuild)\n", info.Name, templateID)
-			if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
-				sbClient.PrintError("%v", err)
-				return
+			if shouldRecreateForDisk(info, true) {
+				fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (recreate)\n", info.Name, templateID)
+			} else {
+				fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (rebuild)\n", info.Name, templateID)
+			}
+			if !shouldRecreateForDisk(info, true) {
+				if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
+					sbClient.PrintError("%v", err)
+					return
+				}
 			}
 		}
 	}
 
-	if templateID != "" && info.MinFreeDiskMB != nil {
+	if shouldRecreateForDisk(info, foundByName) {
+		// rebuild 接口没有磁盘字段，无法调整已存在模板的磁盘。
+		// 与 E2B 的 Template.build 保持一致：用同名创建新模板，
+		// 由服务端把 alias 指到新模板，旧模板保留为历史版本。
+		fmt.Fprintf(os.Stderr, "[recreate] template %q exists; creating a new template with the same name to apply min_free_disk_mb\n", info.Name)
+		templateID = ""
+		info.TemplateID = ""
+	}
+
+	if templateID != "" && info.MinFreeDiskMB != nil && *info.MinFreeDiskMB > 0 {
 		sbClient.PrintWarn("--min-free-disk / min_free_disk_mb only applies when creating a new template; the existing template will be rebuilt without changing this setting")
 	}
 	if templateID == "" {
@@ -343,6 +358,19 @@ func formatBuildFailureLogs(logs []string) string {
 		fmt.Fprintf(&builder, "  %s\n", log)
 	}
 	return builder.String()
+}
+
+// shouldRecreateForDisk 判断是否应把「按 name 命中的 rebuild」改成同名新建。
+//
+// 模板磁盘只在创建时确定：rebuild 请求没有任何磁盘字段，所以配置了
+// min_free_disk_mb 的模板必须重新创建才能生效。这里只对按 name 解析到的
+// 模板生效；显式 --template-id / 配置文件 template_id 仍然走 rebuild，
+// 由调用方给出无法调整磁盘的告警。
+func shouldRecreateForDisk(info BuildInfo, resolvedByName bool) bool {
+	return resolvedByName &&
+		info.Name != "" &&
+		info.MinFreeDiskMB != nil &&
+		*info.MinFreeDiskMB > 0
 }
 
 // legacyDiskSizeWarning 返回 qshell.sandbox.toml 中已废弃 disk_size_mb 的迁移提示。
