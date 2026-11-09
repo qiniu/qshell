@@ -77,82 +77,29 @@ func buildFailed(format string, a ...any) {
 // 确定），再通过构建接口指定底模板/镜像与构建步骤。
 // 同名模板已存在时，创建接口会沿用该模板 ID 并应用新的资源设置。
 func Build(info BuildInfo) {
-	// 记录 CLI 显式指定的底模板，合并后用它覆盖配置文件里的底模板字段。
-	cliBaseField, cliBase, baseErr := cliBaseSelection(info)
-	if baseErr != nil {
-		buildFailed("%v", baseErr)
+	cliBaseField, cliBase, err := cliBaseSelection(info)
+	if err != nil {
+		buildFailed("%v", err)
 		return
 	}
 
-	// 加载配置文件并合并（CLI > file > default）
-	var cfg *config.FileConfig
-	if info.ConfigPath != "" {
-		loaded, cErr := config.Load(info.ConfigPath)
-		if cErr != nil {
-			buildFailed("load config: %v", cErr)
-			return
-		}
-		if loaded == nil {
-			buildFailed("config file not found: %s", info.ConfigPath)
-			return
-		}
-		cfg = loaded
-	} else {
-		loaded, cErr := config.LoadFromCwd()
-		if cErr != nil {
-			buildFailed("load config: %v", cErr)
-			return
-		}
-		cfg = loaded
-	}
-
-	if cfg != nil {
-		fields := config.BuildFields{
-			TemplateID:     info.TemplateID,
-			Name:           info.Name,
-			Dockerfile:     info.Dockerfile,
-			Path:           info.Path,
-			FromImage:      info.FromImage,
-			FromTemplate:   info.FromTemplate,
-			StartCmd:       info.StartCmd,
-			ReadyCmd:       info.ReadyCmd,
-			CPUCount:       info.CPUCount,
-			MemoryMB:       info.MemoryMB,
-			MinFreeDiskMB:  info.MinFreeDiskMB,
-			NoCache:        info.NoCache,
-			NoCacheChanged: info.NoCacheChanged,
-		}
-		overrides := cfg.ApplyTo(&fields)
-		info.TemplateID = fields.TemplateID
-		info.Name = fields.Name
-		info.Dockerfile = fields.Dockerfile
-		info.Path = fields.Path
-		info.FromImage = fields.FromImage
-		info.FromTemplate = fields.FromTemplate
-		info.StartCmd = fields.StartCmd
-		info.ReadyCmd = fields.ReadyCmd
-		info.CPUCount = fields.CPUCount
-		info.MemoryMB = fields.MemoryMB
-		info.MinFreeDiskMB = fields.MinFreeDiskMB
-		info.NoCache = fields.NoCache
-
-		for _, key := range overrides {
-			fmt.Fprintf(os.Stderr, "[config] CLI overrides %s from %s\n", key, cfg.SourcePath())
-		}
+	info, cfg, err := loadBuildConfig(info)
+	if err != nil {
+		buildFailed("%v", err)
+		return
 	}
 	if warning := legacyDiskSizeWarning(cfg); warning != "" {
 		sbClient.PrintWarn("%s", warning)
 	}
-	resolved, overrodeBase, rErr := resolveBuildInputs(info, cfg, cliBaseField, cliBase)
-	if rErr != nil {
-		buildFailed("%v", rErr)
+
+	info, overrodeBase, err := resolveBuildInputs(info, cfg, cliBaseField, cliBase)
+	if err != nil {
+		buildFailed("%v", err)
 		return
 	}
-	info = resolved
 	if overrodeBase && cfg != nil {
 		fmt.Fprintf(os.Stderr, "[config] CLI overrides base template from %s\n", cfg.SourcePath())
 	}
-
 	if info.MinFreeDiskMB != nil && *info.MinFreeDiskMB < 0 {
 		buildFailed("--min-free-disk / min_free_disk_mb must be non-negative")
 		return
@@ -160,9 +107,9 @@ func Build(info BuildInfo) {
 
 	var dockerPlan *dockerfileBuild
 	if info.Dockerfile != "" {
-		dockerPlan, rErr = prepareDockerfileBuild(info)
-		if rErr != nil {
-			buildFailed("%v", rErr)
+		dockerPlan, err = prepareDockerfileBuild(info)
+		if err != nil {
+			buildFailed("%v", err)
 			return
 		}
 	}
@@ -172,38 +119,22 @@ func Build(info BuildInfo) {
 		buildFailed("%v", err)
 		return
 	}
-
 	ctx := context.Background()
 
-	// 同名模板已存在时校验归属与底模板：创建接口会沿用该模板 ID 并应用
-	// 新的资源设置，但不会接管其他团队的同名公共模板。
-	existingID, lookupErr := lookupTemplateIDByName(ctx, client, info.Name)
-	if lookupErr != nil {
-		buildFailed("lookup template by name %q: %v", info.Name, lookupErr)
+	existingID, err := resolveExistingTemplate(ctx, client, info, cfg, cliBaseField)
+	if err != nil {
+		buildFailed("%v", err)
 		return
 	}
-	if existingID != "" {
-		fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s; building under this name\n", info.Name, existingID)
-		if err := ensureTemplateOwned(ctx, client, info.Name, existingID); err != nil {
-			buildFailed("%v", err)
-			return
-		}
-		if err := rejectSelfBase(info, existingID, cfg, cliBaseField); err != nil {
-			buildFailed("%v", err)
-			return
-		}
-	}
-
-	createParams := createTemplateParams(info)
 
 	action := "Creating"
 	if existingID != "" {
 		action = "Requesting build for existing"
 	}
 	fmt.Printf("%s template %s...\n", action, info.Name)
-	resp, cErr := client.CreateTemplate(ctx, createParams)
-	if cErr != nil {
-		buildFailed("create template failed: %v", cErr)
+	resp, err := client.CreateTemplate(ctx, createTemplateParams(info))
+	if err != nil {
+		buildFailed("create template failed: %v", err)
 		return
 	}
 	templateID := resp.TemplateID
@@ -211,42 +142,127 @@ func Build(info BuildInfo) {
 	sbClient.PrintSuccess("Template %s ready for build (build ID: %s)", templateID, buildID)
 
 	if dockerPlan != nil {
-		if err := dockerPlan.start(ctx, client, templateID, buildID, info); err != nil {
-			buildFailed("%v", err)
-			return
-		}
+		err = dockerPlan.start(ctx, client, templateID, buildID, info)
 	} else {
-		buildParams := sandbox.StartTemplateBuildParams{}
-		if info.FromImage != "" {
-			buildParams.FromImage = &info.FromImage
-		}
-		if info.FromTemplate != "" {
-			buildParams.FromTemplate = &info.FromTemplate
-		}
-		if info.StartCmd != "" {
-			buildParams.StartCmd = &info.StartCmd
-		}
-		if info.ReadyCmd != "" {
-			buildParams.ReadyCmd = &info.ReadyCmd
-		}
-		if info.NoCache {
-			force := true
-			buildParams.Force = &force
-		}
-
-		fmt.Printf("Starting build for template %s (build ID: %s)...\n", templateID, buildID)
-		if err := client.StartTemplateBuild(ctx, templateID, buildID, buildParams); err != nil {
-			buildFailed("start build failed: %v", err)
-			return
-		}
+		err = startTemplateBuild(ctx, client, templateID, buildID, info)
+	}
+	if err != nil {
+		buildFailed("%v", err)
+		return
 	}
 
 	if !info.Wait {
 		fmt.Printf("Build started. Use 'qshell sandbox template builds %s %s' to check status.\n", templateID, buildID)
 		return
 	}
+	watchBuild(ctx, client, templateID, buildID)
+}
 
-	// 流式输出构建日志，支持 Ctrl+C 中断
+// loadBuildConfig 加载配置文件并把其中的值合并进构建参数。
+func loadBuildConfig(info BuildInfo) (BuildInfo, *config.FileConfig, error) {
+	var cfg *config.FileConfig
+	var err error
+	if info.ConfigPath != "" {
+		cfg, err = config.Load(info.ConfigPath)
+		if err != nil {
+			return info, nil, fmt.Errorf("load config: %w", err)
+		}
+		if cfg == nil {
+			return info, nil, fmt.Errorf("config file not found: %s", info.ConfigPath)
+		}
+	} else {
+		cfg, err = config.LoadFromCwd()
+		if err != nil {
+			return info, nil, fmt.Errorf("load config: %w", err)
+		}
+	}
+	if cfg == nil {
+		return info, nil, nil
+	}
+
+	fields := config.BuildFields{
+		TemplateID:     info.TemplateID,
+		Name:           info.Name,
+		Dockerfile:     info.Dockerfile,
+		Path:           info.Path,
+		FromImage:      info.FromImage,
+		FromTemplate:   info.FromTemplate,
+		StartCmd:       info.StartCmd,
+		ReadyCmd:       info.ReadyCmd,
+		CPUCount:       info.CPUCount,
+		MemoryMB:       info.MemoryMB,
+		MinFreeDiskMB:  info.MinFreeDiskMB,
+		NoCache:        info.NoCache,
+		NoCacheChanged: info.NoCacheChanged,
+	}
+	overrides := cfg.ApplyTo(&fields)
+	info.TemplateID = fields.TemplateID
+	info.Name = fields.Name
+	info.Dockerfile = fields.Dockerfile
+	info.Path = fields.Path
+	info.FromImage = fields.FromImage
+	info.FromTemplate = fields.FromTemplate
+	info.StartCmd = fields.StartCmd
+	info.ReadyCmd = fields.ReadyCmd
+	info.CPUCount = fields.CPUCount
+	info.MemoryMB = fields.MemoryMB
+	info.MinFreeDiskMB = fields.MinFreeDiskMB
+	info.NoCache = fields.NoCache
+
+	for _, key := range overrides {
+		fmt.Fprintf(os.Stderr, "[config] CLI overrides %s from %s\n", key, cfg.SourcePath())
+	}
+	return info, cfg, nil
+}
+
+// resolveExistingTemplate 返回按 name 命中的模板 ID，并校验归属与底模板。
+func resolveExistingTemplate(ctx context.Context, client *sandbox.Client, info BuildInfo, cfg *config.FileConfig, cliBaseField string) (string, error) {
+	existingID, err := lookupTemplateIDByName(ctx, client, info.Name)
+	if err != nil {
+		return "", fmt.Errorf("lookup template by name %q: %w", info.Name, err)
+	}
+	if existingID == "" {
+		return "", nil
+	}
+	fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s; building under this name\n", info.Name, existingID)
+	if err := ensureTemplateOwned(ctx, client, info.Name, existingID); err != nil {
+		return "", err
+	}
+	if err := rejectSelfBase(info, existingID, cfg, cliBaseField); err != nil {
+		return "", err
+	}
+	return existingID, nil
+}
+
+// startTemplateBuild 以 from-template / from-image 为底启动构建。
+func startTemplateBuild(ctx context.Context, client *sandbox.Client, templateID, buildID string, info BuildInfo) error {
+	buildParams := sandbox.StartTemplateBuildParams{}
+	if info.FromImage != "" {
+		buildParams.FromImage = &info.FromImage
+	}
+	if info.FromTemplate != "" {
+		buildParams.FromTemplate = &info.FromTemplate
+	}
+	if info.StartCmd != "" {
+		buildParams.StartCmd = &info.StartCmd
+	}
+	if info.ReadyCmd != "" {
+		buildParams.ReadyCmd = &info.ReadyCmd
+	}
+	if info.NoCache {
+		force := true
+		buildParams.Force = &force
+	}
+
+	fmt.Printf("Starting build for template %s (build ID: %s)...\n", templateID, buildID)
+	if err := client.StartTemplateBuild(ctx, templateID, buildID, buildParams); err != nil {
+		return fmt.Errorf("start build failed: %w", err)
+	}
+	return nil
+}
+
+// watchBuild 流式输出构建日志直到结束，支持 Ctrl+C 中断。
+func watchBuild(ctx context.Context, client *sandbox.Client, templateID, buildID string) {
 	fmt.Println("Waiting for build to complete...")
 
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
@@ -254,10 +270,10 @@ func Build(info BuildInfo) {
 
 	var cursor *int64
 	for {
-		logs, blErr := client.GetTemplateBuildLogs(ctx, templateID, buildID, &sandbox.GetBuildLogsParams{
+		logs, err := client.GetTemplateBuildLogs(ctx, templateID, buildID, &sandbox.GetBuildLogsParams{
 			Cursor: cursor,
 		})
-		if blErr == nil && logs != nil {
+		if err == nil && logs != nil {
 			for _, entry := range logs.Logs {
 				fmt.Printf("[%s] %s %s\n",
 					sbClient.FormatTimestamp(entry.Timestamp),
@@ -269,10 +285,9 @@ func Build(info BuildInfo) {
 			}
 		}
 
-		// 检查构建状态
-		buildInfo, bErr := client.GetTemplateBuildStatus(ctx, templateID, buildID, nil)
-		if bErr != nil {
-			buildFailed("get build status failed: %v", bErr)
+		buildInfo, err := client.GetTemplateBuildStatus(ctx, templateID, buildID, nil)
+		if err != nil {
+			buildFailed("get build status failed: %v", err)
 			return
 		}
 
@@ -286,7 +301,6 @@ func Build(info BuildInfo) {
 			fmt.Printf("Template ID:  %s\n", buildInfo.TemplateID)
 			fmt.Printf("Build ID:     %s\n", buildInfo.BuildID)
 			fmt.Printf("Status:       %s\n", buildInfo.Status)
-
 			if buildInfo.Status == "ready" {
 				printSDKExamples(buildInfo.TemplateID)
 			}

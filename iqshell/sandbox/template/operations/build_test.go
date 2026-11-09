@@ -404,6 +404,29 @@ func TestResolveBuildInputs_RejectsSelfBase(t *testing.T) {
 	}
 }
 
+func TestResolveBuildInputs_CLIFromImageOverridesFileTemplate(t *testing.T) {
+	cfg := loadTestConfig(t, "name = \"demo\"\nfrom_template = \"file-base\"\n")
+
+	info, overrode, err := resolveBuildInputs(
+		BuildInfo{Name: "demo", FromImage: "ubuntu:22.04", FromTemplate: "file-base"}, cfg, "from_image", "ubuntu:22.04")
+
+	require.NoError(t, err)
+	assert.True(t, overrode)
+	assert.Equal(t, "ubuntu:22.04", info.FromImage)
+	assert.Empty(t, info.FromTemplate)
+}
+
+func TestCliBaseSelection_NamingMatchesSelfBaseGuard(t *testing.T) {
+	field, value, err := cliBaseSelection(BuildInfo{TemplateID: "tmpl-demo"})
+	require.NoError(t, err)
+
+	guardErr := rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: value}, value, nil, field)
+
+	if assert.Error(t, guardErr) {
+		assert.Contains(t, guardErr.Error(), "--template-id names the template being built")
+	}
+}
+
 func TestPrepareDockerfileBuild_ParsesSteps(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "Dockerfile")
