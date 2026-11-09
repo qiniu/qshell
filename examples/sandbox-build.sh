@@ -21,10 +21,10 @@ echo "=== 示例 2: 带 COPY 的 Dockerfile 构建 ==="
 echo "${QSHELL} sbx tpl build --name test-copy --dockerfile ${SCRIPT_DIR}/sandbox/Dockerfile --path ${SCRIPT_DIR}/sandbox --wait"
 # ${QSHELL} sbx tpl build --name test-copy --dockerfile "${SCRIPT_DIR}/sandbox/Dockerfile" --path "${SCRIPT_DIR}/sandbox" --wait
 
-# 示例 3: 重新构建已有模板（无缓存）
+# 示例 3: 以已有模板为底构建（无缓存）
 echo ""
-echo "=== 示例 3: 重新构建已有模板 ==="
-echo "${QSHELL} sbx tpl build --template-id <TEMPLATE_ID> --dockerfile ${SCRIPT_DIR}/sandbox/Dockerfile.simple --no-cache --wait"
+echo "=== 示例 3: 以已有模板为底构建 ==="
+echo "${QSHELL} sbx tpl build --name test-derived --template-id <BASE_TEMPLATE_ID> --dockerfile ${SCRIPT_DIR}/sandbox/Dockerfile.simple --no-cache --wait"
 
 # 示例 4: 从 Docker 镜像直接构建
 echo ""

@@ -43,7 +43,7 @@ type BuildInfo struct {
 	// MemoryMB 是沙箱内存大小（MiB）。
 	MemoryMB int32
 
-	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），仅新建模板时生效。
+	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），每次构建都会提交。
 	MinFreeDiskMB *int32
 
 	// Wait 指示是否等待构建完成。
@@ -71,6 +71,9 @@ type BuildInfo struct {
 // 资源参数在这一步确定），再通过 v2 构建接口指定底模板/镜像与构建步骤。
 // 同名模板已存在时，创建接口会沿用该模板 ID 并应用新的资源设置。
 func Build(info BuildInfo) {
+	// 记录 CLI 显式指定的底模板，合并后用它覆盖配置文件里的底模板字段。
+	cliBaseField, cliBase := cliBaseSelection(info)
+
 	// 加载配置文件并合并（CLI > file > default）
 	var cfg *config.FileConfig
 	if info.ConfigPath != "" {
@@ -130,6 +133,11 @@ func Build(info BuildInfo) {
 	if warning := legacyDiskSizeWarning(cfg); warning != "" {
 		sbClient.PrintWarn("%s", warning)
 	}
+	if cliBase != "" {
+		if overrode := applyCLIBasePrecedence(&info, cliBaseField, cliBase); overrode && cfg != nil {
+			fmt.Fprintf(os.Stderr, "[config] CLI overrides base template from %s\n", cfg.SourcePath())
+		}
+	}
 
 	base, bErr := resolveBaseTemplate(info.TemplateID, info.FromTemplate)
 	if bErr != nil {
@@ -137,6 +145,10 @@ func Build(info BuildInfo) {
 		return
 	}
 	info.FromTemplate = base
+	if base != "" && base == info.Name {
+		sbClient.PrintError("cannot use template %q as its own base template", info.Name)
+		return
+	}
 
 	if info.Name == "" {
 		sbClient.PrintError("template name (--name) is required")
@@ -173,11 +185,19 @@ func Build(info BuildInfo) {
 			sbClient.PrintError("%v", err)
 			return
 		}
+		if err := rejectSelfBase(info, existingID, cfg); err != nil {
+			sbClient.PrintError("%v", err)
+			return
+		}
 	}
 
 	createParams := createTemplateParams(info)
 
-	fmt.Printf("Creating template %s...\n", info.Name)
+	action := "Creating"
+	if existingID != "" {
+		action = "Requesting build for existing"
+	}
+	fmt.Printf("%s template %s...\n", action, info.Name)
 	resp, cErr := client.CreateTemplate(ctx, createParams)
 	if cErr != nil {
 		sbClient.PrintError("create template failed: %v", cErr)
@@ -185,7 +205,7 @@ func Build(info BuildInfo) {
 	}
 	templateID := resp.TemplateID
 	buildID := resp.BuildID
-	sbClient.PrintSuccess("Template %s created (build ID: %s)", templateID, buildID)
+	sbClient.PrintSuccess("Template %s ready for build (build ID: %s)", templateID, buildID)
 
 	if info.Dockerfile != "" {
 		if err := buildFromDockerfile(ctx, client, templateID, buildID, info); err != nil {
@@ -279,11 +299,62 @@ func Build(info BuildInfo) {
 	}
 }
 
+// cliBaseSelection 返回 CLI 显式指定的底模板字段与值。
+func cliBaseSelection(info BuildInfo) (field, value string) {
+	switch {
+	case info.TemplateID != "":
+		return "template_id", info.TemplateID
+	case info.FromTemplate != "":
+		return "from_template", info.FromTemplate
+	case info.FromImage != "":
+		return "from_image", info.FromImage
+	}
+	return "", ""
+}
+
+// applyCLIBasePrecedence 用 CLI 的底模板覆盖配置文件中的底模板字段，
+// 使 --template-id / --from-template / --from-image 优先于 TOML。
+// 返回是否覆盖了来自文件的值。
+func applyCLIBasePrecedence(info *BuildInfo, field, value string) bool {
+	overrode := (field != "template_id" && info.TemplateID != "") ||
+		(field != "from_template" && info.FromTemplate != "") ||
+		(field != "from_image" && info.FromImage != "")
+	info.TemplateID, info.FromTemplate, info.FromImage = "", "", ""
+	switch field {
+	case "template_id":
+		info.TemplateID = value
+	case "from_template":
+		info.FromTemplate = value
+	case "from_image":
+		info.FromImage = value
+	}
+	return overrode
+}
+
+// rejectSelfBase 拒绝把模板自己当作底模板。
+//
+// 旧版 qshell 会把新建模板的 ID 回写到 template_id；在新语义下该字段表示
+// 底模板，于是构建会以模板自身为底，Dockerfile 的 FROM 被忽略。
+func rejectSelfBase(info BuildInfo, existingID string, cfg *config.FileConfig) error {
+	if info.FromTemplate == "" {
+		return nil
+	}
+	if info.FromTemplate != existingID && info.FromTemplate != info.Name {
+		return nil
+	}
+	source := "qshell.sandbox.toml"
+	if cfg != nil && cfg.SourcePath() != "" {
+		source = cfg.SourcePath()
+	}
+	return fmt.Errorf("%s: template_id/from_template points at the template being built (%s); "+
+		"remove that line so the build uses its declared base", source, existingID)
+}
+
 // resolveBaseTemplate 合并 --template-id 与 --from-template：两者都表示
 // 构建所用的底模板，因此不允许同时指定。
 func resolveBaseTemplate(templateID, fromTemplate string) (string, error) {
 	if templateID != "" && fromTemplate != "" {
-		return "", fmt.Errorf("cannot specify both --template-id and --from-template")
+		return "", fmt.Errorf("cannot use both --template-id and --from-template as the base template")
 	}
 	if templateID != "" {
 		return templateID, nil
@@ -455,7 +526,7 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 
 func validateBuildSourceSelection(info BuildInfo) error {
 	if info.FromImage != "" && info.FromTemplate != "" {
-		return fmt.Errorf("cannot specify both --from-image and --from-template")
+		return fmt.Errorf("cannot use both --from-image and --from-template as the base template")
 	}
 	if info.Dockerfile == "" && info.FromImage == "" && info.FromTemplate == "" {
 		return fmt.Errorf("--from-image, --from-template, or --dockerfile is required")

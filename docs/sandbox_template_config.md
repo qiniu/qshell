@@ -16,7 +16,7 @@ $ qshell sandbox template config --doc
 # qshell.sandbox.toml
 
 `qshell sandbox template` 系列命令支持从项目根目录读取 `qshell.sandbox.toml`，
-持久化模板参数。推荐使用环境无关的 `name` 定位模板；已有的 `template_id` 配置仍保持兼容。
+持久化模板参数。用环境无关的 `name` 定位模板；`template_id` 表示构建所用的底模板。
 
 # 完整字段说明
 
@@ -24,10 +24,10 @@ $ qshell sandbox template config --doc
 # 模板身份：推荐只写 name，让不同环境按 name 自动定位各自模板。
 name = "claude"
 
-# 兼容旧配置：已有 template_id 仍优先生效。
+# 构建输入
+# 可选：以另一个模板为底，等价于 from_template。
 # template_id = "tmpl-xxxxxxxxxxxx"
 
-# 构建输入
 dockerfile    = "./Dockerfile"
 path          = "."
 from_image    = ""
@@ -89,7 +89,7 @@ no_cache = false
 
 1. `build` 按 `name` 定位模板，并申请构建；同名模板已存在时沿用其模板 ID
 2. `template_id` / `from_template` / `from_image` 表示构建所用的底模板，不参与目标定位
-3. `get` / `publish` / `delete` / `unpublish` 未传模板 ID 时，先从当前目录配置读取 `template_id`，否则按 `name` 查找
+3. `get` / `publish` / `delete` / `unpublish` 未传模板 ID 时，按当前目录配置的 `name` 查找；只有 `template_id` 没有 `name` 时会报错提示补充 `name`
 4. `build` 若发现 `name` 命中其他团队的公共模板，会直接报错，避免构建结果无法按 name 访问
 
 # 团队协作约定
@@ -127,6 +127,4 @@ qshell sandbox template build --wait
 qshell sandbox template build --wait  # 按 name 定位模板并应用当前配置
 ```
 
-`min_free_disk_mb`：创建模板时构建后的最小剩余空间（MiB），可设为 0。省略时使用团队默认值；CLI 的 `--min-free-disk`（含显式 0）优先。
-
-该设置在申请构建时提交，因此同名模板每次构建都会应用当前配置。省略时使用团队默认值；显式 0 表示不为剩余空间扩容，已有文件系统不会缩小。
+`min_free_disk_mb`：构建后的最小剩余空间（MiB），可设为 0。省略时使用团队默认值；CLI 的 `--min-free-disk`（含显式 0）优先。该值在申请构建时提交，因此同名模板每次构建都会应用；显式 0 表示不为剩余空间扩容，已有文件系统不会缩小。

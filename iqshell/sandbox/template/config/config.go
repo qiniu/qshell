@@ -1,4 +1,4 @@
-// Package config 处理 qshell.sandbox.toml 配置文件的加载、合并与回写。
+// Package config 处理 qshell.sandbox.toml 配置文件的加载与合并。
 package config
 
 // DefaultFileName 是模板配置文件的默认文件名。
@@ -10,7 +10,7 @@ type FileConfig struct {
 	// TemplateID 是构建所用的底模板 ID，与 from_template 等价。
 	TemplateID string `toml:"template_id"`
 
-	// Name 是模板名称，仅首次构建（未设置 TemplateID 时）生效。
+	// Name 是模板名称，每次构建都按它定位目标模板。
 	Name string `toml:"name"`
 
 	// Dockerfile 是 Dockerfile 路径，启用 v2 构建。
@@ -48,7 +48,7 @@ type FileConfig struct {
 	// NoCache 强制完整构建，忽略缓存。
 	NoCache bool `toml:"no_cache"`
 
-	// sourcePath 记录配置文件的绝对路径，用于回写。未导出。
+	// sourcePath 记录配置文件的绝对路径，用于覆盖提示。未导出。
 	sourcePath string
 
 	// defined 记录 TOML 文件中显式定义的字段 key 集合。未导出。

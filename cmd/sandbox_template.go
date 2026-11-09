@@ -110,7 +110,7 @@ var templateDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox template delete tmpl-aaa tmpl-bbb -y
   qshell sbx tpl dl tmpl-aaa tmpl-bbb -y
 
-  # Delete the template recorded in qshell.sandbox.toml
+  # Delete the template named in qshell.sandbox.toml
   qshell sandbox template delete -y
   qshell sbx tpl dl -y`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -161,7 +161,7 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Short:   "Build a template (alias: bd)",
 		Long: `Build a template through the E2B flow: request the build, then start it.
 
-Creating a new template supports three build modes:
+Each build selects one of three base modes:
   1. --from-image: Build from a base Docker image
   2. --from-template: Build from an existing template
   3. --dockerfile: Build from a Dockerfile (v2 build system)
@@ -222,17 +222,17 @@ Dockerfile RUN/COPY/ENV steps on top of the selected base. When combined with
 			operations.Build(info)
 		},
 	}
-	cmd.Flags().StringVar(&info.Name, "name", "", "template name (for creating a new template)")
+	cmd.Flags().StringVar(&info.Name, "name", "", "template name; always required")
 	cmd.Flags().StringVar(&info.TemplateID, "template-id", "", "base template ID for the build (same as --from-template)")
-	cmd.Flags().StringVar(&info.FromImage, "from-image", "", "base Docker image (for creating a new template)")
-	cmd.Flags().StringVar(&info.FromTemplate, "from-template", "", "base template (for creating a new template)")
+	cmd.Flags().StringVar(&info.FromImage, "from-image", "", "base Docker image for the build")
+	cmd.Flags().StringVar(&info.FromTemplate, "from-template", "", "base template for the build")
 	cmd.Flags().StringVar(&info.StartCmd, "start-cmd", "", "command to run after build")
 	cmd.Flags().StringVar(&info.ReadyCmd, "ready-cmd", "", "readiness check command")
 	cmd.Flags().Int32Var(&info.CPUCount, "cpu", 0, "sandbox CPU count")
-	cmd.Flags().Int32Var(&minFreeDiskMB, "min-free-disk", 0, "minimum free disk space after build in MiB (create only); explicit 0 disables free-space growth")
+	cmd.Flags().Int32Var(&minFreeDiskMB, "min-free-disk", 0, "minimum free disk space after build in MiB; explicit 0 disables free-space growth")
 	cmd.Flags().Int32Var(&info.MemoryMB, "memory", 0, "sandbox memory size in MiB")
 	cmd.Flags().BoolVar(&info.Wait, "wait", false, "wait for build to complete")
-	cmd.Flags().BoolVar(&info.NoCache, "no-cache", false, "force full rebuild ignoring cache")
+	cmd.Flags().BoolVar(&info.NoCache, "no-cache", false, "ignore build cache")
 	cmd.Flags().StringVar(&info.Dockerfile, "dockerfile", "", "path to Dockerfile (enables v2 build)")
 	cmd.Flags().StringVar(&info.Path, "path", "", "build context directory (defaults to Dockerfile's parent)")
 	cmd.Flags().StringVar(&info.ConfigPath, "config", "", "path to qshell.sandbox.toml (defaults to ./qshell.sandbox.toml if present)")
@@ -249,7 +249,7 @@ var templatePublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox template publish tmpl-xxxxxxxxxxxx -y
   qshell sbx tpl pb tmpl-xxxxxxxxxxxx -y
 
-  # Publish the template recorded in qshell.sandbox.toml
+  # Publish the template named in qshell.sandbox.toml
   qshell sandbox template publish -y
   qshell sbx tpl pb -y`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -275,7 +275,7 @@ var templateUnpublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox template unpublish tmpl-xxxxxxxxxxxx -y
   qshell sbx tpl upb tmpl-xxxxxxxxxxxx -y
 
-  # Unpublish the template recorded in qshell.sandbox.toml
+  # Unpublish the template named in qshell.sandbox.toml
   qshell sandbox template unpublish -y
   qshell sbx tpl upb -y`,
 		Run: func(cmd *cobra.Command, args []string) {

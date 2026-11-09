@@ -26,7 +26,7 @@
 
 ## 不兼容变更
 1. 移除旧的 `--disk-size` / `disk_size_mb`，改用 `--min-free-disk` / `min_free_disk_mb`。
-2. `sandbox template build` 改为 E2B 构建流程：`--template-id` 与 TOML `template_id` 表示构建所用底模板（与 `--from-template` 等价），需要同时提供 `name`；不再自动回写 `template_id`。
+2. `sandbox template build` 改为 E2B 构建流程：`--template-id` 与 TOML `template_id` 表示构建所用底模板（与 `--from-template` 等价），需要同时提供 `name`；不再自动回写 `template_id`。 旧版 qshell 回写的 `template_id` 若指向模板自身，构建会直接报错并提示删除该行；`get` / `delete` / `publish` / `unpublish` 改为只按 `name` 定位模板。
 
 ## 修复
 1. `sandbox template build` 在配置文件仍保留已移除的 `disk_size_mb` 时输出迁移提示，避免该配置被静默忽略后按团队默认磁盘构建

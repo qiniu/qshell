@@ -179,7 +179,7 @@ func TestValidateBuildSourceSelection_RejectsFromImageAndFromTemplate(t *testing
 	})
 
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "cannot specify both")
+		assert.Contains(t, err.Error(), "cannot use both")
 	}
 }
 
@@ -213,6 +213,69 @@ func TestResolveBaseTemplate_RejectsBothSources(t *testing.T) {
 		assert.Contains(t, err.Error(), "--template-id")
 		assert.Contains(t, err.Error(), "--from-template")
 	}
+}
+
+func TestCLIBaseSelection_PrefersTemplateID(t *testing.T) {
+	field, value := cliBaseSelection(BuildInfo{
+		TemplateID:   "tmpl-base",
+		FromTemplate: "ignored",
+		FromImage:    "ignored:1",
+	})
+
+	assert.Equal(t, "template_id", field)
+	assert.Equal(t, "tmpl-base", value)
+}
+
+func TestCLIBaseSelection_FallsBackToFromImage(t *testing.T) {
+	field, value := cliBaseSelection(BuildInfo{FromImage: "ubuntu:22.04"})
+
+	assert.Equal(t, "from_image", field)
+	assert.Equal(t, "ubuntu:22.04", value)
+}
+
+func TestCLIBaseSelection_EmptyWithoutBase(t *testing.T) {
+	field, value := cliBaseSelection(BuildInfo{Name: "demo"})
+
+	assert.Empty(t, field)
+	assert.Empty(t, value)
+}
+
+func TestApplyCLIBasePrecedence_DropsFileBase(t *testing.T) {
+	info := BuildInfo{TemplateID: "tmpl-cli", FromTemplate: "file-base"}
+
+	overrode := applyCLIBasePrecedence(&info, "template_id", "tmpl-cli")
+
+	assert.True(t, overrode)
+	assert.Equal(t, "tmpl-cli", info.TemplateID)
+	assert.Empty(t, info.FromTemplate)
+}
+
+func TestApplyCLIBasePrecedence_KeepsCLIOnly(t *testing.T) {
+	info := BuildInfo{FromTemplate: "cli-base"}
+
+	overrode := applyCLIBasePrecedence(&info, "from_template", "cli-base")
+
+	assert.False(t, overrode)
+	assert.Equal(t, "cli-base", info.FromTemplate)
+}
+
+func TestRejectSelfBase_RejectsTemplateIDItself(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(path, []byte("name = \"demo\"\ntemplate_id = \"tmpl-demo\"\n"), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
+
+	buildErr := rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "tmpl-demo"}, "tmpl-demo", cfg)
+
+	if assert.Error(t, buildErr) {
+		assert.Contains(t, buildErr.Error(), path)
+		assert.Contains(t, buildErr.Error(), "remove that line")
+	}
+}
+
+func TestRejectSelfBase_AllowsDistinctBase(t *testing.T) {
+	assert.NoError(t, rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "base"}, "tmpl-demo", nil))
 }
 
 func TestValidateBuildSourceSelection_RequiresSource(t *testing.T) {
