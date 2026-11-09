@@ -31,7 +31,7 @@ allowed-tools:
 1. **gofmt 检查**：`gofmt -s -l .` 检查未格式化文件
 2. **单元测试**：`go test -coverprofile=coverage.txt ./...`
 
-Go 版本：1.24.x，运行环境：ubuntu-latest
+Go 版本：1.25.x、1.27.x，运行环境：ubuntu-latest。工作流设置 `GOTOOLCHAIN=local`，确保实际使用矩阵指定的工具链。
 
 ## 何时不要使用（Do NOT use）
 

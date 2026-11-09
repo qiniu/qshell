@@ -1,6 +1,6 @@
 # qshell — 开发维护指引
 
-七牛云命令行工具（`github.com/qiniu/qshell/v2`），Go 1.24+，基于 Cobra 框架。
+七牛云命令行工具（`github.com/qiniu/qshell/v2`），Go 1.25+，基于 Cobra 框架。
 
 完整开发维护指南见项目根目录 `AGENTS.md`。
 
@@ -42,7 +42,7 @@
 
 ## CI 流程
 
-gofmt 检查 → 单元测试 + 覆盖率上传（Go 1.24.x，ubuntu-latest）
+gofmt 检查 → 单元测试 + 覆盖率上传（Go 1.25.x、1.27.x，ubuntu-latest）。设置 `GOTOOLCHAIN=local`，确保使用矩阵指定的工具链。发布构建使用 Go 1.27.3。
 
 ## 关键约定
 

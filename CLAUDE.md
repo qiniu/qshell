@@ -2,7 +2,7 @@
 
 ## 项目概要
 
-七牛云命令行工具 qshell，模块路径 `github.com/qiniu/qshell/v2`，Go 1.24+，基于 Cobra 框架。
+七牛云命令行工具 qshell，模块路径 `github.com/qiniu/qshell/v2`，Go 1.25+，基于 Cobra 框架。
 
 ## 核心开发规范
 
