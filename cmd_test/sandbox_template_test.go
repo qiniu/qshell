@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/qiniu/qshell/v2/cmd_test/test"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 )
 
 // === sandbox template document tests ===
@@ -123,5 +124,15 @@ func TestSandboxTemplateConfigDocumentWithAlias(t *testing.T) {
 	result, _ := test.RunCmdWithError("sbx", "tpl", "cfg", test.DocumentOption)
 	if !strings.Contains(result, "`sandbox template config`") {
 		t.Fatalf("document test fail for sbx tpl cfg, got prefix: %.80s", result)
+	}
+}
+
+// 缺少 name 时必须把命令状态置为失败，CI 才能感知构建没有发生。
+func TestSandboxTemplateBuildMissingNameReportsError(t *testing.T) {
+	flow := test.NewTestFlow("sandbox", "template", "build", "--template-id", "tmpl-x", "--dockerfile", "Dockerfile")
+	flow.Run()
+
+	if got := flow.Status(); got != data.StatusError {
+		t.Fatalf("status = %d, want %d", got, data.StatusError)
 	}
 }
