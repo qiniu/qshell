@@ -13,26 +13,6 @@ import (
 	templatedockerfile "github.com/qiniu/qshell/v2/iqshell/sandbox/template/dockerfile"
 )
 
-func TestShouldRecreateForDisk_RecreatesResolvedNameWithFreeDisk(t *testing.T) {
-	minFree := int32(20480)
-
-	assert.True(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &minFree}, true))
-}
-
-func TestShouldRecreateForDisk_KeepsRebuildWithoutDiskSetting(t *testing.T) {
-	minFree := int32(20480)
-
-	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base"}, true))
-	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &minFree}, false))
-	assert.False(t, shouldRecreateForDisk(BuildInfo{MinFreeDiskMB: &minFree}, true))
-}
-
-func TestShouldRecreateForDisk_AppliesExplicitZero(t *testing.T) {
-	zero := int32(0)
-
-	assert.True(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &zero}, true))
-}
-
 func TestOwnershipError_RejectsForeignPublicTemplate(t *testing.T) {
 	err := ownershipError("agents-base", "cbz63h4i1xiux811uoux", false)
 
@@ -145,66 +125,27 @@ func TestValidateBuildSourceSelection_AllowsDockerfileWithFromTemplate(t *testin
 	assert.NoError(t, err)
 }
 
-func TestValidateRebuildSourceSelection_RejectsCLIFromImage(t *testing.T) {
-	info := BuildInfo{
-		TemplateID: "tmpl-xxxxxxxxxxxx",
-		Dockerfile: "./Dockerfile",
-		FromImage:  "ubuntu:22.04",
-	}
-	err := validateRebuildSourceSelection(info, true, false)
+func TestResolveBaseTemplate_UsesTemplateIDAsBase(t *testing.T) {
+	base, err := resolveBaseTemplate("tmpl-xxxxxxxxxxxx", "")
+
+	require.NoError(t, err)
+	assert.Equal(t, "tmpl-xxxxxxxxxxxx", base)
+}
+
+func TestResolveBaseTemplate_UsesFromTemplateAsBase(t *testing.T) {
+	base, err := resolveBaseTemplate("", "agents-base")
+
+	require.NoError(t, err)
+	assert.Equal(t, "agents-base", base)
+}
+
+func TestResolveBaseTemplate_RejectsBothSources(t *testing.T) {
+	_, err := resolveBaseTemplate("tmpl-xxxxxxxxxxxx", "agents-base")
 
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "--from-image")
+		assert.Contains(t, err.Error(), "--template-id")
 		assert.Contains(t, err.Error(), "--from-template")
 	}
-}
-
-func TestValidateRebuildSourceSelection_RejectsCLIFromTemplate(t *testing.T) {
-	info := BuildInfo{
-		TemplateID:   "tmpl-xxxxxxxxxxxx",
-		Dockerfile:   "./Dockerfile",
-		FromTemplate: "agents-base",
-	}
-	err := validateRebuildSourceSelection(info, false, true)
-
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "--from-image")
-		assert.Contains(t, err.Error(), "--from-template")
-	}
-}
-
-// TOML 配置中声明的 from_image 在 rebuild 时必须保留，
-// 否则下游 buildFromDockerfile 会回退到 Dockerfile 的 FROM 行。
-func TestValidateRebuildSourceSelection_PreservesConfigFromImage(t *testing.T) {
-	info := BuildInfo{
-		TemplateID: "tmpl-xxxxxxxxxxxx",
-		Dockerfile: "./Dockerfile",
-		FromImage:  "ubuntu:22.04",
-	}
-
-	err := validateRebuildSourceSelection(info, false, false)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "ubuntu:22.04", info.FromImage)
-	assert.Empty(t, info.FromTemplate)
-}
-
-// TOML 配置中声明的 from_template 在 rebuild 时必须保留，
-// 这是修复 "image 'scratch' not found" 的关键场景：
-// agents-base 等模板基于 from_template = "base" 构建，
-// rebuild 时若被清空会让 Dockerfile 中的 FROM scratch 直接送到 builder。
-func TestValidateRebuildSourceSelection_PreservesConfigFromTemplate(t *testing.T) {
-	info := BuildInfo{
-		TemplateID:   "tmpl-xxxxxxxxxxxx",
-		Dockerfile:   "./Dockerfile",
-		FromTemplate: "base",
-	}
-
-	err := validateRebuildSourceSelection(info, false, false)
-
-	assert.NoError(t, err)
-	assert.Empty(t, info.FromImage)
-	assert.Equal(t, "base", info.FromTemplate)
 }
 
 func TestValidateBuildSourceSelection_RequiresSource(t *testing.T) {

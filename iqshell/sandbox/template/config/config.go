@@ -7,7 +7,7 @@ const DefaultFileName = "qshell.sandbox.toml"
 // FileConfig 对应 qshell.sandbox.toml 中的所有可配置字段。
 // 所有字段均为可选：未设置时回退到 CLI 参数或内置默认值。
 type FileConfig struct {
-	// TemplateID 是模板 ID，首次构建后由 qshell 自动回写。
+	// TemplateID 是构建所用的底模板 ID，与 from_template 等价。
 	TemplateID string `toml:"template_id"`
 
 	// Name 是模板名称，仅首次构建（未设置 TemplateID 时）生效。

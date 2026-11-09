@@ -22,13 +22,15 @@
 ## 更新
 1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.30.0`。
 2. 模板创建磁盘参数改为 `--min-free-disk` / `min_free_disk_mb`，从最小剩余空间描述构建需求。
+3. `sandbox template build` 每次按 `name` 申请构建：同名模板沿用其模板 ID，并应用 CPU、内存、最小剩余空间等资源设置。
 
 ## 不兼容变更
 1. 移除旧的 `--disk-size` / `disk_size_mb`，改用 `--min-free-disk` / `min_free_disk_mb`。
+2. `sandbox template build` 改为 E2B 构建流程：`--template-id` 与 TOML `template_id` 表示构建所用底模板（与 `--from-template` 等价），需要同时提供 `name`；不再自动回写 `template_id`。
 
 ## 修复
 1. `sandbox template build` 在配置文件仍保留已移除的 `disk_size_mb` 时输出迁移提示，避免该配置被静默忽略后按团队默认磁盘构建
-2. `sandbox template build` 在配置了 `min_free_disk_mb`（含显式 0）且按 name 命中已有模板时，改走 v3 创建接口以同名重新构建，使磁盘设置生效（模板 ID 不变）；命中的是其他团队公共模板时直接报错；显式 `template_id` 仍走 rebuild
+2. `sandbox template build` 命中其他团队的公共模板时直接报错，避免构建结果无法按 name 访问
 
 # 2.19.12 (2026-08-11)
 ## 新增

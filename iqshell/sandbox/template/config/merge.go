@@ -4,7 +4,7 @@ package config
 // 单独定义以避免 config 包依赖 operations 包（解决循环依赖）。
 // operations.Build 在调用前将 BuildInfo 拷贝为 BuildFields，调用后拷贝回。
 type BuildFields struct {
-	// TemplateID 是模板 ID。
+	// TemplateID 是构建所用的底模板 ID。
 	TemplateID string
 	// Name 是模板名称。
 	Name string

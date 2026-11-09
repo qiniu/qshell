@@ -48,8 +48,8 @@ no_cache = false
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| template_id | string | 模板 ID。存在时优先生效，进入 rebuild 流程 |
-| name | string | 模板名称。未提供 template_id 时，build/get/publish/delete/unpublish 会按 name 查找远端模板 |
+| template_id | string | 构建所用的底模板 ID，与 from_template 等价；二者只能选一个 |
+| name | string | 模板名称。build 按 name 定位模板；get/publish/delete/unpublish 未传 ID 时也按 name 查找 |
 | dockerfile | string | Dockerfile 路径 |
 | path | string | 构建上下文目录 |
 | from_image | string | 基础 Docker 镜像 |
@@ -58,7 +58,7 @@ no_cache = false
 | ready_cmd | string | 就绪检查命令 |
 | cpu_count | int | CPU 核数 |
 | memory_mb | int | 内存（MiB） |
-| min_free_disk_mb | int | 构建后的最小剩余空间（MiB）；仅创建新模板时生效，可设为 0 |
+| min_free_disk_mb | int | 构建后的最小剩余空间（MiB），可设为 0；省略时使用团队默认值 |
 | disk_size_mb | int | **已废弃**：模板 API 移除了磁盘大小参数，该字段不再生效，`build` 会在 stderr 给出迁移提示 |
 | no_cache | bool | 强制忽略缓存 |
 
@@ -70,7 +70,7 @@ no_cache = false
 
 # 构建输入组合
 
-`from_image` 和 `from_template` 二选一，不能同时设置。
+`from_image` 和 `from_template` 二选一，不能同时设置。`template_id` 与 `from_template` 等价，同样不能和它们同时使用。
 
 `dockerfile` 可以单独使用，也可以和 `from_image` 或 `from_template` 组合使用：
 - 只有 `dockerfile`：使用 Dockerfile 中的 `FROM` 作为基础镜像。
@@ -87,27 +87,17 @@ no_cache = false
 
 # 模板定位规则
 
-1. 显式传入的 `template_id` 或配置文件中的 `template_id` 优先生效
-2. 未提供 `template_id` 时，使用 `name` 调用远端按 alias 点查
-3. `build` 命中 name 时进入 rebuild；未命中时创建新模板
-4. `get` / `publish` / `delete` / `unpublish` 未传模板 ID 时，也会先从当前目录配置读取 `template_id`，否则按 `name` 查找
-
-# 自动回写行为
-
-- 首次创建新模板（配置文件存在、`template_id` 为空）成功后，qshell 自动把新的 `template_id` 写入文件，兼容旧脚本
-- 按 `name` 命中已有模板并进入 rebuild 时，不回写 `template_id`，配置文件可继续跨环境复用
-- 未指定 `--wait` 时，在构建成功启动后回写；指定 `--wait` 时，在构建完成且状态为 `ready` 后回写
-- 回写会替换已有的 `template_id` 赋值行（无论原值是否为空），或在文件头插入一行
-- 注释、字段顺序、空白均保留
-- 回写完成后 stdout 打印：`Written template_id to <path> (please commit this file)`
-- 通过 `template_id` 或按 `name` 命中后再次执行 build 会进入 rebuild 流程，配置文件中保留的 `from_image` / `from_template` 会继续参与构建；如果从 CLI 显式传入这两个参数，命令会报错
+1. `build` 按 `name` 定位模板，并申请构建；同名模板已存在时沿用其模板 ID
+2. `template_id` / `from_template` / `from_image` 表示构建所用的底模板，不参与目标定位
+3. `get` / `publish` / `delete` / `unpublish` 未传模板 ID 时，先从当前目录配置读取 `template_id`，否则按 `name` 查找
+4. `build` 若发现 `name` 命中其他团队的公共模板，会直接报错，避免构建结果无法按 name 访问
 
 # 团队协作约定
 
 将 `qshell.sandbox.toml` 加入版本控制：
 - 团队成员克隆仓库后直接 `qshell sandbox template build` 即可在当前环境按 `name` 定位或创建模板
 - CI 脚本只需一行命令，无需维护散落的参数
-- 通常只提交 `name` / `dockerfile` / 资源参数即可；如果选择保留 `template_id`，它会固定指向某一个环境里的模板
+- 通常只提交 `name` / `dockerfile` / 资源参数即可
 
 # 示例：最小项目
 
@@ -129,14 +119,14 @@ min_free_disk_mb = 5120
 运行：
 ```bash
 qshell sandbox template build --wait
-# 首次运行时未找到同名模板则创建；同名模板已存在时，配置了 min_free_disk_mb 则改用同名创建以应用磁盘设置，否则 rebuild
+# 每次都会按 name 申请构建：同名模板已存在时沿用其模板 ID，并应用资源设置
 ```
 
 再次构建：
 ```bash
-qshell sandbox template build --wait  # 配置了 min_free_disk_mb 时走同名创建以应用磁盘设置，否则执行 rebuild
+qshell sandbox template build --wait  # 按 name 定位模板并应用当前配置
 ```
 
 `min_free_disk_mb`：创建模板时构建后的最小剩余空间（MiB），可设为 0。省略时使用团队默认值；CLI 的 `--min-free-disk`（含显式 0）优先。
 
-该设置只在创建模板时生效，rebuild 无法调整磁盘。因此只要配置了它（含显式 0）且按 name 命中已有模板时，`sandbox template build` 会改用 v3 创建接口以同名提交（对齐 E2B `Template.build` 的行为），由服务端更新该模板并应用磁盘设置，模板 ID 保持不变；若命中的是其他团队的公共模板则直接报错。显式 `template_id` / `--template-id` 仍走 rebuild，磁盘不变。
+该设置在申请构建时提交，因此同名模板每次构建都会应用当前配置。省略时使用团队默认值；显式 0 表示不为剩余空间扩容，已有文件系统不会缩小。

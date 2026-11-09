@@ -22,7 +22,7 @@ type BuildInfo struct {
 	// Name 是模板名称（用于创建 + 构建）。
 	Name string
 
-	// TemplateID 是已有模板 ID（用于重新构建）。
+	// TemplateID 是构建所用的底模板 ID，与 --from-template 等价。
 	TemplateID string
 
 	// FromImage 是基础 Docker 镜像。
@@ -65,15 +65,12 @@ type BuildInfo struct {
 	ConfigPath string
 }
 
-// Build 创建或重新构建模板。
-// 如果提供了 TemplateID，则对已有模板启动新构建。
-// 否则，使用给定的 Name 创建新模板并启动构建。
+// Build 按 E2B 的构建模型创建模板。
+//
+// 构建分为两步：先通过 v3 创建接口申请构建（CPU、内存、最小剩余空间等
+// 资源参数在这一步确定），再通过 v2 构建接口指定底模板/镜像与构建步骤。
+// 同名模板已存在时，创建接口会沿用该模板 ID 并应用新的资源设置。
 func Build(info BuildInfo) {
-	// 在合并配置前捕获"CLI 未提供 TemplateID"，以便后续判断是否需要回写。
-	noIDBeforeMerge := info.TemplateID == ""
-	cliFromImage := info.FromImage != ""
-	cliFromTemplate := info.FromTemplate != ""
-
 	// 加载配置文件并合并（CLI > file > default）
 	var cfg *config.FileConfig
 	if info.ConfigPath != "" {
@@ -134,20 +131,27 @@ func Build(info BuildInfo) {
 		sbClient.PrintWarn("%s", warning)
 	}
 
-	if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
-		sbClient.PrintError("%v", err)
+	base, bErr := resolveBaseTemplate(info.TemplateID, info.FromTemplate)
+	if bErr != nil {
+		sbClient.PrintError("%v", bErr)
+		return
+	}
+	info.FromTemplate = base
+
+	if info.Name == "" {
+		sbClient.PrintError("template name (--name) is required")
 		return
 	}
 	if err := validateBuildSourceSelection(info); err != nil {
 		sbClient.PrintError("%v", err)
 		return
 	}
-
 	if info.MinFreeDiskMB != nil && *info.MinFreeDiskMB < 0 {
 		data.SetCmdStatusError()
 		sbClient.PrintError("--min-free-disk / min_free_disk_mb must be non-negative")
 		return
 	}
+
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
 		sbClient.PrintError("%v", err)
@@ -155,99 +159,33 @@ func Build(info BuildInfo) {
 	}
 
 	ctx := context.Background()
-	templateID := info.TemplateID
-	buildID := ""
-	// foundByName 表示当前模板是通过 name 在远端查到的；这种情况下
-	// name 已经能稳定定位模板，不再把 template_id 回写进 toml，
-	// 让配置文件保持环境无关。
-	foundByName := false
 
-	// 未提供 --template-id 时，先按 name 在远端查一次：命中即 rebuild，
-	// 未命中再 create。这样多环境切换时无需手工同步 template_id。
-	if templateID == "" && info.Name != "" {
-		existingID, lookupErr := lookupTemplateIDByName(ctx, client, info.Name)
-		if lookupErr != nil {
-			sbClient.PrintError("lookup template by name %q: %v", info.Name, lookupErr)
+	// 同名模板已存在时只做归属校验：创建接口会沿用该模板 ID 并应用
+	// 新的资源设置，但不会接管其他团队的同名公共模板。
+	existingID, lookupErr := lookupTemplateIDByName(ctx, client, info.Name)
+	if lookupErr != nil {
+		sbClient.PrintError("lookup template by name %q: %v", info.Name, lookupErr)
+		return
+	}
+	if existingID != "" {
+		fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s; building under this name\n", info.Name, existingID)
+		if err := ensureTemplateOwned(ctx, client, info.Name, existingID); err != nil {
+			sbClient.PrintError("%v", err)
 			return
-		}
-		if existingID != "" {
-			templateID = existingID
-			info.TemplateID = existingID
-			foundByName = true
-			recreate := shouldRecreateForDisk(info, foundByName)
-			if recreate {
-				fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s; re-creating with the same name to apply min_free_disk_mb\n", info.Name, templateID)
-				if err := ensureTemplateOwned(ctx, client, info.Name, templateID); err != nil {
-					sbClient.PrintError("%v", err)
-					return
-				}
-				templateID = ""
-				info.TemplateID = ""
-			} else {
-				fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (rebuild)\n", info.Name, templateID)
-				if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
-					sbClient.PrintError("%v", err)
-					return
-				}
-			}
 		}
 	}
 
-	if templateID != "" && info.MinFreeDiskMB != nil {
-		sbClient.PrintWarn("--min-free-disk / min_free_disk_mb is not applied when rebuilding an existing template; the rebuild keeps the current disk")
+	createParams := createTemplateParams(info)
+
+	fmt.Printf("Creating template %s...\n", info.Name)
+	resp, cErr := client.CreateTemplate(ctx, createParams)
+	if cErr != nil {
+		sbClient.PrintError("create template failed: %v", cErr)
+		return
 	}
-	if templateID == "" {
-		// 创建新模板
-		if info.Name == "" {
-			sbClient.PrintError("template name (--name) or template ID (--template-id) is required")
-			return
-		}
-
-		createParams := createTemplateParams(info)
-
-		fmt.Printf("Creating template %s...\n", info.Name)
-		resp, cErr := client.CreateTemplate(ctx, createParams)
-		if cErr != nil {
-			sbClient.PrintError("create template failed: %v", cErr)
-			return
-		}
-		templateID = resp.TemplateID
-		buildID = resp.BuildID
-		sbClient.PrintSuccess("Template %s created (build ID: %s)", templateID, buildID)
-	} else {
-		// 对已有模板申请新的 waiting build（对齐 E2B CLI 的 rebuild 流程）：
-		// RebuildTemplate → StartTemplateBuild → WaitForBuild。
-		// 直接复用历史 build ID 会导致 400 "build is not in waiting state"。
-		dockerfileContent, dErr := dockerfileForRebuild(info)
-		if dErr != nil {
-			sbClient.PrintError("%v", dErr)
-			return
-		}
-		rebuildParams := sandbox.RebuildTemplateParams{
-			Dockerfile: dockerfileContent,
-		}
-		if info.CPUCount > 0 {
-			rebuildParams.CPUCount = &info.CPUCount
-		}
-		if info.MemoryMB > 0 {
-			rebuildParams.MemoryMB = &info.MemoryMB
-		}
-		if info.StartCmd != "" {
-			rebuildParams.StartCmd = &info.StartCmd
-		}
-		if info.ReadyCmd != "" {
-			rebuildParams.ReadyCmd = &info.ReadyCmd
-		}
-
-		fmt.Printf("Requesting new build for template %s...\n", templateID)
-		resp, rErr := client.RebuildTemplate(ctx, templateID, rebuildParams)
-		if rErr != nil {
-			sbClient.PrintError("rebuild template failed: %v", rErr)
-			return
-		}
-		buildID = resp.BuildID
-		sbClient.PrintSuccess("New build requested (build ID: %s)", buildID)
-	}
+	templateID := resp.TemplateID
+	buildID := resp.BuildID
+	sbClient.PrintSuccess("Template %s created (build ID: %s)", templateID, buildID)
 
 	if info.Dockerfile != "" {
 		if err := buildFromDockerfile(ctx, client, templateID, buildID, info); err != nil {
@@ -281,7 +219,6 @@ func Build(info BuildInfo) {
 	}
 
 	if !info.Wait {
-		writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge && !foundByName, templateID)
 		fmt.Printf("Build started. Use 'qshell sandbox template builds %s %s' to check status.\n", templateID, buildID)
 		return
 	}
@@ -322,7 +259,6 @@ func Build(info BuildInfo) {
 				fmt.Print(formatBuildFailureLogs(buildInfo.Logs))
 			} else {
 				sbClient.PrintSuccess("Build completed!")
-				writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge && !foundByName, templateID)
 			}
 			fmt.Printf("Template ID:  %s\n", buildInfo.TemplateID)
 			fmt.Printf("Build ID:     %s\n", buildInfo.BuildID)
@@ -343,6 +279,18 @@ func Build(info BuildInfo) {
 	}
 }
 
+// resolveBaseTemplate 合并 --template-id 与 --from-template：两者都表示
+// 构建所用的底模板，因此不允许同时指定。
+func resolveBaseTemplate(templateID, fromTemplate string) (string, error) {
+	if templateID != "" && fromTemplate != "" {
+		return "", fmt.Errorf("cannot specify both --template-id and --from-template")
+	}
+	if templateID != "" {
+		return templateID, nil
+	}
+	return fromTemplate, nil
+}
+
 func formatBuildFailureLogs(logs []string) string {
 	if len(logs) == 0 {
 		return ""
@@ -354,18 +302,6 @@ func formatBuildFailureLogs(logs []string) string {
 		fmt.Fprintf(&builder, "  %s\n", log)
 	}
 	return builder.String()
-}
-
-// shouldRecreateForDisk 判断是否应把「按 name 命中的 rebuild」改成同名创建请求。
-//
-// 模板磁盘只在创建时确定：rebuild 请求没有任何磁盘字段，所以配置了
-// min_free_disk_mb（含显式 0）的模板必须重新走创建接口才能生效。这里
-// 只对按 name 解析到的模板生效；显式 --template-id / 配置文件
-// template_id 仍然走 rebuild，由调用方给出无法调整磁盘的告警。
-func shouldRecreateForDisk(info BuildInfo, resolvedByName bool) bool {
-	return resolvedByName &&
-		info.Name != "" &&
-		info.MinFreeDiskMB != nil
 }
 
 // ensureTemplateOwned 校验按 name 命中的模板是否属于当前团队。
@@ -390,7 +326,7 @@ func ownershipError(name, templateID string, isOwner bool) error {
 		return nil
 	}
 	return fmt.Errorf("template %q (%s) belongs to another team and is only visible as public; "+
-		"choose a unique template name owned by your team so min_free_disk_mb can be applied", name, templateID)
+		"choose a unique template name owned by your team", name, templateID)
 }
 
 // legacyDiskSizeWarning 返回 qshell.sandbox.toml 中已废弃 disk_size_mb 的迁移提示。
@@ -421,18 +357,6 @@ func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {
 		params.MinFreeDiskMB = info.MinFreeDiskMB
 	}
 	return params
-}
-
-func writeTemplateIDToConfigIfNeeded(cfg *config.FileConfig, noIDBeforeMerge bool, templateID string) {
-	if cfg == nil || !noIDBeforeMerge || cfg.SourcePath() == "" {
-		return
-	}
-	if wErr := config.WriteTemplateID(cfg.SourcePath(), templateID); wErr != nil {
-		fmt.Fprintf(os.Stderr, "[config] warning: failed to write template_id to %s: %v\n",
-			cfg.SourcePath(), wErr)
-		return
-	}
-	sbClient.PrintSuccess("Written template_id to %s (please commit this file)", cfg.SourcePath())
 }
 
 // buildFromDockerfile 处理 v2 Dockerfile 构建流程：
@@ -539,26 +463,6 @@ func validateBuildSourceSelection(info BuildInfo) error {
 	return nil
 }
 
-// validateRebuildSourceSelection 校验 rebuild 路径下的 from-* 来源。
-//
-// 仅在 CLI 显式提供 --from-image / --from-template 同时又走 rebuild 时报错，
-// 因为这两个参数仅适用于新建模板。
-//
-// 之前的实现会在 rebuild 时把 info.FromImage / info.FromTemplate 清空，
-// 这会丢掉来自 qshell.sandbox.toml 的 from_template，导致下游
-// buildFromDockerfile 回退到 Dockerfile 中的 `FROM scratch`，
-// 触发 "image 'scratch' not found"。
-// 现在保留 TOML 来源的值原样透传，让模板继续基于声明的父模板构建。
-func validateRebuildSourceSelection(info BuildInfo, cliFromImage, cliFromTemplate bool) error {
-	if info.TemplateID == "" {
-		return nil
-	}
-	if cliFromImage || cliFromTemplate {
-		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template")
-	}
-	return nil
-}
-
 func buildParamsFromDockerfileResult(result *dockerfile.ConvertResult, info BuildInfo) sandbox.StartTemplateBuildParams {
 	buildParams := sandbox.StartTemplateBuildParams{
 		Steps: &result.Steps,
@@ -574,21 +478,6 @@ func buildParamsFromDockerfileResult(result *dockerfile.ConvertResult, info Buil
 	}
 
 	return buildParams
-}
-
-// dockerfileForRebuild 返回 rebuild 请求所需的 Dockerfile 文本。
-// E2B v1 rebuild API（POST /templates/{id}）强制要求在请求体中携带
-// Dockerfile 内容，因此 --template-id 场景必须同时提供 --dockerfile；
-// --from-image / --from-template 仅适用于新建模板。
-func dockerfileForRebuild(info BuildInfo) (string, error) {
-	if info.Dockerfile == "" {
-		return "", fmt.Errorf("--dockerfile is required when rebuilding an existing template (--template-id); --from-image and --from-template only apply to new templates")
-	}
-	content, err := os.ReadFile(info.Dockerfile)
-	if err != nil {
-		return "", fmt.Errorf("read Dockerfile: %w", err)
-	}
-	return string(content), nil
 }
 
 // printSDKExamples prints SDK usage examples for the given template ID.
