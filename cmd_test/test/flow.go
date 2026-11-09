@@ -32,9 +32,17 @@ func (t *testFlow) ErrorHandler(handler func(line string)) *testFlow {
 	return t
 }
 
+// Status 返回最近一次 Run 结束后的命令状态。
+func (t *testFlow) Status() int {
+	return data.GetCmdStatus()
+}
+
 func (t *testFlow) Run() {
 	fmt.Println("")
 	fmt.Println("========== CMD Start:", t.args, "==========")
+
+	// 每个用例从成功状态开始，避免前一个用例的失败状态影响本次执行。
+	data.SetCmdStatus(data.StatusOK)
 
 	var err error
 	if IsDebug() {

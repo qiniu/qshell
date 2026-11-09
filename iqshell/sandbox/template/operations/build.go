@@ -22,7 +22,7 @@ type BuildInfo struct {
 	// Name 是模板名称（用于创建 + 构建）。
 	Name string
 
-	// TemplateID 是已有模板 ID（用于重新构建）。
+	// TemplateID 是构建所用的底模板 ID，与 --from-template 等价。
 	TemplateID string
 
 	// FromImage 是基础 Docker 镜像。
@@ -43,7 +43,7 @@ type BuildInfo struct {
 	// MemoryMB 是沙箱内存大小（MiB）。
 	MemoryMB int32
 
-	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），仅新建模板时生效。
+	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），每次构建都会提交。
 	MinFreeDiskMB *int32
 
 	// Wait 指示是否等待构建完成。
@@ -65,214 +65,204 @@ type BuildInfo struct {
 	ConfigPath string
 }
 
-// Build 创建或重新构建模板。
-// 如果提供了 TemplateID，则对已有模板启动新构建。
-// 否则，使用给定的 Name 创建新模板并启动构建。
+// buildFailed 打印错误并设置命令失败状态，便于 CI 感知构建失败。
+func buildFailed(format string, a ...any) {
+	data.SetCmdStatusError()
+	sbClient.PrintError(format, a...)
+}
+
+// Build 分两步创建模板。
+//
+// 先通过创建接口申请构建（CPU、内存、最小剩余空间等资源参数在这一步
+// 确定），再通过构建接口指定底模板/镜像与构建步骤。
+// 同名模板已存在时，创建接口会沿用该模板 ID 并应用新的资源设置。
 func Build(info BuildInfo) {
-	// 在合并配置前捕获"CLI 未提供 TemplateID"，以便后续判断是否需要回写。
-	noIDBeforeMerge := info.TemplateID == ""
-	cliFromImage := info.FromImage != ""
-	cliFromTemplate := info.FromTemplate != ""
-
-	// 加载配置文件并合并（CLI > file > default）
-	var cfg *config.FileConfig
-	if info.ConfigPath != "" {
-		loaded, cErr := config.Load(info.ConfigPath)
-		if cErr != nil {
-			sbClient.PrintError("load config: %v", cErr)
-			return
-		}
-		if loaded == nil {
-			sbClient.PrintError("config file not found: %s", info.ConfigPath)
-			return
-		}
-		cfg = loaded
-	} else {
-		loaded, cErr := config.LoadFromCwd()
-		if cErr != nil {
-			sbClient.PrintError("load config: %v", cErr)
-			return
-		}
-		cfg = loaded
-	}
-
-	if cfg != nil {
-		fields := config.BuildFields{
-			TemplateID:     info.TemplateID,
-			Name:           info.Name,
-			Dockerfile:     info.Dockerfile,
-			Path:           info.Path,
-			FromImage:      info.FromImage,
-			FromTemplate:   info.FromTemplate,
-			StartCmd:       info.StartCmd,
-			ReadyCmd:       info.ReadyCmd,
-			CPUCount:       info.CPUCount,
-			MemoryMB:       info.MemoryMB,
-			MinFreeDiskMB:  info.MinFreeDiskMB,
-			NoCache:        info.NoCache,
-			NoCacheChanged: info.NoCacheChanged,
-		}
-		overrides := cfg.ApplyTo(&fields)
-		info.TemplateID = fields.TemplateID
-		info.Name = fields.Name
-		info.Dockerfile = fields.Dockerfile
-		info.Path = fields.Path
-		info.FromImage = fields.FromImage
-		info.FromTemplate = fields.FromTemplate
-		info.StartCmd = fields.StartCmd
-		info.ReadyCmd = fields.ReadyCmd
-		info.CPUCount = fields.CPUCount
-		info.MemoryMB = fields.MemoryMB
-		info.MinFreeDiskMB = fields.MinFreeDiskMB
-		info.NoCache = fields.NoCache
-
-		for _, key := range overrides {
-			fmt.Fprintf(os.Stderr, "[config] CLI overrides %s from %s\n", key, cfg.SourcePath())
-		}
-	}
-
-	if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
-		sbClient.PrintError("%v", err)
-		return
-	}
-	if err := validateBuildSourceSelection(info); err != nil {
-		sbClient.PrintError("%v", err)
+	cliBaseField, cliBase, err := cliBaseSelection(info)
+	if err != nil {
+		buildFailed("%v", err)
 		return
 	}
 
+	info, cfg, err := loadBuildConfig(info)
+	if err != nil {
+		buildFailed("%v", err)
+		return
+	}
+	if warning := legacyDiskSizeWarning(cfg); warning != "" {
+		sbClient.PrintWarn("%s", warning)
+	}
+
+	info, overrodeBase, err := resolveBuildInputs(info, cfg, cliBaseField, cliBase)
+	if err != nil {
+		buildFailed("%v", err)
+		return
+	}
+	if overrodeBase && cfg != nil {
+		fmt.Fprintf(os.Stderr, "[config] CLI overrides base template from %s\n", cfg.SourcePath())
+	}
 	if info.MinFreeDiskMB != nil && *info.MinFreeDiskMB < 0 {
-		data.SetCmdStatusError()
-		sbClient.PrintError("--min-free-disk / min_free_disk_mb must be non-negative")
+		buildFailed("--min-free-disk / min_free_disk_mb must be non-negative")
 		return
 	}
+
+	var dockerPlan *dockerfileBuild
+	if info.Dockerfile != "" {
+		dockerPlan, err = prepareDockerfileBuild(info)
+		if err != nil {
+			buildFailed("%v", err)
+			return
+		}
+	}
+
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		sbClient.PrintError("%v", err)
+		buildFailed("%v", err)
+		return
+	}
+	ctx := context.Background()
+
+	existingID, err := resolveExistingTemplate(ctx, client, info, cfg, cliBaseField)
+	if err != nil {
+		buildFailed("%v", err)
 		return
 	}
 
-	ctx := context.Background()
-	templateID := info.TemplateID
-	buildID := ""
-	// foundByName 表示当前模板是通过 name 在远端查到的；这种情况下
-	// name 已经能稳定定位模板，不再把 template_id 回写进 toml，
-	// 让配置文件保持环境无关。
-	foundByName := false
-
-	// 未提供 --template-id 时，先按 name 在远端查一次：命中即 rebuild，
-	// 未命中再 create。这样多环境切换时无需手工同步 template_id。
-	if templateID == "" && info.Name != "" {
-		existingID, lookupErr := lookupTemplateIDByName(ctx, client, info.Name)
-		if lookupErr != nil {
-			sbClient.PrintError("lookup template by name %q: %v", info.Name, lookupErr)
-			return
-		}
-		if existingID != "" {
-			templateID = existingID
-			info.TemplateID = existingID
-			foundByName = true
-			fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s (rebuild)\n", info.Name, templateID)
-			if err := validateRebuildSourceSelection(info, cliFromImage, cliFromTemplate); err != nil {
-				sbClient.PrintError("%v", err)
-				return
-			}
-		}
+	action := "Creating"
+	if existingID != "" {
+		action = "Requesting build for existing"
 	}
-
-	if templateID != "" && info.MinFreeDiskMB != nil {
-		sbClient.PrintWarn("--min-free-disk / min_free_disk_mb only applies when creating a new template; the existing template will be rebuilt without changing this setting")
+	fmt.Printf("%s template %s...\n", action, info.Name)
+	resp, err := client.CreateTemplate(ctx, createTemplateParams(info))
+	if err != nil {
+		buildFailed("create template failed: %v", err)
+		return
 	}
-	if templateID == "" {
-		// 创建新模板
-		if info.Name == "" {
-			sbClient.PrintError("template name (--name) or template ID (--template-id) is required")
-			return
-		}
+	templateID := resp.TemplateID
+	buildID := resp.BuildID
+	sbClient.PrintSuccess("Template %s ready for build (build ID: %s)", templateID, buildID)
 
-		createParams := createTemplateParams(info)
-
-		fmt.Printf("Creating template %s...\n", info.Name)
-		resp, cErr := client.CreateTemplate(ctx, createParams)
-		if cErr != nil {
-			sbClient.PrintError("create template failed: %v", cErr)
-			return
-		}
-		templateID = resp.TemplateID
-		buildID = resp.BuildID
-		sbClient.PrintSuccess("Template %s created (build ID: %s)", templateID, buildID)
+	if dockerPlan != nil {
+		err = dockerPlan.start(ctx, client, templateID, buildID, info)
 	} else {
-		// 对已有模板申请新的 waiting build（对齐 E2B CLI 的 rebuild 流程）：
-		// RebuildTemplate → StartTemplateBuild → WaitForBuild。
-		// 直接复用历史 build ID 会导致 400 "build is not in waiting state"。
-		dockerfileContent, dErr := dockerfileForRebuild(info)
-		if dErr != nil {
-			sbClient.PrintError("%v", dErr)
-			return
-		}
-		rebuildParams := sandbox.RebuildTemplateParams{
-			Dockerfile: dockerfileContent,
-		}
-		if info.CPUCount > 0 {
-			rebuildParams.CPUCount = &info.CPUCount
-		}
-		if info.MemoryMB > 0 {
-			rebuildParams.MemoryMB = &info.MemoryMB
-		}
-		if info.StartCmd != "" {
-			rebuildParams.StartCmd = &info.StartCmd
-		}
-		if info.ReadyCmd != "" {
-			rebuildParams.ReadyCmd = &info.ReadyCmd
-		}
-
-		fmt.Printf("Requesting new build for template %s...\n", templateID)
-		resp, rErr := client.RebuildTemplate(ctx, templateID, rebuildParams)
-		if rErr != nil {
-			sbClient.PrintError("rebuild template failed: %v", rErr)
-			return
-		}
-		buildID = resp.BuildID
-		sbClient.PrintSuccess("New build requested (build ID: %s)", buildID)
+		err = startTemplateBuild(ctx, client, templateID, buildID, info)
 	}
-
-	if info.Dockerfile != "" {
-		if err := buildFromDockerfile(ctx, client, templateID, buildID, info); err != nil {
-			sbClient.PrintError("%v", err)
-			return
-		}
-	} else {
-		buildParams := sandbox.StartTemplateBuildParams{}
-		if info.FromImage != "" {
-			buildParams.FromImage = &info.FromImage
-		}
-		if info.FromTemplate != "" {
-			buildParams.FromTemplate = &info.FromTemplate
-		}
-		if info.StartCmd != "" {
-			buildParams.StartCmd = &info.StartCmd
-		}
-		if info.ReadyCmd != "" {
-			buildParams.ReadyCmd = &info.ReadyCmd
-		}
-		if info.NoCache {
-			force := true
-			buildParams.Force = &force
-		}
-
-		fmt.Printf("Starting build for template %s (build ID: %s)...\n", templateID, buildID)
-		if err := client.StartTemplateBuild(ctx, templateID, buildID, buildParams); err != nil {
-			sbClient.PrintError("start build failed: %v", err)
-			return
-		}
+	if err != nil {
+		buildFailed("%v", err)
+		return
 	}
 
 	if !info.Wait {
-		writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge && !foundByName, templateID)
 		fmt.Printf("Build started. Use 'qshell sandbox template builds %s %s' to check status.\n", templateID, buildID)
 		return
 	}
+	watchBuild(ctx, client, templateID, buildID)
+}
 
-	// 流式输出构建日志，支持 Ctrl+C 中断
+// loadBuildConfig 加载配置文件并把其中的值合并进构建参数。
+func loadBuildConfig(info BuildInfo) (BuildInfo, *config.FileConfig, error) {
+	var cfg *config.FileConfig
+	var err error
+	if info.ConfigPath != "" {
+		cfg, err = config.Load(info.ConfigPath)
+		if err != nil {
+			return info, nil, fmt.Errorf("load config: %w", err)
+		}
+		if cfg == nil {
+			return info, nil, fmt.Errorf("config file not found: %s", info.ConfigPath)
+		}
+	} else {
+		cfg, err = config.LoadFromCwd()
+		if err != nil {
+			return info, nil, fmt.Errorf("load config: %w", err)
+		}
+	}
+	if cfg == nil {
+		return info, nil, nil
+	}
+
+	fields := config.BuildFields{
+		TemplateID:     info.TemplateID,
+		Name:           info.Name,
+		Dockerfile:     info.Dockerfile,
+		Path:           info.Path,
+		FromImage:      info.FromImage,
+		FromTemplate:   info.FromTemplate,
+		StartCmd:       info.StartCmd,
+		ReadyCmd:       info.ReadyCmd,
+		CPUCount:       info.CPUCount,
+		MemoryMB:       info.MemoryMB,
+		MinFreeDiskMB:  info.MinFreeDiskMB,
+		NoCache:        info.NoCache,
+		NoCacheChanged: info.NoCacheChanged,
+	}
+	overrides := cfg.ApplyTo(&fields)
+	info.TemplateID = fields.TemplateID
+	info.Name = fields.Name
+	info.Dockerfile = fields.Dockerfile
+	info.Path = fields.Path
+	info.FromImage = fields.FromImage
+	info.FromTemplate = fields.FromTemplate
+	info.StartCmd = fields.StartCmd
+	info.ReadyCmd = fields.ReadyCmd
+	info.CPUCount = fields.CPUCount
+	info.MemoryMB = fields.MemoryMB
+	info.MinFreeDiskMB = fields.MinFreeDiskMB
+	info.NoCache = fields.NoCache
+
+	for _, key := range overrides {
+		fmt.Fprintf(os.Stderr, "[config] CLI overrides %s from %s\n", key, cfg.SourcePath())
+	}
+	return info, cfg, nil
+}
+
+// resolveExistingTemplate 返回按 name 命中的模板 ID，并校验归属与底模板。
+func resolveExistingTemplate(ctx context.Context, client *sandbox.Client, info BuildInfo, cfg *config.FileConfig, cliBaseField string) (string, error) {
+	existingID, err := lookupTemplateIDByName(ctx, client, info.Name)
+	if err != nil {
+		return "", fmt.Errorf("lookup template by name %q: %w", info.Name, err)
+	}
+	if existingID == "" {
+		return "", nil
+	}
+	fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s; building under this name\n", info.Name, existingID)
+	if err := ensureTemplateOwned(ctx, client, info.Name, existingID); err != nil {
+		return "", err
+	}
+	if err := rejectSelfBase(info, existingID, cfg, cliBaseField); err != nil {
+		return "", err
+	}
+	return existingID, nil
+}
+
+// startTemplateBuild 以 from-template / from-image 为底启动构建。
+func startTemplateBuild(ctx context.Context, client *sandbox.Client, templateID, buildID string, info BuildInfo) error {
+	buildParams := sandbox.StartTemplateBuildParams{}
+	if info.FromImage != "" {
+		buildParams.FromImage = &info.FromImage
+	}
+	if info.FromTemplate != "" {
+		buildParams.FromTemplate = &info.FromTemplate
+	}
+	if info.StartCmd != "" {
+		buildParams.StartCmd = &info.StartCmd
+	}
+	if info.ReadyCmd != "" {
+		buildParams.ReadyCmd = &info.ReadyCmd
+	}
+	if info.NoCache {
+		force := true
+		buildParams.Force = &force
+	}
+
+	fmt.Printf("Starting build for template %s (build ID: %s)...\n", templateID, buildID)
+	if err := client.StartTemplateBuild(ctx, templateID, buildID, buildParams); err != nil {
+		return fmt.Errorf("start build failed: %w", err)
+	}
+	return nil
+}
+
+// watchBuild 流式输出构建日志直到结束，支持 Ctrl+C 中断。
+func watchBuild(ctx context.Context, client *sandbox.Client, templateID, buildID string) {
 	fmt.Println("Waiting for build to complete...")
 
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
@@ -280,10 +270,10 @@ func Build(info BuildInfo) {
 
 	var cursor *int64
 	for {
-		logs, blErr := client.GetTemplateBuildLogs(ctx, templateID, buildID, &sandbox.GetBuildLogsParams{
+		logs, err := client.GetTemplateBuildLogs(ctx, templateID, buildID, &sandbox.GetBuildLogsParams{
 			Cursor: cursor,
 		})
-		if blErr == nil && logs != nil {
+		if err == nil && logs != nil {
 			for _, entry := range logs.Logs {
 				fmt.Printf("[%s] %s %s\n",
 					sbClient.FormatTimestamp(entry.Timestamp),
@@ -295,25 +285,22 @@ func Build(info BuildInfo) {
 			}
 		}
 
-		// 检查构建状态
-		buildInfo, bErr := client.GetTemplateBuildStatus(ctx, templateID, buildID, nil)
-		if bErr != nil {
-			sbClient.PrintError("get build status failed: %v", bErr)
+		buildInfo, err := client.GetTemplateBuildStatus(ctx, templateID, buildID, nil)
+		if err != nil {
+			buildFailed("get build status failed: %v", err)
 			return
 		}
 
 		if buildInfo.Status == "ready" || buildInfo.Status == "error" {
 			if buildInfo.Status == "error" {
-				sbClient.PrintError("build failed")
+				buildFailed("build failed")
 				fmt.Print(formatBuildFailureLogs(buildInfo.Logs))
 			} else {
 				sbClient.PrintSuccess("Build completed!")
-				writeTemplateIDToConfigIfNeeded(cfg, noIDBeforeMerge && !foundByName, templateID)
 			}
 			fmt.Printf("Template ID:  %s\n", buildInfo.TemplateID)
 			fmt.Printf("Build ID:     %s\n", buildInfo.BuildID)
 			fmt.Printf("Status:       %s\n", buildInfo.Status)
-
 			if buildInfo.Status == "ready" {
 				printSDKExamples(buildInfo.TemplateID)
 			}
@@ -322,11 +309,147 @@ func Build(info BuildInfo) {
 
 		select {
 		case <-ctx.Done():
-			sbClient.PrintError("build watch cancelled")
+			buildFailed("build watch cancelled")
 			return
 		case <-time.After(3 * time.Second):
 		}
 	}
+}
+
+// resolveBuildInputs 合并 CLI 与配置文件后，确定目标名称与底模板。
+//
+// 返回值第二项表示 CLI 底模板覆盖了配置文件中的底模板字段。
+func resolveBuildInputs(info BuildInfo, cfg *config.FileConfig, cliBaseField, cliBase string) (BuildInfo, bool, error) {
+	overrode := false
+	if cliBase != "" {
+		overrode = applyCLIBasePrecedence(&info, cliBaseField, cliBase)
+	}
+	if err := baseConflictError(cfg, cliBaseField); err != nil {
+		return info, overrode, err
+	}
+	base, err := resolveBaseTemplate(info.TemplateID, info.FromTemplate)
+	if err != nil {
+		return info, overrode, err
+	}
+	info.FromTemplate = base
+	info.TemplateID = ""
+
+	if base != "" && base == info.Name {
+		return info, overrode, fmt.Errorf("cannot use template %q as its own base template", info.Name)
+	}
+	if info.Name == "" {
+		if base != "" {
+			return info, overrode, fmt.Errorf("template name (--name or TOML name) is required; " +
+				"template_id names the base template, so add a name and remove any template_id written by an older qshell")
+		}
+		return info, overrode, fmt.Errorf("template name (--name or TOML name) is required")
+	}
+	if err := validateBuildSourceSelection(info); err != nil {
+		return info, overrode, err
+	}
+	return info, overrode, nil
+}
+
+// cliBaseSelection 返回 CLI 显式指定的底模板字段与值。
+func cliBaseSelection(info BuildInfo) (field, value string, err error) {
+	var selected []string
+	if info.TemplateID != "" {
+		selected = append(selected, "--template-id")
+	}
+	if info.FromTemplate != "" {
+		selected = append(selected, "--from-template")
+	}
+	if info.FromImage != "" {
+		selected = append(selected, "--from-image")
+	}
+	if len(selected) > 1 {
+		return "", "", fmt.Errorf("cannot use more than one of %s", strings.Join(selected, ", "))
+	}
+	switch {
+	case info.TemplateID != "":
+		return "template_id", info.TemplateID, nil
+	case info.FromTemplate != "":
+		return "from_template", info.FromTemplate, nil
+	case info.FromImage != "":
+		return "from_image", info.FromImage, nil
+	}
+	return "", "", nil
+}
+
+// applyCLIBasePrecedence 用 CLI 的底模板覆盖配置文件中的底模板字段，
+// 使 --template-id / --from-template / --from-image 优先于 TOML。
+// 返回是否覆盖了来自文件的值。
+func applyCLIBasePrecedence(info *BuildInfo, field, value string) bool {
+	overrode := (field != "template_id" && info.TemplateID != "") ||
+		(field != "from_template" && info.FromTemplate != "") ||
+		(field != "from_image" && info.FromImage != "")
+	info.TemplateID, info.FromTemplate, info.FromImage = "", "", ""
+	switch field {
+	case "template_id":
+		info.TemplateID = value
+	case "from_template":
+		info.FromTemplate = value
+	case "from_image":
+		info.FromImage = value
+	}
+	return overrode
+}
+
+// rejectSelfBase 拒绝把模板自己当作底模板。
+//
+// 旧版 qshell 会把新建模板的 ID 回写到 template_id；在新语义下该字段表示
+// 底模板，于是构建会以模板自身为底，Dockerfile 的 FROM 被忽略。
+func rejectSelfBase(info BuildInfo, existingID string, cfg *config.FileConfig, cliBaseField string) error {
+	if info.FromTemplate == "" || info.FromTemplate != existingID {
+		return nil
+	}
+	if cliBaseField != "" {
+		flag := "--" + strings.ReplaceAll(cliBaseField, "_", "-")
+		return fmt.Errorf("%s names the template being built (%s); choose a different base template", flag, existingID)
+	}
+	source := "qshell.sandbox.toml"
+	if cfg != nil && cfg.SourcePath() != "" {
+		source = cfg.SourcePath()
+	}
+	return fmt.Errorf("%s: template_id/from_template points at the template being built (%s); "+
+		"remove that line so the build uses its declared base", source, existingID)
+}
+
+// baseConflictError 返回配置文件里同时声明多个底模板时的错误。
+//
+// 命令行显式指定底模板时以命令行为准，配置文件里的旧值由
+// applyCLIBasePrecedence 清理；只有当冲突全部来自配置文件时才报错。
+func baseConflictError(cfg *config.FileConfig, cliBaseField string) error {
+	if cfg == nil || cliBaseField != "" {
+		return nil
+	}
+	var keys []string
+	if cfg.TemplateID != "" {
+		keys = append(keys, "template_id")
+	}
+	if cfg.FromTemplate != "" {
+		keys = append(keys, "from_template")
+	}
+	if cfg.FromImage != "" {
+		keys = append(keys, "from_image")
+	}
+	if len(keys) < 2 {
+		return nil
+	}
+	return fmt.Errorf("%s: %s all describe the base template; keep one and delete any template_id "+
+		"line written by an older qshell", cfg.SourcePath(), strings.Join(keys, ", "))
+}
+
+// resolveBaseTemplate 合并 --template-id 与 --from-template：两者都表示
+// 构建所用的底模板，因此不允许同时指定。
+func resolveBaseTemplate(templateID, fromTemplate string) (string, error) {
+	if templateID != "" && fromTemplate != "" {
+		return "", fmt.Errorf("cannot use both --template-id and --from-template as the base template")
+	}
+	if templateID != "" {
+		return templateID, nil
+	}
+	return fromTemplate, nil
 }
 
 func formatBuildFailureLogs(logs []string) string {
@@ -340,6 +463,45 @@ func formatBuildFailureLogs(logs []string) string {
 		fmt.Fprintf(&builder, "  %s\n", log)
 	}
 	return builder.String()
+}
+
+// ensureTemplateOwned 校验按 name 命中的模板是否属于当前团队。
+//
+// alias 解析可能命中其他团队的公共模板：此时 v3 创建会落在自己团队下，
+// 但后续按 name 解析仍指向那个公共模板，构建结果不可达。提前失败比
+// 「构建成功但沙箱用旧模板」更容易排查。
+func ensureTemplateOwned(ctx context.Context, client *sandbox.Client, name, templateID string) error {
+	tmpl, err := client.GetTemplate(ctx, templateID, nil)
+	if err != nil {
+		return fmt.Errorf("verify template %q ownership: %w", name, err)
+	}
+	if tmpl == nil {
+		return nil
+	}
+	return ownershipError(name, templateID, tmpl.IsOwner)
+}
+
+// ownershipError 返回模板归属校验失败时的错误；属于当前团队时返回 nil。
+func ownershipError(name, templateID string, isOwner bool) error {
+	if isOwner {
+		return nil
+	}
+	return fmt.Errorf("template %q (%s) belongs to another team and is only visible as public; "+
+		"choose a unique template name owned by your team", name, templateID)
+}
+
+// legacyDiskSizeWarning 返回 qshell.sandbox.toml 中已废弃 disk_size_mb 的迁移提示。
+//
+// go-sdk v7.30.0 起，创建模板请求移除了 diskSizeMB，改为 minFreeDiskMb
+// （构建后的最小剩余空间）。若继续接受旧字段却不提示，配置会静默失效，
+// 用户会得到一个实际仍使用团队默认磁盘的模板。
+func legacyDiskSizeWarning(cfg *config.FileConfig) string {
+	if cfg == nil || cfg.DiskSizeMB == nil {
+		return ""
+	}
+	return fmt.Sprintf("disk_size_mb = %d in %s is no longer supported: the template API removed the disk-size field, "+
+		"so this setting has no effect; use min_free_disk_mb (minimum free space after build in MiB) instead",
+		*cfg.DiskSizeMB, cfg.SourcePath())
 }
 
 func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {
@@ -358,64 +520,58 @@ func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {
 	return params
 }
 
-func writeTemplateIDToConfigIfNeeded(cfg *config.FileConfig, noIDBeforeMerge bool, templateID string) {
-	if cfg == nil || !noIDBeforeMerge || cfg.SourcePath() == "" {
-		return
-	}
-	if wErr := config.WriteTemplateID(cfg.SourcePath(), templateID); wErr != nil {
-		fmt.Fprintf(os.Stderr, "[config] warning: failed to write template_id to %s: %v\n",
-			cfg.SourcePath(), wErr)
-		return
-	}
-	sbClient.PrintSuccess("Written template_id to %s (please commit this file)", cfg.SourcePath())
+// dockerfileBuild 保存申请构建前已完成的 Dockerfile 解析结果。
+//
+// Dockerfile 的读取与解析放在申请构建之前，路径错误不会在服务端排入
+// 一次构建之后才暴露。
+type dockerfileBuild struct {
+	contextPath string
+	result      *dockerfile.ConvertResult
 }
 
-// buildFromDockerfile 处理 v2 Dockerfile 构建流程：
-// 解析 Dockerfile → 上传 COPY 文件 → 使用 steps 启动构建。
-func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID, buildID string, info BuildInfo) error {
-	// 读取 Dockerfile
+// prepareDockerfileBuild 读取并解析 Dockerfile，确定构建上下文目录。
+func prepareDockerfileBuild(info BuildInfo) (*dockerfileBuild, error) {
 	content, err := os.ReadFile(info.Dockerfile)
 	if err != nil {
-		return fmt.Errorf("read Dockerfile: %w", err)
+		return nil, fmt.Errorf("read Dockerfile: %w", err)
 	}
 
-	// 确定构建上下文目录
 	contextPath := info.Path
 	if contextPath == "" {
 		contextPath = filepath.Dir(info.Dockerfile)
 	}
 	contextPath, err = filepath.Abs(contextPath)
 	if err != nil {
-		return fmt.Errorf("resolve context path: %w", err)
+		return nil, fmt.Errorf("resolve context path: %w", err)
 	}
 
-	// 解析 Dockerfile
 	result, err := dockerfile.Convert(string(content))
 	if err != nil {
-		return fmt.Errorf("parse Dockerfile: %w", err)
+		return nil, fmt.Errorf("parse Dockerfile: %w", err)
 	}
 	fmt.Printf("Parsed Dockerfile: base image=%s, %d steps\n", result.BaseImage, len(result.Steps))
 
-	// 读取 .dockerignore
-	ignorePatterns := dockerfile.ReadDockerignore(contextPath)
+	return &dockerfileBuild{contextPath: contextPath, result: result}, nil
+}
 
-	// 处理 COPY 步骤：计算文件哈希并上传文件
-	for i := range result.Steps {
-		step := &result.Steps[i]
+// start 上传 COPY 文件并启动构建。
+func (d *dockerfileBuild) start(ctx context.Context, client *sandbox.Client, templateID, buildID string, info BuildInfo) error {
+	ignorePatterns := dockerfile.ReadDockerignore(d.contextPath)
+
+	for i := range d.result.Steps {
+		step := &d.result.Steps[i]
 		if step.Type != "COPY" || step.Args == nil || len(*step.Args) < 2 {
 			continue
 		}
 		args := *step.Args
 		src, dest := args[0], args[1]
 
-		// 计算文件哈希
-		hash, err := dockerfile.ComputeFilesHash(src, dest, contextPath, ignorePatterns)
+		hash, err := dockerfile.ComputeFilesHash(src, dest, d.contextPath, ignorePatterns)
 		if err != nil {
 			return fmt.Errorf("compute file hash for COPY %s %s: %w", src, dest, err)
 		}
 		step.FilesHash = &hash
 
-		// 检查文件是否需要上传
 		fileInfo, err := client.GetTemplateFiles(ctx, templateID, hash)
 		if err != nil {
 			return fmt.Errorf("get template files for hash %s: %w", hash, err)
@@ -423,7 +579,7 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 
 		if !fileInfo.Present && fileInfo.URL != nil {
 			fmt.Printf("Uploading files for COPY %s %s...\n", src, dest)
-			if err := dockerfile.CollectAndUpload(ctx, *fileInfo.URL, src, contextPath, ignorePatterns); err != nil {
+			if err := dockerfile.CollectAndUpload(ctx, *fileInfo.URL, src, d.contextPath, ignorePatterns); err != nil {
 				return fmt.Errorf("upload files for COPY %s %s: %w", src, dest, err)
 			}
 		} else if fileInfo.Present {
@@ -431,11 +587,9 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 		}
 	}
 
-	// 构建参数
-	buildParams := buildParamsFromDockerfileResult(result, info)
+	buildParams := buildParamsFromDockerfileResult(d.result, info)
 
-	// 应用来自 Dockerfile 或 CLI 覆盖的启动/就绪命令
-	startCmd := result.StartCmd
+	startCmd := d.result.StartCmd
 	if info.StartCmd != "" {
 		startCmd = info.StartCmd
 	}
@@ -443,7 +597,7 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 		buildParams.StartCmd = &startCmd
 	}
 
-	readyCmd := result.ReadyCmd
+	readyCmd := d.result.ReadyCmd
 	if info.ReadyCmd != "" {
 		readyCmd = info.ReadyCmd
 	}
@@ -466,30 +620,10 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 
 func validateBuildSourceSelection(info BuildInfo) error {
 	if info.FromImage != "" && info.FromTemplate != "" {
-		return fmt.Errorf("cannot specify both --from-image and --from-template")
+		return fmt.Errorf("cannot use both --from-image and --from-template as the base template")
 	}
 	if info.Dockerfile == "" && info.FromImage == "" && info.FromTemplate == "" {
 		return fmt.Errorf("--from-image, --from-template, or --dockerfile is required")
-	}
-	return nil
-}
-
-// validateRebuildSourceSelection 校验 rebuild 路径下的 from-* 来源。
-//
-// 仅在 CLI 显式提供 --from-image / --from-template 同时又走 rebuild 时报错，
-// 因为这两个参数仅适用于新建模板。
-//
-// 之前的实现会在 rebuild 时把 info.FromImage / info.FromTemplate 清空，
-// 这会丢掉来自 qshell.sandbox.toml 的 from_template，导致下游
-// buildFromDockerfile 回退到 Dockerfile 中的 `FROM scratch`，
-// 触发 "image 'scratch' not found"。
-// 现在保留 TOML 来源的值原样透传，让模板继续基于声明的父模板构建。
-func validateRebuildSourceSelection(info BuildInfo, cliFromImage, cliFromTemplate bool) error {
-	if info.TemplateID == "" {
-		return nil
-	}
-	if cliFromImage || cliFromTemplate {
-		return fmt.Errorf("cannot specify --from-image or --from-template when rebuilding an existing template")
 	}
 	return nil
 }
@@ -509,21 +643,6 @@ func buildParamsFromDockerfileResult(result *dockerfile.ConvertResult, info Buil
 	}
 
 	return buildParams
-}
-
-// dockerfileForRebuild 返回 rebuild 请求所需的 Dockerfile 文本。
-// E2B v1 rebuild API（POST /templates/{id}）强制要求在请求体中携带
-// Dockerfile 内容，因此 --template-id 场景必须同时提供 --dockerfile；
-// --from-image / --from-template 仅适用于新建模板。
-func dockerfileForRebuild(info BuildInfo) (string, error) {
-	if info.Dockerfile == "" {
-		return "", fmt.Errorf("--dockerfile is required when rebuilding an existing template (--template-id); --from-image and --from-template only apply to new templates")
-	}
-	content, err := os.ReadFile(info.Dockerfile)
-	if err != nil {
-		return "", fmt.Errorf("read Dockerfile: %w", err)
-	}
-	return string(content), nil
 }
 
 // printSDKExamples prints SDK usage examples for the given template ID.

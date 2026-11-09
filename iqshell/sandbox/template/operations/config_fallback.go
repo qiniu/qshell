@@ -5,47 +5,49 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/config"
 )
 
 // templateIDFromCwdConfig 在当前工作目录加载 qshell.sandbox.toml，
-// 返回其中可用于定位模板的 template_id。
+// 按 name 解析出用于定位模板的 template_id。
 //
-// 解析顺序：
-//  1. toml 中的 template_id（向后兼容已有配置）
-//  2. toml 中的 name → 调用 ListTemplates 按 alias 查找
+// template_id 在配置中表示构建所用底模板（与 from_template 等价），
+// 因此不再作为 get/delete/publish/unpublish 的目标；若配置里只有
+// template_id 而没有 name，直接报错并提示补充 name。
 //
-// 这样 toml 里只写 name（不写 template_id）也能让 publish/get/delete
-// 等命令工作，便于多环境共享同一份配置。
-//
-// 加载/解析失败或远端调用失败时打印错误并返回 (""，false)。
-// 配置文件不存在或既无 template_id 也无 name 时返回 ("", true)，
-// 由调用方决定后续行为。
+// 配置文件不存在或既无 name 也无 template_id 时返回 ("", true)，
+// 由调用方决定后续行为；加载/解析或远端调用失败时返回 ("", false)。
 func templateIDFromCwdConfig() (string, bool) {
 	cfg, err := config.LoadFromCwd()
 	if err != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("load config: %v", err)
 		return "", false
 	}
 	if cfg == nil {
 		return "", true
 	}
-	if cfg.TemplateID != "" {
-		fmt.Fprintf(os.Stderr, "[config] using template_id from %s\n", cfg.SourcePath())
-		return cfg.TemplateID, true
-	}
 	if cfg.Name == "" {
+		if cfg.TemplateID != "" {
+			data.SetCmdStatusError()
+			sbClient.PrintError("%s: template_id is the base template for build; add name to locate the template",
+				cfg.SourcePath())
+			return "", false
+		}
 		return "", true
 	}
 
 	client, cErr := sbClient.NewSandboxClient()
 	if cErr != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("%v", cErr)
 		return "", false
 	}
 	id, lErr := lookupTemplateIDByName(context.Background(), client, cfg.Name)
 	if lErr != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("lookup template by name %q: %v", cfg.Name, lErr)
 		return "", false
 	}

@@ -45,6 +45,18 @@ no_cache = true
 	assert.Equal(t, p, cfg.SourcePath())
 }
 
+func TestLoad_KeepsLegacyDiskSizeForMigrationWarning(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(p, []byte("name = \"demo\"\ndisk_size_mb = 20480\n"), 0644))
+
+	cfg, err := Load(p)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	require.NotNil(t, cfg.DiskSizeMB)
+	assert.Equal(t, int32(20480), *cfg.DiskSizeMB)
+}
+
 func TestLoad_InvalidTOML(t *testing.T) {
 	dir := t.TempDir()
 	p := filepath.Join(dir, "qshell.sandbox.toml")
@@ -121,6 +133,29 @@ func TestApplyTo_CLIOverride(t *testing.T) {
 	assert.ElementsMatch(t, []string{"name", "cpu_count", "min_free_disk_mb"}, overrides)
 }
 
+func TestApplyTo_CLIExplicitZeroWinsOverFile(t *testing.T) {
+	fileMinFreeDiskMB := int32(20480)
+	cliZero := int32(0)
+	cfg := &FileConfig{MinFreeDiskMB: &fileMinFreeDiskMB}
+	dst := BuildFields{MinFreeDiskMB: &cliZero}
+
+	overrides := cfg.ApplyTo(&dst)
+
+	require.NotNil(t, dst.MinFreeDiskMB)
+	assert.Equal(t, int32(0), *dst.MinFreeDiskMB)
+	assert.Equal(t, []string{"min_free_disk_mb"}, overrides)
+}
+
+func TestApplyTo_TemplateIDFromFile(t *testing.T) {
+	cfg := &FileConfig{TemplateID: "tmpl-base"}
+	dst := BuildFields{}
+
+	overrides := cfg.ApplyTo(&dst)
+
+	assert.Equal(t, "tmpl-base", dst.TemplateID)
+	assert.Empty(t, overrides)
+}
+
 func TestApplyTo_MixedFill(t *testing.T) {
 	cfg := &FileConfig{
 		Dockerfile: "./Dockerfile",
@@ -177,116 +212,4 @@ func TestApplyTo_BoolDefinedCLIFalseWins(t *testing.T) {
 	overrides := cfg.ApplyTo(&dst)
 	assert.False(t, dst.NoCache)
 	assert.ElementsMatch(t, []string{"no_cache"}, overrides)
-}
-
-func TestWriteTemplateID_ReplaceExisting(t *testing.T) {
-	dir := t.TempDir()
-	p := filepath.Join(dir, "qshell.sandbox.toml")
-	orig := `# comment kept
-template_id = ""
-name = "demo"
-dockerfile = "./Dockerfile"
-`
-	require.NoError(t, os.WriteFile(p, []byte(orig), 0644))
-
-	err := WriteTemplateID(p, "tmpl-new")
-	require.NoError(t, err)
-
-	got, err := os.ReadFile(p)
-	require.NoError(t, err)
-	expected := `# comment kept
-template_id = "tmpl-new"
-name = "demo"
-dockerfile = "./Dockerfile"
-`
-	assert.Equal(t, expected, string(got))
-}
-
-func TestWriteTemplateID_InsertWhenMissing(t *testing.T) {
-	dir := t.TempDir()
-	p := filepath.Join(dir, "qshell.sandbox.toml")
-	orig := `name = "demo"
-dockerfile = "./Dockerfile"
-`
-	require.NoError(t, os.WriteFile(p, []byte(orig), 0644))
-
-	err := WriteTemplateID(p, "tmpl-new")
-	require.NoError(t, err)
-
-	got, err := os.ReadFile(p)
-	require.NoError(t, err)
-	assert.Contains(t, string(got), `template_id = "tmpl-new"`)
-	assert.Contains(t, string(got), `name = "demo"`)
-}
-
-func TestWriteTemplateID_PreservesCommentedLine(t *testing.T) {
-	dir := t.TempDir()
-	p := filepath.Join(dir, "qshell.sandbox.toml")
-	orig := `# template_id = "old"
-name = "demo"
-`
-	require.NoError(t, os.WriteFile(p, []byte(orig), 0644))
-
-	err := WriteTemplateID(p, "tmpl-new")
-	require.NoError(t, err)
-
-	got, err := os.ReadFile(p)
-	require.NoError(t, err)
-	assert.Contains(t, string(got), `# template_id = "old"`)
-	assert.Contains(t, string(got), `template_id = "tmpl-new"`)
-}
-
-func TestWriteTemplateID_PreservesIndentation(t *testing.T) {
-	dir := t.TempDir()
-	p := filepath.Join(dir, "qshell.sandbox.toml")
-	orig := "    template_id = \"old\"\nname = \"demo\"\n"
-	require.NoError(t, os.WriteFile(p, []byte(orig), 0644))
-
-	err := WriteTemplateID(p, "tmpl-new")
-	require.NoError(t, err)
-
-	got, err := os.ReadFile(p)
-	require.NoError(t, err)
-	assert.Contains(t, string(got), "    template_id = \"tmpl-new\"")
-}
-
-func TestWriteTemplateID_DoesNotReplaceTableField(t *testing.T) {
-	dir := t.TempDir()
-	p := filepath.Join(dir, "qshell.sandbox.toml")
-	orig := "[section]\n    template_id = \"section-value\"\nname = \"demo\"\n"
-	require.NoError(t, os.WriteFile(p, []byte(orig), 0644))
-
-	err := WriteTemplateID(p, "tmpl-new")
-	require.NoError(t, err)
-
-	got, err := os.ReadFile(p)
-	require.NoError(t, err)
-	assert.Equal(t, "template_id = \"tmpl-new\"\n[section]\n    template_id = \"section-value\"\nname = \"demo\"\n", string(got))
-}
-
-func TestWriteTemplateID_PreservesCRLF(t *testing.T) {
-	dir := t.TempDir()
-	p := filepath.Join(dir, "qshell.sandbox.toml")
-	orig := "template_id = \"\"\r\nname = \"demo\"\r\n"
-	require.NoError(t, os.WriteFile(p, []byte(orig), 0644))
-
-	err := WriteTemplateID(p, "tmpl-new")
-	require.NoError(t, err)
-
-	got, err := os.ReadFile(p)
-	require.NoError(t, err)
-	assert.Equal(t, "template_id = \"tmpl-new\"\r\nname = \"demo\"\r\n", string(got))
-}
-
-func TestWriteTemplateID_PreservesPermissions(t *testing.T) {
-	dir := t.TempDir()
-	p := filepath.Join(dir, "qshell.sandbox.toml")
-	require.NoError(t, os.WriteFile(p, []byte("name = \"demo\"\n"), 0600))
-
-	err := WriteTemplateID(p, "tmpl-new")
-	require.NoError(t, err)
-
-	info, err := os.Stat(p)
-	require.NoError(t, err)
-	assert.Equal(t, os.FileMode(0600), info.Mode().Perm())
 }

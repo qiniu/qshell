@@ -110,7 +110,7 @@ var templateDeleteCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox template delete tmpl-aaa tmpl-bbb -y
   qshell sbx tpl dl tmpl-aaa tmpl-bbb -y
 
-  # Delete the template recorded in qshell.sandbox.toml
+  # Delete the template named in qshell.sandbox.toml
   qshell sandbox template delete -y
   qshell sbx tpl dl -y`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -159,9 +159,9 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:     "build",
 		Aliases: []string{"bd"},
 		Short:   "Build a template (alias: bd)",
-		Long: `Create a new template and build it, or rebuild an existing template.
+		Long: `Build a template in two steps: request the build with its resources, then start it with the selected base.
 
-Creating a new template supports three build modes:
+Each build selects one of three base modes:
   1. --from-image: Build from a base Docker image
   2. --from-template: Build from an existing template
   3. --dockerfile: Build from a Dockerfile (v2 build system)
@@ -170,18 +170,15 @@ Creating a new template supports three build modes:
 Dockerfile RUN/COPY/ENV steps on top of the selected base. When combined with
 --from-template, the Dockerfile FROM line is parsed but ignored as the base.
 
-Rebuilding an existing template (--template-id) requires --dockerfile
-because the rebuild API must carry the Dockerfile content in the request body.
+--template-id is the base template for the build, equivalent to --from-template.
 
 参数可通过 qshell.sandbox.toml 持久化；CLI flag 优先于配置文件。
 
-模板按 name 定位（同环境内 name 全局唯一）：未提供 --template-id 时，
-qshell 会先按 name 在远端查找；命中即对已有模板触发 rebuild，未命中再创建新模板。
-因此 qshell.sandbox.toml 只需写 name，无需写 template_id，
-配置文件可在多个环境间复用。
-
-向后兼容：toml 中已有 template_id 仍然生效；首次按 --name 创建新模板时，
-qshell 仍会把 template_id 回写到配置文件以备旧脚本使用。`,
+模板按 name 定位（同环境内 name 全局唯一）。每次构建都会先按 name 申请构建：
+同名模板已存在时沿用该模板 ID 并应用 CPU、内存、min_free_disk_mb 等资源设置，
+不存在时创建新模板，随后再以 --from-template / --from-image / Dockerfile 指定的
+底模板启动构建。因此 qshell.sandbox.toml 只需写 name，无需写 template_id。
+`,
 		Example: `  # Create and build a new template from a Docker image
   qshell sandbox template build --name my-template --from-image ubuntu:22.04 --wait
   qshell sbx tpl bd --name my-template --from-image ubuntu:22.04 --wait
@@ -198,13 +195,13 @@ qshell 仍会把 template_id 回写到配置文件以备旧脚本使用。`,
   qshell sandbox template build --name claude --from-template agents-base --dockerfile ./Dockerfile --wait
   qshell sbx tpl bd --name claude --from-template agents-base --dockerfile ./Dockerfile --wait
 
-  # Rebuild an existing template (Dockerfile required)
-  qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --wait
-  qshell sbx tpl bd --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --wait
+  # Use an existing template ID as the base
+  qshell sandbox template build --name my-template-v2 --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --wait
+  qshell sbx tpl bd --name my-template-v2 --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --wait
 
-  # Force rebuild without cache
-  qshell sandbox template build --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --no-cache --wait
-  qshell sbx tpl bd --template-id tmpl-xxxxxxxxxxxx --dockerfile ./Dockerfile --no-cache --wait
+  # Force a full build without cache
+  qshell sandbox template build --name my-template --from-template base --dockerfile ./Dockerfile --no-cache --wait
+  qshell sbx tpl bd --name my-template --from-template base --dockerfile ./Dockerfile --no-cache --wait
 
   # 使用 qshell.sandbox.toml（当前目录）
   qshell sandbox template build --wait
@@ -225,17 +222,17 @@ qshell 仍会把 template_id 回写到配置文件以备旧脚本使用。`,
 			operations.Build(info)
 		},
 	}
-	cmd.Flags().StringVar(&info.Name, "name", "", "template name (for creating a new template)")
-	cmd.Flags().StringVar(&info.TemplateID, "template-id", "", "existing template ID (for rebuilding)")
-	cmd.Flags().StringVar(&info.FromImage, "from-image", "", "base Docker image (for creating a new template)")
-	cmd.Flags().StringVar(&info.FromTemplate, "from-template", "", "base template (for creating a new template)")
+	cmd.Flags().StringVar(&info.Name, "name", "", "template name (via --name or TOML name)")
+	cmd.Flags().StringVar(&info.TemplateID, "template-id", "", "base template ID for the build (same as --from-template)")
+	cmd.Flags().StringVar(&info.FromImage, "from-image", "", "base Docker image for the build")
+	cmd.Flags().StringVar(&info.FromTemplate, "from-template", "", "base template for the build")
 	cmd.Flags().StringVar(&info.StartCmd, "start-cmd", "", "command to run after build")
 	cmd.Flags().StringVar(&info.ReadyCmd, "ready-cmd", "", "readiness check command")
 	cmd.Flags().Int32Var(&info.CPUCount, "cpu", 0, "sandbox CPU count")
-	cmd.Flags().Int32Var(&minFreeDiskMB, "min-free-disk", 0, "minimum free disk space after build in MiB (create only); explicit 0 disables free-space growth")
+	cmd.Flags().Int32Var(&minFreeDiskMB, "min-free-disk", 0, "minimum free disk space after build in MiB; explicit 0 disables free-space growth")
 	cmd.Flags().Int32Var(&info.MemoryMB, "memory", 0, "sandbox memory size in MiB")
 	cmd.Flags().BoolVar(&info.Wait, "wait", false, "wait for build to complete")
-	cmd.Flags().BoolVar(&info.NoCache, "no-cache", false, "force full rebuild ignoring cache")
+	cmd.Flags().BoolVar(&info.NoCache, "no-cache", false, "ignore build cache")
 	cmd.Flags().StringVar(&info.Dockerfile, "dockerfile", "", "path to Dockerfile (enables v2 build)")
 	cmd.Flags().StringVar(&info.Path, "path", "", "build context directory (defaults to Dockerfile's parent)")
 	cmd.Flags().StringVar(&info.ConfigPath, "config", "", "path to qshell.sandbox.toml (defaults to ./qshell.sandbox.toml if present)")
@@ -252,7 +249,7 @@ var templatePublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox template publish tmpl-xxxxxxxxxxxx -y
   qshell sbx tpl pb tmpl-xxxxxxxxxxxx -y
 
-  # Publish the template recorded in qshell.sandbox.toml
+  # Publish the template named in qshell.sandbox.toml
   qshell sandbox template publish -y
   qshell sbx tpl pb -y`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -278,7 +275,7 @@ var templateUnpublishCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox template unpublish tmpl-xxxxxxxxxxxx -y
   qshell sbx tpl upb tmpl-xxxxxxxxxxxx -y
 
-  # Unpublish the template recorded in qshell.sandbox.toml
+  # Unpublish the template named in qshell.sandbox.toml
   qshell sandbox template unpublish -y
   qshell sbx tpl upb -y`,
 		Run: func(cmd *cobra.Command, args []string) {

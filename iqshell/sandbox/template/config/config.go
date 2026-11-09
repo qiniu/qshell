@@ -1,4 +1,4 @@
-// Package config 处理 qshell.sandbox.toml 配置文件的加载、合并与回写。
+// Package config 处理 qshell.sandbox.toml 配置文件的加载与合并。
 package config
 
 // DefaultFileName 是模板配置文件的默认文件名。
@@ -7,10 +7,10 @@ const DefaultFileName = "qshell.sandbox.toml"
 // FileConfig 对应 qshell.sandbox.toml 中的所有可配置字段。
 // 所有字段均为可选：未设置时回退到 CLI 参数或内置默认值。
 type FileConfig struct {
-	// TemplateID 是模板 ID，首次构建后由 qshell 自动回写。
+	// TemplateID 是构建所用的底模板 ID，与 from_template 等价。
 	TemplateID string `toml:"template_id"`
 
-	// Name 是模板名称，仅首次构建（未设置 TemplateID 时）生效。
+	// Name 是模板名称，每次构建都按它定位目标模板。
 	Name string `toml:"name"`
 
 	// Dockerfile 是 Dockerfile 路径，启用 v2 构建。
@@ -40,10 +40,15 @@ type FileConfig struct {
 	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），nil 使用团队默认值，0 表示不为剩余空间扩容。
 	MinFreeDiskMB *int32 `toml:"min_free_disk_mb"`
 
+	// DiskSizeMB 是已废弃的构建磁盘大小字段（MiB）。
+	// 新版本模板 API 已移除该参数，这里仅保留解析能力，
+	// 以便 build 时给出明确迁移提示，而不是静默忽略用户配置。
+	DiskSizeMB *int32 `toml:"disk_size_mb"`
+
 	// NoCache 强制完整构建，忽略缓存。
 	NoCache bool `toml:"no_cache"`
 
-	// sourcePath 记录配置文件的绝对路径，用于回写。未导出。
+	// sourcePath 记录配置文件的绝对路径，用于覆盖提示。未导出。
 	sourcePath string
 
 	// defined 记录 TOML 文件中显式定义的字段 key 集合。未导出。

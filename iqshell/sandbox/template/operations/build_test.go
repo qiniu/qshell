@@ -1,13 +1,49 @@
 package operations
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/config"
 	templatedockerfile "github.com/qiniu/qshell/v2/iqshell/sandbox/template/dockerfile"
 )
+
+func TestOwnershipError_RejectsForeignPublicTemplate(t *testing.T) {
+	err := ownershipError("agents-base", "cbz63h4i1xiux811uoux", false)
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "belongs to another team")
+		assert.Contains(t, err.Error(), "unique template name")
+	}
+}
+
+func TestOwnershipError_AllowsOwnedTemplate(t *testing.T) {
+	assert.NoError(t, ownershipError("demo", "tmpl-x", true))
+}
+
+func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "prod.toml")
+	require.NoError(t, os.WriteFile(path, []byte("disk_size_mb = 20480\n"), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
+
+	warning := legacyDiskSizeWarning(cfg)
+
+	assert.Contains(t, warning, "disk_size_mb = 20480")
+	assert.Contains(t, warning, path)
+	assert.Contains(t, warning, "min_free_disk_mb")
+}
+
+func TestLegacyDiskSizeWarning_QuietWithoutLegacyField(t *testing.T) {
+	assert.Empty(t, legacyDiskSizeWarning(nil))
+	assert.Empty(t, legacyDiskSizeWarning(&config.FileConfig{}))
+}
 
 func TestBuildParamsFromDockerfileResult_UsesFromTemplateAsBase(t *testing.T) {
 	result := &templatedockerfile.ConvertResult{
@@ -60,6 +96,73 @@ func TestCreateTemplateParamsIncludesMinFreeDisk(t *testing.T) {
 	assert.Equal(t, int32(20480), *params.MinFreeDiskMB)
 }
 
+func TestCreateTemplateParams_ForwardsCPUAndMemory(t *testing.T) {
+	params := createTemplateParams(BuildInfo{
+		Name:     "demo",
+		CPUCount: 4,
+		MemoryMB: 8192,
+	})
+
+	require.NotNil(t, params.CPUCount)
+	require.NotNil(t, params.MemoryMB)
+	assert.Equal(t, int32(4), *params.CPUCount)
+	assert.Equal(t, int32(8192), *params.MemoryMB)
+}
+
+func TestCreateTemplateParams_OmitsMinFreeDiskWhenUnset(t *testing.T) {
+	params := createTemplateParams(BuildInfo{Name: "demo"})
+
+	assert.Nil(t, params.MinFreeDiskMB)
+}
+
+func TestCreateTemplateParams_SendsExplicitZero(t *testing.T) {
+	zero := int32(0)
+
+	params := createTemplateParams(BuildInfo{Name: "demo", MinFreeDiskMB: &zero})
+
+	require.NotNil(t, params.MinFreeDiskMB)
+	assert.Equal(t, int32(0), *params.MinFreeDiskMB)
+}
+
+func TestBuildParamsFromDockerfileResult_FallsBackToDockerfileBase(t *testing.T) {
+	result := &templatedockerfile.ConvertResult{
+		BaseImage: "ubuntu:22.04",
+		Steps:     []sandbox.TemplateStep{},
+	}
+
+	params := buildParamsFromDockerfileResult(result, BuildInfo{})
+
+	require.NotNil(t, params.FromImage)
+	assert.Equal(t, "ubuntu:22.04", *params.FromImage)
+	assert.Nil(t, params.FromTemplate)
+}
+
+func TestBuildParamsFromDockerfileResult_KeepsSteps(t *testing.T) {
+	result := &templatedockerfile.ConvertResult{
+		BaseImage: "ubuntu:22.04",
+		Steps: []sandbox.TemplateStep{
+			{Type: "RUN", Args: stringSlicePtr("echo one")},
+			{Type: "RUN", Args: stringSlicePtr("echo two")},
+		},
+	}
+
+	params := buildParamsFromDockerfileResult(result, BuildInfo{FromImage: "ubuntu:22.04"})
+
+	require.NotNil(t, params.Steps)
+	assert.Len(t, *params.Steps, 2)
+}
+
+func TestResolveBaseTemplate_EmptyWhenNoBase(t *testing.T) {
+	base, err := resolveBaseTemplate("", "")
+
+	require.NoError(t, err)
+	assert.Empty(t, base)
+}
+
+func TestValidateBuildSourceSelection_AllowsDockerfileOnly(t *testing.T) {
+	assert.NoError(t, validateBuildSourceSelection(BuildInfo{Dockerfile: "./Dockerfile"}))
+}
+
 func TestFormatBuildFailureLogs(t *testing.T) {
 	got := formatBuildFailureLogs([]string{"step 1 failed", "command exited with status 1"})
 	assert.Equal(t, "\nBuild Logs:\n  step 1 failed\n  command exited with status 1\n", got)
@@ -76,7 +179,7 @@ func TestValidateBuildSourceSelection_RejectsFromImageAndFromTemplate(t *testing
 	})
 
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "cannot specify both")
+		assert.Contains(t, err.Error(), "cannot use both")
 	}
 }
 
@@ -89,27 +192,43 @@ func TestValidateBuildSourceSelection_AllowsDockerfileWithFromTemplate(t *testin
 	assert.NoError(t, err)
 }
 
-func TestValidateRebuildSourceSelection_RejectsCLIFromImage(t *testing.T) {
-	info := BuildInfo{
-		TemplateID: "tmpl-xxxxxxxxxxxx",
-		Dockerfile: "./Dockerfile",
-		FromImage:  "ubuntu:22.04",
-	}
-	err := validateRebuildSourceSelection(info, true, false)
+func TestResolveBaseTemplate_UsesTemplateIDAsBase(t *testing.T) {
+	base, err := resolveBaseTemplate("tmpl-xxxxxxxxxxxx", "")
+
+	require.NoError(t, err)
+	assert.Equal(t, "tmpl-xxxxxxxxxxxx", base)
+}
+
+func TestResolveBaseTemplate_UsesFromTemplateAsBase(t *testing.T) {
+	base, err := resolveBaseTemplate("", "agents-base")
+
+	require.NoError(t, err)
+	assert.Equal(t, "agents-base", base)
+}
+
+func TestResolveBaseTemplate_RejectsBothSources(t *testing.T) {
+	_, err := resolveBaseTemplate("tmpl-xxxxxxxxxxxx", "agents-base")
 
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "--from-image")
+		assert.Contains(t, err.Error(), "--template-id")
 		assert.Contains(t, err.Error(), "--from-template")
 	}
 }
 
-func TestValidateRebuildSourceSelection_RejectsCLIFromTemplate(t *testing.T) {
-	info := BuildInfo{
-		TemplateID:   "tmpl-xxxxxxxxxxxx",
-		Dockerfile:   "./Dockerfile",
+func TestCLIBaseSelection_RejectsMultipleFlags(t *testing.T) {
+	_, _, err := cliBaseSelection(BuildInfo{
+		TemplateID:   "tmpl-base",
 		FromTemplate: "agents-base",
+	})
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "--template-id")
+		assert.Contains(t, err.Error(), "--from-template")
 	}
-	err := validateRebuildSourceSelection(info, false, true)
+}
+
+func TestCLIBaseSelection_RejectsImageAndTemplate(t *testing.T) {
+	_, _, err := cliBaseSelection(BuildInfo{FromImage: "ubuntu:22.04", FromTemplate: "agents-base"})
 
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "--from-image")
@@ -117,38 +236,213 @@ func TestValidateRebuildSourceSelection_RejectsCLIFromTemplate(t *testing.T) {
 	}
 }
 
-// TOML 配置中声明的 from_image 在 rebuild 时必须保留，
-// 否则下游 buildFromDockerfile 会回退到 Dockerfile 的 FROM 行。
-func TestValidateRebuildSourceSelection_PreservesConfigFromImage(t *testing.T) {
-	info := BuildInfo{
-		TemplateID: "tmpl-xxxxxxxxxxxx",
-		Dockerfile: "./Dockerfile",
-		FromImage:  "ubuntu:22.04",
+func TestCLIBaseSelection_ReturnsTemplateID(t *testing.T) {
+	field, value, err := cliBaseSelection(BuildInfo{TemplateID: "tmpl-base"})
+
+	require.NoError(t, err)
+	assert.Equal(t, "template_id", field)
+	assert.Equal(t, "tmpl-base", value)
+}
+
+func TestCLIBaseSelection_FallsBackToFromImage(t *testing.T) {
+	field, value, err := cliBaseSelection(BuildInfo{FromImage: "ubuntu:22.04"})
+
+	require.NoError(t, err)
+	assert.Equal(t, "from_image", field)
+	assert.Equal(t, "ubuntu:22.04", value)
+}
+
+func TestCLIBaseSelection_EmptyWithoutBase(t *testing.T) {
+	field, value, err := cliBaseSelection(BuildInfo{Name: "demo"})
+
+	require.NoError(t, err)
+	assert.Empty(t, field)
+	assert.Empty(t, value)
+}
+
+func TestApplyCLIBasePrecedence_DropsFileBase(t *testing.T) {
+	info := BuildInfo{TemplateID: "tmpl-cli", FromTemplate: "file-base"}
+
+	overrode := applyCLIBasePrecedence(&info, "template_id", "tmpl-cli")
+
+	assert.True(t, overrode)
+	assert.Equal(t, "tmpl-cli", info.TemplateID)
+	assert.Empty(t, info.FromTemplate)
+}
+
+func TestApplyCLIBasePrecedence_KeepsCLIOnly(t *testing.T) {
+	info := BuildInfo{FromTemplate: "cli-base"}
+
+	overrode := applyCLIBasePrecedence(&info, "from_template", "cli-base")
+
+	assert.False(t, overrode)
+	assert.Equal(t, "cli-base", info.FromTemplate)
+}
+
+func TestRejectSelfBase_BlamesFlagWhenBaseCameFromCLI(t *testing.T) {
+	err := rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "tmpl-demo"}, "tmpl-demo", nil, "template_id")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "--template-id")
+		assert.NotContains(t, err.Error(), "qshell.sandbox.toml")
 	}
+}
 
-	err := validateRebuildSourceSelection(info, false, false)
+func TestBaseConflictError_ReportsConfigKeys(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(path, []byte("name = \"demo\"\ntemplate_id = \"tmpl-old\"\nfrom_template = \"base\"\n"), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
 
-	assert.NoError(t, err)
+	conflict := baseConflictError(cfg, "")
+
+	if assert.Error(t, conflict) {
+		assert.Contains(t, conflict.Error(), path)
+		assert.Contains(t, conflict.Error(), "template_id")
+		assert.Contains(t, conflict.Error(), "from_template")
+	}
+}
+
+func TestBaseConflictError_IgnoresFileWhenCLIWins(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(path, []byte("template_id = \"a\"\nfrom_template = \"b\"\n"), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
+
+	assert.NoError(t, baseConflictError(cfg, "template_id"))
+}
+
+func TestRejectSelfBase_RejectsTemplateIDItself(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(path, []byte("name = \"demo\"\ntemplate_id = \"tmpl-demo\"\n"), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
+
+	buildErr := rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "tmpl-demo"}, "tmpl-demo", cfg, "")
+
+	if assert.Error(t, buildErr) {
+		assert.Contains(t, buildErr.Error(), path)
+		assert.Contains(t, buildErr.Error(), "remove that line")
+	}
+}
+
+func TestRejectSelfBase_AllowsDistinctBase(t *testing.T) {
+	assert.NoError(t, rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "base"}, "tmpl-demo", nil, ""))
+}
+
+func loadTestConfig(t *testing.T, content string) *config.FileConfig {
+	t.Helper()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(path, []byte(content), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
+	return cfg
+}
+
+func TestResolveBuildInputs_ReportsTOMLBaseConflict(t *testing.T) {
+	cfg := loadTestConfig(t, "name = \"demo\"\ntemplate_id = \"tmpl-old\"\nfrom_template = \"base\"\n")
+
+	_, _, err := resolveBuildInputs(BuildInfo{}, cfg, "", "")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), cfg.SourcePath())
+		assert.Contains(t, err.Error(), "template_id")
+		assert.Contains(t, err.Error(), "from_template")
+	}
+}
+
+func TestResolveBuildInputs_UsesFileFromTemplate(t *testing.T) {
+	cfg := loadTestConfig(t, "name = \"demo\"\nfrom_template = \"base\"\n")
+
+	info, overrode, err := resolveBuildInputs(BuildInfo{Name: "demo", FromTemplate: "base"}, cfg, "", "")
+
+	require.NoError(t, err)
+	assert.False(t, overrode)
+	assert.Equal(t, "base", info.FromTemplate)
+	assert.Empty(t, info.TemplateID)
+}
+
+func TestResolveBuildInputs_CLIBaseOverridesFile(t *testing.T) {
+	cfg := loadTestConfig(t, "name = \"demo\"\nfrom_template = \"file-base\"\n")
+
+	info, overrode, err := resolveBuildInputs(
+		BuildInfo{Name: "demo", TemplateID: "tmpl-cli", FromTemplate: "file-base"}, cfg, "template_id", "tmpl-cli")
+
+	require.NoError(t, err)
+	assert.True(t, overrode)
+	assert.Equal(t, "tmpl-cli", info.FromTemplate)
+}
+
+func TestResolveBuildInputs_LegacyTemplateIDNeedsName(t *testing.T) {
+	cfg := loadTestConfig(t, "template_id = \"tmpl-old\"\n")
+
+	_, _, err := resolveBuildInputs(BuildInfo{TemplateID: "tmpl-old"}, cfg, "", "")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "add a name")
+		assert.Contains(t, err.Error(), "template_id")
+	}
+}
+
+func TestResolveBuildInputs_RequiresName(t *testing.T) {
+	_, _, err := resolveBuildInputs(BuildInfo{FromTemplate: "base"}, nil, "", "")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "required")
+	}
+}
+
+func TestResolveBuildInputs_RejectsSelfBase(t *testing.T) {
+	_, _, err := resolveBuildInputs(BuildInfo{Name: "demo", FromTemplate: "demo"}, nil, "", "")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "own base")
+	}
+}
+
+func TestResolveBuildInputs_CLIFromImageOverridesFileTemplate(t *testing.T) {
+	cfg := loadTestConfig(t, "name = \"demo\"\nfrom_template = \"file-base\"\n")
+
+	info, overrode, err := resolveBuildInputs(
+		BuildInfo{Name: "demo", FromImage: "ubuntu:22.04", FromTemplate: "file-base"}, cfg, "from_image", "ubuntu:22.04")
+
+	require.NoError(t, err)
+	assert.True(t, overrode)
 	assert.Equal(t, "ubuntu:22.04", info.FromImage)
 	assert.Empty(t, info.FromTemplate)
 }
 
-// TOML 配置中声明的 from_template 在 rebuild 时必须保留，
-// 这是修复 "image 'scratch' not found" 的关键场景：
-// agents-base 等模板基于 from_template = "base" 构建，
-// rebuild 时若被清空会让 Dockerfile 中的 FROM scratch 直接送到 builder。
-func TestValidateRebuildSourceSelection_PreservesConfigFromTemplate(t *testing.T) {
-	info := BuildInfo{
-		TemplateID:   "tmpl-xxxxxxxxxxxx",
-		Dockerfile:   "./Dockerfile",
-		FromTemplate: "base",
+func TestCliBaseSelection_NamingMatchesSelfBaseGuard(t *testing.T) {
+	field, value, err := cliBaseSelection(BuildInfo{TemplateID: "tmpl-demo"})
+	require.NoError(t, err)
+
+	guardErr := rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: value}, value, nil, field)
+
+	if assert.Error(t, guardErr) {
+		assert.Contains(t, guardErr.Error(), "--template-id names the template being built")
 	}
+}
 
-	err := validateRebuildSourceSelection(info, false, false)
+func TestPrepareDockerfileBuild_ParsesSteps(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "Dockerfile")
+	require.NoError(t, os.WriteFile(path, []byte("FROM ubuntu:22.04\nRUN echo hi\n"), 0o644))
 
-	assert.NoError(t, err)
-	assert.Empty(t, info.FromImage)
-	assert.Equal(t, "base", info.FromTemplate)
+	plan, err := prepareDockerfileBuild(BuildInfo{Dockerfile: path})
+
+	require.NoError(t, err)
+	require.NotNil(t, plan)
+	assert.NotEmpty(t, plan.result.Steps)
+}
+
+func TestPrepareDockerfileBuild_MissingFile(t *testing.T) {
+	_, err := prepareDockerfileBuild(BuildInfo{Dockerfile: filepath.Join(t.TempDir(), "missing")})
+
+	assert.Error(t, err)
 }
 
 func TestValidateBuildSourceSelection_RequiresSource(t *testing.T) {
