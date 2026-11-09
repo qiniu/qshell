@@ -96,6 +96,73 @@ func TestCreateTemplateParamsIncludesMinFreeDisk(t *testing.T) {
 	assert.Equal(t, int32(20480), *params.MinFreeDiskMB)
 }
 
+func TestCreateTemplateParams_ForwardsCPUAndMemory(t *testing.T) {
+	params := createTemplateParams(BuildInfo{
+		Name:     "demo",
+		CPUCount: 4,
+		MemoryMB: 8192,
+	})
+
+	require.NotNil(t, params.CPUCount)
+	require.NotNil(t, params.MemoryMB)
+	assert.Equal(t, int32(4), *params.CPUCount)
+	assert.Equal(t, int32(8192), *params.MemoryMB)
+}
+
+func TestCreateTemplateParams_OmitsMinFreeDiskWhenUnset(t *testing.T) {
+	params := createTemplateParams(BuildInfo{Name: "demo"})
+
+	assert.Nil(t, params.MinFreeDiskMB)
+}
+
+func TestCreateTemplateParams_SendsExplicitZero(t *testing.T) {
+	zero := int32(0)
+
+	params := createTemplateParams(BuildInfo{Name: "demo", MinFreeDiskMB: &zero})
+
+	require.NotNil(t, params.MinFreeDiskMB)
+	assert.Equal(t, int32(0), *params.MinFreeDiskMB)
+}
+
+func TestBuildParamsFromDockerfileResult_FallsBackToDockerfileBase(t *testing.T) {
+	result := &templatedockerfile.ConvertResult{
+		BaseImage: "ubuntu:22.04",
+		Steps:     []sandbox.TemplateStep{},
+	}
+
+	params := buildParamsFromDockerfileResult(result, BuildInfo{})
+
+	require.NotNil(t, params.FromImage)
+	assert.Equal(t, "ubuntu:22.04", *params.FromImage)
+	assert.Nil(t, params.FromTemplate)
+}
+
+func TestBuildParamsFromDockerfileResult_KeepsSteps(t *testing.T) {
+	result := &templatedockerfile.ConvertResult{
+		BaseImage: "ubuntu:22.04",
+		Steps: []sandbox.TemplateStep{
+			{Type: "RUN", Args: stringSlicePtr("echo one")},
+			{Type: "RUN", Args: stringSlicePtr("echo two")},
+		},
+	}
+
+	params := buildParamsFromDockerfileResult(result, BuildInfo{FromImage: "ubuntu:22.04"})
+
+	require.NotNil(t, params.Steps)
+	assert.Len(t, *params.Steps, 2)
+}
+
+func TestResolveBaseTemplate_EmptyWhenNoBase(t *testing.T) {
+	base, err := resolveBaseTemplate("", "")
+
+	require.NoError(t, err)
+	assert.Empty(t, base)
+}
+
+func TestValidateBuildSourceSelection_AllowsDockerfileOnly(t *testing.T) {
+	assert.NoError(t, validateBuildSourceSelection(BuildInfo{Dockerfile: "./Dockerfile"}))
+}
+
 func TestFormatBuildFailureLogs(t *testing.T) {
 	got := formatBuildFailureLogs([]string{"step 1 failed", "command exited with status 1"})
 	assert.Equal(t, "\nBuild Logs:\n  step 1 failed\n  command exited with status 1\n", got)

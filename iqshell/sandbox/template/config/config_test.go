@@ -133,6 +133,29 @@ func TestApplyTo_CLIOverride(t *testing.T) {
 	assert.ElementsMatch(t, []string{"name", "cpu_count", "min_free_disk_mb"}, overrides)
 }
 
+func TestApplyTo_CLIExplicitZeroWinsOverFile(t *testing.T) {
+	fileMinFreeDiskMB := int32(20480)
+	cliZero := int32(0)
+	cfg := &FileConfig{MinFreeDiskMB: &fileMinFreeDiskMB}
+	dst := BuildFields{MinFreeDiskMB: &cliZero}
+
+	overrides := cfg.ApplyTo(&dst)
+
+	require.NotNil(t, dst.MinFreeDiskMB)
+	assert.Equal(t, int32(0), *dst.MinFreeDiskMB)
+	assert.Equal(t, []string{"min_free_disk_mb"}, overrides)
+}
+
+func TestApplyTo_TemplateIDFromFile(t *testing.T) {
+	cfg := &FileConfig{TemplateID: "tmpl-base"}
+	dst := BuildFields{}
+
+	overrides := cfg.ApplyTo(&dst)
+
+	assert.Equal(t, "tmpl-base", dst.TemplateID)
+	assert.Empty(t, overrides)
+}
+
 func TestApplyTo_MixedFill(t *testing.T) {
 	cfg := &FileConfig{
 		Dockerfile: "./Dockerfile",
