@@ -28,7 +28,7 @@
 
 ## 修复
 1. `sandbox template build` 在配置文件仍保留已移除的 `disk_size_mb` 时输出迁移提示，避免该配置被静默忽略后按团队默认磁盘构建
-2. `sandbox template build` 在配置了 `min_free_disk_mb`（含显式 0）且按 name 命中已有模板时，改走 v3 创建接口以同名重新构建，使磁盘设置真正生效（模板 ID 不变）；命中的是其他团队公共模板时直接报错；显式 `template_id` 仍走 rebuild
+2. `sandbox template build` 在配置了 `min_free_disk_mb`（含显式 0）且按 name 命中已有模板时，改走 v3 创建接口以同名重新构建，使磁盘设置生效（模板 ID 不变）；命中的是其他团队公共模板时直接报错；显式 `template_id` 仍走 rebuild
 
 # 2.19.12 (2026-08-11)
 ## 新增

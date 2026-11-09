@@ -132,9 +132,9 @@ qshell sandbox template build --wait
 # 首次运行时未找到同名模板则创建；同名模板已存在时，配置了 min_free_disk_mb 则改用同名创建以应用磁盘设置，否则 rebuild
 ```
 
-下次重建：
+再次构建：
 ```bash
-qshell sandbox template build --wait  # 配置了 min_free_disk_mb 时走同名创建，否则 rebuild，不再 409
+qshell sandbox template build --wait  # 配置了 min_free_disk_mb 时走同名创建以应用磁盘设置，否则执行 rebuild
 ```
 
 `min_free_disk_mb`：创建模板时构建后的最小剩余空间（MiB），可设为 0。省略时使用团队默认值；CLI 的 `--min-free-disk`（含显式 0）优先。
