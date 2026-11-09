@@ -1,5 +1,5 @@
 # 简介
-`sandbox template build`（别名 `bd`）按 E2B 的构建流程创建或更新模板：先申请构建，再启动构建。
+`sandbox template build`（别名 `bd`）分两步创建或更新模板：先申请构建并提交资源设置，再以选定的底模板启动构建。
 
 每次构建分两步：
 

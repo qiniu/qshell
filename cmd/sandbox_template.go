@@ -159,7 +159,7 @@ var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 		Use:     "build",
 		Aliases: []string{"bd"},
 		Short:   "Build a template (alias: bd)",
-		Long: `Build a template through the E2B flow: request the build, then start it.
+		Long: `Build a template in two steps: request the build with its resources, then start it with the selected base.
 
 Each build selects one of three base modes:
   1. --from-image: Build from a base Docker image
