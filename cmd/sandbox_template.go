@@ -176,7 +176,7 @@ because the rebuild API must carry the Dockerfile content in the request body.
 参数可通过 qshell.sandbox.toml 持久化；CLI flag 优先于配置文件。
 
 模板按 name 定位（同环境内 name 全局唯一）：未提供 --template-id 时，
-qshell 会先按 name 在远端查找；命中即对已有模板触发 rebuild，未命中再创建新模板。
+qshell 会先按 name 在远端查找；命中即对已有模板触发 rebuild（配置了 min_free_disk_mb 时改为同名创建以应用磁盘设置），未命中再创建新模板。
 因此 qshell.sandbox.toml 只需写 name，无需写 template_id，
 配置文件可在多个环境间复用。
 

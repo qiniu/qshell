@@ -1,10 +1,13 @@
 package operations
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/config"
 	templatedockerfile "github.com/qiniu/qshell/v2/iqshell/sandbox/template/dockerfile"
@@ -17,13 +20,17 @@ func TestShouldRecreateForDisk_RecreatesResolvedNameWithFreeDisk(t *testing.T) {
 }
 
 func TestShouldRecreateForDisk_KeepsRebuildWithoutDiskSetting(t *testing.T) {
-	zero := int32(0)
 	minFree := int32(20480)
 
 	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base"}, true))
-	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &zero}, true))
 	assert.False(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &minFree}, false))
 	assert.False(t, shouldRecreateForDisk(BuildInfo{MinFreeDiskMB: &minFree}, true))
+}
+
+func TestShouldRecreateForDisk_AppliesExplicitZero(t *testing.T) {
+	zero := int32(0)
+
+	assert.True(t, shouldRecreateForDisk(BuildInfo{Name: "agents-base", MinFreeDiskMB: &zero}, true))
 }
 
 func TestOwnershipError_RejectsForeignPublicTemplate(t *testing.T) {
@@ -40,11 +47,16 @@ func TestOwnershipError_AllowsOwnedTemplate(t *testing.T) {
 }
 
 func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
-	legacy := int32(20480)
+	dir := t.TempDir()
+	path := filepath.Join(dir, "prod.toml")
+	require.NoError(t, os.WriteFile(path, []byte("disk_size_mb = 20480\n"), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
 
-	warning := legacyDiskSizeWarning(&config.FileConfig{DiskSizeMB: &legacy})
+	warning := legacyDiskSizeWarning(cfg)
 
 	assert.Contains(t, warning, "disk_size_mb = 20480")
+	assert.Contains(t, warning, path)
 	assert.Contains(t, warning, "min_free_disk_mb")
 }
 

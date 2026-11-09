@@ -2,10 +2,6 @@
 ## 更新
 1. 发布构建和 Makefile 构建使用 `-s -w` 去除符号表及调试信息，减小各平台二进制文件体积
 
-## 修复
-1. `sandbox template build` 遇到 `qshell.sandbox.toml` 中已废弃的 `disk_size_mb` 时输出迁移提示，避免该配置被静默忽略后仍按团队默认磁盘构建
-2. `sandbox template build` 在配置了 `min_free_disk_mb > 0` 且按 name 命中已有模板时，改走 v3 创建接口以同名重新构建，使磁盘设置真正生效（模板 ID 不变）；命中的是其他团队公共模板时直接报错；显式 `template_id` 仍走 rebuild 并保留告警
-
 # 2.19.13 (2026-09-10)
 ## 新增
 1. 新增 `sandbox resource list`，支持查询沙箱挂载资源
@@ -29,6 +25,10 @@
 
 ## 不兼容变更
 1. 移除旧的 `--disk-size` / `disk_size_mb`，改用 `--min-free-disk` / `min_free_disk_mb`。
+
+## 修复
+1. `sandbox template build` 在配置文件仍保留已移除的 `disk_size_mb` 时输出迁移提示，避免该配置被静默忽略后按团队默认磁盘构建
+2. `sandbox template build` 在配置了 `min_free_disk_mb`（含显式 0）且按 name 命中已有模板时，改走 v3 创建接口以同名重新构建，使磁盘设置真正生效（模板 ID 不变）；命中的是其他团队公共模板时直接报错；显式 `template_id` 仍走 rebuild
 
 # 2.19.12 (2026-08-11)
 ## 新增

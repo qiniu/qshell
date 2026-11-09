@@ -193,8 +193,8 @@ func Build(info BuildInfo) {
 		}
 	}
 
-	if templateID != "" && info.MinFreeDiskMB != nil && *info.MinFreeDiskMB > 0 {
-		sbClient.PrintWarn("--min-free-disk / min_free_disk_mb only applies when creating a new template; the existing template will be rebuilt without changing this setting")
+	if templateID != "" && info.MinFreeDiskMB != nil {
+		sbClient.PrintWarn("--min-free-disk / min_free_disk_mb is not applied when rebuilding an existing template; the rebuild keeps the current disk")
 	}
 	if templateID == "" {
 		// 创建新模板
@@ -359,14 +359,13 @@ func formatBuildFailureLogs(logs []string) string {
 // shouldRecreateForDisk 判断是否应把「按 name 命中的 rebuild」改成同名创建请求。
 //
 // 模板磁盘只在创建时确定：rebuild 请求没有任何磁盘字段，所以配置了
-// min_free_disk_mb 的模板必须重新走创建接口才能生效。这里只对按 name
-// 解析到的模板生效；显式 --template-id / 配置文件 template_id 仍然走
-// rebuild，由调用方给出无法调整磁盘的告警。
+// min_free_disk_mb（含显式 0）的模板必须重新走创建接口才能生效。这里
+// 只对按 name 解析到的模板生效；显式 --template-id / 配置文件
+// template_id 仍然走 rebuild，由调用方给出无法调整磁盘的告警。
 func shouldRecreateForDisk(info BuildInfo, resolvedByName bool) bool {
 	return resolvedByName &&
 		info.Name != "" &&
-		info.MinFreeDiskMB != nil &&
-		*info.MinFreeDiskMB > 0
+		info.MinFreeDiskMB != nil
 }
 
 // ensureTemplateOwned 校验按 name 命中的模板是否属于当前团队。
@@ -403,9 +402,9 @@ func legacyDiskSizeWarning(cfg *config.FileConfig) string {
 	if cfg == nil || cfg.DiskSizeMB == nil {
 		return ""
 	}
-	return fmt.Sprintf("qshell.sandbox.toml 中的 disk_size_mb = %d 已废弃："+
-		"模板 API 移除了磁盘大小参数，该配置不会生效；"+
-		"请改用 min_free_disk_mb（构建后的最小剩余空间，单位 MiB）", *cfg.DiskSizeMB)
+	return fmt.Sprintf("disk_size_mb = %d in %s is no longer supported: the template API removed the disk-size field, "+
+		"so this setting has no effect; use min_free_disk_mb (minimum free space after build in MiB) instead",
+		*cfg.DiskSizeMB, cfg.SourcePath())
 }
 
 func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {
