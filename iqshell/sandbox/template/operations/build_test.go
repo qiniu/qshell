@@ -215,27 +215,47 @@ func TestResolveBaseTemplate_RejectsBothSources(t *testing.T) {
 	}
 }
 
-func TestCLIBaseSelection_PrefersTemplateID(t *testing.T) {
-	field, value := cliBaseSelection(BuildInfo{
+func TestCLIBaseSelection_RejectsMultipleFlags(t *testing.T) {
+	_, _, err := cliBaseSelection(BuildInfo{
 		TemplateID:   "tmpl-base",
-		FromTemplate: "ignored",
-		FromImage:    "ignored:1",
+		FromTemplate: "agents-base",
 	})
 
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "--template-id")
+		assert.Contains(t, err.Error(), "--from-template")
+	}
+}
+
+func TestCLIBaseSelection_RejectsImageAndTemplate(t *testing.T) {
+	_, _, err := cliBaseSelection(BuildInfo{FromImage: "ubuntu:22.04", FromTemplate: "agents-base"})
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "--from-image")
+		assert.Contains(t, err.Error(), "--from-template")
+	}
+}
+
+func TestCLIBaseSelection_ReturnsTemplateID(t *testing.T) {
+	field, value, err := cliBaseSelection(BuildInfo{TemplateID: "tmpl-base"})
+
+	require.NoError(t, err)
 	assert.Equal(t, "template_id", field)
 	assert.Equal(t, "tmpl-base", value)
 }
 
 func TestCLIBaseSelection_FallsBackToFromImage(t *testing.T) {
-	field, value := cliBaseSelection(BuildInfo{FromImage: "ubuntu:22.04"})
+	field, value, err := cliBaseSelection(BuildInfo{FromImage: "ubuntu:22.04"})
 
+	require.NoError(t, err)
 	assert.Equal(t, "from_image", field)
 	assert.Equal(t, "ubuntu:22.04", value)
 }
 
 func TestCLIBaseSelection_EmptyWithoutBase(t *testing.T) {
-	field, value := cliBaseSelection(BuildInfo{Name: "demo"})
+	field, value, err := cliBaseSelection(BuildInfo{Name: "demo"})
 
+	require.NoError(t, err)
 	assert.Empty(t, field)
 	assert.Empty(t, value)
 }
@@ -259,6 +279,41 @@ func TestApplyCLIBasePrecedence_KeepsCLIOnly(t *testing.T) {
 	assert.Equal(t, "cli-base", info.FromTemplate)
 }
 
+func TestRejectSelfBase_BlamesFlagWhenBaseCameFromCLI(t *testing.T) {
+	err := rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "tmpl-demo"}, "tmpl-demo", nil, "template_id")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "--template-id")
+		assert.NotContains(t, err.Error(), "qshell.sandbox.toml")
+	}
+}
+
+func TestBaseConflictError_ReportsConfigKeys(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(path, []byte("name = \"demo\"\ntemplate_id = \"tmpl-old\"\nfrom_template = \"base\"\n"), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
+
+	conflict := baseConflictError(cfg, "")
+
+	if assert.Error(t, conflict) {
+		assert.Contains(t, conflict.Error(), path)
+		assert.Contains(t, conflict.Error(), "template_id")
+		assert.Contains(t, conflict.Error(), "from_template")
+	}
+}
+
+func TestBaseConflictError_IgnoresFileWhenCLIWins(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(path, []byte("template_id = \"a\"\nfrom_template = \"b\"\n"), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
+
+	assert.NoError(t, baseConflictError(cfg, "template_id"))
+}
+
 func TestRejectSelfBase_RejectsTemplateIDItself(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "qshell.sandbox.toml")
@@ -266,7 +321,7 @@ func TestRejectSelfBase_RejectsTemplateIDItself(t *testing.T) {
 	cfg, err := config.Load(path)
 	require.NoError(t, err)
 
-	buildErr := rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "tmpl-demo"}, "tmpl-demo", cfg)
+	buildErr := rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "tmpl-demo"}, "tmpl-demo", cfg, "")
 
 	if assert.Error(t, buildErr) {
 		assert.Contains(t, buildErr.Error(), path)
@@ -275,7 +330,7 @@ func TestRejectSelfBase_RejectsTemplateIDItself(t *testing.T) {
 }
 
 func TestRejectSelfBase_AllowsDistinctBase(t *testing.T) {
-	assert.NoError(t, rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "base"}, "tmpl-demo", nil))
+	assert.NoError(t, rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "base"}, "tmpl-demo", nil, ""))
 }
 
 func TestValidateBuildSourceSelection_RequiresSource(t *testing.T) {

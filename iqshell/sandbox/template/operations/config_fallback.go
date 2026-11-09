@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 	"github.com/qiniu/qshell/v2/iqshell/sandbox/template/config"
 )
@@ -21,6 +22,7 @@ import (
 func templateIDFromCwdConfig() (string, bool) {
 	cfg, err := config.LoadFromCwd()
 	if err != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("load config: %v", err)
 		return "", false
 	}
@@ -29,6 +31,7 @@ func templateIDFromCwdConfig() (string, bool) {
 	}
 	if cfg.Name == "" {
 		if cfg.TemplateID != "" {
+			data.SetCmdStatusError()
 			sbClient.PrintError("%s: template_id is the base template for build; add name to locate the template",
 				cfg.SourcePath())
 			return "", false
@@ -38,11 +41,13 @@ func templateIDFromCwdConfig() (string, bool) {
 
 	client, cErr := sbClient.NewSandboxClient()
 	if cErr != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("%v", cErr)
 		return "", false
 	}
 	id, lErr := lookupTemplateIDByName(context.Background(), client, cfg.Name)
 	if lErr != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("lookup template by name %q: %v", cfg.Name, lErr)
 		return "", false
 	}

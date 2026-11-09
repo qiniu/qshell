@@ -65,6 +65,12 @@ type BuildInfo struct {
 	ConfigPath string
 }
 
+// buildFailed 打印错误并设置命令失败状态，便于 CI 感知构建失败。
+func buildFailed(format string, a ...any) {
+	data.SetCmdStatusError()
+	sbClient.PrintError(format, a...)
+}
+
 // Build 分两步创建模板。
 //
 // 先通过创建接口申请构建（CPU、内存、最小剩余空间等资源参数在这一步
@@ -72,25 +78,29 @@ type BuildInfo struct {
 // 同名模板已存在时，创建接口会沿用该模板 ID 并应用新的资源设置。
 func Build(info BuildInfo) {
 	// 记录 CLI 显式指定的底模板，合并后用它覆盖配置文件里的底模板字段。
-	cliBaseField, cliBase := cliBaseSelection(info)
+	cliBaseField, cliBase, baseErr := cliBaseSelection(info)
+	if baseErr != nil {
+		buildFailed("%v", baseErr)
+		return
+	}
 
 	// 加载配置文件并合并（CLI > file > default）
 	var cfg *config.FileConfig
 	if info.ConfigPath != "" {
 		loaded, cErr := config.Load(info.ConfigPath)
 		if cErr != nil {
-			sbClient.PrintError("load config: %v", cErr)
+			buildFailed("load config: %v", cErr)
 			return
 		}
 		if loaded == nil {
-			sbClient.PrintError("config file not found: %s", info.ConfigPath)
+			buildFailed("config file not found: %s", info.ConfigPath)
 			return
 		}
 		cfg = loaded
 	} else {
 		loaded, cErr := config.LoadFromCwd()
 		if cErr != nil {
-			sbClient.PrintError("load config: %v", cErr)
+			buildFailed("load config: %v", cErr)
 			return
 		}
 		cfg = loaded
@@ -139,34 +149,38 @@ func Build(info BuildInfo) {
 		}
 	}
 
+	if err := baseConflictError(cfg, cliBase); err != nil {
+		buildFailed("%v", err)
+		return
+	}
 	base, bErr := resolveBaseTemplate(info.TemplateID, info.FromTemplate)
 	if bErr != nil {
-		sbClient.PrintError("%v", bErr)
+		buildFailed("%v", bErr)
 		return
 	}
 	info.FromTemplate = base
 	if base != "" && base == info.Name {
-		sbClient.PrintError("cannot use template %q as its own base template", info.Name)
+		buildFailed("cannot use template %q as its own base template", info.Name)
 		return
 	}
 
 	if info.Name == "" {
-		sbClient.PrintError("template name (--name) is required")
+		buildFailed("template name (--name) is required")
 		return
 	}
 	if err := validateBuildSourceSelection(info); err != nil {
-		sbClient.PrintError("%v", err)
+		buildFailed("%v", err)
 		return
 	}
 	if info.MinFreeDiskMB != nil && *info.MinFreeDiskMB < 0 {
 		data.SetCmdStatusError()
-		sbClient.PrintError("--min-free-disk / min_free_disk_mb must be non-negative")
+		buildFailed("--min-free-disk / min_free_disk_mb must be non-negative")
 		return
 	}
 
 	client, err := sbClient.NewSandboxClient()
 	if err != nil {
-		sbClient.PrintError("%v", err)
+		buildFailed("%v", err)
 		return
 	}
 
@@ -176,17 +190,17 @@ func Build(info BuildInfo) {
 	// 新的资源设置，但不会接管其他团队的同名公共模板。
 	existingID, lookupErr := lookupTemplateIDByName(ctx, client, info.Name)
 	if lookupErr != nil {
-		sbClient.PrintError("lookup template by name %q: %v", info.Name, lookupErr)
+		buildFailed("lookup template by name %q: %v", info.Name, lookupErr)
 		return
 	}
 	if existingID != "" {
 		fmt.Fprintf(os.Stderr, "[lookup] template %q resolved to %s; building under this name\n", info.Name, existingID)
 		if err := ensureTemplateOwned(ctx, client, info.Name, existingID); err != nil {
-			sbClient.PrintError("%v", err)
+			buildFailed("%v", err)
 			return
 		}
-		if err := rejectSelfBase(info, existingID, cfg); err != nil {
-			sbClient.PrintError("%v", err)
+		if err := rejectSelfBase(info, existingID, cfg, cliBase); err != nil {
+			buildFailed("%v", err)
 			return
 		}
 	}
@@ -200,7 +214,7 @@ func Build(info BuildInfo) {
 	fmt.Printf("%s template %s...\n", action, info.Name)
 	resp, cErr := client.CreateTemplate(ctx, createParams)
 	if cErr != nil {
-		sbClient.PrintError("create template failed: %v", cErr)
+		buildFailed("create template failed: %v", cErr)
 		return
 	}
 	templateID := resp.TemplateID
@@ -209,7 +223,7 @@ func Build(info BuildInfo) {
 
 	if info.Dockerfile != "" {
 		if err := buildFromDockerfile(ctx, client, templateID, buildID, info); err != nil {
-			sbClient.PrintError("%v", err)
+			buildFailed("%v", err)
 			return
 		}
 	} else {
@@ -233,7 +247,7 @@ func Build(info BuildInfo) {
 
 		fmt.Printf("Starting build for template %s (build ID: %s)...\n", templateID, buildID)
 		if err := client.StartTemplateBuild(ctx, templateID, buildID, buildParams); err != nil {
-			sbClient.PrintError("start build failed: %v", err)
+			buildFailed("start build failed: %v", err)
 			return
 		}
 	}
@@ -269,13 +283,13 @@ func Build(info BuildInfo) {
 		// 检查构建状态
 		buildInfo, bErr := client.GetTemplateBuildStatus(ctx, templateID, buildID, nil)
 		if bErr != nil {
-			sbClient.PrintError("get build status failed: %v", bErr)
+			buildFailed("get build status failed: %v", bErr)
 			return
 		}
 
 		if buildInfo.Status == "ready" || buildInfo.Status == "error" {
 			if buildInfo.Status == "error" {
-				sbClient.PrintError("build failed")
+				buildFailed("build failed")
 				fmt.Print(formatBuildFailureLogs(buildInfo.Logs))
 			} else {
 				sbClient.PrintSuccess("Build completed!")
@@ -292,7 +306,7 @@ func Build(info BuildInfo) {
 
 		select {
 		case <-ctx.Done():
-			sbClient.PrintError("build watch cancelled")
+			buildFailed("build watch cancelled")
 			return
 		case <-time.After(3 * time.Second):
 		}
@@ -300,16 +314,29 @@ func Build(info BuildInfo) {
 }
 
 // cliBaseSelection 返回 CLI 显式指定的底模板字段与值。
-func cliBaseSelection(info BuildInfo) (field, value string) {
+func cliBaseSelection(info BuildInfo) (field, value string, err error) {
+	var selected []string
+	if info.TemplateID != "" {
+		selected = append(selected, "--template-id")
+	}
+	if info.FromTemplate != "" {
+		selected = append(selected, "--from-template")
+	}
+	if info.FromImage != "" {
+		selected = append(selected, "--from-image")
+	}
+	if len(selected) > 1 {
+		return "", "", fmt.Errorf("cannot use more than one of %s", strings.Join(selected, ", "))
+	}
 	switch {
 	case info.TemplateID != "":
-		return "template_id", info.TemplateID
+		return "template_id", info.TemplateID, nil
 	case info.FromTemplate != "":
-		return "from_template", info.FromTemplate
+		return "from_template", info.FromTemplate, nil
 	case info.FromImage != "":
-		return "from_image", info.FromImage
+		return "from_image", info.FromImage, nil
 	}
-	return "", ""
+	return "", "", nil
 }
 
 // applyCLIBasePrecedence 用 CLI 的底模板覆盖配置文件中的底模板字段，
@@ -335,12 +362,13 @@ func applyCLIBasePrecedence(info *BuildInfo, field, value string) bool {
 //
 // 旧版 qshell 会把新建模板的 ID 回写到 template_id；在新语义下该字段表示
 // 底模板，于是构建会以模板自身为底，Dockerfile 的 FROM 被忽略。
-func rejectSelfBase(info BuildInfo, existingID string, cfg *config.FileConfig) error {
-	if info.FromTemplate == "" {
+func rejectSelfBase(info BuildInfo, existingID string, cfg *config.FileConfig, cliBase string) error {
+	if info.FromTemplate == "" || info.FromTemplate != existingID {
 		return nil
 	}
-	if info.FromTemplate != existingID && info.FromTemplate != info.Name {
-		return nil
+	if cliBase != "" {
+		flag := "--" + strings.ReplaceAll(cliBase, "_", "-")
+		return fmt.Errorf("%s names the template being built (%s); choose a different base template", flag, existingID)
 	}
 	source := "qshell.sandbox.toml"
 	if cfg != nil && cfg.SourcePath() != "" {
@@ -348,6 +376,31 @@ func rejectSelfBase(info BuildInfo, existingID string, cfg *config.FileConfig) e
 	}
 	return fmt.Errorf("%s: template_id/from_template points at the template being built (%s); "+
 		"remove that line so the build uses its declared base", source, existingID)
+}
+
+// baseConflictError 返回配置文件里同时声明多个底模板时的错误。
+//
+// 命令行显式指定底模板时以命令行为准，配置文件里的旧值由
+// applyCLIBasePrecedence 清理；只有当冲突全部来自配置文件时才报错。
+func baseConflictError(cfg *config.FileConfig, cliBase string) error {
+	if cfg == nil || cliBase != "" {
+		return nil
+	}
+	var keys []string
+	if cfg.TemplateID != "" {
+		keys = append(keys, "template_id")
+	}
+	if cfg.FromTemplate != "" {
+		keys = append(keys, "from_template")
+	}
+	if cfg.FromImage != "" {
+		keys = append(keys, "from_image")
+	}
+	if len(keys) < 2 {
+		return nil
+	}
+	return fmt.Errorf("%s: %s all describe the base template; keep one and delete any template_id "+
+		"line written by an older qshell", cfg.SourcePath(), strings.Join(keys, ", "))
 }
 
 // resolveBaseTemplate 合并 --template-id 与 --from-template：两者都表示
