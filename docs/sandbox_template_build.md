@@ -28,7 +28,7 @@ $ qshell sandbox template build --doc
 需要配置 `QINIU_API_KEY` 或 `E2B_API_KEY` 环境变量。
 
 # 参数
-- `--name`：模板名称，必填。按 name 定位模板；同名模板已存在时沿用其模板 ID
+- `--name`：模板名称，可通过 `--name` 或配置文件 `name` 提供。按 name 定位模板；同名模板已存在时沿用其模板 ID
 - `--template-id`：构建所用的底模板 ID，与 `--from-template` 等价，二者只能选一个
 - `--from-image`：底 Docker 镜像
 - `--from-template`：底模板名称或 ID
@@ -91,7 +91,7 @@ $ qshell sandbox template build --name my-template-v2 --template-id tmpl-xxxxxxx
 
 `--template-id` 与 `--from-template` 等价，二者只能选一个。
 
-7. 更新同名模板的资源配置（忽略缓存）
+7. 忽略缓存重新构建同名模板
 ```
 $ qshell sandbox template build --name my-template --from-template base --dockerfile ./Dockerfile --no-cache --wait
 ```

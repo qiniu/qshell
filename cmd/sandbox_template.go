@@ -222,7 +222,7 @@ Dockerfile RUN/COPY/ENV steps on top of the selected base. When combined with
 			operations.Build(info)
 		},
 	}
-	cmd.Flags().StringVar(&info.Name, "name", "", "template name; always required")
+	cmd.Flags().StringVar(&info.Name, "name", "", "template name (via --name or TOML name)")
 	cmd.Flags().StringVar(&info.TemplateID, "template-id", "", "base template ID for the build (same as --from-template)")
 	cmd.Flags().StringVar(&info.FromImage, "from-image", "", "base Docker image for the build")
 	cmd.Flags().StringVar(&info.FromTemplate, "from-template", "", "base template for the build")

@@ -333,6 +333,95 @@ func TestRejectSelfBase_AllowsDistinctBase(t *testing.T) {
 	assert.NoError(t, rejectSelfBase(BuildInfo{Name: "demo", FromTemplate: "base"}, "tmpl-demo", nil, ""))
 }
 
+func loadTestConfig(t *testing.T, content string) *config.FileConfig {
+	t.Helper()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "qshell.sandbox.toml")
+	require.NoError(t, os.WriteFile(path, []byte(content), 0o644))
+	cfg, err := config.Load(path)
+	require.NoError(t, err)
+	return cfg
+}
+
+func TestResolveBuildInputs_ReportsTOMLBaseConflict(t *testing.T) {
+	cfg := loadTestConfig(t, "name = \"demo\"\ntemplate_id = \"tmpl-old\"\nfrom_template = \"base\"\n")
+
+	_, _, err := resolveBuildInputs(BuildInfo{}, cfg, "", "")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), cfg.SourcePath())
+		assert.Contains(t, err.Error(), "template_id")
+		assert.Contains(t, err.Error(), "from_template")
+	}
+}
+
+func TestResolveBuildInputs_UsesFileFromTemplate(t *testing.T) {
+	cfg := loadTestConfig(t, "name = \"demo\"\nfrom_template = \"base\"\n")
+
+	info, overrode, err := resolveBuildInputs(BuildInfo{Name: "demo", FromTemplate: "base"}, cfg, "", "")
+
+	require.NoError(t, err)
+	assert.False(t, overrode)
+	assert.Equal(t, "base", info.FromTemplate)
+	assert.Empty(t, info.TemplateID)
+}
+
+func TestResolveBuildInputs_CLIBaseOverridesFile(t *testing.T) {
+	cfg := loadTestConfig(t, "name = \"demo\"\nfrom_template = \"file-base\"\n")
+
+	info, overrode, err := resolveBuildInputs(
+		BuildInfo{Name: "demo", TemplateID: "tmpl-cli", FromTemplate: "file-base"}, cfg, "template_id", "tmpl-cli")
+
+	require.NoError(t, err)
+	assert.True(t, overrode)
+	assert.Equal(t, "tmpl-cli", info.FromTemplate)
+}
+
+func TestResolveBuildInputs_LegacyTemplateIDNeedsName(t *testing.T) {
+	cfg := loadTestConfig(t, "template_id = \"tmpl-old\"\n")
+
+	_, _, err := resolveBuildInputs(BuildInfo{TemplateID: "tmpl-old"}, cfg, "", "")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "add a name")
+		assert.Contains(t, err.Error(), "template_id")
+	}
+}
+
+func TestResolveBuildInputs_RequiresName(t *testing.T) {
+	_, _, err := resolveBuildInputs(BuildInfo{FromTemplate: "base"}, nil, "", "")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "required")
+	}
+}
+
+func TestResolveBuildInputs_RejectsSelfBase(t *testing.T) {
+	_, _, err := resolveBuildInputs(BuildInfo{Name: "demo", FromTemplate: "demo"}, nil, "", "")
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "own base")
+	}
+}
+
+func TestPrepareDockerfileBuild_ParsesSteps(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "Dockerfile")
+	require.NoError(t, os.WriteFile(path, []byte("FROM ubuntu:22.04\nRUN echo hi\n"), 0o644))
+
+	plan, err := prepareDockerfileBuild(BuildInfo{Dockerfile: path})
+
+	require.NoError(t, err)
+	require.NotNil(t, plan)
+	assert.NotEmpty(t, plan.result.Steps)
+}
+
+func TestPrepareDockerfileBuild_MissingFile(t *testing.T) {
+	_, err := prepareDockerfileBuild(BuildInfo{Dockerfile: filepath.Join(t.TempDir(), "missing")})
+
+	assert.Error(t, err)
+}
+
 func TestValidateBuildSourceSelection_RequiresSource(t *testing.T) {
 	err := validateBuildSourceSelection(BuildInfo{})
 

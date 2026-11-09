@@ -143,39 +143,28 @@ func Build(info BuildInfo) {
 	if warning := legacyDiskSizeWarning(cfg); warning != "" {
 		sbClient.PrintWarn("%s", warning)
 	}
-	if cliBase != "" {
-		if overrode := applyCLIBasePrecedence(&info, cliBaseField, cliBase); overrode && cfg != nil {
-			fmt.Fprintf(os.Stderr, "[config] CLI overrides base template from %s\n", cfg.SourcePath())
-		}
+	resolved, overrodeBase, rErr := resolveBuildInputs(info, cfg, cliBaseField, cliBase)
+	if rErr != nil {
+		buildFailed("%v", rErr)
+		return
+	}
+	info = resolved
+	if overrodeBase && cfg != nil {
+		fmt.Fprintf(os.Stderr, "[config] CLI overrides base template from %s\n", cfg.SourcePath())
 	}
 
-	if err := baseConflictError(cfg, cliBase); err != nil {
-		buildFailed("%v", err)
-		return
-	}
-	base, bErr := resolveBaseTemplate(info.TemplateID, info.FromTemplate)
-	if bErr != nil {
-		buildFailed("%v", bErr)
-		return
-	}
-	info.FromTemplate = base
-	if base != "" && base == info.Name {
-		buildFailed("cannot use template %q as its own base template", info.Name)
-		return
-	}
-
-	if info.Name == "" {
-		buildFailed("template name (--name) is required")
-		return
-	}
-	if err := validateBuildSourceSelection(info); err != nil {
-		buildFailed("%v", err)
-		return
-	}
 	if info.MinFreeDiskMB != nil && *info.MinFreeDiskMB < 0 {
-		data.SetCmdStatusError()
 		buildFailed("--min-free-disk / min_free_disk_mb must be non-negative")
 		return
+	}
+
+	var dockerPlan *dockerfileBuild
+	if info.Dockerfile != "" {
+		dockerPlan, rErr = prepareDockerfileBuild(info)
+		if rErr != nil {
+			buildFailed("%v", rErr)
+			return
+		}
 	}
 
 	client, err := sbClient.NewSandboxClient()
@@ -186,7 +175,7 @@ func Build(info BuildInfo) {
 
 	ctx := context.Background()
 
-	// 同名模板已存在时只做归属校验：创建接口会沿用该模板 ID 并应用
+	// 同名模板已存在时校验归属与底模板：创建接口会沿用该模板 ID 并应用
 	// 新的资源设置，但不会接管其他团队的同名公共模板。
 	existingID, lookupErr := lookupTemplateIDByName(ctx, client, info.Name)
 	if lookupErr != nil {
@@ -199,7 +188,7 @@ func Build(info BuildInfo) {
 			buildFailed("%v", err)
 			return
 		}
-		if err := rejectSelfBase(info, existingID, cfg, cliBase); err != nil {
+		if err := rejectSelfBase(info, existingID, cfg, cliBaseField); err != nil {
 			buildFailed("%v", err)
 			return
 		}
@@ -221,8 +210,8 @@ func Build(info BuildInfo) {
 	buildID := resp.BuildID
 	sbClient.PrintSuccess("Template %s ready for build (build ID: %s)", templateID, buildID)
 
-	if info.Dockerfile != "" {
-		if err := buildFromDockerfile(ctx, client, templateID, buildID, info); err != nil {
+	if dockerPlan != nil {
+		if err := dockerPlan.start(ctx, client, templateID, buildID, info); err != nil {
 			buildFailed("%v", err)
 			return
 		}
@@ -313,6 +302,40 @@ func Build(info BuildInfo) {
 	}
 }
 
+// resolveBuildInputs 合并 CLI 与配置文件后，确定目标名称与底模板。
+//
+// 返回值第二项表示 CLI 底模板覆盖了配置文件中的底模板字段。
+func resolveBuildInputs(info BuildInfo, cfg *config.FileConfig, cliBaseField, cliBase string) (BuildInfo, bool, error) {
+	overrode := false
+	if cliBase != "" {
+		overrode = applyCLIBasePrecedence(&info, cliBaseField, cliBase)
+	}
+	if err := baseConflictError(cfg, cliBaseField); err != nil {
+		return info, overrode, err
+	}
+	base, err := resolveBaseTemplate(info.TemplateID, info.FromTemplate)
+	if err != nil {
+		return info, overrode, err
+	}
+	info.FromTemplate = base
+	info.TemplateID = ""
+
+	if base != "" && base == info.Name {
+		return info, overrode, fmt.Errorf("cannot use template %q as its own base template", info.Name)
+	}
+	if info.Name == "" {
+		if base != "" {
+			return info, overrode, fmt.Errorf("template name (--name or TOML name) is required; " +
+				"template_id names the base template, so add a name and remove any template_id written by an older qshell")
+		}
+		return info, overrode, fmt.Errorf("template name (--name or TOML name) is required")
+	}
+	if err := validateBuildSourceSelection(info); err != nil {
+		return info, overrode, err
+	}
+	return info, overrode, nil
+}
+
 // cliBaseSelection 返回 CLI 显式指定的底模板字段与值。
 func cliBaseSelection(info BuildInfo) (field, value string, err error) {
 	var selected []string
@@ -362,12 +385,12 @@ func applyCLIBasePrecedence(info *BuildInfo, field, value string) bool {
 //
 // 旧版 qshell 会把新建模板的 ID 回写到 template_id；在新语义下该字段表示
 // 底模板，于是构建会以模板自身为底，Dockerfile 的 FROM 被忽略。
-func rejectSelfBase(info BuildInfo, existingID string, cfg *config.FileConfig, cliBase string) error {
+func rejectSelfBase(info BuildInfo, existingID string, cfg *config.FileConfig, cliBaseField string) error {
 	if info.FromTemplate == "" || info.FromTemplate != existingID {
 		return nil
 	}
-	if cliBase != "" {
-		flag := "--" + strings.ReplaceAll(cliBase, "_", "-")
+	if cliBaseField != "" {
+		flag := "--" + strings.ReplaceAll(cliBaseField, "_", "-")
 		return fmt.Errorf("%s names the template being built (%s); choose a different base template", flag, existingID)
 	}
 	source := "qshell.sandbox.toml"
@@ -382,8 +405,8 @@ func rejectSelfBase(info BuildInfo, existingID string, cfg *config.FileConfig, c
 //
 // 命令行显式指定底模板时以命令行为准，配置文件里的旧值由
 // applyCLIBasePrecedence 清理；只有当冲突全部来自配置文件时才报错。
-func baseConflictError(cfg *config.FileConfig, cliBase string) error {
-	if cfg == nil || cliBase != "" {
+func baseConflictError(cfg *config.FileConfig, cliBaseField string) error {
+	if cfg == nil || cliBaseField != "" {
 		return nil
 	}
 	var keys []string
@@ -483,52 +506,58 @@ func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {
 	return params
 }
 
-// buildFromDockerfile 处理 v2 Dockerfile 构建流程：
-// 解析 Dockerfile → 上传 COPY 文件 → 使用 steps 启动构建。
-func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID, buildID string, info BuildInfo) error {
-	// 读取 Dockerfile
+// dockerfileBuild 保存申请构建前已完成的 Dockerfile 解析结果。
+//
+// Dockerfile 的读取与解析放在申请构建之前，路径错误不会在服务端排入
+// 一次构建之后才暴露。
+type dockerfileBuild struct {
+	contextPath string
+	result      *dockerfile.ConvertResult
+}
+
+// prepareDockerfileBuild 读取并解析 Dockerfile，确定构建上下文目录。
+func prepareDockerfileBuild(info BuildInfo) (*dockerfileBuild, error) {
 	content, err := os.ReadFile(info.Dockerfile)
 	if err != nil {
-		return fmt.Errorf("read Dockerfile: %w", err)
+		return nil, fmt.Errorf("read Dockerfile: %w", err)
 	}
 
-	// 确定构建上下文目录
 	contextPath := info.Path
 	if contextPath == "" {
 		contextPath = filepath.Dir(info.Dockerfile)
 	}
 	contextPath, err = filepath.Abs(contextPath)
 	if err != nil {
-		return fmt.Errorf("resolve context path: %w", err)
+		return nil, fmt.Errorf("resolve context path: %w", err)
 	}
 
-	// 解析 Dockerfile
 	result, err := dockerfile.Convert(string(content))
 	if err != nil {
-		return fmt.Errorf("parse Dockerfile: %w", err)
+		return nil, fmt.Errorf("parse Dockerfile: %w", err)
 	}
 	fmt.Printf("Parsed Dockerfile: base image=%s, %d steps\n", result.BaseImage, len(result.Steps))
 
-	// 读取 .dockerignore
-	ignorePatterns := dockerfile.ReadDockerignore(contextPath)
+	return &dockerfileBuild{contextPath: contextPath, result: result}, nil
+}
 
-	// 处理 COPY 步骤：计算文件哈希并上传文件
-	for i := range result.Steps {
-		step := &result.Steps[i]
+// start 上传 COPY 文件并启动构建。
+func (d *dockerfileBuild) start(ctx context.Context, client *sandbox.Client, templateID, buildID string, info BuildInfo) error {
+	ignorePatterns := dockerfile.ReadDockerignore(d.contextPath)
+
+	for i := range d.result.Steps {
+		step := &d.result.Steps[i]
 		if step.Type != "COPY" || step.Args == nil || len(*step.Args) < 2 {
 			continue
 		}
 		args := *step.Args
 		src, dest := args[0], args[1]
 
-		// 计算文件哈希
-		hash, err := dockerfile.ComputeFilesHash(src, dest, contextPath, ignorePatterns)
+		hash, err := dockerfile.ComputeFilesHash(src, dest, d.contextPath, ignorePatterns)
 		if err != nil {
 			return fmt.Errorf("compute file hash for COPY %s %s: %w", src, dest, err)
 		}
 		step.FilesHash = &hash
 
-		// 检查文件是否需要上传
 		fileInfo, err := client.GetTemplateFiles(ctx, templateID, hash)
 		if err != nil {
 			return fmt.Errorf("get template files for hash %s: %w", hash, err)
@@ -536,7 +565,7 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 
 		if !fileInfo.Present && fileInfo.URL != nil {
 			fmt.Printf("Uploading files for COPY %s %s...\n", src, dest)
-			if err := dockerfile.CollectAndUpload(ctx, *fileInfo.URL, src, contextPath, ignorePatterns); err != nil {
+			if err := dockerfile.CollectAndUpload(ctx, *fileInfo.URL, src, d.contextPath, ignorePatterns); err != nil {
 				return fmt.Errorf("upload files for COPY %s %s: %w", src, dest, err)
 			}
 		} else if fileInfo.Present {
@@ -544,11 +573,9 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 		}
 	}
 
-	// 构建参数
-	buildParams := buildParamsFromDockerfileResult(result, info)
+	buildParams := buildParamsFromDockerfileResult(d.result, info)
 
-	// 应用来自 Dockerfile 或 CLI 覆盖的启动/就绪命令
-	startCmd := result.StartCmd
+	startCmd := d.result.StartCmd
 	if info.StartCmd != "" {
 		startCmd = info.StartCmd
 	}
@@ -556,7 +583,7 @@ func buildFromDockerfile(ctx context.Context, client *sandbox.Client, templateID
 		buildParams.StartCmd = &startCmd
 	}
 
-	readyCmd := result.ReadyCmd
+	readyCmd := d.result.ReadyCmd
 	if info.ReadyCmd != "" {
 		readyCmd = info.ReadyCmd
 	}
