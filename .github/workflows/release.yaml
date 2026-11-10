@@ -13,6 +13,8 @@ on:
     types: [published]
 env:
   CGO_ENABLED: 0
+  GOTOOLCHAIN: local
+  GO_RELEASE_VERSION: "1.27.3"
 name: Release qshell
 jobs:
   release-check:
@@ -58,8 +60,6 @@ jobs:
             goos: windows
           - goarch: amd64
             goos: windows
-          - goarch: arm
-            goos: windows
           - goarch: arm64
             goos: windows
     steps:
@@ -67,7 +67,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v5
       with:
-        go-version: "1.23.2"
+        go-version: ${{ env.GO_RELEASE_VERSION }}
     - name: Set APP_VERSION env
       run: |
         if [ "${{ github.event_name }}" = "release" ]; then
@@ -126,8 +126,6 @@ jobs:
             goos: windows
           - goarch: amd64
             goos: windows
-          - goarch: arm
-            goos: windows
           - goarch: arm64
             goos: windows
     steps:
@@ -149,7 +147,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        goversion: "https://go.dev/dl/go1.23.2.linux-amd64.tar.gz"
+        goversion: "https://go.dev/dl/go${{ env.GO_RELEASE_VERSION }}.linux-amd64.tar.gz"
         ldflags: -s -w -X "github.com/qiniu/qshell/v2/iqshell/common/version.version=${{ env.APP_VERSION }}" -extldflags "-static"
         project_path: "./main"
         retry: '100'

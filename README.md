@@ -46,6 +46,14 @@ export PATH=$PATH:/home/jemy/tools
 
 ![windows-qshell-path-settings.png](http://devtools.qiniu.com/windows-qshell-path-settings.png)
 
+## 从源码构建
+
+从源码构建需要 Go 1.25 或更高版本。CI 验证 Go 1.25.x 和 1.27.x，发布构建使用 Go 1.27.3。
+
+```bash
+go build -o qshell ./main/
+```
+
 ## qshell 使用
 
 1. 添加密钥和账户名称

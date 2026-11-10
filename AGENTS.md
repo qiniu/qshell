@@ -1,6 +1,6 @@
 # qshell — 开发维护指南
 
-qshell 是七牛云官方命令行工具，模块路径 `github.com/qiniu/qshell/v2`，Go 1.24+，基于 Cobra 框架构建。
+qshell 是七牛云官方命令行工具，模块路径 `github.com/qiniu/qshell/v2`，Go 1.25+，基于 Cobra 框架构建。
 
 本文档面向维护者和贡献者，帮助理解项目结构、架构模式和开发流程。
 命令使用说明请参考 `docs/` 目录和 `README.md`。
@@ -176,13 +176,15 @@ CI 在 push 和 pull_request 时触发（`.github/workflows/ut-check.yml`）：
 2. **单元测试**：`go test -coverprofile=coverage.txt ./...`
 3. **代码覆盖率**：上传至 Codecov
 
-Go 版本矩阵：1.24.x
+Go 版本矩阵：1.25.x、1.27.x。CI 设置 `GOTOOLCHAIN=local`，确保使用矩阵指定的工具链。
 
 ### 发布流程
 
 发布通过 GitHub Release 触发（`.github/workflows/release.yaml`）：
 
-1. 构建 16 个平台二进制文件（darwin/linux/windows × 多架构）
+发布检查和二进制构建统一使用 Go 1.27.3，通过工作流的 `GO_RELEASE_VERSION` 配置。
+
+1. 构建 15 个平台二进制文件（darwin/linux/windows × 多架构；不包含 Windows 32 位 ARM）
 2. 上传至 GitHub Releases
 3. 上传至七牛云 devtools 存储
 
@@ -219,6 +221,6 @@ make lint
 2. **版本号通过 ldflags 注入** — 不要硬编码版本号，通过 `-ldflags` 设置 `version.version`
 3. **文档同步** — 新增或修改命令时必须同步更新 `docs/` 目录
 4. **依赖七牛 Go SDK** — 核心存储和沙箱功能依赖 `github.com/qiniu/go-sdk/v7`
-5. **跨平台兼容** — 支持 16 个平台，使用 `filepath.Join` 等跨平台写法
+5. **跨平台兼容** — 支持 15 个平台，使用 `filepath.Join` 等跨平台写法
 6. **保持向后兼容** — 命令行接口变更需要考虑用户兼容性
 7. **CHANGELOG 更新** — 功能变更必须记录在 `CHANGELOG.md` 中
