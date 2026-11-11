@@ -6,6 +6,9 @@
 1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.30.1`，支持模板构建最小总磁盘大小参数。
 2. 发布构建和 Makefile 构建使用 `-s -w` 去除符号表及调试信息，减小各平台二进制文件体积
 
+## 修复
+1. 修正旧 `disk_size_mb` 配置的迁移提示，引导使用 `min_disk_mb`，并区分最小总磁盘大小与最小剩余空间。
+
 ## Go 构建
 1. 升级 `golang.org/x/crypto` 到 `v0.52.0`，同步升级相关 `golang.org/x/*` 依赖。
 2. CI 验证 Go 1.25.x 和 1.27.x，发布构建使用 Go 1.27.3。
@@ -37,7 +40,7 @@
 3. `sandbox template build` 每次按 `name` 申请构建：同名模板沿用其模板 ID，并应用 CPU、内存、最小剩余空间等资源设置。
 
 ## 不兼容变更
-1. 移除旧的 `--disk-size` / `disk_size_mb`，改用 `--min-free-disk` / `min_free_disk_mb`。
+1. 移除旧的 `--disk-size` / `disk_size_mb`，改用 `--min-disk` / `min_disk_mb` 表达最小总磁盘大小；`--min-free-disk` / `min_free_disk_mb` 表达最小剩余空间。
 2. `sandbox template build` 改为两步构建：`--template-id` 与 TOML `template_id` 表示构建所用底模板（与 `--from-template` 等价），需要同时提供 `name`；不再自动回写 `template_id`。 旧版 qshell 回写的 `template_id` 若指向模板自身，构建会直接报错并提示删除该行；`get` / `delete` / `publish` / `unpublish` 改为只按 `name` 定位模板。
 
 ## 修复

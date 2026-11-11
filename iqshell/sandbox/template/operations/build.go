@@ -501,15 +501,15 @@ func ownershipError(name, templateID string, isOwner bool) error {
 
 // legacyDiskSizeWarning 返回 qshell.sandbox.toml 中已废弃 disk_size_mb 的迁移提示。
 //
-// go-sdk v7.30.0 起，创建模板请求移除了 diskSizeMB，改为 minFreeDiskMb
-// （构建后的最小剩余空间）。若继续接受旧字段却不提示，配置会静默失效，
-// 用户会得到一个实际仍使用团队默认磁盘的模板。
+// 旧字段不再生效，应改用 min_disk_mb 表达构建后的最小总磁盘大小；
+// min_free_disk_mb 则控制最小剩余空间，两者语义不同。
 func legacyDiskSizeWarning(cfg *config.FileConfig) string {
 	if cfg == nil || cfg.DiskSizeMB == nil {
 		return ""
 	}
-	return fmt.Sprintf("disk_size_mb = %d in %s is no longer supported: the template API removed the disk-size field, "+
-		"so this setting has no effect; use min_free_disk_mb (minimum free space after build in MiB) instead",
+	return fmt.Sprintf("disk_size_mb = %d in %s is no longer supported and has no effect; "+
+		"use min_disk_mb (minimum total disk size after build in MiB) instead; "+
+		"min_free_disk_mb controls minimum free space after build in MiB",
 		*cfg.DiskSizeMB, cfg.SourcePath())
 }
 

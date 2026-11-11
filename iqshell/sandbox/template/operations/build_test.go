@@ -26,7 +26,7 @@ func TestOwnershipError_AllowsOwnedTemplate(t *testing.T) {
 	assert.NoError(t, ownershipError("demo", "tmpl-x", true))
 }
 
-func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
+func TestLegacyDiskSizeWarning_PointsToMinDisk(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "prod.toml")
 	require.NoError(t, os.WriteFile(path, []byte("disk_size_mb = 20480\n"), 0o644))
@@ -37,7 +37,10 @@ func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
 
 	assert.Contains(t, warning, "disk_size_mb = 20480")
 	assert.Contains(t, warning, path)
-	assert.Contains(t, warning, "min_free_disk_mb")
+	assert.Contains(t, warning, "has no effect")
+	assert.Contains(t, warning, "use min_disk_mb (minimum total disk size after build in MiB) instead")
+	assert.Contains(t, warning, "min_free_disk_mb controls minimum free space after build in MiB")
+	assert.NotContains(t, warning, "use min_free_disk_mb")
 }
 
 func TestLegacyDiskSizeWarning_QuietWithoutLegacyField(t *testing.T) {

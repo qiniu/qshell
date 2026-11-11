@@ -61,7 +61,7 @@ no_cache = false
 | memory_mb | int | 内存（MiB） |
 | min_disk_mb | int | 构建后的最小总磁盘大小（MiB），非负整数；省略或 0 表示不设置最小值，CLI 的 --min-disk（含显式 0）优先 |
 | min_free_disk_mb | int | 构建后的最小剩余空间（MiB），可设为 0；省略时使用团队默认值 |
-| disk_size_mb | int | **已废弃**：模板 API 移除了磁盘大小参数，该字段不再生效，`build` 会在 stderr 给出迁移提示 |
+| disk_size_mb | int | **已废弃**：该字段不再生效，请改用 `min_disk_mb` 表达构建后的最小总磁盘大小；`min_free_disk_mb` 表达最小剩余空间，语义不同。`build` 会在 stderr 给出迁移提示 |
 | no_cache | bool | 强制忽略缓存 |
 
 # 优先级
