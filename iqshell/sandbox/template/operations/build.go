@@ -43,6 +43,9 @@ type BuildInfo struct {
 	// MemoryMB 是沙箱内存大小（MiB）。
 	MemoryMB int32
 
+	// MinDiskMB 是构建后的最小总磁盘大小（MiB），nil 或 0 表示不设置最小值。
+	MinDiskMB *int32
+
 	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），每次构建都会提交。
 	MinFreeDiskMB *int32
 
@@ -99,6 +102,10 @@ func Build(info BuildInfo) {
 	}
 	if overrodeBase && cfg != nil {
 		fmt.Fprintf(os.Stderr, "[config] CLI overrides base template from %s\n", cfg.SourcePath())
+	}
+	if info.MinDiskMB != nil && *info.MinDiskMB < 0 {
+		buildFailed("--min-disk / min_disk_mb must be non-negative")
+		return
 	}
 	if info.MinFreeDiskMB != nil && *info.MinFreeDiskMB < 0 {
 		buildFailed("--min-free-disk / min_free_disk_mb must be non-negative")
@@ -192,6 +199,7 @@ func loadBuildConfig(info BuildInfo) (BuildInfo, *config.FileConfig, error) {
 		CPUCount:       info.CPUCount,
 		MemoryMB:       info.MemoryMB,
 		MinFreeDiskMB:  info.MinFreeDiskMB,
+		MinDiskMB:      info.MinDiskMB,
 		NoCache:        info.NoCache,
 		NoCacheChanged: info.NoCacheChanged,
 	}
@@ -207,6 +215,7 @@ func loadBuildConfig(info BuildInfo) (BuildInfo, *config.FileConfig, error) {
 	info.CPUCount = fields.CPUCount
 	info.MemoryMB = fields.MemoryMB
 	info.MinFreeDiskMB = fields.MinFreeDiskMB
+	info.MinDiskMB = fields.MinDiskMB
 	info.NoCache = fields.NoCache
 
 	for _, key := range overrides {
@@ -506,7 +515,8 @@ func legacyDiskSizeWarning(cfg *config.FileConfig) string {
 
 func createTemplateParams(info BuildInfo) sandbox.CreateTemplateParams {
 	params := sandbox.CreateTemplateParams{
-		Name: &info.Name,
+		Name:      &info.Name,
+		MinDiskMB: info.MinDiskMB,
 	}
 	if info.CPUCount > 0 {
 		params.CPUCount = &info.CPUCount

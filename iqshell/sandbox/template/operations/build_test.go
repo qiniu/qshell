@@ -456,3 +456,30 @@ func TestValidateBuildSourceSelection_RequiresSource(t *testing.T) {
 func stringSlicePtr(values ...string) *[]string {
 	return &values
 }
+
+func TestMinDiskConfigToCreateParams(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		content string
+		cli     *int32
+		want    *int32
+	}{
+		{name: "unset"},
+		{name: "configured", content: "min_disk_mb = 10240", want: diskValue(10240)},
+		{name: "configured zero", content: "min_disk_mb = 0", want: diskValue(0)},
+		{name: "CLI zero overrides", content: "min_disk_mb = 10240", cli: diskValue(0), want: diskValue(0)},
+		{name: "CLI positive overrides", content: "min_disk_mb = 10240", cli: diskValue(20480), want: diskValue(20480)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "qshell.sandbox.toml")
+			require.NoError(t, os.WriteFile(path, []byte(tc.content), 0600))
+			info, _, err := loadBuildConfig(BuildInfo{ConfigPath: path, MinDiskMB: tc.cli, MinFreeDiskMB: diskValue(5120)})
+			require.NoError(t, err)
+			params := createTemplateParams(info)
+			assert.Equal(t, tc.want, params.MinDiskMB)
+			assert.Equal(t, diskValue(5120), params.MinFreeDiskMB)
+		})
+	}
+}
+
+func diskValue(value int32) *int32 { return &value }

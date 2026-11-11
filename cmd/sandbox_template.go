@@ -155,6 +155,7 @@ var templateBuildsCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 var templateBuildCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.BuildInfo{}
 	var minFreeDiskMB int32
+	var minDiskMB int32
 	cmd := &cobra.Command{
 		Use:     "build",
 		Aliases: []string{"bd"},
@@ -175,7 +176,7 @@ Dockerfile RUN/COPY/ENV steps on top of the selected base. When combined with
 参数可通过 qshell.sandbox.toml 持久化；CLI flag 优先于配置文件。
 
 模板按 name 定位（同环境内 name 全局唯一）。每次构建都会先按 name 申请构建：
-同名模板已存在时沿用该模板 ID 并应用 CPU、内存、min_free_disk_mb 等资源设置，
+同名模板已存在时沿用该模板 ID 并应用 CPU、内存、min_disk_mb、min_free_disk_mb 等资源设置，
 不存在时创建新模板，随后再以 --from-template / --from-image / Dockerfile 指定的
 底模板启动构建。因此 qshell.sandbox.toml 只需写 name，无需写 template_id。
 `,
@@ -216,6 +217,9 @@ Dockerfile RUN/COPY/ENV steps on top of the selected base. When combined with
 				return
 			}
 			info.NoCacheChanged = cmd.Flags().Changed("no-cache")
+			if cmd.Flags().Changed("min-disk") {
+				info.MinDiskMB = &minDiskMB
+			}
 			if cmd.Flags().Changed("min-free-disk") {
 				info.MinFreeDiskMB = &minFreeDiskMB
 			}
@@ -229,6 +233,7 @@ Dockerfile RUN/COPY/ENV steps on top of the selected base. When combined with
 	cmd.Flags().StringVar(&info.StartCmd, "start-cmd", "", "command to run after build")
 	cmd.Flags().StringVar(&info.ReadyCmd, "ready-cmd", "", "readiness check command")
 	cmd.Flags().Int32Var(&info.CPUCount, "cpu", 0, "sandbox CPU count")
+	cmd.Flags().Int32Var(&minDiskMB, "min-disk", 0, "minimum total disk size after build in MiB; 0 means no minimum")
 	cmd.Flags().Int32Var(&minFreeDiskMB, "min-free-disk", 0, "minimum free disk space after build in MiB; explicit 0 disables free-space growth")
 	cmd.Flags().Int32Var(&info.MemoryMB, "memory", 0, "sandbox memory size in MiB")
 	cmd.Flags().BoolVar(&info.Wait, "wait", false, "wait for build to complete")

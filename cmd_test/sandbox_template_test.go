@@ -105,7 +105,7 @@ func TestSandboxTemplateUnpublishDocumentWithFlags(t *testing.T) {
 }
 
 func TestSandboxTemplateBuildDocumentWithFlags(t *testing.T) {
-	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "build"}, "--min-free-disk", "0", "--no-cache")
+	testSubcommandDocumentWithFlags(t, []string{"sandbox", "template", "build"}, "--min-disk", "10240", "--min-free-disk", "0", "--no-cache")
 }
 
 func TestSandboxTemplateBuildDocumentWithDockerfile(t *testing.T) {

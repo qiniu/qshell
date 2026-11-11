@@ -37,6 +37,9 @@ type FileConfig struct {
 	// MemoryMB 是沙箱内存大小（MiB）。
 	MemoryMB int32 `toml:"memory_mb"`
 
+	// MinDiskMB 是构建后的最小总磁盘大小（MiB），nil 或 0 表示不设置最小值。
+	MinDiskMB *int32 `toml:"min_disk_mb"`
+
 	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），nil 使用团队默认值，0 表示不为剩余空间扩容。
 	MinFreeDiskMB *int32 `toml:"min_free_disk_mb"`
 
