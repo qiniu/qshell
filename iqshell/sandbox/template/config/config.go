@@ -37,12 +37,15 @@ type FileConfig struct {
 	// MemoryMB 是沙箱内存大小（MiB）。
 	MemoryMB int32 `toml:"memory_mb"`
 
+	// MinDiskMB 是构建后的最小总磁盘大小（MiB），nil 或 0 表示不设置最小值。
+	MinDiskMB *int32 `toml:"min_disk_mb"`
+
 	// MinFreeDiskMB 是构建后的最小剩余空间（MiB），nil 使用团队默认值，0 表示不为剩余空间扩容。
 	MinFreeDiskMB *int32 `toml:"min_free_disk_mb"`
 
 	// DiskSizeMB 是已废弃的构建磁盘大小字段（MiB）。
-	// 新版本模板 API 已移除该参数，这里仅保留解析能力，
-	// 以便 build 时给出明确迁移提示，而不是静默忽略用户配置。
+	// 这里仅保留解析能力，以便 build 时提示改用 min_disk_mb
+	// 表达最小总磁盘大小，而不是静默忽略用户配置。
 	DiskSizeMB *int32 `toml:"disk_size_mb"`
 
 	// NoCache 强制完整构建，忽略缓存。

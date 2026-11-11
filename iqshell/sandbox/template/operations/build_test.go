@@ -26,7 +26,7 @@ func TestOwnershipError_AllowsOwnedTemplate(t *testing.T) {
 	assert.NoError(t, ownershipError("demo", "tmpl-x", true))
 }
 
-func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
+func TestLegacyDiskSizeWarning_PointsToMinDisk(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "prod.toml")
 	require.NoError(t, os.WriteFile(path, []byte("disk_size_mb = 20480\n"), 0o644))
@@ -37,7 +37,10 @@ func TestLegacyDiskSizeWarning_PointsToMinFreeDisk(t *testing.T) {
 
 	assert.Contains(t, warning, "disk_size_mb = 20480")
 	assert.Contains(t, warning, path)
-	assert.Contains(t, warning, "min_free_disk_mb")
+	assert.Contains(t, warning, "has no effect")
+	assert.Contains(t, warning, "use min_disk_mb (minimum total disk size after build in MiB) instead")
+	assert.Contains(t, warning, "min_free_disk_mb controls minimum free space after build in MiB")
+	assert.NotContains(t, warning, "use min_free_disk_mb")
 }
 
 func TestLegacyDiskSizeWarning_QuietWithoutLegacyField(t *testing.T) {
@@ -456,3 +459,30 @@ func TestValidateBuildSourceSelection_RequiresSource(t *testing.T) {
 func stringSlicePtr(values ...string) *[]string {
 	return &values
 }
+
+func TestMinDiskConfigToCreateParams(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		content string
+		cli     *int32
+		want    *int32
+	}{
+		{name: "unset"},
+		{name: "configured", content: "min_disk_mb = 10240", want: diskValue(10240)},
+		{name: "configured zero", content: "min_disk_mb = 0", want: diskValue(0)},
+		{name: "CLI zero overrides", content: "min_disk_mb = 10240", cli: diskValue(0), want: diskValue(0)},
+		{name: "CLI positive overrides", content: "min_disk_mb = 10240", cli: diskValue(20480), want: diskValue(20480)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "qshell.sandbox.toml")
+			require.NoError(t, os.WriteFile(path, []byte(tc.content), 0600))
+			info, _, err := loadBuildConfig(BuildInfo{ConfigPath: path, MinDiskMB: tc.cli, MinFreeDiskMB: diskValue(5120)})
+			require.NoError(t, err)
+			params := createTemplateParams(info)
+			assert.Equal(t, tc.want, params.MinDiskMB)
+			assert.Equal(t, diskValue(5120), params.MinFreeDiskMB)
+		})
+	}
+}
+
+func diskValue(value int32) *int32 { return &value }
