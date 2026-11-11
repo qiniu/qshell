@@ -121,6 +121,8 @@ qshell sandbox template build --name demo --from-image ubuntu:22.04 --min-free-d
 ```
 也可在 qshell.sandbox.toml 中配置 `min_free_disk_mb = 5120`。CLI 显式指定的值（包括 0）优先于配置文件。
 
+# 构建后的最小总磁盘大小
+
 `--min-disk` / `min_disk_mb` 控制最小总磁盘大小，可与最小剩余空间同时设置，构建结果需同时满足两者要求，已有磁盘不会缩小。CLI 显式指定的值（包括 0）优先于配置文件。
 
 ```bash
