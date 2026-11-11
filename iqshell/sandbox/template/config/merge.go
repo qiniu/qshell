@@ -26,7 +26,6 @@ type BuildFields struct {
 	MemoryMB int32
 	// MinDiskMB 是构建后的最小总磁盘大小（MiB），nil 或 0 表示不设置最小值。
 	MinDiskMB *int32
-
 	// MinFreeDiskMB 是构建后的最小剩余空间（MiB）。
 	MinFreeDiskMB *int32
 	// NoCache 强制完整构建，忽略缓存。
