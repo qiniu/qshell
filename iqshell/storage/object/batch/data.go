@@ -60,6 +60,16 @@ type OperationResult struct {
 	EndUser  string  `json:"endUser"`
 	Error    string  `json:"error"`
 	Parts    []int64 `json:"parts"`
+
+	MD5                            string `json:"md5"`                            // 文件 MD5
+	Status                         *int   `json:"status"`                         // 文件禁用状态
+	RestoreStatus                  *int   `json:"restoreStatus"`                  // 文件解冻状态
+	Expiration                     *int64 `json:"expiration"`                     // 过期删除时间，Unix 秒
+	TransitionToIA                 *int64 `json:"transitionToIA"`                 // 转低频时间，Unix 秒
+	TransitionToIntelligentTiering *int64 `json:"transitionToIntelligentTiering"` // 转智能分层时间，Unix 秒
+	TransitionToArchiveIR          int64  `json:"transitionToArchiveIR"`          // 转归档直读时间，Unix 秒，缺失时为 0
+	TransitionToArchive            *int64 `json:"transitionToARCHIVE"`            // 转归档时间，Unix 秒
+	TransitionToDeepArchive        *int64 `json:"transitionToDeepArchive"`        // 转深度归档时间，Unix 秒
 }
 
 var _ flow.Result = (*OperationResult)(nil)

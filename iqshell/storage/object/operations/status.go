@@ -3,6 +3,7 @@ package operations
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/qiniu/qshell/v2/iqshell"
@@ -48,11 +49,14 @@ func Status(cfg *iqshell.Config, info StatusInfo) {
 	}
 }
 
+// BatchStatusInfo 包含批量查询配置和按顺序输出的字段。
 type BatchStatusInfo struct {
-	BatchInfo batch.Info
-	Bucket    string
+	BatchInfo  batch.Info
+	Bucket     string
+	ShowFields string
 }
 
+// Check 校验批量查询参数，规范化字段名并保留用户指定顺序。
 func (info *BatchStatusInfo) Check() *data.CodeError {
 	if err := info.BatchInfo.Check(); err != nil {
 		return err
@@ -61,9 +65,29 @@ func (info *BatchStatusInfo) Check() *data.CodeError {
 	if len(info.Bucket) == 0 {
 		return alert.CannotEmptyError("Bucket", "")
 	}
+	if info.ShowFields == "" {
+		info.ShowFields = strings.Join(batchStatusFields[:6], ",")
+		return nil
+	}
+	fields := strings.Split(info.ShowFields, ",")
+	for i, field := range fields {
+		found := false
+		for _, supported := range batchStatusFields {
+			if strings.EqualFold(field, supported) {
+				fields[i] = supported
+				found = true
+				break
+			}
+		}
+		if !found {
+			return data.NewEmptyError().AppendDescF("show-fields value error:%s not support", field)
+		}
+	}
+	info.ShowFields = strings.Join(fields, ",")
 	return nil
 }
 
+// BatchStatus 批量查询对象，按所选字段输出并保留原有任务和失败处理流程。
 func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 	cfg.JobPathBuilder = func(cmdPath string) string {
 		jobId := utils.Md5Hex(fmt.Sprintf("%s:%s:%s", cfg.CmdCfg.CmdId, info.Bucket, info.BatchInfo.InputFile))
@@ -75,6 +99,7 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 		return
 	}
 
+	fields := strings.Split(info.ShowFields, ",")
 	exporter, err := export.NewFileExport(info.BatchInfo.FileExporterConfig)
 	if err != nil {
 		log.Error(err)
@@ -106,8 +131,7 @@ func BatchStatus(cfg *iqshell.Config, info BatchStatusInfo) {
 			}
 			in := (*StatusInfo)(apiInfo)
 			if result.IsSuccess() {
-				infoString := fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%d",
-					in.Key, result.FSize, result.Hash, result.MimeType, result.PutTime, result.Type)
+				infoString := formatBatchStatus(in.Key, result, fields)
 				log.Alert(infoString)
 				exporter.Result().Export(infoString)
 			} else {

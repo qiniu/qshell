@@ -33,6 +33,7 @@ var batchStatCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	setBatchCmdForceFlags(cmd, &info.BatchInfo)
 	setBatchCmdEnableRecordFlags(cmd, &info.BatchInfo)
 	setBatchCmdRecordRedoWhileErrorFlags(cmd, &info.BatchInfo)
+	cmd.Flags().StringVar(&info.ShowFields, "show-fields", "", "The file attributes to display, separated by commas, in the specified order. Optional fields: Key,Fsize,Hash,MimeType,PutTime,Type,EndUser,MD5,Status,RestoreStatus,Expiration,TransitionToIA,TransitionToIntelligentTiering,TransitionToArchiveIR,TransitionToArchive,TransitionToDeepArchive.")
 	return cmd
 }
 

@@ -206,13 +206,23 @@ func (h *handler) Start() {
 
 				for i, r := range resultList {
 					result := &OperationResult{
-						Code:     r.Code,
-						Hash:     r.Data.Hash,
-						FSize:    r.Data.Fsize,
-						PutTime:  r.Data.PutTime,
-						MimeType: r.Data.MimeType,
-						Type:     r.Data.Type,
-						Error:    r.Data.Error,
+						Code:                           r.Code,
+						Hash:                           r.Data.Hash,
+						FSize:                          r.Data.Fsize,
+						PutTime:                        r.Data.PutTime,
+						MimeType:                       r.Data.MimeType,
+						Type:                           r.Data.Type,
+						Error:                          r.Data.Error,
+						EndUser:                        r.Data.EndUser,
+						MD5:                            r.Data.Md5,
+						Status:                         r.Data.Status,
+						RestoreStatus:                  r.Data.RestoreStatus,
+						Expiration:                     r.Data.Expiration,
+						TransitionToIA:                 r.Data.TransitionToIA,
+						TransitionToIntelligentTiering: r.Data.TransitionToIntelligentTiering,
+						TransitionToArchiveIR:          r.Data.TransitionToArchiveIR,
+						TransitionToArchive:            r.Data.TransitionToArchive,
+						TransitionToDeepArchive:        r.Data.TransitionToDeepArchive,
 					}
 					record := &flow.WorkRecord{
 						WorkInfo: operationWorkInfoList[i],
