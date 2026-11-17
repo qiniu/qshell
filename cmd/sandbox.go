@@ -59,6 +59,12 @@ var sandboxListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox list --state running,paused --limit 10
   qshell sbx ls -s running,paused -l 10
 
+  # Read every matching page
+  qshell sandbox list --all --limit 100
+
+  # Continue from a cursor printed on stderr
+  qshell sandbox list --next-token CURSOR -f json
+
   # Filter by metadata
   qshell sandbox list -m env=prod,team=backend
   qshell sbx ls -m env=prod,team=backend
@@ -76,8 +82,10 @@ var sandboxListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&info.State, "state", "s", "", "filter by state (comma-separated: running,paused). Defaults to running")
 	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "filter by metadata (key1=value1,key2=value2)")
-	cmd.Flags().Int32VarP(&info.Limit, "limit", "l", 0, "maximum number of sandboxes to return")
+	cmd.Flags().Int32VarP(&info.Limit, "limit", "l", 0, "maximum number of sandboxes per page")
 	cmd.Flags().StringVarP(&info.Format, "format", "f", "pretty", "output format: pretty or json")
+	cmd.Flags().BoolVar(&info.All, "all", false, "read all matching pages")
+	cmd.Flags().StringVar(&info.NextToken, "next-token", "", "continue listing from this pagination token")
 	return cmd
 }
 

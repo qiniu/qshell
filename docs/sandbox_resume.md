@@ -22,6 +22,8 @@ $ qshell sandbox resume --doc
 - `-m, --metadata`：配合 -a/--all 使用，按元数据过滤（格式：key1=value1,key2=value2）
 
 # 示例
+`--all` 先完整枚举并去重，再执行恢复；枚举失败时不修改第一页资源。结束后输出成功和失败数量，任一请求失败返回非零退出码。
+
 1. 恢复指定沙箱
 ```
 $ qshell sandbox resume sb-xxxxxxxxxxxx

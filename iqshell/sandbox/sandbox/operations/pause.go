@@ -3,7 +3,6 @@ package operations
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
@@ -23,8 +22,9 @@ type PauseInfo struct {
 
 // Pause pauses one or more sandboxes so they can be resumed later.
 func Pause(info PauseInfo) {
-	client, err := sbClient.NewSandboxClient()
+	client, err := sbClient.NewSandboxListClient()
 	if err != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("%v", err)
 		return
 	}
@@ -50,8 +50,9 @@ func Pause(info PauseInfo) {
 			}
 		}
 
-		sandboxes, lErr := client.List(ctx, params)
+		sandboxes, lErr := client.ListAll(ctx, params)
 		if lErr != nil {
+			data.SetCmdStatusError()
 			sbClient.PrintError("list sandboxes failed: %v", lErr)
 			return
 		}
@@ -67,19 +68,7 @@ func Pause(info PauseInfo) {
 		return
 	}
 
-	// Pause sandboxes concurrently
-	var wg sync.WaitGroup
-	for _, id := range sandboxIDs {
-		wg.Add(1)
-		go func(sandboxID string) {
-			defer wg.Done()
-			if pErr := client.PauseWithParams(ctx, sandboxID, sandbox.PauseParams{Memory: info.Memory}); pErr != nil {
-				data.SetCmdStatusError()
-				sbClient.PrintError("pause sandbox %s failed: %v", sandboxID, pErr)
-				return
-			}
-			sbClient.PrintSuccess("Paused sandbox %s", sandboxID)
-		}(id)
-	}
-	wg.Wait()
+	runSandboxBatch(sandboxIDs, "pause", "Paused", func(id string) error {
+		return client.PauseWithParams(ctx, id, sandbox.PauseParams{Memory: info.Memory})
+	})
 }

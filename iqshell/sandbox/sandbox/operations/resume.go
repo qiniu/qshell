@@ -3,7 +3,6 @@ package operations
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
 
@@ -21,8 +20,9 @@ type ResumeInfo struct {
 // Resume resumes one or more paused sandboxes.
 // 使用 SDK v2 Connect 恢复沙箱，省略超时时间时采用服务端默认值。
 func Resume(info ResumeInfo) {
-	client, err := sbClient.NewSandboxClient()
+	client, err := sbClient.NewSandboxListClient()
 	if err != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("%v", err)
 		return
 	}
@@ -44,8 +44,9 @@ func Resume(info ResumeInfo) {
 			}
 		}
 
-		sandboxes, lErr := client.List(ctx, params)
+		sandboxes, lErr := client.ListAll(ctx, params)
 		if lErr != nil {
+			data.SetCmdStatusError()
 			sbClient.PrintError("list sandboxes failed: %v", lErr)
 			return
 		}
@@ -61,19 +62,8 @@ func Resume(info ResumeInfo) {
 		return
 	}
 
-	// Resume sandboxes concurrently
-	var wg sync.WaitGroup
-	for _, id := range sandboxIDs {
-		wg.Add(1)
-		go func(sandboxID string) {
-			defer wg.Done()
-			if _, rErr := client.Connect(ctx, sandboxID, sandbox.ConnectParams{}); rErr != nil {
-				data.SetCmdStatusError()
-				sbClient.PrintError("resume sandbox %s failed: %v", sandboxID, rErr)
-				return
-			}
-			sbClient.PrintSuccess("Resumed sandbox %s", sandboxID)
-		}(id)
-	}
-	wg.Wait()
+	runSandboxBatch(sandboxIDs, "resume", "Resumed", func(id string) error {
+		_, err := client.Connect(ctx, id, sandbox.ConnectParams{})
+		return err
+	})
 }
