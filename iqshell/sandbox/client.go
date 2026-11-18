@@ -31,7 +31,13 @@ type keepaliveTransport struct {
 
 func (t *keepaliveTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Set(keepalivePingHeader, keepalivePingIntervalSec)
-	return t.base.RoundTrip(req)
+	response, err := t.base.RoundTrip(req)
+	if response != nil && response.StatusCode == http.StatusOK {
+		if token, ok := req.Context().Value(listPageTokenKey{}).(*listPageToken); ok {
+			token.value = response.Header.Get("X-Next-Token")
+		}
+	}
+	return response, err
 }
 
 // Environment variable names for sandbox configuration.

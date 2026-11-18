@@ -13,6 +13,7 @@
 
 ## 新增
 1. 模板构建支持 `--min-disk` / `min_disk_mb`（SDK `MinDiskMB`），设置构建后最小总磁盘大小，可与最小剩余空间同时使用。
+2. `sandbox list` 支持 `--all` 完整查询和 `--next-token` 手动翻页，JSON 数组输出保持兼容。
 
 ## 更新
 1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.30.1`，支持模板构建最小总磁盘大小参数。
@@ -20,6 +21,8 @@
 
 ## 修复
 1. 修正旧 `disk_size_mb` 配置的迁移提示，引导使用 `min_disk_mb`，并区分最小总磁盘大小与最小剩余空间。
+2. `sandbox kill/pause/resume --all` 先枚举全部匹配页并去重，再限制并发执行变更，避免漏页或枚举失败后部分变更。
+3. 沙箱列表和批量操作的配置、查询或单项请求失败时设置非零退出码，批量操作输出成功与失败数量。
 
 ## Go 构建
 1. 升级 `golang.org/x/crypto` 到 `v0.52.0`，同步升级相关 `golang.org/x/*` 依赖。

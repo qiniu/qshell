@@ -3,25 +3,27 @@ package operations
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
+	"github.com/qiniu/qshell/v2/iqshell/common/data"
 
 	sbClient "github.com/qiniu/qshell/v2/iqshell/sandbox"
 )
 
 // KillInfo holds parameters for killing sandboxes.
 type KillInfo struct {
-	SandboxIDs []string
-	All        bool
-	State      string // Comma-separated states for filtering when --all is used
-	Metadata   string // Metadata filter: key=value
+	SandboxIDs  []string
+	All         bool
+	State       string // Comma-separated states for filtering when --all is used
+	Metadata    string // Metadata filter: key=value
+	MetadataSet bool   // Whether --metadata was explicitly supplied
 }
 
 // Kill terminates one or more sandboxes.
 func Kill(info KillInfo) {
-	client, err := sbClient.NewSandboxClient()
+	client, err := sbClient.NewSandboxListClient()
 	if err != nil {
+		data.SetCmdStatusError()
 		sbClient.PrintError("%v", err)
 		return
 	}
@@ -40,15 +42,19 @@ func Kill(info KillInfo) {
 		states := sbClient.ParseStates(stateStr)
 		params.State = &states
 
-		if info.Metadata != "" {
-			m := sbClient.ParseMetadata(info.Metadata)
-			if m != "" {
-				params.Metadata = &m
+		if info.MetadataSet || info.Metadata != "" {
+			filter, err := parseMetadataFilter(info.Metadata)
+			if err != nil {
+				data.SetCmdStatusError()
+				sbClient.PrintError("%v", err)
+				return
 			}
+			params.Metadata = &filter
 		}
 
-		sandboxes, lErr := client.List(ctx, params)
+		sandboxes, lErr := client.ListAll(ctx, params)
 		if lErr != nil {
+			data.SetCmdStatusError()
 			sbClient.PrintError("list sandboxes failed: %v", lErr)
 			return
 		}
@@ -64,18 +70,7 @@ func Kill(info KillInfo) {
 		return
 	}
 
-	// Kill sandboxes concurrently
-	var wg sync.WaitGroup
-	for _, id := range sandboxIDs {
-		wg.Add(1)
-		go func(sandboxID string) {
-			defer wg.Done()
-			if kErr := client.Kill(ctx, sandboxID); kErr != nil {
-				sbClient.PrintError("kill sandbox %s failed: %v", sandboxID, kErr)
-				return
-			}
-			sbClient.PrintSuccess("Killed sandbox %s", sandboxID)
-		}(id)
-	}
-	wg.Wait()
+	runSandboxBatch(sandboxIDs, "kill", "Killed", func(id string) error {
+		return client.Kill(ctx, id)
+	})
 }

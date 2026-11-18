@@ -59,6 +59,12 @@ var sandboxListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
   qshell sandbox list --state running,paused --limit 10
   qshell sbx ls -s running,paused -l 10
 
+  # Read every matching page
+  qshell sandbox list --all --limit 100
+
+  # Continue from a cursor printed on stderr
+  qshell sandbox list --next-token CURSOR -f json
+
   # Filter by metadata
   qshell sandbox list -m env=prod,team=backend
   qshell sbx ls -m env=prod,team=backend
@@ -71,13 +77,16 @@ var sandboxListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if !iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{}) {
 				return
 			}
+			info.MetadataSet = cmd.Flags().Changed("metadata")
 			operations.List(info)
 		},
 	}
 	cmd.Flags().StringVarP(&info.State, "state", "s", "", "filter by state (comma-separated: running,paused). Defaults to running")
 	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "filter by metadata (key1=value1,key2=value2)")
-	cmd.Flags().Int32VarP(&info.Limit, "limit", "l", 0, "maximum number of sandboxes to return")
+	cmd.Flags().Int32VarP(&info.Limit, "limit", "l", 0, "maximum number of sandboxes per page")
 	cmd.Flags().StringVarP(&info.Format, "format", "f", "pretty", "output format: pretty or json")
+	cmd.Flags().BoolVar(&info.All, "all", false, "read all matching pages")
+	cmd.Flags().StringVar(&info.NextToken, "next-token", "", "continue listing from this pagination token")
 	return cmd
 }
 
@@ -242,6 +251,7 @@ var sandboxKillCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 				return
 			}
 			info.SandboxIDs = args
+			info.MetadataSet = cmd.Flags().Changed("metadata")
 			operations.Kill(info)
 		},
 	}
@@ -363,6 +373,7 @@ var sandboxPauseCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if cmd.Flags().Changed("memory") {
 				info.Memory = &memory
 			}
+			info.MetadataSet = cmd.Flags().Changed("metadata")
 			operations.Pause(info)
 		},
 	}
@@ -400,6 +411,7 @@ var sandboxResumeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 				return
 			}
 			info.SandboxIDs = args
+			info.MetadataSet = cmd.Flags().Changed("metadata")
 			operations.Resume(info)
 		},
 	}
