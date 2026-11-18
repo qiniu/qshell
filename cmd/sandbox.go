@@ -77,6 +77,7 @@ var sandboxListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if !iqshell.CheckAndLoad(cfg, iqshell.CheckAndLoadInfo{}) {
 				return
 			}
+			info.MetadataSet = cmd.Flags().Changed("metadata")
 			operations.List(info)
 		},
 	}

@@ -45,7 +45,7 @@ func Pause(info PauseInfo) {
 		params.State = &states
 
 		if info.MetadataSet || info.Metadata != "" {
-			filter, err := parseBulkMetadata(info.Metadata)
+			filter, err := parseMetadataFilter(info.Metadata)
 			if err != nil {
 				data.SetCmdStatusError()
 				sbClient.PrintError("%v", err)

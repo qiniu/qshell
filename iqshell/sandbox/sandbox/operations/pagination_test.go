@@ -103,8 +103,53 @@ func TestBulkOperationsEnumerateAllPagesBeforeMutation(t *testing.T) {
 	}
 }
 
-func TestBulkOperationsRejectInvalidMetadataBeforeAnyRequest(t *testing.T) {
+func TestListAndBulkKillMatchTheSameMetadata(t *testing.T) {
+	const metadata = "lang=c++"
+	var deleted []string
+	var mu sync.Mutex
+	sandboxTestAPI(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete {
+			mu.Lock()
+			deleted = append(deleted, strings.TrimPrefix(r.URL.Path, "/sandboxes/"))
+			mu.Unlock()
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		raw, err := url.QueryUnescape(r.URL.Query().Get("metadata"))
+		condition, parseErr := url.ParseQuery(raw)
+		if err != nil || parseErr != nil {
+			http.Error(w, "invalid metadata", http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		switch condition.Get("lang") {
+		case "c++":
+			fmt.Fprint(w, `[{"sandboxID":"sbx-plus"}]`)
+		case "c  ":
+			fmt.Fprint(w, `[{"sandboxID":"sbx-spaces"}]`)
+		default:
+			fmt.Fprint(w, `[]`)
+		}
+	})
+	for _, all := range []bool{false, true} {
+		output := sandboxOutput(t, func() { List(ListInfo{All: all, Metadata: metadata, Format: "json"}) })
+		var items []struct{ SandboxID string }
+		require.NoError(t, json.Unmarshal([]byte(output), &items))
+		require.Len(t, items, 1)
+		require.Equal(t, "sbx-plus", items[0].SandboxID)
+	}
+	sandboxOutput(t, func() { Kill(KillInfo{All: true, Metadata: metadata}) })
+	mu.Lock()
+	defer mu.Unlock()
+	require.Equal(t, []string{"sbx-plus"}, deleted)
+	require.Equal(t, data.StatusOK, data.GetCmdStatus())
+}
+
+func TestListAndBulkOperationsRejectInvalidMetadataBeforeAnyRequest(t *testing.T) {
 	operations := map[string]func(string){
+		"list": func(filter string) {
+			List(ListInfo{Metadata: filter, MetadataSet: true})
+		},
 		"kill": func(filter string) {
 			Kill(KillInfo{All: true, Metadata: filter, MetadataSet: true})
 		},

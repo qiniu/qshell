@@ -14,7 +14,7 @@ import (
 // 完整枚举可能包含大量沙箱，限制同时进行的变更请求数。
 const maxConcurrentSandboxOperations = 16
 
-func parseBulkMetadata(raw string) (string, error) {
+func parseMetadataFilter(raw string) (string, error) {
 	filters := make(url.Values)
 	for pair := range strings.SplitSeq(raw, ",") {
 		key, value, ok := strings.Cut(pair, "=")

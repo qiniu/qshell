@@ -18,7 +18,7 @@ $ qshell sandbox list --doc
 
 # 参数
 - `-s, --state`：按状态过滤，逗号分隔（可选值：running, paused）。默认为 running
-- `-m, --metadata`：按元数据过滤（格式：key1=value1,key2=value2）
+- `-m, --metadata`：按元数据过滤（格式：key1=value1,key2=value2，键和值均不能为空，键不能重复）。显式传入无效条件时返回非零退出码，并在查询前退出
 - `-l, --limit`：每页的最大数量，省略时使用服务端默认值；使用 `--all` 时不限制总数量
 - `--all`：读取全部匹配页后统一输出
 - `--next-token`：从上一页的游标继续，不能与 `--all` 同用
