@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -45,9 +46,9 @@ func sandboxOutput(t *testing.T, run func()) string {
 
 func TestBulkOperationsEnumerateAllPagesBeforeMutation(t *testing.T) {
 	operations := map[string]func(){
-		"kill":   func() { Kill(KillInfo{All: true, Metadata: "purpose=page-test"}) },
-		"pause":  func() { Pause(PauseInfo{All: true, Metadata: "purpose=page-test"}) },
-		"resume": func() { Resume(ResumeInfo{All: true, Metadata: "purpose=page-test"}) },
+		"kill":   func() { Kill(KillInfo{All: true, Metadata: "branch=feat/a+b&x=1%,purpose=page-test"}) },
+		"pause":  func() { Pause(PauseInfo{All: true, Metadata: "branch=feat/a+b&x=1%,purpose=page-test"}) },
+		"resume": func() { Resume(ResumeInfo{All: true, Metadata: "branch=feat/a+b&x=1%,purpose=page-test"}) },
 	}
 	for name, run := range operations {
 		t.Run(name, func(t *testing.T) {
@@ -62,7 +63,11 @@ func TestBulkOperationsEnumerateAllPagesBeforeMutation(t *testing.T) {
 				w.Header().Set("Content-Type", "application/json")
 				if r.Method == http.MethodGet && r.URL.Path == "/v2/sandboxes" {
 					pages++
-					if r.URL.Query().Get("metadata") != "purpose=page-test" {
+					// 服务端先解码过滤串，再解析各个键值。
+					raw, err := url.QueryUnescape(r.URL.Query().Get("metadata"))
+					filters, parseErr := url.ParseQuery(raw)
+					if err != nil || parseErr != nil || len(filters) != 2 ||
+						filters.Get("purpose") != "page-test" || filters.Get("branch") != "feat/a+b&x=1%" {
 						filterChanged = true
 					}
 					switch r.URL.Query().Get("nextToken") {
@@ -94,6 +99,34 @@ func TestBulkOperationsEnumerateAllPagesBeforeMutation(t *testing.T) {
 			require.False(t, filterChanged, "翻页应保留筛选条件")
 			require.Equal(t, map[string]int{"sbx-1": 1, "sbx-2": 1}, mutated)
 			require.Equal(t, data.StatusOK, data.GetCmdStatus())
+		})
+	}
+}
+
+func TestBulkOperationsRejectInvalidMetadataBeforeAnyRequest(t *testing.T) {
+	operations := map[string]func(string){
+		"kill": func(filter string) {
+			Kill(KillInfo{All: true, Metadata: filter, MetadataSet: true})
+		},
+		"pause": func(filter string) {
+			Pause(PauseInfo{All: true, Metadata: filter, MetadataSet: true})
+		},
+		"resume": func(filter string) {
+			Resume(ResumeInfo{All: true, Metadata: filter, MetadataSet: true})
+		},
+	}
+	for name, run := range operations {
+		t.Run(name, func(t *testing.T) {
+			for _, filter := range []string{"", "env", "env=", "team=ops,env=", "env=prod,typo", "env=prod,env=dev"} {
+				t.Run(filter, func(t *testing.T) {
+					sandboxTestAPI(t, func(w http.ResponseWriter, _ *http.Request) {
+						t.Error("invalid metadata must not send any request")
+						http.Error(w, "unexpected request", http.StatusBadRequest)
+					})
+					sandboxOutput(t, func() { run(filter) })
+					require.Equal(t, data.StatusError, data.GetCmdStatus())
+				})
+			}
 		})
 	}
 }

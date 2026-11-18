@@ -12,9 +12,10 @@ import (
 
 // ResumeInfo holds parameters for resuming sandboxes.
 type ResumeInfo struct {
-	SandboxIDs []string
-	All        bool
-	Metadata   string // Metadata filter: key=value
+	SandboxIDs  []string
+	All         bool
+	Metadata    string // Metadata filter: key=value
+	MetadataSet bool   // Whether --metadata was explicitly supplied
 }
 
 // Resume resumes one or more paused sandboxes.
@@ -37,11 +38,14 @@ func Resume(info ResumeInfo) {
 		states := sbClient.ParseStates("paused")
 		params.State = &states
 
-		if info.Metadata != "" {
-			m := sbClient.ParseMetadata(info.Metadata)
-			if m != "" {
-				params.Metadata = &m
+		if info.MetadataSet || info.Metadata != "" {
+			filter, err := parseBulkMetadata(info.Metadata)
+			if err != nil {
+				data.SetCmdStatusError()
+				sbClient.PrintError("%v", err)
+				return
 			}
+			params.Metadata = &filter
 		}
 
 		sandboxes, lErr := client.ListAll(ctx, params)

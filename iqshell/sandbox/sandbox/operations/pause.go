@@ -14,10 +14,11 @@ import (
 type PauseInfo struct {
 	SandboxIDs []string
 	// Memory 是否保存内存；nil 使用服务端默认值 true。
-	Memory   *bool
-	All      bool
-	State    string // Comma-separated states for filtering when --all is used
-	Metadata string // Metadata filter: key=value
+	Memory      *bool
+	All         bool
+	State       string // Comma-separated states for filtering when --all is used
+	Metadata    string // Metadata filter: key=value
+	MetadataSet bool   // Whether --metadata was explicitly supplied
 }
 
 // Pause pauses one or more sandboxes so they can be resumed later.
@@ -43,11 +44,14 @@ func Pause(info PauseInfo) {
 		states := sbClient.ParseStates(stateStr)
 		params.State = &states
 
-		if info.Metadata != "" {
-			m := sbClient.ParseMetadata(info.Metadata)
-			if m != "" {
-				params.Metadata = &m
+		if info.MetadataSet || info.Metadata != "" {
+			filter, err := parseBulkMetadata(info.Metadata)
+			if err != nil {
+				data.SetCmdStatusError()
+				sbClient.PrintError("%v", err)
+				return
 			}
+			params.Metadata = &filter
 		}
 
 		sandboxes, lErr := client.ListAll(ctx, params)

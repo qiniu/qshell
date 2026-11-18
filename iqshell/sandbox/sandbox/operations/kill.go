@@ -12,10 +12,11 @@ import (
 
 // KillInfo holds parameters for killing sandboxes.
 type KillInfo struct {
-	SandboxIDs []string
-	All        bool
-	State      string // Comma-separated states for filtering when --all is used
-	Metadata   string // Metadata filter: key=value
+	SandboxIDs  []string
+	All         bool
+	State       string // Comma-separated states for filtering when --all is used
+	Metadata    string // Metadata filter: key=value
+	MetadataSet bool   // Whether --metadata was explicitly supplied
 }
 
 // Kill terminates one or more sandboxes.
@@ -41,11 +42,14 @@ func Kill(info KillInfo) {
 		states := sbClient.ParseStates(stateStr)
 		params.State = &states
 
-		if info.Metadata != "" {
-			m := sbClient.ParseMetadata(info.Metadata)
-			if m != "" {
-				params.Metadata = &m
+		if info.MetadataSet || info.Metadata != "" {
+			filter, err := parseBulkMetadata(info.Metadata)
+			if err != nil {
+				data.SetCmdStatusError()
+				sbClient.PrintError("%v", err)
+				return
 			}
+			params.Metadata = &filter
 		}
 
 		sandboxes, lErr := client.ListAll(ctx, params)

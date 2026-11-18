@@ -250,6 +250,7 @@ var sandboxKillCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 				return
 			}
 			info.SandboxIDs = args
+			info.MetadataSet = cmd.Flags().Changed("metadata")
 			operations.Kill(info)
 		},
 	}
@@ -371,6 +372,7 @@ var sandboxPauseCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if cmd.Flags().Changed("memory") {
 				info.Memory = &memory
 			}
+			info.MetadataSet = cmd.Flags().Changed("metadata")
 			operations.Pause(info)
 		},
 	}
@@ -408,6 +410,7 @@ var sandboxResumeCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 				return
 			}
 			info.SandboxIDs = args
+			info.MetadataSet = cmd.Flags().Changed("metadata")
 			operations.Resume(info)
 		},
 	}

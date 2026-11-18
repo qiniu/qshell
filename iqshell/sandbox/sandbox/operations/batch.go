@@ -2,6 +2,8 @@ package operations
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -11,6 +13,24 @@ import (
 
 // 完整枚举可能包含大量沙箱，限制同时进行的变更请求数。
 const maxConcurrentSandboxOperations = 16
+
+func parseBulkMetadata(raw string) (string, error) {
+	filters := make(url.Values)
+	for pair := range strings.SplitSeq(raw, ",") {
+		key, value, ok := strings.Cut(pair, "=")
+		key, value = strings.TrimSpace(key), strings.TrimSpace(value)
+		if !ok || key == "" || value == "" {
+			return "", fmt.Errorf("--metadata requires non-empty key=value pairs")
+		}
+		key = url.QueryEscape(key)
+		if filters.Has(key) {
+			return "", fmt.Errorf("--metadata must not contain duplicate keys")
+		}
+		// 服务端先解码整个过滤串，再分别解码键和值。
+		filters.Set(key, url.QueryEscape(value))
+	}
+	return filters.Encode(), nil
+}
 
 func runSandboxBatch(ids []string, verb, pastTense string, operation func(string) error) {
 	var succeeded, failed atomic.Int64

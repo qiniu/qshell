@@ -19,7 +19,7 @@ $ qshell sandbox resume --doc
 # 参数
 - `sandboxIDs`：要恢复的沙箱 ID 列表
 - `-a, --all`：恢复所有已暂停的沙箱
-- `-m, --metadata`：配合 -a/--all 使用，按元数据过滤（格式：key1=value1,key2=value2）
+- `-m, --metadata`：配合 -a/--all 使用，按元数据过滤（格式：key1=value1,key2=value2，键和值均不能为空，键不能重复）。显式传入无效条件时，命令以非零状态退出，不发送沙箱请求。
 
 # 示例
 `--all` 先完整枚举并去重，再执行恢复；枚举失败时不修改第一页资源。结束后输出成功和失败数量，任一请求失败返回非零退出码。
